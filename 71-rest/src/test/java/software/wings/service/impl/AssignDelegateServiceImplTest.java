@@ -6,7 +6,6 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
-import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.Delegate.Status.ENABLED;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
@@ -71,11 +70,11 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .envId(ENV_ID)
                                     .data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                     .build();
-    Delegate delegate = aDelegate()
-                            .withAccountId(ACCOUNT_ID)
-                            .withUuid(DELEGATE_ID)
-                            .withIncludeScopes(emptyList())
-                            .withExcludeScopes(emptyList())
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .uuid(DELEGATE_ID)
+                            .includeScopes(emptyList())
+                            .excludeScopes(emptyList())
                             .build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
@@ -91,13 +90,13 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .envId(ENV_ID)
                                     .data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                     .build();
-    Delegate delegate = aDelegate()
-                            .withAccountId(ACCOUNT_ID)
-                            .withUuid(DELEGATE_ID)
-                            .withIncludeScopes(ImmutableList.of(
-                                DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build()))
-                            .withExcludeScopes(emptyList())
-                            .build();
+    Delegate delegate =
+        Delegate.builder()
+            .accountId(ACCOUNT_ID)
+            .uuid(DELEGATE_ID)
+            .includeScopes(ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build()))
+            .excludeScopes(emptyList())
+            .build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
   }
@@ -112,12 +111,12 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .envId(ENV_ID)
                                     .data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                     .build();
-    Delegate delegate = aDelegate()
-                            .withAccountId(ACCOUNT_ID)
-                            .withUuid(DELEGATE_ID)
-                            .withIncludeScopes(ImmutableList.of(
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .uuid(DELEGATE_ID)
+                            .includeScopes(ImmutableList.of(
                                 DelegateScope.builder().environmentTypes(ImmutableList.of(NON_PROD)).build()))
-                            .withExcludeScopes(emptyList())
+                            .excludeScopes(emptyList())
                             .build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isFalse();
@@ -133,11 +132,11 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .envId(ENV_ID)
                                     .data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                     .build();
-    Delegate delegate = aDelegate()
-                            .withAccountId(ACCOUNT_ID)
-                            .withUuid(DELEGATE_ID)
-                            .withIncludeScopes(emptyList())
-                            .withExcludeScopes(ImmutableList.of(
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .uuid(DELEGATE_ID)
+                            .includeScopes(emptyList())
+                            .excludeScopes(ImmutableList.of(
                                 DelegateScope.builder().environmentTypes(ImmutableList.of(NON_PROD)).build()))
                             .build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
@@ -154,13 +153,13 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .envId(ENV_ID)
                                     .data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                     .build();
-    Delegate delegate = aDelegate()
-                            .withAccountId(ACCOUNT_ID)
-                            .withUuid(DELEGATE_ID)
-                            .withIncludeScopes(emptyList())
-                            .withExcludeScopes(ImmutableList.of(
-                                DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build()))
-                            .build();
+    Delegate delegate =
+        Delegate.builder()
+            .accountId(ACCOUNT_ID)
+            .uuid(DELEGATE_ID)
+            .includeScopes(emptyList())
+            .excludeScopes(ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build()))
+            .build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isFalse();
   }
@@ -176,12 +175,12 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
             .tags(ImmutableList.of("a", "b"))
             .data(TaskData.builder().taskType(TaskType.SCRIPT.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
             .build();
-    Delegate delegate = aDelegate()
-                            .withAccountId(ACCOUNT_ID)
-                            .withUuid(DELEGATE_ID)
-                            .withIncludeScopes(emptyList())
-                            .withExcludeScopes(emptyList())
-                            .withTags(ImmutableList.of("a", "b", "c"))
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .uuid(DELEGATE_ID)
+                            .includeScopes(emptyList())
+                            .excludeScopes(emptyList())
+                            .tags(ImmutableList.of("a", "b", "c"))
                             .build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
@@ -198,12 +197,12 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
             .tags(ImmutableList.of("a", "b"))
             .data(TaskData.builder().taskType(TaskType.SCRIPT.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
             .build();
-    Delegate delegate = aDelegate()
-                            .withAccountId(ACCOUNT_ID)
-                            .withUuid(DELEGATE_ID)
-                            .withIncludeScopes(emptyList())
-                            .withExcludeScopes(emptyList())
-                            .withTags(ImmutableList.of("b", "c"))
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .uuid(DELEGATE_ID)
+                            .includeScopes(emptyList())
+                            .excludeScopes(emptyList())
+                            .tags(ImmutableList.of("b", "c"))
                             .build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isFalse();
@@ -220,12 +219,12 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
             .tags(ImmutableList.of("a", "b"))
             .data(TaskData.builder().taskType(TaskType.SCRIPT.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
             .build();
-    Delegate delegate = aDelegate()
-                            .withAccountId(ACCOUNT_ID)
-                            .withUuid(DELEGATE_ID)
-                            .withIncludeScopes(emptyList())
-                            .withExcludeScopes(emptyList())
-                            .withTags(ImmutableList.of("c", "d"))
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .uuid(DELEGATE_ID)
+                            .includeScopes(emptyList())
+                            .excludeScopes(emptyList())
+                            .tags(ImmutableList.of("c", "d"))
                             .build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isFalse();
@@ -242,12 +241,12 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
             .tags(null)
             .data(TaskData.builder().taskType(TaskType.SCRIPT.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
             .build();
-    Delegate delegate = aDelegate()
-                            .withAccountId(ACCOUNT_ID)
-                            .withUuid(DELEGATE_ID)
-                            .withIncludeScopes(emptyList())
-                            .withExcludeScopes(emptyList())
-                            .withTags(ImmutableList.of("a", "b", "c"))
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .uuid(DELEGATE_ID)
+                            .includeScopes(emptyList())
+                            .excludeScopes(emptyList())
+                            .tags(ImmutableList.of("a", "b", "c"))
                             .build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
@@ -264,12 +263,12 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
             .tags(ImmutableList.of("a", "b"))
             .data(TaskData.builder().taskType(TaskType.SCRIPT.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
             .build();
-    Delegate delegate = aDelegate()
-                            .withAccountId(ACCOUNT_ID)
-                            .withUuid(DELEGATE_ID)
-                            .withIncludeScopes(emptyList())
-                            .withExcludeScopes(emptyList())
-                            .withTags(null)
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .uuid(DELEGATE_ID)
+                            .includeScopes(emptyList())
+                            .excludeScopes(emptyList())
+                            .tags(null)
                             .build();
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isFalse();
@@ -405,12 +404,12 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   private DelegateTask createDelegateTask(boolean b, String criteria) {
-    Delegate delegate = aDelegate()
-                            .withAccountId(ACCOUNT_ID)
-                            .withUuid(DELEGATE_ID)
-                            .withStatus(ENABLED)
-                            .withLastHeartBeat(clock.millis())
-                            .withConnected(true)
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .uuid(DELEGATE_ID)
+                            .status(ENABLED)
+                            .lastHeartBeat(clock.millis())
+                            .connected(true)
                             .build();
     wingsPersistence.save(delegate);
     wingsPersistence.save(DelegateConnectionResult.builder()
@@ -446,12 +445,12 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldNotGetConnectedWhitelistedDelegatesOldHeartbeat() {
-    Delegate delegate = aDelegate()
-                            .withAccountId(ACCOUNT_ID)
-                            .withUuid(DELEGATE_ID)
-                            .withStatus(ENABLED)
-                            .withLastHeartBeat(clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT - 1000)
-                            .withConnected(true)
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .uuid(DELEGATE_ID)
+                            .status(ENABLED)
+                            .lastHeartBeat(clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT - 1000)
+                            .connected(true)
                             .build();
     wingsPersistence.save(delegate);
     wingsPersistence.save(DelegateConnectionResult.builder()

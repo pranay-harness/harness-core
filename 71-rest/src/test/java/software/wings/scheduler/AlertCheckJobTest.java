@@ -97,11 +97,8 @@ public class AlertCheckJobTest extends WingsBaseTest {
   }
 
   private void saveDelegate(String host, int timeAfterLastHB, boolean createConnection) {
-    Delegate delegate = new Delegate();
-    delegate.setHostName(host);
     long lastHeartbeat = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(timeAfterLastHB);
-    delegate.setLastHeartBeat(lastHeartbeat);
-    delegate.setAccountId(ACCOUNT_ID);
+    Delegate delegate = Delegate.builder().accountId(ACCOUNT_ID).hostName(host).lastHeartBeat(lastHeartbeat).build();
     wingsPersistence.save(delegate);
 
     if (createConnection) {

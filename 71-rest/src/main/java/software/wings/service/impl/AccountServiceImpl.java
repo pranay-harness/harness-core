@@ -15,7 +15,6 @@ import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.ID_KEY;
-import static software.wings.beans.Delegate.ACCOUNT_ID_KEY;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.RoleType.ACCOUNT_ADMIN;
@@ -673,7 +672,7 @@ public class AccountServiceImpl implements AccountService {
     assertTrialAccount(accountId);
 
     Key<Delegate> delegateKey = wingsPersistence.createQuery(Delegate.class)
-                                    .filter(ACCOUNT_ID_KEY, accountId)
+                                    .filter(DelegateKeys.accountId, accountId)
                                     .filter(DelegateKeys.delegateName, SAMPLE_DELEGATE_NAME)
                                     .getKey();
 

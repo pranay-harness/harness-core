@@ -48,7 +48,6 @@ import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
-import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.common.Constants.SELF_DESTRUCT;
 import static software.wings.delegate.app.DelegateApplication.getProcessId;
 import static software.wings.delegate.service.InstallUtils.installChartMuseum;
@@ -98,7 +97,6 @@ import okhttp3.ResponseBody;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpHost;
 import org.atmosphere.wasync.Client;
 import org.atmosphere.wasync.Encoder;
 import org.atmosphere.wasync.Event;
@@ -118,7 +116,7 @@ import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 import retrofit2.Response;
 import software.wings.app.DeployMode;
 import software.wings.beans.Delegate;
-import software.wings.beans.Delegate.Builder;
+import software.wings.beans.Delegate.DelegateBuilder;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConnectionHeartbeat;
 import software.wings.beans.DelegatePackage;
@@ -239,7 +237,6 @@ public class DelegateServiceImpl implements DelegateService {
   private static String delegateGroupName;
   private String accountId;
   private long watcherVersionMatchedAt = System.currentTimeMillis();
-  private HttpHost httpProxyHost;
 
   private final String delegateConnectionId = generateUuid();
   private DelegateConnectionHeartbeat connectionHeartbeat;
@@ -315,24 +312,20 @@ public class DelegateServiceImpl implements DelegateService {
       logger.info("DELEGATE_TYPE is: " + delegateType);
       if (isNotBlank(delegateType)) {
         delegateGroupName = System.getenv().get("DELEGATE_GROUP_NAME");
-        logger.info(new StringBuilder(128)
-                        .append("Registering delegate with delegate Type: ")
-                        .append(delegateType)
-                        .append(", DelegateGroupName: ")
-                        .append(delegateGroupName)
-                        .toString());
+        logger.info(
+            "Registering delegate with delegate Type: {}, DelegateGroupName: {}", delegateType, delegateGroupName);
       }
 
-      Delegate.Builder builder = aDelegate()
-                                     .withIp(getLocalHostAddress())
-                                     .withAccountId(accountId)
-                                     .withHostName(hostName)
-                                     .withDelegateName(delegateName)
-                                     .withDelegateGroupName(delegateGroupName)
-                                     .withDelegateProfileId(delegateProfile)
-                                     .withDescription(description)
-                                     .withVersion(getVersion())
-                                     .withDelegateType(delegateType);
+      DelegateBuilder builder = Delegate.builder()
+                                    .ip(getLocalHostAddress())
+                                    .accountId(accountId)
+                                    .hostName(hostName)
+                                    .delegateName(delegateName)
+                                    .delegateGroupName(delegateGroupName)
+                                    .delegateProfileId(delegateProfile)
+                                    .description(description)
+                                    .version(getVersion())
+                                    .delegateType(delegateType);
 
       delegateId = registerDelegate(builder);
       logger.info("[New] Delegate registered in {} ms", clock.millis() - start);
@@ -490,7 +483,6 @@ public class DelegateServiceImpl implements DelegateService {
    * This is just a workAround. We need to make sure, when delegate.sh is baked into container, its initialized with
    * proper value. We need to update watcher / manager communication for that. Its a bigger change, and will be handled
    * in a separate JIRA
-   * @return
    */
   private boolean isPollingForTasksEnabled() {
     if (isEcsDelegate()) {
@@ -500,14 +492,13 @@ public class DelegateServiceImpl implements DelegateService {
     return delegateConfiguration.isPollForTasks();
   }
 
-  protected void applyProxyConfigurations() {
+  private void applyProxyConfigurations() {
     String proxyHost = System.getProperty("https.proxyHost");
 
     if (isNotBlank(proxyHost)) {
       String proxyScheme = System.getProperty("proxyScheme");
       String proxyPort = System.getProperty("https.proxyPort");
       logger.info("Using {} proxy {}:{}", proxyScheme, proxyHost, proxyPort);
-      httpProxyHost = new HttpHost(proxyHost, Integer.parseInt(proxyPort), proxyScheme);
       String nonProxyHostsString = System.getProperty("http.nonProxyHosts");
       if (isNotBlank(nonProxyHostsString)) {
         String[] suffixes = nonProxyHostsString.split("\\|");
@@ -524,12 +515,15 @@ public class DelegateServiceImpl implements DelegateService {
     pollingForTasks.set(true);
   }
 
-  private void handleReopened(Object o, Builder builder) {
+  private void handleReopened(Object o, DelegateBuilder builder) {
     logger.info("Event:{}, message:[{}]", Event.REOPENED.name(), o.toString());
     pollingForTasks.set(false);
     try {
-      socket.fire(
-          builder.but().withLastHeartBeat(clock.millis()).withStatus(Status.ENABLED).withConnected(true).build());
+      Delegate delegate = builder.build();
+      delegate.setLastHeartBeat(clock.millis());
+      delegate.setStatus(Status.ENABLED);
+      delegate.setConnected(true);
+      socket.fire(delegate);
     } catch (IOException e) {
       logger.error("Error connecting", e);
     }
@@ -571,8 +565,6 @@ public class DelegateServiceImpl implements DelegateService {
   private void handleMessage(String message) {
     if (StringUtils.startsWith(message, "[X]")) {
       String receivedId;
-      String token = null;
-      String sequenceNum = null;
       if (isEcsDelegate()) {
         int indexForToken = message.lastIndexOf("[TOKEN]");
         receivedId = message.substring(3, indexForToken); // Remove the "[X]
@@ -641,7 +633,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @SuppressFBWarnings({"DM_EXIT"})
-  private String registerDelegate(Builder builder) {
+  private String registerDelegate(DelegateBuilder builder) {
     updateBuilderIfEcsDelegate(builder);
     AtomicInteger attempts = new AtomicInteger(0);
     while (acquireTasks.get()) {
@@ -650,8 +642,10 @@ public class DelegateServiceImpl implements DelegateService {
         attempts.incrementAndGet();
         String attemptString = attempts.get() > 1 ? " (Attempt " + attempts.get() + ")" : "";
         logger.info("Registering delegate" + attemptString);
-        delegateResponse = execute(managerClient.registerDelegate(
-            accountId, builder.but().withLastHeartBeat(clock.millis()).withStatus(Status.ENABLED).build()));
+        Delegate delegate = builder.build();
+        delegate.setStatus(Status.ENABLED);
+        delegate.setLastHeartBeat(clock.millis());
+        delegateResponse = execute(managerClient.registerDelegate(accountId, delegate));
       } catch (Exception e) {
         String msg = "Unknown error occurred while registering Delegate [" + accountId + "] with manager";
         logger.error(msg, e);
@@ -675,7 +669,7 @@ public class DelegateServiceImpl implements DelegateService {
         sleep(ofMinutes(1));
         continue;
       }
-      builder.withUuid(delegateId).withStatus(delegateResponse.getResource().getStatus());
+      builder.uuid(delegateId).status(delegateResponse.getResource().getStatus());
       VERIFICATION_SERVICE_SECRET.set(delegateResponse.getResource().getVerificationServiceSecret());
       logger.info(
           "Delegate registered with id {} and status {}", delegateId, delegateResponse.getResource().getStatus());
@@ -948,7 +942,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private void startHeartbeat(Builder builder, Socket socket) {
+  private void startHeartbeat(DelegateBuilder builder, Socket socket) {
     logger.info("Starting heartbeat at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
     heartbeatExecutor.scheduleAtFixedRate(() -> {
       try {
@@ -965,7 +959,7 @@ public class DelegateServiceImpl implements DelegateService {
     }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
 
-  private void startKeepAlivePacket(Builder builder, Socket socket) {
+  private void startKeepAlivePacket(DelegateBuilder builder, Socket socket) {
     if (!isEcsDelegate()) {
       return;
     }
@@ -987,7 +981,7 @@ public class DelegateServiceImpl implements DelegateService {
     }, 0, KEEP_ALIVE_INTERVAL, TimeUnit.MILLISECONDS);
   }
 
-  private void startHeartbeatWhenPollingEnabled(Builder builder) {
+  private void startHeartbeatWhenPollingEnabled(DelegateBuilder builder) {
     logger.info("Starting heartbeat at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
     heartbeatExecutor.scheduleAtFixedRate(() -> {
       if (pollingForTasks.get()) {
@@ -1006,7 +1000,7 @@ public class DelegateServiceImpl implements DelegateService {
     }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
 
-  private void startKeepAliveRequestWhenPollingEnabled(Builder builder) {
+  private void startKeepAliveRequestWhenPollingEnabled(DelegateBuilder builder) {
     logger.info("Starting Keep Alive Request at interval {} ms", KEEP_ALIVE_INTERVAL);
     heartbeatExecutor.scheduleAtFixedRate(() -> {
       if (pollingForTasks.get() && isEcsDelegate()) {
@@ -1130,19 +1124,17 @@ public class DelegateServiceImpl implements DelegateService {
                || now - lastHeartbeatReceivedAt.get() > HEARTBEAT_TIMEOUT);
   }
 
-  private void sendHeartbeat(Builder builder, Socket socket) {
+  private void sendHeartbeat(DelegateBuilder builder, Socket socket) {
     if (socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED) {
       logger.info("Sending heartbeat...");
 
       // This will Add ECS delegate specific fields if delegateType = "ECS"
       updateBuilderIfEcsDelegate(builder);
-      Delegate delegate =
-          builder.but()
-              .withLastHeartBeat(clock.millis())
-              .withConnected(true)
-              .withCurrentlyExecutingDelegateTasks(
-                  currentlyExecutingTasks.values().stream().map(DelegateTask::getUuid).collect(toList()))
-              .build();
+      Delegate delegate = builder.build();
+      delegate.setLastHeartBeat(clock.millis());
+      delegate.setConnected(true);
+      delegate.setCurrentlyExecutingDelegateTasks(
+          currentlyExecutingTasks.values().stream().map(DelegateTask::getUuid).collect(toList()));
 
       try {
         timeLimiter.callWithTimeout(() -> socket.fire(JsonUtils.asJson(delegate)), 15L, TimeUnit.SECONDS, true);
@@ -1159,15 +1151,16 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private void sendKeepAlivePacket(Builder builder, Socket socket) {
+  private void sendKeepAlivePacket(DelegateBuilder builder, Socket socket) {
     if (socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED) {
       logger.info("Sending keepAlive packet...");
       updateBuilderIfEcsDelegate(builder);
       try {
-        timeLimiter.callWithTimeout(
-            ()
-                -> socket.fire(JsonUtils.asJson(builder.but().withKeepAlivePacket(true).build())),
-            15L, TimeUnit.SECONDS, true);
+        timeLimiter.callWithTimeout(() -> {
+          Delegate delegate = builder.build();
+          delegate.setKeepAlivePacket(true);
+          return socket.fire(JsonUtils.asJson(delegate));
+        }, 15L, TimeUnit.SECONDS, true);
       } catch (UncheckedTimeoutException ex) {
         logger.warn("Timed out sending keep alive packet");
       } catch (Exception e) {
@@ -1178,17 +1171,15 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private void sendHeartbeatWhenPollingEnabled(Builder builder) {
+  private void sendHeartbeatWhenPollingEnabled(DelegateBuilder builder) {
     logger.info("Sending heartbeat...");
     try {
       updateBuilderIfEcsDelegate(builder);
-      Delegate delegate =
-          builder.but()
-              .withKeepAlivePacket(false)
-              .withPolllingModeEnabled(true)
-              .withCurrentlyExecutingDelegateTasks(
-                  currentlyExecutingTasks.values().stream().map(DelegateTask::getUuid).collect(toList()))
-              .build();
+      Delegate delegate = builder.build();
+      delegate.setKeepAlivePacket(false);
+      delegate.setPolllingModeEnabled(true);
+      delegate.setCurrentlyExecutingDelegateTasks(
+          currentlyExecutingTasks.values().stream().map(DelegateTask::getUuid).collect(toList()));
       logger.info("SeqNum being sent to manager is: " + delegate.getSequenceNum());
       logger.info("DelegateToken being sent to manager is: " + delegate.getDelegateRandomToken());
 
@@ -1200,7 +1191,7 @@ public class DelegateServiceImpl implements DelegateService {
           initiateSelfDestruct();
         } else {
           delegateId = delegateReceived.getUuid();
-          builder.withUuid(delegateId);
+          builder.uuid(delegateId);
         }
         lastHeartbeatSentAt.set(clock.millis());
         lastHeartbeatReceivedAt.set(clock.millis());
@@ -1220,12 +1211,14 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private void sendKeepAliveRequestWhenPollingEnabled(Builder builder) {
+  private void sendKeepAliveRequestWhenPollingEnabled(DelegateBuilder builder) {
     logger.info("Sending Keep Alive Request...");
     try {
       updateBuilderIfEcsDelegate(builder);
-      execute(managerClient.registerDelegate(
-          accountId, builder.but().withKeepAlivePacket(true).withPolllingModeEnabled(true).build()));
+      Delegate delegate = builder.build();
+      delegate.setKeepAlivePacket(true);
+      delegate.setPolllingModeEnabled(true);
+      execute(managerClient.registerDelegate(accountId, delegate));
     } catch (UncheckedTimeoutException ex) {
       logger.warn("Timed out sending Keep Alive Request");
     } catch (Exception e) {
@@ -1566,14 +1559,9 @@ public class DelegateServiceImpl implements DelegateService {
       }
 
       try {
-        FileIo.writeWithExclusiveLockAcrossProcesses(
-            new StringBuilder(128).append("[TOKEN]").append(token).append("[SEQ]").append(sequenceNum).toString(),
+        FileIo.writeWithExclusiveLockAcrossProcesses("[TOKEN]" + token + "[SEQ]" + sequenceNum,
             DELEGATE_SEQUENCE_CONFIG_FILE, StandardOpenOption.TRUNCATE_EXISTING);
-        logger.info(new StringBuilder("Token Received From Manager : ")
-                        .append(token)
-                        .append(", SeqNum Received From Manager: ")
-                        .append(sequenceNum)
-                        .toString());
+        logger.info("Token Received From Manager : {}, SeqNum Received From Manager: {}", token, sequenceNum);
       } catch (Exception e) {
         logger.error("Failed to write registration response into delegate_sequence file");
       }
@@ -1581,27 +1569,23 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private boolean isInvalidData(String value) {
-    if (isBlank(value) || "null".equalsIgnoreCase(value)) {
-      return true;
-    }
-
-    return false;
+    return isBlank(value) || "null".equalsIgnoreCase(value);
   }
 
-  private void updateBuilderIfEcsDelegate(Builder builder) {
+  private void updateBuilderIfEcsDelegate(DelegateBuilder builder) {
     if (!isEcsDelegate()) {
       return;
     }
 
-    builder.withDelegateGroupName(delegateGroupName);
+    builder.delegateGroupName(delegateGroupName);
 
     try {
       if (!FileIo.checkIfFileExist(DELEGATE_SEQUENCE_CONFIG_FILE)) {
         generateEcsDelegateSequenceConfigFile();
       }
 
-      builder.withDelegateRandomToken(getRandomTokenForEcsDelegate());
-      builder.withSequenceNum(getSequenceNumForEcsDelegate());
+      builder.delegateRandomToken(getRandomTokenForEcsDelegate());
+      builder.sequenceNum(getSequenceNumForEcsDelegate());
     } catch (Exception e) {
       logger.warn("Failed while reading seqNum and delegateToken from disk file");
     }
@@ -1616,14 +1600,14 @@ public class DelegateServiceImpl implements DelegateService {
         content = FileIo.getFileContentsWithSharedLockAcrossProcesses(DELEGATE_SEQUENCE_CONFIG_FILE);
       }
     } catch (Exception e) {
-      content = null;
+      // Ignore
     }
 
     return isBlank(content) ? null : content;
   }
 
   private String getSequenceNumForEcsDelegate() {
-    String content = null;
+    String content;
     String seqNum = null;
     if (isEcsDelegate()) {
       content = getSequenceConfigData();
@@ -1644,8 +1628,7 @@ public class DelegateServiceImpl implements DelegateService {
       return null;
     }
 
-    String token = null;
-    token = readTokenFromFile();
+    String token = readTokenFromFile();
 
     if (token == null) {
       FileUtils.deleteQuietly(new File(DELEGATE_SEQUENCE_CONFIG_FILE));
@@ -1675,12 +1658,8 @@ public class DelegateServiceImpl implements DelegateService {
   private void handleEcsDelegateRegistrationResponse(Delegate delegate) {
     if (isEcsDelegate()) {
       try {
-        FileIo.writeWithExclusiveLockAcrossProcesses(new StringBuilder()
-                                                         .append("[TOKEN]")
-                                                         .append(delegate.getDelegateRandomToken())
-                                                         .append("[SEQ]")
-                                                         .append(delegate.getSequenceNum())
-                                                         .toString(),
+        FileIo.writeWithExclusiveLockAcrossProcesses(
+            "[TOKEN]" + delegate.getDelegateRandomToken() + "[SEQ]" + delegate.getSequenceNum(),
             DELEGATE_SEQUENCE_CONFIG_FILE, StandardOpenOption.TRUNCATE_EXISTING);
       } catch (Exception e) {
         logger.error("Failed to write registration response into delegate_sequence file");
@@ -1697,8 +1676,7 @@ public class DelegateServiceImpl implements DelegateService {
       FileUtils.touch(new File(DELEGATE_SEQUENCE_CONFIG_FILE));
       String randomToken = UUIDGenerator.generateUuid();
       FileIo.writeWithExclusiveLockAcrossProcesses(
-          new StringBuilder(128).append("[TOKEN]").append(randomToken).append("[SEQ]").toString(),
-          DELEGATE_SEQUENCE_CONFIG_FILE, StandardOpenOption.TRUNCATE_EXISTING);
+          "[TOKEN]" + randomToken + "[SEQ]", DELEGATE_SEQUENCE_CONFIG_FILE, StandardOpenOption.TRUNCATE_EXISTING);
     } catch (IOException e) {
       logger.warn("Failed to create DelegateSequenceConfigFile");
     }
@@ -1711,7 +1689,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (isEmpty(encryptionConfigs) || isEmpty(secretDetails)) {
       return;
     }
-    List<EncryptedRecord> encryptedRecordList = new ArrayList();
+    List<EncryptedRecord> encryptedRecordList = new ArrayList<>();
     Map<EncryptionConfig, List<EncryptedRecord>> encryptionConfigListMap = new HashMap<>();
     secretDetails.forEach((key, secretDetail) -> {
       encryptedRecordList.add(secretDetail.getEncryptedRecord());

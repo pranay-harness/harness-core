@@ -24,6 +24,7 @@ import org.hibernate.validator.constraints.NotBlank;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.Delegate;
+import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.alert.AlertType;
@@ -282,7 +283,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   @Override
   public void sendSSONotReachableNotification(String accountId, SSOSettings settings) {
     List<Delegate> delegates = delegateService.list(
-        PageRequestBuilder.aPageRequest().addFilter(Delegate.ACCOUNT_ID_KEY, Operator.EQ, accountId).build());
+        PageRequestBuilder.aPageRequest().addFilter(DelegateKeys.accountId, Operator.EQ, accountId).build());
     String hostNamesForDelegates = "\n" + delegates.stream().map(Delegate::getHostName).collect(joining("\n"));
 
     String hostNamesForDelegatesHtml =

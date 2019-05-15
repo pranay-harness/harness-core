@@ -88,8 +88,6 @@ public interface Constants {
 
   String DEPLOY = "Deploy";
 
-  String SCALE = "Scale";
-
   String VERIFY = "Verify";
 
   String PCF_SETUP = "App Setup";
@@ -259,16 +257,7 @@ public interface Constants {
    */
   @Deprecated String PROVISION_NODE_NAME = "Provision Nodes";
 
-  /**
-   * The constant PROVISION_NODE_NAME.
-   */
-  String PROVISION_WITH_TERRAFORM_NAME = "Terraform";
   String ROLLBACK_TERRAFORM_NAME = "Terraform Rollback";
-
-  /**
-   * The constant PROVISION_NODE_NAME.
-   */
-  String DE_PROVISION_NODE_NAME = "Deprovision";
 
   /**
    * The constant SELECT_NODE_NAME.
@@ -360,14 +349,6 @@ public interface Constants {
    */
   String URL = "url";
   /**
-   * The constant REVISION.
-   */
-  String REVISION = "revision";
-  /**
-   * The constant BUILD_PARAMS.
-   */
-  String BUILD_PARAMS = "buildParameters";
-  /**
    * The constant LAST_UPDATED_AT.
    */
   String LAST_UPDATED_AT = "lastUpdatedAt";
@@ -384,8 +365,6 @@ public interface Constants {
    * The constant GIT_USER.
    */
   String GIT_USER = "git";
-
-  String DEPLOYMENT_TYPE_FIELD = "deploymentType";
 
   /**
    * The constant S3.
@@ -593,8 +572,6 @@ public interface Constants {
   String DEPLOYMENT_TRIGGERED_BY = "deploymentTriggeredBy";
   long ARTIFACT_FILE_SIZE_LIMIT = 4L * 1024L * 1024L * 1024L; // 4GB
 
-  String SUPPORT_EMAIL = "support@harness.io";
-
   /**
    * Trial expires end of day - 14 days from the date of creation.
    */
@@ -622,8 +599,6 @@ public interface Constants {
   String EMAIL_BODY_ACCOUNT_ABOUT_TO_EXPIRE = "Customer License is about to Expire";
 
   Integer REFERENCED_ENTITIES_TO_SHOW = 10;
-  String OLD_LICENSE = "OLD_LICENSE";
-  String NEW_LICENSE = "NEW_LICENSE";
 
   // ECS BG
   String BG_VERSION = "BG_VERSION";
@@ -637,7 +612,6 @@ public interface Constants {
   String APP_ID_KEY = "appId";
 
   String DEFAULT_USER_GROUP_DESCRIPTION = "Default account admin user group";
-  String WORKFLOW_EXECUTION_ID_KEY = "workflowExecutionId";
 
   /**
    * Script as Approval

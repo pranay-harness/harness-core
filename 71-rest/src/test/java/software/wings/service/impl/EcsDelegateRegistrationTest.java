@@ -19,7 +19,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.DelegateSequenceConfig.Builder.aDelegateSequenceBuilder;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
@@ -58,7 +57,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
     delegateService = spy(DelegateServiceImpl.class);
     doReturn(null).when(delegateService).handleEcsDelegateKeepAlivePacket(any());
 
-    delegateService.handleEcsDelegateRequest(aDelegate().withKeepAlivePacket(true).build());
+    delegateService.handleEcsDelegateRequest(Delegate.builder().keepAlivePacket(true).build());
 
     verify(delegateService).handleEcsDelegateKeepAlivePacket(any());
     verify(delegateService, times(0)).handleEcsDelegateRegistration(any());
@@ -71,11 +70,13 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testHandleEcsDelegateRequest_EcsDelegateRegistration() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
-    doReturn(aDelegate().withHostName("delegate_1").build()).when(delegateService).handleEcsDelegateRegistration(any());
+    doReturn(Delegate.builder().hostName("delegate_1").build())
+        .when(delegateService)
+        .handleEcsDelegateRegistration(any());
     doReturn(aDelegateSequenceBuilder().withHostName("delegate").withSequenceNum(1).withDelegateToken("token").build())
         .when(delegateService)
         .getDelegateSequenceConfig(anyString(), anyString(), anyInt());
-    delegateService.handleEcsDelegateRequest(aDelegate().withKeepAlivePacket(false).build());
+    delegateService.handleEcsDelegateRequest(Delegate.builder().keepAlivePacket(false).build());
 
     verify(delegateService, times(0)).handleEcsDelegateKeepAlivePacket(any());
     verify(delegateService).handleEcsDelegateRegistration(any());
@@ -89,8 +90,8 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
   public void testHandleEcsDelegateKeepAlivePacket() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
     doReturn(null)
-        .doReturn(aDelegate().build())
-        .doReturn(aDelegate().build())
+        .doReturn(Delegate.builder().build())
+        .doReturn(Delegate.builder().build())
         .when(delegateService)
         .getDelegateUsingSequenceNum(anyString(), anyString(), anyString());
 
@@ -99,7 +100,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
         .when(delegateService)
         .getDelegateSequenceConfig(anyString(), anyString(), anyInt());
 
-    Delegate delegate = aDelegate().build();
+    Delegate delegate = Delegate.builder().build();
     delegateService.handleEcsDelegateKeepAlivePacket(delegate);
     verify(delegateService, times(0)).getDelegateUsingSequenceNum(anyString(), anyString(), anyString());
 
@@ -147,12 +148,8 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
     DelegateSequenceConfig config = aDelegateSequenceBuilder().withDelegateToken("token").build();
     doReturn(config).when(delegateService).getDelegateSequenceConfig(anyString(), anyString(), anyInt());
 
-    Delegate delegate = aDelegate()
-                            .withUuid("12345")
-                            .withDelegateType("ECS")
-                            .withDelegateRandomToken("token")
-                            .withSequenceNum("1")
-                            .build();
+    Delegate delegate =
+        Delegate.builder().uuid("12345").delegateType("ECS").delegateRandomToken("token").sequenceNum("1").build();
 
     doReturn(delegate).when(query).get();
 
@@ -180,7 +177,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
     DelegateSequenceConfig config = aDelegateSequenceBuilder().withDelegateToken("token").build();
     doReturn(null).when(delegateService).getDelegateSequenceConfig(anyString(), anyString(), anyInt());
 
-    Delegate delegate = aDelegate().withDelegateType("ECS").build();
+    Delegate delegate = Delegate.builder().delegateType("ECS").build();
     try {
       delegateService.handleEcsDelegateRegistration(delegate);
       assertTrue(false);
@@ -220,15 +217,10 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
 
     doReturn(config).when(delegateService).getDelegateSequenceConfig(anyString(), anyString(), anyInt());
 
-    Delegate delegate =
-        aDelegate().withDelegateType("ECS").withDelegateRandomToken("token").withSequenceNum("1").build();
+    Delegate delegate = Delegate.builder().delegateType("ECS").delegateRandomToken("token").sequenceNum("1").build();
 
-    Delegate existingDelegate = aDelegate()
-                                    .withDelegateType("ECS")
-                                    .withUuid("12345")
-                                    .withDelegateRandomToken("token")
-                                    .withSequenceNum("1")
-                                    .build();
+    Delegate existingDelegate =
+        Delegate.builder().delegateType("ECS").uuid("12345").delegateRandomToken("token").sequenceNum("1").build();
 
     doReturn(existingDelegate)
         .doReturn(delegate)
@@ -273,8 +265,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
 
     doReturn(config).when(delegateService).getDelegateSequenceConfig(anyString(), anyString(), anyInt());
 
-    Delegate delegate =
-        aDelegate().withDelegateType("ECS").withDelegateRandomToken("token").withSequenceNum("1").build();
+    Delegate delegate = Delegate.builder().delegateType("ECS").delegateRandomToken("token").sequenceNum("1").build();
 
     doReturn(null).when(delegateService).getDelegateUsingSequenceNum(anyString(), anyString(), anyString());
 
@@ -323,8 +314,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
 
     doReturn(config).when(delegateService).getDelegateSequenceConfig(anyString(), anyString(), anyInt());
     doReturn(false).when(delegateService).checkForValidTokenIfPresent(any(Delegate.class));
-    Delegate delegate =
-        aDelegate().withDelegateType("ECS").withDelegateRandomToken("token").withSequenceNum("1").build();
+    Delegate delegate = Delegate.builder().delegateType("ECS").delegateRandomToken("token").sequenceNum("1").build();
 
     doReturn(null).when(delegateService).handleECSRegistrationUsingSeqNumAndToken(any(Delegate.class));
     doReturn(delegate).when(delegateService).registerDelegateWithNewSequenceGeneration(any(Delegate.class));
@@ -348,9 +338,9 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
 
     List<DelegateSequenceConfig> existingDelegateSequenceConfigs = getExistingDelegateSequenceConfigs();
 
-    Delegate delegate = aDelegate().withDelegateType("ECS").withHostName("hostname").build();
+    Delegate delegate = Delegate.builder().delegateType("ECS").hostName("hostname").build();
 
-    doReturn(aDelegate().withUuid("12345").withTags(Arrays.asList("tag1", "tag2")).build())
+    doReturn(Delegate.builder().uuid("12345").tags(Arrays.asList("tag1", "tag2")).build())
         .doReturn(null)
         .when(delegateService)
         .getDelegateUsingSequenceNum(anyString(), anyString(), anyString());
@@ -385,8 +375,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
   public void testSeqNumAndTokenMatchesConfig() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
 
-    Delegate delegate =
-        aDelegate().withDelegateType("ECS").withDelegateRandomToken("token").withSequenceNum("1").build();
+    Delegate delegate = Delegate.builder().delegateType("ECS").delegateRandomToken("token").sequenceNum("1").build();
     DelegateSequenceConfig config = aDelegateSequenceBuilder()
                                         .withDelegateToken("token")
                                         .withSequenceNum(Integer.valueOf(1))
@@ -429,7 +418,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
     doReturn(existingDelegateSequenceConfigs).when(query).asList();
 
     Delegate delegate =
-        aDelegate().withHostName("hostname").withAccountId(ACCOUNT_ID).withDelegateRandomToken("token").build();
+        Delegate.builder().hostName("hostname").accountId(ACCOUNT_ID).delegateRandomToken("token").build();
 
     // existing sequenceConfigs are {.. seqNum = 0 / 1 / 2}, so 3 should picked as new
     DelegateSequenceConfig config = delegateService.addNewDelegateSequenceConfigRecord(delegate);
@@ -482,7 +471,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
 
     doNothing().when(delegateService).initDelegateWithConfigFromExistingDelegate(any(Delegate.class));
 
-    Delegate delegate = aDelegate().withAccountId(ACCOUNT_ID).withHostName("hostname").build();
+    Delegate delegate = Delegate.builder().accountId(ACCOUNT_ID).hostName("hostname").build();
     delegate = delegateService.registerDelegateWithNewSequenceGeneration(delegate);
     assertNotNull(delegate);
     verify(delegateService, times(0)).addNewDelegateSequenceConfigRecord(any(Delegate.class));
@@ -545,7 +534,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
     delegateService = spy(DelegateServiceImpl.class);
     assertEquals("hostname_harness__delegate",
         delegateService.getDelegateHostNameByRemovingSeqNum(
-            aDelegate().withHostName("hostname_harness__delegate_1").build()));
+            Delegate.builder().hostName("hostname_harness__delegate_1").build()));
   }
 
   @Test
@@ -554,7 +543,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
     delegateService = spy(DelegateServiceImpl.class);
     assertEquals("1",
         delegateService.getDelegateSeqNumFromHostName(
-            aDelegate().withHostName("hostname_harness__delegate_1").build()));
+            Delegate.builder().hostName("hostname_harness__delegate_1").build()));
   }
 
   @Test
@@ -569,7 +558,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
         .when(delegateService)
         .getDelegateSequenceConfig(anyString(), anyString(), anyInt());
 
-    Delegate delegate = aDelegate().withHostName("hostname_harness__delegate_1").build();
+    Delegate delegate = Delegate.builder().hostName("hostname_harness__delegate_1").build();
     delegateService.updateExistingDelegateWithSequenceConfigData(delegate);
     assertEquals("1", delegate.getSequenceNum());
     assertEquals("token", delegate.getDelegateRandomToken());

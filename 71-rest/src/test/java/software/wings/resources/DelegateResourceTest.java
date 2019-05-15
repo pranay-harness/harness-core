@@ -11,7 +11,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
@@ -102,9 +101,9 @@ public class DelegateResourceTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldListDelegates() throws Exception {
+  public void shouldListDelegates() {
     PageResponse<Delegate> pageResponse = new PageResponse<>();
-    pageResponse.setResponse(asList(aDelegate().build()));
+    pageResponse.setResponse(asList(Delegate.builder().build()));
     pageResponse.setTotal(1l);
     when(DELEGATE_SERVICE.list(any(PageRequest.class))).thenReturn(pageResponse);
     RestResponse<PageResponse<Delegate>> restResponse =
@@ -121,7 +120,7 @@ public class DelegateResourceTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldGetDelegateStatus() throws Exception {
+  public void shouldGetDelegateStatus() {
     when(DELEGATE_SERVICE.getDelegateStatus(any()))
         .thenReturn(DelegateStatus.builder().publishedVersions(asList("1.0.0")).build());
     RestResponse<DelegateStatus> restResponse = RESOURCES.client()
@@ -134,14 +133,14 @@ public class DelegateResourceTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldRegisterDelegate() throws Exception {
+  public void shouldRegisterDelegate() {
     when(DELEGATE_SERVICE.register(any(Delegate.class)))
         .thenAnswer(invocation -> invocation.getArgumentAt(0, Delegate.class));
     RestResponse<Delegate> restResponse =
         RESOURCES.client()
             .target("/delegates/register?accountId=" + ACCOUNT_ID)
             .request()
-            .post(entity(aDelegate().withUuid(ID_KEY).build(), MediaType.APPLICATION_JSON),
+            .post(entity(Delegate.builder().uuid(ID_KEY).build(), MediaType.APPLICATION_JSON),
                 new GenericType<RestResponse<Delegate>>() {});
 
     ArgumentCaptor<Delegate> captor = ArgumentCaptor.forClass(Delegate.class);
@@ -156,8 +155,8 @@ public class DelegateResourceTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldAddDelegate() throws Exception {
-    Delegate delegate = aDelegate().build();
+  public void shouldAddDelegate() {
+    Delegate delegate = Delegate.builder().build();
 
     when(DELEGATE_SERVICE.add(any(Delegate.class)))
         .thenAnswer(invocation -> invocation.getArgumentAt(0, Delegate.class));
@@ -177,8 +176,8 @@ public class DelegateResourceTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldUpdateDelegate() throws Exception {
-    Delegate delegate = aDelegate().withUuid(ID_KEY).build();
+  public void shouldUpdateDelegate() {
+    Delegate delegate = Delegate.builder().uuid(ID_KEY).build();
 
     when(DELEGATE_SERVICE.update(any(Delegate.class)))
         .thenAnswer(invocation -> invocation.getArgumentAt(0, Delegate.class));
@@ -200,9 +199,9 @@ public class DelegateResourceTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldUpdateDelegateDescription() throws Exception {
+  public void shouldUpdateDelegateDescription() {
     final String newDesc = "newDescription";
-    Delegate delegate = aDelegate().withUuid(ID_KEY).withAccountId(ACCOUNT_ID).withDescription(newDesc).build();
+    Delegate delegate = Delegate.builder().uuid(ID_KEY).accountId(ACCOUNT_ID).description(newDesc).build();
 
     when(DELEGATE_SERVICE.updateDescription(ACCOUNT_ID, ID_KEY, newDesc)).thenReturn(delegate);
     RestResponse<Delegate> restResponse =
@@ -220,7 +219,7 @@ public class DelegateResourceTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldDelete() throws Exception {
+  public void shouldDelete() {
     Response restResponse =
         RESOURCES.client().target("/delegates/" + ID_KEY + "?accountId=" + ACCOUNT_ID).request().delete();
 
@@ -229,8 +228,8 @@ public class DelegateResourceTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldGet() throws Exception {
-    Delegate delegate = aDelegate().withUuid(ID_KEY).build();
+  public void shouldGet() {
+    Delegate delegate = Delegate.builder().uuid(ID_KEY).build();
 
     when(DELEGATE_SERVICE.get(ACCOUNT_ID, ID_KEY, true)).thenReturn(delegate);
     RestResponse<Delegate> restResponse = RESOURCES.client()
@@ -244,7 +243,7 @@ public class DelegateResourceTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldGetDownloadUrl() throws Exception {
+  public void shouldGetDownloadUrl() {
     when(httpServletRequest.getRequestURI()).thenReturn("/delegates/downloadUrl");
     when(DOWNLOAD_TOKEN_SERVICE.createDownloadToken("delegate." + ACCOUNT_ID)).thenReturn("token");
     RestResponse<Map<String, String>> restResponse = RESOURCES.client()
