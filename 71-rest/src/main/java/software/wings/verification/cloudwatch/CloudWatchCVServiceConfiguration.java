@@ -1,6 +1,8 @@
 package software.wings.verification.cloudwatch;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.reinert.jjschema.Attributes;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,4 +35,21 @@ public class CloudWatchCVServiceConfiguration extends CVConfiguration {
   @Attributes(title = "EC2 Metrics") private List<CloudWatchMetric> ec2Metrics;
 
   @Attributes(title = "Region") private String region;
+
+  /**
+   * The type Yaml.
+   */
+  @Data
+  @JsonPropertyOrder({"type", "harnessApiVersion"})
+  @Builder
+  @AllArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
+  public static final class CloudWatchCVConfigurationYaml extends CVConfigurationYaml {
+    private Map<String, List<CloudWatchMetric>> loadBalancerMetrics;
+    private Map<String, List<CloudWatchMetric>> ecsMetrics;
+    private Map<String, List<CloudWatchMetric>> lambdaFunctionsMetrics;
+    private List<String> ec2InstanceNames;
+    private List<CloudWatchMetric> ec2Metrics;
+    private String region;
+  }
 }
