@@ -87,7 +87,12 @@ public class MarketoHelper {
     leadBuilderWithEmail.email(email).firstName(getFirstName(userName, email)).lastName(getLastName(userName, email));
 
     if (account != null) {
-      leadBuilderWithEmail.company(account.getCompanyName()).Harness_Account_ID__c_lead(account.getUuid());
+      if (isNotEmpty(oauthProvider)) {
+        // In case of sso, make the company name null because it's populated by harness using email.
+        leadBuilderWithEmail.company(null).Harness_Account_ID__c_lead(account.getUuid());
+      } else {
+        leadBuilderWithEmail.company(account.getCompanyName()).Harness_Account_ID__c_lead(account.getUuid());
+      }
       LicenseInfo licenseInfo = account.getLicenseInfo();
       if (licenseInfo != null) {
         leadBuilderWithEmail.Free_Trial_Status__c(licenseInfo.getAccountStatus())
@@ -124,8 +129,12 @@ public class MarketoHelper {
     leadBuilderWithId.email(email).firstName(getFirstName(userName, email)).lastName(getLastName(userName, email));
 
     if (account != null) {
-      leadBuilderWithId.company(account.getCompanyName()).Harness_Account_ID__c_lead(account.getUuid());
-
+      if (isNotEmpty(oauthProvider)) {
+        // In case of sso, make the company name null because it's populated by harness using email.
+        leadBuilderWithId.company(null).Harness_Account_ID__c_lead(account.getUuid());
+      } else {
+        leadBuilderWithId.company(account.getCompanyName()).Harness_Account_ID__c_lead(account.getUuid());
+      }
       LicenseInfo licenseInfo = account.getLicenseInfo();
       if (licenseInfo != null) {
         leadBuilderWithId.Free_Trial_Status__c(licenseInfo.getAccountStatus())
@@ -221,7 +230,8 @@ public class MarketoHelper {
     String[] words = name.split(" ");
     int numberOfWords = words.length;
     if (numberOfWords == 1) {
-      return words[0];
+      // if the name doesn't contains any last name, send null instead of sending first name.
+      return null;
     } else {
       return words[numberOfWords - 1];
     }
