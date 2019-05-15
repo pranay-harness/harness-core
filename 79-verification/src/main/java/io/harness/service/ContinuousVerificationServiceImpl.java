@@ -1083,7 +1083,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         ContinuousVerificationAlertData.builder()
             .riskScore(riskScore)
             .mlAnalysisType(MLAnalysisType.TIME_SERIES)
-            .analysisStartTime(TimeUnit.MINUTES.toMillis(analysisMinute - CRON_POLL_INTERVAL_IN_MINUTES + 1))
+            .analysisStartTime(TimeUnit.MINUTES.toMillis(analysisMinute - CRON_POLL_INTERVAL_IN_MINUTES) + 1)
             .analysisEndTime(TimeUnit.MINUTES.toMillis(analysisMinute))
             .build()));
   }
@@ -1117,7 +1117,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 .mlAnalysisType(MLAnalysisType.LOG_ML)
                 .logAnomaly(splunkAnalysisCluster.getText())
                 .hosts(analysisClusterMap.keySet())
-                .analysisStartTime(TimeUnit.MINUTES.toMillis(analysisMinute - CRON_POLL_INTERVAL_IN_MINUTES + 1))
+                .analysisStartTime(TimeUnit.MINUTES.toMillis(analysisMinute - CRON_POLL_INTERVAL_IN_MINUTES) + 1)
                 .analysisEndTime(TimeUnit.MINUTES.toMillis(analysisMinute))
                 .build()));
       }
