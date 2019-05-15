@@ -261,8 +261,10 @@ public class ContainerInstanceHandler extends InstanceHandler {
     Map<String, K8sPod> currentPodsMap = new HashMap<>();
     Map<String, Instance> dbPodMap = new HashMap<>();
 
-    currentPods.forEach(podInfo -> currentPodsMap.put(podInfo.getName(), podInfo));
-    instancesInDB.forEach(podInstance -> dbPodMap.put(podInstance.getPodInstanceKey().getPodName(), podInstance));
+    currentPods.forEach(podInfo -> currentPodsMap.put(podInfo.getName() + podInfo.getNamespace(), podInfo));
+    instancesInDB.forEach(podInstance
+        -> dbPodMap.put(podInstance.getPodInstanceKey().getPodName() + podInstance.getPodInstanceKey().getNamespace(),
+            podInstance));
 
     SetView<String> instancesToBeAdded = Sets.difference(currentPodsMap.keySet(), dbPodMap.keySet());
     SetView<String> instancesToBeDeleted = Sets.difference(dbPodMap.keySet(), currentPodsMap.keySet());
