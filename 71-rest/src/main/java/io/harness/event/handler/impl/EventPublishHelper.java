@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.Delegate;
+import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.EntityType;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
@@ -405,9 +406,9 @@ public class EventPublishHelper {
 
   private boolean isFirstDelegateInAccount(String delegateId, String accountId) {
     PageRequest<Delegate> pageRequest = aPageRequest()
-                                            .addFilter("accountId", Operator.EQ, accountId)
-                                            .addOrder(Delegate.CREATED_AT_KEY, OrderType.ASC)
-                                            .addFieldsIncluded("_id")
+                                            .addFilter(DelegateKeys.accountId, Operator.EQ, accountId)
+                                            .addOrder(DelegateKeys.createdAt, OrderType.ASC)
+                                            .addFieldsIncluded(DelegateKeys.uuid)
                                             .withLimit("1")
                                             .build();
     PageResponse<Delegate> pageResponse = delegateService.list(pageRequest);

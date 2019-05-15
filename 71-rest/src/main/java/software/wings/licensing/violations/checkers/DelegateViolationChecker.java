@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
 import software.wings.beans.AccountType;
-import software.wings.beans.Delegate;
+import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.FeatureUsageLimitExceededViolation;
 import software.wings.beans.FeatureViolation;
 import software.wings.licensing.violations.FeatureViolationChecker;
@@ -42,7 +42,7 @@ public class DelegateViolationChecker implements FeatureViolationChecker {
   public List<FeatureViolation> getViolationsForCommunityAccount(@NotNull String accountId) {
     int currentDelegateCount =
         delegateService
-            .list(PageRequestBuilder.aPageRequest().addFilter(Delegate.ACCOUNT_ID_KEY, Operator.EQ, accountId).build())
+            .list(PageRequestBuilder.aPageRequest().addFilter(DelegateKeys.accountId, Operator.EQ, accountId).build())
             .size();
 
     int allowedNumberOfDelegates = maxDelegatesAllowed.get(AccountType.COMMUNITY);

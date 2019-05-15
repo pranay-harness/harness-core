@@ -8,7 +8,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.CV_CONFIG_ID;
@@ -266,13 +265,13 @@ public class EventPublishHelperTest extends WingsBaseTest {
       eventPublishHelper.publishInstalledDelegateEvent(ACCOUNT_ID, DELEGATE_ID);
       verify(eventPublisher, never()).publishEvent(any(Event.class));
 
-      Delegate delegate = aDelegate().withUuid("invalid").build();
+      Delegate delegate = Delegate.builder().uuid("invalid").build();
       when(delegateService.list(any(PageRequest.class)))
           .thenReturn(PageResponseBuilder.aPageResponse().withResponse(Arrays.asList(delegate)).withTotal(1).build());
       eventPublishHelper.publishInstalledDelegateEvent(ACCOUNT_ID, DELEGATE_ID);
       verify(eventPublisher, never()).publishEvent(any(Event.class));
 
-      delegate = aDelegate().withUuid(DELEGATE_ID).build();
+      delegate = Delegate.builder().uuid(DELEGATE_ID).build();
       when(delegateService.list(any(PageRequest.class)))
           .thenReturn(PageResponseBuilder.aPageResponse().withResponse(Arrays.asList(delegate)).withTotal(1).build());
       eventPublishHelper.publishInstalledDelegateEvent(ACCOUNT_ID, DELEGATE_ID);

@@ -2,7 +2,6 @@ package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.Constants.DELEGATE_DIR;
 import static software.wings.common.Constants.DOCKER_DELEGATE;
 import static software.wings.common.Constants.ECS_DELEGATE;
@@ -179,7 +178,6 @@ public class DelegateResource {
       @QueryParam("accountId") @NotEmpty String accountId, Delegate delegate) {
     delegate.setAccountId(accountId);
     delegate.setUuid(delegateId);
-    delegate.setAppId(GLOBAL_APP_ID);
 
     Delegate existingDelegate = delegateService.get(accountId, delegateId, true);
     if (existingDelegate != null) {
@@ -303,9 +301,6 @@ public class DelegateResource {
   @ExceptionMetered
   public RestResponse<Delegate> register(@QueryParam("accountId") @NotEmpty String accountId, Delegate delegate) {
     delegate.setAccountId(accountId);
-    if (delegate.getAppId() == null) {
-      delegate.setAppId(GLOBAL_APP_ID);
-    }
     long startTime = System.currentTimeMillis();
     Delegate register = delegateService.register(delegate);
     logger.info("Delegate registration took {} in ms", System.currentTimeMillis() - startTime);

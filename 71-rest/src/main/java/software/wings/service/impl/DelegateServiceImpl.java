@@ -30,7 +30,6 @@ import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.DelegateConnection.defaultExpiryTimeInMinutes;
 import static software.wings.beans.DelegateSequenceConfig.Builder.aDelegateSequenceBuilder;
 import static software.wings.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent;
@@ -235,15 +234,14 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   private final Map<String, Object> syncTaskWaitMap = new ConcurrentHashMap<>();
 
-  private LoadingCache<String, String> delegateVersionCache =
-      CacheBuilder.newBuilder()
-          .maximumSize(10000)
-          .expireAfterWrite(1, TimeUnit.MINUTES)
-          .build(new CacheLoader<String, String>() {
-            public String load(String accountId) {
-              return fetchAccountDelegateMetadataFromStorage(accountId);
-            }
-          });
+  private LoadingCache<String, String> delegateVersionCache = CacheBuilder.newBuilder()
+                                                                  .maximumSize(10000)
+                                                                  .expireAfterWrite(1, TimeUnit.MINUTES)
+                                                                  .build(new CacheLoader<String, String>() {
+                                                                    public String load(String accountId) {
+                                                                      return fetchDelegateMetadataFromStorage();
+                                                                    }
+                                                                  });
 
   private LoadingCache<String, Optional<Delegate>> delegateCache =
       CacheBuilder.newBuilder()
@@ -251,7 +249,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
           .expireAfterWrite(1, TimeUnit.MINUTES)
           .build(new CacheLoader<String, Optional<Delegate>>() {
             public Optional<Delegate> load(String delegateId) throws NotFoundException {
-              return Optional.ofNullable(wingsPersistence.createQuery(Delegate.class).filter(ID_KEY, delegateId).get());
+              return Optional.ofNullable(
+                  wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.uuid, delegateId).get());
             }
           });
 
@@ -265,9 +264,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       if (isNotEmpty(syncTaskWaitMap)) {
         List<String> completedSyncTasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
                                               .filter(DelegateTaskKeys.async, false)
-                                              .field("status")
+                                              .field(DelegateTaskKeys.status)
                                               .in(TASK_COMPLETED_STATUSES)
-                                              .field(ID_KEY)
+                                              .field(DelegateTaskKeys.uuid)
                                               .in(syncTaskWaitMap.keySet())
                                               .asKeyList()
                                               .stream()
@@ -300,7 +299,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Override
   public List<String> getKubernetesDelegateNames(String accountId) {
     return wingsPersistence.createQuery(Delegate.class)
-        .filter(Delegate.ACCOUNT_ID_KEY, accountId)
+        .filter(DelegateKeys.accountId, accountId)
         .field(DelegateKeys.delegateName)
         .exists()
         .project(DelegateKeys.delegateName, true)
@@ -315,8 +314,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Override
   public Set<String> getAllDelegateTags(String accountId) {
     List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class)
-                                   .filter(Delegate.ACCOUNT_ID_KEY, accountId)
-                                   .field("tags")
+                                   .filter(DelegateKeys.accountId, accountId)
+                                   .field(DelegateKeys.tags)
                                    .exists()
                                    .asList();
     if (isNotEmpty(delegates)) {
@@ -341,7 +340,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   public DelegateStatus getDelegateStatus(String accountId) {
     DelegateConfiguration delegateConfiguration = accountService.getDelegateConfiguration(accountId);
     List<Delegate> delegates =
-        wingsPersistence.createQuery(Delegate.class).filter(Delegate.ACCOUNT_ID_KEY, accountId).asList();
+        wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.accountId, accountId).asList();
     List<DelegateConnection> delegateConnections = wingsPersistence.createQuery(DelegateConnection.class)
                                                        .filter(DelegateConnectionKeys.accountId, accountId)
                                                        .project(DelegateConnectionKeys.delegateId, true)
@@ -417,7 +416,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       return updateAllDelegatesIfECSType(delegate, updateOperations, "ALL");
     } else {
       logger.info("Updating delegate : {}", delegate.getUuid());
-      if (!isDelegateWithPollingEnabled(delegate)) {
+      if (isDelegateWithoutPollingEnabled(delegate)) {
         // This updates delegates, as well as delegateConnection and taksBeingExecuted on delegate
         return updateDelegate(delegate, updateOperations);
       } else {
@@ -429,22 +428,22 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   private UpdateOperations<Delegate> getDelegateUpdateOperations(Delegate delegate) {
     UpdateOperations<Delegate> updateOperations = wingsPersistence.createUpdateOperations(Delegate.class);
-    setUnset(updateOperations, "ip", delegate.getIp());
-    setUnset(updateOperations, "status", delegate.getStatus());
+    setUnset(updateOperations, DelegateKeys.ip, delegate.getIp());
+    setUnset(updateOperations, DelegateKeys.status, delegate.getStatus());
     setUnset(updateOperations, DelegateKeys.lastHeartBeat, delegate.getLastHeartBeat());
-    setUnset(updateOperations, "connected", delegate.isConnected());
-    setUnset(updateOperations, "version", delegate.getVersion());
-    setUnset(updateOperations, "description", delegate.getDescription());
-    setUnset(updateOperations, "delegateProfileId", delegate.getDelegateProfileId());
+    setUnset(updateOperations, DelegateKeys.connected, delegate.isConnected());
+    setUnset(updateOperations, DelegateKeys.version, delegate.getVersion());
+    setUnset(updateOperations, DelegateKeys.description, delegate.getDescription());
+    setUnset(updateOperations, DelegateKeys.delegateProfileId, delegate.getDelegateProfileId());
     return updateOperations;
   }
   @Override
   public Delegate updateDescription(String accountId, String delegateId, String newDescription) {
     logger.info("Updating delegate : {} with new description", delegateId);
     wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
-                                .filter(Delegate.ACCOUNT_ID_KEY, accountId)
-                                .filter(ID_KEY, delegateId),
-        wingsPersistence.createUpdateOperations(Delegate.class).set("description", newDescription));
+                                .filter(DelegateKeys.accountId, accountId)
+                                .filter(DelegateKeys.uuid, delegateId),
+        wingsPersistence.createUpdateOperations(Delegate.class).set(DelegateKeys.description, newDescription));
 
     return get(accountId, delegateId, true);
   }
@@ -452,11 +451,11 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Override
   public Delegate updateHeartbeatForDelegateWithPollingEnabled(Delegate delegate) {
     wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
-                                .filter(Delegate.ACCOUNT_ID_KEY, delegate.getAccountId())
-                                .filter(ID_KEY, delegate.getUuid()),
+                                .filter(DelegateKeys.accountId, delegate.getAccountId())
+                                .filter(DelegateKeys.uuid, delegate.getUuid()),
         wingsPersistence.createUpdateOperations(Delegate.class)
-            .set("lastHeartBeat", System.currentTimeMillis())
-            .set("connected", true));
+            .set(DelegateKeys.lastHeartBeat, System.currentTimeMillis())
+            .set(DelegateKeys.connected, true));
     touchExecutingTasks(delegate);
 
     Delegate existingDelegate = get(delegate.getAccountId(), delegate.getUuid(), false);
@@ -471,7 +470,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Override
   public Delegate updateTags(Delegate delegate) {
     UpdateOperations<Delegate> updateOperations = wingsPersistence.createUpdateOperations(Delegate.class);
-    setUnset(updateOperations, "tags", delegate.getTags());
+    setUnset(updateOperations, DelegateKeys.tags, delegate.getTags());
     logger.info("Updating delegate tags : Delegate:{} tags:{}", delegate.getUuid(), delegate.getTags());
 
     if (ECS.equals(delegate.getDelegateType())) {
@@ -489,8 +488,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Override
   public Delegate updateScopes(Delegate delegate) {
     UpdateOperations<Delegate> updateOperations = wingsPersistence.createUpdateOperations(Delegate.class);
-    setUnset(updateOperations, "includeScopes", delegate.getIncludeScopes());
-    setUnset(updateOperations, "excludeScopes", delegate.getExcludeScopes());
+    setUnset(updateOperations, DelegateKeys.includeScopes, delegate.getIncludeScopes());
+    setUnset(updateOperations, DelegateKeys.excludeScopes, delegate.getExcludeScopes());
 
     logger.info("Updating delegate scopes : Delegate:{} includeScopes:{} excludeScopes:{}", delegate.getUuid(),
         delegate.getIncludeScopes(), delegate.getExcludeScopes());
@@ -510,7 +509,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     Delegate previousDelegate = get(delegate.getAccountId(), delegate.getUuid(), false);
 
     if (previousDelegate != null && isBlank(delegate.getDelegateProfileId())) {
-      updateOperations.unset("profileResult").unset("profileError").unset("profileExecutedAt");
+      updateOperations.unset(DelegateKeys.profileResult)
+          .unset(DelegateKeys.profileError)
+          .unset(DelegateKeys.profileExecutedAt);
 
       DelegateProfileErrorAlert alertData = DelegateProfileErrorAlert.builder()
                                                 .accountId(delegate.getAccountId())
@@ -529,8 +530,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     }
 
     wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
-                                .filter(Delegate.ACCOUNT_ID_KEY, delegate.getAccountId())
-                                .filter(ID_KEY, delegate.getUuid()),
+                                .filter(DelegateKeys.accountId, delegate.getAccountId())
+                                .filter(DelegateKeys.uuid, delegate.getUuid()),
         updateOperations);
     touchExecutingTasks(delegate);
 
@@ -598,8 +599,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     return substringBefore(delegateMatadata, " ").trim();
   }
 
-  private String fetchAccountDelegateMetadataFromStorage(String acccountId) {
-    // TODO:: Specific restriction for account can be handled here.
+  private String fetchDelegateMetadataFromStorage() {
     String delegateMetadataUrl = mainConfiguration.getDelegateMetadataUrl().trim();
     try {
       logger.info("Fetching delegate metadata from storage: {}", delegateMetadataUrl);
@@ -681,7 +681,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       ImmutableMap.Builder<String, String> params = ImmutableMap.<String, String>builder()
                                                         .put("delegateDockerImage", delegateDockerImage)
-                                                        .put(Delegate.ACCOUNT_ID_KEY, accountId)
+                                                        .put("accountId", accountId)
                                                         .put("accountSecret", account.getAccountKey())
                                                         .put("hexkey", hexkey)
                                                         .put("upgradeVersion", latestVersion)
@@ -695,7 +695,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                                         .put("kubectlVersion", mainConfiguration.getKubectlVersion())
                                                         .put("kubernetesAccountLabel", getAccountIdentifier(accountId));
       if (isNotBlank(delegateName)) {
-        params.put(DelegateKeys.delegateName, delegateName);
+        params.put("delegateName", delegateName);
       }
       if (delegateProfile != null) {
         params.put("delegateProfile", delegateProfile);
@@ -1011,7 +1011,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     Map<String, String> map = new HashMap<>(scriptParams);
     // AWSVPC mode, hostname must be null
     if (awsVpcMode) {
-      map.put("networkModeForTask", new StringBuilder(64).append("\"networkMode\": ").append("\"awsvpc\",").toString());
+      map.put("networkModeForTask", "\"networkMode\": \"awsvpc\",");
       map.put("hostnameForDelegate", StringUtils.EMPTY);
     } else {
       map.put("networkModeForTask", StringUtils.EMPTY);
@@ -1019,14 +1019,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         // hostname not provided, use as null, so dockerId will become hostname in ecs
         hostname = HARNESS_ECS_DELEGATE;
       }
-      map.put("hostnameForDelegate",
-          new StringBuilder(128).append("\"hostname\": \"").append(hostname).append("\",").toString());
+      map.put("hostnameForDelegate", "\"hostname\": \"" + hostname + "\",");
     }
 
-    map.put("delegateGroupName", new StringBuilder(128).append(delegateGroupName).toString());
+    map.put("delegateGroupName", delegateGroupName);
 
-    scriptParams = ImmutableMap.copyOf(map);
-    return scriptParams;
+    return ImmutableMap.copyOf(map);
   }
 
   @Override
@@ -1053,7 +1051,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     logger.info("Delegate saved: {}", savedDelegate);
 
     // When polling is enabled for delegate, do not perform these event publishing
-    if (!isDelegateWithPollingEnabled(delegate)) {
+    if (isDelegateWithoutPollingEnabled(delegate)) {
       eventEmitter.send(Channel.DELEGATES,
           anEvent().withOrgId(delegate.getAccountId()).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
       assignDelegateService.clearConnectionResults(delegate.getAccountId());
@@ -1065,24 +1063,23 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   private long getTotalNumberOfDelegates(String accountId) {
-    return wingsPersistence.createQuery(Delegate.class).filter(Delegate.ACCOUNT_ID_KEY, accountId).count();
+    return wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.accountId, accountId).count();
   }
 
   private Delegate saveDelegate(Delegate delegate) {
     logger.info("Adding delegate {} for account {}", delegate.getHostName(), delegate.getAccountId());
-    delegate.setAppId(GLOBAL_APP_ID);
-    Delegate savedDelegate = wingsPersistence.saveAndGet(Delegate.class, delegate);
-    logger.info("Delegate saved: {}", savedDelegate);
-    return savedDelegate;
+    wingsPersistence.save(delegate);
+    logger.info("Delegate saved: {}", delegate);
+    return delegate;
   }
 
   @Override
   public void delete(String accountId, String delegateId) {
     logger.info("Deleting delegate: {}", delegateId);
     Delegate existingDelegate = wingsPersistence.createQuery(Delegate.class)
-                                    .filter(Delegate.ACCOUNT_ID_KEY, accountId)
-                                    .filter(ID_KEY, delegateId)
-                                    .project("ip", true)
+                                    .filter(DelegateKeys.accountId, accountId)
+                                    .filter(DelegateKeys.uuid, delegateId)
+                                    .project(DelegateKeys.ip, true)
                                     .project(DelegateKeys.hostName, true)
                                     .get();
 
@@ -1103,33 +1100,18 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     }
 
     wingsPersistence.delete(wingsPersistence.createQuery(Delegate.class)
-                                .filter(Delegate.ACCOUNT_ID_KEY, accountId)
-                                .filter(ID_KEY, delegateId));
+                                .filter(DelegateKeys.accountId, accountId)
+                                .filter(DelegateKeys.uuid, delegateId));
   }
 
   public void retainOnlySelectedDelegatesAndDeleteRest(String accountId, List<String> delegatesToRetain) {
     if (EmptyPredicate.isNotEmpty(delegatesToRetain)) {
       wingsPersistence.delete(wingsPersistence.createQuery(Delegate.class)
-                                  .filter(Delegate.ACCOUNT_ID_KEY, accountId)
-                                  .field(Delegate.ID_KEY)
+                                  .filter(DelegateKeys.accountId, accountId)
+                                  .field(DelegateKeys.uuid)
                                   .notIn(delegatesToRetain));
     } else {
       logger.info("List of delegates to retain is empty. In order to delete delegates, pass a list of delegate IDs");
-    }
-  }
-
-  private void deleteDelegateSequenceConfig(String accountId, Delegate existingDelegate) {
-    try {
-      if (existingDelegate != null && ECS.equals(existingDelegate.getDelegateType())
-          && existingDelegate.getSequenceNum() != null) {
-        wingsPersistence.delete(
-            wingsPersistence.createQuery(DelegateSequenceConfig.class)
-                .filter(DelegateSequenceConfigKeys.accountId, accountId)
-                .filter(DelegateSequenceConfigKeys.hostName, existingDelegate.getHostName())
-                .filter(DelegateSequenceConfigKeys.sequenceNum, Integer.parseInt(existingDelegate.getSequenceNum())));
-      }
-    } catch (Exception e) {
-      logger.error("Failed to clear delegateSequenceConfig for: " + existingDelegate);
     }
   }
 
@@ -1137,7 +1119,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   public Delegate register(Delegate delegate) {
     if (licenseService.isAccountDeleted(delegate.getAccountId())) {
       broadcasterFactory.lookup("/stream/delegate/" + delegate.getAccountId(), true).broadcast(SELF_DESTRUCT);
-      return aDelegate().withUuid(SELF_DESTRUCT).build();
+      return Delegate.builder().uuid(SELF_DESTRUCT).build();
     }
 
     logger.info("Registering delegate for account {}: Hostname: {} IP: {}", delegate.getAccountId(),
@@ -1147,15 +1129,16 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       return handleEcsDelegateRequest(delegate);
     } else {
       Query<Delegate> delegateQuery = wingsPersistence.createQuery(Delegate.class)
-                                          .filter(Delegate.ACCOUNT_ID_KEY, delegate.getAccountId())
+                                          .filter(DelegateKeys.accountId, delegate.getAccountId())
                                           .filter(DelegateKeys.hostName, delegate.getHostName());
       // For delegates running in a kubernetes cluster we include lowercase account ID in the hostname to identify it.
       // We ignore IP address because that can change with every restart of the pod.
       if (!delegate.getHostName().contains(getAccountIdentifier(delegate.getAccountId()))) {
-        delegateQuery.filter("ip", delegate.getIp());
+        delegateQuery.filter(DelegateKeys.ip, delegate.getIp());
       }
 
-      Delegate existingDelegate = delegateQuery.project("status", true).project("delegateProfileId", true).get();
+      Delegate existingDelegate =
+          delegateQuery.project(DelegateKeys.status, true).project(DelegateKeys.delegateProfileId, true).get();
       return upsertDelegateOperation(existingDelegate, delegate);
     }
   }
@@ -1180,7 +1163,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     }
 
     // Not needed to be done when polling is enabled for delegate
-    if (!isDelegateWithPollingEnabled(delegate)) {
+    if (isDelegateWithoutPollingEnabled(delegate)) {
       // Broadcast Message containing, DelegateId and SeqNum (if applicable)
       StringBuilder message = new StringBuilder(128).append("[X]").append(delegate.getUuid());
       updateBroadcastMessageIfEcsDelegate(message, delegate, registeredDelegate);
@@ -1213,14 +1196,14 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @VisibleForTesting
   DelegateSequenceConfig getDelegateSequenceConfig(String accountId, String hostName, Integer seqNum) {
     Query<DelegateSequenceConfig> delegateSequenceQuery = wingsPersistence.createQuery(DelegateSequenceConfig.class)
-                                                              .filter(DelegateSequenceConfig.ACCOUNT_ID_KEY, accountId)
+                                                              .filter(DelegateSequenceConfigKeys.accountId, accountId)
                                                               .filter(DelegateSequenceConfigKeys.hostName, hostName);
 
     if (seqNum != null) {
       delegateSequenceQuery.filter(DelegateSequenceConfigKeys.sequenceNum, seqNum);
     }
 
-    return delegateSequenceQuery.project(DelegateSequenceConfig.ACCOUNT_ID_KEY, true)
+    return delegateSequenceQuery.project(DelegateSequenceConfigKeys.accountId, true)
         .project(DelegateSequenceConfigKeys.sequenceNum, true)
         .project(DelegateSequenceConfigKeys.hostName, true)
         .project(DelegateSequenceConfigKeys.delegateToken, true)
@@ -1291,12 +1274,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     String previousProfileResult = delegate.getProfileResult();
 
     wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
-                                .filter(Delegate.ACCOUNT_ID_KEY, accountId)
-                                .filter(ID_KEY, delegateId),
+                                .filter(DelegateKeys.accountId, accountId)
+                                .filter(DelegateKeys.uuid, delegateId),
         wingsPersistence.createUpdateOperations(Delegate.class)
-            .set("profileResult", fileId)
-            .set("profileError", error)
-            .set("profileExecutedAt", clock.millis()));
+            .set(DelegateKeys.profileResult, fileId)
+            .set(DelegateKeys.profileError, error)
+            .set(DelegateKeys.profileExecutedAt, clock.millis()));
 
     if (isNotBlank(previousProfileResult)) {
       fileService.deleteFile(previousProfileResult, FileBucket.PROFILE_RESULTS);
@@ -1455,8 +1438,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     }
 
     List<String> activeDelegates = wingsPersistence.createQuery(Delegate.class)
-                                       .filter(Delegate.ACCOUNT_ID_KEY, task.getAccountId())
-                                       .field("lastHeartBeat")
+                                       .filter(DelegateKeys.accountId, task.getAccountId())
+                                       .field(DelegateKeys.lastHeartBeat)
                                        .greaterThan(clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT)
                                        .asKeyList()
                                        .stream()
@@ -1620,8 +1603,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   private void setValidationStarted(String delegateId, DelegateTask delegateTask) {
     logger.info("Delegate {} to validate task {} {}", delegateId, delegateTask.getUuid(),
         delegateTask.isAsync() ? "(async)" : "(sync)");
-    UpdateOperations<DelegateTask> updateOperations =
-        wingsPersistence.createUpdateOperations(DelegateTask.class).addToSet("validatingDelegateIds", delegateId);
+    UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
+                                                          .addToSet(DelegateTaskKeys.validatingDelegateIds, delegateId);
     Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
                                           .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
                                           .filter(DelegateTaskKeys.status, QUEUED)
@@ -1630,8 +1613,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                           .filter(ID_KEY, delegateTask.getUuid());
     wingsPersistence.update(updateQuery, updateOperations);
 
-    wingsPersistence.update(updateQuery.field("validationStartedAt").doesNotExist(),
-        wingsPersistence.createUpdateOperations(DelegateTask.class).set("validationStartedAt", clock.millis()));
+    wingsPersistence.update(updateQuery.field(DelegateTaskKeys.validationStartedAt).doesNotExist(),
+        wingsPersistence.createUpdateOperations(DelegateTask.class)
+            .set(DelegateTaskKeys.validationStartedAt, clock.millis()));
   }
 
   private boolean isValidationComplete(DelegateTask delegateTask) {
@@ -1652,8 +1636,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   private void clearFromValidationCache(DelegateTask delegateTask) {
     UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
-                                                          .unset("validatingDelegateIds")
-                                                          .unset("validationCompleteDelegateIds");
+                                                          .unset(DelegateTaskKeys.validatingDelegateIds)
+                                                          .unset(DelegateTaskKeys.validationCompleteDelegateIds);
     Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
                                           .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
                                           .filter(DelegateTaskKeys.status, QUEUED)
@@ -1769,7 +1753,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       wingsPersistence.update(taskQuery,
           wingsPersistence.createUpdateOperations(DelegateTask.class)
               .set(DelegateTaskKeys.notifyResponse, KryoUtils.asBytes(response.getResponse()))
-              .set("status", error));
+              .set(DelegateTaskKeys.status, error));
     }
   }
 
@@ -1788,7 +1772,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                     .project(DelegateTaskKeys.data_parameters, false);
     UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
                                                           .set(DelegateTaskKeys.delegateId, delegateId)
-                                                          .set("status", STARTED);
+                                                          .set(DelegateTaskKeys.status, STARTED);
     DelegateTask task =
         wingsPersistence.findAndModifySystemData(query, updateOperations, HPersistence.returnNewOptions);
     // If the task wasn't updated because delegateId already exists then query for the task with the delegateId in case
@@ -1859,13 +1843,13 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
           wingsPersistence.update(taskQuery,
               wingsPersistence.createUpdateOperations(DelegateTask.class)
                   .unset(DelegateTaskKeys.delegateId)
-                  .unset("validationStartedAt")
-                  .unset("lastBroadcastAt")
-                  .unset("validatingDelegateIds")
-                  .unset("validationCompleteDelegateIds")
-                  .set("broadcastCount", 1)
-                  .set("status", QUEUED)
-                  .addToSet("alreadyTriedDelegates", delegateId));
+                  .unset(DelegateTaskKeys.validationStartedAt)
+                  .unset(DelegateTaskKeys.lastBroadcastAt)
+                  .unset(DelegateTaskKeys.validatingDelegateIds)
+                  .unset(DelegateTaskKeys.validationCompleteDelegateIds)
+                  .set(DelegateTaskKeys.broadcastCount, 1)
+                  .set(DelegateTaskKeys.status, QUEUED)
+                  .addToSet(DelegateTaskKeys.alreadyTriedDelegates, delegateId));
           return;
         } else {
           logger.info("Task {} has been tried on all the connected delegates. Proceeding with error.", taskId);
@@ -1931,8 +1915,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   private void endTask(
       String accountId, String delegateTaskId, Query<DelegateTask> delegateTaskQuery, DelegateTask.Status error) {
-    wingsPersistence.update(
-        delegateTaskQuery, wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", error));
+    wingsPersistence.update(delegateTaskQuery,
+        wingsPersistence.createUpdateOperations(DelegateTask.class).set(DelegateTaskKeys.status, error));
 
     broadcasterFactory.lookup("/stream/delegate/" + accountId, true)
         .broadcast(aDelegateTaskAbortEvent().withAccountId(accountId).withDelegateTaskId(delegateTaskId).build());
@@ -1943,8 +1927,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                                 .filter(ID_KEY, delegateTaskId)
                                                 .filter(DelegateTaskKeys.accountId, accountId)
                                                 .filter(DelegateTaskKeys.async, true);
-    delegateTaskQuery.or(
-        delegateTaskQuery.criteria("status").equal(QUEUED), delegateTaskQuery.criteria("status").equal(STARTED));
+    delegateTaskQuery.or(delegateTaskQuery.criteria(DelegateTaskKeys.status).equal(QUEUED),
+        delegateTaskQuery.criteria(DelegateTaskKeys.status).equal(STARTED));
     return delegateTaskQuery;
   }
 
@@ -1972,7 +1956,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                                 .doesNotExist();
 
     if (featureFlagService.isEnabled(DELEGATE_TASK_VERSIONING, accountId)) {
-      delegateTaskQuery.filter("version", versionInfoManager.getVersionInfo().getVersion());
+      delegateTaskQuery.filter(DelegateTaskKeys.version, versionInfoManager.getVersionInfo().getVersion());
     }
 
     return delegateTaskQuery.asKeyList()
@@ -2061,7 +2045,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
    */
   @VisibleForTesting
   Delegate handleEcsDelegateKeepAlivePacket(Delegate delegate) {
-    logger.info("Hadling Keep alive packet ");
+    logger.info("Handling Keep alive packet ");
     if (isBlank(delegate.getHostName()) || isBlank(delegate.getDelegateRandomToken()) || isBlank(delegate.getUuid())
         || isBlank(delegate.getSequenceNum())) {
       return null;
@@ -2132,11 +2116,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   boolean checkForValidTokenIfPresent(Delegate delegate) {
     DelegateSequenceConfig config = getDelegateSequenceConfig(
         delegate.getAccountId(), delegate.getHostName(), Integer.parseInt(delegate.getSequenceNum()));
-    if (config == null || !config.getDelegateToken().equals(delegate.getDelegateRandomToken())) {
-      return false;
-    }
-
-    return true;
+    return config != null && config.getDelegateToken().equals(delegate.getDelegateRandomToken());
   }
 
   /**
@@ -2201,14 +2181,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @VisibleForTesting
   boolean seqNumAndTokenMatchesConfig(Delegate delegate, DelegateSequenceConfig sequenceConfig) {
-    if (sequenceConfig != null && sequenceConfig.getSequenceNum() != null
+    return sequenceConfig != null && sequenceConfig.getSequenceNum() != null
         && isNotBlank(sequenceConfig.getDelegateToken())
         && sequenceConfig.getDelegateToken().equals(delegate.getDelegateRandomToken())
-        && sequenceConfig.getSequenceNum().toString().equals(delegate.getSequenceNum())) {
-      return true;
-    }
-
-    return false;
+        && sequenceConfig.getSequenceNum().toString().equals(delegate.getSequenceNum());
   }
 
   /**
@@ -2219,7 +2195,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     Delegate existingDelegate;
     Query<Delegate> delegateQuery =
         wingsPersistence.createQuery(Delegate.class)
-            .filter(Delegate.ACCOUNT_ID_KEY, accountId)
+            .filter(DelegateKeys.accountId, accountId)
             .filter(DelegateSequenceConfigKeys.hostName, getHostNameToBeUsedForECSDelegate(hostName, seqNum));
 
     existingDelegate = delegateQuery.get();
@@ -2244,10 +2220,13 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
    */
   @VisibleForTesting
   Delegate handleECSRegistrationUsingID(Delegate delegate) {
-    Query<Delegate> delegateQuery = wingsPersistence.createQuery(Delegate.class).filter(ID_KEY, delegate.getUuid());
+    Query<Delegate> delegateQuery =
+        wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.uuid, delegate.getUuid());
 
-    Delegate existingDelegate =
-        delegateQuery.project("hostName", true).project("status", true).project("delegateProfileId", true).get();
+    Delegate existingDelegate = delegateQuery.project(DelegateKeys.hostName, true)
+                                    .project(DelegateKeys.status, true)
+                                    .project(DelegateKeys.delegateProfileId, true)
+                                    .get();
 
     if (existingDelegate != null) {
       return upsertDelegateOperation(existingDelegate, delegate);
@@ -2305,7 +2284,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   List<DelegateSequenceConfig> getDelegateSequenceConfigs(Delegate delegate) {
     Query<DelegateSequenceConfig> delegateSequenceConfigQuery =
         wingsPersistence.createQuery(DelegateSequenceConfig.class)
-            .filter(DelegateSequenceConfig.ACCOUNT_ID_KEY, delegate.getAccountId())
+            .filter(DelegateSequenceConfigKeys.accountId, delegate.getAccountId())
             .filter(DelegateSequenceConfigKeys.hostName, delegate.getHostName());
 
     return delegateSequenceConfigQuery.project(ID_KEY, true)
@@ -2326,32 +2305,32 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     List<DelegateSequenceConfig> existingDelegateSequenceConfigs =
         delegateSequenceConfigQuery.project(DelegateSequenceConfigKeys.sequenceNum, true)
-            .project("lastUpdatedAt", true)
+            .project(DelegateSequenceConfig.LAST_UPDATED_AT_KEY, true)
             .project(DelegateSequenceConfig.ACCOUNT_ID_KEY, true)
             .project(DelegateSequenceConfigKeys.hostName, true)
             .project(DelegateSequenceConfigKeys.delegateToken, true)
             .asList();
 
     existingDelegateSequenceConfigs = existingDelegateSequenceConfigs.stream()
-                                          .sorted(comparingInt(existingDelegate -> existingDelegate.getSequenceNum()))
+                                          .sorted(comparingInt(DelegateSequenceConfig::getSequenceNum))
                                           .collect(toList());
 
     int num = 0;
-    for (int index = 0; index < existingDelegateSequenceConfigs.size(); index++) {
-      if (num < existingDelegateSequenceConfigs.get(index).getSequenceNum().intValue()) {
+    for (DelegateSequenceConfig existingDelegateSequenceConfig : existingDelegateSequenceConfigs) {
+      if (num < existingDelegateSequenceConfig.getSequenceNum()) {
         break;
       }
       num++;
     }
 
-    delegate.setSequenceNum(new StringBuilder(64).append(num).toString());
-    return generateNewSeqenceConfig(delegate, Integer.valueOf(num));
+    delegate.setSequenceNum(String.valueOf(num));
+    return generateNewSeqenceConfig(delegate, num);
   }
 
   @VisibleForTesting
   DelegateSequenceConfig getInactiveDelegateSequenceConfigToReplace(
       Delegate delegate, List<DelegateSequenceConfig> existingDelegateSequenceConfigs) {
-    DelegateSequenceConfig config = null;
+    DelegateSequenceConfig config;
     try {
       Optional<DelegateSequenceConfig> optionalConfig =
           existingDelegateSequenceConfigs.stream()
@@ -2390,28 +2369,16 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         return config;
       }
     } catch (Exception e) {
-      logger.warn(new StringBuilder(128)
-                      .append("Failed while updating delegateSequenceConfig with delegateToken: ")
-                      .append(delegate.getDelegateRandomToken())
-                      .append("DelegateId: ")
-                      .append(delegate.getUuid())
-                      .toString());
-      config = null;
+      logger.warn("Failed while updating delegateSequenceConfig with delegateToken: {}, DelegateId: {}",
+          delegate.getDelegateRandomToken(), delegate.getUuid());
     }
 
-    return config;
+    return null;
   }
 
-  @VisibleForTesting
-  DelegateSequenceConfig generateNewSeqenceConfig(Delegate delegate, Integer seqNum) {
-    logger.info(new StringBuilder(128)
-                    .append("Adding delegateSequenceConfig For delegate.hostname: ")
-                    .append(delegate.getHostName())
-                    .append(", With SequenceNum: ")
-                    .append(delegate.getSequenceNum())
-                    .append(", for account:  ")
-                    .append(delegate.getAccountId())
-                    .toString());
+  private DelegateSequenceConfig generateNewSeqenceConfig(Delegate delegate, Integer seqNum) {
+    logger.info("Adding delegateSequenceConfig For delegate.hostname: {}, With SequenceNum: {}, for account:  {}",
+        delegate.getHostName(), delegate.getSequenceNum(), delegate.getAccountId());
 
     DelegateSequenceConfig sequenceConfig = aDelegateSequenceBuilder()
                                                 .withSequenceNum(seqNum)
@@ -2421,15 +2388,14 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                                 .withAppId(GLOBAL_APP_ID)
                                                 .build();
 
-    DelegateSequenceConfig savedDelegateSequenceConfig =
-        wingsPersistence.saveAndGet(DelegateSequenceConfig.class, sequenceConfig);
-    logger.info("DelegateSequenceConfig saved: {}", savedDelegateSequenceConfig);
+    wingsPersistence.save(sequenceConfig);
+    logger.info("DelegateSequenceConfig saved: {}", sequenceConfig);
 
-    return savedDelegateSequenceConfig;
+    return sequenceConfig;
   }
 
   private String getHostNameToBeUsedForECSDelegate(String hostName, String seqNum) {
-    return new StringBuilder(128).append(hostName).append(DELIMITER).append(seqNum).toString();
+    return hostName + DELIMITER + seqNum;
   }
 
   /**
@@ -2444,7 +2410,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   private Delegate updateAllDelegatesIfECSType(
-      Delegate delegate, UpdateOperations<Delegate> updateOperations, String filedBeingUpdate) {
+      Delegate delegate, UpdateOperations<Delegate> updateOperations, String fieldBeingUpdate) {
     final List<Delegate> retVal = new ArrayList<>();
     List<Delegate> delegates = getAllDelegatesMatchingGroupName(delegate);
 
@@ -2454,10 +2420,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     delegates.forEach(delegateToBeUpdated -> {
       // LOGGING logic
-      if ("SCOPES".equals(filedBeingUpdate)) {
+      if ("SCOPES".equals(fieldBeingUpdate)) {
         logger.info("Updating delegate scopes : Delegate:{} includeScopes:{} excludeScopes:{}",
             delegateToBeUpdated.getUuid(), delegate.getIncludeScopes(), delegate.getExcludeScopes());
-      } else if ("TAGS".equals(filedBeingUpdate)) {
+      } else if ("TAGS".equals(fieldBeingUpdate)) {
         logger.info("Updating delegate tags : Delegate:{} tags:{}", delegateToBeUpdated.getUuid(), delegate.getTags());
       } else {
         logger.info("Updating delegate : {}", delegateToBeUpdated.getUuid());
@@ -2484,14 +2450,13 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
    */
   private List<Delegate> getAllDelegatesMatchingGroupName(Delegate delegate) {
     return wingsPersistence.createQuery(Delegate.class, excludeAuthority)
-        .filter(Delegate.ACCOUNT_ID_KEY, delegate.getAccountId())
+        .filter(DelegateKeys.accountId, delegate.getAccountId())
         .filter(DelegateKeys.delegateType, delegate.getDelegateType())
         .filter(DelegateKeys.delegateGroupName, delegate.getDelegateGroupName())
         .asList();
   }
 
-  @VisibleForTesting
-  boolean isValidSeqNum(String sequenceNum) {
+  private boolean isValidSeqNum(String sequenceNum) {
     try {
       Integer.parseInt(sequenceNum);
     } catch (Exception e) {
@@ -2501,8 +2466,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     return true;
   }
 
-  private boolean isDelegateWithPollingEnabled(Delegate delegate) {
-    return delegate.isPolllingModeEnabled();
+  private boolean isDelegateWithoutPollingEnabled(Delegate delegate) {
+    return !delegate.isPolllingModeEnabled();
   }
 
   private void updateWithTokenAndSeqNumIfEcsDelegate(Delegate delegate, Delegate savedDelegate) {
@@ -2519,7 +2484,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     DelegateSequenceConfig config =
         getDelegateSequenceConfig(delegate.getAccountId(), hostName, Integer.parseInt(seqNum));
     delegate.setDelegateRandomToken(config.getDelegateToken());
-    delegate.setSequenceNum(new StringBuilder(64).append(config.getSequenceNum()).toString());
+    delegate.setSequenceNum(String.valueOf(config.getSequenceNum()));
   }
 
   @VisibleForTesting

@@ -2,7 +2,6 @@ package software.wings.app;
 
 import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
 import static io.harness.govern.Switch.unhandled;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.common.base.Splitter;
 import com.google.common.io.CharStreams;
@@ -102,9 +101,6 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
       String delegateVersion = req.getHeader("Version");
 
       Delegate delegate = JsonUtils.asObject(CharStreams.toString(req.getReader()), Delegate.class);
-      if (delegate.getAppId() == null) {
-        delegate.setAppId(GLOBAL_APP_ID);
-      }
       delegateService.register(delegate);
       delegateService.doConnectionHeartbeat(accountId, delegateId,
           DelegateConnectionHeartbeat.builder()

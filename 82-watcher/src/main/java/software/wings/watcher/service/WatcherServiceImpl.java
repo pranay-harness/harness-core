@@ -81,7 +81,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpHost;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
@@ -122,13 +121,13 @@ import java.util.stream.Stream;
 @Singleton
 @Slf4j
 public class WatcherServiceImpl implements WatcherService {
-  private static final long WATCHER_STARTUP_GRACE = TimeUnit.SECONDS.toMillis(30);
   private static final long DELEGATE_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(3);
   private static final long DELEGATE_STARTUP_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
   private static final long DELEGATE_UPGRADE_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
   private static final long DELEGATE_SHUTDOWN_TIMEOUT = TimeUnit.HOURS.toMillis(2);
   private static final long DELEGATE_VERSION_MATCH_TIMEOUT = TimeUnit.HOURS.toMillis(2);
   private static final Pattern VERSION_PATTERN = Pattern.compile("^[1-9]\\.[0-9]\\.[0-9]*$");
+  private static final String DELEGATE_SEQUENCE_CONFIG_FILE = "./delegate_sequence_config";
 
   private static final boolean multiVersion;
 
@@ -155,15 +154,11 @@ public class WatcherServiceImpl implements WatcherService {
   private final AtomicInteger minMinorVersion = new AtomicInteger(0);
   private final Set<Integer> illegalVersions = new HashSet<>();
   private final Map<String, Long> delegateVersionMatchedAt = new HashMap<>();
-  private HttpHost httpProxyHost;
-  private long startTime;
-  public static final String DELEGATE_SEQUENCE_CONFIG_FILE = "./delegate_sequence_config";
 
   @SuppressFBWarnings({"UW_UNCOND_WAIT", "WA_NOT_IN_LOOP"})
   @Override
   public void run(boolean upgrade) {
     try {
-      startTime = clock.millis();
       logger.info(upgrade ? "[New] Upgraded watcher process started. Sending confirmation" : "Watcher process started");
       messageService.writeMessage(WATCHER_STARTED);
       startInputCheck();
@@ -185,7 +180,6 @@ public class WatcherServiceImpl implements WatcherService {
         String proxyScheme = System.getProperty("proxyScheme");
         String proxyPort = System.getProperty("https.proxyPort");
         logger.info("Using {} proxy {}:{}", proxyScheme, proxyHost, proxyPort);
-        httpProxyHost = new HttpHost(proxyHost, Integer.parseInt(proxyPort), proxyScheme);
         String nonProxyHostsString = System.getProperty("http.nonProxyHosts");
         if (isNotBlank(nonProxyHostsString)) {
           String[] suffixes = nonProxyHostsString.split("\\|");
@@ -223,8 +217,7 @@ public class WatcherServiceImpl implements WatcherService {
       FileUtils.touch(new File(DELEGATE_SEQUENCE_CONFIG_FILE));
       String randomToken = UUIDGenerator.generateUuid();
       FileIo.writeWithExclusiveLockAcrossProcesses(
-          new StringBuilder(128).append("[TOKEN]").append(randomToken).append("[SEQ]").toString(),
-          DELEGATE_SEQUENCE_CONFIG_FILE, StandardOpenOption.TRUNCATE_EXISTING);
+          "[TOKEN]" + randomToken + "[SEQ]", DELEGATE_SEQUENCE_CONFIG_FILE, StandardOpenOption.TRUNCATE_EXISTING);
     } catch (IOException e) {
       logger.warn("Failed to create DelegateSequenceConfigFile");
     }
