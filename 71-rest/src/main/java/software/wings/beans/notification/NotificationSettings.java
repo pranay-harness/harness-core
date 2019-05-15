@@ -1,5 +1,6 @@
 package software.wings.beans.notification;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.data.structure.CollectionUtils;
 import lombok.Value;
 import software.wings.beans.NotificationChannelType;
@@ -18,6 +19,7 @@ public class NotificationSettings {
   @NotNull private SlackNotificationSetting slackConfig;
 
   @Nonnull
+  @JsonIgnore
   public Map<NotificationChannelType, List<String>> getAddressesByChannelType() {
     return Collections.emptyMap();
   }
