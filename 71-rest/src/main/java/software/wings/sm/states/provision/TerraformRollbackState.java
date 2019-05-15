@@ -150,7 +150,6 @@ public class TerraformRollbackState extends TerraformProvisionState {
             .targets(targets)
             .runPlanOnly(false)
             .tfVarFiles(configParameter.getTfVarFiles())
-            .sourceRepoSettingId(terraformProvisioner.getSourceRepoSettingId())
             .build();
 
     return createAndRunTask(activityId, executionContext, parameters);

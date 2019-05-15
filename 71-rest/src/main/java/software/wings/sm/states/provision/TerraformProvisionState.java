@@ -381,7 +381,6 @@ public abstract class TerraformProvisionState extends State {
 
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
     String path = context.renderExpression(terraformProvisioner.getPath());
-    path = infrastructureProvisionerService.normalizeScriptPath(path);
 
     String entityId = generateEntityId(context);
     String fileId = fileService.getLatestFileId(entityId, TERRAFORM_STATE);
@@ -437,7 +436,6 @@ public abstract class TerraformProvisionState extends State {
             .targets(targets)
             .tfVarFiles(element.getTfVarFiles())
             .runPlanOnly(false)
-            .sourceRepoSettingId(terraformProvisioner.getSourceRepoSettingId())
             .build();
 
     return createAndRunTask(activityId, executionContext, parameters);
@@ -477,7 +475,6 @@ public abstract class TerraformProvisionState extends State {
       gitConfig.setBranch(branch);
     }
     String path = context.renderExpression(terraformProvisioner.getPath());
-    path = infrastructureProvisionerService.normalizeScriptPath(path);
 
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     final String entityId = generateEntityId(context);
@@ -598,7 +595,6 @@ public abstract class TerraformProvisionState extends State {
             .targets(targets)
             .runPlanOnly(runPlanOnly)
             .tfVarFiles(getRenderedTfVarFiles(tfVarFiles, context))
-            .sourceRepoSettingId(terraformProvisioner.getSourceRepoSettingId())
             .build();
 
     return createAndRunTask(activityId, executionContext, parameters);
