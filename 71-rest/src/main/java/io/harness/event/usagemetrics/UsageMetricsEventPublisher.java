@@ -10,9 +10,13 @@ import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
 import io.harness.event.publisher.EventPublisher;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.Account;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 
 @Singleton
@@ -20,6 +24,12 @@ import java.util.concurrent.ExecutorService;
 public class UsageMetricsEventPublisher {
   @Inject EventPublisher eventPublisher;
   @Inject private ExecutorService executorService;
+  SimpleDateFormat sdf;
+
+  public UsageMetricsEventPublisher() {
+    sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+    sdf.setTimeZone(TimeZone.getTimeZone(TimeZone.getTimeZone("Etc/UTC").toZoneId()));
+  }
 
   /***
    *
@@ -114,6 +124,19 @@ public class UsageMetricsEventPublisher {
     properties.put(EventConstants.SETUP_DATA_TYPE, setupDataType);
     EventData eventData = EventData.builder().properties(properties).value(setupDataCount).build();
     publishEvent(Event.builder().eventType(EventType.SETUP_DATA).eventData(eventData).build());
+  }
+
+  public void publishAccountMetadataMetric(Account account) {
+    Map properties = new HashMap();
+    properties.put(EventConstants.ACCOUNT_ID, account.getUuid());
+    properties.put(EventConstants.ACCOUNT_NAME, account.getAccountName());
+    properties.put(EventConstants.COMPANY_NAME, account.getCompanyName());
+    properties.put(EventConstants.ACCOUNT_TYPE, account.getLicenseInfo().getAccountType());
+    properties.put(EventConstants.ACCOUNT_STATUS, account.getLicenseInfo().getAccountStatus());
+    properties.put(EventConstants.ACCOUNT_CREATED_AT, sdf.format(new Date(account.getCreatedAt())));
+    EventData eventData =
+        EventData.builder().properties(properties).value(account.getLicenseInfo().getLicenseUnits()).build();
+    publishEvent(Event.builder().eventType(EventType.LICENSE_UNITS).eventData(eventData).build());
   }
 
   /**

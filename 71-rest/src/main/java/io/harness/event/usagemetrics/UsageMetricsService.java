@@ -19,6 +19,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.trigger.Trigger;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.PipelineService;
@@ -39,14 +40,16 @@ public class UsageMetricsService {
   @Inject private TriggerService triggerService;
   @Inject private UsageMetricsEventPublisher publisher;
   @Inject private EnvironmentService environmentService;
+  @Inject private AccountService accountService;
 
   public void checkUsageMetrics() {
-    getAllAccounts().forEach(account -> {
+    accountService.listAllAccounts().forEach(account -> {
       try {
         logger.info(
             "Checking Usage metrics for accountId:[{}], accountName:[{}]", account.getUuid(), account.getAccountName());
         List<String> appIds = getAppIds(account.getUuid());
         logger.info("Detected [{}] apps for account [{}]", appIds.size(), account.getAccountName());
+
         publisher.publishSetupDataMetric(
             account.getUuid(), account.getAccountName(), appIds.size(), EventConstants.NUMBER_OF_APPLICATIONS);
         publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
@@ -59,6 +62,7 @@ public class UsageMetricsService {
             getNumberOfEnvironmentsPerAccount(appIds), EventConstants.NUMBER_OF_ENVIRONMENTS);
         publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
             getNumberOfWorkflowsForAccount(account.getUuid()), EventConstants.NUMBER_OF_WORKFLOWS);
+        publisher.publishAccountMetadataMetric(account);
       } catch (Exception e) {
         logger.warn("Failed to get Usage metrics for for accountId:[{}], accountName:[{}]", account.getUuid(),
             account.getAccountName(), e);

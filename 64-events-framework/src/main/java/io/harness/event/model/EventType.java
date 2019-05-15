@@ -25,6 +25,7 @@ public enum EventType {
   USERS_LOGGED_IN,
   SETUP_DATA,
   INSTANCE_COUNT,
+  LICENSE_UNITS,
 
   OPEN_ALERT,
 
