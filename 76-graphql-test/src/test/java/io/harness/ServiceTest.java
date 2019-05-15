@@ -43,8 +43,20 @@ public class ServiceTest extends GraphQLTest {
     final Service service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
     assertThat(service).isNotNull();
 
-    String query = "{ service(serviceId: \"" + service.getUuid()
-        + "\") { id name description artifactType deploymentType createdAt createdBy { id }}}";
+    String query = $GQL(/*
+{
+  service(serviceId: "%s") {
+    id
+    name
+    description
+    artifactType
+    deploymentType
+    createdAt
+    createdBy {
+      id
+    }
+  }
+}*/ service.getUuid());
 
     QLTestObject qlService = qlExecute(query);
     assertThat(qlService.get(QLServiceKeys.id)).isEqualTo(service.getUuid());
@@ -76,8 +88,14 @@ public class ServiceTest extends GraphQLTest {
         seed, owners, serviceBuilder.name("Service3").uuid(UUIDGenerator.generateUuid()).build());
 
     {
-      String query = "{ services(applicationId: \"" + application.getUuid()
-          + "\", limit: 2) { nodes { id name description artifactType deploymentType} } }";
+      String query = $GQL(/*
+{
+  services(applicationId: "%s" limit: 2) {
+    nodes {
+      id
+    }
+  }
+}*/ application.getUuid());
 
       QLServiceConnection serviceConnection = qlExecute(QLServiceConnection.class, query);
       assertThat(serviceConnection.getNodes().size()).isEqualTo(2);
@@ -87,8 +105,14 @@ public class ServiceTest extends GraphQLTest {
     }
 
     {
-      String query = "{ services(applicationId: \"" + application.getUuid()
-          + "\", limit: 2, offset: 1) { nodes { id name description artifactType, deploymentType} } }";
+      String query = $GQL(/*
+{
+  services(applicationId: "%s" limit: 2 offset: 1) {
+    nodes {
+      id
+    }
+  }
+}*/ application.getUuid());
 
       QLServiceConnection serviceConnection = qlExecute(QLServiceConnection.class, query);
       assertThat(serviceConnection.getNodes().size()).isEqualTo(2);
@@ -98,9 +122,16 @@ public class ServiceTest extends GraphQLTest {
     }
 
     {
-      String query = "{ application(applicationId: \"" + application.getUuid()
-          + "\") { services(limit: 2, offset: 1) { nodes { id name description artifactType, deploymentType } } } }";
-
+      String query = $GQL(/*
+{
+  application(applicationId: "%s") {
+    services(limit: 5) {
+      nodes {
+        id
+      }
+    }
+  }
+}*/ application.getUuid());
       final QLTestObject qlTestObject = qlExecute(query);
       assertThat(qlTestObject.getMap().size()).isEqualTo(1);
     }

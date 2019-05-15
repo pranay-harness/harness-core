@@ -40,8 +40,8 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.graphql.schema.type.QLApplication.QLApplicationKeys;
-import software.wings.graphql.schema.type.QLExecutedBy.QLExecuteOptions;
-import software.wings.graphql.schema.type.QLExecutedBy.QLExecutedByKeys;
+import software.wings.graphql.schema.type.QLExecutedByUser.QLExecuteOptions;
+import software.wings.graphql.schema.type.QLExecutedByUser.QLExecutedByUserKeys;
 import software.wings.graphql.schema.type.QLExecutionConnection.QLExecutionConnectionKeys;
 import software.wings.graphql.schema.type.QLExecutionStatus;
 import software.wings.graphql.schema.type.QLPageInfo.QLPageInfoKeys;
@@ -150,7 +150,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
     status
     cause {
       __typename
-      ... on ExecutedBy {
+      ... on ExecutedByUser {
         user {
           id
         }
@@ -186,9 +186,9 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
       assertThat(qlTestObject.get(QLWorkflowExecutionKeys.startedAt)).isNotNull();
       assertThat(qlTestObject.get(QLWorkflowExecutionKeys.endedAt)).isNotNull();
       assertThat(qlTestObject.get(QLWorkflowExecutionKeys.status)).isEqualTo(QLExecutionStatus.SUCCESS.name());
-      assertThat(qlTestObject.sub(QLWorkflowExecutionKeys.cause).sub(QLExecutedByKeys.user).get(QLUserKeys.id))
+      assertThat(qlTestObject.sub(QLWorkflowExecutionKeys.cause).sub(QLExecutedByUserKeys.user).get(QLUserKeys.id))
           .isEqualTo(workflowExecution.getTriggeredBy().getUuid());
-      assertThat(qlTestObject.sub(QLWorkflowExecutionKeys.cause).get(QLExecutedByKeys.using))
+      assertThat(qlTestObject.sub(QLWorkflowExecutionKeys.cause).get(QLExecutedByUserKeys.using))
           .isEqualTo(QLExecuteOptions.WEB_UI.name());
       assertThat(qlTestObject.get(QLWorkflowExecutionKeys.notes)).isEqualTo(NOTES);
       assertThat(qlTestObject.sub("workflow").get(QLWorkflowKeys.id)).isEqualTo(workflow.getUuid());
@@ -309,7 +309,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
     status
     cause {
       __typename
-      ... on ExecutedBy {
+      ... on ExecutedByUser {
         user {
           id
         }
@@ -332,9 +332,9 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
       assertThat(qlTestObject.get(QLPipelineExecutionKeys.startedAt)).isNotNull();
       assertThat(qlTestObject.get(QLPipelineExecutionKeys.endedAt)).isNotNull();
       assertThat(qlTestObject.get(QLPipelineExecutionKeys.status)).isEqualTo(QLExecutionStatus.SUCCESS.name());
-      assertThat(qlTestObject.sub(QLPipelineExecutionKeys.cause).sub(QLExecutedByKeys.user).get(QLUserKeys.id))
+      assertThat(qlTestObject.sub(QLPipelineExecutionKeys.cause).sub(QLExecutedByUserKeys.user).get(QLUserKeys.id))
           .isEqualTo(pipelineExecution.getTriggeredBy().getUuid());
-      assertThat(qlTestObject.sub(QLPipelineExecutionKeys.cause).get(QLExecutedByKeys.using))
+      assertThat(qlTestObject.sub(QLPipelineExecutionKeys.cause).get(QLExecutedByUserKeys.using))
           .isEqualTo(QLExecuteOptions.WEB_UI.name());
       assertThat(qlTestObject.get(QLWorkflowExecutionKeys.notes)).isEqualTo(NOTES);
       assertThat(qlTestObject.sub("pipeline").get(QLPipelineKeys.id)).isEqualTo(pipeline.getUuid());
@@ -403,23 +403,12 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
       String query = $GQL(/*
 {
   execution(executionId: "%s") {
-    id
-    application {
-      id
-    }
-    createdAt
-    startedAt
-    endedAt
-    status
     cause {
       __typename
-      ... on PipelineExecution {
-        id
-      }
-    }
-    ... on WorkflowExecution {
-      workflow {
-        id
+      ... on ExecutedAlongPipeline {
+        execution {
+          id
+        }
       }
     }
   }
@@ -427,7 +416,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
 
       final QLTestObject qlTestObject = qlExecute(query);
 
-      assertThat(qlTestObject.sub(QLPipelineExecutionKeys.cause).get(QLPipelineExecutionKeys.id))
+      assertThat(qlTestObject.sub(QLPipelineExecutionKeys.cause).sub("execution").get(QLPipelineExecutionKeys.id))
           .isEqualTo(pipelineExecution.getUuid());
     }
   }

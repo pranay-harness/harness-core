@@ -54,8 +54,18 @@ public class WorkflowTest extends GraphQLTest {
 
     final Workflow workflow = workflowGenerator.ensurePredefined(seed, owners, BASIC_SIMPLE);
 
-    String query =
-        "{ workflow(workflowId: \"" + workflow.getUuid() + "\") { id name description createdAt createdBy { id } } }";
+    String query = $GQL(/*
+{
+  workflow(workflowId: "%s") {
+    id
+    name
+    description
+    createdAt
+    createdBy {
+      id
+    }
+  }
+}*/ workflow.getUuid());
 
     QLTestObject qlWorkflow = qlExecute(query);
     assertThat(qlWorkflow.get(QLWorkflowKeys.id)).isEqualTo(workflow.getUuid());
@@ -70,7 +80,12 @@ public class WorkflowTest extends GraphQLTest {
   @Test
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryMissingPipeline() {
-    String query = "{ workflow(workflowId: \"blah\") { id name description } }";
+    String query = $GQL(/*
+{
+  workflow(workflowId: "blah") {
+    id
+  }
+}*/);
 
     final ExecutionResult result = qlResult(query);
     assertThat(result.getErrors().size()).isEqualTo(1);
@@ -107,8 +122,14 @@ public class WorkflowTest extends GraphQLTest {
     final Workflow workflow3 = workflowGenerator.ensureWorkflow(seed, owners, builder.name("workflow3").build());
 
     {
-      String query =
-          "{ workflows(applicationId: \"" + application.getUuid() + "\", limit: 2) { nodes { id name description } } }";
+      String query = $GQL(/*
+{
+  workflows(applicationId: "%s" limit: 2) {
+    nodes {
+      id
+    }
+  }
+}*/ application.getUuid());
 
       QLWorkflowConnection workflowConnection = qlExecute(QLWorkflowConnection.class, query);
       assertThat(workflowConnection.getNodes().size()).isEqualTo(2);
@@ -117,8 +138,14 @@ public class WorkflowTest extends GraphQLTest {
       assertThat(workflowConnection.getNodes().get(1).getId()).isEqualTo(workflow2.getUuid());
     }
     {
-      String query = "{ workflows(applicationId: \"" + application.getUuid()
-          + "\", limit: 2, offset: 1) { nodes { id name description } } }";
+      String query = $GQL(/*
+{
+  workflows(applicationId: "%s" limit: 2 offset: 1) {
+    nodes {
+      id
+    }
+  }
+}*/ application.getUuid());
 
       QLWorkflowConnection workflowConnection = qlExecute(QLWorkflowConnection.class, query);
       assertThat(workflowConnection.getNodes().size()).isEqualTo(2);
@@ -128,8 +155,16 @@ public class WorkflowTest extends GraphQLTest {
     }
 
     {
-      String query = "{ application(applicationId: \"" + application.getUuid()
-          + "\") { workflows(limit: 2, offset: 1) { nodes { id } } } }";
+      String query = $GQL(/*
+{
+application(applicationId: "%s") {
+  workflows(limit: 5) {
+    nodes {
+      id
+    }
+  }
+}
+}*/ application.getUuid());
 
       final QLTestObject qlTestObject = qlExecute(query);
       assertThat(qlTestObject.getMap().size()).isEqualTo(1);
