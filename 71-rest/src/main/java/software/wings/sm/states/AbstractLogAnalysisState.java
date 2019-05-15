@@ -261,7 +261,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       getLogger().info(
           "for {} got failed execution response {}", executionContext.getStateExecutionInstanceId(), executionResponse);
       continuousVerificationService.setMetaDataExecutionStatus(
-          executionContext.getStateExecutionInstanceId(), ExecutionStatus.ERROR, false);
+          executionContext.getStateExecutionInstanceId(), ExecutionStatus.ERROR, true);
       return anExecutionResponse()
           .withExecutionStatus(ExecutionStatus.ERROR)
           .withStateExecutionData(executionResponse.getStateExecutionData())
@@ -279,7 +279,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           getLogger().info("for {} No analysis summary. This can happen if there is no data with the given queries",
               context.getStateExecutionId());
           continuousVerificationService.setMetaDataExecutionStatus(
-              executionContext.getStateExecutionInstanceId(), ExecutionStatus.SUCCESS, false);
+              executionContext.getStateExecutionInstanceId(), ExecutionStatus.SUCCESS, true);
           return isQAVerificationPath(context.getAccountId(), context.getAppId())
               ? generateAnalysisResponse(context, ExecutionStatus.FAILED, "No Analysis result found")
               : generateAnalysisResponse(
@@ -312,7 +312,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         getLogger().info("for {} the final status is {}", context.getStateExecutionId(), executionStatus);
         executionResponse.getStateExecutionData().setStatus(executionStatus);
         continuousVerificationService.setMetaDataExecutionStatus(
-            executionContext.getStateExecutionInstanceId(), executionStatus, true);
+            executionContext.getStateExecutionInstanceId(), executionStatus, false);
         return anExecutionResponse()
             .withExecutionStatus(isQAVerificationPath(context.getAccountId(), context.getAppId())
                     ? ExecutionStatus.SUCCESS

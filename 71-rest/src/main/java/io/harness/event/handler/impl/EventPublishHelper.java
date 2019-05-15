@@ -575,7 +575,6 @@ public class EventPublishHelper {
 
   public boolean publishVerificationWorkflowMetrics(
       String workflowExecutionId, List<String> appIds, String accountId, boolean isVerificationRolledBack) {
-    logger.info("is this a workflow with verification....");
     PageRequest<ContinuousVerificationExecutionMetaData> cvPageRequest =
         aPageRequest()
             .addFilter("appId", Operator.IN, appIds.toArray())
@@ -592,7 +591,6 @@ public class EventPublishHelper {
       properties.put("workflowExecutionId", workflowExecutionId);
       properties.put("rollback", String.valueOf(isVerificationRolledBack));
       publishEvent(EventType.DEPLOYMENT_VERIFIED, properties);
-      logger.info("yes this is a workflow with verification.... {}", properties);
       return true;
     }
 
