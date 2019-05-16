@@ -35,7 +35,6 @@ import software.wings.service.intfc.ResourceConstraintService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.StateMachineExecutionCallback;
@@ -69,7 +68,6 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private UsageMetricsEventPublisher usageMetricsEventPublisher;
   @Inject private AccountService accountService;
-  @Inject private WorkflowService workflowService;
   @Inject private UsageMetricsHelper usageMetricsHelper;
 
   /**
@@ -189,7 +187,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
           return;
         }
         eventPublishHelper.handleDeploymentCompleted(workflowExecution);
-        if (!WorkflowType.PIPELINE.equals(context.getWorkflowType())) {
+        if (workflowExecution.getPipelineExecutionId() == null) {
           final Application applicationDataForReporting = usageMetricsHelper.getApplication(appId);
           String accountID = applicationDataForReporting.getAccountId();
           String applicationName = applicationDataForReporting.getName();
@@ -201,17 +199,22 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
            * Query workflow execution and project deploymentTrigger, if it is not empty, it is automatic or it is manual
            */
           boolean manual = workflowExecution.getDeploymentTriggerId() == null;
-          String workflowName = usageMetricsHelper.getWorkflowName(context.getAppId(), workflowId);
-          usageMetricsEventPublisher.publishDeploymentDurationEvent(
-              executionDuration, accountID, accountName, workflowId, workflowName, appId, applicationName);
-          usageMetricsEventPublisher.publishDeploymentMetadataEvent(
-              status, manual, accountID, accountName, workflowId, workflowName, appId, applicationName);
 
+          /**
+           * We are sending the event out only for a pipeline execution or a workflow execution
+           */
+          usageMetricsEventPublisher.publishDeploymentDurationEvent(executionDuration, accountID, accountName,
+              workflowId, workflowExecution.getName(), appId, applicationName);
+          usageMetricsEventPublisher.publishDeploymentMetadataEvent(
+              status, manual, accountID, accountName, workflowId, workflowExecution.getName(), appId, applicationName);
+        }
+        if (!WorkflowType.PIPELINE.equals(context.getWorkflowType())) {
           if (workflowExecution.getPipelineExecutionId() != null) {
             workflowExecutionService.refreshCollectedArtifacts(
                 appId, workflowExecution.getPipelineExecutionId(), workflowExecutionId);
           }
         }
+
       } catch (Exception e) {
         logger.error(
             "Failed to generate events for workflowExecution:[{}], appId:[{}],", workflowExecutionId, appId, e);
