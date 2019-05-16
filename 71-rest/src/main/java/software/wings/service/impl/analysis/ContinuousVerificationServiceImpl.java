@@ -471,6 +471,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       return results;
     }
 
+    // TODO: use workflowExecutionService instead querying the database directly
     Query<WorkflowExecution> workflowExecutionQuery =
         wingsPersistence.createQuery(WorkflowExecution.class)
             .filter(WorkflowExecutionKeys.appId, service.getAppId())
