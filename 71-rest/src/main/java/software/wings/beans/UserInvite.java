@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
-import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.validation.Update;
 import lombok.Getter;
@@ -137,7 +136,7 @@ public class UserInvite extends Base {
   }
 
   public List<String> getEmails() {
-    return CollectionUtils.emptyIfNull(emails);
+    return emails;
   }
 
   public void setEmails(List<String> emails) {

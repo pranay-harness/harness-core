@@ -3,11 +3,11 @@ package software.wings.licensing.violations.checkers;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
+import io.harness.data.structure.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AccountType;
-import software.wings.beans.FeatureEnabledViolation;
+import software.wings.beans.FeatureUsageViolation;
 import software.wings.beans.FeatureUsageViolation.Usage;
 import software.wings.beans.FeatureViolation;
 import software.wings.beans.sso.SSOSettings;
@@ -20,7 +20,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Singleton
 @Slf4j
 public class SSOViolationChecker implements FeatureViolationChecker {
   private SSOSettingService ssoSettingService;
@@ -47,12 +46,16 @@ public class SSOViolationChecker implements FeatureViolationChecker {
                        .build())
             .collect(Collectors.toList());
 
+    List<FeatureViolation> featureViolationList = null;
     if (isNotEmpty(flowControlUsageList)) {
       logger.info("Found {} SSO violations for accountId={} and targetAccountType={}", flowControlUsageList.size(),
           accountId, AccountType.COMMUNITY);
-      return Collections.singletonList(new FeatureEnabledViolation(RestrictedFeature.SSO, flowControlUsageList.size()));
+      featureViolationList = Collections.singletonList(FeatureUsageViolation.builder()
+                                                           .restrictedFeature(RestrictedFeature.SSO)
+                                                           .usages(flowControlUsageList)
+                                                           .build());
     }
 
-    return Collections.emptyList();
+    return CollectionUtils.emptyIfNull(featureViolationList);
   }
 }

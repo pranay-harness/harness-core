@@ -34,7 +34,6 @@ import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.CacheModule;
-import software.wings.app.FeatureViolationsModule;
 import software.wings.app.GraphQLModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
@@ -158,7 +157,6 @@ public class GraphQLRule
     modules.add(new ManagerExecutorModule());
     modules.add(new TemplateModule());
     modules.add(new EventsModule(configuration));
-    modules.add(new FeatureViolationsModule());
     modules.add(new GraphQLModule());
 
     return modules;

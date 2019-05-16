@@ -8,11 +8,4 @@ public interface InstanceUsageLimitExcessHandler {
    * @param accountId
    */
   void handle(String accountId, double actualUsage);
-
-  /**
-   * Violation: If am account's deployed SI usage is more than allowed usage, it is considered a violation.
-   * This method updates the count of that violation in store (Mongo at present, but can be anything else depending upon
-   * implementation)
-   */
-  void updateViolationCount(String accountId, double actualUsage);
 }

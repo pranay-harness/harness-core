@@ -3,7 +3,6 @@ package software.wings.licensing.violations.checkers;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import software.wings.beans.FeatureEnabledViolation;
 import software.wings.beans.FeatureViolation;
@@ -14,7 +13,6 @@ import software.wings.service.intfc.UserGroupService;
 import java.util.Collections;
 import java.util.List;
 
-@Singleton
 public class UserGroupsViolationChecker implements FeatureViolationChecker {
   @Inject private UserGroupService userGroupService;
 

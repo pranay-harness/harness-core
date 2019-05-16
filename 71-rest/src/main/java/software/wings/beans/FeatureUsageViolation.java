@@ -4,14 +4,12 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.Singular;
 import lombok.ToString;
 import lombok.Value;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.licensing.violations.RestrictedFeature;
 
 import java.util.List;
-import java.util.Map;
 
 @Getter
 @ToString(callSuper = true)
@@ -33,6 +31,5 @@ public class FeatureUsageViolation extends FeatureViolation {
     @NonNull @NotEmpty String entityId;
     @NonNull @NotEmpty String entityType;
     @NonNull @NotEmpty String entityName;
-    @Singular Map<String, String> properties;
   }
 }
