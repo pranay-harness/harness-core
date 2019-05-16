@@ -12,6 +12,7 @@ import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 
@@ -65,7 +66,12 @@ public abstract class AbstractSecretManagerValidation extends AbstractDelegateVa
     }
 
     Preconditions.checkNotNull(encryptionConfig);
-    if (encryptionConfig instanceof KmsConfig) {
+    if (encryptionConfig instanceof LocalEncryptionConfig) {
+      return DelegateConnectionResult.builder()
+          .criteria(((LocalEncryptionConfig) encryptionConfig).getName())
+          .validated(true)
+          .build();
+    } else if (encryptionConfig instanceof KmsConfig) {
       KmsConfig kmsConfig = (KmsConfig) encryptionConfig;
       String kmsUrl = getAwsUrlFromRegion(kmsConfig.getRegion());
       return validateSecretManagerUrl(kmsUrl, kmsConfig.getName(), kmsConfig.getValidationCriteria());
