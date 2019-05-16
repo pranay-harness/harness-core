@@ -23,6 +23,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import io.harness.filesystem.FileIo;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
@@ -80,7 +81,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   private static final String TERRAFORM_VARIABLES_FILE_NAME = "terraform-%s.tfvars";
   private static final String TERRAFORM_SCRIPT_FILE_EXTENSION = "tf";
   private static final String TERRAFORM_BACKEND_CONFIGS_FILE_NAME = "backend_configs";
-  private static final String REMOTE_STATE_FILE_PATH = ".terraform/terraform.tfstate";
+  private static final String TERRAFORM_INTERNAL_FOLDER = ".terraform";
   private static final long RESOURCE_READY_WAIT_TIME_SECONDS = 15;
 
   @Inject private GitClient gitClient;
@@ -151,13 +152,12 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     String scriptDirectory = resolveScriptDirectory(gitConfig, parameters.getScriptPath());
     logger.info("Script Directory: " + scriptDirectory);
 
+    ensureLocalCleanup(scriptDirectory);
     String sourceRepoReference = getLatestCommitSHAFromLocalRepo(gitConfig);
 
     File tfVariablesFile =
         Paths.get(scriptDirectory, format(TERRAFORM_VARIABLES_FILE_NAME, parameters.getEntityId())).toFile();
     File tfBackendConfigsFile = Paths.get(scriptDirectory, TERRAFORM_BACKEND_CONFIGS_FILE_NAME).toFile();
-
-    ensureLocalCleanup(scriptDirectory);
 
     boolean usingRemoteState = isRemoteStateConfigured(scriptDirectory);
 
@@ -407,7 +407,11 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
 
   private void ensureLocalCleanup(String scriptDirectory) {
     FileUtils.deleteQuietly(Paths.get(scriptDirectory, TERRAFORM_STATE_FILE_NAME).toFile());
-    FileUtils.deleteQuietly(Paths.get(scriptDirectory, REMOTE_STATE_FILE_PATH).toFile());
+    try {
+      FileIo.deleteDirectoryAndItsContentIfExists(TERRAFORM_INTERNAL_FOLDER);
+    } catch (IOException e) {
+      logger.warn("Failed to delete .terraform folder");
+    }
   }
 
   @VisibleForTesting
