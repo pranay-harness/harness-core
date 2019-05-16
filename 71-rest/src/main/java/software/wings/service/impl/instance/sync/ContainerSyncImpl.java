@@ -104,6 +104,14 @@ public class ContainerSyncImpl implements ContainerSync {
 
         result.addAll(delegateProxyFactory.get(ContainerService.class, syncTaskContext)
                           .getContainerInfos(containerServiceParams));
+      } catch (WingsException e) {
+        // PL-1118: If cluster not found, return empty instance list so that all instances associated with this cluster
+        // will be deleted.
+        if (e.getCode() == ErrorCode.CLUSTER_NOT_FOUND) {
+          logger.info(e.getMessage());
+        } else {
+          throw e;
+        }
       } catch (Exception ex) {
         logger.warn(
             "Error while getting instances for container {}", containerDeploymentInfo.getContainerSvcName(), ex);
@@ -141,6 +149,14 @@ public class ContainerSyncImpl implements ContainerSync {
 
         result.addAll(delegateProxyFactory.get(ContainerService.class, syncTaskContext)
                           .getContainerInfos(containerServiceParams));
+      } catch (WingsException e) {
+        // PL-1118: If cluster not found, return empty instance list so that all instances associated with this cluster
+        // will be deleted.
+        if (e.getCode() == ErrorCode.CLUSTER_NOT_FOUND) {
+          logger.info(e.getMessage());
+        } else {
+          throw e;
+        }
       } catch (Exception ex) {
         logger.warn(
             "Error while getting instances for container for appId {} and infraMappingId {} and containerSvcName {}",
