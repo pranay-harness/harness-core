@@ -17,7 +17,7 @@ public interface APMRestClient {
 
   @POST
   Call<Object> validatePost(@Url String url, @HeaderMap Map<String, String> headers,
-      @QueryMap Map<String, String> options, @Body String body);
+      @QueryMap Map<String, String> options, @Body Map<String, Object> body);
 
   @GET
   Call<Object> collect(@Url String url, @HeaderMap Map<String, Object> headers, @QueryMap Map<String, Object> options);

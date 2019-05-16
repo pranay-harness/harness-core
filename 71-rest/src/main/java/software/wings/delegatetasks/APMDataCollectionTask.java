@@ -362,12 +362,15 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
             List<String> curUrls = resolveDollarReferences(initialUrl, host, strategy);
             if (!isEmpty(body)) {
               String resolvedBody = resolvedUrl(body, host, lastEndTime, System.currentTimeMillis());
+              Map<String, Object> bodyMap =
+                  isEmpty(resolvedBody) ? new HashMap<>() : new JSONObject(resolvedBody).toMap();
+
               curUrls.forEach(curUrl
                   -> callabels.add(
                       ()
                           -> new APMResponseParser.APMResponseData(host, dataCollectionInfo.getHosts().get(host),
-                              collect(getAPMRestClient(baseUrl).postCollect(
-                                          curUrl, headersBiMap, optionsBiMap, new JSONObject(resolvedBody).toMap()),
+                              collect(
+                                  getAPMRestClient(baseUrl).postCollect(curUrl, headersBiMap, optionsBiMap, bodyMap),
                                   baseUrl + curUrl),
                               metricInfos)));
             } else {

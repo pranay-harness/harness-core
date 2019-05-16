@@ -1,5 +1,7 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.inject.Inject;
@@ -34,8 +36,16 @@ public class APMDelegateServiceImpl implements APMDelegateService {
   @Override
   public boolean validateCollector(APMValidateCollectorConfig config) {
     config.getHeaders().put("Accept", "application/json");
-    final Call<Object> request =
-        getAPMRestClient(config).validate(config.getUrl(), config.getHeaders(), config.getOptions());
+    Call<Object> request = getAPMRestClient(config).validate(config.getUrl(), config.getHeaders(), config.getOptions());
+
+    if (config.getCollectionMethod().equals(Method.POST)) {
+      Map<String, Object> body = new HashMap<>();
+      if (isNotEmpty(config.getBody())) {
+        body = new JSONObject(config.getBody()).toMap();
+      }
+      request = getAPMRestClient(config).postCollect(config.getUrl(), resolveDollarReferences(config.getHeaders()),
+          resolveDollarReferences(config.getOptions()), body);
+    }
 
     final Response<Object> response;
     try {
@@ -86,8 +96,12 @@ public class APMDelegateServiceImpl implements APMDelegateService {
 
     Call<Object> request;
     if (config.getCollectionMethod() != null && config.getCollectionMethod().equals(Method.POST)) {
+      Map<String, Object> body = new HashMap<>();
+      if (isNotEmpty(config.getBody())) {
+        body = new JSONObject(config.getBody()).toMap();
+      }
       request = getAPMRestClient(config).postCollect(config.getUrl(), resolveDollarReferences(config.getHeaders()),
-          resolveDollarReferences(config.getOptions()), new JSONObject(config.getBody()).toMap());
+          resolveDollarReferences(config.getOptions()), body);
     } else {
       request = getAPMRestClient(config).collect(
           config.getUrl(), resolveDollarReferences(config.getHeaders()), resolveDollarReferences(config.getOptions()));
