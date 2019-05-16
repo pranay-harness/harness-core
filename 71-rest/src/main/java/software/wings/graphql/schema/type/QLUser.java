@@ -12,4 +12,6 @@ import software.wings.security.annotations.Scope;
 @Scope(ResourceType.USER)
 public class QLUser {
   private String id;
+  private String name;
+  private String email;
 }

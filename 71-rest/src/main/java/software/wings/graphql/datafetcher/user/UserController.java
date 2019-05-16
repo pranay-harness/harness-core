@@ -8,6 +8,6 @@ public class UserController {
     if (user == null) {
       return null;
     }
-    return QLUser.builder().id(user.getUuid()).build();
+    return QLUser.builder().id(user.getUuid()).name(user.getName()).email(user.getEmail()).build();
   }
 }
