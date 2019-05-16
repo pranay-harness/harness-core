@@ -25,7 +25,6 @@ import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
-import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.infrastructure.instance.Instance;
@@ -73,16 +72,6 @@ public class UsageMetricsHelper {
                                   .get();
     Validator.notNullCheck("Environment does not exist", environment, USER);
     return environment.getName();
-  }
-
-  public String getWorkflowName(String appId, String workflowId) {
-    Workflow workflow = wingsPersistence.createQuery(Workflow.class)
-                            .project(Workflow.NAME_KEY, true)
-                            .filter(APP_ID_KEY, appId)
-                            .filter(Pipeline.ID_KEY, workflowId)
-                            .get();
-    Validator.notNullCheck("Workflow does not exist", workflow, USER);
-    return workflow.getName();
   }
 
   public List<Account> listAllAccountsWithDefaults() {
