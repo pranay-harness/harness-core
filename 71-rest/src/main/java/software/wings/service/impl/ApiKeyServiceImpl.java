@@ -51,8 +51,6 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
   @Inject private UserGroupService userGroupService;
-  @Inject private ApiKeyServiceCommunityEdition apiKeyServiceCommunity;
-
   private static String DELIMITER = "::";
 
   private SimpleEncryption getSimpleEncryption(String accountId) {
@@ -63,10 +61,6 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
   @Override
   public ApiKeyEntry generate(String accountId, ApiKeyEntry apiKeyEntry) {
-    if (accountService.isCommunityAccount(accountId)) {
-      return apiKeyServiceCommunity.generate(accountId, apiKeyEntry);
-    }
-
     int KEY_LEN = 80;
     String randomKey = accountId + DELIMITER + CryptoUtil.secureRandAlphaNumString(KEY_LEN);
     String apiKey = Base64.getEncoder().encodeToString(randomKey.getBytes(Charsets.UTF_8));
@@ -86,10 +80,6 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
   @Override
   public ApiKeyEntry update(String uuid, String accountId, ApiKeyEntry apiKeyEntry) {
-    if (accountService.isCommunityAccount(accountId)) {
-      return apiKeyServiceCommunity.update(uuid, accountId, apiKeyEntry);
-    }
-
     Validator.notNullCheck("ApiKeyEntry is null", apiKeyEntry, USER);
     Validator.notNullCheck("uuid is null for the given api key entry", uuid, USER);
     Validator.notNullCheck(UserGroup.ACCOUNT_ID_KEY, accountId, USER);

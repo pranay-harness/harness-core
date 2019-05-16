@@ -62,8 +62,6 @@ public interface SettingsService extends OwnedByAccount {
 
   void delete(String appId, String varId, boolean pushToGit, boolean syncFromGit);
 
-  boolean retainSelectedGitConnectorsAndDeleteRest(String appId, String accountId, List<String> gitConnectorToRetain);
-
   SettingAttribute getByName(String accountId, String appId, String attributeName);
 
   SettingAttribute getByName(String accountId, String appId, String envId, String attributeName);

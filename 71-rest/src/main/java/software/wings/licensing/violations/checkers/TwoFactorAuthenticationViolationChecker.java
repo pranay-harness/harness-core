@@ -1,7 +1,6 @@
 package software.wings.licensing.violations.checkers;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import software.wings.beans.FeatureEnabledViolation;
 import software.wings.beans.FeatureViolation;
@@ -13,7 +12,6 @@ import software.wings.service.intfc.UserService;
 import java.util.Collections;
 import java.util.List;
 
-@Singleton
 public class TwoFactorAuthenticationViolationChecker implements FeatureViolationChecker {
   @Inject private TwoFactorAuthenticationManager twoFactorAuthenticationManager;
   @Inject private UserService userService;

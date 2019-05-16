@@ -5,10 +5,6 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
-import io.harness.limits.Action;
-import io.harness.limits.ActionType;
-import io.harness.limits.Counter;
-import io.harness.limits.counter.service.CounterService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.MessageFormatter;
@@ -24,14 +20,11 @@ public class InstanceUsageLimitExcessHandlerImpl implements InstanceUsageLimitEx
 
   private InstanceUsageLimitChecker limitChecker;
   private AlertService alertService;
-  private CounterService counterService;
 
   @Inject
-  public InstanceUsageLimitExcessHandlerImpl(
-      InstanceUsageLimitChecker limitChecker, AlertService alertService, CounterService counterService) {
+  public InstanceUsageLimitExcessHandlerImpl(InstanceUsageLimitChecker limitChecker, AlertService alertService) {
     this.limitChecker = limitChecker;
     this.alertService = alertService;
-    this.counterService = counterService;
   }
 
   private static final String WARNING_MESSAGE =
@@ -47,20 +40,6 @@ public class InstanceUsageLimitExcessHandlerImpl implements InstanceUsageLimitEx
       alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.INSTANCE_USAGE_APPROACHING_LIMIT, alertData);
     } else {
       alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.INSTANCE_USAGE_APPROACHING_LIMIT, alertData);
-    }
-  }
-
-  @Override
-  public void updateViolationCount(String accountId, double actualUsage) {
-    boolean withinLimit = limitChecker.isWithinLimit(accountId, 100L, actualUsage);
-    Action action = new Action(accountId, ActionType.INSTANCE_USAGE_LIMIT_EXCEEDED);
-
-    if (!withinLimit) {
-      int valueOnInsert = 1;
-      counterService.increment(action, valueOnInsert);
-    } else {
-      // reset counter
-      counterService.upsert(new Counter(action.key(), 0));
     }
   }
 

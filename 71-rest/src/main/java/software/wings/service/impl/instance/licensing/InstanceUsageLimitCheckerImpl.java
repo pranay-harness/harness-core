@@ -22,7 +22,7 @@ public class InstanceUsageLimitCheckerImpl implements InstanceUsageLimitChecker 
     long allowedUsage = instanceLimitProvider.getAllowedInstances(accountId);
     boolean withinLimit = isWithinLimit(actualUsage, percentLimit, allowedUsage);
 
-    log.info("[Instance Usage] Allowed: {}, Used: {}, percentLimit: {}, Within Limit: {}, accountId={}", allowedUsage,
+    log.info("[Instance Usage] Allowed: {}, Used: {}, percentLimit: {}, Within Limit: {}, Account ID: {}", allowedUsage,
         actualUsage, percentLimit, withinLimit, accountId);
     return withinLimit;
   }

@@ -22,11 +22,8 @@ import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Checks if an account's usage of resources is close to limits and alerts customers regarding same.
- */
-@Slf4j
 @DisallowConcurrentExecution
+@Slf4j
 public class LimitVicinityCheckerJob implements Job {
   public static final String GROUP = "LIMIT_VICINITY_CHECKER_CRON_GROUP";
 

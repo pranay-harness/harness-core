@@ -1,7 +1,6 @@
 package software.wings.licensing.violations.checkers;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import software.wings.beans.FeatureEnabledViolation;
 import software.wings.beans.FeatureViolation;
@@ -13,7 +12,6 @@ import software.wings.service.intfc.compliance.GovernanceConfigService;
 import java.util.Collections;
 import java.util.List;
 
-@Singleton
 public class GovernanceViolationChecker implements FeatureViolationChecker {
   @Inject private GovernanceConfigService governanceConfigService;
 

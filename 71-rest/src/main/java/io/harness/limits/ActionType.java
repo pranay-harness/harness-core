@@ -13,7 +13,6 @@ public enum ActionType {
   CREATE_PIPELINE(Collections.singletonList(LimitType.STATIC)),
   CREATE_WORKFLOW(Collections.singletonList(LimitType.STATIC)),
   CREATE_INFRA_PROVISIONER(Collections.singletonList(LimitType.STATIC)),
-  INSTANCE_USAGE_LIMIT_EXCEEDED(Collections.emptyList()),
   DEPLOY(Collections.singletonList(LimitType.RATE_LIMIT));
 
   @Getter private List<LimitType> allowedLimitTypes;

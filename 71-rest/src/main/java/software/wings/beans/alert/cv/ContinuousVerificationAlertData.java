@@ -47,7 +47,6 @@ public class ContinuousVerificationAlertData implements AlertData {
     double alertThreshold =
         BigDecimal.valueOf(cvConfiguration.getAlertThreshold()).setScale(2, RoundingMode.HALF_UP).doubleValue();
     riskScore = BigDecimal.valueOf(riskScore).setScale(2, RoundingMode.HALF_UP).doubleValue();
-
     StringBuilder sb = new StringBuilder()
                            .append("24/7 Service Guard detected anomalies for ")
                            .append(cvConfiguration.getName())

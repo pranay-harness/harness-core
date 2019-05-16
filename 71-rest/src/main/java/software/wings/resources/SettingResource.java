@@ -18,12 +18,10 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
@@ -42,7 +40,6 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
-import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.AwsHelperResourceService;
@@ -51,7 +48,6 @@ import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
@@ -79,7 +75,6 @@ import javax.ws.rs.QueryParam;
 /**
  * Created by anubhaw on 5/17/16.
  */
-@Slf4j
 @Api("settings")
 @Path("/settings")
 @Consumes(APPLICATION_JSON)
@@ -94,8 +89,6 @@ public class SettingResource {
   @Inject private ArtifactService artifactService;
   @Inject private AzureResourceService azureResourceService;
   @Inject private AwsHelperResourceService awsHelperResourceService;
-  @Inject private YamlGitService yamlGitService;
-  @Inject private AccountService accountService;
 
   /**
    * List.
@@ -348,38 +341,6 @@ public class SettingResource {
   public RestResponse delete(
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @PathParam("attrId") String attrId) {
     settingsService.delete(appId, attrId);
-    return new RestResponse();
-  }
-
-  /**
-   * Delete all git connectors except the ones to retain
-   * @param appId Harness App ID
-   * @param accountId Harness Account ID
-   * @param gitConnectorsToRetain Body should be a list of git connector IDs
-   * @return Rest response
-   */
-  @DELETE
-  public RestResponse retainSelectedGitConnectorsAndDeleteRest(
-      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
-      @QueryParam("accountId") @NotEmpty String accountId, List<String> gitConnectorsToRetain) {
-    if (EmptyPredicate.isEmpty(gitConnectorsToRetain)) {
-      // We won't delete anything if list to retain is empty
-      // We expect the user to retain at least 1 Git Config
-      return new RestResponse();
-    }
-    logger.info("Retaining the following git connectors for accountId {}: {}", accountId, gitConnectorsToRetain);
-    logger.info("Starting deletion of git connectors for accountId {}", accountId);
-    boolean gitConnectorsDeleted =
-        settingsService.retainSelectedGitConnectorsAndDeleteRest(appId, accountId, gitConnectorsToRetain);
-    if (gitConnectorsDeleted) {
-      logger.info("Deleted remaining of Git Connectors for accountId {}", accountId);
-    }
-    boolean yamlGitConfigsDeleted =
-        yamlGitService.retainYamlGitConfigsOfSelectedGitConnectorsAndDeleteRest(accountId, gitConnectorsToRetain);
-    if (yamlGitConfigsDeleted) {
-      logger.info("Deleted Yaml Git Configs of accountId {} of remaining git connectors");
-    }
-    logger.info("Completed processing git connector and yaml git config deletions for accountId {}", accountId);
     return new RestResponse();
   }
 

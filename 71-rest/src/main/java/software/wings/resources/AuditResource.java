@@ -9,13 +9,11 @@ import com.codahale.metrics.annotation.Timed;
 import io.dropwizard.jersey.caching.CacheControl;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.beans.SearchFilter.Operator;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.audit.AuditHeaderYamlResponse;
-import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuditService;
 
 import java.util.concurrent.TimeUnit;
@@ -33,7 +31,6 @@ import javax.ws.rs.QueryParam;
 @Path("/audits")
 public class AuditResource {
   private AuditService httpAuditService;
-  private AccountService accountService;
 
   /**
    * Gets http audit service.
@@ -41,9 +38,8 @@ public class AuditResource {
    * @return the http audit service
    */
   @Inject
-  public AuditResource(AuditService httpAuditService, AccountService accountService) {
+  public AuditResource(AuditService httpAuditService) {
     this.httpAuditService = httpAuditService;
-    this.accountService = accountService;
   }
 
   /**
@@ -67,13 +63,6 @@ public class AuditResource {
   @Produces("application/json")
   public RestResponse<PageResponse<AuditHeader>> list(
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<AuditHeader> pageRequest) {
-    // Restrict visibility to one week on UI
-    long oneWeekAgo = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(7);
-    boolean isCommunityAccount = accountService.isCommunityAccount(accountId);
-    if (isCommunityAccount) {
-      pageRequest.addFilter(AuditHeaderKeys.createdAt, Operator.GT, oneWeekAgo);
-    }
-
     pageRequest.addFilter(AuditHeaderKeys.accountId, EQ, accountId);
     return new RestResponse<>(httpAuditService.list(pageRequest));
   }
