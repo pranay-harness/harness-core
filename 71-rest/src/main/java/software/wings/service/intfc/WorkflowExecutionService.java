@@ -40,6 +40,8 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 public interface WorkflowExecutionService extends StateStatusUpdate {
+  HIterator<WorkflowExecution> executions(String appId, long startedFrom, long statedTo, Set<String> includeOnlyFields);
+
   PageResponse<WorkflowExecution> listExecutions(PageRequest<WorkflowExecution> pageRequest, boolean includeGraph);
 
   PageResponse<WorkflowExecution> listExecutions(PageRequest<WorkflowExecution> pageRequest, boolean includeGraph,

@@ -239,8 +239,6 @@ import javax.validation.executable.ValidateOnExecution;
 
 /**
  * The Class WorkflowExecutionServiceImpl.
- *
- * @author Rishi
  */
 @Singleton
 @ValidateOnExecution
@@ -278,6 +276,22 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private PreDeploymentChecker preDeploymentChecker;
   @Inject private AlertService alertService;
   @Inject private WorkflowServiceHelper workflowServiceHelper;
+
+  @Override
+  public HIterator<WorkflowExecution> executions(
+      String appId, long startedFrom, long statedTo, Set<String> includeOnlyFields) {
+    Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
+                                         .filter(WorkflowExecutionKeys.appId, appId)
+                                         .field(WorkflowExecutionKeys.startTs)
+                                         .greaterThanOrEq(startedFrom)
+                                         .field(WorkflowExecutionKeys.startTs)
+                                         .lessThan(statedTo);
+    if (isNotEmpty(includeOnlyFields)) {
+      includeOnlyFields.forEach(field -> query.project(field, true));
+    }
+
+    return new HIterator<>(query.fetch());
+  }
 
   /**
    * {@inheritDoc}
