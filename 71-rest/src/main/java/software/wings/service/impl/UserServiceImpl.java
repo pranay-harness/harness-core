@@ -81,6 +81,7 @@ import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
+import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.persistence.UuidAware;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -195,6 +196,7 @@ public class UserServiceImpl implements UserService {
    * The Executor service.
    */
   @Inject ExecutorService executorService;
+  @Inject private UserServiceLimitChecker userServiceLimitChecker;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private EmailNotificationService emailNotificationService;
   @Inject private MainConfiguration configuration;
@@ -217,6 +219,7 @@ public class UserServiceImpl implements UserService {
   @Inject private AuthenticationManager authenticationManager;
   @Inject private AuthenticationUtils authenticationUtils;
   @Inject private SSOService ssoService;
+  @Inject private LimitConfigurationService limits;
 
   private volatile Set<String> blacklistedDomains = new HashSet<>();
 
@@ -728,6 +731,10 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public List<UserInvite> inviteUsers(UserInvite userInvite) {
+    String accountId = userInvite.getAccountId();
+
+    limitCheck(accountId, userInvite);
+
     return userInvite.getEmails()
         .stream()
         .map(email -> {
@@ -736,6 +743,29 @@ public class UserServiceImpl implements UserService {
           return inviteUser(userInviteClone);
         })
         .collect(toList());
+  }
+
+  private void limitCheck(String accountId, UserInvite userInvite) {
+    try {
+      Account account = accountService.get(accountId);
+      if (null == account) {
+        logger.error("No account found for accountId={}", accountId);
+        return;
+      }
+
+      PageRequest<User> request = aPageRequest()
+                                      .addFilter(UserKeys.accounts, IN, Collections.singletonList(account).toArray())
+                                      .withLimit(PageRequest.UNLIMITED)
+                                      .build();
+
+      List<User> existingUsersAndInvites = list(request, false);
+      userServiceLimitChecker.limitCheck(accountId, existingUsersAndInvites, new HashSet<>(userInvite.getEmails()));
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      // catching this because we don't want to stop user invites due to failure in limit check
+      logger.error("Error while checking limits. accountId={}", accountId, e);
+    }
   }
 
   @Override

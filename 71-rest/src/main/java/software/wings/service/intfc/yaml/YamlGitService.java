@@ -204,4 +204,7 @@ public interface YamlGitService {
   void asyncFullSyncForEntireAccount(String accountId);
 
   List<GitFileChange> obtainApplicationYamlGitFileChanges(String accountId, Application app);
+
+  boolean retainYamlGitConfigsOfSelectedGitConnectorsAndDeleteRest(
+      String accountId, List<String> gitConnectorsToRetain);
 }

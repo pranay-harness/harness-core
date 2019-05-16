@@ -53,6 +53,7 @@ import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.WingsTestModule;
 import software.wings.app.CacheModule;
+import software.wings.app.FeatureViolationsModule;
 import software.wings.app.LicenseModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
@@ -311,6 +312,7 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
     modules.add(new WingsTestModule());
     modules.add(new TemplateModule());
     modules.add(new EventsModule((MainConfiguration) configuration));
+    modules.add(new FeatureViolationsModule());
     return modules;
   }
 
