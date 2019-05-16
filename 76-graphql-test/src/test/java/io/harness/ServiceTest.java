@@ -54,6 +54,8 @@ public class ServiceTest extends GraphQLTest {
     createdAt
     createdBy {
       id
+      name
+      email
     }
   }
 }*/ service.getUuid());
@@ -67,6 +69,9 @@ public class ServiceTest extends GraphQLTest {
     assertThat(qlService.get(QLServiceKeys.createdAt))
         .isEqualTo(GraphQLDateTimeScalar.convertToString(service.getCreatedAt()));
     assertThat(qlService.sub(QLServiceKeys.createdBy).get(QLUserKeys.id)).isEqualTo(service.getCreatedBy().getUuid());
+    assertThat(qlService.sub(QLServiceKeys.createdBy).get(QLUserKeys.name)).isEqualTo(service.getCreatedBy().getName());
+    assertThat(qlService.sub(QLServiceKeys.createdBy).get(QLUserKeys.email))
+        .isEqualTo(service.getCreatedBy().getEmail());
   }
 
   @Test

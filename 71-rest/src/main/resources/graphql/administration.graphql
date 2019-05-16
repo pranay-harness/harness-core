@@ -1,5 +1,5 @@
 type User {
   id: String
-  # name: String - do not expouse yet
-  # email: String - do not expouse yet
+  name: String
+  email: String
 }
