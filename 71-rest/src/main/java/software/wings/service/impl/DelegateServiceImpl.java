@@ -160,6 +160,7 @@ import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.utils.Misc;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -1145,6 +1146,13 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @VisibleForTesting
   Delegate upsertDelegateOperation(Delegate existingDelegate, Delegate delegate) {
+    long delegateHeartbeat = delegate.getLastHeartBeat();
+    long now = clock.millis();
+    long skew = Math.abs(now - delegateHeartbeat);
+    if (skew > TimeUnit.MINUTES.toMillis(2L)) {
+      logger.warn("Delegate {} has clock skew of {}", delegate.getUuid(), Misc.getDurationString(skew));
+    }
+    delegate.setLastHeartBeat(now);
     Delegate registeredDelegate;
     if (existingDelegate == null) {
       logger.info("No existing delegate, adding for account {}: Hostname: {} IP: {}", delegate.getAccountId(),
