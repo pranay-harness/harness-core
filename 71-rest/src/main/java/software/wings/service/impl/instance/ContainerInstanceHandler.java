@@ -363,9 +363,12 @@ public class ContainerInstanceHandler extends InstanceHandler {
       if (instanceInfo instanceof ContainerInfo) {
         ContainerInfo containerInfo = (ContainerInfo) instanceInfo;
         String containerSvcName = getContainerSvcName(containerInfo);
-        String namespace = containerInfo instanceof KubernetesContainerInfo
-            ? ((KubernetesContainerInfo) containerInfo).getNamespace()
-            : null;
+        String namespace = null;
+        if (containerInfo instanceof KubernetesContainerInfo) {
+          namespace = ((KubernetesContainerInfo) containerInfo).getNamespace();
+        } else if (containerInfo instanceof K8sPodInfo) {
+          namespace = ((K8sPodInfo) containerInfo).getNamespace();
+        }
         String releaseName = containerInfo instanceof K8sPodInfo ? ((K8sPodInfo) containerInfo).getReleaseName() : null;
         ContainerMetadataType type = containerInfo instanceof K8sPodInfo ? ContainerMetadataType.K8S : null;
         instanceMap.put(ContainerMetadata.builder()
