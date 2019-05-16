@@ -17,7 +17,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AccountType;
-import software.wings.beans.FeatureUsageViolation;
+import software.wings.beans.FeatureEnabledViolation;
 import software.wings.beans.FeatureViolation;
 import software.wings.beans.sso.LdapConnectionSettings;
 import software.wings.beans.sso.LdapSettings;
@@ -30,10 +30,10 @@ import software.wings.service.intfc.SSOSettingService;
 import java.util.List;
 
 public class SSOViolationCheckerTest extends WingsBaseTest {
-  public static final String TEST_SAML_SSO = "TEST SAML";
-  public static final String TEST_LDAP_SSO = "TEST LDAP";
-  public static final String TEST_OAUTH_SSO = "TEST OAUTH";
-  public static final String TEST_ACCOUNT_ID = "ACCOUNT_ID";
+  private static final String TEST_SAML_SSO = "TEST SAML";
+  private static final String TEST_LDAP_SSO = "TEST LDAP";
+  private static final String TEST_OAUTH_SSO = "TEST OAUTH";
+  private static final String TEST_ACCOUNT_ID = "ACCOUNT_ID";
 
   @Mock private SSOSettingService ssoSettingService;
 
@@ -47,15 +47,7 @@ public class SSOViolationCheckerTest extends WingsBaseTest {
     List<FeatureViolation> featureViolationList = ssoViolationChecker.check(TEST_ACCOUNT_ID, AccountType.COMMUNITY);
     assertNotNull(featureViolationList);
     assertEquals(1, featureViolationList.size());
-    assertEquals(((FeatureUsageViolation) featureViolationList.get(0)).getUsageCount(), ssoSettingsList.size());
-    assertTrue("SSOType should be either LDAP OR SAML",
-        ((FeatureUsageViolation) featureViolationList.get(0))
-            .getUsages()
-            .stream()
-            .allMatch(usage
-                -> (SSOType.SAML.name().equals(usage.getEntityType()) && TEST_SAML_SSO.equals(usage.getEntityName()))
-                    || (SSOType.LDAP.name().equals(usage.getEntityType())
-                           && TEST_LDAP_SSO.equals(usage.getEntityName()))));
+    assertEquals(((FeatureEnabledViolation) featureViolationList.get(0)).getUsageCount(), ssoSettingsList.size());
   }
 
   @Test

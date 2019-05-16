@@ -19,6 +19,7 @@ import software.wings.beans.BambooConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Builder;
 import software.wings.beans.SettingAttribute.SettingCategory;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -28,6 +29,7 @@ public class SettingResourceTest extends WingsBaseTest {
   @Mock private SecretManager secretManager;
   @Mock private SettingsService settingsService;
   @Mock private UsageRestrictionsService usageRestrictionsService;
+  @Mock private AccountService accountService;
 
   @InjectMocks private SettingResource settingResource;
 

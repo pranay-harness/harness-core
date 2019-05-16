@@ -5,6 +5,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import software.wings.beans.AccountType;
@@ -20,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Singleton
 public class APIKeyViolationChecker implements FeatureViolationChecker {
   private static final int MAX_COUNT_ALLOWED_IN_PAID = Integer.MAX_VALUE;
   private static final int MAX_COUNT_ALLOWED_IN_TRIAL = Integer.MAX_VALUE;

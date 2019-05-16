@@ -30,6 +30,7 @@ import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProv
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.CacheModule;
 import software.wings.app.DeployMode;
+import software.wings.app.FeatureViolationsModule;
 import software.wings.app.GuiceObjectFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
@@ -115,6 +116,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
     modules.add(new ManagerExecutorModule());
     modules.add(new TemplateModule());
     modules.add(new EventsModule(configuration));
+    modules.add(new FeatureViolationsModule());
 
     Injector injector = Guice.createInjector(modules);
 

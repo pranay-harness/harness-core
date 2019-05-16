@@ -82,10 +82,9 @@ import io.harness.context.ContextElementType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.limits.LimitCheckerFactory;
+import io.harness.limits.InstanceUsageExceededLimitException;
 import io.harness.limits.checker.LimitApproachingException;
 import io.harness.limits.checker.UsageLimitExceededException;
-import io.harness.lock.PersistentLocker;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
@@ -165,14 +164,12 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.common.Constants;
 import software.wings.common.cache.MongoStore;
 import software.wings.dl.WingsPersistence;
-import software.wings.licensing.LicenseService;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.WorkflowExecutionServiceImpl.Tree.TreeBuilder;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
-import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -258,11 +255,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private StateMachineExecutionSimulator stateMachineExecutionSimulator;
   @Inject private GraphRenderer graphRenderer;
   @Inject private AppService appService;
-  @Inject private AccountService accountService;
-  @Inject private LicenseService licenseService;
   @Inject private WorkflowService workflowService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
-  @Inject private PersistentLocker persistentLocker;
   @Inject private PipelineService pipelineService;
   @Inject private ExecutorService executorService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
@@ -274,7 +268,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private UserGroupService userGroupService;
   @Inject private AuthHandler authHandler;
   @Inject private SweepingOutputService sweepingOutputService;
-  @Inject private LimitCheckerFactory limitCheckerFactory;
   @Inject private PreDeploymentChecker preDeploymentChecker;
   @Inject private AlertService alertService;
   @Inject private WorkflowServiceHelper workflowServiceHelper;
@@ -909,6 +902,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (isEmpty(pipeline.getPipelineStages())) {
       throw new WingsException("You can not deploy an empty pipeline.", WingsException.USER);
     }
+    // Checking whether pipeline or
+    preDeploymentChecker.checkIfPipelineUsingRestrictedFeatures(pipeline);
 
     List<WorkflowExecution> runningWorkflowExecutions =
         getRunningWorkflowExecutions(WorkflowType.PIPELINE, appId, pipelineId);
@@ -1014,6 +1009,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (!workflow.getOrchestrationWorkflow().isValid()) {
       throw new InvalidRequestException("Workflow requested for execution is not valid/complete.");
     }
+    // Doing this check here so that workflow is already fetched from databae.
+    preDeploymentChecker.checkIfWorkflowUsingRestrictedFeatures(workflow);
 
     StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
         ((CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getGraph(),
@@ -1524,6 +1521,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       WorkflowExecutionUpdate workflowExecutionUpdate, Trigger trigger) {
     // logging as JSON because logDNA automatically parses json objects.
     // https://docs.logdna.com/docs/ingestion#section-json-parsing
+    // Update: for some reason they don't parse JSON even as they claim it. Had to write a custom parsing rule in logDNA
+    // for this log
     JSONObject context = new JSONObject().put("appId", appId);
     String accountId = appService.getAccountIdByAppId(appId);
     context.put("accountId", accountId);
@@ -1532,6 +1531,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     logger.info("Execution Triggered. {}", context.toString());
 
     checkDeploymentRateLimit(accountId, appId);
+    checkInstanceUsageLimit(accountId, appId);
 
     switch (executionArgs.getWorkflowType()) {
       case PIPELINE: {
@@ -1571,6 +1571,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       throw e;
     } catch (Exception e) {
       logger.error("Error checking deployment rate limit. accountId={}", accountId, e);
+    }
+  }
+
+  private void checkInstanceUsageLimit(String accountId, String appId) {
+    try {
+      preDeploymentChecker.checkInstanceUsageLimit(accountId, appId);
+    } catch (InstanceUsageExceededLimitException e) {
+      throw new WingsException(ErrorCode.USAGE_LIMITS_EXCEEDED,
+          "You have reached your service instance limits. Some deployments might be blocked.", USER);
+    } catch (Exception e) {
+      logger.error("Error while checking SI usage limit. accountId={}", accountId, e);
     }
   }
 
