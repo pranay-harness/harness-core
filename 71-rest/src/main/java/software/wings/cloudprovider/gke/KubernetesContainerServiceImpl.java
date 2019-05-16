@@ -2,6 +2,8 @@ package software.wings.cloudprovider.gke;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.ACCESS_DENIED;
+import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
@@ -12,6 +14,8 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.http.HttpStatus.SC_FORBIDDEN;
+import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
 import static software.wings.beans.command.ContainerApiVersions.KUBERNETES_V1;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.common.Constants.HARNESS_KUBERNETES_REVISION_LABEL_KEY;
@@ -66,6 +70,7 @@ import io.fabric8.kubernetes.api.model.extensions.ReplicaSetList;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSetList;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.RollableScalableResource;
@@ -181,6 +186,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     try {
       return timeLimiter.callWithTimeout(
           getControllerInternal(kubernetesConfig, encryptedDataDetails, name, namespace), 2, TimeUnit.MINUTES, true);
+    } catch (WingsException e) {
+      throw e;
     } catch (UncheckedTimeoutException e) {
       logger.error(format("Timed out getting controller %s", name), e);
       throw new WingsException(ErrorCode.GENERAL_ERROR, e).addParam("message", "Timed out while getting controller");
@@ -250,6 +257,23 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
             if (e.getCause() != null) {
               logger.warn("Caused by: {}:{}", e.getCause().getClass().getSimpleName(), e.getCause().getMessage());
             }
+
+            // Special handling of k8s client 401/403 error. No need to retry...
+            if (e instanceof KubernetesClientException) {
+              KubernetesClientException clientException = (KubernetesClientException) e;
+              int code = clientException.getCode();
+              // error code 0 means connectivity issue. It will retry.
+              switch (code) {
+                case SC_UNAUTHORIZED:
+                  throw new WingsException(INVALID_CREDENTIAL, USER, e);
+                case SC_FORBIDDEN:
+                  throw new WingsException(ACCESS_DENIED, USER, e);
+                default:
+                  logger.warn("Got KubernetesClientException with error code {}", code);
+                  break;
+              }
+            }
+
             sleep(ofSeconds(1));
             logger.info("Retrying getController {} ...", name);
           }

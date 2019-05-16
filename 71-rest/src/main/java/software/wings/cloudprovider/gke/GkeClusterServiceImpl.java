@@ -1,5 +1,6 @@
 package software.wings.cloudprovider.gke;
 
+import static io.harness.eraro.ErrorCode.CLUSTER_NOT_FOUND;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
@@ -226,11 +227,21 @@ public class GkeClusterServiceImpl implements GkeClusterService {
       logger.info("Cluster status: {}", cluster.getStatus());
       logger.debug("Master endpoint: {}", cluster.getEndpoint());
       return configFromCluster(cluster, namespace);
-    } catch (IOException exception) {
-      logNotFoundOrError(exception, projectId, location, clusterName, "getting");
-      throw new InvalidRequestException(
-          format("Error getting cluster %s in location %s for project %s", clusterName, location, projectId),
-          exception);
+    } catch (IOException e) {
+      // PL-1118: In case the cluster is being destroyed/torn down. Return null will immediately reclaim the service
+      // instances
+      if (e instanceof GoogleJsonResponseException
+          && ((GoogleJsonResponseException) e).getDetails().getCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
+        String errorMessage =
+            format("Cluster %s does not exist in location %s for project %s", clusterName, location, projectId);
+        logger.warn(errorMessage, e);
+        throw new WingsException(CLUSTER_NOT_FOUND, e).addParam("message", errorMessage);
+      } else {
+        String errorMessage =
+            format("Error getting cluster %s in location %s for project %s", clusterName, location, projectId);
+        logger.error(errorMessage, e);
+        throw new InvalidRequestException(errorMessage, e);
+      }
     }
   }
 

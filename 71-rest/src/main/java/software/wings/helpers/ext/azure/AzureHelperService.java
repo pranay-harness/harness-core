@@ -5,6 +5,7 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.CLUSTER_NOT_FOUND;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 import static java.lang.String.format;
@@ -41,6 +42,7 @@ import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
+import org.apache.http.HttpStatus;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
@@ -454,10 +456,16 @@ public class AzureHelperService {
         return parseConfig(
             response.body().getProperties().getKubeConfig(), isNotBlank(namespace) ? namespace : "default");
       } else {
-        logger.error(
+        String errorMessage =
             "Error occurred while getting KubernetesClusterConfig from subscriptionId/resourceGroup/clusterName :"
-            + subscriptionId + "/" + resourceGroup + "/" + clusterName + response.raw());
-        throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", response.message());
+            + subscriptionId + "/" + resourceGroup + "/" + clusterName + response.raw();
+        logger.error(errorMessage);
+        int statusCode = response.code();
+        if (statusCode == HttpStatus.SC_NOT_FOUND) {
+          throw new WingsException(CLUSTER_NOT_FOUND).addParam("message", errorMessage);
+        } else {
+          throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", response.message());
+        }
       }
     } catch (Exception e) {
       HandleAzureAuthenticationException(e);
