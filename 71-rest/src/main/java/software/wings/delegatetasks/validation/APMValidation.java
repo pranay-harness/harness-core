@@ -8,6 +8,7 @@ import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptionConfig;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONObject;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -154,7 +155,7 @@ public class APMValidation extends AbstractSecretManagerValidation {
           getAPMRestClient(config).validate(config.getUrl(), config.getHeaders(), config.getOptions());
       if (isNotEmpty(config.getBody())) {
         request = getAPMRestClient(config).validatePost(
-            config.getUrl(), config.getHeaders(), config.getOptions(), config.getBody());
+            config.getUrl(), config.getHeaders(), config.getOptions(), new JSONObject(config.getBody()).toMap());
       }
       final Response<Object> response;
 

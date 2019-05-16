@@ -18,6 +18,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
+import software.wings.sm.states.APMVerificationState.Method;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -38,6 +39,10 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
   @Attributes(title = "Base Url") private String url;
 
   @NotEmpty @Attributes(title = "Validation Url", required = true) private String validationUrl;
+
+  private String validationBody;
+
+  private Method validationMethod;
 
   @SchemaIgnore @NotEmpty private String accountId;
 
@@ -126,6 +131,8 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
       return APMValidateCollectorConfig.builder()
           .baseUrl(url)
           .url(validationUrl)
+          .body(validationBody)
+          .collectionMethod(validationMethod)
           .headers(headers)
           .options(options)
           .build();
