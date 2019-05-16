@@ -327,23 +327,17 @@ public class AuditServiceImpl implements AuditService {
 
       UuidAccess entityToQuery;
       switch (type) {
-        case CREATE: {
+        case CREATE:
+        case UPDATE:
           entityToQuery = (UuidAccess) newEntity;
           break;
-        }
-        case UPDATE: {
-          entityToQuery = (UuidAccess) newEntity;
-          break;
-        }
-        case DELETE: {
+        case DELETE:
           entityToQuery = (UuidAccess) oldEntity;
           break;
-        }
-        default: {
+        default:
           logger.warn(
               format("Unknown type class while registering audit actions: [%s]", type.getClass().getSimpleName()));
           return;
-        }
       }
       EntityAuditRecordBuilder builder = EntityAuditRecord.builder();
       entityHelper.loadMetaDataForEntity(entityToQuery, builder, type);
