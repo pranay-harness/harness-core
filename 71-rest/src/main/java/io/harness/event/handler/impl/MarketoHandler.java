@@ -70,6 +70,7 @@ public class MarketoHandler implements EventHandler {
   @Inject private AccountService accountService;
   @Inject private MarketoHelper marketoHelper;
   @Inject private PersistentLocker persistentLocker;
+  @Inject private Utils utils;
 
   private MarketoConfig marketoConfig;
 
@@ -208,29 +209,9 @@ public class MarketoHandler implements EventHandler {
           break;
       }
 
-      String email = properties.get(EMAIL_ID);
-      if (isEmpty(email)) {
-        logger.error("User email is empty");
-        return;
-      }
-
-      User user = userService.getUserByEmail(email);
+      User user = utils.getUser(properties);
       if (user == null) {
-        logger.error("User not found for email {}", email);
         return;
-      }
-
-      List<Account> accounts = user.getAccounts();
-      if (isEmpty(accounts)) {
-        logger.info("User {} is not assigned to any accounts", email);
-        return;
-      } else {
-        if (accounts.size() > 1) {
-          // At this point, only harness users can be assigned to more than one account.
-          // Marketo and Salesforce follow the model one user - one account.
-          logger.info("User {} is associated with more than one account, skipping marketo publish", email);
-          return;
-        }
       }
 
       switch (eventType) {
@@ -382,7 +363,7 @@ public class MarketoHandler implements EventHandler {
 
     if (!campaignResponse.isSuccess()) {
       logger.error("Marketo http response reported failure for eventType {}, {}", eventType,
-          marketoHelper.getErrorMsg(campaignResponse.getErrors()));
+          utils.getErrorMsg(campaignResponse.getErrors()));
       return false;
     }
 

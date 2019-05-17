@@ -61,6 +61,11 @@ marketoConfig:
   clientId: "marketo_client_id"
   clientSecret: "marketo_client_secret"
 
+segmentConfig:
+  enabled: false #segmentConfigEnable
+  url: "segment_url_place_holder"
+  apiKey: "segment_api_key"
+
 githubConfig:
   clientId: githubClientId
   clientSecret: githubClientSecret

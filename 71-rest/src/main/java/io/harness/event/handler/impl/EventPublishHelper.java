@@ -24,6 +24,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.event.handler.marketo.MarketoConfig;
+import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.event.model.Event;
 import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
@@ -89,13 +90,14 @@ public class EventPublishHelper {
   @Inject private UserGroupService userGroupService;
   @Inject private CVConfigurationService cvConfigurationService;
   @Inject private MarketoConfig marketoConfig;
+  @Inject private SegmentConfig segmentConfig;
   @Inject private StateExecutionService stateExecutionService;
   @Inject private ContinuousVerificationService continuousVerificationService;
 
   private List<StateType> analysisStates = VerificationConstants.getAnalysisStates();
 
   public void publishLicenseChangeEvent(String accountId, String oldAccountType, String newAccountType) {
-    if (!checkIfMarketoIsEnabled()) {
+    if (!checkIfMarketoOrSegmentIsEnabled()) {
       return;
     }
 
@@ -129,7 +131,7 @@ public class EventPublishHelper {
   }
 
   public void publishSSOEvent(String accountId) {
-    String userEmail = checkIfMarketoIsEnabledAndGetUserEmail(EventType.SETUP_SSO);
+    String userEmail = checkIfMarketoOrSegmentIsEnabledAndGetUserEmail(EventType.SETUP_SSO);
 
     if (isEmpty(userEmail)) {
       return;
@@ -160,7 +162,7 @@ public class EventPublishHelper {
   }
 
   public void publishSetupCV247Event(String accountId, String cvConfigId) {
-    String userEmail = checkIfMarketoIsEnabledAndGetUserEmail(EventType.SETUP_CV_24X7);
+    String userEmail = checkIfMarketoOrSegmentIsEnabledAndGetUserEmail(EventType.SETUP_CV_24X7);
 
     if (isEmpty(userEmail)) {
       return;
@@ -204,7 +206,7 @@ public class EventPublishHelper {
   }
 
   public void publishSetupRbacEvent(String accountId, String entityId, EntityType entityType) {
-    String userEmail = checkIfMarketoIsEnabledAndGetUserEmail(EventType.SETUP_RBAC);
+    String userEmail = checkIfMarketoOrSegmentIsEnabledAndGetUserEmail(EventType.SETUP_RBAC);
 
     if (isEmpty(userEmail)) {
       return;
@@ -294,7 +296,7 @@ public class EventPublishHelper {
   }
 
   public void publishSetupIPWhitelistingEvent(String accountId, String whitelistId) {
-    String userEmail = checkIfMarketoIsEnabledAndGetUserEmail(EventType.SETUP_IP_WHITELISTING);
+    String userEmail = checkIfMarketoOrSegmentIsEnabledAndGetUserEmail(EventType.SETUP_IP_WHITELISTING);
 
     if (isEmpty(userEmail)) {
       return;
@@ -338,7 +340,7 @@ public class EventPublishHelper {
   }
 
   public void publishSetup2FAEvent(String accountId) {
-    String userEmail = checkIfMarketoIsEnabledAndGetUserEmail(EventType.SETUP_2FA);
+    String userEmail = checkIfMarketoOrSegmentIsEnabledAndGetUserEmail(EventType.SETUP_2FA);
 
     if (isEmpty(userEmail)) {
       return;
@@ -363,7 +365,7 @@ public class EventPublishHelper {
   }
 
   public void publishUserInviteFromAccountEvent(String accountId, String email) {
-    if (!checkIfMarketoIsEnabled()) {
+    if (!checkIfMarketoOrSegmentIsEnabled()) {
       return;
     }
 
@@ -385,7 +387,7 @@ public class EventPublishHelper {
   }
 
   public void publishInstalledDelegateEvent(String accountId, String delegateId) {
-    if (!checkIfMarketoIsEnabled()) {
+    if (!checkIfMarketoOrSegmentIsEnabled()) {
       return;
     }
 
@@ -425,7 +427,7 @@ public class EventPublishHelper {
   }
 
   public void publishWorkflowCreatedEvent(String workflowId, String accountId) {
-    String userEmail = checkIfMarketoIsEnabledAndGetUserEmail(EventType.FIRST_WORKFLOW_CREATED);
+    String userEmail = checkIfMarketoOrSegmentIsEnabledAndGetUserEmail(EventType.FIRST_WORKFLOW_CREATED);
 
     if (isEmpty(userEmail)) {
       return;
@@ -493,8 +495,8 @@ public class EventPublishHelper {
     publishEvent(EventType.NEW_TRIAL_SIGNUP, getProperties(null, email, userName, inviteId));
   }
 
-  private String checkIfMarketoIsEnabledAndGetUserEmail(EventType eventType) {
-    if (!checkIfMarketoIsEnabled()) {
+  private String checkIfMarketoOrSegmentIsEnabledAndGetUserEmail(EventType eventType) {
+    if (!checkIfMarketoOrSegmentIsEnabled()) {
       return null;
     }
 
@@ -503,7 +505,7 @@ public class EventPublishHelper {
       return null;
     }
 
-    if (isCampaignAlreadyReportedForUser(user, eventType)) {
+    if (isEventAlreadyReportedToUser(user, eventType)) {
       return null;
     }
 
@@ -527,14 +529,16 @@ public class EventPublishHelper {
     return true;
   }
 
-  private boolean isCampaignAlreadyReportedForUser(User user, EventType eventType) {
-    // only report campaign if not reported already
+  private boolean isEventAlreadyReportedToUser(User user, EventType eventType) {
+    // only report event if not reported already
     Set<String> reportedMarketoCampaigns = user.getReportedMarketoCampaigns();
-    if (isEmpty(reportedMarketoCampaigns)) {
+    Set<String> reportedSegmentTracks = user.getReportedSegmentTracks();
+
+    if (isEmpty(reportedMarketoCampaigns) || isEmpty(reportedSegmentTracks)) {
       return false;
     }
 
-    return reportedMarketoCampaigns.contains(eventType.name());
+    return reportedMarketoCampaigns.contains(eventType.name()) && reportedSegmentTracks.contains(eventType.name());
   }
 
   private boolean shouldPublishEventForAccount(String accountId) {
@@ -555,8 +559,8 @@ public class EventPublishHelper {
     return true;
   }
 
-  private boolean checkIfMarketoIsEnabled() {
-    return marketoConfig.isEnabled();
+  private boolean checkIfMarketoOrSegmentIsEnabled() {
+    return marketoConfig.isEnabled() || segmentConfig.isEnabled();
   }
 
   public boolean isWorkflowRolledBack(String workflowExecutionId, List<String> appIds) {
@@ -614,7 +618,7 @@ public class EventPublishHelper {
       boolean workflowWithVerification =
           publishVerificationWorkflowMetrics(workflowExecutionId, appIds, accountId, workflowRolledBack);
 
-      if (!checkIfMarketoIsEnabled()) {
+      if (!checkIfMarketoOrSegmentIsEnabled()) {
         return;
       }
 
@@ -648,15 +652,15 @@ public class EventPublishHelper {
         return;
       }
 
-      if (!isCampaignAlreadyReportedForUser(user, EventType.FIRST_DEPLOYMENT_EXECUTED)) {
+      if (!isEventAlreadyReportedToUser(user, EventType.FIRST_DEPLOYMENT_EXECUTED)) {
         publishIfFirstDeployment(workflowExecutionId, appIds, accountId, userEmail);
       }
 
-      if (!isCampaignAlreadyReportedForUser(user, EventType.FIRST_ROLLED_BACK_DEPLOYMENT) && workflowRolledBack) {
+      if (!isEventAlreadyReportedToUser(user, EventType.FIRST_ROLLED_BACK_DEPLOYMENT) && workflowRolledBack) {
         publishEvent(EventType.FIRST_ROLLED_BACK_DEPLOYMENT, getProperties(accountId, userEmail));
       }
 
-      if (!isCampaignAlreadyReportedForUser(user, EventType.FIRST_VERIFIED_DEPLOYMENT) && workflowWithVerification) {
+      if (!isEventAlreadyReportedToUser(user, EventType.FIRST_VERIFIED_DEPLOYMENT) && workflowWithVerification) {
         publishEvent(EventType.FIRST_VERIFIED_DEPLOYMENT, getProperties(accountId, userEmail));
       }
     });
