@@ -72,7 +72,7 @@ public class Service extends Base implements KeywordsAware, NameAccess {
 
   private boolean isK8sV2;
   @Indexed private String accountId;
-  private List<String> artifactStreamIds;
+  @Indexed private List<String> artifactStreamIds;
 
   @Builder
   public Service(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
