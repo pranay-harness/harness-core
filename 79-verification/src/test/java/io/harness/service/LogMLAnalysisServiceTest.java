@@ -308,7 +308,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertTrue(status);
 
     Set<LogDataRecord> logData = analysisService.getLogData(
-        logRequest, true, UUID.randomUUID().toString(), ClusterLevel.L1, StateType.SPLUNKV2, accountId);
+        logRequest, false, UUID.randomUUID().toString(), ClusterLevel.L1, StateType.SPLUNKV2, accountId);
     assertEquals(0, logData.size());
   }
 

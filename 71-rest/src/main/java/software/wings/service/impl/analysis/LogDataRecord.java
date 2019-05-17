@@ -45,19 +45,27 @@ import java.util.List;
  */
 @Entity(value = "logDataRecords", noClassnameStored = true)
 @Indexes({
-  @Index(fields =
-      {
-        @Field("stateType")
-        , @Field("stateExecutionId"), @Field("host"), @Field("timeStamp"), @Field("logMD5Hash"), @Field("clusterLevel"),
-            @Field("clusterLevel"), @Field("logCollectionMinute")
-      },
-      options = @IndexOptions(unique = true, name = "logUniqueIdx"))
+  @Index(fields = { @Field("stateExecutionId")
+                    , @Field("logCollectionMinute") },
+      options = @IndexOptions(name = "stateHostIdx"))
   ,
       @Index(fields = {
+        @Field("stateExecutionId"), @Field("clusterLevel"), @Field(value = "logCollectionMinute", type = IndexType.DESC)
+      }, options = @IndexOptions(name = "stateCanaryExIdx")), @Index(fields = {
+        @Field("stateExecutionId")
+        , @Field("clusterLevel"), @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("host")
+      }, options = @IndexOptions(name = "stateBumpIdx")), @Index(fields = {
+        @Field("workflowExecutionId")
+        , @Field("serviceId"), @Field("stateType"), @Field("query"), @Field("clusterLevel"),
+            @Field(value = "logCollectionMinute", type = IndexType.DESC)
+      }, options = @IndexOptions(name = "statePrevExIdx")), @Index(fields = {
         @Field("cvConfigId"), @Field("logCollectionMinute")
       }, options = @IndexOptions(name = "cvLogsIdx")), @Index(fields = {
-        @Field("clusterLevel"), @Field("cvConfigId"), @Field(value = "logCollectionMinute", type = IndexType.DESC)
-      }, options = @IndexOptions(name = "cvIdx"))
+        @Field("cvConfigId"), @Field("clusterLevel"), @Field(value = "logCollectionMinute", type = IndexType.DESC)
+      }, options = @IndexOptions(name = "cvRawRecordIdx")), @Index(fields = {
+        @Field("cvConfigId")
+        , @Field("clusterLevel"), @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("host")
+      }, options = @IndexOptions(name = "cvBumpIdx"))
 })
 @Data
 @Builder
@@ -70,7 +78,7 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware {
 
   @NotEmpty private String workflowId;
 
-  @NotEmpty @Indexed private String workflowExecutionId;
+  @NotEmpty private String workflowExecutionId;
 
   @NotEmpty private String serviceId;
 
@@ -135,60 +143,61 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware {
 
     com.google.cloud.datastore.Entity.Builder dataStoreRecordBuilder =
         com.google.cloud.datastore.Entity.newBuilder(taskKey);
-    addFieldIfNotEmpty(dataStoreRecordBuilder, "stateType", stateType.name(), true);
+    addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.stateType, stateType.name(), true);
     addFieldIfNotEmpty(dataStoreRecordBuilder, "appId", appId, true);
-    addFieldIfNotEmpty(dataStoreRecordBuilder, "workflowId", workflowId, true);
-    addFieldIfNotEmpty(dataStoreRecordBuilder, "workflowExecutionId", workflowExecutionId, true);
-    addFieldIfNotEmpty(dataStoreRecordBuilder, "serviceId", serviceId, false);
-    addFieldIfNotEmpty(dataStoreRecordBuilder, "cvConfigId", cvConfigId, false);
-    addFieldIfNotEmpty(dataStoreRecordBuilder, "stateExecutionId", stateExecutionId, true);
-    dataStoreRecordBuilder.set("timeStamp", timeStamp);
-    dataStoreRecordBuilder.set("logCollectionMinute", logCollectionMinute);
+    addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.workflowId, workflowId, true);
+    addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.workflowExecutionId, workflowExecutionId, true);
+    addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.serviceId, serviceId, false);
+    addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.cvConfigId, cvConfigId, false);
+    addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.stateExecutionId, stateExecutionId, true);
+    dataStoreRecordBuilder.set(LogDataRecordKeys.timeStamp, timeStamp);
+    dataStoreRecordBuilder.set(LogDataRecordKeys.logCollectionMinute, logCollectionMinute);
 
-    addFieldIfNotEmpty(dataStoreRecordBuilder, "timesLabeled", String.valueOf(timesLabeled), true);
-    addFieldIfNotEmpty(dataStoreRecordBuilder, "query", query, true);
-    addFieldIfNotEmpty(dataStoreRecordBuilder, "clusterLabel", clusterLabel, true);
-    addFieldIfNotEmpty(dataStoreRecordBuilder, "logMD5Hash", logMD5Hash, true);
+    addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.timesLabeled, String.valueOf(timesLabeled), true);
+    addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.query, query, true);
+    addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.clusterLabel, clusterLabel, true);
+    addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.logMD5Hash, logMD5Hash, true);
 
-    addFieldIfNotEmpty(dataStoreRecordBuilder, "clusterLevel", String.valueOf(clusterLevel), true);
-    addFieldIfNotEmpty(dataStoreRecordBuilder, "count", String.valueOf(count), true);
+    addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.clusterLevel, String.valueOf(clusterLevel), true);
+    addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.count, String.valueOf(count), true);
     try {
       Blob compressedLog = Blob.copyFrom(compressString(logMessage));
-      addFieldIfNotEmpty(dataStoreRecordBuilder, "logMessage", compressedLog, true);
+      addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.logMessage, compressedLog, true);
     } catch (Exception ex) {
       return null;
     }
-    addFieldIfNotEmpty(dataStoreRecordBuilder, "host", host, true);
+    addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.host, host, true);
 
     if (validUntil == null) {
       validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
     }
-    dataStoreRecordBuilder.set("validUntil", validUntil.getTime());
+    dataStoreRecordBuilder.set(LogDataRecordKeys.validUntil, validUntil.getTime());
 
     return dataStoreRecordBuilder.build();
   }
 
   @Override
   public GoogleDataStoreAware readFromCloudStorageEntity(com.google.cloud.datastore.Entity entity) {
-    final LogDataRecord dataRecord = LogDataRecord.builder()
-                                         .stateType(StateType.valueOf(readString(entity, "stateType")))
-                                         .serviceId(readString(entity, "serviceId"))
-                                         .cvConfigId(readString(entity, "cvConfigId"))
-                                         .query(readString(entity, "query"))
-                                         .clusterLabel(readString(entity, "clusterLabel"))
-                                         .host(readString(entity, "host"))
-                                         .timeStamp(Long.parseLong(readString(entity, "timeStamp")))
-                                         .timesLabeled(Integer.parseInt(readString(entity, "timesLabeled")))
-                                         .count(Integer.parseInt(readString(entity, "count")))
-                                         .logMD5Hash(readString(entity, "logMD5Hash"))
-                                         .clusterLevel(ClusterLevel.valueOf(readString(entity, "clusterLevel")))
-                                         .workflowId(readString(entity, "workflowId"))
-                                         .workflowExecutionId(readString(entity, "workflowExecutionId"))
-                                         .stateExecutionId(readString(entity, "stateExecutionId"))
-                                         .build();
+    final LogDataRecord dataRecord =
+        LogDataRecord.builder()
+            .stateType(StateType.valueOf(readString(entity, LogDataRecordKeys.stateType)))
+            .serviceId(readString(entity, LogDataRecordKeys.serviceId))
+            .cvConfigId(readString(entity, LogDataRecordKeys.cvConfigId))
+            .query(readString(entity, LogDataRecordKeys.query))
+            .clusterLabel(readString(entity, LogDataRecordKeys.clusterLabel))
+            .host(readString(entity, LogDataRecordKeys.host))
+            .timeStamp(Long.parseLong(readString(entity, LogDataRecordKeys.timeStamp)))
+            .timesLabeled(Integer.parseInt(readString(entity, LogDataRecordKeys.timesLabeled)))
+            .count(Integer.parseInt(readString(entity, LogDataRecordKeys.count)))
+            .logMD5Hash(readString(entity, LogDataRecordKeys.logMD5Hash))
+            .clusterLevel(ClusterLevel.valueOf(readString(entity, LogDataRecordKeys.clusterLevel)))
+            .workflowId(readString(entity, LogDataRecordKeys.workflowId))
+            .workflowExecutionId(readString(entity, LogDataRecordKeys.workflowExecutionId))
+            .stateExecutionId(readString(entity, LogDataRecordKeys.stateExecutionId))
+            .build();
 
     try {
-      byte[] byteCompressedMsg = readBlob(entity, "logMessage");
+      byte[] byteCompressedMsg = readBlob(entity, LogDataRecordKeys.logMessage);
       dataRecord.setLogMessage(deCompressString(byteCompressedMsg));
     } catch (Exception ex) {
       dataRecord.setLogMessage(null);
