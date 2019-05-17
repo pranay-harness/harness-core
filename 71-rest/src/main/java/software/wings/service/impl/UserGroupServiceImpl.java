@@ -378,7 +378,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     Set<PermissionType> permissions = userGroup.getAccountPermissions().getPermissions();
-    if (permissions.contains(PermissionType.USER_PERMISSION_MANAGEMENT)) {
+    if (isNotEmpty(permissions) && permissions.contains(PermissionType.USER_PERMISSION_MANAGEMENT)) {
       if (!permissions.contains(PermissionType.USER_PERMISSION_READ)) {
         logger.info("Received account permissions {} are not in proper format for account {}, userGroupName {}",
             permissions, userGroup.getAccountId(), userGroup.getName());
