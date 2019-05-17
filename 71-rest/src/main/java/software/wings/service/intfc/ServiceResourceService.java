@@ -488,4 +488,8 @@ public interface ServiceResourceService extends OwnedByApplication {
   Service getWithHelmValues(String appId, String serviceId, SetupStatus status);
 
   Service updateWithHelmValues(Service service);
+
+  List<Service> listByArtifactStreamId(String appId, String artifactStreamId);
+
+  List<Service> listByArtifactStreamId(String artifactStreamId);
 }

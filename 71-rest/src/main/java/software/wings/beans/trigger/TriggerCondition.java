@@ -3,6 +3,7 @@ package software.wings.beans.trigger;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Data;
+import lombok.experimental.FieldNameConstants;
 
 import javax.validation.constraints.NotNull;
 
@@ -18,6 +19,7 @@ import javax.validation.constraints.NotNull;
       @JsonSubTypes.Type(value = NewInstanceTriggerCondition.class, name = "NEW_INSTANCE")
 })
 @Data
+@FieldNameConstants(innerTypeName = "TriggerConditionKeys")
 public abstract class TriggerCondition {
   @NotNull private TriggerConditionType conditionType;
   private String conditionDisplayName;

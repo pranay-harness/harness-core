@@ -3,6 +3,7 @@ package software.wings.service.impl.artifactstream;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -50,8 +51,8 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldCreate() {
-    ArtifactStream artifactStream1 = getArtifactStream(ARTIFACT_STREAM_ID_1);
-    ArtifactStream artifactStream2 = getArtifactStream(ARTIFACT_STREAM_ID_2);
+    ArtifactStream artifactStream1 = getArtifactStream(ARTIFACT_STREAM_ID_1, APP_ID);
+    ArtifactStream artifactStream2 = getArtifactStream(ARTIFACT_STREAM_ID_2, APP_ID);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_1)).thenReturn(artifactStream1);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_2)).thenReturn(artifactStream2);
 
@@ -73,8 +74,8 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldDelete() {
-    ArtifactStream artifactStream1 = getArtifactStream(ARTIFACT_STREAM_ID_1);
-    ArtifactStream artifactStream2 = getArtifactStream(ARTIFACT_STREAM_ID_2);
+    ArtifactStream artifactStream1 = getArtifactStream(ARTIFACT_STREAM_ID_1, APP_ID);
+    ArtifactStream artifactStream2 = getArtifactStream(ARTIFACT_STREAM_ID_2, APP_ID);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_1)).thenReturn(artifactStream1);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_2)).thenReturn(artifactStream2);
 
@@ -92,8 +93,8 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldListArtifactStreams() {
-    ArtifactStream artifactStream1 = getArtifactStream(ARTIFACT_STREAM_ID_1);
-    ArtifactStream artifactStream2 = getArtifactStream(ARTIFACT_STREAM_ID_2);
+    ArtifactStream artifactStream1 = getArtifactStream(ARTIFACT_STREAM_ID_1, APP_ID);
+    ArtifactStream artifactStream2 = getArtifactStream(ARTIFACT_STREAM_ID_2, APP_ID);
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
         .thenReturn(getService().artifactStreamIds(artifactStreamIds).build());
     when(artifactStreamService.listByIds(artifactStreamIds))
@@ -108,23 +109,22 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldPruneByArtifactStream() {
-    ArtifactStream artifactStream1 = getArtifactStream(ARTIFACT_STREAM_ID_1);
-    ArtifactStream artifactStream2 = getArtifactStream(ARTIFACT_STREAM_ID_2);
+    ArtifactStream artifactStream1 = getArtifactStream(ARTIFACT_STREAM_ID_1, APP_ID);
+    ArtifactStream artifactStream2 = getArtifactStream(ARTIFACT_STREAM_ID_2, APP_ID);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_1)).thenReturn(artifactStream1);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_2)).thenReturn(artifactStream2);
 
     Service service1 = getService().artifactStreamIds(new ArrayList<>(artifactStreamIds)).build();
-    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(service1);
     when(serviceResourceService.update(service1)).thenReturn(service1);
 
     Service service2 = getService()
                            .uuid(ANOTHER_SERVICE_ID)
                            .artifactStreamIds(new ArrayList<>(Arrays.asList(ARTIFACT_STREAM_ID_1)))
                            .build();
-    when(serviceResourceService.get(APP_ID, ANOTHER_SERVICE_ID, false)).thenReturn(service2);
     when(serviceResourceService.update(service2)).thenReturn(service2);
 
-    when(serviceResourceService.findServicesByApp(APP_ID)).thenReturn(Arrays.asList(service1, service2));
+    when(serviceResourceService.listByArtifactStreamId(ARTIFACT_STREAM_ID_1)).thenReturn(asList(service1, service2));
+    when(serviceResourceService.listByArtifactStreamId(ARTIFACT_STREAM_ID_2)).thenReturn(asList(service1));
 
     artifactStreamServiceBindingService.pruneByArtifactStream(APP_ID, ARTIFACT_STREAM_ID_1);
     assertThat(service1.getArtifactStreamIds()).isEqualTo(Arrays.asList(ARTIFACT_STREAM_ID_2));
@@ -135,16 +135,45 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
     assertThat(service2.getArtifactStreamIds()).isNullOrEmpty();
   }
 
+  @Test
+  @Category(UnitTests.class)
+  public void shouldPruneByArtifactStreamAtConnectorLevel() {
+    ArtifactStream artifactStream1 = getArtifactStream(ARTIFACT_STREAM_ID_1, GLOBAL_APP_ID);
+    ArtifactStream artifactStream2 = getArtifactStream(ARTIFACT_STREAM_ID_2, GLOBAL_APP_ID);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID_1)).thenReturn(artifactStream1);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID_2)).thenReturn(artifactStream2);
+
+    Service service1 = getService().artifactStreamIds(new ArrayList<>(artifactStreamIds)).build();
+    when(serviceResourceService.update(service1)).thenReturn(service1);
+
+    Service service2 = getService()
+                           .uuid(ANOTHER_SERVICE_ID)
+                           .artifactStreamIds(new ArrayList<>(Arrays.asList(ARTIFACT_STREAM_ID_1)))
+                           .build();
+    when(serviceResourceService.update(service2)).thenReturn(service2);
+
+    when(serviceResourceService.listByArtifactStreamId(ARTIFACT_STREAM_ID_1)).thenReturn(asList(service1, service2));
+    when(serviceResourceService.listByArtifactStreamId(ARTIFACT_STREAM_ID_2)).thenReturn(asList(service1));
+
+    artifactStreamServiceBindingService.pruneByArtifactStream(GLOBAL_APP_ID, ARTIFACT_STREAM_ID_1);
+    assertThat(service1.getArtifactStreamIds()).isEqualTo(Arrays.asList(ARTIFACT_STREAM_ID_2));
+    assertThat(service2.getArtifactStreamIds()).isNullOrEmpty();
+
+    artifactStreamServiceBindingService.pruneByArtifactStream(GLOBAL_APP_ID, ARTIFACT_STREAM_ID_2);
+    assertThat(service1.getArtifactStreamIds()).isNullOrEmpty();
+    assertThat(service2.getArtifactStreamIds()).isNullOrEmpty();
+  }
+
   private ServiceBuilder getService() {
     return Service.builder().appId(APP_ID).artifactType(ArtifactType.DOCKER).uuid(SERVICE_ID);
   }
 
-  private ArtifactStream getArtifactStream(String id) {
+  private ArtifactStream getArtifactStream(String id, String appId) {
     return JenkinsArtifactStream.builder()
         .uuid(id)
         .sourceName("todolistwar")
         .settingId(SETTING_ID)
-        .appId(APP_ID)
+        .appId(appId)
         .jobname("todolistwar")
         .autoPopulate(true)
         .serviceId(SERVICE_ID)

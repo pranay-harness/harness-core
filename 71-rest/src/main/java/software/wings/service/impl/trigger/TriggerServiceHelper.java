@@ -7,10 +7,12 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.toList;
 import static net.redhogs.cronparser.CronExpressionDescriptor.getDescription;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_COLLECTED;
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_DEPLOYED;
@@ -41,11 +43,13 @@ import software.wings.beans.Workflow;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.trigger.ArtifactTriggerCondition;
+import software.wings.beans.trigger.ArtifactTriggerCondition.ArtifactTriggerConditionKeys;
 import software.wings.beans.trigger.PipelineTriggerCondition;
 import software.wings.beans.trigger.ScheduledTriggerCondition;
 import software.wings.beans.trigger.ServiceInfraWorkflow;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.Trigger.TriggerKeys;
+import software.wings.beans.trigger.TriggerCondition.TriggerConditionKeys;
 import software.wings.beans.trigger.TriggerConditionType;
 import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.dl.WingsPersistence;
@@ -110,7 +114,19 @@ public class TriggerServiceHelper {
         .collect(toList());
   }
 
+  public List<Trigger> getNewArtifactTriggers(String artifactStreamId) {
+    return wingsPersistence.createQuery(Trigger.class, excludeAuthority)
+        .disableValidation()
+        .filter(TriggerKeys.condition + "." + TriggerConditionKeys.conditionType, NEW_ARTIFACT)
+        .filter(TriggerKeys.condition + "." + ArtifactTriggerConditionKeys.artifactStreamId, artifactStreamId)
+        .asList();
+  }
+
   public List<Trigger> getNewArtifactTriggers(String appId, String artifactStreamId) {
+    if (GLOBAL_APP_ID.equals(appId)) {
+      return getNewArtifactTriggers(artifactStreamId);
+    }
+
     return getTriggersByApp(appId)
         .stream()
         .filter(tr

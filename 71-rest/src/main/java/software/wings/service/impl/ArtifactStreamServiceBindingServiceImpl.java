@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 
 import com.google.inject.Inject;
@@ -8,9 +9,7 @@ import com.google.inject.Singleton;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Service;
-import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -24,7 +23,6 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Slf4j
 public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamServiceBindingService {
-  @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ArtifactStreamService artifactStreamService;
 
@@ -99,24 +97,22 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
 
   @Override
   public List<Service> listServices(String appId, String artifactStreamId) {
-    return wingsPersistence.createQuery(Service.class)
-        .filter(Service.APP_ID_KEY, appId)
-        .field(ServiceKeys.artifactStreamIds)
-        .contains(artifactStreamId)
-        .asList();
+    return serviceResourceService.listByArtifactStreamId(appId, artifactStreamId);
   }
 
   @Override
   public List<Service> listServices(String artifactStreamId) {
-    return wingsPersistence.createQuery(Service.class)
-        .field(ServiceKeys.artifactStreamIds)
-        .contains(artifactStreamId)
-        .asList();
+    return serviceResourceService.listByArtifactStreamId(artifactStreamId);
   }
 
   @Override
   public void pruneByArtifactStream(String appId, String artifactStreamId) {
-    serviceResourceService.findServicesByApp(appId).forEach(service -> delete(service, artifactStreamId));
+    List<Service> services = listServices(artifactStreamId);
+    if (isEmpty(services)) {
+      return;
+    }
+
+    services.forEach(service -> delete(service, artifactStreamId));
   }
 
   private boolean delete(Service service, String artifactStreamId) {

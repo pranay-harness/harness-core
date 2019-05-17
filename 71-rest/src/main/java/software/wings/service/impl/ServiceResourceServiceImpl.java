@@ -2268,4 +2268,21 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     wingsPersistence.update(query, updateOperations);
   }
+
+  @Override
+  public List<Service> listByArtifactStreamId(String appId, String artifactStreamId) {
+    return wingsPersistence.createQuery(Service.class)
+        .filter(Service.APP_ID_KEY, appId)
+        .field(ServiceKeys.artifactStreamIds)
+        .contains(artifactStreamId)
+        .asList();
+  }
+
+  @Override
+  public List<Service> listByArtifactStreamId(String artifactStreamId) {
+    return wingsPersistence.createQuery(Service.class, excludeAuthority)
+        .field(ServiceKeys.artifactStreamIds)
+        .contains(artifactStreamId)
+        .asList();
+  }
 }
