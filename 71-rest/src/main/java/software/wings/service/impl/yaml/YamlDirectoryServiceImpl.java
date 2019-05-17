@@ -1759,10 +1759,13 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             .toString();
 
       case SERVICE:
+        boolean valuesYaml = AppManifestKind.VALUES.equals(applicationManifest.getKind());
+
         StringBuilder builder = new StringBuilder(getRootPathByService(service, getRootPathByApp(application)))
                                     .append(PATH_DELIMITER)
-                                    .append(MANIFEST_FOLDER);
-        if (fromManifestFile) {
+                                    .append(valuesYaml ? VALUES_FOLDER : MANIFEST_FOLDER);
+
+        if (fromManifestFile && !valuesYaml) {
           builder.append(PATH_DELIMITER).append(MANIFEST_FILE_FOLDER);
         }
 
