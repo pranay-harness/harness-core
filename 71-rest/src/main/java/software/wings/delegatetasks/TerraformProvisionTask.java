@@ -408,7 +408,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   private void ensureLocalCleanup(String scriptDirectory) {
     FileUtils.deleteQuietly(Paths.get(scriptDirectory, TERRAFORM_STATE_FILE_NAME).toFile());
     try {
-      FileIo.deleteDirectoryAndItsContentIfExists(TERRAFORM_INTERNAL_FOLDER);
+      FileIo.deleteDirectoryAndItsContentIfExists(Paths.get(scriptDirectory, TERRAFORM_INTERNAL_FOLDER).toString());
     } catch (IOException e) {
       logger.warn("Failed to delete .terraform folder");
     }
