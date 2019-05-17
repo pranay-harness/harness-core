@@ -396,7 +396,8 @@ public class AuditServiceImpl implements AuditService {
 
   @VisibleForTesting
   void loadLatestYamlDetailsForEntity(EntityAuditRecord record, String accountId) {
-    if (nonYamlEntities.contains(record.getEntityType())) {
+    if (nonYamlEntities.contains(record.getEntityType())
+        || nonYamlEntities.contains(record.getAffectedResourceType())) {
       return;
     }
     String entityId;
@@ -431,7 +432,8 @@ public class AuditServiceImpl implements AuditService {
 
   @VisibleForTesting
   void saveEntityYamlForAudit(Object entity, EntityAuditRecord record, String accountId) {
-    if (nonYamlEntities.contains(record.getEntityType()) || entity == null) {
+    if (nonYamlEntities.contains(record.getEntityType()) || nonYamlEntities.contains(record.getAffectedResourceType())
+        || entity == null) {
       return;
     }
     String yamlContent;
