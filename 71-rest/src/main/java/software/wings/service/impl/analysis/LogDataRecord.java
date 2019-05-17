@@ -50,8 +50,6 @@ import java.util.List;
       options = @IndexOptions(name = "stateHostIdx"))
   ,
       @Index(fields = {
-        @Field("stateExecutionId"), @Field("clusterLevel"), @Field(value = "logCollectionMinute", type = IndexType.DESC)
-      }, options = @IndexOptions(name = "stateCanaryExIdx")), @Index(fields = {
         @Field("stateExecutionId")
         , @Field("clusterLevel"), @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("host")
       }, options = @IndexOptions(name = "stateBumpIdx")), @Index(fields = {
@@ -59,9 +57,7 @@ import java.util.List;
         , @Field("serviceId"), @Field("stateType"), @Field("query"), @Field("clusterLevel"),
             @Field(value = "logCollectionMinute", type = IndexType.DESC)
       }, options = @IndexOptions(name = "statePrevExIdx")), @Index(fields = {
-        @Field("cvConfigId"), @Field("logCollectionMinute")
-      }, options = @IndexOptions(name = "cvLogsIdx")), @Index(fields = {
-        @Field("cvConfigId"), @Field("clusterLevel"), @Field(value = "logCollectionMinute", type = IndexType.DESC)
+        @Field("cvConfigId"), @Field(value = "logCollectionMinute", type = IndexType.ASC), @Field("clusterLevel")
       }, options = @IndexOptions(name = "cvRawRecordIdx")), @Index(fields = {
         @Field("cvConfigId")
         , @Field("clusterLevel"), @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("host")
@@ -82,9 +78,9 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware {
 
   @NotEmpty private String serviceId;
 
-  @NotEmpty @Indexed private String stateExecutionId;
+  @NotEmpty private String stateExecutionId;
 
-  @Indexed private String cvConfigId;
+  private String cvConfigId;
 
   @NotEmpty private String query;
 
