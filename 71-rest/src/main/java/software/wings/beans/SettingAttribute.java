@@ -281,5 +281,6 @@ public class SettingAttribute extends Base implements NameAccess {
     public static final String appId = "appId";
     public static final String createdAt = "createdAt";
     public static final String uuid = "uuid";
+    public static final String accountId = "accountId";
   }
 }
