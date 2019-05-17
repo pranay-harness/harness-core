@@ -56,6 +56,7 @@ public class VerificationMetricJob implements Job {
     LearningEngineAnalysisTask lastQueuedAnalysisTask =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
             .filter(LearningEngineAnalysisTaskKeys.executionStatus, QUEUED)
+            .filter(LearningEngineAnalysisTaskKeys.service_guard_backoff_count, 0)
             .order(Sort.ascending("createdAt"))
             .get();
 
@@ -68,6 +69,7 @@ public class VerificationMetricJob implements Job {
     lastQueuedAnalysisTask = wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
                                  .filter(LearningEngineAnalysisTaskKeys.executionStatus, QUEUED)
                                  .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, MLAnalysisType.LOG_CLUSTER)
+                                 .filter(LearningEngineAnalysisTaskKeys.service_guard_backoff_count, 0)
                                  .order(Sort.ascending("createdAt"))
                                  .get();
 

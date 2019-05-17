@@ -238,20 +238,20 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   public List<AppdynamicsMetric> getTierBTMetrics(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
       long tierId, List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException {
     Preconditions.checkNotNull(apiCallLog);
-    final AppdynamicsTier tier = getAppdynamicsTier(appDynamicsConfig, appdynamicsAppId, tierId, encryptionDetails);
+    final AppdynamicsTier tier =
+        getAppdynamicsTier(appDynamicsConfig, appdynamicsAppId, tierId, encryptionDetails, apiCallLog.copy());
     final String tierBTsPath = BT_PERFORMANCE_PATH_PREFIX + tier.getName();
-    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                     .name("url")
-                                     .value(appDynamicsConfig.getControllerUrl() + "/rest/applications/"
-                                         + appdynamicsAppId + "/metrics?output=JSON&metric-path=" + tierBTsPath)
-                                     .type(FieldType.URL)
-                                     .build());
     apiCallLog.setTitle("Fetching business transactions for tier from " + appDynamicsConfig.getControllerUrl());
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     Call<List<AppdynamicsMetric>> tierBTMetricRequest =
         getAppdynamicsRestClient(appDynamicsConfig)
             .listMetrices(
                 getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, tierBTsPath);
+    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                     .name("url")
+                                     .value(tierBTMetricRequest.request().url().toString())
+                                     .type(FieldType.URL)
+                                     .build());
 
     Response<List<AppdynamicsMetric>> tierBTResponse;
 
@@ -355,20 +355,37 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   }
 
   public AppdynamicsTier getAppdynamicsTier(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
-      List<EncryptedDataDetail> encryptionDetails) throws IOException {
-    final Call<List<AppdynamicsTier>> tierDetail =
-        getAppdynamicsRestClient(appDynamicsConfig)
-            .getTierDetails(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, tierId);
-    final Response<List<AppdynamicsTier>> tierResponse = tierDetail.execute();
-    if (!tierResponse.isSuccessful()) {
-      logger.info("Request not successful. Reason: {}", tierResponse);
+      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException {
+    Preconditions.checkNotNull(apiCallLog);
+    try {
+      apiCallLog.setTitle("Fetching tiers from " + appDynamicsConfig.getControllerUrl());
+      apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+      final Call<List<AppdynamicsTier>> tierDetail =
+          getAppdynamicsRestClient(appDynamicsConfig)
+              .getTierDetails(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, tierId);
+      apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                       .name("url")
+                                       .value(tierDetail.request().url().toString())
+                                       .type(FieldType.URL)
+                                       .build());
+      final Response<List<AppdynamicsTier>> tierResponse = tierDetail.execute();
+      if (!tierResponse.isSuccessful()) {
+        logger.info("Request not successful. Reason: {}", tierResponse);
+        throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
+            .addParam("reason",
+                "Unsuccessful response while fetching data from AppDynamics. Error code: " + tierResponse.code()
+                    + ". Error message: " + tierResponse.errorBody());
+      }
+      return tierResponse.body().get(0);
+    } catch (Exception e) {
+      logger.info("Error while getting tier", e);
+      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+      apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
+      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
       throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
           .addParam("reason",
-              "Unsuccessful response while fetching data from AppDynamics. Error code: " + tierResponse.code()
-                  + ". Error message: " + tierResponse.errorBody());
+              "Unsuccessful response while fetching tiers from AppDynamics. Error message: " + e.getMessage());
     }
-
-    return tierResponse.body().get(0);
   }
 
   private List<AppdynamicsMetric> getChildMetrics(AppDynamicsConfig appDynamicsConfig, long applicationId,
@@ -508,8 +525,8 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   public VerificationNodeDataSetupResponse getMetricsWithDataForNode(AppDynamicsConfig appDynamicsConfig,
       List<EncryptedDataDetail> encryptionDetails, AppdynamicsSetupTestNodeData setupTestNodeData, String hostName,
       ThirdPartyApiCallLog apiCallLog) throws IOException {
-    final AppdynamicsTier tier = getAppdynamicsTier(
-        appDynamicsConfig, setupTestNodeData.getApplicationId(), setupTestNodeData.getTierId(), encryptionDetails);
+    final AppdynamicsTier tier = getAppdynamicsTier(appDynamicsConfig, setupTestNodeData.getApplicationId(),
+        setupTestNodeData.getTierId(), encryptionDetails, apiCallLog.copy());
     final List<AppdynamicsMetric> tierMetrics = getTierBTMetrics(appDynamicsConfig,
         setupTestNodeData.getApplicationId(), setupTestNodeData.getTierId(), encryptionDetails, apiCallLog);
 

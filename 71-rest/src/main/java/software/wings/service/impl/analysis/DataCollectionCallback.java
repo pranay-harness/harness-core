@@ -111,8 +111,9 @@ public class DataCollectionCallback implements NotifyCallback {
             ContinuousVerificationDataCollectionAlert.builder().cvConfiguration(cvConfiguration).build());
         break;
       case FAILURE:
-        String message = "Failed to collect data for " + cvConfiguration.getName() + "(Application: "
-            + cvConfiguration.getAppName() + ", Environment: " + cvConfiguration.getEnvName() + ") for Time: "
+        String message = "Failed to collect data for " + cvConfiguration.getName()
+            + "(Application: " + cvConfiguration.getAppName() + ", Environment: " + cvConfiguration.getEnvName()
+            + ", Service: " + cvConfiguration.getServiceName() + ") for Time: "
             + new SimpleDateFormat(ContinuousVerificationAlertData.DEFAULT_TIME_FORMAT)
                   .format(new Date(dataCollectionEndTime))
             + "\nReason: " + errorMessage;
