@@ -25,7 +25,6 @@ import software.wings.utils.Validator;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 
@@ -36,6 +35,7 @@ import java.util.List;
 @Slf4j
 public class MarketoHelper {
   @Inject private UserService userService;
+  @Inject private Utils utils;
 
   public long createOrUpdateLead(Account account, String userName, String email, String accessToken,
       String oauthProvider, Retrofit retrofit) throws IOException, URISyntaxException {
@@ -55,13 +55,13 @@ public class MarketoHelper {
         }
       } else {
         logger.error("Marketo http response reported failure while looking up lead. {}",
-            getErrorMsg(existingLeadResponse.getErrors()));
+            utils.getErrorMsg(existingLeadResponse.getErrors()));
       }
     } else {
       logger.error("Marketo http response reported null while looking up lead");
     }
 
-    String userInviteUrl = getUserInviteUrl(email, account);
+    String userInviteUrl = utils.getUserInviteUrl(email, account);
     retrofit2.Response<Response> createOrUpdateResponse;
     if (existingLeadId > 0) {
       try {
@@ -84,7 +84,9 @@ public class MarketoHelper {
       String userInviteUrl, String accessToken, String oauthProvider) throws IOException {
     logger.info("Creating lead with email: {} in marketo with oauth provider {}", email, oauthProvider);
     LeadRequestWithEmail.Lead.LeadBuilder leadBuilderWithEmail = LeadRequestWithEmail.Lead.builder();
-    leadBuilderWithEmail.email(email).firstName(getFirstName(userName, email)).lastName(getLastName(userName, email));
+    leadBuilderWithEmail.email(email)
+        .firstName(utils.getFirstName(userName, email))
+        .lastName(utils.getLastName(userName, email));
 
     if (account != null) {
       if (isNotEmpty(oauthProvider)) {
@@ -96,7 +98,7 @@ public class MarketoHelper {
       LicenseInfo licenseInfo = account.getLicenseInfo();
       if (licenseInfo != null) {
         leadBuilderWithEmail.Free_Trial_Status__c(licenseInfo.getAccountStatus())
-            .Days_Left_in_Trial__c(getDaysLeft(licenseInfo.getExpiryTime()));
+            .Days_Left_in_Trial__c(utils.getDaysLeft(licenseInfo.getExpiryTime()));
       }
     }
 
@@ -126,7 +128,9 @@ public class MarketoHelper {
 
     LeadBuilder leadBuilderWithId = Lead.builder();
     leadBuilderWithId.id(existingLeadId);
-    leadBuilderWithId.email(email).firstName(getFirstName(userName, email)).lastName(getLastName(userName, email));
+    leadBuilderWithId.email(email)
+        .firstName(utils.getFirstName(userName, email))
+        .lastName(utils.getLastName(userName, email));
 
     if (account != null) {
       if (isNotEmpty(oauthProvider)) {
@@ -138,7 +142,7 @@ public class MarketoHelper {
       LicenseInfo licenseInfo = account.getLicenseInfo();
       if (licenseInfo != null) {
         leadBuilderWithId.Free_Trial_Status__c(licenseInfo.getAccountStatus())
-            .Days_Left_in_Trial__c(getDaysLeft(licenseInfo.getExpiryTime()));
+            .Days_Left_in_Trial__c(utils.getDaysLeft(licenseInfo.getExpiryTime()));
       }
     }
 
@@ -171,8 +175,8 @@ public class MarketoHelper {
 
     Response leadResponse = response.body();
     if (!leadResponse.isSuccess()) {
-      logger.error(
-          "Marketo http response reported failure while creating lead. {}", getErrorMsg(leadResponse.getErrors()));
+      logger.error("Marketo http response reported failure while creating lead. {}",
+          utils.getErrorMsg(leadResponse.getErrors()));
       return marketoLeadId;
     }
 
@@ -198,66 +202,6 @@ public class MarketoHelper {
 
     logger.info("Marketo returned lead id {}", result.getId());
     return result.getId();
-  }
-
-  private String getUserInviteUrl(String email, Account account) throws URISyntaxException {
-    if (account != null) {
-      return userService.getUserInviteUrl(email, account);
-    } else {
-      return userService.getUserInviteUrl(email);
-    }
-  }
-
-  private String getFirstName(String name, String email) {
-    if (isEmpty(name) || name.equals(email)) {
-      return null;
-    }
-
-    String[] words = name.split(" ");
-    int numberOfWords = words.length;
-    if (numberOfWords == 1 || numberOfWords == 2) {
-      return words[0];
-    } else {
-      return name.substring(0, name.lastIndexOf(words[numberOfWords - 1]) - 1);
-    }
-  }
-
-  private String getLastName(String name, String email) {
-    if (isEmpty(name) || name.equals(email)) {
-      return null;
-    }
-
-    String[] words = name.split(" ");
-    int numberOfWords = words.length;
-    if (numberOfWords == 1) {
-      // if the name doesn't contains any last name, send null instead of sending first name.
-      return null;
-    } else {
-      return words[numberOfWords - 1];
-    }
-  }
-
-  private String getDaysLeft(long expiryTime) {
-    long delta = expiryTime - System.currentTimeMillis();
-    if (delta <= 0) {
-      return "0";
-    }
-
-    return "" + delta / Duration.ofDays(1).toMillis();
-  }
-
-  public String getErrorMsg(List<Error> errors) {
-    if (isEmpty(errors)) {
-      return "No error msg reported in response";
-    }
-
-    Error error = errors.get(0);
-    StringBuilder builder = new StringBuilder(32);
-    return builder.append("error code is: ")
-        .append(error.getCode())
-        .append(" , error msg is: ")
-        .append(error.getMessage())
-        .toString();
   }
 
   public String getAccessToken(String clientId, String clientSecret, Retrofit retrofit) throws IOException {

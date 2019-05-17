@@ -1648,6 +1648,14 @@ public class UserServiceImpl implements UserService {
       updateOperations.set("reportedMarketoCampaigns", user.getReportedMarketoCampaigns());
     }
 
+    if (isNotEmpty(user.getSegmentIdentity())) {
+      updateOperations.set("segmentIdentity", user.getSegmentIdentity());
+    }
+
+    if (isNotEmpty(user.getReportedSegmentTracks())) {
+      updateOperations.set("reportedSegmentTracks", user.getReportedSegmentTracks());
+    }
+
     if (user.getLastLogin() > 0L) {
       updateOperations.set("lastLogin", user.getLastLogin());
     }

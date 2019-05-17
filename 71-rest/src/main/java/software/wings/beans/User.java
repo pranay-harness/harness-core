@@ -93,8 +93,10 @@ public class User extends Base implements Principal {
   private TwoFactorAuthenticationMechanism twoFactorAuthenticationMechanism;
   @JsonIgnore private String totpSecretKey;
   @JsonIgnore private long marketoLeadId;
+  @JsonIgnore private String segmentIdentity;
   private String oauthProvider;
   @JsonIgnore private Set<String> reportedMarketoCampaigns = new HashSet<>();
+  @JsonIgnore private Set<String> reportedSegmentTracks = new HashSet<>();
 
   /**
    * Return partial user object without sensitive information.
@@ -446,6 +448,16 @@ public class User extends Base implements Principal {
   }
 
   @JsonIgnore
+  public String getSegmentIdentity() {
+    return segmentIdentity;
+  }
+
+  @JsonIgnore
+  public void setSegmentIdentity(String segmentIdentity) {
+    this.segmentIdentity = segmentIdentity;
+  }
+
+  @JsonIgnore
   public Set<String> getReportedMarketoCampaigns() {
     return reportedMarketoCampaigns;
   }
@@ -453,6 +465,16 @@ public class User extends Base implements Principal {
   @JsonIgnore
   public void setReportedMarketoCampaigns(Set<String> reportedMarketoCampaigns) {
     this.reportedMarketoCampaigns = reportedMarketoCampaigns;
+  }
+
+  @JsonIgnore
+  public Set<String> getReportedSegmentTracks() {
+    return reportedSegmentTracks;
+  }
+
+  @JsonIgnore
+  public void setReportedSegmentTracks(Set<String> reportedSegmentTracks) {
+    this.reportedSegmentTracks = reportedSegmentTracks;
   }
 
   public String getOauthProvider() {
