@@ -73,7 +73,7 @@ public interface AuditService {
    */
   void deleteAuditRecords(long retentionMillis);
 
-  AuditHeaderYamlResponse fetchAuditEntityYamls(String headerId, String entityId);
+  AuditHeaderYamlResponse fetchAuditEntityYamls(String headerId, String entityId, String accountId);
 
   <T> void registerAuditActions(String accountId, T oldEntity, T newEntity, Type type);
 }

@@ -117,7 +117,7 @@ public class AuditServiceImpl implements AuditService {
   }
 
   @Override
-  public AuditHeaderYamlResponse fetchAuditEntityYamls(String headerId, String entityId) {
+  public AuditHeaderYamlResponse fetchAuditEntityYamls(String headerId, String entityId, String accountId) {
     if (isEmpty(entityId)) {
       throw new WingsException("EntityId is needed.").addParam("message", "EntityId is needed.");
     }
@@ -154,8 +154,10 @@ public class AuditServiceImpl implements AuditService {
     }
 
     if (isNotEmpty(yamlIds)) {
-      Query<EntityYamlRecord> query =
-          wingsPersistence.createQuery(EntityYamlRecord.class).field(EntityYamlRecordKeys.uuid).in(yamlIds);
+      Query<EntityYamlRecord> query = wingsPersistence.createQuery(EntityYamlRecord.class)
+                                          .filter(EntityYamlRecordKeys.accountId, accountId)
+                                          .field(EntityYamlRecordKeys.uuid)
+                                          .in(yamlIds);
       List<EntityYamlRecord> entityAuditYamls = query.asList();
       if (isNotEmpty(entityAuditYamls)) {
         entityAuditYamls.forEach(yaml -> {
