@@ -386,8 +386,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     logger.info("Fetched {} CVExecutionMetadata for stateExecutionId {}", cvList.size(), stateExecutionId);
     cvList.forEach(cvMetadata -> successfulExecutions.add(cvMetadata.getWorkflowExecutionId()));
     for (String successfulExecution : successfulExecutions) {
-      if (wingsPersistence.createQuery(LogDataRecord.class)
-              .filter("appId", appId)
+      if (wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
               .filter(LogDataRecordKeys.workflowExecutionId, successfulExecution)
               .filter(LogDataRecordKeys.clusterLevel, ClusterLevel.L2)
               .filter(LogDataRecordKeys.query, query)
