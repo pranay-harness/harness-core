@@ -648,7 +648,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   public List<ArtifactStreamSummary> listArtifactStreamSummary(String appId) {
     List<ArtifactStream> artifactStreams = wingsPersistence.createQuery(ArtifactStream.class, excludeAuthority)
                                                .project(ArtifactStreamKeys.uuid, true)
-                                               .project(ArtifactStreamKeys.name, true)
+                                               .project(ArtifactStreamKeys.sourceName, true)
                                                .asList();
     List<Service> services = wingsPersistence.createQuery(Service.class)
                                  .filter(ServiceKeys.appId, appId)
