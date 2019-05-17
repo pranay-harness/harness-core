@@ -48,6 +48,7 @@ public class Artifact extends Base {
   public static final class ArtifactKeys {
     public static final String metadata_image = metadata + "." + ArtifactMetadataKeys.image;
     public static final String metadata_tag = metadata + "." + ArtifactMetadataKeys.tag;
+    public static final String appId = "appId";
   }
 
   private String artifactStreamId;

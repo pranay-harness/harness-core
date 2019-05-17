@@ -104,4 +104,6 @@ public interface SettingsService extends OwnedByAccount {
   Map<String, String> listAppDefaults(String accountId, String appId);
 
   GitConfig fetchGitConfigFromConnectorId(String gitConnectorId);
+
+  String fetchAccountIdBySettingId(String settingId);
 }

@@ -872,4 +872,16 @@ public class SettingsServiceImpl implements SettingsService {
     gitConfigHelperService.setSshKeySettingAttributeIfNeeded(gitConfig);
     return gitConfig;
   }
+
+  @Override
+  public String fetchAccountIdBySettingId(String settingId) {
+    SettingAttribute settingAttribute = wingsPersistence.createQuery(SettingAttribute.class)
+                                            .filter(SettingAttributeKeys.uuid, settingId)
+                                            .project(SettingAttributeKeys.accountId, true)
+                                            .get();
+    if (settingAttribute == null) {
+      throw new InvalidRequestException(format("Setting attribute %s not found", settingId), USER);
+    }
+    return settingAttribute.getAccountId();
+  }
 }

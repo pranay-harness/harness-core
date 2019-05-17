@@ -76,6 +76,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryType;
 
@@ -117,6 +118,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Inject private ExecutorService executorService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
+  @Inject private SettingsService settingsService;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
@@ -198,6 +200,8 @@ public class ArtifactServiceImpl implements ArtifactService {
       artifact.setServiceIds(serviceIds);
     }
 
+    setAccountId(artifact);
+
     setArtifactStatus(artifact, artifactStream);
 
     String key = wingsPersistence.save(artifact);
@@ -209,6 +213,18 @@ public class ArtifactServiceImpl implements ArtifactService {
     }
     executorService.submit(() -> deleteArtifactsWithContents(ARTIFACT_RETENTION_SIZE, artifactStream));
     return savedArtifact;
+  }
+
+  private void setAccountId(Artifact artifact) {
+    if (isEmpty(artifact.getAccountId())) {
+      if (artifact.getAppId() != null && !artifact.getAppId().equals(GLOBAL_APP_ID)) {
+        artifact.setAccountId(appService.getAccountIdByAppId(artifact.getAppId()));
+      } else {
+        if (artifact.getSettingId() != null) {
+          artifact.setAccountId(settingsService.fetchAccountIdBySettingId(artifact.getSettingId()));
+        }
+      }
+    }
   }
 
   private void setArtifactStatus(Artifact artifact, ArtifactStream artifactStream) {
