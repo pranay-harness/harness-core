@@ -250,12 +250,13 @@ public class AppdynamicsApiTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testGetBTs() throws IOException, CloneNotSupportedException {
+  public void testGetBTs() throws IOException {
     Call<List<AppdynamicsTier>> tierRestCall = mock(Call.class);
     AppdynamicsTier tier =
         AppdynamicsTier.builder().name(UUID.randomUUID().toString()).id(new Random().nextInt()).build();
     List<AppdynamicsTier> tiers = Lists.newArrayList(tier);
     when(tierRestCall.execute()).thenReturn(Response.success(tiers));
+    when(tierRestCall.request()).thenReturn(new Request.Builder().url("https://google.com").build());
     when(appdynamicsRestClient.getTierDetails(anyString(), anyLong(), anyLong())).thenReturn(tierRestCall);
 
     Call<List<AppdynamicsMetric>> btsCall = mock(Call.class);
@@ -263,6 +264,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
         AppdynamicsMetric.builder().name(UUID.randomUUID().toString()).type(AppdynamicsMetricType.leaf).build(),
         AppdynamicsMetric.builder().name(UUID.randomUUID().toString()).type(AppdynamicsMetricType.leaf).build());
     when(btsCall.execute()).thenReturn(Response.success(bts));
+    when(btsCall.request()).thenReturn(new Request.Builder().url("https://google.com").build());
     when(appdynamicsRestClient.listMetrices(anyString(), anyLong(), anyString())).thenReturn(btsCall);
 
     AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()

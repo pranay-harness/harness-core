@@ -132,8 +132,8 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
       final List<EncryptedDataDetail> encryptionDetails = dataCollectionInfo.getEncryptedDataDetails();
       final long appId = dataCollectionInfo.getAppId();
       final long tierId = dataCollectionInfo.getTierId();
-      final AppdynamicsTier tier =
-          appdynamicsDelegateService.getAppdynamicsTier(appDynamicsConfig, appId, tierId, encryptionDetails);
+      final AppdynamicsTier tier = appdynamicsDelegateService.getAppdynamicsTier(appDynamicsConfig, appId, tierId,
+          encryptionDetails, createApiCallLog(dataCollectionInfo.getStateExecutionId()));
       final List<AppdynamicsMetric> tierMetrics = appdynamicsDelegateService.getTierBTMetrics(appDynamicsConfig, appId,
           tierId, encryptionDetails, createApiCallLog(dataCollectionInfo.getStateExecutionId()));
 
@@ -315,9 +315,9 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
       while (!completed.get() && retry < RETRIES) {
         try {
           logger.info("starting metric data collection for {} for minute {}", dataCollectionInfo, dataCollectionMinute);
-          AppdynamicsTier appdynamicsTier =
-              appdynamicsDelegateService.getAppdynamicsTier(appDynamicsConfig, dataCollectionInfo.getAppId(),
-                  dataCollectionInfo.getTierId(), dataCollectionInfo.getEncryptedDataDetails());
+          AppdynamicsTier appdynamicsTier = appdynamicsDelegateService.getAppdynamicsTier(appDynamicsConfig,
+              dataCollectionInfo.getAppId(), dataCollectionInfo.getTierId(),
+              dataCollectionInfo.getEncryptedDataDetails(), createApiCallLog(dataCollectionInfo.getStateExecutionId()));
           Preconditions.checkNotNull(dataCollectionInfo, "No trier found for dataCollectionInfo");
           setHostIdsIfNecessary();
           List<AppdynamicsMetricData> metricsData = getMetricsData();
