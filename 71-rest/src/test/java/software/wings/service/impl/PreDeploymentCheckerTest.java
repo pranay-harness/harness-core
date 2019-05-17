@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
@@ -8,28 +9,21 @@ import io.harness.category.element.UnitTests;
 import io.harness.limits.LimitCheckerFactory;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
 import software.wings.app.DeployMode;
+import software.wings.app.MainConfiguration;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(PreDeploymentChecker.class)
 public class PreDeploymentCheckerTest extends WingsBaseTest {
   @Mock private LimitCheckerFactory limitCheckerFactory;
+  @Mock private MainConfiguration mainConfiguration;
   @Inject @InjectMocks private PreDeploymentChecker preDeploymentChecker;
 
   @Test
   @Category(UnitTests.class)
   public void checkDeploymentRateLimit() {
-    PowerMockito.mockStatic(System.class);
-
-    Mockito.when(System.getenv(DeployMode.DEPLOY_MODE)).thenReturn(DeployMode.ONPREM.toString());
+    when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.ONPREM);
 
     String accountId = "some-account-id";
     String appId = "some-app-id";

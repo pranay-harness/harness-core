@@ -21,6 +21,7 @@ import io.harness.limits.lib.RateLimitChecker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.DeployMode;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.dl.WingsPersistence;
@@ -38,6 +39,7 @@ public class PreDeploymentChecker {
   @Inject private GovernanceConfigService governanceConfigService;
   @Inject private LimitCheckerFactory limitCheckerFactory;
   @Inject private WingsPersistence persistence;
+  @Inject private MainConfiguration mainConfiguration;
 
   private static final Logger log = LoggerFactory.getLogger(PreDeploymentChecker.class);
 
@@ -53,8 +55,7 @@ public class PreDeploymentChecker {
    * These exceptions should not block deployments, useful to give some warnings, though.
    */
   public void checkDeploymentRateLimit(String accountId, String appId) throws UsageLimitExceededException {
-    String deployMode = System.getenv(DeployMode.DEPLOY_MODE);
-    if (DeployMode.isOnPrem(deployMode)) {
+    if (DeployMode.isOnPrem(mainConfiguration.getDeployMode().name())) {
       return;
     }
 
