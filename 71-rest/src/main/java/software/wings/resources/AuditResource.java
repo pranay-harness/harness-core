@@ -73,8 +73,8 @@ public class AuditResource {
   @ExceptionMetered
   @CacheControl(maxAge = 15, maxAgeUnit = TimeUnit.MINUTES)
   @Produces("application/json")
-  public RestResponse<AuditHeaderYamlResponse> getAuditHeaderDetails(
-      @PathParam("auditHeaderId") String auditHeaderId, @QueryParam("entityId") String entityId) {
-    return new RestResponse<>(httpAuditService.fetchAuditEntityYamls(auditHeaderId, entityId));
+  public RestResponse<AuditHeaderYamlResponse> getAuditHeaderDetails(@PathParam("auditHeaderId") String auditHeaderId,
+      @QueryParam("entityId") String entityId, @QueryParam("accountId") String accountId) {
+    return new RestResponse<>(httpAuditService.fetchAuditEntityYamls(auditHeaderId, entityId, accountId));
   }
 }
