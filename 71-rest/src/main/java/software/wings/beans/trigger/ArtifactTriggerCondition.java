@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 
 /**
@@ -15,6 +16,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
+@FieldNameConstants(innerTypeName = "ArtifactTriggerConditionKeys")
 public class ArtifactTriggerCondition extends TriggerCondition {
   @NotEmpty private String artifactStreamId;
   private String artifactSourceName;

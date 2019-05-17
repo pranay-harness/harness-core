@@ -57,7 +57,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
-import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactKeys;
 import software.wings.beans.artifact.Artifact.ContentStatus;
@@ -385,13 +384,9 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   @Override
   public Artifact get(String appId, String artifactId, boolean withServices) {
-    Artifact artifact = wingsPersistence.getWithAppId(Artifact.class, appId, artifactId);
+    Artifact artifact = wingsPersistence.get(Artifact.class, artifactId);
     if (withServices) {
-      List<Service> services = artifact.getServiceIds()
-                                   .stream()
-                                   .map(serviceId -> serviceResourceService.get(artifact.getAppId(), serviceId))
-                                   .collect(toList());
-      artifact.setServices(services);
+      artifact.setServices(artifactStreamServiceBindingService.listServices(appId, artifact.getArtifactStreamId()));
     }
     return artifact;
   }

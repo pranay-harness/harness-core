@@ -22,6 +22,9 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
+import software.wings.beans.trigger.ArtifactTriggerCondition.ArtifactTriggerConditionKeys;
+import software.wings.beans.trigger.Trigger.TriggerKeys;
+import software.wings.beans.trigger.TriggerCondition.TriggerConditionKeys;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -38,8 +41,16 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "TriggerKeys")
 @Entity(value = "triggers")
 @HarnessExportableEntity
-@Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("appId")
-                                                                                  , @Field("name") }))
+@Indexes({
+  @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("appId")
+                                                                           , @Field("name") })
+  ,
+
+      @Index(options = @IndexOptions(name = "conditionArtifactStreamId"), fields = {
+        @Field(TriggerKeys.condition + "." + TriggerConditionKeys.conditionType)
+        , @Field(TriggerKeys.condition + "." + ArtifactTriggerConditionKeys.artifactStreamId)
+      })
+})
 public class Trigger extends Base implements NameAccess {
   @NotEmpty private String name;
   private String description;

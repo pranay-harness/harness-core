@@ -108,7 +108,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private BuildSourceService buildSourceService;
   @Inject private AppService appService;
-  @Inject private TriggerService triggerService;
   @Inject private SettingsService settingsService;
   @Inject private YamlPushService yamlPushService;
   @Inject @Transient private transient FeatureFlagService featureFlagService;
@@ -120,6 +119,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private ArtifactService artifactService;
   @Inject private AlertService alertService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Inject private TriggerService triggerService;
 
   @Override
   public PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req) {
@@ -128,7 +128,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public ArtifactStream get(String appId, String artifactStreamId) {
-    return wingsPersistence.getWithAppId(ArtifactStream.class, appId, artifactStreamId);
+    return wingsPersistence.get(ArtifactStream.class, artifactStreamId);
   }
 
   @Override
