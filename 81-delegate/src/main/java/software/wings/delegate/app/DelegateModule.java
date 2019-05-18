@@ -68,6 +68,7 @@ import software.wings.delegatetasks.k8s.taskhandler.K8sRollingDeployRollbackTask
 import software.wings.delegatetasks.k8s.taskhandler.K8sRollingDeployTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sScaleTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sTaskHandler;
+import software.wings.delegatetasks.k8s.taskhandler.K8sTrafficSplitTaskHandler;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfApplicationDetailsCommandTaskHandler;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfCommandTaskHandler;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfCreatePcfResourceCommandTaskHandler;
@@ -480,6 +481,8 @@ public class DelegateModule extends DependencyModule {
     k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.INSTANCE_SYNC.name())
         .to(K8sInstanceSyncTaskHandler.class);
     k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.DELETE.name()).to(K8sDeleteTaskHandler.class);
+    k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.TRAFFIC_SPLIT.name())
+        .to(K8sTrafficSplitTaskHandler.class);
   }
 
   @Override

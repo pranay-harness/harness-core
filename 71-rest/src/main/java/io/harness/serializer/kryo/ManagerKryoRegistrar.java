@@ -250,6 +250,7 @@ import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.beans.jira.JiraCustomFieldValue;
 import software.wings.beans.jira.JiraTaskParameters;
+import software.wings.beans.k8s.istio.IstioDestinationWeight;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.beans.security.AccountPermissions;
@@ -359,6 +360,7 @@ import software.wings.helpers.ext.k8s.request.K8sRollingDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sScaleTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters.K8sTaskType;
+import software.wings.helpers.ext.k8s.request.K8sTrafficSplitTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sBlueGreenDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sCanaryDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sDeleteResponse;
@@ -367,6 +369,7 @@ import software.wings.helpers.ext.k8s.response.K8sRollingDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sScaleResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
+import software.wings.helpers.ext.k8s.response.K8sTrafficSplitResponse;
 import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.mail.SmtpConfig;
@@ -1241,5 +1244,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsSecretsManagerConfig.class, 7178);
     kryo.register(EcsContainerDetails.class, 7179);
     kryo.register(LocalEncryptionConfig.class, 7180);
+    kryo.register(K8sTrafficSplitTaskParameters.class, 7181);
+    kryo.register(K8sTrafficSplitResponse.class, 7182);
+    kryo.register(IstioDestinationWeight.class, 7183);
   }
 }

@@ -57,6 +57,7 @@ import static software.wings.sm.StateTypeScope.COMMON;
 import static software.wings.sm.StateTypeScope.NONE;
 import static software.wings.sm.StateTypeScope.ORCHESTRATION_STENCILS;
 import static software.wings.sm.StateTypeScope.PIPELINE_STENCILS;
+import static software.wings.sm.states.k8s.K8sTrafficSplitState.K8S_TRAFFIC_SPLIT_STATE_NAME;
 import static software.wings.stencils.StencilCategory.CLOUD;
 import static software.wings.stencils.StencilCategory.COLLABORATION;
 import static software.wings.stencils.StencilCategory.COLLECTIONS;
@@ -161,6 +162,7 @@ import software.wings.sm.states.k8s.K8sDelete;
 import software.wings.sm.states.k8s.K8sRollingDeploy;
 import software.wings.sm.states.k8s.K8sRollingDeployRollback;
 import software.wings.sm.states.k8s.K8sScale;
+import software.wings.sm.states.k8s.K8sTrafficSplitState;
 import software.wings.sm.states.pcf.MapRouteState;
 import software.wings.sm.states.pcf.PcfDeployState;
 import software.wings.sm.states.pcf.PcfRollbackState;
@@ -592,7 +594,10 @@ public enum StateType implements StateTypeDescriptor {
   SERVICENOW_CREATE_UPDATE(ServiceNowCreateUpdateState.class, COLLABORATION, 3, "ServiceNow",
       asList(PRE_DEPLOYMENT, POST_DEPLOYMENT, START_SERVICE, STOP_SERVICE, DEPLOY_SERVICE, ENABLE_SERVICE,
           DISABLE_SERVICE, CONTAINER_SETUP, CONTAINER_DEPLOY, WRAP_UP),
-      ORCHESTRATION_STENCILS, COMMON);
+      ORCHESTRATION_STENCILS, COMMON),
+
+  K8S_TRAFFIC_SPLIT(K8sTrafficSplitState.class, KUBERNETES, 0, K8S_TRAFFIC_SPLIT_STATE_NAME, Lists.newArrayList(),
+      asList(), ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";

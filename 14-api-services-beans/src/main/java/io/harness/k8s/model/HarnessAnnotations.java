@@ -5,4 +5,5 @@ public interface HarnessAnnotations {
   String skipVersioning = "harness.io/skip-versioning";
   String primaryService = "harness.io/primary-service";
   String stageService = "harness.io/stage-service";
+  String managed = "harness.io/managed";
 }

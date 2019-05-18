@@ -2,6 +2,8 @@ package software.wings.delegatetasks.k8s;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
@@ -13,6 +15,7 @@ import static io.harness.k8s.manifest.ManifestHelper.yaml_file_extension;
 import static io.harness.k8s.model.Release.Status.Failed;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -23,6 +26,9 @@ import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
+import static software.wings.delegatetasks.k8s.taskhandler.K8sTrafficSplitTaskHandler.ISTIO_DESTINATION_TEMPLATE;
+import static software.wings.sm.states.k8s.K8sTrafficSplitState.K8S_CANARY_DESTINATION_PLACEHOLDER;
+import static software.wings.sm.states.k8s.K8sTrafficSplitState.K8S_STABLE_DESTINATION_PLACEHOLDER;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -30,10 +36,13 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
 import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServicePort;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.harness.beans.FileData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
@@ -46,15 +55,31 @@ import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.kubectl.RolloutHistoryCommand;
 import io.harness.k8s.kubectl.RolloutStatusCommand;
 import io.harness.k8s.manifest.ManifestHelper;
+import io.harness.k8s.model.HarnessLabelValues;
 import io.harness.k8s.model.HarnessLabels;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
+import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceComparer;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.ReleaseHistory;
+import io.harness.serializer.YamlUtils;
 import lombok.extern.slf4j.Slf4j;
+import me.snowdrop.istio.api.networking.v1alpha3.Destination;
+import me.snowdrop.istio.api.networking.v1alpha3.DestinationRule;
+import me.snowdrop.istio.api.networking.v1alpha3.DestinationRuleBuilder;
+import me.snowdrop.istio.api.networking.v1alpha3.DestinationWeight;
+import me.snowdrop.istio.api.networking.v1alpha3.DoneableDestinationRule;
+import me.snowdrop.istio.api.networking.v1alpha3.DoneableVirtualService;
+import me.snowdrop.istio.api.networking.v1alpha3.HTTPRoute;
+import me.snowdrop.istio.api.networking.v1alpha3.Subset;
+import me.snowdrop.istio.api.networking.v1alpha3.TCPRoute;
+import me.snowdrop.istio.api.networking.v1alpha3.TLSRoute;
+import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
+import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceBuilder;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
@@ -67,6 +92,7 @@ import software.wings.beans.Log.LogLevel;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.k8s.istio.IstioDestinationWeight;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.GitFile;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
@@ -77,14 +103,18 @@ import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
+import software.wings.service.impl.KubernetesHelperService;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -99,6 +129,7 @@ public class K8sTaskHelper {
   @Inject private GitService gitService;
   @Inject private EncryptionService encryptionService;
   @Inject private HelmTaskHelper helmTaskHelper;
+  @Inject private KubernetesHelperService kubernetesHelperService;
 
   private static String eventOutputFormat =
       "custom-columns=KIND:involvedObject.kind,NAME:.involvedObject.name,MESSAGE:.message,REASON:.reason";
@@ -813,5 +844,200 @@ public class K8sTaskHelper {
       executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
       return null;
     }
+  }
+
+  public List<Subset> generateSubsetsForDestinationRule(List<String> subsetNames) {
+    List<Subset> subsets = new ArrayList<>();
+
+    for (String subsetName : subsetNames) {
+      Subset subset = new Subset();
+      subset.setName(subsetName);
+
+      if (subsetName.equals(HarnessLabelValues.trackCanary)) {
+        Map<String, String> labels = new HashMap<>();
+        labels.put(HarnessLabels.track, HarnessLabelValues.trackCanary);
+        subset.setLabels(labels);
+      } else if (subsetName.equals(HarnessLabelValues.trackStable)) {
+        Map<String, String> labels = new HashMap<>();
+        labels.put(HarnessLabels.track, HarnessLabelValues.trackStable);
+        subset.setLabels(labels);
+      } else if (subsetName.equals(HarnessLabelValues.colorBlue)) {
+        Map<String, String> labels = new HashMap<>();
+        labels.put(HarnessLabels.color, HarnessLabelValues.colorBlue);
+        subset.setLabels(labels);
+      } else if (subsetName.equals(HarnessLabelValues.colorGreen)) {
+        Map<String, String> labels = new HashMap<>();
+        labels.put(HarnessLabels.color, HarnessLabelValues.colorGreen);
+        subset.setLabels(labels);
+      }
+
+      subsets.add(subset);
+    }
+
+    return subsets;
+  }
+
+  private String getHostFromRoute(List<DestinationWeight> routes) {
+    if (isEmpty(routes)) {
+      throw new WingsException("No routes exist in VirtualService", USER);
+    }
+
+    if (null == routes.get(0).getDestination()) {
+      throw new WingsException("No destination exist in VirtualService", USER);
+    }
+
+    if (isBlank(routes.get(0).getDestination().getHost())) {
+      throw new WingsException("No host exist in VirtualService", USER);
+    }
+
+    return routes.get(0).getDestination().getHost();
+  }
+
+  public void updateVirtualServiceWithDestinationWeights(List<IstioDestinationWeight> istioDestinationWeights,
+      VirtualService virtualService, ExecutionLogCallback executionLogCallback) throws IOException {
+    validateRoutesInVirtualService(virtualService);
+
+    executionLogCallback.saveExecutionLog("\nUpdating VirtualService with destination weights");
+
+    List<HTTPRoute> http = virtualService.getSpec().getHttp();
+    if (isNotEmpty(http)) {
+      String host = getHostFromRoute(http.get(0).getRoute());
+      http.get(0).setRoute(generateDestinationWeights(istioDestinationWeights, host));
+    }
+  }
+
+  private List<DestinationWeight> generateDestinationWeights(
+      List<IstioDestinationWeight> istioDestinationWeights, String host) throws IOException {
+    List<DestinationWeight> destinationWeights = new ArrayList<>();
+
+    for (IstioDestinationWeight istioDestinationWeight : istioDestinationWeights) {
+      String destinationYaml = getDestinationYaml(istioDestinationWeight.getDestination(), host);
+      Destination destination = new YamlUtils().read(destinationYaml, Destination.class);
+
+      DestinationWeight destinationWeight = new DestinationWeight();
+      destinationWeight.setWeight(istioDestinationWeight.getWeight());
+      destinationWeight.setDestination(destination);
+
+      destinationWeights.add(destinationWeight);
+    }
+
+    return destinationWeights;
+  }
+
+  private String getDestinationYaml(String destination, String host) {
+    if (K8S_CANARY_DESTINATION_PLACEHOLDER.equals(destination)) {
+      return generateDestination(host, HarnessLabelValues.trackCanary);
+    } else if (K8S_STABLE_DESTINATION_PLACEHOLDER.equals(destination)) {
+      return generateDestination(host, HarnessLabelValues.trackStable);
+    } else {
+      return destination;
+    }
+  }
+
+  private String generateDestination(String host, String subset) {
+    return ISTIO_DESTINATION_TEMPLATE.replace("$ISTIO_DESTINATION_HOST_NAME", host)
+        .replace("$ISTIO_DESTINATION_SUBSET_NAME", subset);
+  }
+
+  private void validateRoutesInVirtualService(VirtualService virtualService) {
+    List<HTTPRoute> http = virtualService.getSpec().getHttp();
+    List<TCPRoute> tcp = virtualService.getSpec().getTcp();
+    List<TLSRoute> tls = virtualService.getSpec().getTls();
+
+    if (isEmpty(http)) {
+      throw new WingsException("Http route is not present in VirtualService. Only Http routes are allowed", USER);
+    }
+
+    if (isNotEmpty(tcp) || isNotEmpty(tls)) {
+      throw new WingsException("Only Http routes are allowed in VirtualService for Traffic split", USER);
+    }
+
+    if (http.size() > 1) {
+      throw new WingsException("Only one route is allowed in VirtualService", USER);
+    }
+  }
+
+  public DestinationRule updateDestinationRuleManifestFilesWithSubsets(List<KubernetesResource> resources,
+      List<String> subsets, KubernetesConfig kubernetesConfig, ExecutionLogCallback executionLogCallback)
+      throws IOException {
+    List<KubernetesResource> destinationRuleResources =
+        resources.stream()
+            .filter(
+                kubernetesResource -> kubernetesResource.getResourceId().getKind().equals(Kind.DestinationRule.name()))
+            .filter(resource -> resource.isManaged())
+            .collect(Collectors.toList());
+
+    if (isEmpty(destinationRuleResources)) {
+      return null;
+    }
+
+    if (destinationRuleResources.size() > 1) {
+      String msg = "More than 1 DestinationRule found";
+      executionLogCallback.saveExecutionLog(msg + "\n", ERROR, FAILURE);
+      throw new WingsException(msg, USER);
+    }
+
+    KubernetesClient kubernetesClient =
+        kubernetesHelperService.getKubernetesClient(kubernetesConfig, Collections.emptyList());
+    kubernetesClient.customResources(
+        kubernetesContainerService.getCustomResourceDefinition(kubernetesClient, new DestinationRuleBuilder().build()),
+        DestinationRule.class, KubernetesResourceList.class, DoneableDestinationRule.class);
+
+    KubernetesResource kubernetesResource = destinationRuleResources.get(0);
+    InputStream inputStream = IOUtils.toInputStream(kubernetesResource.getSpec(), UTF_8);
+    DestinationRule destinationRule = (DestinationRule) kubernetesClient.load(inputStream).get().get(0);
+    destinationRule.getSpec().setSubsets(generateSubsetsForDestinationRule(subsets));
+
+    kubernetesResource.setSpec(KubernetesHelper.toYaml(destinationRule));
+
+    return destinationRule;
+  }
+
+  public VirtualService updateVirtualServiceManifestFilesWithRoutesForCanary(List<KubernetesResource> resources,
+      KubernetesConfig kubernetesConfig, ExecutionLogCallback executionLogCallback) throws IOException {
+    List<IstioDestinationWeight> istioDestinationWeights = new ArrayList<>();
+    istioDestinationWeights.add(
+        IstioDestinationWeight.builder().destination(K8S_STABLE_DESTINATION_PLACEHOLDER).weight(100).build());
+    istioDestinationWeights.add(
+        IstioDestinationWeight.builder().destination(K8S_CANARY_DESTINATION_PLACEHOLDER).weight(0).build());
+
+    return updateVirtualServiceManifestFilesWithRoutes(
+        resources, kubernetesConfig, istioDestinationWeights, executionLogCallback);
+  }
+
+  private VirtualService updateVirtualServiceManifestFilesWithRoutes(List<KubernetesResource> resources,
+      KubernetesConfig kubernetesConfig, List<IstioDestinationWeight> istioDestinationWeights,
+      ExecutionLogCallback executionLogCallback) throws IOException {
+    List<KubernetesResource> virtualServiceResources =
+        resources.stream()
+            .filter(
+                kubernetesResource -> kubernetesResource.getResourceId().getKind().equals(Kind.VirtualService.name()))
+            .filter(resource -> resource.isManaged())
+            .collect(Collectors.toList());
+
+    if (isEmpty(virtualServiceResources)) {
+      return null;
+    }
+
+    if (virtualServiceResources.size() > 1) {
+      String msg = "More than 1 VirtualService found";
+      executionLogCallback.saveExecutionLog(msg + "\n", ERROR, FAILURE);
+      throw new WingsException("msg", USER);
+    }
+
+    KubernetesClient kubernetesClient =
+        kubernetesHelperService.getKubernetesClient(kubernetesConfig, Collections.emptyList());
+    kubernetesClient.customResources(
+        kubernetesContainerService.getCustomResourceDefinition(kubernetesClient, new VirtualServiceBuilder().build()),
+        VirtualService.class, KubernetesResourceList.class, DoneableVirtualService.class);
+
+    KubernetesResource kubernetesResource = virtualServiceResources.get(0);
+    InputStream inputStream = IOUtils.toInputStream(kubernetesResource.getSpec(), UTF_8);
+    VirtualService virtualService = (VirtualService) kubernetesClient.load(inputStream).get().get(0);
+    updateVirtualServiceWithDestinationWeights(istioDestinationWeights, virtualService, executionLogCallback);
+
+    kubernetesResource.setSpec(KubernetesHelper.toYaml(virtualService));
+
+    return virtualService;
   }
 }

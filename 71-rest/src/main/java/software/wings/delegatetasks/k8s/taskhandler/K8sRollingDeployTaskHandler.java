@@ -6,6 +6,7 @@ import static io.harness.k8s.manifest.ManifestHelper.getManagedWorkload;
 import static io.harness.k8s.manifest.ManifestHelper.getWorkloads;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.LogColor.Cyan;
 import static software.wings.beans.Log.LogColor.White;
@@ -209,6 +210,11 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
       resources = k8sTaskHelper.readManifests(manifestFiles, executionLogCallback);
 
+      if (request.isInCanaryWorkflow()) {
+        updateDestinationRuleManifestFilesWithSubsets(executionLogCallback);
+        updateVirtualServiceManifestFilesWithRoutes(executionLogCallback);
+      }
+
       executionLogCallback.saveExecutionLog(color("\nManifests [Post template rendering] :\n", White, Bold));
 
       executionLogCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(resources));
@@ -243,7 +249,6 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       if (!k8sRollingDeployTaskParameters.isInCanaryWorkflow()) {
         release = releaseHistory.createNewRelease(
             resources.stream().map(resource -> resource.getResourceId()).collect(Collectors.toList()));
-
       } else {
         release = releaseHistory.getLatestRelease();
         release.setResources(resources.stream().map(resource -> resource.getResourceId()).collect(Collectors.toList()));
@@ -293,5 +298,17 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     k8sTaskHelper.describe(client, k8sDelegateTaskParams, executionLogCallback);
 
     executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+  }
+
+  private void updateVirtualServiceManifestFilesWithRoutes(ExecutionLogCallback executionLogCallback)
+      throws IOException {
+    k8sTaskHelper.updateVirtualServiceManifestFilesWithRoutesForCanary(
+        resources, kubernetesConfig, executionLogCallback);
+  }
+
+  private void updateDestinationRuleManifestFilesWithSubsets(ExecutionLogCallback executionLogCallback)
+      throws IOException {
+    k8sTaskHelper.updateDestinationRuleManifestFilesWithSubsets(resources,
+        asList(HarnessLabelValues.trackCanary, HarnessLabelValues.trackStable), kubernetesConfig, executionLogCallback);
   }
 }
