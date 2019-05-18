@@ -187,16 +187,16 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       }
     }
 
-    String id = Validator.duplicateCheck(() -> wingsPersistence.save(artifactStream), "name", artifactStream.getName());
     String accountId = null;
     if (artifactStream.getAppId() == null || !artifactStream.getAppId().equals(GLOBAL_APP_ID)) {
       accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
     } else {
-      SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
-      if (settingAttribute != null) {
-        accountId = settingAttribute.getAccountId();
+      if (artifactStream.getSettingId() != null) {
+        accountId = settingsService.fetchAccountIdBySettingId(artifactStream.getSettingId());
       }
     }
+    artifactStream.setAccountId(accountId);
+    String id = Validator.duplicateCheck(() -> wingsPersistence.save(artifactStream), "name", artifactStream.getName());
 
     yamlPushService.pushYamlChangeSet(
         accountId, null, artifactStream, Type.CREATE, artifactStream.isSyncFromGit(), false);
@@ -260,6 +260,11 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     if (artifactStream.getArtifactStreamType() != null && existingArtifactStream.getArtifactStreamType() != null
         && !artifactStream.getArtifactStreamType().equals(existingArtifactStream.getArtifactStreamType())) {
       throw new InvalidRequestException("Artifact Stream type cannot be updated", USER);
+    }
+
+    if (artifactStream.getAccountId() != null && existingArtifactStream.getAccountId() != null
+        && !artifactStream.getAccountId().equals(existingArtifactStream.getAccountId())) {
+      throw new InvalidRequestException("Artifact Stream cannot be moved from one account to another", USER);
     }
 
     validateRepositoryType(artifactStream, existingArtifactStream);

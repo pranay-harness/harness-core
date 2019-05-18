@@ -50,6 +50,7 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.AcrArtifactStream;
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.AmiArtifactStream;
@@ -133,6 +134,9 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Before
   public void setUp() {
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build();
+    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
+    when(settingsService.fetchAccountIdBySettingId(SETTING_ID)).thenReturn(ACCOUNT_ID);
   }
 
   @Test
@@ -155,6 +159,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   private void validateJenkinsArtifactStreamOnCreate(ArtifactStream savedArtifactSteam) {
+    assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     String artifactDisplayName = savedArtifactSteam.fetchArtifactDisplayName("40");
@@ -222,7 +227,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     updateAndValidateJenkinsArtifactStream(
         (JenkinsArtifactStream) savedArtifactSteam, savedJenkinsArtifactStream, GLOBAL_APP_ID);
 
-    verify(yamlPushService, times(1))
+    verify(yamlPushService, times(2))
         .pushYamlChangeSet(
             any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
     verify(artifactService).deleteWhenArtifactSourceNameChanged(jenkinsArtifactStream);
@@ -231,6 +236,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
   @NotNull
   private JenkinsArtifactStream validateJenkinsArtifactStream(ArtifactStream savedArtifactSteam, String appId) {
+    assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(JENKINS.name());
@@ -342,7 +348,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
     updateAndValidateBambooArtifactStream((BambooArtifactStream) savedArtifactSteam, GLOBAL_APP_ID);
 
-    verify(yamlPushService, times(1))
+    verify(yamlPushService, times(2))
         .pushYamlChangeSet(
             any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
     verify(artifactService).deleteWhenArtifactSourceNameChanged(bambooArtifactStream);
@@ -377,6 +383,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
   private ArtifactStream createBambooArtifactStream(BambooArtifactStream bambooArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = createArtifactStream(bambooArtifactStream);
+    assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(BAMBOO.name());
@@ -444,6 +451,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   private void validateNexusArtifactStream(ArtifactStream savedArtifactSteam, String appId) {
+    assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(NEXUS.name());
@@ -554,6 +562,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
   private void validateNexusDockerArtifactStream(NexusArtifactStream nexusDockerArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = createArtifactStream(nexusDockerArtifactStream);
+    assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(NEXUS.name());
@@ -608,10 +617,9 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                         .repositoryType("docker")
                                                         .build();
     updateNexusDockerArtifactStreamAndValidate(nexusDockerArtifactStream, GLOBAL_APP_ID);
-    //    verify(yamlPushService, times(1))
-    //            .pushYamlChangeSet(
-    //                    any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(),
-    //                    anyBoolean());
+    verify(yamlPushService, times(2))
+        .pushYamlChangeSet(
+            any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
   }
 
   private void updateNexusDockerArtifactStreamAndValidate(NexusArtifactStream nexusDockerArtifactStream, String appId) {
@@ -699,6 +707,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   private void createAndValidateArtifactoryArtifactStream(
       ArtifactoryArtifactStream artifactoryArtifactStream, String appId, String repositoryType) {
     ArtifactStream savedArtifactSteam = createArtifactStream(artifactoryArtifactStream);
+    assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(ARTIFACTORY.name());
@@ -856,6 +865,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   private void addArtifactoryMavenArtifactStreamAndValidate(
       ArtifactoryArtifactStream artifactoryArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = createArtifactStream(artifactoryArtifactStream);
+    assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(ARTIFACTORY.name());
@@ -964,6 +974,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                               .serviceId(SERVICE_ID)
                                                               .build();
     ArtifactStream savedArtifactSteam = createArtifactStream(artifactoryArtifactStream);
+    assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(ARTIFACTORY.name());
@@ -999,6 +1010,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                               .serviceId(SERVICE_ID)
                                                               .build();
     ArtifactStream savedArtifactSteam = createArtifactStream(artifactoryArtifactStream);
+    assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(ARTIFACTORY.name());
@@ -1090,6 +1102,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
   private void validateAmiArtifactStream(AmiArtifactStream amiArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = createArtifactStream(amiArtifactStream);
+    assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(AMI.name());
@@ -1142,13 +1155,14 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                               .build();
     updateAmiArtifactStreamAndValidate(amiArtifactStream, GLOBAL_APP_ID);
 
-    verify(yamlPushService, times(1))
+    verify(yamlPushService, times(2))
         .pushYamlChangeSet(
             any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
   }
 
   private void updateAmiArtifactStreamAndValidate(AmiArtifactStream amiArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = createArtifactStream(amiArtifactStream);
+    assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(AMI.name());
@@ -1171,6 +1185,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     savedAmiArtifactStream.setRegion("us-west");
 
     ArtifactStream updatedAmiArtifactStream = artifactStreamService.update(savedAmiArtifactStream);
+    assertThat(updatedAmiArtifactStream.getAccountId()).isEqualTo(ACCOUNT_ID);
 
     assertThat(updatedAmiArtifactStream.getUuid()).isNotEmpty();
     assertThat(updatedAmiArtifactStream.getName()).isNotEmpty();
@@ -1219,6 +1234,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
   private void validateS3ArtifactStream(AmazonS3ArtifactStream amazonS3ArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = createArtifactStream(amazonS3ArtifactStream);
+    assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(AMAZON_S3.name());
@@ -1262,6 +1278,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
   private void updateS3ArtifactStreamAndValidate(AmazonS3ArtifactStream amazonS3ArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = createArtifactStream(amazonS3ArtifactStream);
+    assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(AMAZON_S3.name());
@@ -1280,6 +1297,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     savedAmazonS3ArtifactStream.setArtifactPaths(asList("qa/todolist.war"));
 
     ArtifactStream updatedArtifactStream = artifactStreamService.update(savedAmazonS3ArtifactStream);
+    assertThat(updatedArtifactStream.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(updatedArtifactStream.getUuid()).isNotEmpty();
     assertThat(updatedArtifactStream.getName()).isNotEmpty().isEqualTo("s3 stream");
     assertThat(updatedArtifactStream.getArtifactStreamType()).isEqualTo(AMAZON_S3.name());
@@ -1322,6 +1340,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
   private void validateDockerArtifactStream(DockerArtifactStream dockerArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = createArtifactStream(dockerArtifactStream);
+    assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(DOCKER.name());
@@ -1425,6 +1444,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
   private void validateECRArtifactStream(EcrArtifactStream dockerArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = createArtifactStream(dockerArtifactStream);
+    assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(ECR.name());
@@ -1533,6 +1553,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
   private void validateGCRArtifactStream(GcrArtifactStream gcrArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = createArtifactStream(gcrArtifactStream);
+    assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(GCR.name());
@@ -1649,6 +1670,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
   private void validateAcrArtifactStream(AcrArtifactStream acrArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = createArtifactStream(acrArtifactStream);
+    assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(ArtifactStreamType.ACR.name());

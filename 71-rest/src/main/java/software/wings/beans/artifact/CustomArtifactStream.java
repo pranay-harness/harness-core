@@ -47,9 +47,9 @@ public class CustomArtifactStream extends ArtifactStream {
   @Builder
   public CustomArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
-      String name, String serviceId, String scriptString, List<Script> scripts, List<String> tags) {
+      String name, String serviceId, String scriptString, List<Script> scripts, List<String> tags, String accountId) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath,
-        ArtifactStreamType.CUSTOM.name(), sourceName, settingId, name, false, serviceId, true);
+        ArtifactStreamType.CUSTOM.name(), sourceName, settingId, name, false, serviceId, true, accountId);
     this.scripts = scripts;
     this.tags = tags;
   }

@@ -30,9 +30,9 @@ public class JenkinsArtifactStream extends ArtifactStream {
   public JenkinsArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
       String name, boolean autoPopulate, String serviceId, boolean metadataOnly, String jobname,
-      List<String> artifactPaths) {
+      List<String> artifactPaths, String accountId) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, JENKINS.name(), sourceName,
-        settingId, name, autoPopulate, serviceId, metadataOnly);
+        settingId, name, autoPopulate, serviceId, metadataOnly, accountId);
     this.jobname = jobname;
     this.artifactPaths = artifactPaths;
   }
