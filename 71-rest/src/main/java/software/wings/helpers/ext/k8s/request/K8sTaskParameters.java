@@ -24,6 +24,7 @@ public class K8sTaskParameters implements TaskParameters {
     CANARY_DEPLOY,
     BLUE_GREEN_DEPLOY,
     INSTANCE_SYNC,
-    DELETE;
+    DELETE,
+    TRAFFIC_SPLIT;
   }
 }

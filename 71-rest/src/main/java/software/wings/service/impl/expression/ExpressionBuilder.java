@@ -27,6 +27,9 @@ import static software.wings.common.Constants.WINGS_STAGING_PATH;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.sm.ContextElement.DEPLOYMENT_URL;
+import static software.wings.sm.states.k8s.K8sTrafficSplitState.K8S_CANARY_DESTINATION;
+import static software.wings.sm.states.k8s.K8sTrafficSplitState.K8S_STABLE_DESTINATION;
+import static software.wings.sm.states.k8s.K8sTrafficSplitState.K8S_VIRTUAL_SERVICE;
 
 import com.google.inject.Inject;
 
@@ -210,6 +213,11 @@ public abstract class ExpressionBuilder {
       case HELM_ROLLBACK:
         expressions.addAll(asList(INFRA_HELM_SHORTID, INFRA_HELM_RELEASENAME));
         break;
+
+      case K8S_TRAFFIC_SPLIT:
+        expressions.addAll(asList(K8S_CANARY_DESTINATION, K8S_STABLE_DESTINATION, K8S_VIRTUAL_SERVICE));
+        break;
+
       default:
         break;
     }

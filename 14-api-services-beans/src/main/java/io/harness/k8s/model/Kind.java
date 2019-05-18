@@ -26,5 +26,7 @@ public enum Kind {
   Job,
   CronJob,
   Ingress,
-  APIService
+  APIService,
+  VirtualService,
+  DestinationRule
 }

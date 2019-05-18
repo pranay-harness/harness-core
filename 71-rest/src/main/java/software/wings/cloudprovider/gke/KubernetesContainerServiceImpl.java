@@ -1010,7 +1010,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     }
   }
 
-  private CustomResourceDefinition getCustomResourceDefinition(KubernetesClient client, IstioResource resource) {
+  public CustomResourceDefinition getCustomResourceDefinition(KubernetesClient client, IstioResource resource) {
     final Optional<String> crdName = IstioSpecRegistry.getCRDNameFor(resource.getKind().toLowerCase());
     final CustomResourceDefinition customResourceDefinition =
         client.customResourceDefinitions().withName(crdName.get()).get();
