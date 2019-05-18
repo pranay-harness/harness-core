@@ -38,7 +38,7 @@ public class APMDelegateServiceImpl implements APMDelegateService {
     config.getHeaders().put("Accept", "application/json");
     Call<Object> request = getAPMRestClient(config).validate(config.getUrl(), config.getHeaders(), config.getOptions());
 
-    if (config.getCollectionMethod().equals(Method.POST)) {
+    if (config.getCollectionMethod() != null && config.getCollectionMethod().equals(Method.POST)) {
       Map<String, Object> body = new HashMap<>();
       if (isNotEmpty(config.getBody())) {
         body = new JSONObject(config.getBody()).toMap();

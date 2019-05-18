@@ -354,7 +354,8 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
       responseMappers.put("host", hostResponseMapper);
     }
     responseMappers.put("txnName", txnNameResponseMapper);
-    if (isNotEmpty(responseMapping.getTimestampJsonPath().trim())) {
+    if (isNotEmpty(responseMapping.getTimestampJsonPath())
+        && isNotEmpty(responseMapping.getTimestampJsonPath().trim())) {
       responseMappers.put("timestamp",
           ResponseMapper.builder()
               .fieldName("timestamp")
