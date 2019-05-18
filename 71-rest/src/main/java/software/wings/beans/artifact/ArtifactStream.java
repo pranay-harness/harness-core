@@ -71,6 +71,7 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
   private String templateUuid;
   private String templateVersion;
   private List<Variable> templateVariables = new ArrayList<>();
+  private String accountId;
 
   public ArtifactStream(String artifactStreamType) {
     this.artifactStreamType = artifactStreamType;
@@ -79,7 +80,7 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
 
   public ArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
       long lastUpdatedAt, String entityYamlPath, String artifactStreamType, String sourceName, String settingId,
-      String name, boolean autoPopulate, String serviceId, boolean metadataOnly) {
+      String name, boolean autoPopulate, String serviceId, boolean metadataOnly, String accountId) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.artifactStreamType = artifactStreamType;
     this.sourceName = sourceName;
@@ -88,6 +89,7 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
     this.autoPopulate = autoPopulate;
     this.serviceId = serviceId;
     this.metadataOnly = metadataOnly;
+    this.accountId = accountId;
   }
 
   public String generateName() {
@@ -148,5 +150,6 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
     public static final String appId = "appId";
     public static final String uuid = "uuid";
     public static final String settingId = "settingId";
+    public static final String accountId = "accountId";
   }
 }

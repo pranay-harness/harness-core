@@ -32,9 +32,10 @@ public class AmazonS3ArtifactStream extends ArtifactStream {
   @Builder
   public AmazonS3ArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
-      String name, boolean autoPopulate, String serviceId, String jobname, List<String> artifactPaths) {
+      String name, boolean autoPopulate, String serviceId, String jobname, List<String> artifactPaths,
+      String accountId) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, AMAZON_S3.name(), sourceName,
-        settingId, name, autoPopulate, serviceId, true);
+        settingId, name, autoPopulate, serviceId, true, accountId);
     this.jobname = jobname;
     this.artifactPaths = artifactPaths;
   }

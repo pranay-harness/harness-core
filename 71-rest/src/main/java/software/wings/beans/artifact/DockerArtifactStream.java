@@ -31,9 +31,9 @@ public class DockerArtifactStream extends ArtifactStream {
   @Builder
   public DockerArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
-      String name, boolean autoPopulate, String serviceId, boolean metadataOnly, String imageName) {
+      String name, boolean autoPopulate, String serviceId, boolean metadataOnly, String imageName, String accountId) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, DOCKER.name(), sourceName,
-        settingId, name, autoPopulate, serviceId, true);
+        settingId, name, autoPopulate, serviceId, true, accountId);
     this.imageName = imageName;
   }
 

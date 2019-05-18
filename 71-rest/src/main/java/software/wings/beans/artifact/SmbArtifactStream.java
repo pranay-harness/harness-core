@@ -31,9 +31,9 @@ public class SmbArtifactStream extends ArtifactStream {
   @Builder
   public SmbArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
-      String name, boolean autoPopulate, String serviceId, List<String> artifactPaths) {
+      String name, boolean autoPopulate, String serviceId, List<String> artifactPaths, String accountId) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, SMB.name(), sourceName,
-        settingId, name, autoPopulate, serviceId, true);
+        settingId, name, autoPopulate, serviceId, true, accountId);
     this.artifactPaths = artifactPaths;
   }
 
