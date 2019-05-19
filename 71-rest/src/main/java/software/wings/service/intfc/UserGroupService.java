@@ -158,5 +158,7 @@ public interface UserGroupService extends OwnedByAccount {
 
   UserGroup fetchUserGroupByName(@NotEmpty String accountId, @NotEmpty String groupName);
 
+  UserGroup getAdminUserGroup(String accountId);
+
   boolean deleteNonAdminUserGroups(String accountId);
 }

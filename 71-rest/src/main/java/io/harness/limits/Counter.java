@@ -16,6 +16,11 @@ import software.wings.beans.Base;
 @Indexes(@Index(fields = @Field("key"), options = @IndexOptions(name = "key_idx", unique = true)))
 @FieldNameConstants(innerTypeName = "CounterKeys")
 public class Counter extends Base {
+  public static class CounterKeys {
+    public static final String KEY = "key";
+    public static final String VALUE = "value";
+  }
+
   private final String key;
   private final Long value;
 

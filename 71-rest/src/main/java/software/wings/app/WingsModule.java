@@ -91,12 +91,6 @@ import software.wings.licensing.DatabaseLicenseProviderImpl;
 import software.wings.licensing.LicenseProvider;
 import software.wings.licensing.LicenseService;
 import software.wings.licensing.LicenseServiceImpl;
-import software.wings.licensing.violations.FeatureViolationsService;
-import software.wings.licensing.violations.FeatureViolationsServiceImpl;
-import software.wings.licensing.violations.checkers.ApprovalStepViolationChecker;
-import software.wings.licensing.violations.checkers.FlowControlViolationChecker;
-import software.wings.licensing.violations.checkers.SSOViolationChecker;
-import software.wings.licensing.violations.checkers.TemplateLibraryViolationChecker;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.scheduler.ServiceJobScheduler;
 import software.wings.security.saml.SamlUserGroupSync;
@@ -718,11 +712,6 @@ public class WingsModule extends DependencyModule {
 
     bind(FileService.class).to(FileServiceImpl.class);
     bind(AlertNotificationRuleChecker.class).to(AlertNotificationRuleCheckerImpl.class);
-    bind(FeatureViolationsService.class).to(FeatureViolationsServiceImpl.class);
-    bind(FlowControlViolationChecker.class);
-    bind(SSOViolationChecker.class);
-    bind(TemplateLibraryViolationChecker.class);
-    bind(ApprovalStepViolationChecker.class);
 
     bind(new TypeLiteral<NotificationDispatcher<UserGroup>>() {})
         .annotatedWith(UseUserGroup.class)

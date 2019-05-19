@@ -1,19 +1,17 @@
 package software.wings.licensing.violations.checkers;
 
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.licensing.violations.checkers.WorkflowViolationCheckerMixin.WORFKFLOW_TEMPLAE_USAGE_PREDICATE;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
-import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.EntityType;
 import software.wings.beans.FeatureUsageViolation;
@@ -33,8 +31,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
 
+@Singleton
 @Slf4j
-public class TemplateLibraryViolationChecker implements FeatureViolationChecker {
+public class TemplateLibraryViolationChecker implements FeatureViolationChecker, ServiceViolationCheckerMixin {
   private ServiceResourceService serviceResourceService;
   private HPersistence hPersistence;
 
@@ -47,9 +46,10 @@ public class TemplateLibraryViolationChecker implements FeatureViolationChecker 
   public List<FeatureViolation> getViolationsForCommunityAccount(@NotNull String accountId) {
     List<FeatureViolation> featureViolationList = null;
 
-    List<Usage> usages = Stream.of(getViolationsInWorkflows(accountId), getViolationsInServices(accountId))
-                             .flatMap(Collection::stream)
-                             .collect(Collectors.toList());
+    List<Usage> usages =
+        Stream.of(getViolationsInWorkflows(accountId), getViolationsInServices(getServicesForAccount(accountId)))
+            .flatMap(Collection::stream)
+            .collect(Collectors.toList());
 
     if (isNotEmpty(usages)) {
       featureViolationList = Collections.singletonList(
@@ -65,11 +65,12 @@ public class TemplateLibraryViolationChecker implements FeatureViolationChecker 
     try (HIterator<Workflow> iterator = new HIterator<>(query.fetch())) {
       while (iterator.hasNext()) {
         Workflow workflow = iterator.next();
-        if (isNotEmpty(workflow.getLinkedTemplateUuids())) {
+        if (WORFKFLOW_TEMPLAE_USAGE_PREDICATE.test(workflow)) {
           templateLibraryUsages.add(Usage.builder()
                                         .entityId(workflow.getUuid())
                                         .entityName(workflow.getName())
                                         .entityType(EntityType.WORKFLOW.name())
+                                        .property(Workflow.APP_ID_KEY, workflow.getAppId())
                                         .build());
         }
       }
@@ -77,27 +78,7 @@ public class TemplateLibraryViolationChecker implements FeatureViolationChecker 
     return templateLibraryUsages;
   }
 
-  private List<Usage> getViolationsInServices(String accountId) {
-    List<Usage> templateLibraryUsages = Lists.newArrayList();
-
-    PageRequest<Service> pageRequest = aPageRequest()
-                                           .withLimit(PageRequest.UNLIMITED)
-                                           .addFilter(Service.ACCOUNT_ID_KEY, Operator.EQ, accountId)
-                                           .build();
-
-    PageResponse<Service> servicePageResponse = serviceResourceService.list(pageRequest, false, true);
-
-    servicePageResponse.stream().filter(s -> isNotEmpty(s.getServiceCommands())).forEach(s -> {
-      boolean usesTemplateLibrary =
-          s.getServiceCommands().stream().anyMatch(sc -> StringUtils.isNotBlank(sc.getTemplateUuid()));
-      if (usesTemplateLibrary) {
-        templateLibraryUsages.add(Usage.builder()
-                                      .entityId(s.getUuid())
-                                      .entityName(s.getName())
-                                      .entityType(EntityType.SERVICE.name())
-                                      .build());
-      }
-    });
-    return templateLibraryUsages;
+  private PageResponse<Service> getServicesForAccount(@NotNull String accountId) {
+    return serviceResourceService.list(getServicePageRequest(accountId, null), false, true);
   }
 }
