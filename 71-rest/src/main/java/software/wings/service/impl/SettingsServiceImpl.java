@@ -5,6 +5,7 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.USAGE_LIMITS_EXCEEDED;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeValidate;
 import static java.lang.String.format;
@@ -46,6 +47,8 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter.Operator;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -55,6 +58,7 @@ import io.harness.observer.Subject;
 import io.harness.persistence.HIterator;
 import io.harness.validation.Create;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.annotation.EncryptableSetting;
@@ -75,6 +79,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildService;
@@ -107,6 +112,7 @@ import javax.validation.executable.ValidateOnExecution;
 /**
  * Created by anubhaw on 5/17/16.
  */
+@Slf4j
 @ValidateOnExecution
 @Singleton
 public class SettingsServiceImpl implements SettingsService {
@@ -123,6 +129,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private YamlPushService yamlPushService;
   @Inject private GitConfigHelperService gitConfigHelperService;
+  @Inject private AccountService accountService;
 
   @Getter private Subject<SettingsServiceManipulationObserver> manipulationSubject = new Subject<>();
   @Inject private CacheHelper cacheHelper;
@@ -196,6 +203,24 @@ public class SettingsServiceImpl implements SettingsService {
         helmRepoSettingAttributes);
 
     return filteredSettingAttributes;
+  }
+
+  private void checkGitConnectorsUsageWithinLimit(SettingAttribute settingAttribute) {
+    if (accountService.isCommunityAccount(settingAttribute.getAccountId())) {
+      PageRequest<SettingAttribute> request =
+          aPageRequest()
+              .addFilter(SettingAttribute.ACCOUNT_ID_KEY, Operator.EQ, settingAttribute.getAccountId())
+              .addFilter(SettingAttribute.VALUE_TYPE_KEY, Operator.EQ, SettingVariableTypes.GIT)
+              .build();
+      int currentGitConnectorCount = list(request, null, null).getResponse().size();
+      if (currentGitConnectorCount >= 1) {
+        logger.info(
+            "Did not save Setting Attribute of type {} for Community account ID {} because usage limit exceeded",
+            settingAttribute.getValue().getType(), settingAttribute.getAccountId());
+        throw new WingsException(USAGE_LIMITS_EXCEEDED,
+            "Cannot create more than 1 Git Connector in Harness Community Edition.", WingsException.USER);
+      }
+    }
   }
 
   private void getFilteredHelmRepoSettingAttributes(String appIdFromRequest, String envIdFromRequest, String accountId,
@@ -280,6 +305,9 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   @ValidationGroups(Create.class)
   public SettingAttribute save(SettingAttribute settingAttribute) {
+    if (settingAttribute.getValue().getType().equals(SettingVariableTypes.GIT.name())) {
+      checkGitConnectorsUsageWithinLimit(settingAttribute);
+    }
     return save(settingAttribute, true);
   }
 
@@ -569,6 +597,25 @@ public class SettingsServiceImpl implements SettingsService {
     } else {
       auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, settingAttribute);
     }
+  }
+
+  /**
+   * Retain only the selected
+   * @param appId Harness App ID
+   * @param selectedGitConnectors List of setting attribute IDs of Git connectors to be retained
+   */
+  public boolean retainSelectedGitConnectorsAndDeleteRest(
+      String appId, String accountId, List<String> selectedGitConnectors) {
+    if (EmptyPredicate.isNotEmpty(selectedGitConnectors)) {
+      // Delete git connectors
+      wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class)
+                                  .filter(SettingAttribute.ACCOUNT_ID_KEY, accountId)
+                                  .filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.GIT)
+                                  .field(SettingAttribute.ID_KEY)
+                                  .notIn(selectedGitConnectors));
+      return true;
+    }
+    return false;
   }
 
   @Override

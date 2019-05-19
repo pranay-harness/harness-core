@@ -592,12 +592,6 @@ public interface Constants {
 
   int DEFAULT_PAID_LICENSE_UNITS = 100;
 
-  String EMAIL_SUBJECT_ACCOUNT_EXPIRED = "Harness License Expired!";
-  String EMAIL_SUBJECT_ACCOUNT_ABOUT_TO_EXPIRE = "Harness License about to Expire!";
-
-  String EMAIL_BODY_ACCOUNT_EXPIRED = "Customer License has Expired";
-  String EMAIL_BODY_ACCOUNT_ABOUT_TO_EXPIRE = "Customer License is about to Expire";
-
   Integer REFERENCED_ENTITIES_TO_SHOW = 10;
 
   // ECS BG

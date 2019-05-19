@@ -1045,4 +1045,18 @@ public class YamlGitServiceImpl implements YamlGitService {
 
     return gitCommit;
   }
+
+  public boolean retainYamlGitConfigsOfSelectedGitConnectorsAndDeleteRest(
+      String accountId, List<String> selectedGitConnectors) {
+    if (EmptyPredicate.isNotEmpty(selectedGitConnectors)) {
+      // Delete yamlGitConfig documents whose gitConnectorId is not among
+      // the list of selected git connectors
+      wingsPersistence.delete(wingsPersistence.createQuery(YamlGitConfig.class)
+                                  .filter(YamlGitConfig.ACCOUNT_ID_KEY, accountId)
+                                  .field(YamlGitConfig.GIT_CONNECTOR_ID_KEY)
+                                  .hasNoneOf(selectedGitConnectors));
+      return true;
+    }
+    return false;
+  }
 }

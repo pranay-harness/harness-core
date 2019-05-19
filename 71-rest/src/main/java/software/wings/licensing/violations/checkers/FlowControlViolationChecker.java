@@ -11,28 +11,23 @@ import software.wings.beans.AccountType;
 import software.wings.beans.FeatureUsageViolation;
 import software.wings.beans.FeatureUsageViolation.Usage;
 import software.wings.beans.FeatureViolation;
-import software.wings.beans.GraphNode;
+import software.wings.beans.Workflow;
+import software.wings.licensing.violations.FeatureViolationChecker;
 import software.wings.licensing.violations.RestrictedFeature;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.sm.StateType;
-import software.wings.stencils.StencilCategory;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Predicate;
+import javax.validation.constraints.NotNull;
 
 @Singleton
 @Slf4j
-public class FlowControlViolationChecker extends AbstractWorkflowViolationChecker {
-  private Predicate<GraphNode> flowControlPredicate;
+public class FlowControlViolationChecker implements FeatureViolationChecker, WorkflowViolationCheckerMixin {
+  private WorkflowService workflowService;
 
   @Inject
   public FlowControlViolationChecker(WorkflowService workflowService) {
-    super(workflowService);
-    flowControlPredicate = gn -> {
-      StateType stateType = StateType.valueOf(gn.getType());
-      return StencilCategory.FLOW_CONTROLS.equals(stateType.getStencilCategory());
-    };
+    this.workflowService = workflowService;
   }
 
   @Override
@@ -41,7 +36,8 @@ public class FlowControlViolationChecker extends AbstractWorkflowViolationChecke
         "Checking Flow control violations for accountId={} and targetAccountType={}", accountId, AccountType.COMMUNITY);
 
     List<FeatureViolation> featureViolationList = null;
-    List<Usage> flowControlUsages = getWorkflowViolationUsages(accountId, flowControlPredicate);
+    List<Usage> flowControlUsages =
+        getWorkflowViolationUsages(getAllWorkflowsByAccountId(accountId), FLOW_CONTROL_STEP_PREDICATE);
     if (isNotEmpty(flowControlUsages)) {
       logger.info("Found {} Flow control violations for accountId={} and targetAccountType={}",
           flowControlUsages.size(), accountId, AccountType.COMMUNITY);
@@ -52,5 +48,9 @@ public class FlowControlViolationChecker extends AbstractWorkflowViolationChecke
     }
 
     return CollectionUtils.emptyIfNull(featureViolationList);
+  }
+
+  private List<Workflow> getAllWorkflowsByAccountId(@NotNull String accountId) {
+    return workflowService.listWorkflows(getWorkflowsPageRequest(accountId)).getResponse();
   }
 }

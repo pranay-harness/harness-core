@@ -600,6 +600,16 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
+  public UserGroup getAdminUserGroup(String accountId) {
+    PageRequest<UserGroup> pageRequest =
+        aPageRequest()
+            .addFilter(UserGroup.NAME_KEY, Operator.EQ, UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME)
+            .build();
+
+    return list(accountId, pageRequest, true).getResponse().get(0);
+  }
+
+  @Override
   public boolean deleteNonAdminUserGroups(String accountId) {
     List<UserGroup> userGroups =
         wingsPersistence.createQuery(UserGroup.class).filter(UserGroup.ACCOUNT_ID_KEY, accountId).asList();

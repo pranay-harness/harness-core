@@ -16,6 +16,7 @@ import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -115,6 +116,7 @@ import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.service.impl.MarketPlaceServiceImpl;
 import software.wings.service.impl.UserServiceImpl;
+import software.wings.service.impl.UserServiceLimitChecker;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
@@ -171,7 +173,6 @@ public class UserServiceTest extends WingsBaseTest {
   /**
    * The User invite query end.
    */
-
   @Mock private EmailNotificationService emailDataNotificationService;
   @Mock private RoleService roleService;
   @Mock private WingsPersistence wingsPersistence;
@@ -182,6 +183,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Mock private CacheHelper cacheHelper;
   @Mock private LimitCheckerFactory limitCheckerFactory;
   @Mock private AuthenticationManager authenticationManager;
+  @Mock private UserServiceLimitChecker userServiceLimitChecker;
 
   /**
    * The Cache.
@@ -200,6 +202,8 @@ public class UserServiceTest extends WingsBaseTest {
    */
   @Before
   public void setupMocks() {
+    doNothing().when(userServiceLimitChecker).limitCheck(Mockito.anyString(), Mockito.anyList(), Mockito.anySet());
+
     when(cacheHelper.getUserCache()).thenReturn(cache);
 
     when(wingsPersistence.createQuery(User.class)).thenReturn(query);
@@ -683,7 +687,6 @@ public class UserServiceTest extends WingsBaseTest {
         .thenReturn(userBuilder.withUuid(USER_ID).build());
 
     userService.inviteUsers(userInvite);
-    verify(accountService).get(ACCOUNT_ID);
     verify(wingsPersistence).save(any(UserInvite.class));
     verify(wingsPersistence).getWithAppId(UserInvite.class, GLOBAL_APP_ID, USER_INVITE_ID);
     verify(wingsPersistence).saveAndGet(eq(User.class), any(User.class));
@@ -733,7 +736,6 @@ public class UserServiceTest extends WingsBaseTest {
 
     userService.inviteUsers(userInvite);
 
-    verify(accountService).get(ACCOUNT_ID);
     verify(wingsPersistence).saveAndGet(eq(User.class), userArgumentCaptor.capture());
     assertThat(userArgumentCaptor.getValue()).hasFieldOrPropertyWithValue("email", mixedEmail.trim().toLowerCase());
   }
