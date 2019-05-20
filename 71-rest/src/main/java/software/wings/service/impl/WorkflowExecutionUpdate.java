@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
@@ -191,22 +192,30 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
           final Application applicationDataForReporting = usageMetricsHelper.getApplication(appId);
           String accountID = applicationDataForReporting.getAccountId();
           String applicationName = applicationDataForReporting.getName();
-          String accountName = accountService.getFromCache(accountID).getAccountName();
-          long executionDuration = workflowExecution.getStartTs() != null && workflowExecution.getEndTs() != null
-              ? TimeUnit.MILLISECONDS.toSeconds(workflowExecution.getEndTs() - workflowExecution.getStartTs())
-              : 0;
-          /**
-           * Query workflow execution and project deploymentTrigger, if it is not empty, it is automatic or it is manual
-           */
-          boolean manual = workflowExecution.getDeploymentTriggerId() == null;
+          Account account = accountService.getFromCache(accountID);
+          // The null check is in case the account has been physical deleted.
+          if (account == null) {
+            logger.warn("Workflow execution in application {} is associated with deleted account {}", applicationName,
+                accountID);
+          } else {
+            String accountName = account.getAccountName();
+            long executionDuration = workflowExecution.getStartTs() != null && workflowExecution.getEndTs() != null
+                ? TimeUnit.MILLISECONDS.toSeconds(workflowExecution.getEndTs() - workflowExecution.getStartTs())
+                : 0;
+            /**
+             * Query workflow execution and project deploymentTrigger, if it is not empty, it is automatic or it is
+             * manual
+             */
+            boolean manual = workflowExecution.getDeploymentTriggerId() == null;
 
-          /**
-           * We are sending the event out only for a pipeline execution or a workflow execution
-           */
-          usageMetricsEventPublisher.publishDeploymentDurationEvent(executionDuration, accountID, accountName,
-              workflowId, workflowExecution.getName(), appId, applicationName);
-          usageMetricsEventPublisher.publishDeploymentMetadataEvent(
-              status, manual, accountID, accountName, workflowId, workflowExecution.getName(), appId, applicationName);
+            /**
+             * We are sending the event out only for a pipeline execution or a workflow execution
+             */
+            usageMetricsEventPublisher.publishDeploymentDurationEvent(executionDuration, accountID, accountName,
+                workflowId, workflowExecution.getName(), appId, applicationName);
+            usageMetricsEventPublisher.publishDeploymentMetadataEvent(status, manual, accountID, accountName,
+                workflowId, workflowExecution.getName(), appId, applicationName);
+          }
         }
         if (!WorkflowType.PIPELINE.equals(context.getWorkflowType())) {
           if (workflowExecution.getPipelineExecutionId() != null) {
