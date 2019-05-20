@@ -5,6 +5,7 @@ import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
@@ -30,7 +31,6 @@ import com.amazonaws.services.secretsmanager.model.AWSSecretsManagerException;
 import com.amazonaws.services.secretsmanager.model.GetSecretValueRequest;
 import com.amazonaws.services.secretsmanager.model.ResourceNotFoundException;
 import com.mongodb.DuplicateKeyException;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptionType;
@@ -57,6 +57,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 /**
  * @author marklu on 2019-05-07
@@ -64,15 +65,28 @@ import java.util.Objects;
 @Singleton
 @Slf4j
 public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl implements AwsSecretsManagerService {
+  private static final int AWS_SECRET_CONTENT_SIZE_LIMIT = 7168;
+  private static final Pattern AWS_SECRET_NAME_PATTERN = Pattern.compile("^[\\w-/_+=.@!]+$");
+
   private static final String SECRET_KEY_NAME_SUFFIX = "_secretKey";
   private static final String AWS_SECRETS_MANAGER_VALIDATION_URL = "aws_secrets_manager_validation";
 
   @Inject private AlertService alertService;
   @Inject private AccountService accountService;
 
+  private void validateSecretName(String name) {
+    if (!AWS_SECRET_NAME_PATTERN.matcher(name).find()) {
+      throw new WingsException(AWS_SECRETS_MANAGER_OPERATION_ERROR, USER_SRE)
+          .addParam(REASON_KEY, "Secret name can only contain alphanumeric characters, or any of: -/_+=.@!");
+    }
+  }
+
   @Override
   public EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
       AwsSecretsManagerConfig secretsManagerConfig, EncryptedData encryptedData) {
+    // AWS Secrets Manager has restrictions on what the secret name can be. A pre-validation will be helpful.
+    validateSecretName(name);
+
     SyncTaskContext syncTaskContext =
         SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
     return (EncryptedData) delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
@@ -95,7 +109,8 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
             .decrypt(data, secretsManagerConfig);
       } catch (WingsException e) {
         failedAttempts++;
-        logger.info("Vault Decryption failed for encryptedData {}. trial num: {}", data.getName(), failedAttempts, e);
+        logger.info("AWS Secrets Manager decryption failed for encryptedData {}. trial num: {}", data.getName(),
+            failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
           throw e;
         }
@@ -128,21 +143,13 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     return getAwsSecretsManagerConfigInternal(query);
   }
 
-  @Override
-  public AwsSecretsManagerConfig getAwsSecretsManagerConfigByName(String accountId, String name) {
-    Query<AwsSecretsManagerConfig> query = wingsPersistence.createQuery(AwsSecretsManagerConfig.class)
-                                               .filter(ACCOUNT_ID_KEY, accountId)
-                                               .filter(NAME_KEY, name);
-    return getAwsSecretsManagerConfigInternal(query);
-  }
-
   private AwsSecretsManagerConfig getAwsSecretsManagerConfigInternal(Query<AwsSecretsManagerConfig> query) {
     AwsSecretsManagerConfig secretsManagerConfig = query.get();
 
     if (secretsManagerConfig != null) {
       EncryptedData encryptedSecretKey = wingsPersistence.get(EncryptedData.class, secretsManagerConfig.getSecretKey());
       if (encryptedSecretKey == null) {
-        throw new WingsException("Either auth token or secret Id field needs to be present for vault secret manager.");
+        throw new WingsException("Secret key field needs to be present for AWS secrets manager.");
       }
 
       char[] secretKey = decryptLocal(encryptedSecretKey);
@@ -162,10 +169,11 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
           || !SECRET_MASK.equals(secretsManagerConfig.getSecretKey());
     }
     if (shouldVerify) {
-      // New vault configuration, need to validate it's parameters
+      // New AWS Secrets Manager configuration, need to validate it's parameters
       validateSecretsManagerConfig(secretsManagerConfig);
     } else {
-      // When setting this vault config as default, set current default secret manager to non-default first.
+      // When setting this AWS Secrets Manager config as default, set current default secret manager to non-default
+      // first.
       if (secretsManagerConfig.isDefault()) {
         updateCurrentEncryptionConfigsToNonDefault(accountId);
       }
@@ -188,16 +196,16 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     try {
       secretsManagerConfigId = wingsPersistence.save(secretsManagerConfig);
     } catch (DuplicateKeyException e) {
-      throw new WingsException(ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR, USER_SRE)
-          .addParam(REASON_KEY, "Another vault configuration with the same name or URL exists");
+      throw new WingsException(AWS_SECRETS_MANAGER_OPERATION_ERROR, USER_SRE)
+          .addParam(REASON_KEY, "Another AWS Secrets Manager configuration with the same name or URL exists");
     }
 
-    // When setting this vault config as default, set current default secret manager to non-default first.
+    // When setting this AWS secrets manager config as default, set current default secret manager to non-default first.
     if (secretsManagerConfig.isDefault()) {
       updateCurrentEncryptionConfigsToNonDefault(accountId);
     }
 
-    // Create a LOCAL encrypted record for Vault authToken
+    // Create a LOCAL encrypted record for AWS secret key
     String secretKeyEncryptedDataId =
         saveSecretField(secretsManagerConfig, secretsManagerConfigId, secretKeyEncryptedData, SECRET_KEY_NAME_SUFFIX);
     secretsManagerConfig.setSecretKey(secretKeyEncryptedDataId);
@@ -224,8 +232,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     } catch (AWSSecretsManagerException e) {
       String message =
           "Was not able to reach AWS Secrets Manager using given credentials. Please check your credentials and try again";
-      throw new WingsException(ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR, message, USER, e)
-          .addParam(REASON_KEY, message);
+      throw new WingsException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, USER, e).addParam(REASON_KEY, message);
     }
     logger.info("Test connection to AWS Secrets Manager Succeeded for {}", secretsManagerConfig.getName());
   }
@@ -250,13 +257,13 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     return encryptedData;
   }
 
-  private String saveSecretField(AwsSecretsManagerConfig secretsManagerConfig, String vaultConfigId,
+  private String saveSecretField(AwsSecretsManagerConfig secretsManagerConfig, String configId,
       EncryptedData secretFieldEncryptedData, String secretNameSuffix) {
     String secretFieldEncryptedDataId = null;
     if (secretFieldEncryptedData != null) {
       secretFieldEncryptedData.setAccountId(secretsManagerConfig.getAccountId());
-      secretFieldEncryptedData.addParent(vaultConfigId);
-      secretFieldEncryptedData.setType(SettingVariableTypes.VAULT);
+      secretFieldEncryptedData.addParent(configId);
+      secretFieldEncryptedData.setType(SettingVariableTypes.AWS_SECRETS_MANAGER);
       secretFieldEncryptedData.setName(secretsManagerConfig.getName() + secretNameSuffix);
       secretFieldEncryptedDataId = wingsPersistence.save(secretFieldEncryptedData);
     }
@@ -268,13 +275,14 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     final long count = wingsPersistence.createQuery(EncryptedData.class)
                            .filter(ACCOUNT_ID_KEY, accountId)
                            .filter(EncryptedDataKeys.kmsId, configId)
-                           .filter(EncryptedDataKeys.encryptionType, EncryptionType.VAULT)
+                           .filter(EncryptedDataKeys.encryptionType, EncryptionType.AWS_SECRETS_MANAGER)
                            .count(new CountOptions().limit(1));
 
     if (count > 0) {
-      String message = "Can not delete the vault configuration since there are secrets encrypted with this. "
+      String message =
+          "Can not delete the AWS Secrets Manager configuration since there are secrets encrypted with this. "
           + "Please transition your secrets to a new kms and then try again";
-      throw new WingsException(ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR, USER).addParam(REASON_KEY, message);
+      throw new WingsException(AWS_SECRETS_MANAGER_OPERATION_ERROR, USER).addParam(REASON_KEY, message);
     }
 
     AwsSecretsManagerConfig secretsManagerConfig = wingsPersistence.get(AwsSecretsManagerConfig.class, configId);
@@ -307,8 +315,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
         } else {
           EncryptedData secretKeyData = wingsPersistence.get(EncryptedData.class, secretsManagerConfig.getSecretKey());
           if (secretKeyData == null) {
-            throw new WingsException(
-                "Either auth token or secret Id field needs to be present for vault secret manager.");
+            throw new WingsException("Secret key field needs to be present for AWS secrets manager.");
           }
 
           char[] decryptedSecretKey = decryptLocal(secretKeyData);
@@ -326,6 +333,12 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
       byte[] inputBytes, EncryptedData savedEncryptedData) {
     Preconditions.checkNotNull(secretsManagerConfig);
     byte[] bytes = encodeBase64ToByteArray(inputBytes);
+    if (bytes.length > AWS_SECRET_CONTENT_SIZE_LIMIT) {
+      throw new WingsException(AWS_SECRETS_MANAGER_OPERATION_ERROR, USER_SRE)
+          .addParam(
+              REASON_KEY, "AWS Secrets Manager limits secret value to " + AWS_SECRET_CONTENT_SIZE_LIMIT + " bytes.");
+    }
+
     EncryptedData fileData = encrypt(name, new String(CHARSET.decode(ByteBuffer.wrap(bytes)).array()), accountId,
         SettingVariableTypes.CONFIG_FILE, secretsManagerConfig, savedEncryptedData);
     fileData.setAccountId(accountId);

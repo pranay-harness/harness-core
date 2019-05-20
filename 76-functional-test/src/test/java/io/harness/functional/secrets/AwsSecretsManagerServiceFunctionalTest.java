@@ -8,6 +8,8 @@ import com.google.inject.Inject;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rest.RestResponse;
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.framework.utils.SecretsUtils;
 import io.harness.testframework.restutils.SecretsRestUtils;
@@ -40,21 +42,23 @@ public class AwsSecretsManagerServiceFunctionalTest extends AbstractFunctionalTe
   @Category(FunctionalTests.class)
   @Ignore
   public void testCRUDSecretsWithAwsSecretsManager() {
-    AwsSecretsManagerConfig secretsManagerConfig = AwsSecretsManagerConfig.builder()
-                                                       .accountId(getAccount().getUuid())
-                                                       .name(ASM_NAME)
-                                                       .accessKey("AKIA5GUB5GGCMWOWNBEV")
-                                                       .secretKey("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")
-                                                       .region("us-east-2")
-                                                       .secretNamePrefix("foo/bar")
-                                                       .isDefault(true)
-                                                       .build();
+    AwsSecretsManagerConfig secretsManagerConfig =
+        AwsSecretsManagerConfig.builder()
+            .accountId(getAccount().getUuid())
+            .name(ASM_NAME)
+            .accessKey("AKIA5GUB5GGCID6JJB7D")
+            .secretKey(new ScmSecret().decryptToString(new SecretName("plat_aws_secrets_manager_secret")))
+            .region("us-east-1")
+            .secretNamePrefix("foo/bar")
+            .isDefault(true)
+            .build();
 
-    String secretsManagerId = addAwsSecretsManager(secretsManagerConfig);
-    assertNotNull(secretsManagerId);
-    logger.info("AWS Secrets Manager config created.");
-
+    String secretsManagerId = null;
     try {
+      secretsManagerId = addAwsSecretsManager(secretsManagerConfig);
+      assertNotNull(secretsManagerId);
+      logger.info("AWS Secrets Manager config created.");
+
       List<AwsSecretsManagerConfig> secretsManagerConfigs = listConfigs(getAccount().getUuid());
       assertTrue(secretsManagerConfigs.size() > 0);
 
@@ -79,8 +83,10 @@ public class AwsSecretsManagerServiceFunctionalTest extends AbstractFunctionalTe
       boolean isDeletionDone = SecretsRestUtils.deleteSecret(getAccount().getUuid(), bearerToken, secretId);
       assertTrue(isDeletionDone);
     } finally {
-      deleteAwsSecretsManager(getAccount().getUuid(), secretsManagerId);
-      logger.info("AWS Secrets Manager deleted.");
+      if (secretsManagerId != null) {
+        deleteAwsSecretsManager(getAccount().getUuid(), secretsManagerId);
+        logger.info("AWS Secrets Manager deleted.");
+      }
     }
   }
 
