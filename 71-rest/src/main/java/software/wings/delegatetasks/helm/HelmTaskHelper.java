@@ -355,13 +355,16 @@ public class HelmTaskHelper {
         .replace("${REPO_NAME}", repoName);
   }
 
-  public void removeRepo(String repoName) throws Exception {
-    String repoRemoveCommand = getRepoRemoveCommand(repoName);
+  public void removeRepo(String repoName) {
+    try {
+      String repoRemoveCommand = getRepoRemoveCommand(repoName);
 
-    ProcessResult processResult = executeCommand(repoRemoveCommand, null);
-    if (processResult.getExitValue() != 0) {
-      throw new WingsException(
-          format("Failed to remove helm repo %s. %s", repoName, processResult.getOutput().getUTF8()));
+      ProcessResult processResult = executeCommand(repoRemoveCommand, null);
+      if (processResult.getExitValue() != 0) {
+        logger.warn(format("Failed to remove helm repo %s. %s", repoName, processResult.getOutput().getUTF8()));
+      }
+    } catch (Exception ex) {
+      logger.warn(ExceptionUtils.getMessage(ex));
     }
   }
 

@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.chartmuseum;
 
+import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
@@ -161,9 +162,13 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
     return rand.nextInt(PORTS_BOUND) + PORTS_START_POINT;
   }
 
-  public void stopChartMuseumServer(StartedProcess process) throws Exception {
-    if (process != null) {
-      process.getProcess().destroyForcibly().waitFor();
+  public void stopChartMuseumServer(StartedProcess process) {
+    try {
+      if (process != null) {
+        process.getProcess().destroyForcibly().waitFor();
+      }
+    } catch (Exception ex) {
+      logger.warn("Failed to stop chart museum server " + getMessage(ex));
     }
   }
 
