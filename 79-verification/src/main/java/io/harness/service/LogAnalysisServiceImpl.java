@@ -236,7 +236,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
               workflowExecutionId, serviceId, clusterLevel, ClusterLevel.getHeartBeatLevel(clusterLevel), logData);
 
       if (!checkIfL0AlreadyPresent(appId, cvConfigId, logDataRecords, stateExecutionId)) {
-        return false;
+        return true;
       }
       wingsPersistence.saveIgnoringDuplicateKeys(logDataRecords);
 
@@ -299,7 +299,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       return true;
     }
 
-    logger.error("for {} got logs for minutes {} which are already clustered", cvConfigId, clusteredMinutes);
+    logger.error("for {} got logs for minutes {} which are already clustered", fieldValueForQuery, clusteredMinutes);
     return false;
   }
 
