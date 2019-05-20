@@ -207,8 +207,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
     wingsPersistence.update(query,
         wingsPersistence.createUpdateOperations(ContinuousVerificationExecutionMetaData.class)
-            .set("executionStatus", status)
-            .set("noData", noData));
+            .set(ContinuousVerificationExecutionMetaDataKeys.executionStatus, status)
+            .set(ContinuousVerificationExecutionMetaDataKeys.noData, noData));
   }
 
   @Override

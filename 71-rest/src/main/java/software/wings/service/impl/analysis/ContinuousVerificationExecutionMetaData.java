@@ -12,8 +12,12 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.Base;
 import software.wings.sm.StateType;
 
@@ -25,6 +29,12 @@ import java.util.Date;
 @Builder
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @FieldNameConstants(innerTypeName = "ContinuousVerificationExecutionMetaDataKeys")
+@Indexes({
+  @Index(fields = {
+    @Field("workflowId")
+    , @Field("stateType"), @Field("executionStatus"), @Field(value = "workflowStartTs", type = IndexType.DESC)
+  }, options = @IndexOptions(name = "stateHostIdx"))
+})
 public class ContinuousVerificationExecutionMetaData extends Base {
   @NotEmpty @Indexed private long workflowStartTs;
   @NotEmpty private long pipelineStartTs;

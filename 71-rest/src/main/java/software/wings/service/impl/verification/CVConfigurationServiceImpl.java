@@ -344,22 +344,19 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
               "Invalid baseline start and end time provided. They both should be positive and the difference should at least be "
                   + (CRON_POLL_INTERVAL_IN_MINUTES - 1) + " provided config: " + logsCVConfiguration);
     }
-    wingsPersistence.delete(wingsPersistence.createQuery(LogDataRecord.class)
-                                .filter("appId", appId)
+    wingsPersistence.delete(wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
                                 .filter(LogDataRecordKeys.cvConfigId, cvConfigId));
-    wingsPersistence.delete(wingsPersistence.createQuery(LogMLAnalysisRecord.class)
-                                .filter("appId", appId)
+    wingsPersistence.delete(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
                                 .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
-                                .field("logCollectionMinute")
+                                .field(LogMLAnalysisRecordKeys.logCollectionMinute)
                                 .greaterThanOrEq(logsCVConfiguration.getBaselineStartMinute()));
-    wingsPersistence.update(wingsPersistence.createQuery(LogMLAnalysisRecord.class)
-                                .filter("appId", appId)
+    wingsPersistence.update(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
                                 .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
-                                .field("logCollectionMinute")
+                                .field(LogMLAnalysisRecordKeys.logCollectionMinute)
                                 .lessThanOrEq(logsCVConfiguration.getBaselineStartMinute()),
-        wingsPersistence.createUpdateOperations(LogMLAnalysisRecord.class).set("deprecated", true));
-    wingsPersistence.delete(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-                                .filter("appId", appId)
+        wingsPersistence.createUpdateOperations(LogMLAnalysisRecord.class)
+            .set(LogMLAnalysisRecordKeys.deprecated, true));
+    wingsPersistence.delete(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
                                 .filter(LearningEngineAnalysisTaskKeys.cvConfigId, cvConfigId));
     cvConfiguration.setBaselineStartMinute(logsCVConfiguration.getBaselineStartMinute());
     cvConfiguration.setBaselineEndMinute(logsCVConfiguration.getBaselineEndMinute());

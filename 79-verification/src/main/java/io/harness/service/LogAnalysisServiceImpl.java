@@ -16,6 +16,7 @@ import static software.wings.service.intfc.analysis.ClusterLevel.H1;
 import static software.wings.service.intfc.analysis.ClusterLevel.H2;
 import static software.wings.service.intfc.analysis.ClusterLevel.HF;
 import static software.wings.service.intfc.analysis.ClusterLevel.L0;
+import static software.wings.service.intfc.analysis.ClusterLevel.L2;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
@@ -151,7 +152,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                      .filter(LogDataRecordKeys.cvConfigId, cvConfigId)
                                      .filter(LogDataRecordKeys.clusterLevel, fromLevel);
 
-    if (ClusterLevel.L2.equals(toLevel)) {
+    if (L2.equals(toLevel)) {
       query = query.field(LogDataRecordKeys.logCollectionMinute).lessThanOrEq(logCollectionMinute);
     } else {
       query = query.filter(LogDataRecordKeys.logCollectionMinute, logCollectionMinute);
@@ -168,7 +169,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                   .filter(LogDataRecordKeys.cvConfigId, cvConfigId)
                   .filter(LogDataRecordKeys.clusterLevel, ClusterLevel.getHeartBeatLevel(fromLevel));
 
-      if (ClusterLevel.L2.equals(toLevel)) {
+      if (L2.equals(toLevel)) {
         query = query.field(LogDataRecordKeys.logCollectionMinute).lessThanOrEq(logCollectionMinute);
       } else {
         query = query.filter(LogDataRecordKeys.logCollectionMinute, logCollectionMinute);
@@ -239,7 +240,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       }
       wingsPersistence.saveIgnoringDuplicateKeys(logDataRecords);
 
-      if (dataStoreService instanceof GoogleDataStoreServiceImpl && clusterLevel == ClusterLevel.L2) {
+      if (dataStoreService instanceof GoogleDataStoreServiceImpl && clusterLevel == L2) {
         dataStoreService.save(LogDataRecord.class, logDataRecords, true);
       }
 
@@ -260,11 +261,11 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
           break;
         case L2:
           bumpClusterLevel(stateType, stateExecutionId, appId, query, emptySet(), logCollectionMinute,
-              ClusterLevel.getHeartBeatLevel(ClusterLevel.L1), ClusterLevel.getHeartBeatLevel(ClusterLevel.L2));
+              ClusterLevel.getHeartBeatLevel(ClusterLevel.L1), ClusterLevel.getHeartBeatLevel(L2));
           deleteClusterLevel(
               stateType, stateExecutionId, appId, query, emptySet(), logCollectionMinute, ClusterLevel.L1);
           learningEngineService.markCompleted(
-              workflowExecutionId, stateExecutionId, logCollectionMinute, MLAnalysisType.LOG_CLUSTER, ClusterLevel.L2);
+              workflowExecutionId, stateExecutionId, logCollectionMinute, MLAnalysisType.LOG_CLUSTER, L2);
           break;
         default:
           throw new WingsException("Bad cluster level {} " + clusterLevel.name());
@@ -318,7 +319,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       logger.info("Saved {} clustered data for cvConfig: {}, minute {}, toLevel {}, host {}", logDataRecords.size(),
           cvConfigId, logCollectionMinute, clusterLevel, host);
 
-      if (dataStoreService instanceof GoogleDataStoreServiceImpl && clusterLevel.equals(ClusterLevel.L2)) {
+      if (dataStoreService instanceof GoogleDataStoreServiceImpl && clusterLevel.equals(L2)) {
         dataStoreService.save(LogDataRecord.class, logDataRecords, true);
         logger.info("Saved L2 clustered data to GoogleDatStore for cvConfig: {}, minute {}, toLevel {}", cvConfigId,
             logCollectionMinute, clusterLevel);
@@ -341,9 +342,9 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
         }
         break;
       case L2:
-        deleteClusterLevel(cvConfigId, null, logCollectionMinute, ClusterLevel.L1, ClusterLevel.L2);
+        deleteClusterLevel(cvConfigId, null, logCollectionMinute, ClusterLevel.L1, L2);
         learningEngineService.markCompleted(null, "LOGS_CLUSTER_L2_" + cvConfigId + "_" + logCollectionMinute,
-            logCollectionMinute, MLAnalysisType.LOG_CLUSTER, ClusterLevel.L2);
+            logCollectionMinute, MLAnalysisType.LOG_CLUSTER, L2);
         break;
       default:
         throw new WingsException("Bad cluster level {} " + clusterLevel.name());
@@ -513,9 +514,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     List<String> successfulExecutions = new ArrayList<>();
     List<ContinuousVerificationExecutionMetaData> cvList =
         wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class, excludeAuthority)
-            .filter(ContinuousVerificationExecutionMetaDataKeys.applicationId, appId)
-            .filter(ContinuousVerificationExecutionMetaDataKeys.stateType, stateType)
             .filter(ContinuousVerificationExecutionMetaDataKeys.workflowId, workflowId)
+            .filter(ContinuousVerificationExecutionMetaDataKeys.stateType, stateType)
             .filter(ContinuousVerificationExecutionMetaDataKeys.executionStatus, ExecutionStatus.SUCCESS)
             .order(Sort.descending(ContinuousVerificationExecutionMetaDataKeys.workflowStartTs))
             .asList();
@@ -523,7 +523,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     for (String successfulExecution : successfulExecutions) {
       if (wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
               .filter(LogDataRecordKeys.workflowExecutionId, successfulExecution)
-              .filter(LogDataRecordKeys.clusterLevel, ClusterLevel.L2)
+              .filter(LogDataRecordKeys.clusterLevel, L2)
               .filter(LogDataRecordKeys.query, query)
               .count(new CountOptions().limit(1))
           > 0) {
@@ -552,7 +552,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     }
     bumpClusterLevel(stateType, mlAnalysisResponse.getStateExecutionId(), mlAnalysisResponse.getAppId(),
         mlAnalysisResponse.getQuery(), emptySet(), mlAnalysisResponse.getLogCollectionMinute(),
-        ClusterLevel.getHeartBeatLevel(ClusterLevel.L2), ClusterLevel.getFinal());
+        ClusterLevel.getHeartBeatLevel(L2), ClusterLevel.getFinal());
     if (taskId.isPresent()) {
       learningEngineService.markCompleted(taskId.get());
     }
@@ -583,6 +583,11 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                 .lessThanOrEq(analysisMinute),
         wingsPersistence.createUpdateOperations(LogDataRecord.class)
             .set(LogDataRecordKeys.clusterLevel, ClusterLevel.getFinal()));
+    wingsPersistence.delete(wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
+                                .filter(LogDataRecordKeys.cvConfigId, cvConfigId)
+                                .filter(LogDataRecordKeys.clusterLevel, L2)
+                                .field(LogDataRecordKeys.logCollectionMinute)
+                                .lessThanOrEq(analysisMinute));
     if (taskId.isPresent()) {
       learningEngineService.markCompleted(taskId.get());
     }
@@ -630,7 +635,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
         + " StateExecutionInstanceId: " + mlAnalysisResponse.getStateExecutionId());
     bumpClusterLevel(stateType, mlAnalysisResponse.getStateExecutionId(), mlAnalysisResponse.getAppId(),
         mlAnalysisResponse.getQuery(), emptySet(), mlAnalysisResponse.getLogCollectionMinute(),
-        ClusterLevel.getHeartBeatLevel(ClusterLevel.L2), ClusterLevel.getFinal());
+        ClusterLevel.getHeartBeatLevel(L2), ClusterLevel.getFinal());
     if (taskId.isPresent()) {
       learningEngineService.markExpTaskCompleted(taskId.get());
     }
