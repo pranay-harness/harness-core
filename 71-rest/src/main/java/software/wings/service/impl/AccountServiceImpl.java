@@ -318,13 +318,14 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public String getAccountStatus(String accountId) {
-    LicenseInfo licenseInfo = dbCache.get(Account.class, accountId).getLicenseInfo();
-
-    if (licenseInfo == null) {
-      return AccountStatus.ACTIVE;
+    Account account = dbCache.get(Account.class, accountId);
+    if (account == null) {
+      // Account was hard/physically deleted case
+      return AccountStatus.DELETED;
+    } else {
+      LicenseInfo licenseInfo = account.getLicenseInfo();
+      return licenseInfo == null ? AccountStatus.ACTIVE : licenseInfo.getAccountStatus();
     }
-
-    return licenseInfo.getAccountStatus();
   }
 
   private void decryptLicenseInfo(List<Account> accounts) {
