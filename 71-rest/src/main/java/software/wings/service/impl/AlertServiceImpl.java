@@ -24,6 +24,7 @@ import static software.wings.beans.alert.AlertType.USAGE_LIMIT_EXCEEDED;
 import static software.wings.beans.alert.AlertType.USERGROUP_SYNC_FAILED;
 import static software.wings.utils.Misc.getDurationString;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -63,7 +64,6 @@ import software.wings.service.intfc.alert.NotificationRulesStatusService;
 
 import java.time.OffsetDateTime;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -74,10 +74,10 @@ import java.util.concurrent.Future;
 @Slf4j
 public class AlertServiceImpl implements AlertService {
   // TODO: check if ARTIFACT_COLLECTION_FAILED alert type needs to be added here
-  private static final List<AlertType> ALERT_TYPES_TO_NOTIFY_ON = Collections.unmodifiableList(Arrays.asList(
-      NoActiveDelegates, DelegatesDown, NoEligibleDelegates, DelegateProfileError, DEPLOYMENT_RATE_APPROACHING_LIMIT,
-      INSTANCE_USAGE_APPROACHING_LIMIT, USAGE_LIMIT_EXCEEDED, USERGROUP_SYNC_FAILED, RESOURCE_USAGE_APPROACHING_LIMIT,
-      GitSyncError, GitConnectionError, InvalidKMS, CONTINUOUS_VERIFICATION_ALERT));
+  private static final List<AlertType> ALERT_TYPES_TO_NOTIFY_ON = ImmutableList.of(NoActiveDelegates, DelegatesDown,
+      NoEligibleDelegates, DelegateProfileError, DEPLOYMENT_RATE_APPROACHING_LIMIT, INSTANCE_USAGE_APPROACHING_LIMIT,
+      USAGE_LIMIT_EXCEEDED, USERGROUP_SYNC_FAILED, RESOURCE_USAGE_APPROACHING_LIMIT, GitSyncError, GitConnectionError,
+      InvalidKMS, CONTINUOUS_VERIFICATION_ALERT);
   private static final Iterable<AlertStatus> STATUS_ACTIVE = ImmutableSet.of(Open, Pending);
 
   @Inject private WingsPersistence wingsPersistence;
@@ -191,35 +191,35 @@ public class AlertServiceImpl implements AlertService {
     findExistingAlert(
         accountId, GLOBAL_APP_ID, NoActiveDelegates, NoActiveDelegatesAlert.builder().accountId(accountId).build())
         .ifPresent(this ::close);
-    wingsPersistence.createQuery(Alert.class)
-        .filter(AlertKeys.accountId, accountId)
-        .filter(AlertKeys.type, NoEligibleDelegates)
-        .field(AlertKeys.status)
-        .in(STATUS_ACTIVE)
-        .asList()
-        .stream()
-        .filter(alert -> {
-          NoEligibleDelegatesAlert data = (NoEligibleDelegatesAlert) alert.getAlertData();
-          return assignDelegateService.canAssign(delegateId, accountId, data.getAppId(), data.getEnvId(),
-              data.getInfraMappingId(), data.getTaskGroup(), data.getTags());
-        })
-        .forEach(this ::close);
+    Query<Alert> alertQuery = wingsPersistence.createQuery(Alert.class)
+                                  .filter(AlertKeys.accountId, accountId)
+                                  .filter(AlertKeys.type, NoEligibleDelegates)
+                                  .field(AlertKeys.status)
+                                  .in(STATUS_ACTIVE);
+    for (Alert alert : alertQuery) {
+      NoEligibleDelegatesAlert data = (NoEligibleDelegatesAlert) alert.getAlertData();
+      if (assignDelegateService.canAssign(delegateId, accountId, data.getAppId(), data.getEnvId(),
+              data.getInfraMappingId(), data.getTaskGroup(), data.getTags())) {
+        close(alert);
+      }
+    }
   }
 
   private void deploymentCompletedInternal(String appId, String executionId) {
-    wingsPersistence.createQuery(Alert.class)
-        .filter(AlertKeys.appId, appId)
-        .field(AlertKeys.type)
-        .in(asList(ApprovalNeeded, ManualInterventionNeeded))
-        .field(AlertKeys.status)
-        .in(STATUS_ACTIVE)
-        .asList()
-        .stream()
-        .filter(alert
-            -> executionId.equals(alert.getType().equals(ApprovalNeeded)
-                    ? ((ApprovalNeededAlert) alert.getAlertData()).getExecutionId()
-                    : ((ManualInterventionNeededAlert) alert.getAlertData()).getExecutionId()))
-        .forEach(this ::close);
+    Query<Alert> alertQuery = wingsPersistence.createQuery(Alert.class)
+                                  .filter(AlertKeys.appId, appId)
+                                  .field(AlertKeys.type)
+                                  .in(asList(ApprovalNeeded, ManualInterventionNeeded))
+                                  .field(AlertKeys.status)
+                                  .in(STATUS_ACTIVE);
+    for (Alert alert : alertQuery) {
+      String alertExecutionId = alert.getType().equals(ApprovalNeeded)
+          ? ((ApprovalNeededAlert) alert.getAlertData()).getExecutionId()
+          : ((ManualInterventionNeededAlert) alert.getAlertData()).getExecutionId();
+      if (executionId.equals(alertExecutionId)) {
+        close(alert);
+      }
+    }
   }
 
   private Optional<Alert> findExistingAlert(String accountId, String appId, AlertType alertType, AlertData alertData) {
@@ -229,34 +229,34 @@ public class AlertServiceImpl implements AlertService {
       logger.error(errorMsg);
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", errorMsg);
     }
-    Query<Alert> query = wingsPersistence.createQuery(Alert.class)
-                             .filter(AlertKeys.type, alertType)
-                             .filter(AlertKeys.accountId, accountId)
-                             .field(AlertKeys.status)
-                             .in(STATUS_ACTIVE);
+    Query<Alert> alertQuery = wingsPersistence.createQuery(Alert.class)
+                                  .filter(AlertKeys.type, alertType)
+                                  .filter(AlertKeys.accountId, accountId)
+                                  .field(AlertKeys.status)
+                                  .in(STATUS_ACTIVE);
     if (appId != null) {
-      query.filter(AlertKeys.appId, appId);
+      alertQuery.filter(AlertKeys.appId, appId);
     }
     injector.injectMembers(alertData);
-    return query.asList()
-        .stream()
-        .filter(alert -> {
-          injector.injectMembers(alert.getAlertData());
-          return alertData.matches(alert.getAlertData());
-        })
-        .findFirst();
+    for (Alert alert : alertQuery) {
+      injector.injectMembers(alert.getAlertData());
+      if (alertData.matches(alert.getAlertData())) {
+        return Optional.of(alert);
+      }
+    }
+    return Optional.empty();
   }
 
-  private List<Alert> findExistingAlertsOfType(String accountId, String appId, AlertType alertType) {
-    Query<Alert> query = wingsPersistence.createQuery(Alert.class)
-                             .filter(AlertKeys.type, alertType)
-                             .filter(AlertKeys.accountId, accountId)
-                             .field(AlertKeys.status)
-                             .in(STATUS_ACTIVE);
+  private Iterable<Alert> findExistingAlertsOfType(String accountId, String appId, AlertType alertType) {
+    Query<Alert> alertQuery = wingsPersistence.createQuery(Alert.class)
+                                  .filter(AlertKeys.type, alertType)
+                                  .filter(AlertKeys.accountId, accountId)
+                                  .field(AlertKeys.status)
+                                  .in(STATUS_ACTIVE);
     if (appId != null) {
-      query.filter(AlertKeys.appId, appId);
+      alertQuery.filter(AlertKeys.appId, appId);
     }
-    return query.asList();
+    return alertQuery;
   }
 
   private void close(Alert alert) {
@@ -279,20 +279,22 @@ public class AlertServiceImpl implements AlertService {
 
   @Override
   public void deleteByAccountId(String accountId) {
-    List<Alert> alerts = wingsPersistence.createQuery(Alert.class).filter(AlertKeys.accountId, accountId).asList();
-    alerts.forEach(alert -> wingsPersistence.delete(alert));
+    wingsPersistence.createQuery(Alert.class)
+        .filter(AlertKeys.accountId, accountId)
+        .forEach(alert -> wingsPersistence.delete(alert));
   }
 
   @Override
   public void pruneByApplication(String appId) {
-    List<Alert> alerts = wingsPersistence.createQuery(Alert.class).filter(AlertKeys.appId, appId).asList();
-    alerts.forEach(alert -> wingsPersistence.delete(alert));
+    wingsPersistence.createQuery(Alert.class)
+        .filter(AlertKeys.appId, appId)
+        .forEach(alert -> wingsPersistence.delete(alert));
   }
 
   @Override
   public void pruneByArtifactStream(String appId, String artifactStreamId) {
     // NOTE: this pruning is done only for ArtifactCollectionFailedAlert
-    List<Alert> alerts;
+    Iterable<Alert> alerts;
     if (GLOBAL_APP_ID.equals(appId)) {
       ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
       if (artifactStream == null || artifactStream.getSettingId() == null) {
@@ -310,11 +312,11 @@ public class AlertServiceImpl implements AlertService {
           findExistingAlertsOfType(appService.getAccountIdByAppId(appId), appId, AlertType.ARTIFACT_COLLECTION_FAILED);
     }
 
-    alerts.stream()
-        .filter(alert -> {
-          ArtifactCollectionFailedAlert data = (ArtifactCollectionFailedAlert) alert.getAlertData();
-          return data.getArtifactStreamId().equals(artifactStreamId);
-        })
-        .forEach(alert -> wingsPersistence.delete(alert));
+    for (Alert alert : alerts) {
+      ArtifactCollectionFailedAlert data = (ArtifactCollectionFailedAlert) alert.getAlertData();
+      if (data.getArtifactStreamId().equals(artifactStreamId)) {
+        wingsPersistence.delete(alert);
+      }
+    }
   }
 }
