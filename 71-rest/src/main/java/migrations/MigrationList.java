@@ -3,6 +3,7 @@ package migrations;
 import com.google.common.collect.ImmutableList;
 
 import migrations.all.AddAccountIdToAppEntities;
+import migrations.all.AddAccountIdToArtifactStreamsMigration;
 import migrations.all.AddAccountIdToArtifactsMigration;
 import migrations.all.AddInstanceStatsCollectionJobToAllAccounts;
 import migrations.all.AddLimitVicinityCheckJobToAllAccounts;
@@ -229,6 +230,7 @@ public class MigrationList {
         .add(Pair.of(248, ServiceAddArtifactStreamIdsMigration.class))
         .add(Pair.of(249, SetRollbackFlagToWorkflows.class))
         .add(Pair.of(250, AddAccountIdToArtifactsMigration.class))
+        .add(Pair.of(251, AddAccountIdToArtifactStreamsMigration.class))
         .build();
   }
 }
