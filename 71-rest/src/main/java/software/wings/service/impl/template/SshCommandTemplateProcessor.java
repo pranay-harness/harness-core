@@ -13,9 +13,6 @@ import static software.wings.beans.template.Template.FOLDER_ID_KEY;
 import static software.wings.beans.template.Template.NAME_KEY;
 import static software.wings.beans.template.Template.TYPE_KEY;
 import static software.wings.common.TemplateConstants.GENERIC_JSON_PATH;
-import static software.wings.common.TemplateConstants.JBOSS_WAR_INSTALL_PATH;
-import static software.wings.common.TemplateConstants.JBOSS_WAR_START_PATH;
-import static software.wings.common.TemplateConstants.JBOSS_WAR_STOP_PATH;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
 import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_INSTALL_PATH;
 import static software.wings.common.TemplateConstants.TOMCAT_WAR_INSTALL_PATH;
@@ -206,9 +203,8 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
 
   @Override
   public void loadDefaultTemplates(String accountId, String accountName) {
-    super.loadDefaultTemplates(
-        asList(TOMCAT_WAR_STOP_PATH, TOMCAT_WAR_START_PATH, TOMCAT_WAR_INSTALL_PATH, JBOSS_WAR_STOP_PATH,
-            JBOSS_WAR_START_PATH, JBOSS_WAR_INSTALL_PATH, POWER_SHELL_IIS_INSTALL_PATH, GENERIC_JSON_PATH),
+    super.loadDefaultTemplates(asList(TOMCAT_WAR_STOP_PATH, TOMCAT_WAR_START_PATH, TOMCAT_WAR_INSTALL_PATH,
+                                   POWER_SHELL_IIS_INSTALL_PATH, GENERIC_JSON_PATH),
         accountId, accountName);
   }
 

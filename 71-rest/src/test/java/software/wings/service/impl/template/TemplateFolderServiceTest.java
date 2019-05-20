@@ -178,7 +178,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
     assertThat(templateFolder.getChildren())
         .isNotEmpty()
         .extracting(templateFolder1 -> templateFolder1.getName())
-        .contains(JBOSS_COMMANDS);
+        .doesNotContain(JBOSS_COMMANDS);
   }
 
   @Test

@@ -66,6 +66,10 @@ public interface TemplateService extends OwnedByAccount, OwnedByApplication {
 
   Template fetchTemplateByKeyword(@NotEmpty String accountId, @NotEmpty String appId, String keyword);
 
+  Template fetchTemplateByKeywords(@NotEmpty String accountId, List<String> keywords);
+
+  List<Template> fetchTemplatesWithReferencedTemplateId(@NotEmpty String templateId);
+
   Template convertYamlToTemplate(String templatePath) throws IOException;
 
   void loadDefaultTemplates(List<String> templateFiles, String accountId, String accountName);

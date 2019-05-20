@@ -6,6 +6,7 @@ import migrations.seedata.IISInstallCommandMigration;
 import migrations.seedata.IISInstallCommandV4Migration;
 import migrations.seedata.ReImportTemplatesMigration;
 import migrations.seedata.TemplateGalleryDefaultTemplatesMigration;
+import migrations.seedata.TomcatInstallCommandMigration;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class SeedDataMigrationList {
         .add(Pair.of(8, IISInstallCommandV4Migration.class))
         .add(Pair.of(9, BaseSeedDataMigration.class))
         .add(Pair.of(10, ReImportTemplatesMigration.class))
+        .add(Pair.of(11, TomcatInstallCommandMigration.class))
         .build();
   }
 }
