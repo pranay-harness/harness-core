@@ -9,7 +9,6 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.persistence.HQuery.excludeCount;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.VerificationConstants.DEMO_APPLICAITON_ID;
 import static software.wings.common.VerificationConstants.DEMO_FAILURE_LOG_STATE_EXECUTION_ID;
@@ -376,12 +375,11 @@ public class AnalysisServiceImpl implements AnalysisService {
     // TODO should we limit the number of executions to search in ??
     List<String> successfulExecutions = new ArrayList<>();
     List<ContinuousVerificationExecutionMetaData> cvList =
-        wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class, excludeCount)
-            .filter("appId", appId)
-            .filter("stateType", stateType)
-            .filter("workflowId", workflowId)
-            .filter("executionStatus", ExecutionStatus.SUCCESS)
-            .order("-workflowStartTs")
+        wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class, excludeAuthority)
+            .filter(ContinuousVerificationExecutionMetaDataKeys.workflowId, workflowId)
+            .filter(ContinuousVerificationExecutionMetaDataKeys.stateType, stateType)
+            .filter(ContinuousVerificationExecutionMetaDataKeys.executionStatus, ExecutionStatus.SUCCESS)
+            .order(Sort.descending(ContinuousVerificationExecutionMetaDataKeys.workflowStartTs))
             .asList();
     logger.info("Fetched {} CVExecutionMetadata for stateExecutionId {}", cvList.size(), stateExecutionId);
     cvList.forEach(cvMetadata -> successfulExecutions.add(cvMetadata.getWorkflowExecutionId()));
@@ -639,11 +637,11 @@ public class AnalysisServiceImpl implements AnalysisService {
   private long getLogRecordMinute(
       String appId, String stateExecutionId, ClusterLevel clusterLevel, OrderType orderType) {
     LogDataRecord logDataRecord =
-        wingsPersistence.createQuery(LogDataRecord.class)
-            .filter("appId", appId)
+        wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
             .filter(LogDataRecordKeys.stateExecutionId, stateExecutionId)
             .filter(LogDataRecordKeys.clusterLevel, clusterLevel)
-            .order(orderType == OrderType.DESC ? "-logCollectionMinute" : "logCollectionMinute")
+            .order(orderType == OrderType.DESC ? Sort.descending(LogDataRecordKeys.logCollectionMinute)
+                                               : Sort.ascending(LogDataRecordKeys.logCollectionMinute))
             .get();
 
     return logDataRecord == null ? -1 : logDataRecord.getLogCollectionMinute();
@@ -936,16 +934,6 @@ public class AnalysisServiceImpl implements AnalysisService {
     final int sprinkleRatio = random.nextInt() % 8;
     double adjustmentBase = coordinate - Math.floor(coordinate);
     return coordinate + (adjustmentBase * sprinkleRatio) / 100;
-  }
-
-  private boolean logExist(StateType stateType, WorkflowExecution workflowExecution) {
-    return wingsPersistence.createQuery(LogDataRecord.class)
-               .filter("appId", workflowExecution.getAppId())
-               .filter(LogDataRecordKeys.stateType, stateType)
-               .filter(LogDataRecordKeys.workflowId, workflowExecution.getWorkflowId())
-               .filter(LogDataRecordKeys.workflowExecutionId, workflowExecution.getUuid())
-               .count(new CountOptions().limit(1))
-        > 0;
   }
 
   @Override

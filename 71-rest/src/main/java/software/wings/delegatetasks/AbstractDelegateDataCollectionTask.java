@@ -8,7 +8,6 @@ import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
@@ -65,15 +64,16 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
     return Http.getUnsafeOkHttpClient(baseUrl, 15, 60);
   }
 
-  @SuppressFBWarnings({"UW_UNCOND_WAIT", "WA_NOT_IN_LOOP"})
   private void waitForCompletion() {
     synchronized (lockObject) {
-      try {
-        lockObject.wait();
-      } catch (InterruptedException e) {
-        completed.set(true);
-        getLogger().info("{} data collection interrupted", getStateType());
-        Thread.currentThread().interrupt();
+      while (!completed.get()) {
+        try {
+          lockObject.wait();
+        } catch (InterruptedException e) {
+          completed.set(true);
+          getLogger().info("{} data collection interrupted", getStateType());
+          Thread.currentThread().interrupt();
+        }
       }
     }
   }

@@ -73,6 +73,7 @@ import migrations.all.PreferenceUserIdRemoveDollarSignMigration;
 import migrations.all.RemoveDupInstanceStats;
 import migrations.all.RemoveResizeFromStatefulSetWorkflows;
 import migrations.all.RemoveServiceVariablesFromActivity;
+import migrations.all.RemoveUnusedLogDataRecordMigration;
 import migrations.all.RenameProvisionNodeToInfrastructureNodeWorkflows;
 import migrations.all.SecretTextNameKeyWordsMigration;
 import migrations.all.ServiceAddArtifactStreamIdsMigration;
@@ -231,6 +232,7 @@ public class MigrationList {
         .add(Pair.of(249, SetRollbackFlagToWorkflows.class))
         .add(Pair.of(250, AddAccountIdToArtifactsMigration.class))
         .add(Pair.of(251, AddAccountIdToArtifactStreamsMigration.class))
+        .add(Pair.of(252, RemoveUnusedLogDataRecordMigration.class))
         .build();
   }
 }
