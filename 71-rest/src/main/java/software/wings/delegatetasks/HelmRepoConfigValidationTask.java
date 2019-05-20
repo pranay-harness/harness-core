@@ -88,7 +88,8 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
         unhandled(helmRepoConfig.getSettingType());
         throw new WingsException("Unhandled type of helm repo config. Type : " + helmRepoConfig.getSettingType());
     }
-    removeRepo(repoName);
+
+    helmTaskHelper.removeRepo(repoName);
   }
 
   private void tryAddingGCSHelmRepo(
@@ -115,13 +116,5 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
     encryptionService.decrypt(awsConfig, connectorEncryptedDataDetails);
 
     helmTaskHelper.addHelmRepo(helmRepoConfig, awsConfig, repoName, taskParams.getRepoDisplayName());
-  }
-
-  private void removeRepo(String repoName) {
-    try {
-      helmTaskHelper.removeRepo(repoName);
-    } catch (Exception ex) {
-      logger.warn(ExceptionUtils.getMessage(ex));
-    }
   }
 }

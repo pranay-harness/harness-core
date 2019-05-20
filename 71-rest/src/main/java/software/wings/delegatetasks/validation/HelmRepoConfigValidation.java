@@ -11,6 +11,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -21,8 +22,13 @@ import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationTaskParams;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
+import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
+import software.wings.helpers.ext.helm.HelmDeployService;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
+import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
+import software.wings.helpers.ext.helm.response.HelmCommandResponse;
+import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 
 import java.util.List;
@@ -39,6 +45,9 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
   private static final String CHART_MUSEUM_VERSION_COMMAND = "${CHART_MUSEUM_PATH} -v";
 
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
+  @Inject private HelmDeployService helmDeployService;
+  @Inject private ContainerValidationHelper containerValidationHelper;
+  @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
 
   public HelmRepoConfigValidation(
       String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> consumer) {
@@ -77,7 +86,7 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
 
   private boolean validateHelmRepoConfig(HelmRepoConfig helmRepoConfig) {
     if (helmRepoConfig == null) {
-      return isHelmInstalled();
+      return validateEmptyHelmRepoConfig();
     } else if (helmRepoConfig instanceof HttpHelmRepoConfig) {
       return validateHttpHelmRepoConfig(helmRepoConfig);
     } else if (helmRepoConfig instanceof AmazonS3HelmRepoConfig) {
@@ -201,5 +210,33 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
       logger.error("Error executing command: " + command, ex);
       return false;
     }
+  }
+
+  private boolean validateEmptyHelmRepoConfig() {
+    HelmValuesFetchTaskParameters valuesTaskParams = (HelmValuesFetchTaskParameters) getParameters()[0];
+    ContainerServiceParams containerServiceParams = valuesTaskParams.getContainerServiceParams();
+
+    logger.info("Running validation for empty helm repo config ");
+
+    boolean validated = false;
+    try {
+      String configLocation = containerDeploymentDelegateHelper.createAndGetKubeConfigLocation(containerServiceParams);
+
+      HelmInstallCommandRequest commandRequest =
+          HelmInstallCommandRequest.builder().commandFlags(valuesTaskParams.getHelmCommandFlags()).build();
+      commandRequest.setKubeConfigLocation(configLocation);
+
+      HelmCommandResponse helmCommandResponse = helmDeployService.ensureHelmCliAndTillerInstalled(commandRequest);
+      if (helmCommandResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS)) {
+        validated = containerValidationHelper.validateContainerServiceParams(containerServiceParams);
+        logger.info("Helm containerServiceParams validation result. Validated: " + validated);
+      }
+    } catch (Exception e) {
+      logger.error("Helm validation failed", e);
+    }
+
+    logger.info("HelmRepoConfigValidation result. Validated: " + validated);
+
+    return validated;
   }
 }

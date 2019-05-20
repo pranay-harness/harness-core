@@ -943,7 +943,8 @@ public class HelmDeployState extends State {
 
   public ExecutionResponse executeHelmValuesFetchTask(ExecutionContext context, String activityId) {
     Application app = appService.get(context.getAppId());
-    HelmValuesFetchTaskParameters helmValuesFetchTaskParameters = getHelmValuesFetchTaskParameters(context, activityId);
+    HelmValuesFetchTaskParameters helmValuesFetchTaskParameters =
+        getHelmValuesFetchTaskParameters(context, app.getUuid(), activityId);
 
     String waitId = generateUuid();
     DelegateTask delegateTask = DelegateTask.builder()
@@ -972,19 +973,35 @@ public class HelmDeployState extends State {
         .build();
   }
 
-  private HelmValuesFetchTaskParameters getHelmValuesFetchTaskParameters(ExecutionContext context, String activityId) {
+  private HelmValuesFetchTaskParameters getHelmValuesFetchTaskParameters(
+      ExecutionContext context, String appId, String activityId) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
+    ContainerInfrastructureMapping containerInfraMapping =
+        (ContainerInfrastructureMapping) infrastructureMappingService.get(appId, phaseElement.getInfraMappingId());
+
+    String releaseName = obtainHelmReleaseNamePrefix(context);
+    ContainerServiceParams containerServiceParams =
+        containerDeploymentHelper.getContainerServiceParams(containerInfraMapping, releaseName, context);
+
+    String evaluatedCommandFlags = obtainCommandFlags(context);
+
+    HelmValuesFetchTaskParameters helmValuesFetchTaskParameters =
+        HelmValuesFetchTaskParameters.builder()
+            .accountId(context.getAccountId())
+            .appId(context.getAppId())
+            .activityId(activityId)
+            .helmCommandFlags(evaluatedCommandFlags)
+            .containerServiceParams(containerServiceParams)
+            .workflowExecutionId(context.getWorkflowExecutionId())
+            .build();
+
     ApplicationManifest applicationManifest = applicationManifestUtils.getApplicationManifestForService(context);
     if (applicationManifest == null || !HelmChartRepo.equals(applicationManifest.getStoreType())) {
-      return null;
+      return helmValuesFetchTaskParameters;
     }
 
-    return HelmValuesFetchTaskParameters.builder()
-        .accountId(context.getAccountId())
-        .appId(context.getAppId())
-        .activityId(activityId)
-        .helmChartConfigTaskParams(
-            helmChartConfigHelperService.getHelmChartConfigTaskParams(context, applicationManifest))
-        .workflowExecutionId(context.getWorkflowExecutionId())
-        .build();
+    helmValuesFetchTaskParameters.setHelmChartConfigTaskParams(
+        helmChartConfigHelperService.getHelmChartConfigTaskParams(context, applicationManifest));
+    return helmValuesFetchTaskParameters;
   }
 }
