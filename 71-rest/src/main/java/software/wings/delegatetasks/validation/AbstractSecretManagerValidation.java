@@ -67,10 +67,7 @@ public abstract class AbstractSecretManagerValidation extends AbstractDelegateVa
 
     Preconditions.checkNotNull(encryptionConfig);
     if (encryptionConfig instanceof LocalEncryptionConfig) {
-      return DelegateConnectionResult.builder()
-          .criteria(((LocalEncryptionConfig) encryptionConfig).getName())
-          .validated(true)
-          .build();
+      return DelegateConnectionResult.builder().criteria(encryptionConfig.getName()).validated(true).build();
     } else if (encryptionConfig instanceof KmsConfig) {
       KmsConfig kmsConfig = (KmsConfig) encryptionConfig;
       String kmsUrl = getAwsUrlFromRegion(kmsConfig.getRegion());

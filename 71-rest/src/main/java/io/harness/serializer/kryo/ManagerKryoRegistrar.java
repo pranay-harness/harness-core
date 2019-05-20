@@ -1,5 +1,6 @@
 package io.harness.serializer.kryo;
 
+import com.amazonaws.services.secretsmanager.model.AWSSecretsManagerException;
 import com.esotericsoftware.kryo.Kryo;
 import io.harness.serializer.KryoRegistrar;
 import software.wings.api.AmiServiceDeployElement;
@@ -1247,5 +1248,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sTrafficSplitTaskParameters.class, 7181);
     kryo.register(K8sTrafficSplitResponse.class, 7182);
     kryo.register(IstioDestinationWeight.class, 7183);
+    kryo.register(AWSSecretsManagerException.class, 7184);
   }
 }

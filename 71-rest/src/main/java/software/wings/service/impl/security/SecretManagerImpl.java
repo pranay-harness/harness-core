@@ -789,7 +789,7 @@ public class SecretManagerImpl implements SecretManager {
     }
 
     if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE) {
-      changeFileSecretManager(accountId, encryptedData, fromEncryptionType, toEncryptionType, toConfig);
+      changeFileSecretManager(accountId, encryptedData, fromEncryptionType, fromConfig, toEncryptionType, toConfig);
       return;
     }
 
@@ -806,6 +806,10 @@ public class SecretManagerImpl implements SecretManager {
         break;
       case AWS_SECRETS_MANAGER:
         decrypted = secretsManagerService.decrypt(encryptedData, accountId, (AwsSecretsManagerConfig) fromConfig);
+        // Delete the AWS secrets after it's transitioned out.
+        String awsSecretName =
+            isEmpty(encryptedData.getPath()) ? encryptedData.getEncryptionKey() : encryptedData.getPath();
+        secretsManagerService.deleteSecret(accountId, awsSecretName, (AwsSecretsManagerConfig) fromConfig);
         break;
       default:
         throw new IllegalStateException("Invalid type : " + fromEncryptionType);
@@ -848,7 +852,7 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   private void changeFileSecretManager(String accountId, EncryptedData encryptedData, EncryptionType fromEncryptionType,
-      EncryptionType toEncryptionType, EncryptionConfig toConfig) {
+      EncryptionConfig fromConfig, EncryptionType toEncryptionType, EncryptionConfig toConfig) {
     byte[] decryptedFileContent = getFileContents(accountId, encryptedData.getUuid());
     EncryptedData existingEncryptedRecord =
         isBlank(encryptedData.getUuid()) ? null : wingsPersistence.get(EncryptedData.class, encryptedData.getUuid());
@@ -874,10 +878,20 @@ public class SecretManagerImpl implements SecretManager {
         throw new IllegalArgumentException("Invalid target encryption type " + toEncryptionType);
     }
 
-    // Delete file from file service only if the source secret manager is of KMS type.
-    if (fromEncryptionType == EncryptionType.KMS) {
-      String savedFileId = String.valueOf(encryptedData.getEncryptedValue());
-      fileService.deleteFile(savedFileId, CONFIGS);
+    switch (fromEncryptionType) {
+      case KMS:
+        // Delete file from file service only if the source secret manager is of KMS type.
+        String savedFileId = String.valueOf(encryptedData.getEncryptedValue());
+        fileService.deleteFile(savedFileId, CONFIGS);
+        break;
+      case AWS_SECRETS_MANAGER:
+        // Delete the AWS secrets (encrypted file type) after it's transitioned out.
+        String awsSecretName =
+            isEmpty(encryptedData.getPath()) ? encryptedData.getEncryptionKey() : encryptedData.getPath();
+        secretsManagerService.deleteSecret(accountId, awsSecretName, (AwsSecretsManagerConfig) fromConfig);
+        break;
+      default:
+        break;
     }
 
     encryptedData.setEncryptionKey(encryptedFileData.getEncryptionKey());
@@ -1011,7 +1025,7 @@ public class SecretManagerImpl implements SecretManager {
     }
 
     if (isNotEmpty(path)) {
-      if (encryptionType != EncryptionType.VAULT) {
+      if (encryptionType != EncryptionType.VAULT && encryptionType != EncryptionType.AWS_SECRETS_MANAGER) {
         throw new WingsException("Secret path can be specified only if the secret manager is of VAULT type!");
       }
       // Path should always have a "#" in and a key name after the #.
@@ -1181,11 +1195,27 @@ public class SecretManagerImpl implements SecretManager {
       throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
     }
 
-    if (encryptedData.getEncryptionType() == EncryptionType.VAULT && isEmpty(encryptedData.getPath())) {
-      // For harness managed secrets, we need to delete the corresponding entries in the Vault service.
-      String keyName = encryptedData.getEncryptionKey();
-      VaultConfig vaultConfig = vaultService.getVaultConfig(accountId, encryptedData.getKmsId());
-      vaultService.deleteSecret(accountId, keyName, vaultConfig);
+    EncryptionType encryptionType = encryptedData.getEncryptionType();
+    switch (encryptionType) {
+      case AWS_SECRETS_MANAGER:
+        if (isEmpty(encryptedData.getPath())) {
+          // For harness managed secrets, we need to delete the corresponding entries in the Vault service.
+          String keyName = encryptedData.getEncryptionKey();
+          AwsSecretsManagerConfig secretsManagerConfig =
+              secretsManagerService.getAwsSecretsManagerConfig(accountId, encryptedData.getKmsId());
+          secretsManagerService.deleteSecret(accountId, keyName, secretsManagerConfig);
+        }
+        break;
+      case VAULT:
+        if (isEmpty(encryptedData.getPath())) {
+          // For harness managed secrets, we need to delete the corresponding entries in the Vault service.
+          String keyName = encryptedData.getEncryptionKey();
+          VaultConfig vaultConfig = vaultService.getVaultConfig(accountId, encryptedData.getKmsId());
+          vaultService.deleteSecret(accountId, keyName, vaultConfig);
+        }
+        break;
+      default:
+        break;
     }
 
     return deleteAndReportForAuditRecord(accountId, encryptedData);

@@ -35,8 +35,6 @@ import software.wings.beans.BaseFile;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.KmsConfig.KmsConfigKeys;
 import software.wings.beans.SyncTaskContext;
-import software.wings.beans.VaultConfig;
-import software.wings.beans.VaultConfig.VaultConfigKeys;
 import software.wings.common.Constants;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
@@ -175,10 +173,6 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   private String saveKmsConfigInternal(String accountId, KmsConfig kmsConfig) {
     kmsConfig.setAccountId(accountId);
 
-    Query<VaultConfig> vaultConfigQuery =
-        wingsPersistence.createQuery(VaultConfig.class).filter(VaultConfigKeys.accountId, accountId);
-    List<VaultConfig> vaultConfigs = vaultConfigQuery.asList();
-
     EncryptedData accessKeyData = encryptLocal(kmsConfig.getAccessKey().toCharArray());
     if (isNotBlank(kmsConfig.getUuid())) {
       EncryptedData savedAccessKey = wingsPersistence.get(
@@ -224,6 +218,11 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     String arnKeyId = wingsPersistence.save(arnKeyData);
     kmsConfig.setKmsArn(arnKeyId);
 
+    // When setting this vault config as default, set current default secret manager to non-default first.
+    if (kmsConfig.isDefault()) {
+      updateCurrentEncryptionConfigsToNonDefault(accountId);
+    }
+
     String parentId = wingsPersistence.save(kmsConfig);
 
     accessKeyData.addParent(parentId);
@@ -234,27 +233,6 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
     arnKeyData.addParent(parentId);
     wingsPersistence.save(arnKeyData);
-
-    Query<KmsConfig> query = wingsPersistence.createQuery(KmsConfig.class).filter(KmsConfigKeys.accountId, accountId);
-    Collection<KmsConfig> savedConfigs = query.asList();
-    if (kmsConfig.isDefault() && (!savedConfigs.isEmpty() || !vaultConfigs.isEmpty())) {
-      for (KmsConfig savedConfig : savedConfigs) {
-        if (kmsConfig.getUuid().equals(savedConfig.getUuid())) {
-          continue;
-        }
-        if (savedConfig.isDefault()) {
-          savedConfig.setDefault(false);
-          wingsPersistence.save(savedConfig);
-        }
-      }
-
-      for (VaultConfig vaultConfig : vaultConfigs) {
-        if (vaultConfig.isDefault()) {
-          vaultConfig.setDefault(false);
-          wingsPersistence.save(vaultConfig);
-        }
-      }
-    }
 
     return parentId;
   }

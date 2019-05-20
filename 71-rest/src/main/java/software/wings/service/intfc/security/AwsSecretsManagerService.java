@@ -23,8 +23,6 @@ public interface AwsSecretsManagerService {
 
   AwsSecretsManagerConfig getAwsSecretsManagerConfig(String accountId, String configId);
 
-  AwsSecretsManagerConfig getAwsSecretsManagerConfigByName(String accountId, String name);
-
   String saveAwsSecretsManagerConfig(String accountId, AwsSecretsManagerConfig secretsManagerConfig);
 
   boolean deleteAwsSecretsManagerConfig(String accountId, String configId);
