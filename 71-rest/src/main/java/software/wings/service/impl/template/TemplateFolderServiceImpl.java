@@ -18,7 +18,6 @@ import static software.wings.beans.template.TemplateFolder.NodeType.FOLDER;
 import static software.wings.common.TemplateConstants.GENERIC_COMMANDS;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.HTTP_VERIFICATION;
-import static software.wings.common.TemplateConstants.JBOSS_COMMANDS;
 import static software.wings.common.TemplateConstants.PATH_DELIMITER;
 import static software.wings.common.TemplateConstants.POWER_SHELL_COMMANDS;
 import static software.wings.common.TemplateConstants.TOMCAT_COMMANDS;
@@ -210,9 +209,6 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
                                             .build());
     // Generic commands folder
     save(constructTemplateBuilder(harnessFolder, GENERIC_COMMANDS));
-
-    // Jboss commands folder
-    save(constructTemplateBuilder(harnessFolder, JBOSS_COMMANDS));
 
     // Adding Load Balancer folder
     //    TemplateFolder loadBalancer = save(constructTemplateBuilder(harnessFolder, LOAD_BALANCERS));

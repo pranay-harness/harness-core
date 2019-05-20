@@ -18,6 +18,7 @@ import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.template.Template.FOLDER_PATH_ID_KEY;
 import static software.wings.beans.template.Template.NAME_KEY;
+import static software.wings.beans.template.Template.REFERENCED_TEMPLATE_ID;
 import static software.wings.beans.template.Template.VERSION_KEY;
 import static software.wings.beans.template.TemplateHelper.addUserKeyWords;
 import static software.wings.beans.template.TemplateHelper.mappedEntity;
@@ -577,6 +578,39 @@ public class TemplateServiceImpl implements TemplateService {
       }
     }
     return template;
+  }
+
+  public Template fetchTemplateByKeywords(@NotEmpty String accountId, List<String> keywords) {
+    Template template = null;
+    if (isNotEmpty(keywords)) {
+      Query<Template> templateQuery =
+          wingsPersistence.createQuery(Template.class)
+              .filter(ACCOUNT_ID_KEY, accountId)
+              .filter(APP_ID_KEY, GLOBAL_APP_ID)
+              .field(Template.KEYWORDS_KEY)
+              .hasAllOf(keywords.stream().map(String::toLowerCase).collect(Collectors.toList()));
+      List<Template> templates = templateQuery.asList();
+      if (isNotEmpty(templates)) {
+        template = templates.get(0);
+      }
+      if (template != null) {
+        setTemplateDetails(template, null);
+      }
+    }
+    return template;
+  }
+
+  public List<Template> fetchTemplatesWithReferencedTemplateId(@NotEmpty String templateId) {
+    Query<Template> templateQuery = wingsPersistence.createQuery(Template.class)
+                                        .filter(APP_ID_KEY, GLOBAL_APP_ID)
+                                        .filter(REFERENCED_TEMPLATE_ID, templateId);
+    List<Template> templates = templateQuery.asList();
+    if (isNotEmpty(templates)) {
+      for (Template template : templates) {
+        setTemplateDetails(template, null);
+      }
+    }
+    return templates;
   }
 
   public Template convertYamlToTemplate(String templatePath) throws IOException {

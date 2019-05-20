@@ -49,6 +49,7 @@ public class Template extends Base implements KeywordsAware, NameAccess {
   public static final String NAME_KEY = "name";
   public static final String TYPE_KEY = "type";
   public static final String VERSION_KEY = "version";
+  public static final String REFERENCED_TEMPLATE_ID = "referencedTemplateId";
 
   @Indexed @NotNull @EntityName(groups = {Create.class, Update.class}) private String name;
   @NotEmpty private String accountId;
