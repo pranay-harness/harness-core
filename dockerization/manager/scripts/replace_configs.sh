@@ -148,6 +148,18 @@ if [[ -v "MARKETO_CLIENT_SECRET" ]]; then
     sed -i "s|marketo_client_secret|${MARKETO_CLIENT_SECRET}|" /opt/harness/config.yml
 fi
 
+if [[ -v "SEGMENT_ENABLED" ]]; then
+    sed -i "s|enabled: false #segmentConfigEnable|enabled: ${SEGMENT_ENABLED}|" /opt/harness/config.yml
+fi
+
+if [[ -v "SEGMENT_URL" ]]; then
+    sed -i "s|segment_url_place_holder|${SEGMENT_URL}|" /opt/harness/config.yml
+fi
+
+if [[ -v "SEGMENT_APIKEY" ]]; then
+    sed -i "s|segment_api_key|${SEGMENT_APIKEY}|" /opt/harness/config.yml
+fi
+
 if [[ -v "DELEGATE_DOCKER_IMAGE" ]]; then
     sed -i "s|delegateDockerImage:.*|delegateDockerImage: ${DELEGATE_DOCKER_IMAGE}|" /opt/harness/config.yml
 fi
