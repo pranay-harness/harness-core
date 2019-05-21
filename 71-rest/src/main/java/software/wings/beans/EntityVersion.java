@@ -1,13 +1,13 @@
 package software.wings.beans;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
+import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 
 /**
  * Created by rishi on 10/13/16.
  */
-@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
+@EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "EntityVersionKeys")
 public class EntityVersion extends Base {
   public static final Integer INITIAL_VERSION = 1;
