@@ -36,6 +36,7 @@ public class LogAnalysisStoreServiceImpl implements LogAnalysisStoreService {
         case LOGZ:
         case LOG_VERIFICATION:
         case BUG_SNAG:
+        case DATA_DOG_LOG:
           return execute(verificationServiceClient.saveLogs(accountId, appId, cvConfigId, stateExecutionId, workflowId,
                              workflowExecutionId, serviceId, ClusterLevel.L0, delegateTaskId, stateType, logs))
               .getResource();

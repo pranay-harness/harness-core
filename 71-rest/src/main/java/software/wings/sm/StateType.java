@@ -106,6 +106,7 @@ import software.wings.sm.states.BugsnagState;
 import software.wings.sm.states.CloudWatchState;
 import software.wings.sm.states.CommandState;
 import software.wings.sm.states.CustomLogVerificationState;
+import software.wings.sm.states.DatadogLogState;
 import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.DcNodeSelectState;
 import software.wings.sm.states.DynatraceState;
@@ -332,6 +333,11 @@ public enum StateType implements StateTypeDescriptor {
    */
   STACK_DRIVER(
       StackDriverState.class, VERIFICATIONS, 18, "Stackdriver", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+
+  /**
+   * DatadogLog state type.
+   */
+  DATA_DOG_LOG(DatadogLogState.class, VERIFICATIONS, 19, "Datadog Log", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Env state state type.

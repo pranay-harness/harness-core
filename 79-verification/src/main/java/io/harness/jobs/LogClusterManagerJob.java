@@ -1,5 +1,7 @@
 package io.harness.jobs;
 
+import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -25,7 +27,6 @@ import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.ClusterLevel;
-import software.wings.sm.StateType;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
@@ -124,7 +125,7 @@ public class LogClusterManagerJob implements Job {
                 if (hasDataRecords) {
                   logger.info("Running cluster task for stateExecutionId {}, minute {}, stateType {}, ",
                       context.getStateExecutionId(), logRequest.getLogCollectionMinute(), context.getStateType());
-                  if (context.getStateType().equals(StateType.SUMO)) {
+                  if (PER_MINUTE_CV_STATES.contains(context.getStateType())) {
                     new LogMLClusterGenerator(learningEngineService, context.getClusterContext(), ClusterLevel.L0,
                         ClusterLevel.L1, logRequest, (int) context.getStartDataCollectionMinute())
                         .run();
@@ -174,6 +175,7 @@ public class LogClusterManagerJob implements Job {
           case LOGZ:
           case BUG_SNAG:
           case LOG_VERIFICATION:
+          case DATA_DOG_LOG:
             cluster();
             break;
           case SPLUNKV2:

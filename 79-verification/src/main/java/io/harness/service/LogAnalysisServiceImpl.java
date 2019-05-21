@@ -11,6 +11,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
+import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
 import static software.wings.service.intfc.analysis.ClusterLevel.H0;
 import static software.wings.service.intfc.analysis.ClusterLevel.H1;
 import static software.wings.service.intfc.analysis.ClusterLevel.H2;
@@ -96,8 +97,6 @@ import java.util.Set;
 public class LogAnalysisServiceImpl implements LogAnalysisService {
   private static final double HIGH_RISK_THRESHOLD = 50;
   private static final double MEDIUM_RISK_THRESHOLD = 25;
-  // Add to this list whenever we add more states to this type of collection
-  private static final List<StateType> PER_MINUTE_CV_STATES = Arrays.asList(StateType.SUMO);
 
   private final Random random = new Random();
 
@@ -368,7 +367,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     } else {
       long timeDelta = 0;
 
-      if (stateType.equals(StateType.SUMO)) {
+      if (PER_MINUTE_CV_STATES.contains(stateType)) {
         LogDataRecord logDataRecord = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
                                           .project(LogDataRecordKeys.logCollectionMinute, true)
                                           .filter(LogDataRecordKeys.stateExecutionId, logRequest.getStateExecutionId())
@@ -931,7 +930,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   @Override
   public boolean isProcessingComplete(String query, String appId, String stateExecutionId, StateType type,
       int timeDurationMins, long collectionMinute, String accountId) {
-    if (type.equals(StateType.SUMO)) {
+    if (PER_MINUTE_CV_STATES.contains(type)) {
       return getLastProcessedMinute(stateExecutionId) - collectionMinute >= timeDurationMins - 1;
     } else {
       return getLastProcessedMinute(stateExecutionId) >= timeDurationMins - 1;

@@ -23,12 +23,14 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.time.Timestamp;
 import io.harness.version.VersionInfoManager;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.DatadogConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.FeatureName;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.AnalysisTolerance;
+import software.wings.service.impl.analysis.CustomLogDataCollectionInfo;
 import software.wings.service.impl.analysis.DataCollectionInfo;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.MLAnalysisType;
@@ -46,6 +48,7 @@ import software.wings.verification.log.LogsCVConfiguration;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -207,7 +210,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       // Or in case when feature flag CV_DATA_COLLECTION_JOB is enabled. Delegate task creation will be every minute
       if (getComparisonStrategy() == PREDICTIVE
           || (featureFlagService.isEnabled(FeatureName.CV_DATA_COLLECTION_JOB, executionContext.getAccountId())
-                 && getStateType().equals(StateType.SUMO.name()))) {
+                     && (getStateType().equals(StateType.SUMO.name()))
+                 || getStateType().equals(StateType.DATA_DOG_LOG.name()))) {
         getLogger().info(
             "Feature flag CV_DATA_COLLECTION_JOB is enabled will use data collection for triggering delegate task");
       } else {
@@ -389,10 +393,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
 
-    String hostNameField = null;
-    if (StateType.valueOf(getStateType()).equals(StateType.SUMO)) {
-      hostNameField = ((SumoLogicAnalysisState) this).getHostnameField().getHostNameField();
-    }
+    String hostNameField = getHostnameField(context);
+
     AnalysisContext analysisContext =
         AnalysisContext.builder()
             .accountId(this.appService.get(context.getAppId()).getAccountId())
@@ -427,6 +429,17 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     return analysisContext;
   }
 
+  public String getHostnameField(ExecutionContext context) {
+    switch (StateType.valueOf(getStateType())) {
+      case SUMO:
+        return ((SumoLogicAnalysisState) this).getHostnameField().getHostNameField();
+      case DATA_DOG_LOG:
+        return this.getHostnameField(context);
+      default:
+        return null;
+    }
+  }
+
   public DataCollectionInfo createDataCollectionInfo(AnalysisContext analysisContext) {
     StateType stateType = StateType.valueOf(getStateType());
     switch (stateType) {
@@ -448,6 +461,36 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .queryType(elkAnalysisState.getQueryType())
             .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
             .encryptedDataDetails(secretManager.getEncryptionDetails(elkConfig, analysisContext.getAppId(), null))
+            .build();
+      case DATA_DOG_LOG:
+        DatadogLogState datadogLogState = (DatadogLogState) this;
+        DatadogConfig datadogConfig = (DatadogConfig) settingsService.get(getAnalysisServerConfigId()).getValue();
+        return CustomLogDataCollectionInfo.builder()
+            .baseUrl(datadogConfig.getUrl())
+            .validationUrl(DatadogConfig.validationUrl)
+            .dataUrl(DatadogConfig.logAnalysisUrl)
+            .headers(new HashMap<>())
+            .options(datadogConfig.fetchLogOptionsMap())
+            .body(DatadogLogState.resolveHostnameField(
+                datadogConfig.fetchLogBodyMap(), analysisContext.getHostNameField()))
+            .query(getRenderedQuery())
+            .encryptedDataDetails(secretManager.getEncryptionDetails(
+                datadogConfig, analysisContext.getAppId(), analysisContext.getWorkflowExecutionId()))
+            .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
+            .stateType(StateType.DATA_DOG_LOG)
+            .applicationId(analysisContext.getAppId())
+            .stateExecutionId(analysisContext.getStateExecutionId())
+            .workflowId(analysisContext.getWorkflowId())
+            .workflowExecutionId(analysisContext.getWorkflowExecutionId())
+            .serviceId(analysisContext.getServiceId())
+            .hostnameSeparator(DatadogLogState.hostNameSeparator)
+            .hostnameField(analysisContext.getHostNameField())
+            .responseDefinition(
+                datadogLogState.constructLogDefinitions(datadogConfig, analysisContext.getHostNameField()))
+            .shouldInspectHosts(true)
+            .collectionFrequency(1)
+            .collectionTime(Integer.parseInt(getTimeDuration()))
+            .accountId(analysisContext.getAccountId())
             .build();
       default:
         return null;

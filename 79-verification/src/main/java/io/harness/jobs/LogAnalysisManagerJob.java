@@ -92,6 +92,7 @@ public class LogAnalysisManagerJob implements Job {
 
       switch (context.getStateType()) {
         case SUMO:
+        case DATA_DOG_LOG:
           new LogMLClusterGenerator(learningEngineService, context.getClusterContext(), ClusterLevel.L1,
               ClusterLevel.L2, logRequest, (int) context.getStartDataCollectionMinute())
               .run();

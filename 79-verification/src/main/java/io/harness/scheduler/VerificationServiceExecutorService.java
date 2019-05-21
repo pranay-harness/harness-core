@@ -99,7 +99,7 @@ public class VerificationServiceExecutorService {
             .callManagerWithRetry(
                 verificationManagerClient.isFeatureEnabled(FeatureName.CV_DATA_COLLECTION_JOB, context.getAccountId()))
             .getResource()) {
-      if (context.getStateType().equals(StateType.SUMO)) {
+      if (context.getStateType().equals(StateType.SUMO) || context.getStateType().equals(StateType.DATA_DOG_LOG)) {
         Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(DELAY_MINUTES));
         JobDetail job = JobBuilder.newJob(DataCollectionForWorkflowJob.class)
                             .withIdentity(context.getStateExecutionId(),

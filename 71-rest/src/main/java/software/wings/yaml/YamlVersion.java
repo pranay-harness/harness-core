@@ -101,13 +101,12 @@ public class YamlVersion extends Base implements YamlHistory {
     return Objects.hash(type, entityId, yaml);
   }
 
-  @SuppressFBWarnings("EQ_OVERRIDING_EQUALS_NOT_SYMMETRIC") // TODO
   @Override
   public boolean equals(Object o) {
     if (o == this) {
       return true;
     }
-    if (!(o instanceof YamlVersion)) {
+    if (o == null || this.getClass() != o.getClass()) {
       return false;
     }
     YamlVersion yv = (YamlVersion) o;

@@ -118,6 +118,7 @@ import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
 import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.BugsnagState;
+import software.wings.sm.states.DatadogLogState;
 import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.DynatraceState;
 import software.wings.sm.states.NewRelicState;
@@ -1454,6 +1455,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         context.getStateType(), context.getStateExecutionId(), collectionMinute);
     switch (context.getStateType()) {
       case SUMO:
+      case DATA_DOG_LOG:
         return createDataCollectionDelegateTask(context, collectionMinute);
       default:
         logger.error("Calling collect data for an unsupported state");
@@ -1765,6 +1767,36 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           throw new WingsException("log analysis state failed ", ex);
         }
         break;
+      case DATA_DOG_LOG:
+        final VerificationStateAnalysisExecutionData datadogExecutionData =
+            createLogAnalysisExecutionData(context, canaryNewHostNames, lastExecutionNodes);
+        try {
+          DatadogConfig datadogConfig =
+              (DatadogConfig) settingsService.get(context.getAnalysisServerConfigId()).getValue();
+          List<DelegateTask> delegateTasks = new ArrayList<>();
+          for (List<String> hostBatch : Lists.partition(hostsToBeCollected, HOST_BATCH_SIZE)) {
+            final CustomLogDataCollectionInfo dataCollectionInfo = createCustomLogDataCollectionInfo(
+                datadogConfig, context, collectionStartMinute, new HashSet<>(hostBatch));
+            String waitId = generateUuid();
+            delegateTasks.add(createDelegateTask(TaskType.CUSTOM_LOG_COLLECTION_TASK, context.getAccountId(),
+                context.getAppId(), waitId, new Object[] {dataCollectionInfo}, context.getEnvId()));
+            waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
+                                            .appId(context.getAppId())
+                                            .executionData(datadogExecutionData)
+                                            .isLogCollection(true)
+                                            .isSumoDataCollection(true)
+                                            .stateExecutionId(context.getStateExecutionId())
+                                            .stateType(context.getStateType())
+                                            .build(),
+                waitId);
+            for (DelegateTask task : delegateTasks) {
+              delegateService.queueTask(task);
+            }
+          }
+        } catch (Exception ex) {
+          throw new WingsException("log analysis state failed ", ex);
+        }
+        break;
       default:
         throw new IllegalStateException("Invalid state: " + context.getStateType());
     }
@@ -1788,6 +1820,34 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         .hostnameField(context.getHostNameField())
         .encryptedDataDetails(
             secretManager.getEncryptionDetails(sumoConfig, context.getAppId(), context.getWorkflowExecutionId()))
+        .build();
+  }
+
+  private CustomLogDataCollectionInfo createCustomLogDataCollectionInfo(
+      DatadogConfig datadogConfig, AnalysisContext context, long collectionStartMinute, Set<String> hostBatch) {
+    return CustomLogDataCollectionInfo.builder()
+        .baseUrl(datadogConfig.getUrl())
+        .validationUrl(DatadogConfig.validationUrl)
+        .dataUrl(DatadogConfig.logAnalysisUrl)
+        .headers(new HashMap<>())
+        .options(datadogConfig.fetchLogOptionsMap())
+        .body(DatadogLogState.resolveHostnameField(datadogConfig.fetchLogBodyMap(), context.getHostNameField()))
+        .query(context.getQuery())
+        .encryptedDataDetails(
+            secretManager.getEncryptionDetails(datadogConfig, context.getAppId(), context.getWorkflowExecutionId()))
+        .hosts(hostBatch)
+        .stateType(StateType.DATA_DOG_LOG)
+        .applicationId(context.getAppId())
+        .stateExecutionId(context.getStateExecutionId())
+        .workflowId(context.getWorkflowId())
+        .workflowExecutionId(context.getWorkflowExecutionId())
+        .serviceId(context.getServiceId())
+        .startMinute((int) collectionStartMinute)
+        .collectionTime(1)
+        .accountId(context.getAccountId())
+        .hostnameField(context.getHostNameField())
+        .hostnameSeparator(DatadogLogState.hostNameSeparator)
+        .responseDefinition(DatadogLogState.constructLogDefinitions(datadogConfig, context.getHostNameField()))
         .build();
   }
 
@@ -1817,6 +1877,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                   .timeout(TimeUnit.MINUTES.toMillis(30))
                   .build())
         .envId(envId)
+
         .build();
   }
 
