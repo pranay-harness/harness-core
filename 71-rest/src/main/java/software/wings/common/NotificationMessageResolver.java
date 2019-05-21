@@ -395,7 +395,7 @@ public class NotificationMessageResolver {
     Application app = ((ExecutionContextImpl) context).getApp();
     String workflowUrl = generateUrl(app, context, alertType);
     String startTime = format("%s at %s", dateFormat.format(new Date(startTs)), timeFormat.format(new Date(startTs)));
-    String endTime = timeFormat.format(new Date(endTs));
+    String endTime = format("%s at %s", dateFormat.format(new Date(endTs)), timeFormat.format(new Date(endTs)));
 
     Environment env = ((ExecutionContextImpl) context).getEnv();
     String envName = (env != null) ? env.getName() : "";

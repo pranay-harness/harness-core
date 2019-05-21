@@ -377,7 +377,7 @@ public class WorkflowNotificationHelper {
     }
 
     String startTime = format("%s at %s", dateFormat.format(new Date(startTs)), timeFormat.format(new Date(startTs)));
-    String endTime = timeFormat.format(new Date(endTs));
+    String endTime = format("%s at %s", dateFormat.format(new Date(endTs)), timeFormat.format(new Date(endTs)));
 
     Map<String, String> placeHolderValues = new HashMap<>();
     placeHolderValues.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
