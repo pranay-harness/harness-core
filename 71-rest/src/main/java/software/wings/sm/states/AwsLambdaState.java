@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
@@ -32,7 +33,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.Getter;
 import lombok.Setter;
-import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.AwsLambdaContextElement;
 import software.wings.api.AwsLambdaContextElement.FunctionMeta;
 import software.wings.api.CommandStateExecutionData;
@@ -92,45 +92,18 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-/**
- * The type Aws lambda state.
- */
 public class AwsLambdaState extends State {
-  /**
-   * The Settings service.
-   */
-  @Inject @Transient protected transient SettingsService settingsService;
-
-  /**
-   * The Service resource service.
-   */
-  @Inject @Transient protected transient ServiceResourceService serviceResourceService;
-
-  /**
-   * The Service template service.
-   */
-  @Inject @Transient protected transient ServiceTemplateService serviceTemplateService;
-  /**
-   * The Activity service.
-   */
-  @Inject @Transient protected transient ActivityService activityService;
-
-  /**
-   * The Infrastructure mapping service.
-   */
-  @Inject @Transient protected transient InfrastructureMappingService infrastructureMappingService;
-
-  @Inject @Transient private transient DelegateService delegateService;
-
-  @Inject @Transient private transient AwsHelperService awsHelperService;
-
-  @Inject @Transient private transient SecretManager secretManager;
-
-  @Inject @Transient private transient LogService logService;
-
-  @Inject @Transient private transient ArtifactStreamService artifactStreamService;
-
-  @Inject @Transient private transient EncryptionService encryptionService;
+  @Inject protected transient SettingsService settingsService;
+  @Inject protected transient ServiceResourceService serviceResourceService;
+  @Inject protected transient ServiceTemplateService serviceTemplateService;
+  @Inject protected transient ActivityService activityService;
+  @Inject protected transient InfrastructureMappingService infrastructureMappingService;
+  @Inject private transient DelegateService delegateService;
+  @Inject private transient AwsHelperService awsHelperService;
+  @Inject private transient SecretManager secretManager;
+  @Inject private transient LogService logService;
+  @Inject private transient ArtifactStreamService artifactStreamService;
+  @Inject private transient EncryptionService encryptionService;
 
   @Attributes(title = "Command")
   @DefaultValue(Constants.AWS_LAMBDA_COMMAND_NAME)
@@ -199,8 +172,12 @@ public class AwsLambdaState extends State {
         wfResponse.getFunctionResults().stream().map(AwsLambdaFunctionResult::getFunctionMeta).collect(toList());
     AwsConfig awsConfig = wfResponse.getAwsConfig();
     String region = wfResponse.getRegion();
+    stateExecutionData.setAliases(aliases);
+    stateExecutionData.setTags(tags);
     AwsLambdaContextElement awsLambdaContextElement = AwsLambdaContextElement.Builder.anAwsLambdaContextElement()
                                                           .withAwsConfig(awsConfig)
+                                                          .withAliases(aliases)
+                                                          .withTags(tags)
                                                           .withRegion(region)
                                                           .withFunctionArns(functionMetas)
                                                           .build();
@@ -339,6 +316,13 @@ public class AwsLambdaState extends State {
     }
   }
 
+  protected List<String> getEvaluatedAliases(ExecutionContext context) {
+    if (isNotEmpty(aliases)) {
+      return aliases.stream().map(context::renderExpression).collect(toList());
+    }
+    return emptyList();
+  }
+
   private AwsLambdaExecuteWfRequest constructLambdaWfRequestParams(LambdaSpecification specification,
       ExecutionContext context, String appId, String envId, AwsLambdaInfraStructureMapping infrastructureMapping,
       AwsConfig awsConfig, String region, Artifact artifact, String accountId, String activityId) {
@@ -355,7 +339,7 @@ public class AwsLambdaState extends State {
     wfRequestBuilder.roleArn(infrastructureMapping.getRole());
 
     if (isNotEmpty(aliases)) {
-      wfRequestBuilder.evaluatedAliases(aliases.stream().map(context::renderExpression).collect(toList()));
+      wfRequestBuilder.evaluatedAliases(getEvaluatedAliases(context));
     }
     Map<String, String> serviceVariables =
         serviceTemplateService
@@ -389,7 +373,7 @@ public class AwsLambdaState extends State {
     return wfRequestBuilder.build();
   }
 
-  private Map<String, String> getFunctionTags(ExecutionContext context) {
+  protected Map<String, String> getFunctionTags(ExecutionContext context) {
     Map<String, String> functionTags = Maps.newHashMap();
     if (isNotEmpty(tags)) {
       tags.forEach(tag -> { functionTags.put(tag.getKey(), context.renderExpression(tag.getValue())); });

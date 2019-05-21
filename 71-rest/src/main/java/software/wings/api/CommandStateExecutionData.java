@@ -14,6 +14,7 @@ import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.CountsByStatuses;
+import software.wings.beans.Tag;
 import software.wings.beans.command.CodeDeployParams;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.command.ContainerResizeParams;
@@ -72,6 +73,10 @@ public class CommandStateExecutionData extends StateExecutionData {
   private String codeDeployDeploymentId;
   private ContainerSetupParams containerSetupParams;
   private ContainerResizeParams containerResizeParams;
+
+  // Aws Lambda Data
+  private List<String> aliases;
+  private List<Tag> tags;
 
   @Transient @Inject private transient ActivityService activityService;
 
@@ -175,6 +180,10 @@ public class CommandStateExecutionData extends StateExecutionData {
     commandStepExecutionSummary.setCodeDeployParams(codeDeployParams);
     commandStepExecutionSummary.setOldCodeDeployParams(oldCodeDeployParams);
     commandStepExecutionSummary.setCodeDeployDeploymentId(codeDeployDeploymentId);
+
+    commandStepExecutionSummary.setAliases(aliases);
+    commandStepExecutionSummary.setTags(tags);
+
     return commandStepExecutionSummary;
   }
 

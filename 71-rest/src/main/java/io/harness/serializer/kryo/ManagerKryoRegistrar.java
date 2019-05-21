@@ -167,6 +167,7 @@ import software.wings.beans.SlackConfig;
 import software.wings.beans.SmbConfig;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SumoConfig;
+import software.wings.beans.Tag;
 import software.wings.beans.TaskType;
 import software.wings.beans.TerraformInputVariablesTaskResponse;
 import software.wings.beans.User;
@@ -1249,5 +1250,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sTrafficSplitResponse.class, 7182);
     kryo.register(IstioDestinationWeight.class, 7183);
     kryo.register(AWSSecretsManagerException.class, 7184);
+    kryo.register(Tag.class, 7185);
   }
 }
