@@ -608,16 +608,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Service savedService = get(service.getAppId(), service.getUuid(), false);
     notNullCheck("Service", savedService);
 
-    List<String> artifactStreamIds = service.getArtifactStreamIds();
-    if (artifactStreamIds == null) {
-      artifactStreamIds = new ArrayList<>();
-    }
     List<String> keywords = trimStrings(service.generateKeywords());
     UpdateOperations<Service> updateOperations =
         wingsPersistence.createUpdateOperations(Service.class)
             .set(ServiceKeys.name, service.getName())
             .set(ServiceKeys.description, Optional.ofNullable(service.getDescription()).orElse(""))
-            .set(ServiceKeys.artifactStreamIds, artifactStreamIds)
             .set(ServiceKeys.keywords, keywords);
 
     if (fromYaml) {
@@ -632,6 +627,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       } else {
         updateOperations.unset("helmValueYaml");
       }
+    } else {
+      updateOperations.set(ServiceKeys.artifactStreamIds, service.getArtifactStreamIds());
     }
 
     wingsPersistence.update(savedService, updateOperations);
