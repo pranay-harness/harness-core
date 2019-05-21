@@ -13,7 +13,7 @@ import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.graphql.schema.type.QLPageInfo;
 import software.wings.graphql.schema.type.QLPageInfo.QLPageInfoBuilder;
 
-import java.time.ZonedDateTime;
+import java.time.OffsetDateTime;
 
 @Slf4j
 public abstract class AbstractConnectionDataFetcher<T, P> extends AbstractDataFetcher<T, P> {
@@ -55,12 +55,12 @@ public abstract class AbstractConnectionDataFetcher<T, P> extends AbstractDataFe
   }
 
   // Adds closed open range filter to the query
-  protected <M> void filterDatetimeRange(Query<M> query, String fieldName, ZonedDateTime from, ZonedDateTime to) {
+  protected <M> void filterDatetimeRange(Query<M> query, String fieldName, OffsetDateTime from, OffsetDateTime to) {
     if (from != null) {
-      query.field(fieldName).greaterThanOrEq(from.toOffsetDateTime().toInstant().toEpochMilli());
+      query.field(fieldName).greaterThanOrEq(from.toInstant().toEpochMilli());
     }
     if (to != null) {
-      query.field(fieldName).lessThan(to.toOffsetDateTime().toInstant().toEpochMilli());
+      query.field(fieldName).lessThan(to.toInstant().toEpochMilli());
     }
   }
 

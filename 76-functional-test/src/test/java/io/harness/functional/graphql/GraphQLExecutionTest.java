@@ -9,6 +9,7 @@ import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.graphql.scalar.GraphQLDateTimeScalar.convertToString;
 import static software.wings.sm.StateType.ENV_STATE;
 
 import com.google.common.collect.ImmutableMap;
@@ -107,7 +108,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
     {
       String query = $GQL(/*
 {
-  executions(workflowId: "%s", limit: 5, from: %s, to: %s) {
+  executions(workflowId: "%s", limit: 5, from: "%s", to: "%s") {
      pageInfo {
        total
      }
@@ -115,7 +116,8 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
        id
      }
   }
-}*/ workflow.getUuid(), workflowExecution1.getCreatedAt(), workflowExecution2.getCreatedAt());
+}*/ workflow.getUuid(), convertToString(workflowExecution1.getCreatedAt()),
+          convertToString(workflowExecution2.getCreatedAt()));
 
       final QLTestObject qlTestObject = qlExecute(query);
       assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total)).isEqualTo(1);
