@@ -54,15 +54,18 @@ import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
+import software.wings.service.impl.analysis.CVFeedbackRecord;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataKeys;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord.ExperimentalLogMLAnalysisRecordKeys;
+import software.wings.service.impl.analysis.FeedbackAction;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRecordKeys;
+import software.wings.service.impl.analysis.LogMLAnalysisStatus;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterSummary;
 import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;
@@ -73,6 +76,7 @@ import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTa
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.ClusterLevel;
+import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateType;
 import software.wings.utils.Misc;
@@ -108,6 +112,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   @Inject private HarnessMetricRegistry metricRegistry;
   @Inject private UsageMetricsHelper usageMetricsHelper;
   @Inject private ContinuousVerificationService continuousVerificationService;
+  @Inject private CVConfigurationService cvConfigurationService;
 
   @Override
   public void bumpClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
@@ -560,7 +565,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
   @Override
   public boolean save24X7LogAnalysisRecords(String appId, String cvConfigId, int analysisMinute,
-      AnalysisComparisonStrategy comparisonStrategy, LogMLAnalysisRecord mlAnalysisResponse, Optional<String> taskId) {
+      AnalysisComparisonStrategy comparisonStrategy, LogMLAnalysisRecord mlAnalysisResponse, Optional<String> taskId,
+      Optional<Boolean> isFeedbackAnalysis) {
     final LogsCVConfiguration logsCVConfiguration = wingsPersistence.get(LogsCVConfiguration.class, cvConfigId);
     if (isNotEmpty(logsCVConfiguration.getContextId())) {
       AnalysisContext analysisContext = wingsPersistence.get(AnalysisContext.class, logsCVConfiguration.getContextId());
@@ -568,10 +574,16 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       mlAnalysisResponse.setStateType(analysisContext.getStateType());
     }
     Map<String, Map<String, SplunkAnalysisCluster>> unknownClusters = mlAnalysisResponse.getUnknown_clusters();
+    LogMLAnalysisRecord uncompressedAnalysis = mlAnalysisResponse;
     mlAnalysisResponse.compressLogAnalysisRecord();
     mlAnalysisResponse.setCvConfigId(cvConfigId);
     mlAnalysisResponse.setAppId(appId);
     mlAnalysisResponse.setLogCollectionMinute(analysisMinute);
+    if (!isFeedbackAnalysis.isPresent() || !isFeedbackAnalysis.get()) {
+      mlAnalysisResponse.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+    } else {
+      mlAnalysisResponse.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
+    }
     wingsPersistence.save(mlAnalysisResponse);
     mlAnalysisResponse.setUnknown_clusters(unknownClusters);
 
@@ -592,6 +604,24 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     }
     continuousVerificationService.triggerLogAnalysisAlertIfNecessary(cvConfigId, mlAnalysisResponse, analysisMinute);
     return true;
+  }
+
+  @Override
+  public Map<FeedbackAction, List<CVFeedbackRecord>> getUserFeedback(
+      String cvConfigId, String stateExecutionId, String appId) {
+    List<CVFeedbackRecord> feedbackRecords =
+        managerClientHelper.callManagerWithRetry(managerClient.getFeedbackList(cvConfigId, stateExecutionId))
+            .getResource();
+
+    Map<FeedbackAction, List<CVFeedbackRecord>> actionRecordMap = new HashMap<>();
+    for (FeedbackAction action : FeedbackAction.values()) {
+      actionRecordMap.put(action, new ArrayList<>());
+    }
+    feedbackRecords.forEach(feedbackRecord -> {
+      FeedbackAction actionTaken = feedbackRecord.getActionTaken();
+      actionRecordMap.get(actionTaken).add(feedbackRecord);
+    });
+    return actionRecordMap;
   }
 
   @Override
@@ -1027,11 +1057,16 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   }
 
   @Override
-  public long getLastCVAnalysisMinute(String appId, String cvConfigId) {
+  public long getLastCVAnalysisMinute(String appId, String cvConfigId, LogMLAnalysisStatus status) {
+    // TODO; Write migration to add analysis status to all analyses in the past one month.
     final LogMLAnalysisRecord mlAnalysisRecord =
-        wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
+        wingsPersistence
+            .createQuery(LogMLAnalysisRecord.class, excludeAuthority)
+
             .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
+            .filter(LogMLAnalysisRecordKeys.analysisStatus, status)
             .order(Sort.descending(LogMLAnalysisRecordKeys.logCollectionMinute))
+
             .get();
     return mlAnalysisRecord == null ? -1 : mlAnalysisRecord.getLogCollectionMinute();
   }
@@ -1042,5 +1077,22 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                        .order(Sort.descending(LogDataRecordKeys.logCollectionMinute))
                                        .get();
     return logDataRecords == null ? -1 : logDataRecords.getLogCollectionMinute();
+  }
+
+  public boolean updateAnalysisStatus(String cvConfigId, long analysisMinute, LogMLAnalysisStatus status) {
+    final Query<LogMLAnalysisRecord> query = wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
+                                                 .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
+                                                 .filter(LogMLAnalysisRecordKeys.logCollectionMinute, analysisMinute);
+
+    try {
+      UpdateResults results = wingsPersistence.update(query,
+          wingsPersistence.createUpdateOperations(LogMLAnalysisRecord.class)
+              .set(LogMLAnalysisRecordKeys.analysisStatus, status));
+      logger.info("for {} and minute {} bumped the analysisStatus to  {}", cvConfigId, analysisMinute, status);
+      return true;
+    } catch (DuplicateKeyException e) {
+      logger.info("for {} and minute {} Failed to bump the analysisStatus to  {}", cvConfigId, analysisMinute, status);
+      return false;
+    }
   }
 }

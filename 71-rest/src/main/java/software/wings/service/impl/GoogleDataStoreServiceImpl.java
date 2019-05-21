@@ -98,6 +98,17 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
         .build();
   }
 
+  public <T extends GoogleDataStoreAware> T getEntity(Class<T> clazz, String id) {
+    Key keyToFetch = datastore.newKeyFactory()
+                         .setKind(clazz.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value())
+                         .newKey(id);
+    try {
+      return (T) clazz.newInstance().readFromCloudStorageEntity(datastore.get(keyToFetch));
+    } catch (Exception ex) {
+      throw new WingsException(ex);
+    }
+  }
+
   @Override
   public void delete(Class<? extends GoogleDataStoreAware> clazz, String id) {
     logger.info("Deleting from GoogleDatastore table {}, id: {}",

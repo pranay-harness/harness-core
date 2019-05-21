@@ -17,6 +17,8 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.common.VerificationConstants;
+import software.wings.service.impl.analysis.CVFeedbackRecord;
+import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.StateType;
 import software.wings.verification.VerificationDataAnalysisResponse;
 
@@ -68,4 +70,8 @@ public interface VerificationManagerClient {
   @POST("alerts/open-cv-alert")
   Call<RestResponse<Boolean>> triggerCVAlert(
       @Query("cvConfigId") String cvConfigId, @Body ContinuousVerificationAlertData alertData);
+
+  @GET("logml" + LogAnalysisResource.GET_FEEDBACK_LIST_LE)
+  Call<RestResponse<List<CVFeedbackRecord>>> getFeedbackList(
+      @Query("cvConfigId") String cvConfigId, @Query("stateExecutionId") String stateExecutionId);
 }

@@ -183,6 +183,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       final VerificationStateAnalysisExecutionData executionData =
           VerificationStateAnalysisExecutionData.builder()
               .appId(analysisContext.getAppId())
+              .serviceId(getPhaseServiceId(executionContext))
               .stateExecutionInstanceId(analysisContext.getStateExecutionId())
               .serverConfigId(getAnalysisServerConfigId())
               .query(getRenderedQuery())

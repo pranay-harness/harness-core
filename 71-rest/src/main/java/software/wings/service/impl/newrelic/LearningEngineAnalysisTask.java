@@ -2,6 +2,7 @@ package software.wings.service.impl.newrelic;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import lombok.Builder;
@@ -85,6 +86,7 @@ public class LearningEngineAnalysisTask extends Base {
   private StateType stateType;
   private MLAnalysisType ml_analysis_type;
   private String feedback_url;
+  @JsonProperty("log_ml_result_url") private String logMLResultUrl;
   private String feature_name;
   @Indexed private ExecutionStatus executionStatus;
   private String cvConfigId;

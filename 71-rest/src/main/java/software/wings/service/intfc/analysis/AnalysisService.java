@@ -4,6 +4,8 @@ import software.wings.api.InstanceElement;
 import software.wings.beans.SettingAttribute;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
+import software.wings.service.impl.analysis.CVFeedbackRecord;
+import software.wings.service.impl.analysis.FeedbackAction;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterSummary;
 import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;
@@ -73,4 +75,9 @@ public interface AnalysisService {
       Map<String, LogMLScore> clusterScores, CLUSTER_TYPE cluster_type);
 
   boolean save24x7Feedback(LogMLFeedback feedback, String cvConfigId);
+  List<CVFeedbackRecord> getFeedbacks(String cvConfigId, String stateExecutionId);
+  boolean addToBaseline(String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord);
+  boolean removeFromBaseline(String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord);
+  boolean updateFeedbackPriority(String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord);
+  Map<FeedbackAction, List<FeedbackAction>> getNextFeedbackActions();
 }

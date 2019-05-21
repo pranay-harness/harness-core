@@ -5,10 +5,13 @@ import io.harness.validation.Create;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.InstanceElement;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.CVFeedbackRecord;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
+import software.wings.service.impl.analysis.FeedbackAction;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
+import software.wings.service.impl.analysis.LogMLAnalysisStatus;
 import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;
 import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.LogRequest;
@@ -41,7 +44,8 @@ public interface LogAnalysisService {
   boolean saveLogAnalysisRecords(LogMLAnalysisRecord mlAnalysisResponse, StateType stateType, Optional<String> taskId);
 
   boolean save24X7LogAnalysisRecords(String appId, String cvConfigId, int analysisMinute,
-      AnalysisComparisonStrategy comparisonStrategy, LogMLAnalysisRecord mlAnalysisResponse, Optional<String> taskId);
+      AnalysisComparisonStrategy comparisonStrategy, LogMLAnalysisRecord mlAnalysisResponse, Optional<String> taskId,
+      Optional<Boolean> isFeedbackAnalysis);
 
   LogMLAnalysisRecord getLogAnalysisRecords(
       String appId, String stateExecutionId, String query, StateType stateType, int logCollectionMinute);
@@ -96,7 +100,11 @@ public interface LogAnalysisService {
   Set<String> getHostsForMinute(String appId, String fieldNameForQuery, String fieldValueForQuery, long logRecordMinute,
       ClusterLevel... clusterLevels);
 
-  long getLastCVAnalysisMinute(String appId, String cvConfigId);
+  long getLastCVAnalysisMinute(String appId, String cvConfigId, LogMLAnalysisStatus status);
 
   long getLastLogDataCollectedMinute(String query, String appId, String stateExecutionId, StateType type);
+
+  Map<FeedbackAction, List<CVFeedbackRecord>> getUserFeedback(String cvConfigId, String stateExecutionId, String appId);
+
+  boolean updateAnalysisStatus(String cvConfigId, long analysisMinute, LogMLAnalysisStatus status);
 }

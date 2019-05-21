@@ -10,6 +10,7 @@ public interface DataStoreService {
   <T extends GoogleDataStoreAware> void save(Class<T> clazz, List<T> records, boolean ignoreDuplicate);
 
   <T extends GoogleDataStoreAware> PageResponse<T> list(Class<T> clazz, PageRequest<T> pageRequest);
+  <T extends GoogleDataStoreAware> T getEntity(Class<T> clazz, String id);
 
   void delete(Class<? extends GoogleDataStoreAware> clazz, String id);
 

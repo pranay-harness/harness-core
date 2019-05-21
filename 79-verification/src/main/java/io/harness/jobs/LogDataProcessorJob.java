@@ -23,6 +23,8 @@ public class LogDataProcessorJob implements Job {
     continuousVerificationService.triggerLogsL1Clustering(accountId);
     continuousVerificationService.triggerLogsL2Clustering(accountId);
     continuousVerificationService.triggerLogDataAnalysis(accountId);
+    continuousVerificationService.triggerFeedbackAnalysis(accountId);
+
     logger.info("Completed Log Data Processor Job");
   }
 }

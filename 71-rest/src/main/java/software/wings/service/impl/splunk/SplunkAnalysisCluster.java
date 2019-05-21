@@ -3,6 +3,7 @@ package software.wings.service.impl.splunk;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
+import software.wings.service.impl.analysis.FeedbackPriority;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +22,10 @@ public class SplunkAnalysisCluster {
   private double x;
   private double y;
   private String feedback_id;
+  private FeedbackPriority priority;
+
   private List<String> diff_tags = new ArrayList<>();
+
   private double alert_score;
   private double test_score;
   private double control_score;

@@ -17,6 +17,7 @@ public class LogMLClusterSummary {
   private List<String> tags;
   private double score;
   private RiskLevel riskLevel;
+  private FeedbackPriority priority;
   private int clusterLabel;
   private AnalysisServiceImpl.LogMLFeedbackType logMLFeedbackType;
   private String logMLFeedbackId;

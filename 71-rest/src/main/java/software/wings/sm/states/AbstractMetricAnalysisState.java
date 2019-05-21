@@ -154,6 +154,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       executionData =
           VerificationStateAnalysisExecutionData.builder()
               .appId(context.getAppId())
+              .serviceId(getPhaseServiceId(context))
               .workflowExecutionId(context.getWorkflowExecutionId())
               .stateExecutionInstanceId(context.getStateExecutionInstanceId())
               .serverConfigId(getAnalysisServerConfigId())

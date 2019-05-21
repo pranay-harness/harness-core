@@ -1052,7 +1052,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     records.setAppId(appId);
     records.setStateExecutionId(stateExecutionId);
     records.setAnalysisSummaryMessage("10");
-    analysisService.save24X7LogAnalysisRecords(appId, cvConfigId, 12345, PREDICTIVE, records, Optional.empty());
+    analysisService.save24X7LogAnalysisRecords(
+        appId, cvConfigId, 12345, PREDICTIVE, records, Optional.empty(), Optional.empty());
 
     LogMLFeedback logMLFeedback = LogMLFeedback.builder()
                                       .appId(appId)
@@ -1081,7 +1082,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     records.setAppId(appId);
     records.setStateExecutionId(stateExecutionId);
     records.setAnalysisSummaryMessage("10");
-    analysisService.save24X7LogAnalysisRecords(appId, cvConfigId, 12345, PREDICTIVE, records, Optional.empty());
+    analysisService.save24X7LogAnalysisRecords(
+        appId, cvConfigId, 12345, PREDICTIVE, records, Optional.empty(), Optional.empty());
 
     LogMLFeedback logMLFeedback = LogMLFeedback.builder()
                                       .appId(appId)
@@ -1308,6 +1310,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertNotNull(compressedLogMLAnalysisRecord.getUnknown_clusters());
     assertNotNull(compressedLogMLAnalysisRecord.getIgnore_clusters());
 
+    assertEquals(logMLAnalysisRecord.getAnalysisStatus(), compressedLogMLAnalysisRecord.getAnalysisStatus());
     assertEquals(logMLAnalysisRecord.getUnknown_events(), compressedLogMLAnalysisRecord.getUnknown_events());
     assertEquals(logMLAnalysisRecord.getTest_events(), compressedLogMLAnalysisRecord.getTest_events());
     assertEquals(logMLAnalysisRecord.getControl_events(), compressedLogMLAnalysisRecord.getControl_events());

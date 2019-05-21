@@ -13,4 +13,7 @@ public class LogMLFeedback {
   private AnalysisServiceImpl.LogMLFeedbackType logMLFeedbackType;
   private String comment;
   private String logMLFeedbackId;
+  private long analysisMinute;
+  private String serviceId;
+  private String envId;
 }

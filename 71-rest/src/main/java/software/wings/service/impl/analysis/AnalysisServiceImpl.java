@@ -58,6 +58,7 @@ import software.wings.resources.AccountResource;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
+import software.wings.service.impl.analysis.CVFeedbackRecord.CVFeedbackRecordKeys;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataKeys;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord.ExperimentalLogMLAnalysisRecordKeys;
 import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
@@ -75,6 +76,7 @@ import software.wings.service.impl.splunk.SplunkAnalysisCluster.MessageFrequency
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -84,11 +86,14 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.service.intfc.sumo.SumoDelegateService;
 import software.wings.service.intfc.verification.CV24x7DashboardService;
+import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateType;
 import software.wings.utils.Misc;
+import software.wings.verification.CVConfiguration;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.log.LogsCVConfiguration;
 
@@ -132,6 +137,8 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Inject private UsageMetricsHelper usageMetricsHelper;
   @Inject private CV24x7DashboardService cv24x7DashboardService;
   @Inject private HostService hostService;
+  @Inject private CVConfigurationService cvConfigurationService;
+  @Inject private StateExecutionService stateExecutionService;
 
   @Override
   public void cleanUpForLogRetry(String stateExecutionId) {
@@ -306,6 +313,151 @@ public class AnalysisServiceImpl implements AnalysisService {
             stateExecutionInstance.getWorkflowId()});
 
     return true;
+  }
+
+  @Override
+  public boolean addToBaseline(String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord) {
+    if (isNotEmpty(feedbackRecord.getUuid())) {
+      CVFeedbackRecord feedbackRecordFromDataStore =
+          dataStoreService.getEntity(CVFeedbackRecord.class, feedbackRecord.getUuid());
+      checkIfActionIsAllowed(feedbackRecordFromDataStore, FeedbackAction.ADD_TO_BASELINE);
+    }
+    feedbackRecord.setPriority(FeedbackPriority.BASELINE);
+    return saveLogFeedback(cvConfigId, stateExecutionId, feedbackRecord, FeedbackAction.ADD_TO_BASELINE);
+  }
+
+  @Override
+  public boolean removeFromBaseline(String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord) {
+    if (isNotEmpty(feedbackRecord.getUuid())) {
+      CVFeedbackRecord feedbackRecordFromDataStore =
+          dataStoreService.getEntity(CVFeedbackRecord.class, feedbackRecord.getUuid());
+      checkIfActionIsAllowed(feedbackRecordFromDataStore, FeedbackAction.REMOVE_FROM_BASELINE);
+    }
+    return saveLogFeedback(cvConfigId, stateExecutionId, feedbackRecord, FeedbackAction.REMOVE_FROM_BASELINE);
+  }
+
+  @Override
+  public boolean updateFeedbackPriority(String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord) {
+    if (isNotEmpty(feedbackRecord.getUuid())) {
+      CVFeedbackRecord feedbackRecordFromDataStore =
+          dataStoreService.getEntity(CVFeedbackRecord.class, feedbackRecord.getUuid());
+      checkIfActionIsAllowed(feedbackRecordFromDataStore, FeedbackAction.UPDATE_PRIORITY);
+    }
+
+    return saveLogFeedback(cvConfigId, stateExecutionId, feedbackRecord, FeedbackAction.UPDATE_PRIORITY);
+  }
+
+  private boolean checkIfActionIsAllowed(CVFeedbackRecord feedbackRecordFromDataStore, FeedbackAction nextAction) {
+    if (feedbackRecordFromDataStore != null) {
+      Map<FeedbackAction, List<FeedbackAction>> nextActions = getNextFeedbackActions();
+      if (nextActions.containsKey(feedbackRecordFromDataStore.getActionTaken())) {
+        if (!nextActions.get(feedbackRecordFromDataStore.getActionTaken()).contains(nextAction)) {
+          throw new WingsException(ErrorCode.GENERAL_ERROR, USER)
+              .addParam("reason", nextAction + " is not allowed on this feedback record");
+        }
+      }
+    }
+    return true;
+  }
+
+  @Override
+  public Map<FeedbackAction, List<FeedbackAction>> getNextFeedbackActions() {
+    Map<FeedbackAction, List<FeedbackAction>> feedbackActionListMap = new HashMap<>();
+    feedbackActionListMap.put(FeedbackAction.ADD_TO_BASELINE, Arrays.asList(FeedbackAction.REMOVE_FROM_BASELINE));
+    feedbackActionListMap.put(
+        FeedbackAction.UPDATE_PRIORITY, Arrays.asList(FeedbackAction.UPDATE_PRIORITY, FeedbackAction.ADD_TO_BASELINE));
+    feedbackActionListMap.put(FeedbackAction.REMOVE_FROM_BASELINE,
+        Arrays.asList(FeedbackAction.UPDATE_PRIORITY, FeedbackAction.ADD_TO_BASELINE));
+
+    return feedbackActionListMap;
+  }
+
+  private boolean saveLogFeedback(
+      String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord, FeedbackAction feedbackAction) {
+    if (isNotEmpty(cvConfigId)) {
+      CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
+      feedbackRecord.setServiceId(cvConfiguration.getServiceId());
+      feedbackRecord.setEnvId(cvConfiguration.getEnvId());
+      feedbackRecord.setCvConfigId(cvConfigId);
+    } else if (isNotEmpty(stateExecutionId)) {
+      PageRequest<StateExecutionInstance> stateExecutionInstancePageRequest =
+          PageRequestBuilder.aPageRequest()
+              .addFilter(StateExecutionInstanceKeys.uuid, Operator.EQ, stateExecutionId)
+              .build();
+      List<StateExecutionInstance> stateExecutionInstances =
+          stateExecutionService.list(stateExecutionInstancePageRequest).getResponse();
+      if (isNotEmpty(stateExecutionInstances) && stateExecutionInstances.size() == 1) {
+        StateExecutionInstance stateExecutionInstance = stateExecutionInstances.get(0);
+        feedbackRecord.setStateExecutionId(stateExecutionId);
+
+        feedbackRecord.setServiceId(getServiceIdFromStateExecutionInstance(stateExecutionInstance));
+        feedbackRecord.setEnvId(getEnvIdForStateExecutionId(stateExecutionInstance.getAppId(), stateExecutionId));
+      } else {
+        throw new WingsException("Incorrect stateExecutionId. No valid instances available");
+      }
+      feedbackRecord.setStateExecutionId(stateExecutionId);
+    } else {
+      throw new WingsException("Missing cvConfigId or stateExecutionId to create/modify a feedback");
+    }
+
+    feedbackRecord.setActionTaken(feedbackAction);
+    dataStoreService.save(CVFeedbackRecord.class, Arrays.asList(feedbackRecord), false);
+    return true;
+  }
+
+  private String getEnvIdForStateExecutionId(String appId, String stateExecutionId) {
+    WorkflowExecution execution = workflowExecutionService.getWorkflowExecution(appId, stateExecutionId);
+    if (execution == null) {
+      throw new WingsException(
+          ErrorCode.GENERAL_ERROR, "This stateExecutionId does not correspond to a valid workflow");
+    }
+    return execution.getEnvId();
+  }
+
+  private String getServiceIdFromStateExecutionInstance(StateExecutionInstance instance) {
+    PhaseElement phaseElement = null;
+    for (ContextElement element : instance.getContextElements()) {
+      if (element instanceof PhaseElement) {
+        phaseElement = (PhaseElement) element;
+        break;
+      }
+    }
+    if (phaseElement != null) {
+      return phaseElement.getServiceElement().getUuid();
+    }
+    throw new WingsException("There is no serviceID associated with the stateExecutionId: " + instance.getUuid());
+  }
+
+  @Override
+  public List<CVFeedbackRecord> getFeedbacks(String cvConfigId, String stateExecutionId) {
+    PageRequest<CVFeedbackRecord> feedbackRecordPageRequest = PageRequestBuilder.aPageRequest().build();
+    String serviceId = null, envId = null;
+    if (isNotEmpty(cvConfigId)) {
+      CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
+      serviceId = cvConfiguration.getServiceId();
+      envId = cvConfiguration.getEnvId();
+
+    } else if (isNotEmpty(stateExecutionId)) {
+      PageRequest<StateExecutionInstance> stateExecutionInstancePageRequest =
+          PageRequestBuilder.aPageRequest()
+              .addFilter(StateExecutionInstanceKeys.uuid, Operator.EQ, stateExecutionId)
+              .build();
+      List<StateExecutionInstance> stateExecutionInstances =
+          stateExecutionService.list(stateExecutionInstancePageRequest).getResponse();
+      if (isNotEmpty(stateExecutionInstances) && stateExecutionInstances.size() == 1) {
+        StateExecutionInstance instance = stateExecutionInstances.get(0);
+        serviceId = getServiceIdFromStateExecutionInstance(instance);
+        WorkflowExecution execution =
+            workflowExecutionService.getWorkflowExecution(instance.getAppId(), instance.getExecutionUuid());
+        envId = execution.getEnvId();
+      }
+    } else {
+      throw new WingsException("Missing cvConfigId or stateExecutionId to create/modify a feedback");
+    }
+
+    feedbackRecordPageRequest.addFilter(CVFeedbackRecordKeys.serviceId, Operator.EQ, serviceId);
+    feedbackRecordPageRequest.addFilter(CVFeedbackRecordKeys.envId, Operator.EQ, envId);
+    return dataStoreService.list(CVFeedbackRecord.class, feedbackRecordPageRequest).getResponse();
   }
 
   @Override
@@ -835,13 +987,12 @@ public class AnalysisServiceImpl implements AnalysisService {
         hostSummary.setFrequencies(getFrequencies(analysisCluster));
         hostSummary.setFrequencyMap(getFrequencyMap(analysisCluster));
         clusterSummary.setLogText(analysisCluster.getText());
+        clusterSummary.setPriority(analysisCluster.getPriority());
         clusterSummary.setTags(analysisCluster.getTags());
         clusterSummary.setClusterLabel(analysisCluster.getCluster_label());
         clusterSummary.getHostSummary().put(Misc.replaceUnicodeWithDot(hostEntry.getKey()), hostSummary);
 
-        if (cluster_type.equals(CLUSTER_TYPE.IGNORE)) {
-          clusterSummary.setLogMLFeedbackId(analysisCluster.getFeedback_id());
-        }
+        clusterSummary.setLogMLFeedbackId(analysisCluster.getFeedback_id());
 
         double score;
         if (clusterScores != null && clusterScores.containsKey(labelEntry.getKey())) {

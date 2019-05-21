@@ -15,6 +15,8 @@ import software.wings.beans.FeatureName;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.analysis.CVFeedbackRecord;
+import software.wings.service.impl.analysis.FeedbackAction;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogMLFeedbackRecord;
@@ -131,5 +133,62 @@ public class LogMLResource {
   public RestResponse<List<LogMLFeedbackRecord>> get24x7Feedback(
       @QueryParam("accountId") String accountId, @QueryParam("cvConfigId") String cvConfigId) {
     return new RestResponse<>(analysisService.get24x7MLFeedback(cvConfigId));
+  }
+
+  @GET
+  @Path(LogAnalysisResource.GET_FEEDBACK_LIST)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<CVFeedbackRecord>> getFeedbacks(@QueryParam("accountId") String accountId,
+      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("stateExecutionId") String stateExecutionId) {
+    return new RestResponse<>(analysisService.getFeedbacks(cvConfigId, stateExecutionId));
+  }
+
+  @GET
+  @Path(LogAnalysisResource.GET_FEEDBACK_LIST_LE)
+  @Timed
+  @LearningEngineAuth
+  @ExceptionMetered
+  public RestResponse<List<CVFeedbackRecord>> getFeedbacksLE(@QueryParam("accountId") String accountId,
+      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("stateExecutionId") String stateExecutionId) {
+    return new RestResponse<>(analysisService.getFeedbacks(cvConfigId, stateExecutionId));
+  }
+
+  @GET
+  @Path(LogAnalysisResource.GET_FEEDBACK_ACTION_LIST)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<FeedbackAction, List<FeedbackAction>>> getFeedbacksActionList() {
+    return new RestResponse<>(analysisService.getNextFeedbackActions());
+  }
+
+  @POST
+  @Path(LogAnalysisResource.FEEDBACK_ADD_TO_BASELINE)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> addToBaseline(@QueryParam("accountId") String accountId,
+      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("stateExecutionId") String stateExecutionId,
+      CVFeedbackRecord feedback) {
+    return new RestResponse<>(analysisService.addToBaseline(cvConfigId, stateExecutionId, feedback));
+  }
+
+  @POST
+  @Path(LogAnalysisResource.FEEDBACK_REMOVE_FROM_BASELINE)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> removeFromBaseline(@QueryParam("accountId") String accountId,
+      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("stateExecutionId") String stateExecutionId,
+      CVFeedbackRecord feedback) {
+    return new RestResponse<>(analysisService.removeFromBaseline(cvConfigId, stateExecutionId, feedback));
+  }
+
+  @POST
+  @Path(LogAnalysisResource.FEEDBACK_UPDATE_PRIORITY)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> updateFeedbackPriority(@QueryParam("accountId") String accountId,
+      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("stateExecutionId") String stateExecutionId,
+      CVFeedbackRecord feedback) {
+    return new RestResponse<>(analysisService.updateFeedbackPriority(cvConfigId, stateExecutionId, feedback));
   }
 }
