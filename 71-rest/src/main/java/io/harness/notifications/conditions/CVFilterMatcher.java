@@ -63,10 +63,6 @@ public class CVFilterMatcher implements FilterMatcher {
       conditions.add(() -> alertData.getRiskScore() >= cvAlertFilters.getAlertMinThreshold());
     }
 
-    if (cvAlertFilters.getAlertMaxThreshold() >= 0) {
-      conditions.add(() -> alertData.getRiskScore() < cvAlertFilters.getAlertMaxThreshold());
-    }
-
     boolean matches = allTrue(conditions);
 
     switch (op) {
