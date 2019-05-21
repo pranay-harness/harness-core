@@ -13,7 +13,7 @@ import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 
 import java.util.List;
 import java.util.Map;
@@ -48,7 +48,7 @@ public abstract class CommandUnitYamlHandler<Y extends AbstractCommandUnit.Yaml,
 
   protected C toBean(ChangeContext<Y> changeContext) throws HarnessException {
     Y yaml = changeContext.getYaml();
-    CommandUnitType commandUnitType = Util.getEnumFromString(CommandUnitType.class, yaml.getCommandUnitType());
+    CommandUnitType commandUnitType = Utils.getEnumFromString(CommandUnitType.class, yaml.getCommandUnitType());
     C commandUnit = getCommandUnit();
     commandUnit.setDeploymentType(yaml.getDeploymentType());
     commandUnit.setCommandUnitType(commandUnitType);
@@ -59,13 +59,13 @@ public abstract class CommandUnitYamlHandler<Y extends AbstractCommandUnit.Yaml,
   public C toBean(AbstractCommandUnit.Yaml yaml) {
     C commandUnit = getCommandUnit();
     commandUnit.setDeploymentType(yaml.getDeploymentType());
-    commandUnit.setCommandUnitType(Util.getEnumFromString(CommandUnitType.class, yaml.getCommandUnitType()));
+    commandUnit.setCommandUnitType(Utils.getEnumFromString(CommandUnitType.class, yaml.getCommandUnitType()));
     commandUnit.setName(yaml.getName());
     return commandUnit;
   }
 
   protected void toYaml(Y yaml, C bean) {
-    String commandUnitType = Util.getStringFromEnum(bean.getCommandUnitType());
+    String commandUnitType = Utils.getStringFromEnum(bean.getCommandUnitType());
     yaml.setCommandUnitType(commandUnitType);
     yaml.setDeploymentType(bean.getDeploymentType());
     yaml.setName(bean.getName());

@@ -22,7 +22,7 @@ import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 import software.wings.yaml.workflow.StepYaml;
 
 import java.util.List;
@@ -37,11 +37,11 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
   private PhaseStep toBean(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
     Yaml yaml = changeContext.getYaml();
-    PhaseStepType phaseStepType = Util.getEnumFromString(PhaseStepType.class, yaml.getType());
+    PhaseStepType phaseStepType = Utils.getEnumFromString(PhaseStepType.class, yaml.getType());
     String phaseStepUuid = generateUuid();
     PhaseStepBuilder phaseStepBuilder = PhaseStepBuilder.aPhaseStep(phaseStepType, yaml.getName(), phaseStepUuid);
 
-    ExecutionStatus statusForRollback = Util.getEnumFromString(ExecutionStatus.class, yaml.getStatusForRollback());
+    ExecutionStatus statusForRollback = Utils.getEnumFromString(ExecutionStatus.class, yaml.getStatusForRollback());
 
     List<GraphNode> stepList = Lists.newArrayList();
     if (yaml.getSteps() != null) {

@@ -34,7 +34,7 @@ import static software.wings.common.Constants.WINDOWS_RUNTIME_PATH;
 import static software.wings.service.intfc.security.SecretManager.ENCRYPTED_FIELD_MASK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AMAZON_S3_HELM_REPO;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCS_HELM_REPO;
-import static software.wings.utils.UsageRestrictionsUtil.getAllAppAllEnvUsageRestrictions;
+import static software.wings.utils.UsageRestrictionsUtils.getAllAppAllEnvUsageRestrictions;
 import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.equalCheck;
 import static software.wings.utils.Validator.notNullCheck;
@@ -96,7 +96,7 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.utils.CacheHelper;
-import software.wings.utils.CryptoUtil;
+import software.wings.utils.CryptoUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -413,7 +413,7 @@ public class SettingsServiceImpl implements SettingsService {
       GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
 
       if (gitConfig.isGenerateWebhookUrl() && isEmpty(gitConfig.getWebhookToken())) {
-        gitConfig.setWebhookToken(CryptoUtil.secureRandAlphaNumString(40));
+        gitConfig.setWebhookToken(CryptoUtils.secureRandAlphaNumString(40));
       }
     }
   }

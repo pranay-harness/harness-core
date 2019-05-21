@@ -31,7 +31,7 @@ import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
@@ -79,7 +79,7 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
       //      }
       fileName = bean.getEncryptedFileId();
     } else {
-      fileName = Util.normalize(bean.getRelativeFilePath());
+      fileName = Utils.normalize(bean.getRelativeFilePath());
     }
 
     String serviceName = null;
@@ -101,7 +101,7 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
         .serviceName(serviceName)
         .fileName(fileName)
         .checksum(bean.getChecksum())
-        .checksumType(Util.getStringFromEnum(bean.getChecksumType()))
+        .checksumType(Utils.getStringFromEnum(bean.getChecksumType()))
         .encrypted(bean.isEncrypted())
         .harnessApiVersion(getHarnessApiVersion())
         .build();
@@ -153,7 +153,7 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
     } else {
       configFile.setEncryptedFileId("");
 
-      ChecksumType checksumType = Util.getEnumFromString(ChecksumType.class, yaml.getChecksumType());
+      ChecksumType checksumType = Utils.getEnumFromString(ChecksumType.class, yaml.getChecksumType());
       configFile.setFileName(yaml.getFileName());
       configFile.setChecksum(yaml.getChecksum());
       configFile.setChecksumType(checksumType);

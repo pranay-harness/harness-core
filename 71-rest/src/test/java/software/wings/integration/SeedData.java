@@ -1,7 +1,7 @@
 package software.wings.integration;
 
 import static java.util.Arrays.asList;
-import static software.wings.integration.IntegrationTestUtil.randomInt;
+import static software.wings.integration.IntegrationTestUtils.randomInt;
 
 import java.util.List;
 

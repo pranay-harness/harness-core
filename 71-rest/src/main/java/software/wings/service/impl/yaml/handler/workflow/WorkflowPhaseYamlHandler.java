@@ -34,7 +34,7 @@ import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 
 import java.util.List;
 
@@ -122,7 +122,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
 
     Boolean isRollback = (Boolean) context.getProperties().get(YamlConstants.IS_ROLLBACK);
     WorkflowPhaseBuilder phase = WorkflowPhaseBuilder.aWorkflowPhase();
-    DeploymentType deploymentType = Util.getEnumFromString(DeploymentType.class, deploymentTypeString);
+    DeploymentType deploymentType = Utils.getEnumFromString(DeploymentType.class, deploymentTypeString);
     phase.computeProviderId(computeProviderId)
         .deploymentType(deploymentType)
         .infraMappingId(infraMappingId)
@@ -170,7 +170,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
                               .collect(toList());
     }
 
-    String deploymentType = Util.getStringFromEnum(bean.getDeploymentType());
+    String deploymentType = Utils.getStringFromEnum(bean.getDeploymentType());
     String serviceName = null;
     if (isNotEmpty(bean.getServiceId())) {
       Service service = serviceResourceService.get(appId, bean.getServiceId());

@@ -19,7 +19,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.integration.BaseIntegrationTest;
-import software.wings.integration.IntegrationTestUtil;
+import software.wings.integration.IntegrationTestUtils;
 import software.wings.utils.WingsTestConstants;
 
 import java.util.concurrent.TimeUnit;
@@ -39,7 +39,7 @@ public class LimitConfigurationResourceIntegrationTest extends BaseIntegrationTe
   @Category(IntegrationTests.class)
   public void testConfigure() throws Exception {
     StaticLimit limit = new StaticLimit(10);
-    String url = IntegrationTestUtil.buildAbsoluteUrl("/api/limits/configure/static-limit",
+    String url = IntegrationTestUtils.buildAbsoluteUrl("/api/limits/configure/static-limit",
         ImmutableMap.of("accountId", WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID, "action", "CREATE_APPLICATION"));
 
     WebTarget target = client.target(url);
@@ -56,7 +56,7 @@ public class LimitConfigurationResourceIntegrationTest extends BaseIntegrationTe
   @Category(IntegrationTests.class)
   public void testConfigureRateLimit() throws Exception {
     RateLimit limit = new RateLimit(10, 24, TimeUnit.HOURS);
-    String url = IntegrationTestUtil.buildAbsoluteUrl("/api/limits/configure/rate-limit",
+    String url = IntegrationTestUtils.buildAbsoluteUrl("/api/limits/configure/rate-limit",
         ImmutableMap.of("accountId", WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID, "action", "DEPLOY"));
 
     WebTarget target = client.target(url);

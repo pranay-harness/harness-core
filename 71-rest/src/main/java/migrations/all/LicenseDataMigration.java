@@ -14,7 +14,7 @@ import software.wings.beans.LicenseInfo;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.licensing.LicenseService;
-import software.wings.service.impl.LicenseUtil;
+import software.wings.service.impl.LicenseUtils;
 import software.wings.service.intfc.AccountService;
 
 /**
@@ -58,7 +58,7 @@ public class LicenseDataMigration implements Migration {
           switch (accountType) {
             case AccountType.PAID:
               if (expiryTime <= 0) {
-                licenseInfo.setExpiryTime(LicenseUtil.getDefaultPaidExpiryTime());
+                licenseInfo.setExpiryTime(LicenseUtils.getDefaultPaidExpiryTime());
               }
 
               if (licenseUnits <= 0) {
@@ -68,7 +68,7 @@ public class LicenseDataMigration implements Migration {
 
             case AccountType.TRIAL:
               if (expiryTime <= 0) {
-                licenseInfo.setExpiryTime(LicenseUtil.getDefaultTrialExpiryTime());
+                licenseInfo.setExpiryTime(LicenseUtils.getDefaultTrialExpiryTime());
               }
 
               if (licenseUnits <= 0) {

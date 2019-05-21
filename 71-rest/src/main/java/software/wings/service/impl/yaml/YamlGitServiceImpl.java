@@ -15,9 +15,6 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
-import static software.wings.beans.GitCommit.STATUS_KEY;
-import static software.wings.beans.GitCommit.YAML_GIT_CONFIG_IDS_KEY;
-import static software.wings.beans.GitCommit.YAML_GIT_CONFIG_ID_KEY;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.APPLICATION_FOLDER_PATH;
 import static software.wings.beans.yaml.YamlConstants.ARTIFACT_SOURCES_FOLDER;
@@ -100,8 +97,8 @@ import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.utils.CryptoUtil;
-import software.wings.utils.Util;
+import software.wings.utils.CryptoUtils;
+import software.wings.utils.Utils;
 import software.wings.yaml.directory.DirectoryPath;
 import software.wings.yaml.directory.FolderNode;
 import software.wings.yaml.errorhandling.GitSyncError;
@@ -725,7 +722,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       return gsw;
     } else {
       // create a new GitSyncWebhook, save to Mongo and return it
-      String newWebhookToken = CryptoUtil.secureRandAlphaNumString(40);
+      String newWebhookToken = CryptoUtils.secureRandAlphaNumString(40);
       gsw = GitSyncWebhook.builder().accountId(accountId).entityId(entityId).webhookToken(newWebhookToken).build();
       return wingsPersistence.saveAndGet(GitSyncWebhook.class, gsw);
     }
@@ -915,7 +912,7 @@ public class YamlGitServiceImpl implements YamlGitService {
         yamlContent = syncError.getYamlContent();
       }
 
-      ChangeType changeType = Util.getEnumFromString(ChangeType.class, syncError.getChangeType());
+      ChangeType changeType = Utils.getEnumFromString(ChangeType.class, syncError.getChangeType());
       GitFileChange gitFileChange = Builder.aGitFileChange()
                                         .withAccountId(accountId)
                                         .withFilePath(syncError.getYamlFilePath())
@@ -1027,8 +1024,8 @@ public class YamlGitServiceImpl implements YamlGitService {
 
     GitCommit gitCommit = wingsPersistence.createQuery(GitCommit.class)
                               .filter(ACCOUNT_ID_KEY, accountId)
-                              .filter(STATUS_KEY, Status.COMPLETED)
-                              .field(YAML_GIT_CONFIG_IDS_KEY)
+                              .filter(GitCommitKeys.status, Status.COMPLETED)
+                              .field(GitCommitKeys.yamlGitConfigIds)
                               .hasAnyOf(yamlGitConfigIds)
                               .order("-lastUpdatedAt")
                               .get();
@@ -1037,8 +1034,8 @@ public class YamlGitServiceImpl implements YamlGitService {
     if (gitCommit == null) {
       gitCommit = wingsPersistence.createQuery(GitCommit.class)
                       .filter(ACCOUNT_ID_KEY, accountId)
-                      .filter(YAML_GIT_CONFIG_ID_KEY, yamlGitConfigIds.get(0))
-                      .filter(STATUS_KEY, Status.COMPLETED)
+                      .filter(GitCommitKeys.yamlGitConfigId, yamlGitConfigIds.get(0))
+                      .filter(GitCommitKeys.status, Status.COMPLETED)
                       .order("-lastUpdatedAt")
                       .get();
     }

@@ -13,7 +13,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 
 import java.util.Map;
 import java.util.Optional;
@@ -57,7 +57,7 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
   @SchemaIgnore
   @Override
   public String getDefaultName() {
-    return Util.normalize(
+    return Utils.normalize(
         format("%s (GCP/Kubernetes::%s) %s", isEmpty(this.getProvisionerId()) ? this.getClusterName() : "",
             Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
             Optional.ofNullable(this.getNamespace()).orElse("default")));

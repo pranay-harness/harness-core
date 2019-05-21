@@ -15,7 +15,7 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.TriggerBuilder;
-import software.wings.beans.instance.dashboard.InstanceStatsUtil;
+import software.wings.beans.instance.dashboard.InstanceStatsUtils;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.instance.licensing.InstanceUsageLimitExcessHandler;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
@@ -85,7 +85,7 @@ public class ServiceInstanceUsageCheckerJob implements Job {
       }
 
       logger.info("Triggered: {} accountId: {}", ServiceInstanceUsageCheckerJob.class.getSimpleName(), accountId);
-      double usage = InstanceStatsUtil.actualUsage(accountId, instanceStatService);
+      double usage = InstanceStatsUtils.actualUsage(accountId, instanceStatService);
       instanceUsageLimitExcessHandler.updateViolationCount(accountId, usage);
     });
   }

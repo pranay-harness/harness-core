@@ -51,7 +51,7 @@ import software.wings.beans.ServiceSecretKey.ServiceSecretKeyKeys;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptionUtils;
-import software.wings.service.impl.LicenseUtil;
+import software.wings.service.impl.LicenseUtils;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.MLAnalysisType;
@@ -100,10 +100,10 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
     FieldUtils.writeField(continuousVerificationService, "timeSeriesAnalysisService", timeSeriesAnalysisService, true);
     FieldUtils.writeField(learningEngineService, "managerClientHelper", managerClientHelper, true);
     Account account = anAccount().withAccountName(generateUUID()).build();
-    account.setEncryptedLicenseInfo(
-        EncryptionUtils.encrypt(LicenseUtil.convertToString(LicenseInfo.builder().accountType(AccountType.PAID).build())
-                                    .getBytes(Charset.forName("UTF-8")),
-            null));
+    account.setEncryptedLicenseInfo(EncryptionUtils.encrypt(
+        LicenseUtils.convertToString(LicenseInfo.builder().accountType(AccountType.PAID).build())
+            .getBytes(Charset.forName("UTF-8")),
+        null));
     accountId = wingsPersistence.save(account);
     appId = wingsPersistence.save(anApplication().accountId(accountId).name(generateUUID()).build());
     workflowExecutionId = generateUUID();

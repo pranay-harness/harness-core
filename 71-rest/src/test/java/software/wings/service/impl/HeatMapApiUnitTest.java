@@ -99,10 +99,10 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   public void setup() {
     Account account = anAccount().withAccountName(generateUUID()).build();
 
-    account.setEncryptedLicenseInfo(
-        EncryptionUtils.encrypt(LicenseUtil.convertToString(LicenseInfo.builder().accountType(AccountType.PAID).build())
-                                    .getBytes(Charset.forName("UTF-8")),
-            null));
+    account.setEncryptedLicenseInfo(EncryptionUtils.encrypt(
+        LicenseUtils.convertToString(LicenseInfo.builder().accountType(AccountType.PAID).build())
+            .getBytes(Charset.forName("UTF-8")),
+        null));
     accountId = wingsPersistence.save(account);
     appId = wingsPersistence.save(anApplication().accountId(accountId).name(generateUUID()).build());
     envName = generateUuid();

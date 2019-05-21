@@ -30,7 +30,7 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
-import software.wings.service.impl.apm.MLServiceUtil;
+import software.wings.service.impl.apm.MLServiceUtils;
 import software.wings.service.impl.cloudwatch.AwsNameSpace;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.impl.cloudwatch.CloudWatchSetupTestNodeData;
@@ -59,7 +59,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
   @Inject private AwsHelperService awsHelperService;
   @Inject private SecretManager secretManager;
   @Inject private AwsInfrastructureProvider awsInfrastructureProvider;
-  @Inject private MLServiceUtil mlServiceUtil;
+  @Inject private MLServiceUtils mlServiceUtils;
   @Inject private DelegateProxyFactory delegateProxyFactory;
 
   private final Map<AwsNameSpace, List<CloudWatchMetric>> cloudWatchMetrics;
@@ -185,7 +185,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
                                             .build();
       String hostName = null;
       if (!setupTestNodeData.isServiceLevel()) {
-        hostName = mlServiceUtil.getHostNameFromExpression(setupTestNodeData);
+        hostName = mlServiceUtils.getHostNameFromExpression(setupTestNodeData);
       }
       return delegateProxyFactory.get(CloudWatchDelegateService.class, syncTaskContext)
           .getMetricsWithDataForNode((AwsConfig) settingAttribute.getValue(), encryptionDetails, setupTestNodeData,

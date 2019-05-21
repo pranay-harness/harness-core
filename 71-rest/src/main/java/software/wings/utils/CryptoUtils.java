@@ -4,10 +4,10 @@ import java.security.SecureRandom;
 import java.util.Random;
 
 /**
- * The Class CryptoUtil.
+ * The Class CryptoUtils.
  */
 /* http://stackoverflow.com/a/19597101 */
-public class CryptoUtil {
+public class CryptoUtils {
   private static final char[] VALID_CHARACTERS =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456879".toCharArray();
 

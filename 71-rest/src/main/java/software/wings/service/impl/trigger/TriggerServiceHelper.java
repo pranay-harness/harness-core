@@ -54,7 +54,7 @@ import software.wings.beans.trigger.TriggerConditionType;
 import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.ScheduledTriggerJob;
-import software.wings.utils.CryptoUtil;
+import software.wings.utils.CryptoUtils;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
@@ -232,7 +232,7 @@ public class TriggerServiceHelper {
     WebHookToken webHookToken;
     if (existingToken == null || existingToken.getWebHookToken() == null) {
       webHookToken =
-          WebHookToken.builder().httpMethod("POST").webHookToken(CryptoUtil.secureRandAlphaNumString(40)).build();
+          WebHookToken.builder().httpMethod("POST").webHookToken(CryptoUtils.secureRandAlphaNumString(40)).build();
     } else {
       webHookToken = existingToken;
     }

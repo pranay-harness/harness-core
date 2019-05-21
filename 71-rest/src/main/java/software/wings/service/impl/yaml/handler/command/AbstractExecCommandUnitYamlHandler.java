@@ -16,7 +16,7 @@ import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.ExecCommandUnit.AbstractYaml;
 import software.wings.beans.command.TailFilePatternEntry;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 
 import java.util.List;
 import java.util.Map;
@@ -68,7 +68,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
     Y yaml = changeContext.getYaml();
     ScriptType scriptType = isEmpty(yaml.getScriptType())
         ? ScriptType.BASH
-        : Util.getEnumFromString(ScriptType.class, yaml.getScriptType());
+        : Utils.getEnumFromString(ScriptType.class, yaml.getScriptType());
     bean.setScriptType(scriptType);
     bean.setCommandString(yaml.getCommand());
     bean.setCommandPath(yaml.getWorkingDirectory());
@@ -82,7 +82,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
     final ExecCommandUnit.AbstractYaml execYaml = (ExecCommandUnit.AbstractYaml) yaml;
     ScriptType scriptType = isEmpty(execYaml.getScriptType())
         ? ScriptType.BASH
-        : Util.getEnumFromString(ScriptType.class, execYaml.getScriptType());
+        : Utils.getEnumFromString(ScriptType.class, execYaml.getScriptType());
     bean.setScriptType(scriptType);
     bean.setCommandString(execYaml.getCommand());
     bean.setCommandPath(execYaml.getWorkingDirectory());

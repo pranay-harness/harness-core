@@ -21,7 +21,7 @@ import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
-import software.wings.service.impl.apm.MLServiceUtil;
+import software.wings.service.impl.apm.MLServiceUtils;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.prometheus.PrometheusAnalysisService;
 import software.wings.service.intfc.prometheus.PrometheusDelegateService;
@@ -42,7 +42,7 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
   @Inject private SettingsService settingsService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private SecretManager secretManager;
-  @Inject private MLServiceUtil mlServiceUtil;
+  @Inject private MLServiceUtils mlServiceUtils;
 
   @Override
   public VerificationNodeDataSetupResponse getMetricsWithDataForNode(PrometheusSetupTestNodeData setupTestNodeData) {
@@ -52,7 +52,7 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
 
     String hostName = null;
     if (!setupTestNodeData.isServiceLevel()) {
-      hostName = mlServiceUtil.getHostNameFromExpression(setupTestNodeData);
+      hostName = mlServiceUtils.getHostNameFromExpression(setupTestNodeData);
     }
 
     VerificationNodeDataSetupResponse setupResponse =

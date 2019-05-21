@@ -21,7 +21,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.NotificationSetupService;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 
 import java.util.List;
 import java.util.Map;
@@ -99,7 +99,7 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
 
   private Map<NotificationChannelType, List<String>> toAddressByChannelTypeMap(List<AddressYaml> addressYamlList) {
     return addressYamlList.stream().collect(Collectors.toMap(addressYaml
-        -> Util.getEnumFromString(NotificationChannelType.class, addressYaml.getChannelType()),
+        -> Utils.getEnumFromString(NotificationChannelType.class, addressYaml.getChannelType()),
         addressYaml -> {
           List<String> addressList = addressYaml.getAddresses();
           return addressList == null ? Lists.newArrayList() : addressList;

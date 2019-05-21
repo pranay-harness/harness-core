@@ -13,7 +13,7 @@ import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
-import static software.wings.utils.WinRmHelperUtil.buildErrorDetailsFromWinRmClientException;
+import static software.wings.utils.WinRmHelperUtils.buildErrorDetailsFromWinRmClientException;
 
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.delegate.command.CommandExecutionResult;

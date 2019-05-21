@@ -46,7 +46,7 @@ import java.net.UnknownHostException;
 /**
  * Created by anubhaw on 2/23/17.
  */
-public class SshHelperUtil {
+public class SshHelperUtils {
   private static ExecutorType getExecutorType(
       SettingAttribute hostConnectionSetting, SettingAttribute bastionHostConnectionSetting) {
     ExecutorType executorType;

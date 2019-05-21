@@ -36,7 +36,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
-import software.wings.service.impl.jenkins.JenkinsUtil;
+import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.JenkinsState;
 
@@ -55,7 +55,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   @Mock private BuildWithDetails buildWithDetails;
   @Mock private EncryptionService encryptionService;
   @Mock private DelegateLogService logService;
-  @Inject @InjectMocks JenkinsUtil jenkinsUtil;
+  @Inject @InjectMocks JenkinsUtils jenkinsUtil;
 
   private String jenkinsUrl = "http://jenkins";
   private String userName = "user1";

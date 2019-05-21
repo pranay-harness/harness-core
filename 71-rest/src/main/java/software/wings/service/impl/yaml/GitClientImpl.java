@@ -21,7 +21,7 @@ import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.common.Constants.HARNESS_IO_KEY_;
 import static software.wings.common.Constants.HARNESS_SUPPORT_EMAIL_KEY;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
-import static software.wings.utils.SshHelperUtil.createSshSessionConfig;
+import static software.wings.utils.SshHelperUtils.createSshSessionConfig;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;

@@ -24,7 +24,7 @@ import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 
 import java.util.Collections;
 import java.util.List;
@@ -96,7 +96,7 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends Yaml, B ext
               .map(nameValuePair -> nameValuePairYamlHandler.toYaml(nameValuePair, bean.getAppId()))
               .collect(toList());
 
-      yaml.setVariables(Util.getSortedNameValuePairYamlList(nvpYamlList));
+      yaml.setVariables(Utils.getSortedNameValuePairYamlList(nvpYamlList));
     }
 
     return yaml;

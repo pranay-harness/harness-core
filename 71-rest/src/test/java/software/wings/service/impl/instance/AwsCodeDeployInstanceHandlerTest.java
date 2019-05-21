@@ -110,7 +110,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
   @InjectMocks @Inject AwsCodeDeployInstanceHandler awsCodeDeployInstanceHandler;
   @InjectMocks @Spy AwsInfrastructureProvider awsInfrastructureProvider;
   @InjectMocks @Spy InstanceHelper instanceHelper;
-  @Spy InstanceUtil instanceUtil;
+  @Spy InstanceUtils instanceUtil;
   private com.amazonaws.services.ec2.model.Instance instance1;
   private com.amazonaws.services.ec2.model.Instance instance2;
   private com.amazonaws.services.ec2.model.Instance instance3;

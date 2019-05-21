@@ -23,7 +23,7 @@ import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
 import software.wings.common.Constants;
 import software.wings.licensing.LicenseService;
-import software.wings.service.impl.LicenseUtil;
+import software.wings.service.impl.LicenseUtils;
 import software.wings.service.intfc.AccountService;
 
 import java.util.Calendar;
@@ -55,7 +55,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldSaveTrialAccountWithDefaultValues() {
-    long expiryTime = LicenseUtil.getDefaultTrialExpiryTime();
+    long expiryTime = LicenseUtils.getDefaultTrialExpiryTime();
     LicenseInfo licenseInfo = new LicenseInfo();
     licenseInfo.setAccountType(AccountType.TRIAL);
     licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
@@ -98,7 +98,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldSaveAccountWithSpecificTypeAndExpiryTime() {
-    long expiryTime = LicenseUtil.getDefaultTrialExpiryTime() + 100000;
+    long expiryTime = LicenseUtils.getDefaultTrialExpiryTime() + 100000;
     LicenseInfo licenseInfo = new LicenseInfo();
     licenseInfo.setAccountType(AccountType.TRIAL);
     licenseInfo.setExpiryTime(expiryTime);
@@ -118,7 +118,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldUpdatePaidAccountWithDefaultValues() {
-    long expiryTime = LicenseUtil.getDefaultTrialExpiryTime() + 100000;
+    long expiryTime = LicenseUtils.getDefaultTrialExpiryTime() + 100000;
     LicenseInfo licenseInfo = new LicenseInfo();
     licenseInfo.setAccountType(AccountType.PAID);
     licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
@@ -140,7 +140,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldUpdateTrialAccountWithDefaultValues() {
-    long expiryTime = LicenseUtil.getDefaultTrialExpiryTime() + 100000;
+    long expiryTime = LicenseUtils.getDefaultTrialExpiryTime() + 100000;
     LicenseInfo licenseInfo = new LicenseInfo();
     licenseInfo.setAccountType(AccountType.TRIAL);
     licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
@@ -169,7 +169,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldFailToUpdateTrialAccountWithNullLicenseInfo() {
-    long expiryTime = LicenseUtil.getDefaultTrialExpiryTime();
+    long expiryTime = LicenseUtils.getDefaultTrialExpiryTime();
     LicenseInfo licenseInfo = new LicenseInfo();
     licenseInfo.setAccountType(AccountType.TRIAL);
     licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
@@ -190,7 +190,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldUpdateTrialAccount3WithDefaultValues() {
-    long expiryTime = LicenseUtil.getDefaultTrialExpiryTime();
+    long expiryTime = LicenseUtils.getDefaultTrialExpiryTime();
     LicenseInfo licenseInfo = new LicenseInfo();
     licenseInfo.setAccountType(AccountType.TRIAL);
     licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
@@ -245,7 +245,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldUpdateAccountWithSpecificTypeAndExpiryTime() {
-    long expiryTime = LicenseUtil.getDefaultTrialExpiryTime() + 100000;
+    long expiryTime = LicenseUtils.getDefaultTrialExpiryTime() + 100000;
     LicenseInfo licenseInfo = new LicenseInfo();
     licenseInfo.setAccountType(AccountType.PAID);
     licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
@@ -278,7 +278,7 @@ public class LicenseServiceTest extends WingsBaseTest {
     licenseInfo.setAccountType(AccountType.TRIAL);
     licenseInfo.setAccountStatus(AccountStatus.EXPIRED);
 
-    long expiryTime = LicenseUtil.getDefaultTrialExpiryTime();
+    long expiryTime = LicenseUtils.getDefaultTrialExpiryTime();
     Account accountFromDB = accountService.save(anAccount()
                                                     .withCompanyName(HARNESS_NAME)
                                                     .withAccountName(HARNESS_NAME)
@@ -306,7 +306,7 @@ public class LicenseServiceTest extends WingsBaseTest {
     licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
     licenseInfo.setLicenseUnits(10);
 
-    long expiryTime = LicenseUtil.getDefaultPaidExpiryTime();
+    long expiryTime = LicenseUtils.getDefaultPaidExpiryTime();
     Account accountFromDB = accountService.save(anAccount()
                                                     .withCompanyName(HARNESS_NAME)
                                                     .withAccountName(HARNESS_NAME)

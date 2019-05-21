@@ -33,7 +33,7 @@ import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.UserGroupService;
-import software.wings.utils.CryptoUtil;
+import software.wings.utils.CryptoUtils;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
@@ -68,7 +68,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     }
 
     int KEY_LEN = 80;
-    String randomKey = accountId + DELIMITER + CryptoUtil.secureRandAlphaNumString(KEY_LEN);
+    String randomKey = accountId + DELIMITER + CryptoUtils.secureRandAlphaNumString(KEY_LEN);
     String apiKey = Base64.getEncoder().encodeToString(randomKey.getBytes(Charsets.UTF_8));
     ApiKeyEntry apiKeyEntryToBeSaved =
         ApiKeyEntry.builder()

@@ -17,7 +17,7 @@ import software.wings.service.intfc.MigrationService;
  */
 @Integration
 @Ignore
-public class RunMigrationsUtil extends WingsBaseTest {
+public class RunMigrationsUtils extends WingsBaseTest {
   @Inject private MigrationService migrationService;
   @Inject private Injector injector;
 

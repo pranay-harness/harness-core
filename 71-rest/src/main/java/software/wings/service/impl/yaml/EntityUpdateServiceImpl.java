@@ -41,7 +41,7 @@ import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 import software.wings.utils.Validator;
 
 import java.io.ByteArrayOutputStream;
@@ -197,7 +197,7 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
 
     // For Manifest File "/" is allowed in name
     if (!(entity instanceof ManifestFile)) {
-      yamlFileName = Util.normalize(yamlFileName);
+      yamlFileName = Utils.normalize(yamlFileName);
     }
 
     helperEntity = obtainHelperEntity(helperEntity, entity);
@@ -271,7 +271,7 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
     } else if (entity instanceof ConfigFile) {
       ConfigFile configFile = (ConfigFile) entity;
       String fileContent = loadFileContentIntoString(configFile);
-      String fileName = Util.normalize(configFile.getRelativeFilePath());
+      String fileName = Utils.normalize(configFile.getRelativeFilePath());
 
       if (fileContent != null) {
         gitFileChanges.add(createGitChangeWhenUsingActualFile(

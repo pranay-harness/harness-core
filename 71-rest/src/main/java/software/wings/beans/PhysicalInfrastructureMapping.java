@@ -12,7 +12,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.beans.infrastructure.Host;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -71,7 +71,7 @@ public class PhysicalInfrastructureMapping extends PhysicalInfrastructureMapping
   @SchemaIgnore
   @Override
   public String getDefaultName() {
-    return Util.normalize(
+    return Utils.normalize(
         format("%s (DataCenter_SSH)", Optional.ofNullable(this.getComputeProviderName()).orElse("data-center-ssh")));
   }
 

@@ -32,7 +32,7 @@ import java.util.List;
  */
 @Integration
 @Ignore
-public class RoleRefreshUtil extends WingsBaseTest {
+public class RoleRefreshUtils extends WingsBaseTest {
   @Inject UserService userService;
   @Inject RoleService roleService;
   @Inject AccountService accountService;

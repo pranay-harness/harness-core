@@ -14,17 +14,17 @@ import java.util.regex.Pattern;
  * @since 20120507
  * @version 20120507
  */
-public final class MavenVersionCompareUtil {
+public final class MavenVersionCompareUtils {
   private static final Pattern PATTERN_APPROXIMATION = compile("^([\\d\\.]+\\.)*(\\d+)$");
 
   private ComparableVersion mMavenVersionCompareUtil;
 
-  private MavenVersionCompareUtil(String v) {
+  private MavenVersionCompareUtils(String v) {
     mMavenVersionCompareUtil = new ComparableVersion(v);
   }
 
-  public static MavenVersionCompareUtil compare(String v) {
-    return new MavenVersionCompareUtil(v);
+  public static MavenVersionCompareUtils compare(String v) {
+    return new MavenVersionCompareUtils(v);
   }
 
   /**

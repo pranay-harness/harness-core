@@ -14,7 +14,7 @@ import java.util.Calendar;
  * Utility class that has object to string and string to object representations.
  * @author rktummala on 09/10/2018
  */
-public class LicenseUtil {
+public class LicenseUtils {
   public static String convertToString(LicenseInfo licenseInfo) {
     StringBuilder builder = new StringBuilder();
 

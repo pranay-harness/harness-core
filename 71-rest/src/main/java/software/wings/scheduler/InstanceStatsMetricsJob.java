@@ -19,7 +19,7 @@ import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import software.wings.beans.Account;
-import software.wings.beans.instance.dashboard.InstanceStatsUtil;
+import software.wings.beans.instance.dashboard.InstanceStatsUtils;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 
 import java.time.Duration;
@@ -64,7 +64,7 @@ public class InstanceStatsMetricsJob implements Job {
             eventPublisher.publishInstanceMetric(
                 account.getUuid(), account.getAccountName(), instanceCount, EventConstants.INSTANCE_COUNT_TOTAL);
             eventPublisher.publishInstanceMetric(account.getUuid(), account.getAccountName(),
-                InstanceStatsUtil.actualUsage(account.getUuid(), instanceStatService),
+                InstanceStatsUtils.actualUsage(account.getUuid(), instanceStatService),
                 EventConstants.INSTANCE_COUNT_NINETY_FIVE_PERCENTILE);
             globalCount[0] = +instanceCount;
 

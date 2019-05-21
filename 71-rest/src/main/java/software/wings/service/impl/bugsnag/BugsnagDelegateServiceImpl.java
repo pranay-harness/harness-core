@@ -16,7 +16,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.BugsnagConfig;
-import software.wings.delegatetasks.CustomDataCollectionUtil;
+import software.wings.delegatetasks.CustomDataCollectionUtils;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.apm.APMRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -109,7 +109,7 @@ public class BugsnagDelegateServiceImpl implements BugsnagDelegateService {
       }
 
       String url = FETCH_EVENTS_URL.replaceAll(":projectId:", bugsnagSetupTestData.getProjectId());
-      String resolvedUrl = CustomDataCollectionUtil.resolvedUrl(
+      String resolvedUrl = CustomDataCollectionUtils.resolvedUrl(
           url, null, bugsnagSetupTestData.getFromTime(), bugsnagSetupTestData.getToTime(), null);
 
       Call<Object> request = client.collect(resolvedUrl, hMap, HashBiMap.create());

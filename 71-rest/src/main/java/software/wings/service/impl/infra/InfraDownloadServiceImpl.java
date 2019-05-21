@@ -11,7 +11,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import software.wings.utils.GcsUtil;
+import software.wings.utils.GcsUtils;
 
 import java.io.File;
 import java.util.Optional;
@@ -23,7 +23,7 @@ import javax.validation.executable.ValidateOnExecution;
 public class InfraDownloadServiceImpl implements InfraDownloadService {
   private static final String BUILDS_PATH = "/builds/";
 
-  @Inject private GcsUtil gcsUtil;
+  @Inject private GcsUtils gcsUtil;
 
   @Override
   public String getDownloadUrlForDelegate(String version, String envString) {
@@ -92,7 +92,7 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
         ErrorCode.INVALID_INFRA_CONFIGURATION, "No Service Account configuration discovered for env=" + env);
   }
 
-  GcsUtil getGcsUtil() {
+  GcsUtils getGcsUtil() {
     return gcsUtil;
   }
 }

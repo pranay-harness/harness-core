@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.beans.infrastructure.Host;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 
 import java.util.List;
 import java.util.Map;
@@ -31,7 +31,7 @@ public class PhysicalInfrastructureMappingWinRm extends PhysicalInfrastructureMa
   @SchemaIgnore
   @Override
   public String getDefaultName() {
-    return Util.normalize(format(
+    return Utils.normalize(format(
         "%s (DataCenter_WinRM)", Optional.ofNullable(this.getComputeProviderName()).orElse("data-center-winrm")));
   }
 

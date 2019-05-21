@@ -13,7 +13,7 @@ import java.util.Set;
 import java.util.TimeZone;
 
 @Slf4j
-public class CustomDataCollectionUtil {
+public class CustomDataCollectionUtils {
   private static final String ISO_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
   public static String resolvedUrl(String url, String host, long startTime, long endTime, String query) {

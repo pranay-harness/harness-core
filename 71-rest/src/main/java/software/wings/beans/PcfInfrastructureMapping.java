@@ -11,7 +11,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 
 import java.util.List;
 import java.util.Map;
@@ -55,7 +55,7 @@ public class PcfInfrastructureMapping extends InfrastructureMapping {
   @SchemaIgnore
   @Override
   public String getDefaultName() {
-    return Util.normalize(format("%s (%s::%s) %s", this.getOrganization(), this.getComputeProviderType(),
+    return Utils.normalize(format("%s (%s::%s) %s", this.getOrganization(), this.getComputeProviderType(),
         Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
         this.getSpace()));
   }

@@ -53,7 +53,7 @@ import software.wings.beans.trigger.WebhookSource;
 import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
-import software.wings.utils.CryptoUtil;
+import software.wings.utils.CryptoUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -75,7 +75,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   @Inject @InjectMocks private WebHookService webHookService;
   @Inject WingsPersistence wingsPersistence;
 
-  final String token = CryptoUtil.secureRandAlphaNumString(40);
+  final String token = CryptoUtils.secureRandAlphaNumString(40);
 
   WorkflowExecution execution =
       WorkflowExecution.builder().appId(APP_ID).envId(ENV_ID).uuid(WORKFLOW_EXECUTION_ID).status(RUNNING).build();
@@ -468,7 +468,7 @@ public class WebHookServiceTest extends WingsBaseTest {
     doReturn(application).when(appService).get(APP_ID);
     final WorkflowExecution execution =
         WorkflowExecution.builder().appId(APP_ID).envId(ENV_ID).uuid(WORKFLOW_EXECUTION_ID).status(RUNNING).build();
-    final String token = CryptoUtil.secureRandAlphaNumString(40);
+    final String token = CryptoUtils.secureRandAlphaNumString(40);
     doReturn(execution)
         .when(triggerService)
         .triggerExecutionByWebHook(eq(APP_ID), eq(token), anyMap(), anyMap(), any());

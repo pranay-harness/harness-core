@@ -24,7 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
-import software.wings.integration.IntegrationTestUtil;
+import software.wings.integration.IntegrationTestUtils;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -50,7 +50,7 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
   @Before
   public void init() throws Exception {
     this.cleanUp();
-    if (!indexesEnsured && !IntegrationTestUtil.isManagerRunning(client)) {
+    if (!indexesEnsured && !IntegrationTestUtils.isManagerRunning(client)) {
       persistence.getDatastore(UsageBucket.class, ReadPref.NORMAL).ensureIndexes(UsageBucket.class);
       indexesEnsured = true;
     }

@@ -11,7 +11,7 @@ import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.common.Constants.HARNESS_NAME;
-import static software.wings.integration.IntegrationTestUtil.randomInt;
+import static software.wings.integration.IntegrationTestUtils.randomInt;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 
 import com.google.inject.Inject;

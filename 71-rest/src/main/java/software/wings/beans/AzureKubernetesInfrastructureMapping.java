@@ -11,7 +11,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 
 import java.util.Map;
 import java.util.Optional;
@@ -35,7 +35,7 @@ public class AzureKubernetesInfrastructureMapping extends ContainerInfrastructur
   @SchemaIgnore
   @Override
   public String getDefaultName() {
-    return Util.normalize(format("%s_AZURE_Kubernetes_%s_%s", this.getClusterName(),
+    return Utils.normalize(format("%s_AZURE_Kubernetes_%s_%s", this.getClusterName(),
         Optional.ofNullable(this.getComputeProviderName())
             .orElse(this.getComputeProviderType().toLowerCase())
             .replace(':', '_'),

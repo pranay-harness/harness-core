@@ -9,7 +9,7 @@ import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 
 @Singleton
-public class JenkinsUtil {
+public class JenkinsUtils {
   @Inject private JenkinsFactory jenkinsFactory;
 
   public Jenkins getJenkins(JenkinsConfig jenkinsConfig) {

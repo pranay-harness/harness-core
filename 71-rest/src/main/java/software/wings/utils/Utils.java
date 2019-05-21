@@ -22,7 +22,7 @@ import java.util.Map;
  * @author rktummala on 10/11/17
  */
 @Slf4j
-public class Util {
+public class Utils {
   public static String generatePath(String delimiter, boolean endsWithDelimiter, String... elements) {
     StringBuilder builder = new StringBuilder();
     for (String element : elements) {

@@ -138,7 +138,7 @@ import software.wings.utils.EcsConvention;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.KubernetesConvention;
 import software.wings.utils.Misc;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -651,7 +651,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     // If an entry exists with the given default name get the next revision number
     if (isNotEmpty(response)) {
-      name = Util.getNameWithNextRevision(
+      name = Utils.getNameWithNextRevision(
           response.getResponse().stream().map(InfrastructureMapping::getName).collect(toList()), name);
     }
 

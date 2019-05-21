@@ -19,7 +19,7 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
-import software.wings.service.impl.apm.MLServiceUtil;
+import software.wings.service.impl.apm.MLServiceUtils;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
@@ -42,7 +42,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   @Inject private SettingsService settingsService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private SecretManager secretManager;
-  @Inject private MLServiceUtil mlServiceUtil;
+  @Inject private MLServiceUtils mlServiceUtils;
 
   @Override
   public List<NewRelicApplication> getApplications(final String settingId) throws IOException {
@@ -146,7 +146,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
     String hostName = null;
     // check if it is for service level, serviceId is empty then get hostname
     if (!setupTestNodeData.isServiceLevel()) {
-      hostName = mlServiceUtil.getHostNameFromExpression(setupTestNodeData);
+      hostName = mlServiceUtils.getHostNameFromExpression(setupTestNodeData);
     }
 
     try {

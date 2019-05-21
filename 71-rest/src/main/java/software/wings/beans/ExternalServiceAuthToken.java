@@ -1,7 +1,7 @@
 package software.wings.beans;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.utils.CryptoUtil.secureRandAlphaNumString;
+import static software.wings.utils.CryptoUtils.secureRandAlphaNumString;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.annotations.Entity;

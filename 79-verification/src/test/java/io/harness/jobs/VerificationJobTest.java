@@ -25,7 +25,7 @@ import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
 import software.wings.security.encryption.EncryptionUtils;
-import software.wings.service.impl.LicenseUtil;
+import software.wings.service.impl.LicenseUtils;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -72,7 +72,7 @@ public class VerificationJobTest extends VerificationBaseTest {
     licenseInfo.setAccountType(type);
     licenseInfo.setAccountStatus(status);
     byte[] licenseInfoEncrypted =
-        EncryptionUtils.encrypt(LicenseUtil.convertToString(licenseInfo).getBytes(Charset.forName("UTF-8")), null);
+        EncryptionUtils.encrypt(LicenseUtils.convertToString(licenseInfo).getBytes(Charset.forName("UTF-8")), null);
 
     Account account = anAccount()
                           .withUuid(UUID.randomUUID().toString())

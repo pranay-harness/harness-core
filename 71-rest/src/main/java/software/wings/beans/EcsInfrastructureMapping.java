@@ -20,7 +20,7 @@ import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 
 import java.util.List;
 import java.util.Map;
@@ -166,7 +166,7 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
   @SchemaIgnore
   @Override
   public String getDefaultName() {
-    return Util.normalize(format("%s (%s::%s) %s", isEmpty(this.getProvisionerId()) ? this.getClusterName() : "",
+    return Utils.normalize(format("%s (%s::%s) %s", isEmpty(this.getProvisionerId()) ? this.getClusterName() : "",
         this.getComputeProviderType(),
         Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
         this.getRegion()));

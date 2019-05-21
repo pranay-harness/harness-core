@@ -24,7 +24,7 @@ import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
-import software.wings.service.impl.apm.MLServiceUtil;
+import software.wings.service.impl.apm.MLServiceUtils;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.sm.StateType;
@@ -42,7 +42,7 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 @Slf4j
 public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAnalysisService {
-  @Inject private MLServiceUtil mlServiceUtil;
+  @Inject private MLServiceUtils mlServiceUtils;
 
   @Override
   public Map<String, ElkIndexTemplate> getIndices(String accountId, String analysisServerConfigId) throws IOException {
@@ -138,7 +138,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
           .build();
     }
 
-    String hostName = mlServiceUtil.getHostNameFromExpression(elkSetupTestNodeData);
+    String hostName = mlServiceUtils.getHostNameFromExpression(elkSetupTestNodeData);
     logger.info("Hostname Expression : " + hostName);
 
     final ElkLogFetchRequest elkFetchRequestWithHost =

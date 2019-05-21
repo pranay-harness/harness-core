@@ -14,7 +14,7 @@ import software.wings.beans.FailureType;
 import software.wings.beans.RepairActionCode;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 
 import java.util.List;
 
@@ -25,10 +25,10 @@ import java.util.List;
 public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.Yaml, FailureStrategy> {
   private FailureStrategy toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
-    RepairActionCode repairActionCode = Util.getEnumFromString(RepairActionCode.class, yaml.getRepairActionCode());
-    ExecutionScope executionScope = Util.getEnumFromString(ExecutionScope.class, yaml.getExecutionScope());
+    RepairActionCode repairActionCode = Utils.getEnumFromString(RepairActionCode.class, yaml.getRepairActionCode());
+    ExecutionScope executionScope = Utils.getEnumFromString(ExecutionScope.class, yaml.getExecutionScope());
     RepairActionCode repairActionCodeAfterRetry =
-        Util.getEnumFromString(RepairActionCode.class, yaml.getRepairActionCodeAfterRetry());
+        Utils.getEnumFromString(RepairActionCode.class, yaml.getRepairActionCodeAfterRetry());
 
     return FailureStrategy.builder()
         .executionScope(executionScope)
@@ -39,7 +39,7 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
         .failureTypes(yaml.getFailureTypes() != null
                 ? yaml.getFailureTypes()
                       .stream()
-                      .map(failureTypeString -> Util.getEnumFromString(FailureType.class, failureTypeString))
+                      .map(failureTypeString -> Utils.getEnumFromString(FailureType.class, failureTypeString))
                       .collect(toList())
                 : null)
         .specificSteps(yaml.getSpecificSteps())
@@ -52,9 +52,9 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
     if (bean.getFailureTypes() != null) {
       failureTypeList = bean.getFailureTypes().stream().map(failureType -> failureType.name()).collect(toList());
     }
-    String repairActionCode = Util.getStringFromEnum(bean.getRepairActionCode());
-    String repairActionCodeAfterRetry = Util.getStringFromEnum(bean.getRepairActionCodeAfterRetry());
-    String executionScope = Util.getStringFromEnum(bean.getExecutionScope());
+    String repairActionCode = Utils.getStringFromEnum(bean.getRepairActionCode());
+    String repairActionCodeAfterRetry = Utils.getStringFromEnum(bean.getRepairActionCodeAfterRetry());
+    String executionScope = Utils.getStringFromEnum(bean.getExecutionScope());
 
     return FailureStrategy.Yaml.builder()
         .executionScope(executionScope)

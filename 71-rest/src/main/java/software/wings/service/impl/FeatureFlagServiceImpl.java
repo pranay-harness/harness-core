@@ -71,7 +71,10 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
       }
 
       featureFlag = cache.computeIfAbsent(featureName,
-          key -> wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", key.name()).get());
+          key
+          -> wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority)
+                 .filter(FeatureFlagKeys.name, key.name())
+                 .get());
     }
 
     if (featureFlag == null) {
@@ -105,27 +108,27 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
 
     // Mark persisted flags that are no longer defined as obsolete
     wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority)
-                                .filter("obsolete", false)
-                                .field("name")
+                                .filter(FeatureFlagKeys.obsolete, false)
+                                .field(FeatureFlagKeys.name)
                                 .notIn(definedNames),
-        wingsPersistence.createUpdateOperations(FeatureFlag.class).set("obsolete", true));
+        wingsPersistence.createUpdateOperations(FeatureFlag.class).set(FeatureFlagKeys.obsolete, true));
 
     // Mark persisted flags that are defined as not obsolete
     wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority)
-                                .filter("obsolete", true)
-                                .field("name")
+                                .filter(FeatureFlagKeys.obsolete, true)
+                                .field(FeatureFlagKeys.name)
                                 .in(definedNames),
-        wingsPersistence.createUpdateOperations(FeatureFlag.class).set("obsolete", false));
+        wingsPersistence.createUpdateOperations(FeatureFlag.class).set(FeatureFlagKeys.obsolete, false));
 
     // Delete flags that were marked obsolete more than ten days ago
     wingsPersistence.delete(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority)
-                                .filter("obsolete", true)
+                                .filter(FeatureFlagKeys.obsolete, true)
                                 .field(FeatureFlagKeys.lastUpdatedAt)
                                 .lessThan(clock.millis() - TimeUnit.DAYS.toMillis(10)));
 
     // Persist new flags initialized as enabled false
     Set<String> persistedNames = wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority)
-                                     .project("name", true)
+                                     .project(FeatureFlagKeys.name, true)
                                      .asList()
                                      .stream()
                                      .map(FeatureFlag::getName)
@@ -142,8 +145,10 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
       List<String> enabled =
           isBlank(features) ? emptyList() : Splitter.on(',').omitEmptyStrings().trimResults().splitToList(features);
       for (String name : definedNames) {
-        wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", name),
-            wingsPersistence.createUpdateOperations(FeatureFlag.class).set("enabled", enabled.contains(name)));
+        wingsPersistence.update(
+            wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter(FeatureFlagKeys.name, name),
+            wingsPersistence.createUpdateOperations(FeatureFlag.class)
+                .set(FeatureFlagKeys.enabled, enabled.contains(name)));
       }
     }
   }

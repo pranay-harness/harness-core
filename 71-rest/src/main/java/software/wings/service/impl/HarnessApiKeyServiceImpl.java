@@ -22,7 +22,7 @@ import software.wings.security.annotations.HarnessApiKeyAuth;
 import software.wings.security.encryption.EncryptionUtils;
 import software.wings.service.intfc.HarnessApiKeyService;
 import software.wings.utils.CacheHelper;
-import software.wings.utils.CryptoUtil;
+import software.wings.utils.CryptoUtils;
 import software.wings.utils.Validator;
 
 import java.lang.reflect.Method;
@@ -73,7 +73,7 @@ public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
 
   private String getNewKey() {
     int KEY_LEN = 80;
-    return CryptoUtil.secureRandAlphaNumString(KEY_LEN);
+    return CryptoUtils.secureRandAlphaNumString(KEY_LEN);
   }
 
   @Override

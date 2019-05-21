@@ -19,7 +19,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot.InstanceStatsSnapshotKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
-import software.wings.integration.IntegrationTestUtil;
+import software.wings.integration.IntegrationTestUtils;
 import software.wings.service.impl.instance.stats.InstanceStatServiceImpl;
 
 import java.net.URISyntaxException;
@@ -43,7 +43,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
 
   @Before
   public void ensureIndices() throws URISyntaxException {
-    if (!indexesEnsured && !IntegrationTestUtil.isManagerRunning(client)) {
+    if (!indexesEnsured && !IntegrationTestUtils.isManagerRunning(client)) {
       persistence.getDatastore(InstanceStatsSnapshot.class, ReadPref.NORMAL).ensureIndexes(InstanceStatsSnapshot.class);
       indexesEnsured = true;
     }

@@ -58,7 +58,7 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private YamlGitService yamlGitService;
   @Inject private EncryptionService encryptionService;
-  @Inject private GitIntegrationTestUtil gitIntegrationTestUtil;
+  @Inject private GitIntegrationTestUtils gitIntegrationTestUtil;
   @Inject private ScmSecret scmSecret;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject private EnvironmentService environmentService;

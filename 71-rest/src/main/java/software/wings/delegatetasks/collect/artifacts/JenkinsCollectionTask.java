@@ -15,7 +15,7 @@ import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.service.impl.jenkins.JenkinsUtil;
+import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.InputStream;
@@ -29,7 +29,7 @@ import java.util.function.Supplier;
  */
 @Slf4j
 public class JenkinsCollectionTask extends AbstractDelegateRunnableTask {
-  @Inject private JenkinsUtil jenkinsUtil;
+  @Inject private JenkinsUtils jenkinsUtil;
   @Inject private EncryptionService encryptionService;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 

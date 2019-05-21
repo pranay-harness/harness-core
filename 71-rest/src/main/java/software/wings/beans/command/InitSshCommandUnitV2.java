@@ -5,7 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.utils.Util.escapifyString;
+import static software.wings.utils.Utils.escapifyString;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;

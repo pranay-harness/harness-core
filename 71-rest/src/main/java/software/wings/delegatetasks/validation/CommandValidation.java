@@ -6,7 +6,7 @@ import static java.util.Collections.singletonList;
 import static software.wings.common.Constants.ALWAYS_TRUE_CRITERIA;
 import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
-import static software.wings.utils.SshHelperUtil.createSshSessionConfig;
+import static software.wings.utils.SshHelperUtils.createSshSessionConfig;
 
 import com.google.inject.Inject;
 

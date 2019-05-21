@@ -1,6 +1,6 @@
 package migrations.all;
 
-import static migrations.MigrationUtil.renameStateTypeAndStateClass;
+import static migrations.MigrationUtils.renameStateTypeAndStateClass;
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY_ROLLBACK;
 import static software.wings.sm.StateType.KUBERNETES_SETUP;

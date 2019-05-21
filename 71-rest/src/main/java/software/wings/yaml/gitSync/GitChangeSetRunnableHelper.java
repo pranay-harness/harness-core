@@ -9,6 +9,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import software.wings.dl.WingsPersistence;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
+import software.wings.yaml.gitSync.YamlChangeSet.YamlChangeSetKeys;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -22,7 +23,7 @@ public class GitChangeSetRunnableHelper {
     return wingsPersistence.createQuery(YamlChangeSet.class, excludeAuthority)
         .field("accountId")
         .in(runningAccountIdList)
-        .filter("status", Status.RUNNING.name())
+        .filter(YamlChangeSetKeys.status, Status.RUNNING.name())
         .field(YamlChangeSet.LAST_UPDATED_AT_KEY)
         .lessThan(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(TIMEOUT_FOR_RUNNING_CHANGESET))
         .project("_id", true)

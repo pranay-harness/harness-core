@@ -34,7 +34,7 @@ import java.util.Map;
 
 @Singleton
 @Slf4j
-public class YamlAuditRecordGenerationUtil {
+public class YamlAuditRecordGenerationUtils {
   @Inject private AuditHelper auditHelper;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AuditYamlHelperForFailedChanges auditYamlHelper;

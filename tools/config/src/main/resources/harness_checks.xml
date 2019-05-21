@@ -236,6 +236,13 @@
 
     <!-- Spelling consistence -->
 
+    <module name="RegexpOnFilename">
+        <property name="fileNamePattern" value="Util\."/>
+    </module>
+
+    <module name="RegexpOnFilename">
+        <property name="fileNamePattern" value="Utililit(y|ies)\."/>
+    </module>
 
     <module name="RegexpSingleline">
         <property name="format" value="import static .*(?&lt;class&gt;[^.]+).\k&lt;class&gt;Keys\..*;"/>

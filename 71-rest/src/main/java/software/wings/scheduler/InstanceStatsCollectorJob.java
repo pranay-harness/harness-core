@@ -18,7 +18,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.TriggerBuilder;
 import software.wings.beans.Account;
-import software.wings.beans.instance.dashboard.InstanceStatsUtil;
+import software.wings.beans.instance.dashboard.InstanceStatsUtils;
 import software.wings.service.intfc.instance.licensing.InstanceUsageLimitExcessHandler;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 import software.wings.service.intfc.instance.stats.collector.StatsCollector;
@@ -83,7 +83,7 @@ public class InstanceStatsCollectorJob implements Job {
       String accountId = (String) jobExecutionContext.getJobDetail().getJobDataMap().get(ACCOUNT_ID_KEY);
       Objects.requireNonNull(accountId, "Account Id must be passed in job context");
       createStats(accountId);
-      double ninety_five_percentile_usage = InstanceStatsUtil.actualUsage(accountId, instanceStatService);
+      double ninety_five_percentile_usage = InstanceStatsUtils.actualUsage(accountId, instanceStatService);
       instanceLimitHandler.handle(accountId, ninety_five_percentile_usage);
     });
   }

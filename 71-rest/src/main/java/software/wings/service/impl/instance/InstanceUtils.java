@@ -16,7 +16,7 @@ import software.wings.beans.infrastructure.instance.InstanceType;
  */
 @Singleton
 @Slf4j
-public class InstanceUtil {
+public class InstanceUtils {
   private static final String WORKFLOW_PREFIX = "Workflow: ";
   private static final int WORKFLOW_PREFIX_LENGTH = 10;
 
