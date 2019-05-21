@@ -290,6 +290,11 @@
                 <version>0.1.7</version>
             </dependency>
             <dependency>
+                <groupId>com.bettercloud</groupId>
+                <artifactId>vault-java-driver</artifactId>
+                <version>4.0.0</version>
+            </dependency>
+            <dependency>
                 <groupId>com.coveo</groupId>
                 <artifactId>saml-client</artifactId>
                 <version>1.4.0</version>

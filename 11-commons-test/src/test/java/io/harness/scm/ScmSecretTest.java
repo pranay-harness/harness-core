@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import com.bettercloud.vault.VaultException;
 import io.harness.category.element.UnitTests;
 import io.harness.resource.Project;
 import io.harness.rule.CommonsMethodRule;
@@ -27,6 +28,15 @@ import java.util.List;
 public class ScmSecretTest {
   @Rule public CommonsMethodRule commonsMethodRule = new CommonsMethodRule();
   @Inject ScmSecret scmSecret;
+
+  @Test
+  @Category(UnitTests.class)
+  public void testVault() throws VaultException {
+    if (!scmSecret.isInitialized()) {
+      return;
+    }
+    assertThat(scmSecret.obtain("/datagen/!!!test", "do-not-delete")).isEqualTo("hello");
+  }
 
   @Test
   @Category(UnitTests.class)
