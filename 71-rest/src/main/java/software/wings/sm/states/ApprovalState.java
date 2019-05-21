@@ -60,6 +60,7 @@ import software.wings.beans.NotificationRule.NotificationRuleBuilder;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.ApprovalNeededAlert;
+import software.wings.beans.approval.ApprovalPollingJobEntity;
 import software.wings.beans.approval.ApprovalStateParams;
 import software.wings.beans.approval.JiraApprovalParams;
 import software.wings.beans.approval.ServiceNowApprovalParams;
@@ -77,6 +78,7 @@ import software.wings.service.impl.JiraHelperService;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.ApprovalPolingService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationService;
@@ -121,6 +123,7 @@ public class ApprovalState extends State {
   @Inject private ServiceNowService serviceNowService;
   @Inject private transient ActivityService activityService;
   @Inject private transient WorkflowNotificationHelper workflowNotificationHelper;
+  @Inject private ApprovalPolingService approvalPolingService;
 
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
   private Integer DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -340,17 +343,37 @@ public class ApprovalState extends State {
 
     // Create a cron job which polls JIRA for approval status
     logger.info("IssueId = {} while creating Jira polling Job", jiraApprovalParams.getIssueId());
-    JiraPollingJob.doPollingJob(serviceJobScheduler, jiraApprovalParams, executionData.getApprovalId(),
-        app.getAccountId(), app.getAppId(), context.getWorkflowExecutionId(), context.getStateExecutionInstanceId());
-
-    // issue Url on which approval is waiting in case of jira.
-    return anExecutionResponse()
-        .withAsync(true)
-        .withExecutionStatus(PAUSED)
-        .withErrorMessage(jiraExecutionData.getErrorMessage())
-        .withCorrelationIds(asList(approvalId))
-        .withStateExecutionData(executionData)
-        .build();
+    ApprovalPollingJobEntity approvalPollingJobEntity =
+        ApprovalPollingJobEntity.builder()
+            .accountId(app.getAccountId())
+            .appId(app.getAppId())
+            .approvalField(jiraApprovalParams.getApprovalField())
+            .rejectionField(jiraApprovalParams.getRejectionField())
+            .approvalValue(jiraApprovalParams.getApprovalValue())
+            .rejectionValue(jiraApprovalParams.getRejectionValue())
+            .approvalId(approvalId)
+            .approvalType(approvalStateType)
+            .connectorId(jiraApprovalParams.getJiraConnectorId())
+            .issueId(jiraApprovalParams.getIssueId())
+            .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+            .workflowExecutionId(context.getWorkflowExecutionId())
+            .build();
+    try {
+      approvalPolingService.save(approvalPollingJobEntity);
+      return anExecutionResponse()
+          .withAsync(true)
+          .withExecutionStatus(PAUSED)
+          .withErrorMessage(jiraExecutionData.getErrorMessage())
+          .withCorrelationIds(asList(approvalId))
+          .withStateExecutionData(executionData)
+          .build();
+    } catch (WingsException e) {
+      return anExecutionResponse()
+          .withExecutionStatus(FAILED)
+          .withErrorMessage("Failed to schedule Approval" + e.getMessage())
+          .withStateExecutionData(executionData)
+          .build();
+    }
   }
 
   private ExecutionResponse executeServiceNowApproval(
@@ -373,18 +396,41 @@ public class ApprovalState extends State {
 
     Application app = ((ExecutionContextImpl) context).getApp();
 
-    // Create a cron job which polls ServiceNow for approval status
-    ServiceNowApprovalJob.doPollingJob(serviceJobScheduler, servicenowApprovalParams, executionData.getApprovalId(),
-        app.getAccountId(), app.getAppId(), context.getWorkflowExecutionId(),
-        servicenowApprovalParams.getTicketType().toString());
-
     try {
       String ticketUrl = serviceNowService.getIssueUrl(servicenowApprovalParams.getIssueNumber(),
           servicenowApprovalParams.getSnowConnectorId(), servicenowApprovalParams.getTicketType(), app.getAppId(),
           app.getAccountId());
-
       executionData.setTicketUrl(ticketUrl);
       executionData.setTicketType(servicenowApprovalParams.getTicketType());
+    } catch (WingsException we) {
+      return anExecutionResponse()
+          .withExecutionStatus(FAILED)
+          .withErrorMessage(we.getParams().get("message").toString())
+          .withStateExecutionData(executionData)
+          .build();
+    }
+
+    // Create a cron job which polls ServiceNow for approval status
+    logger.info("IssueId = {} while creating Jira polling Job", servicenowApprovalParams.getIssueNumber());
+    ApprovalPollingJobEntity approvalPollingJobEntity =
+        ApprovalPollingJobEntity.builder()
+            .accountId(app.getAccountId())
+            .appId(app.getAppId())
+            .approvalField(servicenowApprovalParams.getApprovalField())
+            .rejectionField(servicenowApprovalParams.getRejectionField())
+            .approvalValue(servicenowApprovalParams.getApprovalValue())
+            .rejectionValue(servicenowApprovalParams.getRejectionValue())
+            .approvalId(approvalId)
+            .approvalType(approvalStateType)
+            .connectorId(servicenowApprovalParams.getSnowConnectorId())
+            .issueNumber(servicenowApprovalParams.getIssueNumber())
+            .issueType(servicenowApprovalParams.getTicketType())
+            .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+            .workflowExecutionId(context.getWorkflowExecutionId())
+            .build();
+
+    try {
+      approvalPolingService.save(approvalPollingJobEntity);
       return anExecutionResponse()
           .withAsync(true)
           .withExecutionStatus(PAUSED)
@@ -392,10 +438,10 @@ public class ApprovalState extends State {
           .withCorrelationIds(asList(approvalId))
           .withStateExecutionData(executionData)
           .build();
-    } catch (WingsException we) {
+    } catch (WingsException e) {
       return anExecutionResponse()
           .withExecutionStatus(FAILED)
-          .withErrorMessage(we.getParams().get("message").toString())
+          .withErrorMessage("Failed to schedule Approval" + e.getMessage())
           .withStateExecutionData(executionData)
           .build();
     }
@@ -506,6 +552,9 @@ public class ApprovalState extends State {
     jiraApprovalParams.setIssueId(context.renderExpression(jiraApprovalParams.getIssueId()));
     logger.info("Deleting job for approvalId: {}, workflowExecutionId: {} ", executionData.getApprovalId(),
         executionData.getWorkflowId());
+    approvalPolingService.delete(executionData.getApprovalId());
+    // Todo: keeping this for backward compatibility and cleanup of old jobs. Can be removed a disconnected onprem
+    // release
     JiraPollingJob.deleteJob(serviceJobScheduler, executionData.getApprovalId());
 
     return anExecutionResponse()
@@ -522,6 +571,9 @@ public class ApprovalState extends State {
 
     logger.info("Deleting job for approvalId: {}, workflowExecutionId: {} ", executionData.getApprovalId(),
         executionData.getWorkflowId());
+    approvalPolingService.delete(executionData.getApprovalId());
+    // Todo: keeping this for backward compatibility and cleanup of old jobs. Can be removed a disconnected onprem
+    // release
     ServiceNowApprovalJob.deleteJob(serviceJobScheduler, executionData.getApprovalId());
 
     setPipelineVariables(context);
@@ -621,11 +673,18 @@ public class ApprovalState extends State {
 
   private void handleAbortEventJira(ExecutionContext context, Application app) {
     ApprovalStateExecutionData executionData = (ApprovalStateExecutionData) context.getStateExecutionData();
+    approvalPolingService.delete(executionData.getApprovalId());
+    // Todo: keeping this for backward compatibility and cleanup of old jobs. Can be removed a disconnected onprem
+    // release
     JiraPollingJob.deleteJob(serviceJobScheduler, executionData.getApprovalId());
   }
 
   private void handleAbortEventServiceNow(ExecutionContext context, Application app) {
     ApprovalStateExecutionData executionData = (ApprovalStateExecutionData) context.getStateExecutionData();
+    approvalPolingService.delete(executionData.getApprovalId());
+
+    // Todo: keeping this for backward compatibility and cleanup of old jobs. Can be removed a disconnected onprem
+    // release
     ServiceNowApprovalJob.deleteJob(serviceJobScheduler, executionData.getApprovalId());
   }
 

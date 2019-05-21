@@ -105,6 +105,7 @@ import software.wings.service.impl.ApiKeyServiceImpl;
 import software.wings.service.impl.AppContainerServiceImpl;
 import software.wings.service.impl.AppServiceImpl;
 import software.wings.service.impl.ApplicationManifestServiceImpl;
+import software.wings.service.impl.ApprovalPolingServiceImpl;
 import software.wings.service.impl.ArtifactStreamServiceBindingServiceImpl;
 import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.impl.AssignDelegateServiceImpl;
@@ -272,6 +273,7 @@ import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
+import software.wings.service.intfc.ApprovalPolingService;
 import software.wings.service.intfc.ArtifactCleanupService;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactService;
@@ -696,6 +698,7 @@ public class WingsModule extends DependencyModule {
 
     bind(ServiceNowService.class).to(ServiceNowServiceImpl.class);
     bind(PagerDutyService.class).to(PagerDutyServiceImpl.class);
+    bind(ApprovalPolingService.class).to(ApprovalPolingServiceImpl.class);
     // Start of deployment trigger dependencies
     bind(DeploymentTriggerService.class).to(DeploymentTriggerServiceImpl.class);
     bind(TriggerExecutionService.class).to(TriggerExecutionServiceImpl.class);

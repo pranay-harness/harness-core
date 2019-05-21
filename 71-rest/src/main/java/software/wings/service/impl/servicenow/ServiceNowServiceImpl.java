@@ -23,6 +23,7 @@ import software.wings.beans.ApprovalDetails.Action;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
+import software.wings.beans.approval.ApprovalPollingJobEntity;
 import software.wings.beans.servicenow.ServiceNowTaskParameters;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.service.intfc.SettingsService;
@@ -155,6 +156,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
     return delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext).getIssueUrl(taskParameters);
   }
 
+  // Todo: Cleanup this method after about 6 months. Keeping it for older approval jobs only.
   @Override
   public ApprovalDetails.Action getApprovalStatus(String connectorId, String accountId, String appId,
       String issueNumber, String approvalField, String approvalValue, String rejectionField, String rejectionValue,
@@ -188,6 +190,65 @@ public class ServiceNowServiceImpl implements ServiceNowService {
       return Action.REJECT;
     }
     return null;
+  }
+
+  public ApprovalDetails.Action getApprovalStatus(ApprovalPollingJobEntity approvalPollingJobEntity) {
+    ServiceNowConfig serviceNowConfig;
+    try {
+      serviceNowConfig = (ServiceNowConfig) settingService.get(approvalPollingJobEntity.getConnectorId()).getValue();
+    } catch (Exception e) {
+      logger.error("Error getting ServiceNow connector for ID: {}", approvalPollingJobEntity.getConnectorId());
+      throw new WingsException(ErrorCode.SERVICENOW_ERROR, WingsException.USER)
+          .addParam("message", ExceptionUtils.getMessage(e));
+    }
+    ServiceNowTaskParameters taskParameters =
+        ServiceNowTaskParameters.builder()
+            .accountId(approvalPollingJobEntity.getAccountId())
+            .issueNumber(approvalPollingJobEntity.getIssueNumber())
+            .serviceNowConfig(serviceNowConfig)
+            .ticketType(approvalPollingJobEntity.getIssueType())
+            .encryptionDetails(secretManager.getEncryptionDetails(serviceNowConfig, approvalPollingJobEntity.getAppId(),
+                approvalPollingJobEntity.getWorkflowExecutionId()))
+            .build();
+
+    SyncTaskContext snowTaskContext = SyncTaskContext.builder()
+                                          .accountId(approvalPollingJobEntity.getAccountId())
+                                          .appId(approvalPollingJobEntity.getAppId())
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .build();
+
+    String issueStatus =
+        delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext).getIssueStatus(taskParameters);
+    if (approvalPollingJobEntity.getApprovalValue() != null
+        && approvalPollingJobEntity.getApprovalValue().equalsIgnoreCase(issueStatus)) {
+      return Action.APPROVE;
+    }
+    if (approvalPollingJobEntity.getRejectionValue() != null
+        && approvalPollingJobEntity.getRejectionValue().equalsIgnoreCase(issueStatus)) {
+      return Action.REJECT;
+    }
+    return null;
+  }
+
+  public void handleServiceNowPolling(ApprovalPollingJobEntity entity) {
+    String approvalId = entity.getApprovalId();
+    String workflowExecutionId = entity.getWorkflowExecutionId();
+    String appId = entity.getAppId();
+    String stateExecutionInstanceId = entity.getStateExecutionInstanceId();
+    try {
+      ApprovalDetails.Action approval = getApprovalStatus(entity);
+      if (approval != null) {
+        logger.info("Servicenow Approval Status: {} for approvalId: {}, workflowExecutionId: {} ", approval, approvalId,
+            workflowExecutionId);
+        EmbeddedUser user = null;
+        approveWorkflow(approval, approvalId, user, appId, workflowExecutionId);
+      }
+
+    } catch (Exception ex) {
+      logger.error(
+          "Exception in execute service now polling job. approvalId: {}, workflowExecutionId: {} , issueNumber: {}",
+          approvalId, workflowExecutionId, entity.getIssueNumber(), ex);
+    }
   }
 
   public void approveWorkflow(

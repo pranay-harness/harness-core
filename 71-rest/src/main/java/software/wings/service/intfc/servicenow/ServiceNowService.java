@@ -4,6 +4,7 @@ import io.harness.beans.EmbeddedUser;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ApprovalDetails.Action;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.approval.ApprovalPollingJobEntity;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowMetaDTO;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
 
@@ -20,5 +21,7 @@ public interface ServiceNowService {
       String issueNumber, String connectorId, ServiceNowTicketType ticketType, String appId, String accountId);
   ApprovalDetails.Action getApprovalStatus(String connectorId, String accountId, String appId, String issueNumber,
       String approvalField, String approvalValue, String rejectionField, String rejectionValue, String ticketType);
+  ApprovalDetails.Action getApprovalStatus(ApprovalPollingJobEntity entity);
   void approveWorkflow(Action action, String approvalId, EmbeddedUser user, String appId, String workflowExecutionId);
+  void handleServiceNowPolling(ApprovalPollingJobEntity entity);
 }
