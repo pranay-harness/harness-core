@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.graphql.schema.type.artifact.QLArtifact;
 
-import java.time.ZonedDateTime;
+import java.time.OffsetDateTime;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -14,13 +14,13 @@ public class QLEcsContainerInstance extends QLContainerInstance {
   private String taskDefinitionArn;
   private String serviceName;
   private long version;
-  private ZonedDateTime startedAt;
+  private OffsetDateTime startedAt;
   private String startedBy;
 
   @Builder
   public QLEcsContainerInstance(String id, QLInstanceType type, String environmentId, String applicationId,
       String serviceId, QLArtifact artifact, String clusterName, String identifier, String taskArn,
-      String taskDefinitionArn, String serviceName, long version, ZonedDateTime startedAt, String startedBy) {
+      String taskDefinitionArn, String serviceName, long version, OffsetDateTime startedAt, String startedBy) {
     super(id, type, environmentId, applicationId, serviceId, artifact, clusterName, identifier);
     this.taskArn = taskArn;
     this.taskDefinitionArn = taskDefinitionArn;

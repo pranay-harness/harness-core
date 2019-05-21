@@ -6,7 +6,7 @@ import lombok.experimental.FieldNameConstants;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 
-import java.time.ZonedDateTime;
+import java.time.OffsetDateTime;
 
 @Value
 @Builder
@@ -16,6 +16,6 @@ public class QLApplication implements QLObject {
   String id;
   String name;
   String description;
-  ZonedDateTime createdAt;
+  OffsetDateTime createdAt;
   QLUser createdBy;
 }

@@ -4,7 +4,7 @@ import graphql.schema.DataFetchingFieldSelectionSet;
 import lombok.Value;
 import software.wings.graphql.schema.type.QLExecutionStatus;
 
-import java.time.ZonedDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Value
@@ -14,8 +14,8 @@ public class QLExecutionsQueryParameters implements QLPageQueryParameters {
   private String workflowId;
   private String serviceId;
 
-  private ZonedDateTime from;
-  private ZonedDateTime to;
+  private OffsetDateTime from;
+  private OffsetDateTime to;
 
   private List<QLExecutionStatus> statuses;
 

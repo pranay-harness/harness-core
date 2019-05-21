@@ -7,7 +7,7 @@ import software.wings.graphql.schema.type.QLObject;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 
-import java.time.ZonedDateTime;
+import java.time.OffsetDateTime;
 
 @Value
 @Builder
@@ -16,5 +16,5 @@ import java.time.ZonedDateTime;
 public class QLArtifact implements QLObject {
   private String id;
   private String buildNo;
-  private ZonedDateTime collectedAt;
+  private OffsetDateTime collectedAt;
 }
