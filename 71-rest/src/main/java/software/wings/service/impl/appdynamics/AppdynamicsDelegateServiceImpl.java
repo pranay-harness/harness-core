@@ -369,6 +369,9 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
                                        .type(FieldType.URL)
                                        .build());
       final Response<List<AppdynamicsTier>> tierResponse = tierDetail.execute();
+      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+      apiCallLog.addFieldToResponse(tierResponse.code(), tierResponse.body(), FieldType.JSON);
+      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
       if (!tierResponse.isSuccessful()) {
         logger.info("Request not successful. Reason: {}", tierResponse);
         throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
@@ -379,9 +382,11 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       return tierResponse.body().get(0);
     } catch (Exception e) {
       logger.info("Error while getting tier", e);
-      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-      apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
-      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
+      if (!(e instanceof WingsException)) {
+        apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+        apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
+        delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
+      }
       throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
           .addParam("reason",
               "Unsuccessful response while fetching tiers from AppDynamics. Error message: " + e.getMessage());
