@@ -1,6 +1,7 @@
 package software.wings.service.impl.newrelic;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import lombok.Builder;
@@ -14,6 +15,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.Base;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -32,29 +34,24 @@ import java.util.concurrent.TimeUnit;
  */
 @Entity(value = "learningEngineAnalysisTask", noClassnameStored = true)
 @Indexes({
-  @Index(fields =
-      {
-        @Field("workflow_execution_id")
-        , @Field("state_execution_id"), @Field("executionStatus"), @Field("analysis_minute"), @Field("cluster_level"),
-            @Field("ml_analysis_type"), @Field("control_nodes"), @Field("group_name"), @Field("tag")
-      },
-      options = @IndexOptions(unique = true, name = "metricUniqueIdx"))
-  ,
-      @Index(fields = {
-        @Field("executionStatus"), @Field("version"), @Field("is24x7Task"), @Field("lastUpdatedAt"), @Field("retry")
-      }, options = @IndexOptions(name = "retryIdx"))
+  @Index(fields = {
+    @Field("state_execution_id")
+    , @Field(value = "analysis_minute", type = IndexType.DESC), @Field("executionStatus"), @Field("ml_analysis_type"),
+        @Field("cluster_level"), @Field("group_name"), @Field("version")
+  }, options = @IndexOptions(name = "taskFetchIdx"))
 })
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "LearningEngineAnalysisTaskKeys")
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class LearningEngineAnalysisTask extends Base {
   public static long TIME_SERIES_ANALYSIS_TASK_TIME_OUT = TimeUnit.MINUTES.toMillis(12);
   public static final int RETRIES = 3;
 
   private String workflow_id;
   private String workflow_execution_id;
-  @Indexed private String state_execution_id;
+  private String state_execution_id;
   private String service_id;
   private String auth_token;
   private int analysis_start_min;
