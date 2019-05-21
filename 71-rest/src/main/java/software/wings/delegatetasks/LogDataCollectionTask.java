@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.common.Constants.URL_STRING;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
@@ -39,9 +40,11 @@ import software.wings.sm.states.CustomLogVerificationState.ResponseMapper;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -159,7 +162,8 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
       return output;
     }
 
-    private String fetchLogs(final String url, Map<String, String> headers, Map<String, String> options) {
+    private String fetchLogs(final String url, Map<String, String> headers, Map<String, String> options,
+        Map<String, Object> body, String query, Set<String> hosts, String hostNameSeparator) {
       try {
         BiMap<String, Object> headersBiMap = resolveDollarReferences(headers);
         BiMap<String, Object> optionsBiMap = resolveDollarReferences(options);
@@ -167,9 +171,18 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
         final long endTime =
             is24X7Task() ? dataCollectionInfo.getEndTime() : collectionStartTime + TimeUnit.MINUTES.toMillis(1);
 
-        String resolvedUrl = CustomDataCollectionUtil.resolvedUrl(url, null, startTime, endTime);
-        final Call<Object> request =
-            getRestClient(dataCollectionInfo.getBaseUrl()).collect(resolvedUrl, headersBiMap, optionsBiMap);
+        String concatenatedHostQuery = CustomDataCollectionUtil.getConcatenatedQuery(hosts, hostNameSeparator);
+        String resolvedUrl = CustomDataCollectionUtil.resolvedUrl(url, null, startTime, endTime, null);
+        Map<String, Object> resolvedBody =
+            CustomDataCollectionUtil.resolveMap(body, concatenatedHostQuery, startTime, endTime, query);
+
+        Call<Object> request;
+        if (isNotEmpty(body)) {
+          request = getRestClient(dataCollectionInfo.getBaseUrl())
+                        .postCollect(resolvedUrl, headersBiMap, optionsBiMap, resolvedBody);
+        } else {
+          request = getRestClient(dataCollectionInfo.getBaseUrl()).collect(resolvedUrl, headersBiMap, optionsBiMap);
+        }
         ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
         apiCallLog.setTitle("Fetch request to " + resolvedUrl);
         apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
@@ -178,6 +191,12 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
                                          .type(FieldType.URL)
                                          .build());
         apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+        List<ThirdPartyApiCallField> requestFields = new ArrayList<>();
+        resolvedBody.forEach(
+            (key, value)
+                -> requestFields.add(
+                    ThirdPartyApiCallField.builder().name(key).value(value.toString()).type(FieldType.TEXT).build()));
+        apiCallLog.setRequest(requestFields);
         Response<Object> response;
         try {
           response = request.execute();
@@ -214,8 +233,10 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
           for (Map.Entry<String, Map<String, ResponseMapper>> logDataInfo :
               dataCollectionInfo.getLogResponseDefinition().entrySet()) {
             // go fetch the logs first
-            String searchResponse =
-                fetchLogs(logDataInfo.getKey(), dataCollectionInfo.getHeaders(), dataCollectionInfo.getOptions());
+            String searchResponse = fetchLogs(logDataInfo.getKey(), dataCollectionInfo.getHeaders(),
+                dataCollectionInfo.getOptions(), dataCollectionInfo.getBody(), dataCollectionInfo.getQuery(),
+                dataCollectionInfo.getHosts(), dataCollectionInfo.getHostnameSeparator());
+
             LogResponseParser.LogResponseData data = new LogResponseParser.LogResponseData(searchResponse,
                 dataCollectionInfo.getHosts(), dataCollectionInfo.isShouldInspectHosts(), logDataInfo.getValue());
             // parse the results that were fetched.

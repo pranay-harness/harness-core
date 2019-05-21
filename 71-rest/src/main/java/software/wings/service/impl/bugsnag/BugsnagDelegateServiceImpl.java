@@ -110,7 +110,7 @@ public class BugsnagDelegateServiceImpl implements BugsnagDelegateService {
 
       String url = FETCH_EVENTS_URL.replaceAll(":projectId:", bugsnagSetupTestData.getProjectId());
       String resolvedUrl = CustomDataCollectionUtil.resolvedUrl(
-          url, null, bugsnagSetupTestData.getFromTime(), bugsnagSetupTestData.getToTime());
+          url, null, bugsnagSetupTestData.getFromTime(), bugsnagSetupTestData.getToTime(), null);
 
       Call<Object> request = client.collect(resolvedUrl, hMap, HashBiMap.create());
       apiCallLog.setTitle("Fetch request to " + resolvedUrl);

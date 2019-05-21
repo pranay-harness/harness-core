@@ -123,6 +123,12 @@ public class VerificationConstants {
 
   public static final String VERIFICATION_DEPLOYMENTS = "verification_deployments";
 
+  // Add to this list whenever we add more states to this type of collection
+  public static final List<StateType> PER_MINUTE_CV_STATES = Arrays.asList(StateType.SUMO, StateType.DATA_DOG_LOG);
+
+  public static final String DATA_DOG_KUBERNETES_HOSTNAME = "pod_name";
+  public static final String DATA_DOG_DEFAULT_HOSTNAME = "container_id";
+
   private VerificationConstants() {}
 
   public static List<StateType> getMetricAnalysisStates() {
@@ -131,8 +137,8 @@ public class VerificationConstants {
   }
 
   public static List<StateType> getLogAnalysisStates() {
-    return Arrays.asList(
-        StateType.ELK, StateType.SUMO, StateType.LOGZ, StateType.SPLUNK, StateType.SPLUNKV2, StateType.BUG_SNAG);
+    return Arrays.asList(StateType.ELK, StateType.SUMO, StateType.LOGZ, StateType.SPLUNK, StateType.SPLUNKV2,
+        StateType.BUG_SNAG, StateType.DATA_DOG_LOG);
   }
 
   public static List<StateType> getAnalysisStates() {

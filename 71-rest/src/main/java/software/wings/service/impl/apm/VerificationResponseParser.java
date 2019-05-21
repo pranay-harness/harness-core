@@ -150,6 +150,9 @@ public class VerificationResponseParser {
         Map.Entry<String, VerificationResponseParser> trieEntry = iterator.next();
         VerificationResponseParser childNode = trieEntry.getValue();
         Object childBody = getValue(body, trieEntry.getKey());
+        if (childBody == null) {
+          break;
+        }
         if (childBody instanceof JSONArray) {
           for (Object val : (JSONArray) childBody) {
             result.putAll(process(childNode, val, level + 1, output));
@@ -188,7 +191,20 @@ public class VerificationResponseParser {
         return array.get(Integer.parseInt(group));
       }
     } else {
-      return ((JSONObject) jsonObject).get(field);
+      try {
+        return ((JSONObject) jsonObject).get(field);
+      } catch (ClassCastException e) {
+        if (jsonObject instanceof String) {
+          String[] arr = ((String) jsonObject).split(":");
+          if (arr[0].equals(field)) {
+            return arr[1];
+          } else {
+            return null;
+          }
+        } else {
+          throw e;
+        }
+      }
     }
   }
 }

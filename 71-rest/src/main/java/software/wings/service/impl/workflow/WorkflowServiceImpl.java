@@ -335,6 +335,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     removeStencil(stencils, appId, FeatureName.SHELL_SCRIPT_PROVISION, StateTypeScope.ORCHESTRATION_STENCILS,
         StateType.SHELL_SCRIPT_PROVISION);
+    removeStencil(stencils, appId, FeatureName.CV_DATA_COLLECTION_JOB, StateTypeScope.ORCHESTRATION_STENCILS,
+        StateType.DATA_DOG_LOG);
     return stencils;
   }
 
