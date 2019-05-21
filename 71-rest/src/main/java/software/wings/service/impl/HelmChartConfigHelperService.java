@@ -91,6 +91,18 @@ public class HelmChartConfigHelperService {
       return null;
     }
 
+    if (isNotBlank(helmChartConfig.getChartUrl())) {
+      helmChartConfig.setChartUrl(context.renderExpression(helmChartConfig.getChartUrl()));
+    }
+
+    if (isNotBlank(helmChartConfig.getChartName())) {
+      helmChartConfig.setChartName(context.renderExpression(helmChartConfig.getChartName()));
+    }
+
+    if (isNotBlank(helmChartConfig.getChartVersion())) {
+      helmChartConfig.setChartVersion(context.renderExpression(helmChartConfig.getChartVersion()));
+    }
+
     HelmChartConfigParamsBuilder helmChartConfigParamsBuilder =
         HelmChartConfigParams.builder().chartVersion(helmChartConfig.getChartVersion());
 
