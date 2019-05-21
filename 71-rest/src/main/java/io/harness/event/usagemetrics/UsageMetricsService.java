@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -43,31 +44,34 @@ public class UsageMetricsService {
   @Inject private AccountService accountService;
 
   public void checkUsageMetrics() {
-    accountService.listAllAccounts().forEach(account -> {
-      try {
-        logger.info(
-            "Checking Usage metrics for accountId:[{}], accountName:[{}]", account.getUuid(), account.getAccountName());
-        List<String> appIds = getAppIds(account.getUuid());
-        logger.info("Detected [{}] apps for account [{}]", appIds.size(), account.getAccountName());
+    accountService.listAllAccounts()
+        .stream()
+        .filter(account -> !account.getUuid().equals(GLOBAL_ACCOUNT_ID))
+        .forEach(account -> {
+          try {
+            logger.info("Checking Usage metrics for accountId:[{}], accountName:[{}]", account.getUuid(),
+                account.getAccountName());
+            List<String> appIds = getAppIds(account.getUuid());
+            logger.info("Detected [{}] apps for account [{}]", appIds.size(), account.getAccountName());
 
-        publisher.publishSetupDataMetric(
-            account.getUuid(), account.getAccountName(), appIds.size(), EventConstants.NUMBER_OF_APPLICATIONS);
-        publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
-            getNumberOfServicesPerAccount(appIds), EventConstants.NUMBER_OF_SERVICES);
-        publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
-            getNumberOfPipelinesPerAccount(appIds), EventConstants.NUMBER_OF_PIPELINES);
-        publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
-            getNumberOfTriggersPerAccount(appIds), EventConstants.NUMBER_OF_TRIGGERS);
-        publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
-            getNumberOfEnvironmentsPerAccount(appIds), EventConstants.NUMBER_OF_ENVIRONMENTS);
-        publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
-            getNumberOfWorkflowsForAccount(account.getUuid()), EventConstants.NUMBER_OF_WORKFLOWS);
-        publisher.publishAccountMetadataMetric(account);
-      } catch (Exception e) {
-        logger.warn("Failed to get Usage metrics for for accountId:[{}], accountName:[{}]", account.getUuid(),
-            account.getAccountName(), e);
-      }
-    });
+            publisher.publishSetupDataMetric(
+                account.getUuid(), account.getAccountName(), appIds.size(), EventConstants.NUMBER_OF_APPLICATIONS);
+            publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
+                getNumberOfServicesPerAccount(appIds), EventConstants.NUMBER_OF_SERVICES);
+            publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
+                getNumberOfPipelinesPerAccount(appIds), EventConstants.NUMBER_OF_PIPELINES);
+            publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
+                getNumberOfTriggersPerAccount(appIds), EventConstants.NUMBER_OF_TRIGGERS);
+            publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
+                getNumberOfEnvironmentsPerAccount(appIds), EventConstants.NUMBER_OF_ENVIRONMENTS);
+            publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
+                getNumberOfWorkflowsForAccount(account.getUuid()), EventConstants.NUMBER_OF_WORKFLOWS);
+            publisher.publishAccountMetadataMetric(account);
+          } catch (Exception e) {
+            logger.warn("Failed to get Usage metrics for for accountId:[{}], accountName:[{}]", account.getUuid(),
+                account.getAccountName(), e);
+          }
+        });
   }
 
   protected List<Account> getAllAccounts() {
