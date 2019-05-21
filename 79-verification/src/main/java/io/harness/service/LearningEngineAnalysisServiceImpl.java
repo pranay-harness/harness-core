@@ -113,16 +113,15 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     }
     Query<LearningEngineAnalysisTask> query =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.workflow_execution_id, analysisTask.getWorkflow_execution_id())
             .filter(LearningEngineAnalysisTaskKeys.state_execution_id, analysisTask.getState_execution_id())
             .field(LearningEngineAnalysisTaskKeys.analysis_minute)
             .lessThanOrEq(analysisTask.getAnalysis_minute())
-            .filter(LearningEngineAnalysisTaskKeys.version, learningEngineApiVersion)
             .field(LearningEngineAnalysisTaskKeys.executionStatus)
             .in(Lists.newArrayList(ExecutionStatus.RUNNING, ExecutionStatus.QUEUED, ExecutionStatus.SUCCESS))
-            .filter(LearningEngineAnalysisTaskKeys.cluster_level, analysisTask.getCluster_level())
             .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, analysisTask.getMl_analysis_type())
+            .filter(LearningEngineAnalysisTaskKeys.cluster_level, analysisTask.getCluster_level())
             .filter(LearningEngineAnalysisTaskKeys.group_name, analysisTask.getGroup_name())
+            .filter(LearningEngineAnalysisTaskKeys.version, learningEngineApiVersion)
             .order("-createdAt");
     if (!analysisTask.is24x7Task()) {
       query = query.filter(LearningEngineAnalysisTaskKeys.control_nodes, analysisTask.getControl_nodes());
