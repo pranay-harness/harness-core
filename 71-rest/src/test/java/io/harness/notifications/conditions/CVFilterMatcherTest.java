@@ -35,7 +35,6 @@ public class CVFilterMatcherTest extends WingsBaseTest {
                 .envIds(envIds)
                 .cvConfigIds(cvConfigIds)
                 .alertMinThreshold(0.3)
-                .alertMaxThreshold(0.5)
                 .build()));
     CVConfiguration cvConfiguration = new CVConfiguration();
     cvConfiguration.setUuid("cvConfig1");
@@ -79,11 +78,6 @@ public class CVFilterMatcherTest extends WingsBaseTest {
     // should not alert for less threshold
     cvAlert.setAlertData(
         ContinuousVerificationAlertData.builder().cvConfiguration(cvConfiguration).riskScore(0.2).build());
-    assertFalse(cvFilterMatcher.matchesCondition());
-
-    // should not alert for more threshold
-    cvAlert.setAlertData(
-        ContinuousVerificationAlertData.builder().cvConfiguration(cvConfiguration).riskScore(0.6).build());
     assertFalse(cvFilterMatcher.matchesCondition());
 
     // put things back, should alert again
