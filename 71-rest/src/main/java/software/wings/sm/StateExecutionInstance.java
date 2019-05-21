@@ -98,7 +98,7 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
   private String cloneInstanceId;
 
   private String notifyId;
-  @Indexed private ExecutionStatus status = ExecutionStatus.NEW;
+  private ExecutionStatus status = ExecutionStatus.NEW;
 
   private Map<String, Object> stateParams;
 
