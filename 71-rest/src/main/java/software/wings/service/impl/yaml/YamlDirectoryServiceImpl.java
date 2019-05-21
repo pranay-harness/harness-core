@@ -31,6 +31,7 @@ import static software.wings.beans.yaml.YamlConstants.PIPELINES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PROVISIONERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SERVICES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.TRIGGER_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.VALUES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.VERIFICATION_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.WORKFLOWS_FOLDER;
@@ -81,6 +82,7 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.defaults.Defaults;
+import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.GitFileChange.Builder;
@@ -106,6 +108,7 @@ import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
@@ -173,6 +176,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private ExecutorService executorService;
   @Inject private ApplicationManifestService applicationManifestService;
+  @Inject private TriggerService triggerService;
 
   @Override
   public YamlGitConfig weNeedToPushChanges(String accountId, String appId) {
@@ -620,6 +624,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     Set<String> envSet = null;
     Set<String> workflowSet = null;
     Set<String> pipelineSet = null;
+    Set<String> triggerSet = null;
 
     if (applyPermissions && appPermissionSummary != null) {
       Map<Action, Set<String>> servicePermissions = appPermissionSummary.getServicePermissions();
@@ -659,6 +664,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     Set<String> allowedEnvs = envSet;
     Set<String> allowedWorkflows = workflowSet;
     Set<String> allowedPipelines = pipelineSet;
+    Set<String> allowedTriggers = triggerSet;
 
     //--------------------------------------
     // parallelization using CompletionService (part 2)
@@ -677,6 +683,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
     futureResponseList.add(
         executorService.submit(() -> doProvisioners(app, appPath.clone(), applyPermissions, allowedProvisioners)));
+
+    if (isTriggerYamlEnabled(accountId)) {
+      futureResponseList.add(executorService.submit(() -> doTriggers(app, appPath.clone())));
+    }
 
     //      completionService.submit(() -> doTriggers(app, appPath.clone()));
 
@@ -705,10 +715,16 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     appFolder.addChild(map.get(WORKFLOWS_FOLDER));
     appFolder.addChild(map.get(PIPELINES_FOLDER));
     appFolder.addChild(map.get(PROVISIONERS_FOLDER));
-    //      appFolder.addChild(map.get(TRIGGERS_FOLDER));
+    if (isTriggerYamlEnabled(accountId)) {
+      appFolder.addChild(map.get(TRIGGER_FOLDER));
+    }
     //--------------------------------------
 
     return applicationsFolder;
+  }
+
+  private boolean isTriggerYamlEnabled(String accountId) {
+    return featureFlagService.isEnabled(FeatureName.TRIGGER_YAML, accountId);
   }
 
   private FolderNode doApplicationsYamlTree(String accountId, DirectoryPath directoryPath, boolean applyPermissions,
@@ -1376,6 +1392,27 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     return pipelinesFolder;
   }
 
+  private FolderNode doTriggers(Application app, DirectoryPath directoryPath) {
+    String accountId = app.getAccountId();
+    FolderNode triggersFolder = new FolderNode(
+        accountId, TRIGGER_FOLDER, Trigger.class, directoryPath.add(TRIGGER_FOLDER), app.getUuid(), yamlGitSyncService);
+
+    PageRequest<Trigger> pageRequest = aPageRequest().addFilter("appId", Operator.EQ, app.getAppId()).build();
+    List<Trigger> triggers = triggerService.list(pageRequest).getResponse();
+
+    if (triggers != null) {
+      for (Trigger trigger : triggers) {
+        DirectoryPath triggerPath = directoryPath.clone();
+        String triggerYamlFileName = trigger.getName() + YAML_EXTENSION;
+        triggersFolder.addChild(
+            new AppLevelYamlNode(accountId, trigger.getUuid(), trigger.getAppId(), triggerYamlFileName, Trigger.class,
+                triggerPath.add(triggerYamlFileName), yamlGitSyncService, Type.TRIGGER));
+      }
+    }
+
+    return triggersFolder;
+  }
+
   private FolderNode doProvisioners(
       Application app, DirectoryPath directoryPath, boolean applyPermissions, Set<String> allowedProvisioners) {
     String accountId = app.getAccountId();
@@ -1855,6 +1892,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   @Override
+  public String getRootPathByTrigger(Trigger trigger) {
+    Application app = appService.get(trigger.getAppId());
+    return getRootPathByApp(app) + PATH_DELIMITER + TRIGGER_FOLDER;
+  }
+
+  @Override
   public String getRootPathByPipeline(Pipeline pipeline) {
     Application app = appService.get(pipeline.getAppId());
     return getRootPathByApp(app) + PATH_DELIMITER + PIPELINES_FOLDER;
@@ -2035,6 +2078,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       return getRootPathByManifestFile((ManifestFile) entity, (ApplicationManifest) helperEntity);
     } else if (entity instanceof CVConfiguration) {
       return getRootPathByCVConfiguration((CVConfiguration) entity);
+    } else if (entity instanceof Trigger) {
+      return getRootPathByTrigger((Trigger) entity);
     }
 
     throw new InvalidRequestException(
