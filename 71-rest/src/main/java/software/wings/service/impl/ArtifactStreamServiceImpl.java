@@ -196,6 +196,12 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       }
     }
     artifactStream.setAccountId(accountId);
+
+    // Set serviceId equal to SettingId for Connector level artifact streams
+    if (artifactStream.getAppId() == null || artifactStream.getAppId().equals(GLOBAL_APP_ID)) {
+      artifactStream.setServiceId(artifactStream.getSettingId());
+    }
+
     String id = Validator.duplicateCheck(() -> wingsPersistence.save(artifactStream), "name", artifactStream.getName());
 
     yamlPushService.pushYamlChangeSet(
