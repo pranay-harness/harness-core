@@ -137,6 +137,7 @@ public class ServiceTest extends GraphQLTest {
     }
   }
 }*/ application.getUuid());
+
       final QLTestObject qlTestObject = qlExecute(query);
       assertThat(qlTestObject.getMap().size()).isEqualTo(1);
     }

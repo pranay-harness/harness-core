@@ -54,8 +54,7 @@ public class ApplicationTest extends GraphQLTest {
      id
     }
   }
-}*/
-        application.getUuid());
+}*/ application.getUuid());
 
     final QLTestObject qlTestObject = qlExecute(query);
     assertThat(qlTestObject.get(QLApplicationKeys.id)).isEqualTo(application.getUuid());
@@ -114,8 +113,7 @@ public class ApplicationTest extends GraphQLTest {
       description
     }
   }
-}*/
-          account.getUuid());
+}*/ account.getUuid());
 
       QLApplicationConnection applicationConnection = qlExecute(QLApplicationConnection.class, query);
       assertThat(applicationConnection.getNodes().size()).isEqualTo(2);
