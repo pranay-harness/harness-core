@@ -8,11 +8,14 @@ import io.harness.rest.RestResponse;
 import io.harness.service.intfc.LogAnalysisService;
 import io.swagger.annotations.Api;
 import software.wings.api.InstanceElement;
+import software.wings.common.VerificationConstants;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.CVFeedbackRecord;
+import software.wings.service.impl.analysis.FeedbackAction;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
@@ -147,9 +150,9 @@ public class LogVerificationResource {
       @QueryParam("cvConfigId") String cvConfigId, @QueryParam("analysisMinute") int analysisMinute,
       @QueryParam("taskId") String taskId,
       @QueryParam("comparisonStrategy") AnalysisComparisonStrategy comparisonStrategy,
-      LogMLAnalysisRecord mlAnalysisResponse) {
-    return new RestResponse<>(analysisService.save24X7LogAnalysisRecords(
-        appId, cvConfigId, analysisMinute, comparisonStrategy, mlAnalysisResponse, Optional.of(taskId)));
+      @QueryParam("isFeedbackAnalysis") boolean isFeedbackAnalysis, LogMLAnalysisRecord mlAnalysisResponse) {
+    return new RestResponse<>(analysisService.save24X7LogAnalysisRecords(appId, cvConfigId, analysisMinute,
+        comparisonStrategy, mlAnalysisResponse, Optional.of(taskId), Optional.of(isFeedbackAnalysis)));
   }
 
   @Produces({"application/json", "application/v1+json"})
@@ -176,6 +179,17 @@ public class LogVerificationResource {
     return new RestResponse<>(analysisService.getLogAnalysisRecords(appId, cvConfigId, analysisMinute));
   }
 
+  @GET
+  @Produces({"application/json", "application/v1+json"})
+  @Path(LogAnalysisResource.ANALYSIS_GET_24X7_ANALYSIS_RECORDS_URL)
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  public RestResponse<LogMLAnalysisRecord> getLogAnalysisRecords(@QueryParam("appId") String appId,
+      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("analysisMinute") int analysisMinute) {
+    return new RestResponse<>(analysisService.getLogAnalysisRecords(appId, cvConfigId, analysisMinute));
+  }
+
   @DELETE
   @Path(LogAnalysisResource.ANALYSIS_USER_FEEDBACK + "/{feedbackId}")
   @Timed
@@ -195,6 +209,17 @@ public class LogVerificationResource {
       @QueryParam("appId") String appId, @QueryParam("serviceId") String serviceId,
       @QueryParam("workflowId") String workflowId, @QueryParam("workflowExecutionId") String workflowExecutionId) {
     return new RestResponse<>(analysisService.getMLFeedback(appId, serviceId, workflowId, workflowExecutionId));
+  }
+
+  @GET
+  @Produces({"application/json", "application/v1+json"})
+  @Path(VerificationConstants.GET_LOG_FEEDBACKS)
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  public RestResponse<Map<FeedbackAction, List<CVFeedbackRecord>>> getFeedback(@QueryParam("appId") String appId,
+      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("stateExecutionId") String stateExecutionId) {
+    return new RestResponse<>(analysisService.getUserFeedback(cvConfigId, stateExecutionId, appId));
   }
 
   @GET

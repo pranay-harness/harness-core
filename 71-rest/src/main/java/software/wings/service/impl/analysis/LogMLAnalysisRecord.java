@@ -53,16 +53,9 @@ import java.util.Map;
  */
 @Entity(value = "logAnalysisRecords", noClassnameStored = true)
 @Indexes({
-  @Index(fields =
-      {
-        @Field("applicationId")
-        , @Field("stateExecutionId"), @Field("cvConfigId"), @Field("stateType"), @Field("logCollectionMinute")
-      },
-      options = @IndexOptions(unique = true, name = "logAnalysisUniqueIdx"))
-  ,
-      @Index(fields = {
-        @Field("cvConfigId"), @Field(value = "logCollectionMinute", type = IndexType.DESC)
-      }, options = @IndexOptions(name = "service_guard_idx"))
+  @Index(fields = {
+    @Field("cvConfigId"), @Field("analysisStatus"), @Field(value = "logCollectionMinute", type = IndexType.DESC)
+  }, options = @IndexOptions(name = "service_guard_idx"))
 })
 @Data
 @NoArgsConstructor
@@ -85,6 +78,9 @@ public class LogMLAnalysisRecord extends Base {
   private double score;
   private LogMLClusterScores cluster_scores;
   private byte[] analysisDetailsCompressedJson;
+
+  private LogMLAnalysisStatus analysisStatus;
+
   private byte[] protoSerializedAnalyisDetails;
 
   private List<List<SplunkAnalysisCluster>> unknown_events;
@@ -332,27 +328,33 @@ public class LogMLAnalysisRecord extends Base {
                   .setTime(messageFrequency.getTime())
                   .build()));
     }
-    return LogAnalysisCluster.newBuilder()
-        .setClusterLabel(splunkAnalysisCluster.getCluster_label())
-        .setUnexpectedFreq(splunkAnalysisCluster.isUnexpected_freq())
-        .setText(splunkAnalysisCluster.getText())
-        .setX(splunkAnalysisCluster.getX())
-        .setY(splunkAnalysisCluster.getY())
-        .setFeedbackId(splunkAnalysisCluster.getFeedback_id() == null ? "" : splunkAnalysisCluster.getFeedback_id())
-        .setAlertScore(splunkAnalysisCluster.getAlert_score())
-        .setTestScore(splunkAnalysisCluster.getTest_score())
-        .setControlScore(splunkAnalysisCluster.getControl_score())
-        .setFreqScore(splunkAnalysisCluster.getFreq_score())
-        .setControlLabel(splunkAnalysisCluster.getControl_label())
-        .setRiskLevel(splunkAnalysisCluster.getRisk_level())
-        .addAllTags(splunkAnalysisCluster.getTags() == null ? Collections.emptyList() : splunkAnalysisCluster.getTags())
-        .addAllAnomalousCounts(splunkAnalysisCluster.getAnomalous_counts() == null
-                ? Collections.emptyList()
-                : splunkAnalysisCluster.getAnomalous_counts())
-        .addAllDiffTags(splunkAnalysisCluster.getDiff_tags() == null ? Collections.emptyList()
-                                                                     : splunkAnalysisCluster.getDiff_tags())
-        .addAllMessageFrequencies(messageFrequenciesList)
-        .build();
+    LogAnalysisCluster.Builder cluster =
+        LogAnalysisCluster.newBuilder()
+            .setClusterLabel(splunkAnalysisCluster.getCluster_label())
+            .setUnexpectedFreq(splunkAnalysisCluster.isUnexpected_freq())
+            .setText(splunkAnalysisCluster.getText())
+            .setX(splunkAnalysisCluster.getX())
+            .setY(splunkAnalysisCluster.getY())
+            .setFeedbackId(splunkAnalysisCluster.getFeedback_id() == null ? "" : splunkAnalysisCluster.getFeedback_id())
+            .setAlertScore(splunkAnalysisCluster.getAlert_score())
+            .setTestScore(splunkAnalysisCluster.getTest_score())
+            .setControlScore(splunkAnalysisCluster.getControl_score())
+            .setFreqScore(splunkAnalysisCluster.getFreq_score())
+            .setControlLabel(splunkAnalysisCluster.getControl_label())
+            .setRiskLevel(splunkAnalysisCluster.getRisk_level())
+            .addAllTags(
+                splunkAnalysisCluster.getTags() == null ? Collections.emptyList() : splunkAnalysisCluster.getTags())
+            .addAllAnomalousCounts(splunkAnalysisCluster.getAnomalous_counts() == null
+                    ? Collections.emptyList()
+                    : splunkAnalysisCluster.getAnomalous_counts())
+            .addAllDiffTags(splunkAnalysisCluster.getDiff_tags() == null ? Collections.emptyList()
+                                                                         : splunkAnalysisCluster.getDiff_tags())
+            .addAllMessageFrequencies(messageFrequenciesList);
+
+    if (splunkAnalysisCluster.getPriority() != null) {
+      cluster.setPriority(splunkAnalysisCluster.getPriority().name());
+    }
+    return cluster.build();
   }
 
   private SplunkAnalysisCluster convertToSplunkAnalysisCluster(LogAnalysisCluster logAnalysisCluster) {
@@ -387,6 +389,9 @@ public class LogMLAnalysisRecord extends Base {
     splunkAnalysisCluster.setFreq_score(logAnalysisCluster.getFreqScore());
     splunkAnalysisCluster.setControl_label(logAnalysisCluster.getControlLabel());
     splunkAnalysisCluster.setRisk_level(logAnalysisCluster.getRiskLevel());
+    splunkAnalysisCluster.setPriority(
+        isEmpty(logAnalysisCluster.getPriority()) ? null : FeedbackPriority.valueOf(logAnalysisCluster.getPriority()));
+
     return splunkAnalysisCluster;
   }
 }

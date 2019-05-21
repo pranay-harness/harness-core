@@ -82,6 +82,7 @@ import software.wings.service.impl.DelayEvent;
 import software.wings.service.impl.ExecutionEvent;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.CVFeedbackRecord;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
 import software.wings.service.impl.analysis.ExperimentalMetricAnalysisRecord;
@@ -185,7 +186,7 @@ public class ManagerMorphiaClasses {
       Personalization.class, EntityYamlRecord.class, ProvisionerWithOnlyAuditNeededData.class,
       ArtifactStreamWithOnlyAuditNeededData.class, InfraMappingWithOnlyAuditNeededData.class,
       NotificationRulesStatus.class, AwsSecretsManagerConfig.class, ApprovalPollingJobEntity.class, HarnessTag.class,
-      HarnessTagLink.class);
+      HarnessTagLink.class, CVFeedbackRecord.class);
 
   public static final Set<Class> dependentClasses =
       ImmutableSet.<Class>of(EncryptionConfig.class, EncryptedRecord.class, ExecutionCapabilityDemander.class);

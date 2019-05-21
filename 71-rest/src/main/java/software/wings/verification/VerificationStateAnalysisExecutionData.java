@@ -36,6 +36,7 @@ public class VerificationStateAnalysisExecutionData extends StateExecutionData {
   @JsonIgnore @Inject private WingsPersistence wingsPersistence;
 
   private String appId;
+  private String serviceId;
   private String correlationId;
   private String workflowExecutionId;
   private String stateExecutionInstanceId;

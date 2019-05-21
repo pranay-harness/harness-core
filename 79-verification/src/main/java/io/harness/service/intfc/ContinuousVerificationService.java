@@ -23,6 +23,8 @@ public interface ContinuousVerificationService {
 
   void triggerLogDataAnalysis(String accountId);
 
+  void triggerFeedbackAnalysis(String accountId);
+
   void cleanupStuckLocks();
 
   boolean triggerLogDataCollection(AnalysisContext context);

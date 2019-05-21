@@ -25,11 +25,12 @@ message LogAnalysisCluster {
   required double freq_score = 10;
   required int32 control_label = 11;
   required double risk_level = 12 [default = -1];
-
+  optional string priority = 13;
   repeated string tags = 20;
   repeated int32 anomalous_counts = 21;
   repeated string diff_tags = 22;
   repeated LogAnalysisMessageFrequency message_frequencies = 23;
+
 }
 
 message LogAnalysisClusterList {

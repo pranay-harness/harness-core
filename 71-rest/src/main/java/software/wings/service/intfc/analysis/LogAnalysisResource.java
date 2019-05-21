@@ -72,6 +72,18 @@ public interface LogAnalysisResource {
 
   String ANALYSIS_24x7_USER_FEEDBACK = "/24x7-user-feedback";
 
+  String GET_FEEDBACK_LIST = "/feedbacks";
+
+  String GET_FEEDBACK_LIST_LE = "/feedbacks-le";
+
+  String GET_FEEDBACK_ACTION_LIST = "/feedback-actions";
+
+  String FEEDBACK_ADD_TO_BASELINE = "/add-to-baseline";
+
+  String FEEDBACK_REMOVE_FROM_BASELINE = "/remove-from-baseline";
+
+  String FEEDBACK_UPDATE_PRIORITY = "/update-priority";
+
   /**
    * Url for UI to fetch User Feedbacks by workflow id
    */

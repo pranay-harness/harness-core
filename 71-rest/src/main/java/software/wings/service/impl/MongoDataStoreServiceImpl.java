@@ -83,6 +83,11 @@ public class MongoDataStoreServiceImpl implements DataStoreService {
   }
 
   @Override
+  public <T extends GoogleDataStoreAware> T getEntity(Class<T> clazz, String id) {
+    return wingsPersistence.get(clazz, id);
+  }
+
+  @Override
   public void purgeByActivity(String appId, String activityId) {
     wingsPersistence.delete(
         wingsPersistence.createQuery(Log.class).filter("appId", appId).filter(LogKeys.activityId, activityId));

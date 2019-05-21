@@ -22,6 +22,7 @@ import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRecordKeys;
+import software.wings.service.impl.analysis.LogMLAnalysisStatus;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterSummary;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
@@ -228,6 +229,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
             .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfiguration.getUuid())
             .field(LogMLAnalysisRecordKeys.logCollectionMinute)
             .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(endTime))
+            .filter(LogMLAnalysisRecordKeys.analysisStatus, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE)
             .project(LogMLAnalysisRecordKeys.analysisDetailsCompressedJson, readDetails)
             .project(LogMLAnalysisRecordKeys.protoSerializedAnalyisDetails, readDetails)
             .project(LogMLAnalysisRecordKeys.cluster_scores, readDetails);

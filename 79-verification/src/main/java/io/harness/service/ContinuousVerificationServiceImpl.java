@@ -12,6 +12,7 @@ import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_TASKS_PER_MINUTE;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
+import static software.wings.common.VerificationConstants.GET_LOG_FEEDBACKS;
 import static software.wings.common.VerificationConstants.TIME_DELAY_QUERY_MINS;
 import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_BASE_URL;
 import static software.wings.common.VerificationConstants.getLogAnalysisStates;
@@ -46,6 +47,7 @@ import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
+import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
@@ -53,8 +55,11 @@ import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.CVFeedbackRecord;
+import software.wings.service.impl.analysis.FeedbackAction;
 import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
+import software.wings.service.impl.analysis.LogMLAnalysisStatus;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates.TimeSeriesMetricTemplatesKeys;
@@ -74,12 +79,15 @@ import software.wings.verification.log.LogsCVConfiguration;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -786,6 +794,103 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Override
   @Counted
   @Timed
+  public void triggerFeedbackAnalysis(String accountId) {
+    // List all the CV configurations for a given account
+    List<CVConfiguration> cvConfigurations = cvConfigurationService.listConfigurations(accountId);
+
+    cvConfigurations.stream()
+        .filter(cvConfiguration
+            -> cvConfiguration.isEnabled24x7() && getLogAnalysisStates().contains(cvConfiguration.getStateType()))
+
+        .forEach(cvConfiguration -> {
+          LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
+          if (!logsCVConfiguration.isWorkflowConfig()) {
+            long lastFeedbackAnalysisMinute = logAnalysisService.getLastCVAnalysisMinute(logsCVConfiguration.getAppId(),
+                logsCVConfiguration.getUuid(), LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
+            long minuteForFeedbackAnalysis = lastFeedbackAnalysisMinute + CRON_POLL_INTERVAL_IN_MINUTES;
+            long lastLogMLAnalysisMinute = logAnalysisService.getLastCVAnalysisMinute(logsCVConfiguration.getAppId(),
+                logsCVConfiguration.getUuid(), LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+            if (lastFeedbackAnalysisMinute <= 0) {
+              if (lastLogMLAnalysisMinute <= 0) {
+                logger.info(
+                    "For account {} and CV config {} name {} type {} no data LogML clustering has happened yet. Skipping feedback analysis",
+                    logsCVConfiguration.getAccountId(), logsCVConfiguration.getUuid(), logsCVConfiguration.getName(),
+                    logsCVConfiguration.getStateType());
+                return;
+              } else {
+                minuteForFeedbackAnalysis = lastLogMLAnalysisMinute;
+              }
+            } else if (TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()) - lastFeedbackAnalysisMinute
+                < CRON_POLL_INTERVAL_IN_MINUTES) {
+              logger.info("It is not time for the next feedback analysis yet. We'll wait for some time.");
+              return;
+            }
+            AtomicBoolean isEmptyFeedbacks = new AtomicBoolean(true);
+
+            Map<FeedbackAction, List<CVFeedbackRecord>> feedbacks =
+                logAnalysisService.getUserFeedback(cvConfiguration.getUuid(), null, cvConfiguration.getAppId());
+            feedbacks.forEach((action, list) -> {
+              if (isNotEmpty(list)) {
+                isEmptyFeedbacks.set(false);
+              }
+            });
+            if (isEmptyFeedbacks.get()) {
+              logAnalysisService.updateAnalysisStatus(
+                  cvConfiguration.getUuid(), lastLogMLAnalysisMinute, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
+            } else {
+              createFeedbackAnalysisTask(logsCVConfiguration, minuteForFeedbackAnalysis);
+              logger.info("Created Feedback analysis task for {} and minute {}", logsCVConfiguration.getUuid(),
+                  minuteForFeedbackAnalysis);
+            }
+          }
+        });
+  }
+
+  private boolean createFeedbackAnalysisTask(LogsCVConfiguration logsCVConfiguration, long logCollectionMinute) {
+    String stateExecutionIdForLETask =
+        "LOG_24X7_FEEDBACK_ANALYSIS_" + logsCVConfiguration.getUuid() + "_" + logCollectionMinute;
+    logger.info(
+        "Creating Feedback analysis task for {} and minute {}", logsCVConfiguration.getUuid(), logCollectionMinute);
+    String feedbackUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS + GET_LOG_FEEDBACKS
+        + "?cvConfigId=" + logsCVConfiguration.getUuid() + "&appId=" + logsCVConfiguration.getAppId();
+    final String taskId = generateUuid();
+    final String logAnalysisSaveUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
+        + LogAnalysisResource.ANALYSIS_SAVE_24X7_ANALYSIS_RECORDS_URL + "?cvConfigId=" + logsCVConfiguration.getUuid()
+        + "&appId=" + logsCVConfiguration.getAppId() + "&analysisMinute=" + logCollectionMinute + "&taskId=" + taskId
+        + "&isFeedbackAnalysis=true";
+    final String logMLResultUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
+        + LogAnalysisResource.ANALYSIS_GET_24X7_ANALYSIS_RECORDS_URL + "?appId=" + logsCVConfiguration.getAppId()
+        + "&cvConfigId=" + logsCVConfiguration.getUuid() + "&analysisMinute=" + logCollectionMinute;
+    final String failureUrl = "/verification/" + LearningEngineService.RESOURCE_URL
+        + VerificationConstants.NOTIFY_LEARNING_FAILURE + "?taskId=" + taskId;
+    LearningEngineAnalysisTask feedbackTask = LearningEngineAnalysisTask.builder()
+                                                  .feedback_url(feedbackUrl)
+                                                  .logMLResultUrl(logMLResultUrl)
+                                                  .state_execution_id(stateExecutionIdForLETask)
+                                                  .query(Arrays.asList(logsCVConfiguration.getQuery()))
+                                                  .ml_analysis_type(MLAnalysisType.FEEDBACK_ANALYSIS)
+                                                  .analysis_save_url(logAnalysisSaveUrl)
+                                                  .analysis_failure_url(failureUrl)
+                                                  .cvConfigId(logsCVConfiguration.getUuid())
+                                                  .analysis_minute(logCollectionMinute)
+                                                  .stateType(logsCVConfiguration.getStateType())
+                                                  .build();
+
+    feedbackTask.setAppId(logsCVConfiguration.getAppId());
+    feedbackTask.setUuid(taskId);
+
+    learningEngineService.checkAndUpdateFailedLETask(stateExecutionIdForLETask, (int) logCollectionMinute);
+    int nextBackoffCount = learningEngineService.getNextServiceGuardBackoffCount(stateExecutionIdForLETask,
+        logsCVConfiguration.getUuid(), logCollectionMinute, MLAnalysisType.FEEDBACK_ANALYSIS);
+    if (nextBackoffCount > 0) {
+      return learningEngineService.addLearningEngineAnalysisTask(feedbackTask);
+    }
+    return false;
+  }
+
+  @Override
+  @Counted
+  @Timed
   public void triggerLogDataAnalysis(String accountId) {
     // List all the CV configurations for a given account
     List<CVConfiguration> cvConfigurations = cvConfigurationService.listConfigurations(accountId);
@@ -827,8 +932,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               return;
             }
 
-            long lastCVAnalysisMinute = logAnalysisService.getLastCVAnalysisMinute(
-                logsCVConfiguration.getAppId(), logsCVConfiguration.getUuid());
+            long lastCVAnalysisMinute = logAnalysisService.getLastCVAnalysisMinute(logsCVConfiguration.getAppId(),
+                logsCVConfiguration.getUuid(), LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
 
             if (lastCVAnalysisMinute > analysisStartMin) {
               logger.info("for {} last analysis happened for min {}, will try again for {} soon",

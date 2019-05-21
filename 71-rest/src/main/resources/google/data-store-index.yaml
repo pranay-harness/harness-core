@@ -66,16 +66,22 @@ indexes:
   - name: dataCollectionMinute
     direction: desc
 
-
-- kind: logMlFeedbackRecords
-  properties:
-  - name: stateExecutionId
-    direction: desc
-
-
 - kind: logMlFeedbackRecords
   properties:
   - name: serviceId
   - name: workflowId
   - name: workflowExecutionId
+    direction: desc
+
+- kind: cvFeedbackRecords
+  properties:
+  - name: serviceId
+  - name: envId
+    direction: desc
+
+- kind: cvFeedbackRecords
+  properties:
+  - name: serviceId
+  - name: envId
+  - name: analysisMinute
     direction: desc

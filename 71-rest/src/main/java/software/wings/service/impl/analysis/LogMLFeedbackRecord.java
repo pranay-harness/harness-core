@@ -41,6 +41,8 @@ import software.wings.sm.StateType;
 public class LogMLFeedbackRecord extends Base implements GoogleDataStoreAware {
   @NotEmpty @Indexed private String serviceId;
 
+  private String envId;
+
   private String workflowId;
 
   @Indexed private String workflowExecutionId;
@@ -64,6 +66,16 @@ public class LogMLFeedbackRecord extends Base implements GoogleDataStoreAware {
   private String comment;
 
   private String supervisedLabel;
+
+  private FeedbackPriority priority;
+
+  private String jiraLink;
+
+  private long analysisMinute;
+
+  private FeedbackAction actionTaken;
+
+  private Object metadata;
 
   @Builder
   public LogMLFeedbackRecord(String uuid, String appId, EmbeddedUser createdBy, long createdAt,

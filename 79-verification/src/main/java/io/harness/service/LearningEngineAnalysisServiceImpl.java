@@ -181,6 +181,10 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
 
     if (taskTypes.isPresent() && isNotEmpty(taskTypes.get())) {
       query.field(LearningEngineAnalysisTaskKeys.ml_analysis_type).in(taskTypes.get());
+    } else {
+      // this is to ensure that we do not send any Feedback tasks to LE.
+      // Feedback tasks should only go to FeedbackEngine
+      query.field(LearningEngineAnalysisTaskKeys.ml_analysis_type).notEqual(MLAnalysisType.FEEDBACK_ANALYSIS.name());
     }
 
     query.or(query.criteria(LearningEngineAnalysisTaskKeys.executionStatus).equal(ExecutionStatus.QUEUED),
