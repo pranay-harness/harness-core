@@ -38,7 +38,7 @@ import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.APMDelegateService;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
-import software.wings.service.impl.apm.MLServiceUtil;
+import software.wings.service.impl.apm.MLServiceUtils;
 import software.wings.service.impl.newrelic.NewRelicApplication.NewRelicApplications;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
@@ -80,7 +80,7 @@ public class NewRelicServiceImpl implements NewRelicService {
   @Inject private CacheHelper cacheHelper;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutionContextFactory executionContextFactory;
-  @Inject private MLServiceUtil mlServiceUtil;
+  @Inject private MLServiceUtils mlServiceUtils;
   @Inject private FeatureFlagService featureFlagService;
 
   @Override
@@ -275,7 +275,7 @@ public class NewRelicServiceImpl implements NewRelicService {
     long instanceId = -1;
     // check if it is for service level, serviceId is empty then get hostname
     if (!setupTestNodeData.isServiceLevel()) {
-      hostName = mlServiceUtil.getHostNameFromExpression(setupTestNodeData);
+      hostName = mlServiceUtils.getHostNameFromExpression(setupTestNodeData);
       List<NewRelicApplicationInstance> applicationInstances = getApplicationInstances(
           setupTestNodeData.getSettingId(), setupTestNodeData.getNewRelicAppId(), StateType.NEW_RELIC);
 

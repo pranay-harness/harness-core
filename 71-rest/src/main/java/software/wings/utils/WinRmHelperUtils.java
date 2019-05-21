@@ -13,7 +13,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
 import javax.xml.ws.soap.SOAPFaultException;
 
-public class WinRmHelperUtil {
+public class WinRmHelperUtils {
   public static ResponseMessage buildErrorDetailsFromWinRmClientException(Throwable e) {
     ResponseMessageBuilder builder = ResponseMessage.builder().code(UNKNOWN_ERROR).message("Generic Error");
     Throwable e1 = e;

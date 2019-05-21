@@ -32,7 +32,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.ArtifactType;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -135,10 +135,10 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
       saveOrUpdateServiceVariables(previousYaml, yaml, previousService.getServiceVariables(), currentService.getAppId(),
           currentService.getUuid(), syncFromGit);
     } else {
-      ArtifactType artifactType = Util.getEnumFromString(ArtifactType.class, yaml.getArtifactType());
+      ArtifactType artifactType = Utils.getEnumFromString(ArtifactType.class, yaml.getArtifactType());
       currentService.setArtifactType(artifactType);
       if (StringUtils.isNotBlank(yaml.getDeploymentType())) {
-        DeploymentType deploymentType = Util.getEnumFromString(DeploymentType.class, yaml.getDeploymentType());
+        DeploymentType deploymentType = Utils.getEnumFromString(DeploymentType.class, yaml.getDeploymentType());
         currentService.setDeploymentType(deploymentType);
       }
       currentService =

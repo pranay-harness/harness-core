@@ -30,7 +30,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
-import software.wings.integration.IntegrationTestUtil;
+import software.wings.integration.IntegrationTestUtils;
 import software.wings.utils.WingsIntegrationTestConstants;
 
 import java.util.HashMap;
@@ -81,7 +81,7 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
         ActionType.CREATE_APPLICATION, new StaticLimit(maxApps));
     assertTrue("limit should be configured", configured);
 
-    val url = IntegrationTestUtil.buildAbsoluteUrl(
+    val url = IntegrationTestUtils.buildAbsoluteUrl(
         "/api/apps", ImmutableMap.of("accountId", WingsIntegrationTestConstants.INTEGRATION_TEST_ACCOUNT_ID));
     log.debug("Create URL to hit: {}", url);
     WebTarget target = client.target(url);
@@ -97,7 +97,7 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
     assertEquals("new app should NOT be created since usage limit reached", Status.FORBIDDEN.getStatusCode(), status);
 
     // delete an app
-    String deleteUrl = IntegrationTestUtil.buildAbsoluteUrl("/api/apps/" + app.getAppId(), new HashMap<>());
+    String deleteUrl = IntegrationTestUtils.buildAbsoluteUrl("/api/apps/" + app.getAppId(), new HashMap<>());
     WebTarget deleteTarget = client.target(deleteUrl);
     log.debug("Delete URL to hit: {}", deleteUrl);
 
@@ -126,7 +126,7 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
         ActionType.CREATE_APPLICATION, new StaticLimit(maxApps));
     assertTrue("limit should be configured", configured);
 
-    val url = IntegrationTestUtil.buildAbsoluteUrl(
+    val url = IntegrationTestUtils.buildAbsoluteUrl(
         "/api/apps", ImmutableMap.of("accountId", WingsIntegrationTestConstants.INTEGRATION_TEST_ACCOUNT_ID));
     log.debug("Create URL to hit: {}", url);
     WebTarget target = client.target(url);
@@ -138,7 +138,7 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
 
     // delete an app
     Application appToDelete = fetchAppsQuery().get();
-    String deleteUrl = IntegrationTestUtil.buildAbsoluteUrl("/api/apps/" + appToDelete.getAppId(), new HashMap<>());
+    String deleteUrl = IntegrationTestUtils.buildAbsoluteUrl("/api/apps/" + appToDelete.getAppId(), new HashMap<>());
     WebTarget deleteTarget = client.target(deleteUrl);
     log.debug("Delete URL to hit: {}", deleteUrl);
 

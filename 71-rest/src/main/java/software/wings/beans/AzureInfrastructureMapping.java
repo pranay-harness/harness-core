@@ -10,7 +10,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,7 +77,7 @@ public class AzureInfrastructureMapping extends InfrastructureMapping {
 
     parts.add("AZURE");
 
-    return Util.normalize(String.join(" - ", parts));
+    return Utils.normalize(String.join(" - ", parts));
   }
   @Override
   public void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType) {}

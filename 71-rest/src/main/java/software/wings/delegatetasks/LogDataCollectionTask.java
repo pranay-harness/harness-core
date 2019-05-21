@@ -171,10 +171,10 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
         final long endTime =
             is24X7Task() ? dataCollectionInfo.getEndTime() : collectionStartTime + TimeUnit.MINUTES.toMillis(1);
 
-        String concatenatedHostQuery = CustomDataCollectionUtil.getConcatenatedQuery(hosts, hostNameSeparator);
-        String resolvedUrl = CustomDataCollectionUtil.resolvedUrl(url, null, startTime, endTime, null);
+        String concatenatedHostQuery = CustomDataCollectionUtils.getConcatenatedQuery(hosts, hostNameSeparator);
+        String resolvedUrl = CustomDataCollectionUtils.resolvedUrl(url, null, startTime, endTime, null);
         Map<String, Object> resolvedBody =
-            CustomDataCollectionUtil.resolveMap(body, concatenatedHostQuery, startTime, endTime, query);
+            CustomDataCollectionUtils.resolveMap(body, concatenatedHostQuery, startTime, endTime, query);
 
         Call<Object> request;
         if (isNotEmpty(body)) {

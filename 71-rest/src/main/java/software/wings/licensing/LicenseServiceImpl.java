@@ -36,7 +36,7 @@ import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.encryption.EncryptionUtils;
-import software.wings.service.impl.LicenseUtil;
+import software.wings.service.impl.LicenseUtils;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.UserGroupService;
@@ -330,9 +330,9 @@ public class LicenseServiceImpl implements LicenseService {
         licenseInfo.setExpiryTime(getExpiryTime(expiryInDays));
       } else if (licenseInfo.getExpiryTime() <= System.currentTimeMillis()) {
         if (licenseInfo.getAccountType().equals(AccountType.TRIAL)) {
-          licenseInfo.setExpiryTime(LicenseUtil.getDefaultTrialExpiryTime());
+          licenseInfo.setExpiryTime(LicenseUtils.getDefaultTrialExpiryTime());
         } else if (licenseInfo.getAccountType().equals(AccountType.PAID)) {
-          licenseInfo.setExpiryTime(LicenseUtil.getDefaultPaidExpiryTime());
+          licenseInfo.setExpiryTime(LicenseUtils.getDefaultPaidExpiryTime());
         }
       }
     }
@@ -351,7 +351,7 @@ public class LicenseServiceImpl implements LicenseService {
       throw new WingsException("Invalid number of license units. Cannot proceed.", USER);
     }
 
-    return EncryptionUtils.encrypt(LicenseUtil.convertToString(licenseInfo).getBytes(Charset.forName("UTF-8")), null);
+    return EncryptionUtils.encrypt(LicenseUtils.convertToString(licenseInfo).getBytes(Charset.forName("UTF-8")), null);
   }
 
   private long getExpiryTime(int numberOfDays) {
@@ -393,12 +393,12 @@ public class LicenseServiceImpl implements LicenseService {
           && !currentLicenseInfo.getAccountType().equals(newLicenseInfo.getAccountType())) {
         if (AccountType.TRIAL.equals(newLicenseInfo.getAccountType())) {
           resetLicenseUnitsCount = Constants.DEFAULT_TRIAL_LICENSE_UNITS;
-          resetExpiryTime = LicenseUtil.getDefaultTrialExpiryTime();
+          resetExpiryTime = LicenseUtils.getDefaultTrialExpiryTime();
         } else if (AccountType.COMMUNITY.equals(newLicenseInfo.getAccountType())) {
           resetLicenseUnitsCount = Constants.DEFAULT_COMMUNITY_LICENSE_UNITS;
           resetExpiryTime = -1L;
         } else if (AccountType.PAID.equals(newLicenseInfo.getAccountType())) {
-          resetExpiryTime = LicenseUtil.getDefaultPaidExpiryTime();
+          resetExpiryTime = LicenseUtils.getDefaultPaidExpiryTime();
         }
       }
       currentLicenseInfo.setAccountType(newLicenseInfo.getAccountType());
@@ -446,7 +446,7 @@ public class LicenseServiceImpl implements LicenseService {
     }
 
     return EncryptionUtils.encrypt(
-        LicenseUtil.convertToString(currentLicenseInfo).getBytes(Charset.forName("UTF-8")), null);
+        LicenseUtils.convertToString(currentLicenseInfo).getBytes(Charset.forName("UTF-8")), null);
   }
 
   @Override
@@ -510,7 +510,7 @@ public class LicenseServiceImpl implements LicenseService {
     if (isNotEmpty(encryptedLicenseInfo)) {
       byte[] decryptedBytes = EncryptionUtils.decrypt(encryptedLicenseInfo, null);
       if (isNotEmpty(decryptedBytes)) {
-        LicenseInfo licenseInfo = LicenseUtil.convertToObject(decryptedBytes, setExpiry);
+        LicenseInfo licenseInfo = LicenseUtils.convertToObject(decryptedBytes, setExpiry);
         account.setLicenseInfo(licenseInfo);
       } else {
         logger.error("Error while decrypting license info. Deserialized object is not instance of LicenseInfo");

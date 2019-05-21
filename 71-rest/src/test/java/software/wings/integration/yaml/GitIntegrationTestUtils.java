@@ -15,7 +15,7 @@ import software.wings.service.intfc.yaml.GitClient;
 import java.util.List;
 
 @Singleton
-public class GitIntegrationTestUtil {
+public class GitIntegrationTestUtils {
   @Inject private DelegateService delegateService;
   @Inject private SecretManager secretManager;
   @Inject private GitClient gitClient;

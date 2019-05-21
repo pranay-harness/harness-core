@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 @Slf4j
-public class MigrationUtil {
+public class MigrationUtils {
   /*
    * Be sure to make corresponding changes in UI that reference the old state type.
    *

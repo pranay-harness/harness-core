@@ -6,7 +6,7 @@ import com.google.inject.Inject;
 
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.instance.dashboard.InstanceStatsUtil;
+import software.wings.beans.instance.dashboard.InstanceStatsUtils;
 import software.wings.graphql.datafetcher.AbstractDataFetcher;
 import software.wings.graphql.schema.query.QLInstancesCountQueryParameters;
 import software.wings.graphql.schema.type.QLInstanceCount;
@@ -31,7 +31,7 @@ public class InstanceCountDataFetcher extends AbstractDataFetcher<QLInstanceCoun
     switch (qlQuery.getInstanceCountType()) {
       case NINETY_FIVE_PERCENTILE:
         return QLInstanceCount.builder()
-            .count((int) (InstanceStatsUtil.actualUsage(qlQuery.getAccountId(), instanceStatService)))
+            .count((int) (InstanceStatsUtils.actualUsage(qlQuery.getAccountId(), instanceStatService)))
             .instanceCountType(qlQuery.getInstanceCountType())
             .build();
 

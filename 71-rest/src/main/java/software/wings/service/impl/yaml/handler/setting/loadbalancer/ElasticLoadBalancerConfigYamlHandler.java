@@ -8,7 +8,7 @@ import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.ElasticLoadBalancerConfig.Yaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 
 import java.util.List;
 
@@ -40,7 +40,7 @@ public class ElasticLoadBalancerConfigYamlHandler extends LoadBalancerYamlHandle
     String accountId = changeContext.getChange().getAccountId();
 
     // Regions region = Regions.fromName(yaml.getRegion());
-    Regions region = Util.getEnumFromString(Regions.class, yaml.getRegion());
+    Regions region = Utils.getEnumFromString(Regions.class, yaml.getRegion());
     ElasticLoadBalancerConfig config = ElasticLoadBalancerConfig.builder()
                                            .accountId(accountId)
                                            .accessKey(yaml.getAccessKey())

@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.stencils.EnumData;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 
 import java.util.Map;
 import java.util.Optional;
@@ -76,7 +76,7 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
   @SchemaIgnore
   @Override
   public String getDefaultName() {
-    return Util.normalize(format("%s (AWS/CodeDeploy) %s",
+    return Utils.normalize(format("%s (AWS/CodeDeploy) %s",
         Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
         this.getRegion()));
   }

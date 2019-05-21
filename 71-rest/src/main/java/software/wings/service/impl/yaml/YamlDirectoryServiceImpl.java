@@ -118,7 +118,7 @@ import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.ArtifactType;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 import software.wings.utils.Validator;
 import software.wings.verification.CVConfiguration;
 import software.wings.yaml.YamlVersion.Type;
@@ -931,7 +931,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         List<ConfigFile> configFiles =
             configService.getConfigFilesForEntity(service.getAppId(), DEFAULT_TEMPLATE_ID, service.getUuid());
         configFiles.forEach(configFile -> {
-          String configFileName = Util.normalize(configFile.getRelativeFilePath()) + YAML_EXTENSION;
+          String configFileName = Utils.normalize(configFile.getRelativeFilePath()) + YAML_EXTENSION;
           configFilesFolder.addChild(new ServiceLevelYamlNode(accountId, configFile.getUuid(), configFile.getAppId(),
               configFile.getEntityId(), configFileName, ConfigFile.class, configFilesPath.clone().add(configFileName),
               yamlGitSyncService, Type.CONFIG_FILE));
@@ -1236,7 +1236,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         List<ConfigFile> configFiles =
             configService.getConfigFileOverridesForEnv(environment.getAppId(), environment.getUuid());
         configFiles.forEach(configFile -> {
-          String configFileName = Util.normalize(configFile.getRelativeFilePath()) + YAML_EXTENSION;
+          String configFileName = Utils.normalize(configFile.getRelativeFilePath()) + YAML_EXTENSION;
           configFilesFolder.addChild(new EnvLevelYamlNode(accountId, configFile.getUuid(), configFile.getAppId(),
               environment.getUuid(), configFileName, ConfigFile.class, configFilesPath.clone().add(configFileName),
               yamlGitSyncService, Type.CONFIG_FILE_OVERRIDE));

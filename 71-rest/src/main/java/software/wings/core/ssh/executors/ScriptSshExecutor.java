@@ -16,7 +16,7 @@ import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SU_AP
 import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.BASTION_HOST;
 import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.KEY_AUTH;
 import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.PASSWORD_AUTH;
-import static software.wings.utils.SshHelperUtil.normalizeError;
+import static software.wings.utils.SshHelperUtils.normalizeError;
 
 import com.google.inject.Inject;
 

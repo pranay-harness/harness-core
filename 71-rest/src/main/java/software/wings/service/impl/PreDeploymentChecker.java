@@ -32,7 +32,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
 import software.wings.beans.governance.GovernanceConfig;
-import software.wings.beans.instance.dashboard.InstanceStatsUtil;
+import software.wings.beans.instance.dashboard.InstanceStatsUtils;
 import software.wings.dl.WingsPersistence;
 import software.wings.licensing.LicenseService;
 import software.wings.licensing.violations.checkers.PipelinePreDeploymentViolationChecker;
@@ -112,7 +112,7 @@ public class PreDeploymentChecker {
   }
 
   public void checkInstanceUsageLimit(String accountId, String appId) throws InstanceUsageExceededLimitException {
-    double ninetyFifthPercentileUsage = InstanceStatsUtil.actualUsage(accountId, instanceStatService);
+    double ninetyFifthPercentileUsage = InstanceStatsUtils.actualUsage(accountId, instanceStatService);
 
     // has the customer reached 3x of limit?
     boolean within3x = instanceUsageLimitChecker.isWithinLimit(accountId, 300, ninetyFifthPercentileUsage);

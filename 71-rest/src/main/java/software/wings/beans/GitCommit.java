@@ -32,10 +32,6 @@ import java.util.List;
 @HarnessExportableEntity
 @FieldNameConstants(innerTypeName = "GitCommitKeys")
 public class GitCommit extends Base {
-  public static final String YAML_GIT_CONFIG_ID_KEY = "yamlGitConfigId";
-  public static final String YAML_GIT_CONFIG_IDS_KEY = "yamlGitConfigIds";
-  public static final String STATUS_KEY = "status";
-
   private String accountId;
   private String yamlGitConfigId;
   private String commitId;

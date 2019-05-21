@@ -83,7 +83,7 @@ import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingValue;
 import software.wings.stencils.DataProvider;
 import software.wings.utils.ArtifactType;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
@@ -235,7 +235,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       // If an entry exists with the given default name
       //      if (isNotEmpty(response) || isNotEmpty(connectorResponse)) {
       if (isNotEmpty(response)) {
-        name = Util.getNameWithNextRevision(
+        name = Utils.getNameWithNextRevision(
             response.getResponse().stream().map(ArtifactStream::getName).collect(toList()), name);
       }
       artifactStream.setName(name);

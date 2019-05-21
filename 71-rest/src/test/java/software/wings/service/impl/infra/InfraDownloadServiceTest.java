@@ -20,10 +20,10 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
-import software.wings.utils.GcsUtil;
+import software.wings.utils.GcsUtils;
 
 public class InfraDownloadServiceTest {
-  @Inject @InjectMocks GcsUtil gcsUtil;
+  @Inject @InjectMocks GcsUtils gcsUtil;
   @Mock MainConfiguration mainConfiguration;
   @Spy @Inject InfraDownloadServiceImpl infraDownloadService;
 

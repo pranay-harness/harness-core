@@ -25,7 +25,7 @@ import javax.ws.rs.core.Response.Status;
  * Created by anubhaw on 5/11/16.
  */
 @Slf4j
-public class IntegrationTestUtil {
+public class IntegrationTestUtils {
   private static Random random = new Random();
 
   /**

@@ -11,7 +11,7 @@ import software.wings.audit.AuditHeader;
 import software.wings.beans.FeatureName;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
-import software.wings.service.impl.yaml.gitdiff.gitaudit.YamlAuditRecordGenerationUtil;
+import software.wings.service.impl.yaml.gitdiff.gitaudit.YamlAuditRecordGenerationUtils;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.YamlGitService;
 
@@ -22,7 +22,7 @@ import java.util.Map;
 @Slf4j
 public class GitChangeSetProcesser {
   @Inject private GitChangeSetHandler gitChangesToEntityConverter;
-  @Inject private YamlAuditRecordGenerationUtil gitChangeAuditRecordHandler;
+  @Inject private YamlAuditRecordGenerationUtils gitChangeAuditRecordHandler;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private YamlGitService yamlGitService;
 

@@ -31,7 +31,7 @@ import software.wings.helpers.ext.jenkins.model.JobProperty;
 import software.wings.helpers.ext.jenkins.model.JobWithExtendedDetails;
 import software.wings.helpers.ext.jenkins.model.ParametersDefinitionProperty;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.service.impl.jenkins.JenkinsUtil;
+import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.ArtifactType;
@@ -56,7 +56,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   public static final String APP_ID = "appId";
 
   @Inject private EncryptionService encryptionService;
-  @Inject private JenkinsUtil jenkinsUtil;
+  @Inject private JenkinsUtils jenkinsUtil;
 
   @Override
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,

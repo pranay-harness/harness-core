@@ -428,13 +428,15 @@ public class GoogleCloudFileServiceImpl implements FileService {
   }
 
   private GcsFileMetadata getFileMetadataByFileId(String gcsFileId) {
-    return wingsPersistence.createQuery(GcsFileMetadata.class, excludeAuthority).filter("gcsFileId", gcsFileId).get();
+    return wingsPersistence.createQuery(GcsFileMetadata.class, excludeAuthority)
+        .filter(GcsFileMetadataKeys.gcsFileId, gcsFileId)
+        .get();
   }
 
   private List<String> getAllFileIdsFromGcsFileMetadata(String entityId, FileBucket fileBucket) {
     List<GcsFileMetadata> gcsFileMetadatas = wingsPersistence.createQuery(GcsFileMetadata.class, excludeAuthority)
-                                                 .filter("entityId", entityId)
-                                                 .filter("fileBucket", fileBucket)
+                                                 .filter(GcsFileMetadataKeys.entityId, entityId)
+                                                 .filter(GcsFileMetadataKeys.fileBucket, fileBucket)
                                                  .asList();
 
     return gcsFileMetadatas.stream()
@@ -445,8 +447,8 @@ public class GoogleCloudFileServiceImpl implements FileService {
 
   private String getLatestFileIdFromGcsFileMetadata(String entityId, FileBucket fileBucket) {
     GcsFileMetadata gcsFileMetadata = wingsPersistence.createQuery(GcsFileMetadata.class, excludeAuthority)
-                                          .filter("entityId", entityId)
-                                          .filter("fileBucket", fileBucket)
+                                          .filter(GcsFileMetadataKeys.entityId, entityId)
+                                          .filter(GcsFileMetadataKeys.fileBucket, fileBucket)
                                           .order("-createdAt")
                                           .get();
 
@@ -455,9 +457,9 @@ public class GoogleCloudFileServiceImpl implements FileService {
 
   private String getFileIdFromGcsFileMetadataByVersion(String entityId, Integer version, FileBucket fileBucket) {
     GcsFileMetadata gcsFileMetadata = wingsPersistence.createQuery(GcsFileMetadata.class, excludeAuthority)
-                                          .filter("entityId", entityId)
-                                          .filter("version", version)
-                                          .filter("fileBucket", fileBucket)
+                                          .filter(GcsFileMetadataKeys.entityId, entityId)
+                                          .filter(GcsFileMetadataKeys.version, version)
+                                          .filter(GcsFileMetadataKeys.fileBucket, fileBucket)
                                           .get();
 
     return gcsFileMetadata == null ? null : gcsFileMetadata.getGcsFileId();

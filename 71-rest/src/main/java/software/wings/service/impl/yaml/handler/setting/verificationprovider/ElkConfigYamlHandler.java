@@ -8,7 +8,7 @@ import software.wings.beans.ElkConfig.Yaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.analysis.ElkConnector;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 
 import java.util.List;
 
@@ -20,7 +20,7 @@ public class ElkConfigYamlHandler extends VerificationProviderYamlHandler<Yaml, 
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     ElkConfig config = (ElkConfig) settingAttribute.getValue();
-    String connectorType = Util.getStringFromEnum(config.getElkConnector());
+    String connectorType = Utils.getStringFromEnum(config.getElkConnector());
 
     Yaml yaml = Yaml.builder()
                     .harnessApiVersion(getHarnessApiVersion())
@@ -40,7 +40,7 @@ public class ElkConfigYamlHandler extends VerificationProviderYamlHandler<Yaml, 
     String uuid = previous != null ? previous.getUuid() : null;
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
-    ElkConnector elkConnector = Util.getEnumFromString(ElkConnector.class, yaml.getConnectorType());
+    ElkConnector elkConnector = Utils.getEnumFromString(ElkConnector.class, yaml.getConnectorType());
     ElkConfig config = ElkConfig.builder()
                            .accountId(accountId)
                            .elkUrl(yaml.getElkUrl())

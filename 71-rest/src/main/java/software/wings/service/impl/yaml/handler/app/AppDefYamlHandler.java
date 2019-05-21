@@ -17,7 +17,7 @@ import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.NameValuePairYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 
 import java.util.List;
 import java.util.Map;
@@ -39,7 +39,7 @@ public class AppDefYamlHandler extends BaseYamlHandler<Yaml, TemplateExpression>
               .stream()
               .map(nvpYaml -> NameValuePair.builder().name(nvpYaml.getName()).value(nvpYaml.getValue()).build())
               .collect(toList());
-      properties = Util.toProperties(nameValuePairList);
+      properties = Utils.toProperties(nameValuePairList);
     }
 
     return TemplateExpression.builder()
@@ -53,7 +53,7 @@ public class AppDefYamlHandler extends BaseYamlHandler<Yaml, TemplateExpression>
   public Yaml toYaml(TemplateExpression bean, String appId) {
     NameValuePairYamlHandler nameValuePairYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.NAME_VALUE_PAIR);
     List<NameValuePair.Yaml> nameValuePairYamlList =
-        Util.toNameValuePairYamlList(bean.getMetadata(), appId, nameValuePairYamlHandler);
+        Utils.toNameValuePairYamlList(bean.getMetadata(), appId, nameValuePairYamlHandler);
 
     return Yaml.Builder.aYaml()
         .withExpression(bean.getExpression())

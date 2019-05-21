@@ -9,7 +9,7 @@ import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.command.ScpCommandUnit.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 
 import java.util.Map;
 
@@ -33,7 +33,7 @@ public class ScpCommandUnitYamlHandler extends SshCommandUnitYamlHandler<Yaml, S
     Yaml yaml = Yaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setDestinationDirectoryPath(bean.getDestinationDirectoryPath());
-    String fileCategory = Util.getStringFromEnum(bean.getFileCategory());
+    String fileCategory = Utils.getStringFromEnum(bean.getFileCategory());
     yaml.setSource(fileCategory);
     return yaml;
   }
@@ -42,7 +42,7 @@ public class ScpCommandUnitYamlHandler extends SshCommandUnitYamlHandler<Yaml, S
     ScpCommandUnit scpCommandUnit = super.toBean(changeContext);
     Yaml yaml = changeContext.getYaml();
     scpCommandUnit.setDestinationDirectoryPath(yaml.getDestinationDirectoryPath());
-    ScpFileCategory scpFileCategory = Util.getEnumFromString(ScpFileCategory.class, yaml.getSource());
+    ScpFileCategory scpFileCategory = Utils.getEnumFromString(ScpFileCategory.class, yaml.getSource());
     scpCommandUnit.setFileCategory(scpFileCategory);
     return scpCommandUnit;
   }
@@ -52,7 +52,7 @@ public class ScpCommandUnitYamlHandler extends SshCommandUnitYamlHandler<Yaml, S
     ScpCommandUnit.Yaml scpYaml = (ScpCommandUnit.Yaml) yaml;
     ScpCommandUnit scpCommandUnit = super.toBean(yaml);
     scpCommandUnit.setDestinationDirectoryPath(scpYaml.getDestinationDirectoryPath());
-    ScpFileCategory scpFileCategory = Util.getEnumFromString(ScpFileCategory.class, scpYaml.getSource());
+    ScpFileCategory scpFileCategory = Utils.getEnumFromString(ScpFileCategory.class, scpYaml.getSource());
     scpCommandUnit.setFileCategory(scpFileCategory);
     return scpCommandUnit;
   }

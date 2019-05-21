@@ -24,7 +24,7 @@ import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.Datastore;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
-import software.wings.integration.IntegrationTestUtil;
+import software.wings.integration.IntegrationTestUtils;
 
 import java.util.concurrent.TimeUnit;
 
@@ -44,7 +44,7 @@ public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
   @Before
   public void init() throws Exception {
     this.cleanUp();
-    if (!indexesEnsured && !IntegrationTestUtil.isManagerRunning(client)) {
+    if (!indexesEnsured && !IntegrationTestUtils.isManagerRunning(client)) {
       dao.getDatastore(Counter.class, ReadPref.NORMAL).ensureIndexes(Counter.class);
       dao.getDatastore(ConfiguredLimit.class, ReadPref.NORMAL).ensureIndexes(ConfiguredLimit.class);
       indexesEnsured = true;

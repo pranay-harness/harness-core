@@ -32,7 +32,7 @@ import software.wings.beans.Log;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.helpers.ext.jenkins.Jenkins;
-import software.wings.service.impl.jenkins.JenkinsUtil;
+import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
 
@@ -49,7 +49,7 @@ import java.util.function.Supplier;
 public class JenkinsTask extends AbstractDelegateRunnableTask {
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService logService;
-  @Inject private JenkinsUtil jenkinsUtil;
+  @Inject private JenkinsUtils jenkinsUtil;
 
   public JenkinsTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> postExecute,
       Supplier<Boolean> preExecute) {

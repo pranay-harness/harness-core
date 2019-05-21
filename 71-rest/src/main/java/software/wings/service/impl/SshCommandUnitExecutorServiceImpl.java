@@ -35,7 +35,7 @@ import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.CommandUnitExecutorService;
-import software.wings.utils.SshHelperUtil;
+import software.wings.utils.SshHelperUtils;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -96,7 +96,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
                                                     .build();
       executor = shellExecutorFactory.getExecutor(shellExecutorConfig);
     } else {
-      SshSessionConfig sshSessionConfig = SshHelperUtil.createSshSessionConfig(commandUnit.getName(), context);
+      SshSessionConfig sshSessionConfig = SshHelperUtils.createSshSessionConfig(commandUnit.getName(), context);
       executor = sshExecutorFactory.getExecutor(sshSessionConfig);
     }
 

@@ -3,9 +3,9 @@ package software.wings.utils;
 import static io.harness.govern.Switch.noop;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.common.Constants.WINDOWS_HOME_DIR;
-import static software.wings.utils.SshHelperUtil.createSshSessionConfig;
-import static software.wings.utils.SshHelperUtil.normalizeError;
-import static software.wings.utils.WinRmHelperUtil.buildErrorDetailsFromWinRmClientException;
+import static software.wings.utils.SshHelperUtils.createSshSessionConfig;
+import static software.wings.utils.SshHelperUtils.normalizeError;
+import static software.wings.utils.WinRmHelperUtils.buildErrorDetailsFromWinRmClientException;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;

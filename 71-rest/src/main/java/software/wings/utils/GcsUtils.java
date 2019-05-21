@@ -22,9 +22,9 @@ import java.security.Signature;
 import java.security.spec.PKCS8EncodedKeySpec;
 
 @Singleton
-public class GcsUtil {
+public class GcsUtils {
   @Inject private MainConfiguration configuration;
-  private static final Logger log = LoggerFactory.getLogger(GcsUtil.class);
+  private static final Logger log = LoggerFactory.getLogger(GcsUtils.class);
   private static final String downloadPathPattern = "/storage/harness-download";
 
   private String getSignedUrlUsingPrivateKey(

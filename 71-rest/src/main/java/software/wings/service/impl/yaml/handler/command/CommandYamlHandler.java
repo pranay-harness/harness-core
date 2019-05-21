@@ -41,7 +41,7 @@ import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.template.TemplateService;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 import software.wings.yaml.command.CommandYaml;
 
 import java.util.List;
@@ -107,7 +107,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
       graphBuilder.withNodes(nodeList);
     }
 
-    CommandType commandType = Util.getEnumFromString(CommandType.class, commandYaml.getType());
+    CommandType commandType = Utils.getEnumFromString(CommandType.class, commandYaml.getType());
 
     Command command =
         Builder.aCommand().withCommandType(commandType).withCommandUnits(commandUnitList).withName(name).build();
@@ -177,8 +177,8 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
     Command command = serviceCommand.getCommand();
     notNullCheck("command is null for serviceCommand:" + serviceCommand.getName(), command, USER);
 
-    String commandType = Util.getStringFromEnum(command.getCommandType());
-    String commandUnitType = Util.getStringFromEnum(command.getCommandUnitType());
+    String commandType = Utils.getStringFromEnum(command.getCommandType());
+    String commandUnitType = Utils.getStringFromEnum(command.getCommandUnitType());
 
     // command units
     List<AbstractCommandUnit.Yaml> commandUnitYamlList =

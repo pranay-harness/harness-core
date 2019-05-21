@@ -21,7 +21,7 @@ import software.wings.beans.Base;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.Variable;
 import software.wings.beans.config.ArtifactSourceable;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
@@ -93,7 +93,7 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
   }
 
   public String generateName() {
-    return Util.normalize(generateSourceName());
+    return Utils.normalize(generateSourceName());
   }
 
   public abstract String generateSourceName();

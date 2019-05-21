@@ -23,7 +23,7 @@ import software.wings.beans.NotificationRule.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.intfc.NotificationSetupService;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 
 import java.util.List;
 
@@ -38,7 +38,7 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
       throws HarnessException {
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
-    ExecutionScope executionScope = Util.getEnumFromString(ExecutionScope.class, yaml.getExecutionScope());
+    ExecutionScope executionScope = Utils.getEnumFromString(ExecutionScope.class, yaml.getExecutionScope());
 
     List<NotificationGroup> notificationGroups = Lists.newArrayList();
 
@@ -66,7 +66,7 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
 
     List<ExecutionStatus> conditions = yaml.getConditions()
                                            .stream()
-                                           .map(condition -> Util.getEnumFromString(ExecutionStatus.class, condition))
+                                           .map(condition -> Utils.getEnumFromString(ExecutionStatus.class, condition))
                                            .collect(toList());
     return NotificationRuleBuilder.aNotificationRule()
         .withUuid(generateUuid())
@@ -104,7 +104,7 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
 
     return Yaml.builder()
         .conditions(conditionList)
-        .executionScope(Util.getStringFromEnum(notificationRule.getExecutionScope()))
+        .executionScope(Utils.getStringFromEnum(notificationRule.getExecutionScope()))
         .notificationGroups(notificationGroupList)
         .notificationGroupAsExpression(notificationRule.isNotificationGroupAsExpression())
         .userGroupIds(notificationRule.getUserGroupIds())

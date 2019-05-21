@@ -23,7 +23,7 @@ import static software.wings.beans.SystemCatalog.CatalogType.APPSTACK;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.ContainerFamily.TOMCAT;
-import static software.wings.utils.UsageRestrictionsUtil.getAllAppAllEnvUsageRestrictions;
+import static software.wings.utils.UsageRestrictionsUtils.getAllAppAllEnvUsageRestrictions;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;

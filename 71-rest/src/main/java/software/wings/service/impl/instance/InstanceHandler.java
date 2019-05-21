@@ -57,7 +57,7 @@ public abstract class InstanceHandler {
   @Inject protected EnvironmentService environmentService;
   @Inject protected WorkflowExecutionService workflowExecutionService;
   @Inject protected ServiceResourceService serviceResourceService;
-  @Inject protected InstanceUtil instanceUtil;
+  @Inject protected InstanceUtils instanceUtil;
   @Inject protected DeploymentService deploymentService;
 
   public static final String AUTO_SCALE = "AUTO_SCALE";

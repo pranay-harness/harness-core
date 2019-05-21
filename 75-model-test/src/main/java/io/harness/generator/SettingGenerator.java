@@ -16,7 +16,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingAttribute.SettingCategory.CLOUD_PROVIDER;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.beans.SettingAttribute.SettingCategory.SETTING;
-import static software.wings.utils.UsageRestrictionsUtil.getAllAppAllEnvUsageRestrictions;
+import static software.wings.utils.UsageRestrictionsUtils.getAllAppAllEnvUsageRestrictions;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

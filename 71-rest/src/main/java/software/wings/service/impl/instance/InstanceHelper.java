@@ -73,7 +73,7 @@ import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.PhaseStepSubWorkflow;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 import software.wings.utils.Validator;
 
 import java.time.Duration;
@@ -97,7 +97,7 @@ public class InstanceHelper {
   @Inject private Queue<DeploymentEvent> deploymentEventQueue;
   @Inject private InfrastructureMappingService infraMappingService;
   @Inject private AppService appService;
-  @Inject private InstanceUtil instanceUtil;
+  @Inject private InstanceUtils instanceUtil;
   @Inject private HostService hostService;
   @Inject private AwsHelperService awsHelperService;
   @Inject private SettingsService settingsService;
@@ -471,7 +471,7 @@ public class InstanceHelper {
       Validator.notNullCheck("Infra mapping is null for the given id: " + infraMappingId, infraMapping);
 
       InfrastructureMappingType infrastructureMappingType =
-          Util.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());
+          Utils.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());
       if (isSupported(infrastructureMappingType)) {
         InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infrastructureMappingType);
         instanceHandler.handleNewDeployment(deploymentSummaries, isRollback);
@@ -491,7 +491,7 @@ public class InstanceHelper {
 
   private Optional<InstanceHandler> getInstanceHandler(InfrastructureMapping infraMapping) {
     InfrastructureMappingType infrastructureMappingType =
-        Util.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());
+        Utils.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());
     if (isSupported(infrastructureMappingType)) {
       return Optional.of(instanceHandlerFactory.getInstanceHandler(infrastructureMappingType));
     }
@@ -582,7 +582,7 @@ public class InstanceHelper {
 
     String infraMappingId = infraMapping.getUuid();
     InfrastructureMappingType infraMappingType =
-        Util.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());
+        Utils.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());
     try (AcquiredLock lock =
              persistentLocker.tryToAcquireLock(InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(180))) {
       if (lock == null) {

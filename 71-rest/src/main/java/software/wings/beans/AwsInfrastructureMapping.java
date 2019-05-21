@@ -27,7 +27,7 @@ import software.wings.beans.AwsInstanceFilter.Tag;
 import software.wings.beans.AwsInstanceFilter.Tag.TagBuilder;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.stencils.DataProvider;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -332,7 +332,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
       parts.add(getRegion());
     }
 
-    return Util.normalize(String.join(" - ", parts));
+    return Utils.normalize(String.join(" - ", parts));
   }
 
   /**

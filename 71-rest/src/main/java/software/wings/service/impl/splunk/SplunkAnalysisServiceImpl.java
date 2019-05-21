@@ -20,7 +20,7 @@ import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
-import software.wings.service.impl.apm.MLServiceUtil;
+import software.wings.service.impl.apm.MLServiceUtils;
 import software.wings.service.intfc.splunk.SplunkAnalysisService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.sm.StateType;
@@ -33,7 +33,7 @@ import java.util.List;
 @Singleton
 @Slf4j
 public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements SplunkAnalysisService {
-  @Inject private MLServiceUtil mlServiceUtil;
+  @Inject private MLServiceUtils mlServiceUtils;
   @Override
   public VerificationNodeDataSetupResponse getLogDataByHost(
       String accountId, SplunkSetupTestNodeData setupTestNodeData) {
@@ -66,7 +66,7 @@ public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements Sp
           .build();
     }
 
-    String hostName = mlServiceUtil.getHostNameFromExpression(setupTestNodeData);
+    String hostName = mlServiceUtils.getHostNameFromExpression(setupTestNodeData);
     List<LogElement> responseWithHost =
         delegateProxyFactory.get(SplunkDelegateService.class, taskContext)
             .getLogResults((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails,

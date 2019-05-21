@@ -8,7 +8,7 @@ import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class CryptoUtilTest {
+public class CryptoUtilsTest {
   public static final int LEN = 10;
 
   @Test
@@ -16,8 +16,8 @@ public class CryptoUtilTest {
   public void testSecureRandAlphaNumString() {
     String alphaNumericPattern = "^[a-zA-Z0-9]*$";
 
-    String randomString1 = CryptoUtil.secureRandAlphaNumString(LEN);
-    String randomString2 = CryptoUtil.secureRandAlphaNumString(LEN);
+    String randomString1 = CryptoUtils.secureRandAlphaNumString(LEN);
+    String randomString2 = CryptoUtils.secureRandAlphaNumString(LEN);
 
     // test string generated is alphaNumeric
     assertTrue(randomString1.matches(alphaNumericPattern));
@@ -27,8 +27,8 @@ public class CryptoUtilTest {
     assertEquals(LEN, randomString2.length());
     assertNotEquals(randomString1, randomString2);
 
-    randomString1 = CryptoUtil.secureRandAlphaNumString(LEN * LEN);
-    randomString2 = CryptoUtil.secureRandAlphaNumString(LEN * LEN);
+    randomString1 = CryptoUtils.secureRandAlphaNumString(LEN * LEN);
+    randomString2 = CryptoUtils.secureRandAlphaNumString(LEN * LEN);
 
     // test string generated is alphaNumeric
     assertTrue(randomString1.matches(alphaNumericPattern));

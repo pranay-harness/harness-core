@@ -26,7 +26,7 @@ import software.wings.sm.StateType;
  * Created by Pranjal on 08/17/2018
  */
 @Slf4j
-public class MLServiceUtil {
+public class MLServiceUtils {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutionContextFactory executionContextFactory;
 

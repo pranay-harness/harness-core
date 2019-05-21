@@ -86,6 +86,6 @@ public class MiscellaneousTest {
   public void shouldValidateTestGovernanceRules() {
     Validator validator = ValidatorBuilder.create().with(new TestClassMustBeProperlyNamedRule()).build();
 
-    validator.validateRecursively("software.wings", TEST_ONLY_FILTER, new FilterClassName("^((?!Util$).)*$"));
+    validator.validateRecursively("software.wings", TEST_ONLY_FILTER, new FilterClassName("^((?!Utils$).)*$"));
   }
 }

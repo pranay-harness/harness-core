@@ -12,7 +12,7 @@ import software.wings.settings.UsageRestrictions.AppEnvRestriction;
  * Helper class to
  * @author rktummala on 10/18/2018
  */
-public class UsageRestrictionsUtil {
+public class UsageRestrictionsUtils {
   public static UsageRestrictions getAllAppAllEnvUsageRestrictions() {
     GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
     EnvFilter prodEnvFilter = EnvFilter.builder().filterTypes(Sets.newHashSet(EnvFilter.FilterType.PROD)).build();

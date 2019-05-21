@@ -32,7 +32,7 @@ import static software.wings.beans.yaml.YamlConstants.VALUES_YAML_KEY;
 import static software.wings.beans.yaml.YamlConstants.VERIFICATION_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.WORKFLOWS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXPRESSION;
-import static software.wings.utils.Util.generatePath;
+import static software.wings.utils.Utils.generatePath;
 
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;

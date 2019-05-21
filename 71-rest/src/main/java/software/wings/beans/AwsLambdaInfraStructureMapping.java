@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.stencils.EnumData;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +52,7 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
   @SchemaIgnore
   @Override
   public String getDefaultName() {
-    return Util.normalize(format("%s (AWS_Lambda) %s",
+    return Utils.normalize(format("%s (AWS_Lambda) %s",
         Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
         StringUtils.isEmpty(getProvisionerId()) ? this.getRegion() : ""));
   }

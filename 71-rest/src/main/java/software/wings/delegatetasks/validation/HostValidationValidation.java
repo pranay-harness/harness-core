@@ -3,7 +3,7 @@ package software.wings.delegatetasks.validation;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
-import static software.wings.utils.SshHelperUtil.createSshSessionConfig;
+import static software.wings.utils.SshHelperUtils.createSshSessionConfig;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;

@@ -16,7 +16,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.utils.RepositoryType;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -78,7 +78,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
 
   @Override
   public String generateName() {
-    return Util.normalize(generateSourceName());
+    return Utils.normalize(generateSourceName());
   }
 
   @Override

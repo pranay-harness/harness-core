@@ -14,7 +14,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
-import software.wings.integration.IntegrationTestUtil;
+import software.wings.integration.IntegrationTestUtils;
 
 import java.util.Arrays;
 
@@ -27,7 +27,7 @@ public class UsageBucketIntegrationTest extends BaseIntegrationTest {
 
   @Before
   public void ensureIndices() throws Exception {
-    if (!indexesEnsured && !IntegrationTestUtil.isManagerRunning(client)) {
+    if (!indexesEnsured && !IntegrationTestUtils.isManagerRunning(client)) {
       persistence.getDatastore(UsageBucket.class, ReadPref.NORMAL).ensureIndexes(UsageBucket.class);
       indexesEnsured = true;
     }

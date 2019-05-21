@@ -13,7 +13,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
-import software.wings.utils.Util;
+import software.wings.utils.Utils;
 
 import java.util.Map;
 import java.util.Optional;
@@ -53,7 +53,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
   @SchemaIgnore
   @Override
   public String getDefaultName() {
-    return Util.normalize(format("%s_DIRECT_Kubernetes_%s",
+    return Utils.normalize(format("%s_DIRECT_Kubernetes_%s",
         Optional.ofNullable(getComputeProviderName()).orElse(getComputeProviderType().toLowerCase()).replace(':', '_'),
         Optional.ofNullable(getNamespace()).orElse("default")));
   }
