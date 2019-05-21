@@ -139,7 +139,7 @@ public class LicenseServiceImpl implements LicenseService {
               if (!account.isEmailSentToSales() && ((expiryTime - currentTime) <= Duration.ofDays(7).toMillis())) {
                 sendEmailToSales(account, expiryTime, accountType, EMAIL_SUBJECT_ACCOUNT_ABOUT_TO_EXPIRE,
                     EMAIL_BODY_ACCOUNT_ABOUT_TO_EXPIRE, trialDefaultContacts);
-                sendEmailToAdminBeforeLicenseExpiration(account);
+                // sendEmailToAdminBeforeLicenseExpiration(account);
               }
             }
           } else if (AccountStatus.ACTIVE.equals(accountStatus)) {
@@ -147,7 +147,7 @@ public class LicenseServiceImpl implements LicenseService {
             sendEmailToSales(account, expiryTime, accountType, EMAIL_SUBJECT_ACCOUNT_EXPIRED,
                 EMAIL_BODY_ACCOUNT_EXPIRED,
                 accountType.equals(AccountType.PAID) ? paidDefaultContacts : trialDefaultContacts);
-            sendEmailToAdminAfterLicenseExpiration(account);
+            // sendEmailToAdminAfterLicenseExpiration(account);
           }
         } catch (Exception e) {
           logger.warn("Failed to check license info for account id {}", account.getUuid(), e);
