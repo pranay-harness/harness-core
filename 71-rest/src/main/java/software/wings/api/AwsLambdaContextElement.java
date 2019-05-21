@@ -1,7 +1,10 @@
 package software.wings.api;
 
 import io.harness.context.ContextElementType;
+import lombok.Getter;
+import lombok.Setter;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.Tag;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
@@ -18,6 +21,9 @@ public class AwsLambdaContextElement implements ContextElement {
   private AwsConfig awsConfig;
   private String region;
   private List<FunctionMeta> functionArns = new ArrayList<>();
+
+  @Getter @Setter private List<String> aliases;
+  @Getter @Setter private List<Tag> tags;
 
   public AwsConfig getAwsConfig() {
     return awsConfig;
@@ -156,6 +162,16 @@ public class AwsLambdaContextElement implements ContextElement {
       return new Builder();
     }
 
+    public Builder withAliases(List<String> aliases) {
+      awsLambdaContextElement.setAliases(aliases);
+      return this;
+    }
+
+    public Builder withTags(List<Tag> tags) {
+      awsLambdaContextElement.setTags(tags);
+      return this;
+    }
+
     public Builder withAwsConfig(AwsConfig awsConfig) {
       awsLambdaContextElement.setAwsConfig(awsConfig);
       return this;
@@ -175,7 +191,9 @@ public class AwsLambdaContextElement implements ContextElement {
       return anAwsLambdaContextElement()
           .withAwsConfig(awsLambdaContextElement.getAwsConfig())
           .withRegion(awsLambdaContextElement.getRegion())
-          .withFunctionArns(awsLambdaContextElement.getFunctionArns());
+          .withFunctionArns(awsLambdaContextElement.getFunctionArns())
+          .withTags(awsLambdaContextElement.getTags())
+          .withAliases(awsLambdaContextElement.getAliases());
     }
 
     public AwsLambdaContextElement build() {

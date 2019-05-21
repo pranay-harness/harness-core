@@ -44,6 +44,7 @@ import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationResult;
 import com.amazonaws.services.lambda.model.VpcConfig;
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -181,6 +182,8 @@ public class AwsLambdaHelperServiceDelegateImpl
       }
       responseBuilder.executionStatus(status);
       responseBuilder.functionResults(functionResultList);
+      logCallback.saveExecutionLog(
+          "Successfully completed Aws Lambda Deploy step", INFO, CommandExecutionStatus.SUCCESS);
     } catch (AmazonEC2Exception amazonEC2Exception) {
       handleAmazonServiceException(amazonEC2Exception);
     } catch (AmazonClientException amazonClientException) {

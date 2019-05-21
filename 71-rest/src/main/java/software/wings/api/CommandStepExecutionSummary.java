@@ -3,6 +3,7 @@ package software.wings.api;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import software.wings.beans.Tag;
 import software.wings.beans.command.CodeDeployParams;
 import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.sm.StepExecutionSummary;
@@ -32,4 +33,8 @@ public class CommandStepExecutionSummary extends StepExecutionSummary {
   private CodeDeployParams oldCodeDeployParams;
   private String codeDeployDeploymentId;
   private String releaseName;
+
+  // For Aws Lambda
+  private List<String> aliases;
+  private List<Tag> tags;
 }

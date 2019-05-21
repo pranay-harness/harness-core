@@ -5,21 +5,30 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.EXISTS;
 import static io.harness.beans.SearchFilter.Operator.NOT_EQ;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static java.util.stream.Collectors.toList;
+import static software.wings.api.AwsLambdaContextElement.AWS_LAMBDA_REQUEST_PARAM;
 
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageResponse;
+import io.harness.context.ContextElementType;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.AwsLambdaContextElement;
 import software.wings.beans.Activity;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Tag;
 import software.wings.beans.artifact.Artifact;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 
 import java.util.List;
+import java.util.Map;
 
 public class AwsLambdaRollback extends AwsLambdaState {
   @Inject @Transient protected transient ArtifactService artifactService;
@@ -46,14 +55,42 @@ public class AwsLambdaRollback extends AwsLambdaState {
     return null;
   }
 
-  @SchemaIgnore
   @Override
+  protected List<String> getEvaluatedAliases(ExecutionContext context) {
+    AwsLambdaContextElement awsLambdaContextElement =
+        context.getContextElement(ContextElementType.PARAM, AWS_LAMBDA_REQUEST_PARAM);
+    if (awsLambdaContextElement != null) {
+      List<String> aliases = awsLambdaContextElement.getAliases();
+      if (isNotEmpty(aliases)) {
+        return aliases.stream().map(context::renderExpression).collect(toList());
+      }
+    }
+    return emptyList();
+  }
+
+  @Override
+  protected Map<String, String> getFunctionTags(ExecutionContext context) {
+    AwsLambdaContextElement awsLambdaContextElement =
+        context.getContextElement(ContextElementType.PARAM, AWS_LAMBDA_REQUEST_PARAM);
+    if (awsLambdaContextElement != null) {
+      List<Tag> tags = awsLambdaContextElement.getTags();
+      if (isNotEmpty(tags)) {
+        Map<String, String> functionTags = Maps.newHashMap();
+        tags.forEach(tag -> { functionTags.put(tag.getKey(), context.renderExpression(tag.getValue())); });
+        return functionTags;
+      }
+    }
+    return emptyMap();
+  }
+
+  @Override
+  @SchemaIgnore
   public List<String> getAliases() {
     return super.getAliases();
   }
 
-  @SchemaIgnore
   @Override
+  @SchemaIgnore
   public String getCommandName() {
     return super.getCommandName();
   }
