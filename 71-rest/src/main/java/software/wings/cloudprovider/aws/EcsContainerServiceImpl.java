@@ -99,6 +99,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   @Inject private TimeLimiter timeLimiter;
 
   private ObjectMapper mapper = new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+  private static final String CONTAINER_METADATA_FORMAT_STRING = "http://%s:51678/v1/tasks";
 
   /**
    * Create cluster.
@@ -1194,8 +1195,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
           ipAddress = StringUtils.EMPTY;
         }
 
-        String uri = generateTaskMetadataEndpointUrl(ipAddress);
-        if (Http.connectableHttpUrl(uri)) {
+        String uri = generateTaskMetadataEndpointUrl(ec2Instance, executionLogCallback);
+        if (isNotEmpty(uri)) {
           try {
             if (executionLogCallback != null) {
               executionLogCallback.saveExecutionLog("Fetching container meta data from " + uri, LogLevel.INFO);
@@ -1277,8 +1278,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         } else {
           logger.warn("Could not connect to {}", uri);
           if (executionLogCallback != null) {
-            executionLogCallback.saveExecutionLog("Could not reach " + uri
-                    + " to fetch container meta data. Verification steps using containerId may not work",
+            executionLogCallback.saveExecutionLog("Could not fetch container meta data. "
+                    + "Verification steps using containerId may not work",
                 LogLevel.WARN);
           }
           containerInfos.add(ContainerInfo.builder()
@@ -1312,13 +1313,22 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     return ipAddressForContainer;
   }
 
-  /**
-   * https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-agent-introspection.html
-   * @param ipAddress
-   * @return
-   */
-  private String generateTaskMetadataEndpointUrl(String ipAddress) {
-    return "http://" + ipAddress + ":51678/v1/tasks";
+  // https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-agent-introspection.html
+  private String generateTaskMetadataEndpointUrl(
+      com.amazonaws.services.ec2.model.Instance ec2Instance, ExecutionLogCallback logCallback) {
+    String url = format(CONTAINER_METADATA_FORMAT_STRING, ec2Instance.getPrivateDnsName());
+    logCallback.saveExecutionLog(format("Testing private Dns: [%s] for connectivity", url));
+    if (Http.connectableHttpUrl(url)) {
+      logCallback.saveExecutionLog(format("[%s] is reachable. Using it for container meta data", url));
+      return url;
+    }
+    url = format(CONTAINER_METADATA_FORMAT_STRING, ec2Instance.getPrivateIpAddress());
+    logCallback.saveExecutionLog(format("Testing private ip: [%s] for connectivity", url));
+    if (Http.connectableHttpUrl(url)) {
+      logCallback.saveExecutionLog(format("[%s] is reachable. Using it for container meta data", url));
+      return url;
+    }
+    return StringUtils.EMPTY;
   }
 
   /**
