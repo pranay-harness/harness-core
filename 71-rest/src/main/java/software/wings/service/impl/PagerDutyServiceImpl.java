@@ -50,9 +50,13 @@ public class PagerDutyServiceImpl implements PagerDutyService {
 
     List<LinkContext> links = new ArrayList<>();
     Map<String, String> customDetails =
-        notification.getNotificationTemplateVariables().keySet().stream().collect(Collectors.toMap(key
-            -> WordUtils.capitalizeFully(key.replace("_", " ")),
-            key -> notification.getNotificationTemplateVariables().get(key), (a, b) -> b));
+        notification.getNotificationTemplateVariables()
+            .keySet()
+            .stream()
+            .filter(key -> !key.equalsIgnoreCase("START_TS_SECS") && !key.equalsIgnoreCase("END_TS_SECS"))
+            .collect(Collectors.toMap(key
+                -> WordUtils.capitalizeFully(key.replace("_", " ")),
+                key -> notification.getNotificationTemplateVariables().get(key), (a, b) -> b));
 
     JSONObject jsonObject = new JSONObject(customDetails);
     Payload payload = Payload.Builder.newBuilder()
