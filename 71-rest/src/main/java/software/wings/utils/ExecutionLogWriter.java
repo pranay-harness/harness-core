@@ -7,7 +7,6 @@ import lombok.Builder;
 import software.wings.beans.Log.LogLevel;
 import software.wings.delegatetasks.DelegateLogService;
 
-import java.io.IOException;
 import java.io.Writer;
 
 @Builder
@@ -23,7 +22,7 @@ public class ExecutionLogWriter extends Writer {
   private final String commandUnitName;
 
   @Override
-  public void write(char[] cbuf, int off, int len) throws IOException {
+  public void write(char[] cbuf, int off, int len) {
     stringBuilder.append(cbuf, off, len);
     char lastChar = cbuf[off + len - 1];
     if (lastChar == '\n') {
@@ -32,12 +31,12 @@ public class ExecutionLogWriter extends Writer {
   }
 
   @Override
-  public void flush() throws IOException {
+  public void flush() {
     logAndFlush();
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() {
     logAndFlush();
   }
 
@@ -51,7 +50,7 @@ public class ExecutionLogWriter extends Writer {
               .withLogLevel(logLevel)
               .withCommandUnitName(commandUnitName)
               .withHostName(hostName)
-              .withLogLine(stringBuilder.toString().trim())
+              .withLogLine(logLine.trim())
               .withExecutionResult(RUNNING)
               .build());
       stringBuilder.setLength(0);

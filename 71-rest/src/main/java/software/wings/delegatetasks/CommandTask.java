@@ -12,21 +12,14 @@ import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
-import software.wings.core.local.executors.ShellExecutorFactory;
-import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-/**
- * Created by peeyushaggarwal on 1/6/17.
- */
 @Slf4j
 public class CommandTask extends AbstractDelegateRunnableTask {
   @Inject private ServiceCommandExecutorService serviceCommandExecutorService;
-  @Inject private ShellExecutorFactory shellExecutorFactory;
-  @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
 
   public CommandTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> postExecute,
       Supplier<Boolean> preExecute) {

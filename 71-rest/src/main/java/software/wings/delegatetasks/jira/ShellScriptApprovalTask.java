@@ -97,7 +97,7 @@ public class ShellScriptApprovalTask extends AbstractDelegateRunnableTask {
       }
     }
 
-    String errorMessage = null;
+    String errorMessage;
     switch (executionStatus) {
       case SUCCESS:
         errorMessage = "Approved by Script";

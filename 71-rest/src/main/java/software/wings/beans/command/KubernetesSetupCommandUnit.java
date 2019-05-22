@@ -6,6 +6,7 @@ import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
@@ -30,7 +31,6 @@ import static software.wings.common.Constants.HARNESS_KUBERNETES_INFRA_MAPPING_I
 import static software.wings.common.Constants.HARNESS_KUBERNETES_MANAGED_LABEL_KEY;
 import static software.wings.common.Constants.HARNESS_KUBERNETES_REVISION_LABEL_KEY;
 import static software.wings.common.Constants.HARNESS_KUBERNETES_SERVICE_LABEL_KEY;
-import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.service.impl.KubernetesHelperService.printVirtualServiceRouteWeights;
 import static software.wings.service.impl.KubernetesHelperService.toDisplayYaml;
 import static software.wings.service.impl.KubernetesHelperService.toYaml;

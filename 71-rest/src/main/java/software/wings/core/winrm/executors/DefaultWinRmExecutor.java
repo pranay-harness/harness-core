@@ -56,20 +56,24 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
     this.config = config;
   }
 
+  @Override
   public CommandExecutionStatus executeCommandString(String command) {
     return executeCommandString(command, null, false);
   }
 
+  @Override
   public CommandExecutionStatus executeCommandString(String command, boolean displayCommand) {
     return executeCommandString(command, null, displayCommand);
   }
 
+  @Override
   public CommandExecutionStatus executeCommandString(String command, StringBuffer output) {
     return executeCommandString(command, output, false);
   }
 
+  @Override
   public CommandExecutionStatus executeCommandString(String command, StringBuffer output, boolean displayCommand) {
-    CommandExecutionStatus commandExecutionStatus = FAILURE;
+    CommandExecutionStatus commandExecutionStatus;
     saveExecutionLog(format("Initializing WinRM connection to %s ...", config.getHostname()), INFO);
 
     try (WinRmSession session = new WinRmSession(config); ExecutionLogWriter outputWriter = getExecutionLogWriter(INFO);
@@ -112,6 +116,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
     return wrapperCommand.toString();
   }
 
+  @Override
   public CommandExecutionResult executeCommandString(String command, List<String> envVariablesToCollect) {
     ShellExecutionDataBuilder executionDataBuilder = ShellExecutionData.builder();
     CommandExecutionResultBuilder commandExecutionResult = CommandExecutionResult.builder();

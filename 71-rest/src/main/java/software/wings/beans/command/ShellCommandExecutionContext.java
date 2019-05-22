@@ -10,9 +10,6 @@ import software.wings.service.intfc.FileService.FileBucket;
 
 import java.util.List;
 
-/**
- * Created by peeyushaggarwal on 8/2/16.
- */
 @EqualsAndHashCode(callSuper = true)
 public class ShellCommandExecutionContext extends CommandExecutionContext {
   private BaseScriptExecutor executor;

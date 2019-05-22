@@ -6,6 +6,7 @@ import lombok.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Subject<T> {
   @FunctionalInterface
@@ -38,6 +39,16 @@ public class Subject<T> {
     void inform(T t, U1 u1, U2 u2, U3 u3, U4 u4);
   }
 
+  @FunctionalInterface
+  public interface Processor0<T, U> {
+    U process(T t, U u);
+  }
+
+  @FunctionalInterface
+  public interface Processor1<T, U1, U2> {
+    U2 process(T t, U1 u1, U2 u2);
+  }
+
   private List<T> observers = new ArrayList<>();
 
   public void register(@NonNull T observer) {
@@ -49,10 +60,7 @@ public class Subject<T> {
   }
 
   public <U> List<Rejection> fireApproveFromAll(Approver<T, U, Rejection> func, U arg) {
-    return observers.stream()
-        .map(observer -> func.apply(observer, arg))
-        .filter(rejection -> rejection != null)
-        .collect(toList());
+    return observers.stream().map(observer -> func.apply(observer, arg)).filter(Objects::nonNull).collect(toList());
   }
 
   public void fireInform(Informant0<T> func) {
@@ -107,5 +115,19 @@ public class Subject<T> {
         func.inform(observer, arg1, arg2, arg3, arg4);
       }
     });
+  }
+
+  public <U> U fireProcess(Processor0<T, U> func, U data) {
+    for (T observer : observers) {
+      data = func.process(observer, data);
+    }
+    return data;
+  }
+
+  public <U1, U2> U2 fireProcess(Processor1<T, U1, U2> func, U1 id, U2 data) {
+    for (T observer : observers) {
+      data = func.process(observer, id, data);
+    }
+    return data;
   }
 }

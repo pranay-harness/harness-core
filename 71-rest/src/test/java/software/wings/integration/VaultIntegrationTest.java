@@ -17,6 +17,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.exception.WingsException;
+import io.harness.expression.SecretString;
 import io.harness.rest.RestResponse;
 import io.harness.scm.SecretName;
 import io.harness.security.encryption.EncryptionConfig;
@@ -32,7 +33,6 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.VaultConfig;
-import software.wings.common.Constants;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.impl.security.SecretText;
@@ -321,7 +321,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
 
     // Update the vault base path
     savedVaultConfig.setBasePath(VAULT_BASE_PATH);
-    savedVaultConfig.setAuthToken(Constants.SECRET_MASK);
+    savedVaultConfig.setAuthToken(SecretString.SECRET_MASK);
     updateVaultConfig(savedVaultConfig);
 
     savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);

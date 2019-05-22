@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -17,7 +18,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
-import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
 
 import com.google.inject.Inject;

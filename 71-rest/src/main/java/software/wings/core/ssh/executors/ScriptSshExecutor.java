@@ -18,6 +18,7 @@ import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.KEY_
 import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.PASSWORD_AUTH;
 import static software.wings.utils.SshHelperUtils.normalizeError;
 
+import com.google.common.base.Charsets;
 import com.google.inject.Inject;
 
 import com.jcraft.jsch.Channel;
@@ -26,7 +27,6 @@ import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionResultBuilder;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -50,7 +50,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.nio.charset.Charset;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
@@ -264,7 +263,7 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
                     new BoundedInputStream(((ChannelSftp) channel).get(envVariablesFilename), CHUNK_SIZE);
                 saveExecutionLog("Script Output: ");
 
-                br = new BufferedReader(new InputStreamReader(stream, Charset.forName("UTF-8")));
+                br = new BufferedReader(new InputStreamReader(stream, Charsets.UTF_8));
                 String line;
                 while ((line = br.readLine()) != null) {
                   int index = line.indexOf('=');
@@ -379,10 +378,9 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
     return wrapperCommand.toString();
   }
 
-  @SuppressFBWarnings("DMI_INVOKING_TOSTRING_ON_ARRAY") // TODO
   private void passwordPromptResponder(String line, OutputStream outputStream) throws IOException {
     if (matchesPasswordPromptPattern(line)) {
-      outputStream.write((config.getSudoAppPassword() + "\n").getBytes(UTF_8));
+      outputStream.write((new String(config.getSudoAppPassword()) + "\n").getBytes(UTF_8));
       outputStream.flush();
     }
   }
@@ -419,13 +417,13 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
     return lastLine.charAt(lastLine.length() - 1) != text.charAt(text.length() - 1);
   }
 
-  public Session getSession(SshSessionConfig config) {
+  private Session getSession(SshSessionConfig config) {
     return getSession(config,
         new ExecutionLogCallback(logService, config.getAccountId(), config.getAppId(), config.getExecutionId(),
             config.getCommandUnitName()));
   }
 
-  public Session getSession(SshSessionConfig config, ExecutionLogCallback executionLogCallback) {
+  private Session getSession(SshSessionConfig config, ExecutionLogCallback executionLogCallback) {
     if (config.getExecutorType() == null) {
       if (config.getBastionHostConfig() != null) {
         config.setExecutorType(BASTION_HOST);

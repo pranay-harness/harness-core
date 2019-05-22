@@ -3,6 +3,7 @@ package software.wings.service;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.expression.SecretString.SECRET_MASK;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -19,7 +20,6 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
-import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.service.impl.security.SecretManagerImpl.HARNESS_DEFAULT_SECRET_MANAGER;
 import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SECRET_TEXT;
@@ -32,6 +32,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.exception.WingsException;
+import io.harness.expression.SecretString;
 import io.harness.persistence.UuidAware;
 import io.harness.rule.RealMongo;
 import io.harness.security.encryption.EncryptionType;
@@ -68,7 +69,6 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.WorkflowExecution;
-import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.resources.SecretManagementResource;
@@ -291,7 +291,7 @@ public class SecretTextTest extends WingsBaseTest {
     secretManagementResource.updateSecret(accountId, secretId,
         SecretText.builder()
             .name(secretName)
-            .value(Constants.SECRET_MASK)
+            .value(SecretString.SECRET_MASK)
             .usageRestrictions(usageRestrictions)
             .build());
     changeLogs = secretManagementResource.getChangeLogs(accountId, secretId, SECRET_TEXT).getResource();

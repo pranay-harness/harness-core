@@ -47,7 +47,7 @@ public class MaintenanceController implements Managed {
   @Inject private ExecutorService executorService;
 
   private final AtomicBoolean running = new AtomicBoolean(true);
-  private final Subject<MaintenanceListener> maintenanceListenerSubject = new Subject();
+  private final Subject<MaintenanceListener> maintenanceListenerSubject = new Subject<>();
 
   public void register(MaintenanceListener listener) {
     maintenanceListenerSubject.register(listener);

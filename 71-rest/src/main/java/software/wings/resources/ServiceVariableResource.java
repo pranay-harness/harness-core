@@ -1,11 +1,11 @@
 package software.wings.resources;
 
+import static io.harness.expression.SecretString.SECRET_MASK;
 import static java.util.Arrays.asList;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
-import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 
 import com.google.inject.Inject;

@@ -172,16 +172,15 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
   @Override
   public CommandExecutionResult executeCommandString(String command, List<String> envVariablesToCollect) {
     CommandExecutionResult commandExecutionResult = null;
-    CommandExecutionStatus commandExecutionStatus = FAILURE;
 
-    saveExecutionLog(format("Executing command ..."), INFO);
+    saveExecutionLog("Executing command ...", INFO);
 
     switch (this.scriptType) {
       case BASH:
         try {
           commandExecutionResult = executeBashScript(command, envVariablesToCollect);
         } catch (Exception e) {
-          saveExecutionLog(format("Exception: %s", e), ERROR, commandExecutionStatus);
+          saveExecutionLog(format("Exception: %s", e), ERROR, FAILURE);
         }
         break;
 

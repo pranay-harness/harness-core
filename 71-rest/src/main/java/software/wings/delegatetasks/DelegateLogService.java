@@ -11,4 +11,6 @@ import javax.validation.Valid;
 public interface DelegateLogService {
   void save(String accountId, @Valid Log log);
   void save(String accountId, @Valid ThirdPartyApiCallLog thirdPartyApiCallLog);
+  void registerLogSanitizer(LogSanitizer sanitizer);
+  void unregisterLogSanitizer(LogSanitizer sanitizer);
 }

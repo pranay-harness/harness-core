@@ -26,6 +26,7 @@ import static io.harness.delegate.message.MessageConstants.WATCHER_PROCESS;
 import static io.harness.delegate.message.MessageConstants.WATCHER_VERSION;
 import static io.harness.delegate.message.MessengerType.DELEGATE;
 import static io.harness.delegate.message.MessengerType.WATCHER;
+import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.filesystem.FileIo.acquireLock;
 import static io.harness.filesystem.FileIo.isLocked;
 import static io.harness.filesystem.FileIo.releaseLock;
@@ -78,6 +79,7 @@ import io.harness.delegate.message.Message;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.filesystem.FileIo;
 import io.harness.network.FibonacciBackOff;
@@ -125,13 +127,21 @@ import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.TaskType;
+import software.wings.beans.command.Command;
+import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.delegation.ShellScriptParameters;
+import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
 import software.wings.delegate.app.DelegateConfiguration;
+import software.wings.delegatetasks.DelegateLogService;
+import software.wings.delegatetasks.LogSanitizer;
 import software.wings.delegatetasks.TaskLogContext;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.DelegateValidateTask;
 import software.wings.managerclient.ManagerClient;
 import software.wings.managerclient.ManagerClientFactory;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.FileService.FileBucket;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -150,6 +160,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
@@ -184,6 +195,9 @@ public class DelegateServiceImpl implements DelegateService {
   private static final int CLIENT_TOOL_RETRIES = 10;
 
   private static String hostName;
+  private static String delegateId;
+  private static String delegateType;
+  private static String delegateGroupName;
 
   @Inject private DelegateConfiguration delegateConfiguration;
   @Inject private ManagerClient managerClient;
@@ -207,6 +221,8 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private TimeLimiter timeLimiter;
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private DelegateDecryptionService delegateDecryptionService;
+  @Inject private DelegateLogService delegateLogService;
+  @Inject private EncryptionService encryptionService;
 
   private final Object waiter = new Object();
 
@@ -232,9 +248,6 @@ public class DelegateServiceImpl implements DelegateService {
   private long startTime;
   private long upgradeStartedAt;
   private long stoppedAcquiringAt;
-  private static String delegateId;
-  private static String delegateType;
-  private static String delegateGroupName;
   private String accountId;
   private long watcherVersionMatchedAt = System.currentTimeMillis();
 
@@ -1381,10 +1394,12 @@ public class DelegateServiceImpl implements DelegateService {
     }
     logger.info("DelegateTask acquired - uuid: {}, accountId: {}, taskType: {}", delegateTask.getUuid(), accountId,
         delegateTask.getData().getTaskType());
+    Optional<LogSanitizer> sanitizer = getLogSanitizer(delegateTask);
     DelegateRunnableTask delegateRunnableTask =
         TaskType.valueOf(delegateTask.getData().getTaskType())
-            .getDelegateRunnableTask(delegateId, delegateTask, getPostExecutionFunction(delegateTask.getUuid()),
-                getPreExecutionFunction(delegateTask));
+            .getDelegateRunnableTask(delegateId, delegateTask,
+                getPostExecutionFunction(delegateTask.getUuid(), sanitizer.orElse(null)),
+                getPreExecutionFunction(delegateTask, sanitizer.orElse(null)));
     injector.injectMembers(delegateRunnableTask);
     ExecutorService executorService = delegateTask.isAsync()
         ? asyncExecutorService
@@ -1397,12 +1412,78 @@ public class DelegateServiceImpl implements DelegateService {
     logger.info("Task [{}] submitted for execution", delegateTask.getUuid());
   }
 
-  private Supplier<Boolean> getPreExecutionFunction(@NotNull DelegateTask delegateTask) {
+  private Optional<LogSanitizer> getLogSanitizer(@NotNull DelegateTask delegateTask) {
+    String activityId = null;
+    Map<String, String> secrets = new HashMap<>();
+
+    // TODO: This gets secrets for Shell Script, Shell Script Provision, and Command only
+    // When secret decryption is moved to delegate for each task then those secrets can be used instead.
+    Object[] parameters = delegateTask.getData().getParameters();
+    if (parameters.length == 1 && parameters[0] instanceof TaskParameters) {
+      if (parameters[0] instanceof ShellScriptParameters) {
+        // Shell Script
+        ShellScriptParameters shellScriptParameters = (ShellScriptParameters) parameters[0];
+        activityId = shellScriptParameters.getActivityId();
+        secrets = secretMapFromMaskedVariables(
+            shellScriptParameters.getServiceVariables(), shellScriptParameters.getSafeDisplayServiceVariables());
+      } else if (parameters[0] instanceof ShellScriptProvisionParameters) {
+        // Shell Script Provision
+        ShellScriptProvisionParameters shellScriptProvisionParameters = (ShellScriptProvisionParameters) parameters[0];
+        activityId = shellScriptProvisionParameters.getActivityId();
+        Map<String, EncryptedDataDetail> encryptedVariables = shellScriptProvisionParameters.getEncryptedVariables();
+        if (isNotEmpty(encryptedVariables)) {
+          for (Entry<String, EncryptedDataDetail> encryptedVariable : encryptedVariables.entrySet()) {
+            try {
+              secrets.put(encryptedVariable.getKey(),
+                  String.valueOf(encryptionService.getDecryptedValue(encryptedVariable.getValue())));
+            } catch (IOException e) {
+              throw new WingsException("Error occurred while decrypting encrypted variables", e);
+            }
+          }
+        }
+      }
+    } else {
+      if (parameters.length >= 2 && parameters[0] instanceof Command
+          && parameters[1] instanceof CommandExecutionContext) {
+        // Command
+        CommandExecutionContext context = (CommandExecutionContext) parameters[1];
+        activityId = context.getActivityId();
+        secrets = secretMapFromMaskedVariables(context.getServiceVariables(), context.getSafeDisplayServiceVariables());
+      }
+    }
+    return isNotBlank(activityId) && isNotEmpty(secrets) ? Optional.of(new LogSanitizer(activityId, secrets))
+                                                         : Optional.empty();
+  }
+
+  /**
+   * Build secret map from two maps. Both contain all variables, secret and plain.
+   * The first does not mask secrets while the second does
+   * @param serviceVariables contains all variables, secret and plain, unmasked
+   * @param safeDisplayServiceVariables contains all variables with secret ones masked
+   * @return map of only secret variables, unmasked
+   */
+  private static Map<String, String> secretMapFromMaskedVariables(
+      Map<String, String> serviceVariables, Map<String, String> safeDisplayServiceVariables) {
+    Map<String, String> secrets = new HashMap<>();
+    if (isNotEmpty(serviceVariables) && isNotEmpty(safeDisplayServiceVariables)) {
+      for (Map.Entry<String, String> entry : safeDisplayServiceVariables.entrySet()) {
+        if (SECRET_MASK.equals(entry.getValue())) {
+          secrets.put(entry.getKey(), serviceVariables.get(entry.getKey()));
+        }
+      }
+    }
+    return secrets;
+  }
+
+  private Supplier<Boolean> getPreExecutionFunction(@NotNull DelegateTask delegateTask, LogSanitizer sanitizer) {
     return () -> {
       logger.info("Starting pre-execution for task {}", delegateTask.getUuid());
       if (!currentlyExecutingTasks.containsKey(delegateTask.getUuid())) {
         logger.info("Adding task {} to executing tasks", delegateTask.getUuid());
         currentlyExecutingTasks.put(delegateTask.getUuid(), delegateTask);
+        if (sanitizer != null) {
+          delegateLogService.registerLogSanitizer(sanitizer);
+        }
         return true;
       } else {
         logger.info("Task {} is already being executed", delegateTask.getUuid());
@@ -1411,7 +1492,7 @@ public class DelegateServiceImpl implements DelegateService {
     };
   }
 
-  private Consumer<DelegateTaskResponse> getPostExecutionFunction(String taskId) {
+  private Consumer<DelegateTaskResponse> getPostExecutionFunction(String taskId, LogSanitizer sanitizer) {
     return taskResponse -> {
       Response<ResponseBody> response = null;
       try {
@@ -1437,6 +1518,9 @@ public class DelegateServiceImpl implements DelegateService {
       } catch (Exception e) {
         logger.error("Unable to send response to manager", e);
       } finally {
+        if (sanitizer != null) {
+          delegateLogService.unregisterLogSanitizer(sanitizer);
+        }
         currentlyExecutingTasks.remove(taskId);
         if (currentlyExecutingFutures.remove(taskId) != null) {
           logger.info("Removed {} from executing futures on post execution", taskId);
