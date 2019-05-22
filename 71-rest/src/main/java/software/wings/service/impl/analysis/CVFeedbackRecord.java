@@ -118,8 +118,8 @@ public class CVFeedbackRecord implements GoogleDataStoreAware {
 
     addFieldIfNotEmpty(recordBuilder, CVFeedbackRecordKeys.createdAt, createdAt, true);
     addFieldIfNotEmpty(recordBuilder, CVFeedbackRecordKeys.lastUpdatedAt, lastUpdatedAt, true);
-    addFieldIfNotEmpty(recordBuilder, CVFeedbackRecordKeys.createdBy, createdBy.toString(), true);
-    addFieldIfNotEmpty(recordBuilder, CVFeedbackRecordKeys.lastUpdatedBy, lastUpdatedBy.toString(), true);
+    addFieldIfNotEmpty(recordBuilder, CVFeedbackRecordKeys.createdBy, JsonUtils.asJson(createdBy), true);
+    addFieldIfNotEmpty(recordBuilder, CVFeedbackRecordKeys.lastUpdatedBy, JsonUtils.asJson(lastUpdatedBy), true);
     return recordBuilder.build();
   }
 
@@ -129,18 +129,20 @@ public class CVFeedbackRecord implements GoogleDataStoreAware {
         CVFeedbackRecord.builder()
             .serviceId(readString(entity, CVFeedbackRecordKeys.serviceId))
             .envId(readString(entity, CVFeedbackRecordKeys.envId))
-
+            .stateExecutionId(readString(entity, CVFeedbackRecordKeys.stateExecutionId))
             .cvConfigId(readString(entity, CVFeedbackRecordKeys.cvConfigId))
-            .clusterLabel(Integer.valueOf(readString(entity, CVFeedbackRecordKeys.clusterLabel)))
+            .clusterLabel((int) (readLong(entity, CVFeedbackRecordKeys.clusterLabel)))
             .clusterType(CLUSTER_TYPE.valueOf(readString(entity, CVFeedbackRecordKeys.clusterType)))
-
             .logMessage(readString(entity, CVFeedbackRecordKeys.logMessage))
+            .analysisMinute(readLong(entity, CVFeedbackRecordKeys.analysisMinute))
+            .comment(readString(entity, CVFeedbackRecordKeys.comment))
             .actionTaken(FeedbackAction.valueOf(readString(entity, CVFeedbackRecordKeys.actionTaken)))
             .uuid(entity.getKey().getName())
             .priority(FeedbackPriority.valueOf(readString(entity, CVFeedbackRecordKeys.priority)))
             .jiraLink(readString(entity, CVFeedbackRecordKeys.jiraLink))
             .createdAt(readLong(entity, CVFeedbackRecordKeys.createdAt))
             .lastUpdatedAt(readLong(entity, CVFeedbackRecordKeys.lastUpdatedAt))
+            .supervisedLabel(readString(entity, CVFeedbackRecordKeys.supervisedLabel))
             .build();
 
     String createdBy = readString(entity, CVFeedbackRecordKeys.createdBy);

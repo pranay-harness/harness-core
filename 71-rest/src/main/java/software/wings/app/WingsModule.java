@@ -738,7 +738,7 @@ public class WingsModule extends DependencyModule {
     if (configuration.getExecutionLogsStorageMode() == null) {
       configuration.setExecutionLogsStorageMode(DataStorageMode.MONGO);
     }
-    // configuration.setExecutionLogsStorageMode(DataStorageMode.GOOGLE_CLOUD_DATA_STORE);
+
     switch (configuration.getExecutionLogsStorageMode()) {
       case GOOGLE_CLOUD_DATA_STORE:
         bind(DataStoreService.class).to(GoogleDataStoreServiceImpl.class);
