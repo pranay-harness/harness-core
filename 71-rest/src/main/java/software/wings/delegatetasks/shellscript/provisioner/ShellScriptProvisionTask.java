@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.shellscript.provisioner;
 
+import static java.util.Collections.emptyList;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.INFO;
 
@@ -34,7 +35,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -81,7 +81,7 @@ public class ShellScriptProvisionTask extends AbstractDelegateRunnableTask {
                                                     .build();
       ScriptProcessExecutor executor = shellExecutorFactory.getExecutor(shellExecutorConfig);
       CommandExecutionResult commandExecutionResult =
-          executor.executeCommandString(parameters.getScriptBody(), Collections.emptyList());
+          executor.executeCommandString(parameters.getScriptBody(), emptyList());
 
       saveExecutionLog(parameters, "Execution finished with status: " + commandExecutionResult.getStatus(),
           commandExecutionResult.getStatus());

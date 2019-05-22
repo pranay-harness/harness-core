@@ -11,7 +11,6 @@ import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
 import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
@@ -29,6 +28,7 @@ import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.expression.SecretString;
 import io.harness.network.Http;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptionType;
@@ -47,7 +47,6 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.KmsSetupAlert;
-import software.wings.common.Constants;
 import software.wings.helpers.ext.vault.VaultSysAuthRestClient;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
@@ -254,8 +253,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
       shouldVerify = !savedVaultConfig.getVaultUrl().equals(vaultConfig.getVaultUrl())
           || !Objects.equals(savedVaultConfig.getAppRoleId(), vaultConfig.getAppRoleId())
-          || !Constants.SECRET_MASK.equals(vaultConfig.getAuthToken())
-          || !Constants.SECRET_MASK.equals(vaultConfig.getSecretId());
+          || !SecretString.SECRET_MASK.equals(vaultConfig.getAuthToken())
+          || !SecretString.SECRET_MASK.equals(vaultConfig.getSecretId());
     }
     if (shouldVerify) {
       // New vault configuration, need to validate it's parameters

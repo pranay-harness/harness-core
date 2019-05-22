@@ -27,7 +27,7 @@ public class ExecutionLogWriterTest {
 
   @Test
   @Category(UnitTests.class)
-  public void smokeTest() throws java.io.IOException {
+  public void smokeTest() {
     ExecutionLogWriter testWriter = ExecutionLogWriter.builder()
                                         .accountId(ACCOUNT_ID)
                                         .appId(APP_ID)

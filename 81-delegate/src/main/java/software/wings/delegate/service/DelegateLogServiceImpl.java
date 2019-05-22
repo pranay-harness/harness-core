@@ -27,11 +27,13 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.RemovalCause;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.observer.Subject;
 import io.harness.rest.RestResponse;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Log;
 import software.wings.beans.Log.LogLevel;
 import software.wings.delegatetasks.DelegateLogService;
+import software.wings.delegatetasks.LogSanitizer;
 import software.wings.managerclient.ManagerClient;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 
@@ -47,9 +49,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
 
-/**
- * Created by peeyushaggarwal on 1/9/17.
- */
 @Singleton
 @ValidateOnExecution
 @Slf4j
@@ -57,6 +56,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
   private Cache<String, List<Log>> cache;
   private Cache<String, List<ThirdPartyApiCallLog>> apiCallLogCache;
   private ManagerClient managerClient;
+  private final Subject<LogSanitizer> logSanitizerSubject = new Subject<>();
 
   @Inject
   public DelegateLogServiceImpl(ManagerClient managerClient, @Named("asyncExecutor") ExecutorService executorService) {
@@ -88,7 +88,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
       logger.info("Logging stack while saving the execution log ", new Exception(""));
     }
 
-    String line = log.getLogLine();
+    String line = logSanitizerSubject.fireProcess(LogSanitizer::sanitizeLog, log.getActivityId(), log.getLogLine());
     if (log.getLogLevel() == LogLevel.ERROR) {
       line = color(line, Red, Bold);
     } else if (log.getLogLevel() == LogLevel.WARN) {
@@ -106,6 +106,16 @@ public class DelegateLogServiceImpl implements DelegateLogService {
 
     Optional.ofNullable(apiCallLogCache.get(accountId, s -> new ArrayList<>()))
         .ifPresent(logs -> logs.add(thirdPartyApiCallLog));
+  }
+
+  @Override
+  public void registerLogSanitizer(LogSanitizer sanitizer) {
+    logSanitizerSubject.register(sanitizer);
+  }
+
+  @Override
+  public void unregisterLogSanitizer(LogSanitizer sanitizer) {
+    logSanitizerSubject.unregister(sanitizer);
   }
 
   private void dispatchCommandExecutionLogs(String accountId, List<Log> logs, RemovalCause removalCause) {

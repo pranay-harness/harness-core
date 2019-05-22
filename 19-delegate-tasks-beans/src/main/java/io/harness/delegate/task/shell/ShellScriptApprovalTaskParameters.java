@@ -1,5 +1,7 @@
 package io.harness.delegate.task.shell;
 
+import static java.util.Collections.singletonList;
+
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
@@ -8,7 +10,6 @@ import io.harness.expression.Expression;
 import lombok.Builder;
 import lombok.Data;
 
-import java.util.Arrays;
 import java.util.List;
 
 @Data
@@ -26,6 +27,6 @@ public class ShellScriptApprovalTaskParameters implements TaskParameters, Execut
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Arrays.asList(IgnoreValidationCapabilityGenerator.buildIgnoreValidationCapability());
+    return singletonList(IgnoreValidationCapabilityGenerator.buildIgnoreValidationCapability());
   }
 }

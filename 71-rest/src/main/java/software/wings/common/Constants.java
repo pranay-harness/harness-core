@@ -504,11 +504,6 @@ public interface Constants {
   String DEFAULT_AWS_HOST_NAME_CONVENTION = "${host.ec2Instance.privateDnsName.split('\\.')[0]}";
 
   /**
-   * The constant SECRET_MASK.
-   */
-  String SECRET_MASK = "**************";
-
-  /**
    * The constant DEFAULT_PROD_SUPPORT_USER_GROUP_DESCRIPTION.
    */
   String DEFAULT_PROD_SUPPORT_USER_GROUP_DESCRIPTION =

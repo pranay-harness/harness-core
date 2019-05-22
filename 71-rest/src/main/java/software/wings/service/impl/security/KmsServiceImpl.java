@@ -25,6 +25,7 @@ import com.google.inject.Singleton;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
+import io.harness.expression.SecretString;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +36,6 @@ import software.wings.beans.BaseFile;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.KmsConfig.KmsConfigKeys;
 import software.wings.beans.SyncTaskContext;
-import software.wings.common.Constants;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.service.intfc.AccountService;
@@ -290,8 +290,8 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
         kmsConfig.setKmsArn(new String(decryptLocal(arnData)));
 
         if (maskSecret) {
-          kmsConfig.setSecretKey(Constants.SECRET_MASK);
-          kmsConfig.setKmsArn(Constants.SECRET_MASK);
+          kmsConfig.setSecretKey(SecretString.SECRET_MASK);
+          kmsConfig.setKmsArn(SecretString.SECRET_MASK);
         } else {
           EncryptedData secretData = wingsPersistence.get(EncryptedData.class, kmsConfig.getSecretKey());
           Preconditions.checkNotNull(secretData, "encrypted secret key can't be null for " + kmsConfig);

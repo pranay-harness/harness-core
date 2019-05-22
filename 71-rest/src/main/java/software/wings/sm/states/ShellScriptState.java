@@ -362,9 +362,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
         Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString()));
     Map<String, String> safeDisplayServiceVariables = context.getSafeDisplayServiceVariables();
 
-    if (serviceVariables != null) {
-      serviceVariables.replaceAll((name, value) -> context.renderExpression(value));
-    }
+    serviceVariables.replaceAll((name, value) -> context.renderExpression(value));
 
     if (safeDisplayServiceVariables != null) {
       safeDisplayServiceVariables.replaceAll((name, value) -> context.renderExpression(value));
