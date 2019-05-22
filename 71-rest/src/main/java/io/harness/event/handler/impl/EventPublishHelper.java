@@ -495,6 +495,14 @@ public class EventPublishHelper {
     publishEvent(EventType.NEW_TRIAL_SIGNUP, getProperties(null, email, userName, inviteId));
   }
 
+  public void publishJoinAccountEvent(String email, String userName) {
+    if (isEmpty(email)) {
+      return;
+    }
+
+    publishEvent(EventType.JOIN_ACCOUNT_REQUEST, getProperties(null, email, userName, null));
+  }
+
   private String checkIfMarketoOrSegmentIsEnabledAndGetUserEmail(EventType eventType) {
     if (!checkIfMarketoOrSegmentIsEnabled()) {
       return null;
