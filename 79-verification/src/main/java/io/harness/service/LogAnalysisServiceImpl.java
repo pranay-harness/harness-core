@@ -551,6 +551,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     boolean isAnalysisEmpty =
         isEmpty(mlAnalysisResponse.getControl_events()) && isEmpty(mlAnalysisResponse.getTest_events());
     mlAnalysisResponse.compressLogAnalysisRecord();
+    mlAnalysisResponse.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
 
     if (mlAnalysisResponse.getLogCollectionMinute() == -1 || !isAnalysisEmpty) {
       wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(mlAnalysisResponse));

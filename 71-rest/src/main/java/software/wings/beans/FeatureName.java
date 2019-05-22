@@ -42,7 +42,8 @@ public enum FeatureName {
   USE_PCF_CLI,
   AUDIT_TRAIL_UI,
   ARTIFACT_STREAM_REFACTOR,
-  TRIGGER_YAML;
+  TRIGGER_YAML,
+  CV_FEEDBACKS;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;

@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
+import software.wings.beans.FeatureName;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
@@ -30,6 +31,7 @@ import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates.TimeSeriesMetricTemplatesKeys;
 import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.verification.CV24x7DashboardService;
 import software.wings.service.intfc.verification.CVConfigurationService;
@@ -58,6 +60,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
   @Inject WingsPersistence wingsPersistence;
   @Inject CVConfigurationService cvConfigurationService;
   @Inject AnalysisService analysisService;
+  @Inject FeatureFlagService featureFlagService;
 
   @Override
   public List<HeatMap> getHeatMapForLogs(
@@ -229,11 +232,14 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
             .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfiguration.getUuid())
             .field(LogMLAnalysisRecordKeys.logCollectionMinute)
             .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(endTime))
-            .filter(LogMLAnalysisRecordKeys.analysisStatus, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE)
             .project(LogMLAnalysisRecordKeys.analysisDetailsCompressedJson, readDetails)
             .project(LogMLAnalysisRecordKeys.protoSerializedAnalyisDetails, readDetails)
             .project(LogMLAnalysisRecordKeys.cluster_scores, readDetails);
 
+    if (featureFlagService.isEnabled(FeatureName.CV_FEEDBACKS, cvConfiguration.getAccountId())) {
+      analysisRecordQuery = analysisRecordQuery.filter(
+          LogMLAnalysisRecordKeys.analysisStatus, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
+    }
     if (readDetails) {
       analysisRecordQuery =
           analysisRecordQuery.field("logCollectionMinute").greaterThan(TimeUnit.MILLISECONDS.toMinutes(startTime));
