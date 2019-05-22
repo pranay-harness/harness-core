@@ -58,7 +58,6 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
 
     Service service = getService().build();
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(service);
-    when(serviceResourceService.update(service)).thenReturn(service);
 
     ArtifactStream gotArtifactStream1 =
         artifactStreamServiceBindingService.create(APP_ID, SERVICE_ID, ARTIFACT_STREAM_ID_1);
@@ -81,7 +80,6 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
 
     Service service = getService().artifactStreamIds(new ArrayList<>(artifactStreamIds)).build();
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(service);
-    when(serviceResourceService.update(service)).thenReturn(service);
 
     artifactStreamServiceBindingService.delete(APP_ID, SERVICE_ID, ARTIFACT_STREAM_ID_1);
     assertThat(service.getArtifactStreamIds()).isEqualTo(Arrays.asList(ARTIFACT_STREAM_ID_2));
@@ -115,13 +113,11 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_2)).thenReturn(artifactStream2);
 
     Service service1 = getService().artifactStreamIds(new ArrayList<>(artifactStreamIds)).build();
-    when(serviceResourceService.update(service1)).thenReturn(service1);
 
     Service service2 = getService()
                            .uuid(ANOTHER_SERVICE_ID)
                            .artifactStreamIds(new ArrayList<>(Arrays.asList(ARTIFACT_STREAM_ID_1)))
                            .build();
-    when(serviceResourceService.update(service2)).thenReturn(service2);
 
     when(serviceResourceService.listByArtifactStreamId(ARTIFACT_STREAM_ID_1)).thenReturn(asList(service1, service2));
     when(serviceResourceService.listByArtifactStreamId(ARTIFACT_STREAM_ID_2)).thenReturn(asList(service1));
@@ -144,13 +140,10 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_2)).thenReturn(artifactStream2);
 
     Service service1 = getService().artifactStreamIds(new ArrayList<>(artifactStreamIds)).build();
-    when(serviceResourceService.update(service1)).thenReturn(service1);
-
     Service service2 = getService()
                            .uuid(ANOTHER_SERVICE_ID)
                            .artifactStreamIds(new ArrayList<>(Arrays.asList(ARTIFACT_STREAM_ID_1)))
                            .build();
-    when(serviceResourceService.update(service2)).thenReturn(service2);
 
     when(serviceResourceService.listByArtifactStreamId(ARTIFACT_STREAM_ID_1)).thenReturn(asList(service1, service2));
     when(serviceResourceService.listByArtifactStreamId(ARTIFACT_STREAM_ID_2)).thenReturn(asList(service1));
