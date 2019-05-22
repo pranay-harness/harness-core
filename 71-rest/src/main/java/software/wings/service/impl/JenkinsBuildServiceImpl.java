@@ -61,7 +61,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   @Override
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       JenkinsConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    return getBuildDetails(artifactStreamAttributes, appId, config, encryptionDetails, 50);
+    return getBuildDetails(artifactStreamAttributes, appId, config, encryptionDetails, 25);
   }
 
   @Override

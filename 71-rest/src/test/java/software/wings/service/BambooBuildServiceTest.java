@@ -56,7 +56,7 @@ public class BambooBuildServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldGetBuilds() {
-    when(bambooService.getBuilds(bambooConfig, null, BUILD_JOB_NAME, 50))
+    when(bambooService.getBuilds(bambooConfig, null, BUILD_JOB_NAME, 25))
         .thenReturn(
             Lists.newArrayList(aBuildDetails().withNumber("10").build(), aBuildDetails().withNumber("9").build()));
     List<BuildDetails> builds =
