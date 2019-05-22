@@ -11,6 +11,7 @@ import com.amazonaws.services.ec2.model.DescribeImagesRequest;
 import com.amazonaws.services.ec2.model.DescribeImagesResult;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Image;
+import com.amazonaws.services.ec2.model.Tag;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -22,6 +23,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Created by sgurubelli on 12/14/17.
@@ -47,18 +49,25 @@ public class AmiServiceImpl implements AmiService {
     describeImagesResult.getImages()
         .stream()
         .filter(image -> image != null && isNotBlank(image.getName()))
-        .forEach(image
-            -> buildDetails.add(aBuildDetails()
-                                    .withNumber(image.getName())
-                                    .withRevision(image.getImageId())
-                                    .withUiDisplayName("Image: " + image.getName())
-                                    .build()));
+        .forEach(image -> constructBuildDetails(buildDetails, image));
     if (buildDetails.isEmpty()) {
       logger.info("No images found matching with the given Region {}, and filters {}", region, filters);
     } else {
       logger.info("Images found of size {}", buildDetails.size());
     }
     return buildDetails;
+  }
+
+  private void constructBuildDetails(List<BuildDetails> buildDetails, Image image) {
+    Map<String, String> metadata = image.getTags().stream().collect(Collectors.toMap(Tag::getKey, Tag::getValue));
+    metadata.put("ownerId", image.getOwnerId());
+    metadata.put("imageType", image.getImageType());
+    buildDetails.add(aBuildDetails()
+                         .withNumber(image.getName())
+                         .withRevision(image.getImageId())
+                         .withUiDisplayName("Image: " + image.getName())
+                         .withMetadata(metadata)
+                         .build());
   }
 
   protected List<Filter> getFilters(Map<String, List<String>> tags, Map<String, String> filterMap) {
