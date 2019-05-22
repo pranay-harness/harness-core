@@ -17,6 +17,8 @@ import software.wings.security.annotations.AuthRule;
 
 @Slf4j
 public class EnvironmentDataFetcher extends AbstractDataFetcher<QLEnvironment, QLEnvironmentQueryParameters> {
+  public static final String ENV_DOES_NOT_EXISTS_MSG = "Environment does not exist";
+
   @Inject HPersistence persistence;
 
   @Override
@@ -24,7 +26,7 @@ public class EnvironmentDataFetcher extends AbstractDataFetcher<QLEnvironment, Q
   public QLEnvironment fetch(QLEnvironmentQueryParameters qlQuery) {
     Environment environment = persistence.get(Environment.class, qlQuery.getEnvironmentId());
     if (environment == null) {
-      throw new InvalidRequestException("Environment does not exist", WingsException.USER);
+      throw new InvalidRequestException(ENV_DOES_NOT_EXISTS_MSG, WingsException.USER);
     }
 
     final QLEnvironmentBuilder builder = QLEnvironment.builder();

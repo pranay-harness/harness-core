@@ -1,6 +1,8 @@
 package software.wings.graphql.datafetcher;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.exception.WingsException.ReportTarget.GRAPHQL_API;
+import static io.harness.exception.WingsException.USER_SRE;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
@@ -8,8 +10,10 @@ import com.google.inject.Inject;
 import graphql.GraphQLContext;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
+import io.harness.eraro.ResponseMessage;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -30,15 +34,19 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
 public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
   public static final String SELECTION_SET_FIELD_NAME = "selectionSet";
+  private static final String EXCEPTION_MSG_DELIMITER = ";; ";
+  private static final String GENERIC_EXCEPTION_MSG = "An error has occurred. Please contact the Harness support team.";
 
   @Inject AuthRuleGraphQL authRuleInstrumentation;
 
@@ -64,19 +72,28 @@ public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
     Type[] typeArguments = ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments();
     Class<T> returnClass = (Class<T>) typeArguments[0];
     Class<P> parametersClass = (Class<P>) typeArguments[1];
-    final P parameters = fetchParameters(parametersClass, dataFetchingEnvironment);
-    authRuleInstrumentation.instrumentDataFetcher(this, dataFetchingEnvironment, parameters, returnClass);
-    String parentTypeName = dataFetchingEnvironment.getParentType().getName();
-    if (isBatchingRequired(parentTypeName)) {
-      String dataFetcherName = getDataFetcherName(parentTypeName);
-      return fetchWithBatching(parameters, dataFetchingEnvironment.getDataLoader(dataFetcherName));
-    } else {
-      return fetch(parameters);
+    Object result = null;
+    try {
+      final P parameters = fetchParameters(parametersClass, dataFetchingEnvironment);
+      authRuleInstrumentation.instrumentDataFetcher(this, dataFetchingEnvironment, parameters, returnClass);
+      String parentTypeName = dataFetchingEnvironment.getParentType().getName();
+      if (isBatchingRequired(parentTypeName)) {
+        String dataFetcherName = getDataFetcherName(parentTypeName);
+        result = fetchWithBatching(parameters, dataFetchingEnvironment.getDataLoader(dataFetcherName));
+      } else {
+        result = fetch(parameters);
+      }
+    } catch (WingsException ex) {
+      throw new WingsException(getCombinedErrorMessages(ex), ex, ex.getReportTargets());
+    } catch (Exception ex) {
+      throw new WingsException(GENERIC_EXCEPTION_MSG, USER_SRE);
     }
+    return result;
   }
 
-  protected WingsException batchFetchException(Throwable cause) {
-    return new WingsException("", cause);
+  private String getCombinedErrorMessages(WingsException ex) {
+    List<ResponseMessage> responseMessages = ExceptionLogger.getResponseMessageList(ex, GRAPHQL_API);
+    return responseMessages.stream().map(rm -> rm.getMessage()).collect(Collectors.joining(EXCEPTION_MSG_DELIMITER));
   }
 
   public PermissionAttribute getPermissionAttribute(P parameters) {
