@@ -294,8 +294,11 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     logDataRecords.stream()
         .filter(logDataRecord -> logDataRecord.getClusterLevel().equals(H0))
         .forEach(logDataRecord -> {
-          if (isNotEmpty(getHostsForMinute(appId, fieldNameForQuery, fieldValueForQuery,
-                  logDataRecord.getLogCollectionMinute(), H0, H1, H2, HF))) {
+          // Assumption: We either save all the records or none of the records in a batch.
+          final Set<String> hostsForMinute = getHostsForMinute(
+              appId, fieldNameForQuery, fieldValueForQuery, logDataRecord.getLogCollectionMinute(), H0, H1, H2, HF);
+          if (isNotEmpty(hostsForMinute)
+              && (isEmpty(stateExecutionId) || hostsForMinute.contains(logDataRecord.getHost()))) {
             clusteredMinutes.add(logDataRecord.getLogCollectionMinute());
           }
         });
