@@ -2,6 +2,7 @@ package migrations;
 
 import com.google.common.collect.ImmutableList;
 
+import migrations.all.AddAnalysisStatusMigration;
 import migrations.all.AddInfraMappingNameToInstanceData;
 import migrations.all.AddIsDefaultFlagToUserGroup;
 import migrations.all.AddOrchestrationToWorkflows;
@@ -12,6 +13,7 @@ import migrations.all.CleanupOrphanInstances;
 import migrations.all.CleanupSyncStatusForDeletedEntities;
 import migrations.all.DeleteAndAddInstanceSyncJobToAllAccounts;
 import migrations.all.DeleteOrphanNotificationGroups;
+import migrations.all.ExplodeLogMLFeedbackRecordsMigration;
 import migrations.all.MarkSendMailFlagAsTrueInUserGroup;
 import migrations.all.MigrateLogDataRecordsToGoogle;
 import migrations.all.RemoveSupportEmailFromSalesContacts;
@@ -57,6 +59,8 @@ public class MigrationBackgroundList {
         .add(Pair.of(24, SetEmailToIndividualMemberFlag.class))
         .add(Pair.of(25, SetEmailToIndividualMemberFlag.class))
         .add(Pair.of(26, MarkSendMailFlagAsTrueInUserGroup.class))
+        .add(Pair.of(27, AddAnalysisStatusMigration.class))
+        .add(Pair.of(28, ExplodeLogMLFeedbackRecordsMigration.class))
         .build();
   }
 }
