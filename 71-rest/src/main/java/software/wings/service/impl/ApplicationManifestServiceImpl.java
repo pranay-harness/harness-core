@@ -17,6 +17,7 @@ import static software.wings.delegatetasks.k8s.K8sTaskHelper.manifestFilesFromGi
 import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.notNullCheck;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -24,10 +25,12 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.waiter.ErrorNotifyResponseData;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Application;
 import software.wings.beans.Event.Type;
@@ -59,6 +62,8 @@ import software.wings.utils.ApplicationManifestUtils;
 import software.wings.yaml.directory.DirectoryNode;
 import software.wings.yaml.directory.DirectoryPath;
 
+import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,11 +92,41 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
   @Override
   public ManifestFile createManifestFileByServiceId(ManifestFile manifestFile, String serviceId) {
+    doFileValidations(manifestFile);
     return upsertManifestFileForService(manifestFile, serviceId, true);
+  }
+
+  private void doFileValidations(ManifestFile manifestFile) {
+    doFileSizeValidation(manifestFile);
+  }
+
+  @VisibleForTesting
+  public void doFileSizeValidation(ManifestFile manifestFile) {
+    if (isEmpty(manifestFile.getFileContent())) {
+      return;
+    }
+    byte[] bytes;
+    try {
+      bytes = manifestFile.getFileContent().getBytes("UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+    }
+    if (bytes.length > 16 * 1024) {
+      throw new InvalidRequestException(format("File size: %s bytes exceeded the limit", bytes.length), USER);
+    }
+  }
+
+  private void doFileExtensionValidation(ManifestFile manifestFile) {
+    List<String> allowedExtensions = Arrays.asList("yaml", "yml");
+    String fileExtension = FilenameUtils.getExtension(manifestFile.getFileName());
+    if (!allowedExtensions.contains(fileExtension)) {
+      throw new InvalidRequestException(format("Extension: %s is not allowed", fileExtension), USER);
+    }
   }
 
   @Override
   public ManifestFile updateManifestFileByServiceId(ManifestFile manifestFile, String serviceId) {
+    doFileValidations(manifestFile);
     return upsertManifestFileForService(manifestFile, serviceId, false);
   }
 

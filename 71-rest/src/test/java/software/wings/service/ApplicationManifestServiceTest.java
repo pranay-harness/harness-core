@@ -33,6 +33,7 @@ import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.ApplicationManifestKeys;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.ApplicationManifestServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -54,6 +55,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
 
   @Inject @InjectMocks ApplicationManifestService applicationManifestService;
+  @Inject ApplicationManifestServiceImpl applicationManifestServiceImpl;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -675,5 +677,13 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
 
     manifestFile = getManifestFileWithName(fileName2);
     applicationManifestService.upsertApplicationManifestFile(manifestFile, appManifest, true);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testDoFileSizeValidation() {
+    String content = "abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabc";
+    ManifestFile manifestFile = ManifestFile.builder().fileContent(content).build();
+    applicationManifestServiceImpl.doFileSizeValidation(manifestFile);
   }
 }
