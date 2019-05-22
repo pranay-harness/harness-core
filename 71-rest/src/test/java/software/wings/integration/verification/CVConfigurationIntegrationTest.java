@@ -579,6 +579,26 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Category(IntegrationTests.class)
+  public <T extends CVConfiguration> void testCloudWatchConfigurationNoMetricsShouldFail() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
+    String url =
+        API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + CLOUD_WATCH;
+    logger.info("POST " + url);
+    WebTarget target = client.target(url);
+
+    cloudWatchCVServiceConfiguration.setLambdaFunctionsMetrics(null);
+    cloudWatchCVServiceConfiguration.setLoadBalancerMetrics(null);
+    cloudWatchCVServiceConfiguration.setEc2InstanceNames(null);
+    cloudWatchCVServiceConfiguration.setEcsMetrics(null);
+    cloudWatchCVServiceConfiguration.setEc2Metrics(null);
+    thrown.expect(Exception.class);
+    getRequestBuilderWithAuthHeader(target).post(
+        entity(cloudWatchCVServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testCloudWatchConfigurationWithoutAnyMetric() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 

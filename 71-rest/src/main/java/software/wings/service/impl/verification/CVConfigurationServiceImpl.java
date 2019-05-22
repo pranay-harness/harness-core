@@ -108,6 +108,14 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
       case CLOUD_WATCH:
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), CloudWatchCVServiceConfiguration.class);
+        CloudWatchCVServiceConfiguration cloudWatchCVServiceConfiguration =
+            (CloudWatchCVServiceConfiguration) cvConfiguration;
+        if (isEmpty(cloudWatchCVServiceConfiguration.getLoadBalancerMetrics())
+            && isEmpty(cloudWatchCVServiceConfiguration.getEc2InstanceNames())
+            && isEmpty(cloudWatchCVServiceConfiguration.getLambdaFunctionsMetrics())
+            && isEmpty(cloudWatchCVServiceConfiguration.getEcsMetrics())) {
+          throw new WingsException("No metric provided in Configuration");
+        }
         break;
 
       case SUMO:
