@@ -87,6 +87,8 @@ import javax.crypto.spec.SecretKeySpec;
 @Singleton
 @Slf4j
 public class SecretManagementDelegateServiceImpl implements SecretManagementDelegateService {
+  private static final String REASON_KEY = "reason";
+
   private TimeLimiter timeLimiter;
 
   @Inject
@@ -196,9 +198,12 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
             throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
-                .addParam("reason", "encryption failed after " + NUM_OF_RETRIES + " retries");
+                .addParam(REASON_KEY, "encryption failed after " + NUM_OF_RETRIES + " retries");
           }
           sleep(ofMillis(1000));
+        } else {
+          throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, e.getMessage(), USER)
+              .addParam(REASON_KEY, "Failed to encrypt Vault secret " + name);
         }
       }
     }
@@ -220,9 +225,12 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
             throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
-                .addParam("reason", "Decryption failed after " + NUM_OF_RETRIES + " retries");
+                .addParam(REASON_KEY, "Decryption failed after " + NUM_OF_RETRIES + " retries");
           }
           sleep(ofMillis(1000));
+        } else {
+          throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, e.getMessage(), USER)
+              .addParam(REASON_KEY, "Failed to decrypt Vault secret " + data.getName());
         }
       }
     }
@@ -236,7 +244,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           .deleteSecret(String.valueOf(vaultConfig.getAuthToken()), fullPath);
     } catch (IOException e) {
       throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
-          .addParam("reason", "Deletion of secret failed");
+          .addParam(REASON_KEY, "Deletion of secret failed");
     }
   }
 
@@ -283,7 +291,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       }
     } catch (Exception e) {
       throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
-          .addParam("reason", "Retrieval of vault secret version history failed");
+          .addParam(REASON_KEY, "Retrieval of vault secret version history failed");
     }
 
     return secretChangeLogs;
@@ -308,7 +316,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         logger.warn(format("renewal failed. trial num: %d", failedAttempts), e);
         if (failedAttempts == NUM_OF_RETRIES) {
           throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
-              .addParam("reason", "renewal failed after " + NUM_OF_RETRIES + " retries");
+              .addParam(REASON_KEY, "renewal failed after " + NUM_OF_RETRIES + " retries");
         }
         sleep(ofMillis(1000));
       }
@@ -331,9 +339,12 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
             throw new WingsException(ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR, USER, e)
-                .addParam("reason", "encryption failed after " + NUM_OF_RETRIES + " retries");
+                .addParam(REASON_KEY, "encryption failed after " + NUM_OF_RETRIES + " retries");
           }
           sleep(ofMillis(1000));
+        } else {
+          throw new WingsException(ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR, USER, e)
+              .addParam(REASON_KEY, "Failed to encrypt secret " + name);
         }
       }
     }
@@ -356,9 +367,12 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
             throw new WingsException(ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR, USER, e)
-                .addParam("reason", "Decryption failed after " + NUM_OF_RETRIES + " retries");
+                .addParam(REASON_KEY, "Decryption failed after " + NUM_OF_RETRIES + " retries");
           }
           sleep(ofMillis(1000));
+        } else {
+          throw new WingsException(ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR, USER, e)
+              .addParam(REASON_KEY, "Failed to decrypt secret " + data.getName());
         }
       }
     }
@@ -379,24 +393,20 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
   private EncryptedRecord encryptInternal(String name, String value, String accountId, SettingVariableTypes settingType,
       AwsSecretsManagerConfig secretsManagerConfig, EncryptedRecord savedEncryptedData) {
-    String fullSecretName = getFullPath(secretsManagerConfig.getSecretNamePrefix(), name);
-
-    long startTime = System.currentTimeMillis();
-    logger.info("Saving secret '{}' into AWS Secrets Manager: {}", name, secretsManagerConfig.getName());
-
-    EncryptedRecord encryptedData = savedEncryptedData;
-    if (savedEncryptedData == null) {
-      encryptedData = EncryptedData.builder()
-                          .encryptionKey(fullSecretName)
-                          .encryptionType(EncryptionType.VAULT)
-                          .enabled(true)
-                          .accountId(accountId)
-                          .parentIds(new HashSet<>())
-                          .kmsId(secretsManagerConfig.getUuid())
-                          .build();
+    final String fullSecretName;
+    boolean pathReference = false;
+    if (isNotEmpty(savedEncryptedData.getPath())) {
+      pathReference = true;
+      fullSecretName = savedEncryptedData.getPath();
+    } else {
+      fullSecretName = getFullPath(secretsManagerConfig.getSecretNamePrefix(), name);
     }
 
-    if (isEmpty(value)) {
+    long startTime = System.currentTimeMillis();
+    logger.info("Saving secret '{}' into AWS Secrets Manager: {}", fullSecretName, secretsManagerConfig.getName());
+
+    EncryptedRecord encryptedData = savedEncryptedData;
+    if (!pathReference && isEmpty(value)) {
       return encryptedData;
     }
 
@@ -413,6 +423,12 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     }
 
     if (!secretExists) {
+      // If it's a secret reference, the referred secret has to exist for this reference creation to succeed.
+      if (pathReference) {
+        throw new WingsException(ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR, USER)
+            .addParam(REASON_KEY, "Secret name reference '" + savedEncryptedData.getPath() + "' is invalid");
+      }
+
       // Create the secret with proper tags.
       CreateSecretRequest request = new CreateSecretRequest()
                                         .withName(fullSecretName)
@@ -569,7 +585,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       char[] referredSecretValue = decryptInternal(encryptedData, vaultConfig);
       if (isEmpty(referredSecretValue)) {
         throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER)
-            .addParam("reason", "Vault path '" + encryptedData.getPath() + "' is not referring to any valid secret.");
+            .addParam(REASON_KEY, "Vault path '" + encryptedData.getPath() + "' is not referring to any valid secret.");
       }
 
       encryptedData.setEncryptionKey(keyUrl);
@@ -598,7 +614,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     } else {
       String errorMsg = "Request not successful.";
       logger.error(errorMsg);
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER).addParam("reason", errorMsg);
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER).addParam(REASON_KEY, errorMsg);
     }
   }
 
@@ -618,7 +634,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     } else {
       String errorMsg = "Secret key path '" + fullPath + "' is invalid.";
       logger.error(errorMsg);
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER).addParam("reason", errorMsg);
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER).addParam(REASON_KEY, errorMsg);
     }
   }
 
