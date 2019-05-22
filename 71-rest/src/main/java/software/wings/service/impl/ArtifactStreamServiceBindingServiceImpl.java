@@ -48,8 +48,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
       return artifactStream;
     }
 
-    service.setArtifactStreamIds(artifactStreamIds);
-    serviceResourceService.update(service);
+    serviceResourceService.updateArtifactStreamIds(service, artifactStreamIds);
     return artifactStream;
   }
 
@@ -121,7 +120,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
       return false;
     }
 
-    serviceResourceService.update(service);
+    serviceResourceService.updateArtifactStreamIds(service, artifactStreamIds);
     return true;
   }
 }

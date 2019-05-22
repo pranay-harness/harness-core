@@ -605,6 +605,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    */
   @Override
   public Service update(Service service, boolean fromYaml) {
+    // TODO: ASR: YAML: needs to be updated when bindings support is added to YAML
     Service savedService = get(service.getAppId(), service.getUuid(), false);
     notNullCheck("Service", savedService);
 
@@ -627,8 +628,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       } else {
         updateOperations.unset("helmValueYaml");
       }
-    } else {
-      updateOperations.set(ServiceKeys.artifactStreamIds, service.getArtifactStreamIds());
     }
 
     wingsPersistence.update(savedService, updateOperations);
@@ -646,6 +645,22 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         accountId, savedService, updatedService, Type.UPDATE, service.isSyncFromGit(), isRename);
 
     return updatedService;
+  }
+
+  @Override
+  public Service updateArtifactStreamIds(Service service, List<String> artifactStreamIds) {
+    if (artifactStreamIds == null) {
+      artifactStreamIds = new ArrayList<>();
+    }
+
+    Service savedService = get(service.getAppId(), service.getUuid(), false);
+    notNullCheck("Service", savedService);
+
+    UpdateOperations<Service> updateOperations =
+        wingsPersistence.createUpdateOperations(Service.class).set(ServiceKeys.artifactStreamIds, artifactStreamIds);
+
+    wingsPersistence.update(savedService, updateOperations);
+    return get(service.getAppId(), service.getUuid(), false);
   }
 
   /**
