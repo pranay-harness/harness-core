@@ -167,10 +167,10 @@ public class SecretManagerImpl implements SecretManager {
       encryptionType = LOCAL;
     } else if (vaultService.getSecretConfig(accountId) != null) {
       encryptionType = EncryptionType.VAULT;
-    } else if (kmsService.getSecretConfig(accountId) != null) {
-      encryptionType = EncryptionType.KMS;
     } else if (secretsManagerService.getSecretConfig(accountId) != null) {
       encryptionType = EncryptionType.AWS_SECRETS_MANAGER;
+    } else if (kmsService.getSecretConfig(accountId) != null) {
+      encryptionType = EncryptionType.KMS;
     } else {
       encryptionType = LOCAL;
     }
@@ -1025,13 +1025,19 @@ public class SecretManagerImpl implements SecretManager {
     }
 
     if (isNotEmpty(path)) {
-      if (encryptionType != EncryptionType.VAULT && encryptionType != EncryptionType.AWS_SECRETS_MANAGER) {
-        throw new WingsException("Secret path can be specified only if the secret manager is of VAULT type!");
-      }
-      // Path should always have a "#" in and a key name after the #.
-      if (path.indexOf('#') < 0) {
-        throw new WingsException(
-            "Secret path need to include the # sign with the the key name after. E.g. /foo/bar/my-secret#my-key.");
+      switch (encryptionType) {
+        case VAULT:
+          // Path should always have a "#" in and a key name after the #.
+          if (path.indexOf('#') < 0) {
+            throw new WingsException(
+                "Secret path need to include the # sign with the the key name after. E.g. /foo/bar/my-secret#my-key.");
+          }
+          break;
+        case AWS_SECRETS_MANAGER:
+          break;
+        default:
+          throw new WingsException(
+              "Secret path can be specified only if the secret manager is of VAULT/AWS_SECRETS_MANAGER type!");
       }
     }
 
@@ -1084,11 +1090,25 @@ public class SecretManagerImpl implements SecretManager {
         savedData.addSearchTag(name);
 
         // PL-1125: Remove old secret name in Vault if secret text's name changed to not have dangling entries.
-        if (savedData.getEncryptionType() == EncryptionType.VAULT && isEmpty(savedData.getPath())) {
-          // For harness managed secrets, we need to delete the corresponding entries in the Vault service.
-          String keyName = savedData.getEncryptionKey();
-          VaultConfig vaultConfig = vaultService.getVaultConfig(accountId, savedData.getKmsId());
-          vaultService.deleteSecret(accountId, keyName, vaultConfig);
+        if (isEmpty(savedData.getPath())) {
+          // For harness managed secrets, we need to delete the corresponding entries in the secret manager.
+          String secretName = savedData.getEncryptionKey();
+          switch (savedData.getEncryptionType()) {
+            case VAULT:
+              VaultConfig vaultConfig = vaultService.getVaultConfig(accountId, savedData.getKmsId());
+              vaultService.deleteSecret(accountId, secretName, vaultConfig);
+              break;
+            case AWS_SECRETS_MANAGER:
+              AwsSecretsManagerConfig secretsManagerConfig =
+                  secretsManagerService.getAwsSecretsManagerConfig(accountId, savedData.getKmsId());
+              // retrieve/decrypt the old secret value.
+              secretValue = secretsManagerService.decrypt(savedData, accountId, secretsManagerConfig);
+              secretsManagerService.deleteSecret(accountId, secretName, secretsManagerConfig);
+              break;
+            default:
+              // Not relevant for other secret manager types
+              break;
+          }
         }
       }
       if (valueChanged) {
@@ -1437,9 +1457,22 @@ public class SecretManagerImpl implements SecretManager {
     if (update) {
       if (newEncryptedFile != null) {
         // PL-1125: Remove old encrypted file in Vault if its name has changed so as not to have dangling entries.
-        if (encryptionType == EncryptionType.VAULT && !Objects.equals(oldName, name)) {
-          VaultConfig vaultConfig = vaultService.getVaultConfig(accountId, encryptedData.getKmsId());
-          vaultService.deleteSecret(accountId, encryptedData.getEncryptionKey(), vaultConfig);
+        if (!Objects.equals(oldName, name)) {
+          String secretName = encryptedData.getEncryptionKey();
+          switch (encryptionType) {
+            case VAULT:
+              VaultConfig vaultConfig = vaultService.getVaultConfig(accountId, encryptedData.getKmsId());
+              vaultService.deleteSecret(accountId, secretName, vaultConfig);
+              break;
+            case AWS_SECRETS_MANAGER:
+              AwsSecretsManagerConfig secretsManagerConfig =
+                  secretsManagerService.getAwsSecretsManagerConfig(accountId, encryptedData.getKmsId());
+              secretsManagerService.deleteSecret(accountId, secretName, secretsManagerConfig);
+              break;
+            default:
+              // Does not apply to other secret manager types
+              break;
+          }
         }
 
         encryptedData.setEncryptionKey(newEncryptedFile.getEncryptionKey());
