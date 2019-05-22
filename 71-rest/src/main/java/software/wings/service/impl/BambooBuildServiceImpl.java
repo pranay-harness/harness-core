@@ -36,7 +36,7 @@ public class BambooBuildServiceImpl implements BambooBuildService {
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.BAMBOO.name());
-    return bambooService.getBuilds(bambooConfig, encryptionDetails, artifactStreamAttributes.getJobName(), 50);
+    return bambooService.getBuilds(bambooConfig, encryptionDetails, artifactStreamAttributes.getJobName(), 25);
   }
 
   @Override
