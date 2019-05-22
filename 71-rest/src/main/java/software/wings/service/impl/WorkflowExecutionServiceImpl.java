@@ -1442,8 +1442,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private void lastGoodReleaseInfo(WorkflowElement workflowElement, WorkflowExecution workflowExecution) {
-    WorkflowExecution workflowExecutionLast =
-        fetchLastSuccessDeployment(workflowExecution.getAppId(), workflowExecution.getWorkflowId());
+    WorkflowExecution workflowExecutionLast = fetchLastSuccessDeployment(workflowExecution);
     if (workflowExecutionLast != null) {
       workflowElement.setLastGoodDeploymentDisplayName(workflowExecutionLast.displayName());
       workflowElement.setLastGoodDeploymentUuid(workflowExecutionLast.getUuid());
@@ -2636,6 +2635,19 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         .filter(WorkflowExecutionKeys.status, SUCCESS)
         .order("-createdAt")
         .get();
+  }
+
+  private WorkflowExecution fetchLastSuccessDeployment(WorkflowExecution workflowExecution) {
+    Query<WorkflowExecution> workflowExecutionQuery =
+        wingsPersistence.createQuery(WorkflowExecution.class)
+            .filter(WorkflowExecutionKeys.status, SUCCESS)
+            .filter(WorkflowExecutionKeys.appId, workflowExecution.getAppId())
+            .filter(WorkflowExecutionKeys.workflowId, workflowExecution.getWorkflowId());
+
+    if (isNotEmpty(workflowExecution.getInfraMappingIds())) {
+      workflowExecutionQuery.filter(WorkflowExecutionKeys.infraMappingIds, workflowExecution.getInfraMappingIds());
+    }
+    return workflowExecutionQuery.order("-createdAt").get();
   }
 
   @Override
