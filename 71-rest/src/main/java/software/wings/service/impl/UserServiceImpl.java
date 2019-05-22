@@ -95,6 +95,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
+import software.wings.beans.AccountJoinRequest;
 import software.wings.beans.AccountRole;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
@@ -188,6 +189,7 @@ public class UserServiceImpl implements UserService {
   public static final String INVITE_EMAIL_TEMPLATE_NAME = "invite";
   public static final String TRIAL_EMAIL_VERIFICATION_TEMPLATE_NAME = "invite_trial";
   public static final String TRIAL_SIGNUP_COMPLETED_TEMPLATE_NAME = "trial_signup_completed";
+  public static final String JOIN_EXISTING_TEAM_TEMPLATE_NAME = "join_existing_team";
   public static final int REGISTRATION_SPAM_THRESHOLD = 3;
 
   private static final String BLACKLISTED_DOMAINS_FILE = "trial/blacklisted-email-domains.txt";
@@ -220,6 +222,7 @@ public class UserServiceImpl implements UserService {
   @Inject private AuthenticationUtils authenticationUtils;
   @Inject private SSOService ssoService;
   @Inject private LimitConfigurationService limits;
+  @Inject private MainConfiguration mainConfiguration;
 
   private volatile Set<String> blacklistedDomains = new HashSet<>();
 
@@ -311,6 +314,25 @@ public class UserServiceImpl implements UserService {
     }
 
     return true;
+  }
+
+  @Override
+  public boolean accountJoinRequest(AccountJoinRequest accountJoinRequest) {
+    final String emailAddress = accountJoinRequest.getEmail().toLowerCase();
+    validateTrialSignup(emailAddress);
+
+    Map<String, String> params = new HashMap<>();
+    params.put("email", emailAddress);
+    params.put("name", accountJoinRequest.getName());
+    params.put("url", "https://app.harness.io/#/login");
+    params.put("companyName", accountJoinRequest.getCompanyName());
+    params.put("url", "https://app.harness.io/#/login");
+    params.put("note", accountJoinRequest.getNote());
+    boolean hasAccountAdminEmail = isNotEmpty(accountJoinRequest.getAccountAdminEmail());
+    String supportEmail = mainConfiguration.getSupportEmail();
+    String to = hasAccountAdminEmail ? accountJoinRequest.getAccountAdminEmail() : supportEmail;
+    String cc = hasAccountAdminEmail ? supportEmail : null;
+    return sendEmail(to, cc, JOIN_EXISTING_TEAM_TEMPLATE_NAME, params);
   }
 
   /**
@@ -1028,6 +1050,16 @@ public class UserServiceImpl implements UserService {
     emailData.setAccountId(userInvite.getAccountId());
 
     emailNotificationService.send(emailData);
+  }
+
+  private boolean sendEmail(String toEmail, String cc, String templateName, Map<String, String> templateModel) {
+    List<String> toList = new ArrayList<>();
+    toList.add(toEmail);
+    EmailData emailData =
+        EmailData.builder().to(toList).templateName(templateName).templateModel(templateModel).build();
+    emailData.setCc(isNotEmpty(cc) ? Arrays.asList(cc) : Collections.emptyList());
+    emailData.setRetries(2);
+    return emailNotificationService.send(emailData);
   }
 
   private Map<String, Object> getAddedRoleTemplateModel(User user, Account account, List<UserGroup> userGroups)

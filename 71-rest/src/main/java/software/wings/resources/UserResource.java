@@ -29,6 +29,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Account;
+import software.wings.beans.AccountJoinRequest;
 import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.FeatureFlag;
@@ -211,6 +212,22 @@ public class UserResource {
   @ExceptionMetered
   public RestResponse<Boolean> trialSignup(UserInvite userInvite) {
     return new RestResponse<>(userService.trialSignup(userInvite));
+  }
+
+  /**
+   *  Start the trial registration with email and user info.
+   *  A verification email will be sent to the specified email address.
+   *  On successful verification, it creates the account and registers the user.
+   *
+   * @param accountJoinRequest user invite with email and user info
+   */
+  @PublicApi
+  @POST
+  @Path("join-account")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> trialSignup(AccountJoinRequest accountJoinRequest) {
+    return new RestResponse<>(userService.accountJoinRequest(accountJoinRequest));
   }
 
   @POST

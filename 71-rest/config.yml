@@ -116,6 +116,8 @@ defaultSalesContacts:
     - accountType: PAID
       emailIds: csm@harness.io
 
+supportEmail: support@harness.io
+
 logging:
   level: INFO
   loggers:

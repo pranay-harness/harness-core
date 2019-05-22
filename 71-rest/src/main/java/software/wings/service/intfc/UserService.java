@@ -9,6 +9,7 @@ import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Account;
+import software.wings.beans.AccountJoinRequest;
 import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.User;
@@ -464,4 +465,9 @@ public interface UserService extends OwnedByAccount {
 
   @ValidationGroups(Update.class)
   User updateTwoFactorAuthenticationSettings(@NotNull User user, @NotNull TwoFactorAuthenticationSettings settings);
+
+  /**
+   *
+   */
+  boolean accountJoinRequest(AccountJoinRequest accountJoinRequest);
 }

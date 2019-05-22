@@ -12,6 +12,7 @@ import static io.harness.event.model.EventType.FIRST_DEPLOYMENT_EXECUTED;
 import static io.harness.event.model.EventType.FIRST_ROLLED_BACK_DEPLOYMENT;
 import static io.harness.event.model.EventType.FIRST_VERIFIED_DEPLOYMENT;
 import static io.harness.event.model.EventType.FIRST_WORKFLOW_CREATED;
+import static io.harness.event.model.EventType.JOIN_ACCOUNT_REQUEST;
 import static io.harness.event.model.EventType.LICENSE_UPDATE;
 import static io.harness.event.model.EventType.NEW_TRIAL_SIGNUP;
 import static io.harness.event.model.EventType.SETUP_2FA;
@@ -91,7 +92,7 @@ public class SegmentHandler implements EventHandler {
         Sets.newHashSet(USER_INVITED_FROM_EXISTING_ACCOUNT, COMPLETE_USER_REGISTRATION, FIRST_DELEGATE_REGISTERED,
             FIRST_WORKFLOW_CREATED, FIRST_DEPLOYMENT_EXECUTED, FIRST_VERIFIED_DEPLOYMENT, FIRST_ROLLED_BACK_DEPLOYMENT,
             SETUP_CV_24X7, SETUP_2FA, SETUP_SSO, SETUP_IP_WHITELISTING, SETUP_RBAC, TRIAL_TO_PAID, TRIAL_TO_COMMUNITY,
-            COMMUNITY_TO_PAID, NEW_TRIAL_SIGNUP, LICENSE_UPDATE));
+            COMMUNITY_TO_PAID, NEW_TRIAL_SIGNUP, LICENSE_UPDATE, JOIN_ACCOUNT_REQUEST));
   }
 
   public boolean isSegmentEnabled() {
