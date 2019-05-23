@@ -36,6 +36,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.trigger.Trigger;
 import software.wings.exception.YamlProcessingException;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -177,12 +178,12 @@ public class YamlResource {
    * @return the rest response
    */
   @GET
-  @Path("/triggers/{artifactStreamId}")
+  @Path("/artifactTriggers/{artifactStreamId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<YamlPayload> getTrigger(
+  public RestResponse<YamlPayload> getArtifactTrigger(
       @QueryParam("appId") String appId, @PathParam("artifactStreamId") String artifactStreamId) {
-    return yamlResourceService.getTrigger(appId, artifactStreamId);
+    return yamlResourceService.getArtifactTrigger(appId, artifactStreamId);
   }
 
   /**
@@ -193,10 +194,42 @@ public class YamlResource {
    * @return the rest response
    */
   @PUT
-  @Path("/triggers/{artifactStreamId}")
+  @Path("/artifactTriggers/{artifactStreamId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<ArtifactStream> updateTrigger(
+  public RestResponse<ArtifactStream> updateArtifactTrigger(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, YamlPayload yamlPayload) {
+    return yamlService.update(yamlPayload, accountId);
+  }
+
+  /**
+   * Gets the yaml version of a trigger by trigger id
+   *
+   * @param appId            the app id
+   * @param triggerId the artifact stream id
+   * @return the rest response
+   */
+  @GET
+  @Path("/triggers/{triggerId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<YamlPayload> getTrigger(
+      @QueryParam("appId") String appId, @PathParam("triggerId") String triggerId) {
+    return yamlResourceService.getTrigger(appId, triggerId);
+  }
+
+  /**
+   * Update a trigger that is sent as Yaml (in a JSON "wrapper")
+   *
+   * @param yamlPayload the yaml version of the service command
+   * @param accountId   the account id
+   * @return the rest response
+   */
+  @PUT
+  @Path("/triggers/{triggerId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Trigger> updateTrigger(
       @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, YamlPayload yamlPayload) {
     return yamlService.update(yamlPayload, accountId);
   }

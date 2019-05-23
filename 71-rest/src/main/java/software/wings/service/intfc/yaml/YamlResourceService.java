@@ -38,7 +38,16 @@ public interface YamlResourceService {
    * @param artifactStreamId the artifact stream id
    * @return the rest response
    */
-  RestResponse<YamlPayload> getTrigger(String appId, String artifactStreamId);
+  RestResponse<YamlPayload> getArtifactTrigger(String appId, String artifactStreamId);
+
+  /**
+   * Gets the yaml for a workflow
+   *
+   * @param appId     the app id
+   * @param triggerId the Trigger id
+   * @return the rest response
+   */
+  RestResponse<YamlPayload> getTrigger(String appId, String triggerId);
 
   /**
    * Gets the yaml for a workflow

@@ -27,6 +27,7 @@ import static software.wings.beans.yaml.YamlConstants.PIPELINES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PROVISIONERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SERVICES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.TRIGGER_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.VALUES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.VALUES_YAML_KEY;
 import static software.wings.beans.yaml.YamlConstants.VERIFICATION_PROVIDERS_FOLDER;
@@ -68,6 +69,7 @@ import software.wings.beans.container.LogConfiguration;
 import software.wings.beans.container.PortMapping;
 import software.wings.beans.container.StorageConfiguration;
 import software.wings.beans.defaults.Defaults;
+import software.wings.beans.trigger.Trigger;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.verification.CVConfiguration;
@@ -218,6 +220,9 @@ public enum YamlType {
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, WORKFLOWS_FOLDER, YAML_EXPRESSION),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, WORKFLOWS_FOLDER, ANY),
       Workflow.class),
+  TRIGGER(EntityType.TRIGGER.name(),
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, TRIGGER_FOLDER, YAML_EXPRESSION),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, TRIGGER_FOLDER, ANY), Trigger.class),
   PIPELINE(EntityType.PIPELINE.name(),
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, PIPELINES_FOLDER, YAML_EXPRESSION),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, PIPELINES_FOLDER, ANY),
