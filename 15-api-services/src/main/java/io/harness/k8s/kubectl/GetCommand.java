@@ -13,6 +13,7 @@ public class GetCommand extends AbstractExecutable {
   private boolean watch;
   private boolean watchOnly;
   private boolean export;
+  private boolean allNamespaces;
 
   public GetCommand(Kubectl client) {
     this.client = client;
@@ -53,6 +54,11 @@ public class GetCommand extends AbstractExecutable {
     return this;
   }
 
+  public GetCommand allNamespaces(boolean allNamespaces) {
+    this.allNamespaces = allNamespaces;
+    return this;
+  }
+
   public String command() {
     StringBuilder command = new StringBuilder();
     command.append(client.command()).append("get ");
@@ -67,6 +73,10 @@ public class GetCommand extends AbstractExecutable {
 
     if (StringUtils.isNotBlank(this.namespace)) {
       command.append(Kubectl.option(Option.namespace, this.namespace));
+    }
+
+    if (this.allNamespaces) {
+      command.append(Kubectl.option(Option.allNamespaces, "true"));
     }
 
     if (this.output != null) {

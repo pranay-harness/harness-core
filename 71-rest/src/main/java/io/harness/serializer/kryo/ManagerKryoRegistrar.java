@@ -350,6 +350,7 @@ import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 import software.wings.helpers.ext.helm.response.ReleaseInfo;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
+import software.wings.helpers.ext.k8s.request.K8sApplyTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sBlueGreenDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sCanaryDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sCanaryRollbackTaskParameters;
@@ -363,6 +364,7 @@ import software.wings.helpers.ext.k8s.request.K8sScaleTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters.K8sTaskType;
 import software.wings.helpers.ext.k8s.request.K8sTrafficSplitTaskParameters;
+import software.wings.helpers.ext.k8s.response.K8sApplyResponse;
 import software.wings.helpers.ext.k8s.response.K8sBlueGreenDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sCanaryDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sDeleteResponse;
@@ -1251,5 +1253,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(IstioDestinationWeight.class, 7183);
     kryo.register(AWSSecretsManagerException.class, 7184);
     kryo.register(Tag.class, 7185);
+    kryo.register(K8sApplyTaskParameters.class, 7186);
+    kryo.register(K8sApplyResponse.class, 7187);
   }
 }

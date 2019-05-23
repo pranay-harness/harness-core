@@ -18,6 +18,7 @@ import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.LogColor.Gray;
@@ -51,6 +52,7 @@ import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.k8s.kubectl.AbstractExecutable;
 import io.harness.k8s.kubectl.GetCommand;
+import io.harness.k8s.kubectl.GetPodCommand;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.kubectl.RolloutHistoryCommand;
 import io.harness.k8s.kubectl.RolloutStatusCommand;
@@ -113,10 +115,10 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -133,6 +135,9 @@ public class K8sTaskHelper {
 
   private static String eventOutputFormat =
       "custom-columns=KIND:involvedObject.kind,NAME:.involvedObject.name,MESSAGE:.message,REASON:.reason";
+
+  private static String eventWithNamespaceOutputFormat =
+      "custom-columns=KIND:involvedObject.kind,NAME:.involvedObject.name,NAMESPACE:.involvedObject.namespace,MESSAGE:.message,REASON:.reason";
 
   public boolean dryRunManifests(Kubectl client, List<KubernetesResource> resources,
       K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback) {
@@ -234,6 +239,179 @@ public class K8sTaskHelper {
       if (!success) {
         logger.warn(result.outputString());
       }
+      return success;
+    } catch (Exception e) {
+      logger.error("Exception while doing statusCheck", e);
+      executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
+      return false;
+    } finally {
+      if (eventWatchProcess != null) {
+        eventWatchProcess.getProcess().destroyForcibly().waitFor();
+      }
+      if (success) {
+        executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+
+      } else {
+        executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
+      }
+    }
+  }
+
+  private boolean doStatusCheckForJob(Kubectl client, KubernetesResourceId resourceId,
+      K8sDelegateTaskParams k8sDelegateTaskParams, String statusFormat, ExecutionLogCallback executionLogCallback)
+      throws Exception {
+    try (LogOutputStream statusInfoStream =
+             new LogOutputStream() {
+               @Override
+               protected void processLine(String line) {
+                 executionLogCallback.saveExecutionLog(
+                     format(statusFormat, "Status", resourceId.getName(), line), INFO);
+               }
+             };
+         LogOutputStream statusErrorStream =
+             new LogOutputStream() {
+               @Override
+               protected void processLine(String line) {
+                 executionLogCallback.saveExecutionLog(
+                     format(statusFormat, "Status", resourceId.getName(), line), ERROR);
+               }
+             }) {
+      GetPodCommand getPodCommand =
+          client.getPod().selector("job-name=" + resourceId.getName()).output("jsonpath='{.items[*].status.phase}'");
+
+      executionLogCallback.saveExecutionLog(GetPodCommand.getPrintableCommand(getPodCommand.command()) + "\n");
+
+      while (true) {
+        ProcessResult result = getPodCommand.execute(
+            k8sDelegateTaskParams.getWorkingDirectory(), statusInfoStream, statusErrorStream, false);
+
+        boolean success = 0 == result.getExitValue();
+        if (!success) {
+          logger.warn(result.outputString());
+          return false;
+        }
+
+        // cli command outputs with single quotes
+        String jobStatus = result.outputString().replace("'", "");
+        if ("Failed".equals(jobStatus) || "Unknown".equals(jobStatus)) {
+          logger.warn(result.outputString());
+          return false;
+        }
+
+        if ("Succeeded".equals(jobStatus)) {
+          break;
+        }
+
+        sleep(ofSeconds(5));
+      }
+
+      return true;
+    }
+  }
+
+  private boolean doStatusCheckForWorkloads(Kubectl client, KubernetesResourceId resourceId,
+      K8sDelegateTaskParams k8sDelegateTaskParams, String statusFormat, ExecutionLogCallback executionLogCallback)
+      throws Exception {
+    try (LogOutputStream statusErrorStream =
+             new LogOutputStream() {
+               @Override
+               protected void processLine(String line) {
+                 executionLogCallback.saveExecutionLog(
+                     format(statusFormat, "Status", resourceId.getName(), line), ERROR);
+               }
+             };
+         LogOutputStream statusInfoStream =
+             new LogOutputStream() {
+               @Override
+               protected void processLine(String line) {
+                 executionLogCallback.saveExecutionLog(
+                     format(statusFormat, "Status", resourceId.getName(), line), INFO);
+               }
+             }) {
+      RolloutStatusCommand rolloutStatusCommand =
+          client.rollout().status().resource(resourceId.kindNameRef()).namespace(resourceId.getNamespace()).watch(true);
+
+      executionLogCallback.saveExecutionLog(
+          RolloutStatusCommand.getPrintableCommand(rolloutStatusCommand.command()) + "\n");
+
+      ProcessResult result = rolloutStatusCommand.execute(
+          k8sDelegateTaskParams.getWorkingDirectory(), statusInfoStream, statusErrorStream, false);
+
+      boolean success = 0 == result.getExitValue();
+      if (!success) {
+        logger.warn(result.outputString());
+      }
+
+      return success;
+    }
+  }
+
+  public boolean doStatusCheckForAllResources(Kubectl client, List<KubernetesResourceId> resourceIds,
+      K8sDelegateTaskParams k8sDelegateTaskParams, String namespace, ExecutionLogCallback executionLogCallback)
+      throws Exception {
+    if (isEmpty(resourceIds)) {
+      return true;
+    }
+
+    int maxResourceNameLength = 0;
+    for (KubernetesResourceId kubernetesResourceId : resourceIds) {
+      maxResourceNameLength = Math.max(maxResourceNameLength, kubernetesResourceId.getName().length());
+    }
+
+    final String eventErrorFormat = "%-7s: %s";
+    final String eventInfoFormat = "%-7s: %-" + maxResourceNameLength + "s   %s";
+    final String statusFormat = "%n%-7s: %-" + maxResourceNameLength + "s   %s";
+
+    GetCommand getEventsCommand =
+        client.get().resources("events").allNamespaces(true).output(eventWithNamespaceOutputFormat).watchOnly(true);
+    executionLogCallback.saveExecutionLog(GetCommand.getPrintableCommand(getEventsCommand.command()) + "\n");
+
+    boolean success = false;
+
+    StartedProcess eventWatchProcess = null;
+    try (LogOutputStream watchInfoStream =
+             new LogOutputStream() {
+               @Override
+               protected void processLine(String line) {
+                 Optional<KubernetesResourceId> filteredResourceId =
+                     resourceIds.parallelStream()
+                         .filter(kubernetesResourceId
+                             -> line.contains(isNotBlank(kubernetesResourceId.getNamespace())
+                                        ? kubernetesResourceId.getNamespace()
+                                        : namespace)
+                                 && line.contains(kubernetesResourceId.getName()))
+                         .findFirst();
+
+                 if (filteredResourceId.isPresent()) {
+                   executionLogCallback.saveExecutionLog(
+                       format(eventInfoFormat, "Event", filteredResourceId.get().getName(), line), INFO);
+                 }
+               }
+             };
+         LogOutputStream watchErrorStream =
+             new LogOutputStream() {
+               @Override
+               protected void processLine(String line) {
+                 executionLogCallback.saveExecutionLog(format(eventErrorFormat, "Event", line), ERROR);
+               }
+             }) {
+      eventWatchProcess = getEventsCommand.executeInBackground(
+          k8sDelegateTaskParams.getWorkingDirectory(), watchInfoStream, watchErrorStream);
+
+      for (KubernetesResourceId kubernetesResourceId : resourceIds) {
+        if (Kind.Job.name().equals(kubernetesResourceId.getKind())) {
+          success = doStatusCheckForJob(
+              client, kubernetesResourceId, k8sDelegateTaskParams, statusFormat, executionLogCallback);
+        } else {
+          success = doStatusCheckForWorkloads(
+              client, kubernetesResourceId, k8sDelegateTaskParams, statusFormat, executionLogCallback);
+        }
+
+        if (!success) {
+          break;
+        }
+      }
+
       return success;
     } catch (Exception e) {
       logger.error("Exception while doing statusCheck", e);
@@ -716,8 +894,7 @@ public class K8sTaskHelper {
     try {
       return timeLimiter.callWithTimeout(() -> {
         try {
-          return kubernetesContainerService
-              .getRunningPodsWithLabels(kubernetesConfig, Collections.emptyList(), namespace, labels)
+          return kubernetesContainerService.getRunningPodsWithLabels(kubernetesConfig, emptyList(), namespace, labels)
               .stream()
               .map(pod
                   -> K8sPod.builder()
@@ -799,7 +976,7 @@ public class K8sTaskHelper {
       return timeLimiter.callWithTimeout(() -> {
         while (true) {
           Service service =
-              kubernetesContainerService.getService(kubernetesConfig, Collections.emptyList(), serviceName, namespace);
+              kubernetesContainerService.getService(kubernetesConfig, emptyList(), serviceName, namespace);
 
           LoadBalancerStatus loadBalancerStatus = service.getStatus().getLoadBalancer();
           if (!loadBalancerStatus.getIngress().isEmpty()) {
@@ -977,8 +1154,7 @@ public class K8sTaskHelper {
       throw new WingsException(msg, USER);
     }
 
-    KubernetesClient kubernetesClient =
-        kubernetesHelperService.getKubernetesClient(kubernetesConfig, Collections.emptyList());
+    KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList());
     kubernetesClient.customResources(
         kubernetesContainerService.getCustomResourceDefinition(kubernetesClient, new DestinationRuleBuilder().build()),
         DestinationRule.class, KubernetesResourceList.class, DoneableDestinationRule.class);
@@ -1025,8 +1201,7 @@ public class K8sTaskHelper {
       throw new WingsException("msg", USER);
     }
 
-    KubernetesClient kubernetesClient =
-        kubernetesHelperService.getKubernetesClient(kubernetesConfig, Collections.emptyList());
+    KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList());
     kubernetesClient.customResources(
         kubernetesContainerService.getCustomResourceDefinition(kubernetesClient, new VirtualServiceBuilder().build()),
         VirtualService.class, KubernetesResourceList.class, DoneableVirtualService.class);

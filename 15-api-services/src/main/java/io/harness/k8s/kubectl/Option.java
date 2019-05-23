@@ -10,5 +10,12 @@ public enum Option {
       return "to-revision";
     }
   },
-  replicas
+  replicas,
+  selector,
+  allNamespaces {
+    @Override
+    public String toString() {
+      return "all-namespaces";
+    }
+  }
 }

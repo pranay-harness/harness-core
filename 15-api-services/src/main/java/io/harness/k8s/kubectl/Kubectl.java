@@ -41,6 +41,10 @@ public class Kubectl {
     return new RolloutCommand(this);
   }
 
+  public GetPodCommand getPod() {
+    return new GetPodCommand(new GetCommand(this));
+  }
+
   public ScaleCommand scale() {
     return new ScaleCommand(this);
   }
