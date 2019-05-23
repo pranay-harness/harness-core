@@ -25,12 +25,6 @@ import static software.wings.beans.container.KubernetesContainerTask.CONFIG_MAP_
 import static software.wings.beans.container.KubernetesContainerTask.SECRET_MAP_NAME_PLACEHOLDER_REGEX;
 import static software.wings.beans.container.KubernetesServiceType.None;
 import static software.wings.beans.container.Label.Builder.aLabel;
-import static software.wings.common.Constants.HARNESS_KUBERNETES_APP_LABEL_KEY;
-import static software.wings.common.Constants.HARNESS_KUBERNETES_ENV_LABEL_KEY;
-import static software.wings.common.Constants.HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY;
-import static software.wings.common.Constants.HARNESS_KUBERNETES_MANAGED_LABEL_KEY;
-import static software.wings.common.Constants.HARNESS_KUBERNETES_REVISION_LABEL_KEY;
-import static software.wings.common.Constants.HARNESS_KUBERNETES_SERVICE_LABEL_KEY;
 import static software.wings.service.impl.KubernetesHelperService.printVirtualServiceRouteWeights;
 import static software.wings.service.impl.KubernetesHelperService.toDisplayYaml;
 import static software.wings.service.impl.KubernetesHelperService.toYaml;
@@ -156,6 +150,12 @@ import java.util.regex.Pattern;
  */
 @Slf4j
 public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
+  public static final String HARNESS_KUBERNETES_MANAGED_LABEL_KEY = "harness.io/managed";
+  public static final String HARNESS_KUBERNETES_APP_LABEL_KEY = "harness.io/application";
+  public static final String HARNESS_KUBERNETES_SERVICE_LABEL_KEY = "harness.io/service";
+  public static final String HARNESS_KUBERNETES_ENV_LABEL_KEY = "harness.io/environment";
+  public static final String HARNESS_KUBERNETES_REVISION_LABEL_KEY = "harness.io/revision";
+  public static final String HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY = "harness.io/service-infra-id";
   @Transient private static final Pattern envVarPattern = Pattern.compile("^[A-Za-z_][A-Za-z0-9_]*$");
   @Transient
   private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
