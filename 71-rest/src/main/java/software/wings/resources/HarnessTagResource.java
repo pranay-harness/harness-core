@@ -57,8 +57,13 @@ public class HarnessTagResource {
   @Path("{key}")
   @Timed
   @ExceptionMetered
-  public RestResponse<HarnessTag> get(@QueryParam("accountId") String accountId, @PathParam("key") String key) {
-    return new RestResponse<>(harnessTagService.get(accountId, key));
+  public RestResponse<HarnessTag> get(@QueryParam("accountId") String accountId, @PathParam("key") String key,
+      @QueryParam("includeInUseValues") boolean includeInUseValues) {
+    if (includeInUseValues) {
+      return new RestResponse<>(harnessTagService.getTagWithInUseValues(accountId, key));
+    } else {
+      return new RestResponse<>(harnessTagService.get(accountId, key));
+    }
   }
 
   @DELETE

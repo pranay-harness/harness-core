@@ -12,10 +12,12 @@ public interface HarnessTagService {
   HarnessTag create(HarnessTag tag);
   HarnessTag update(HarnessTag tag);
   HarnessTag get(@NotBlank String accountId, @NotBlank String key);
+  HarnessTag getTagWithInUseValues(@NotBlank String accountId, @NotBlank String key);
   PageResponse<HarnessTag> list(PageRequest<HarnessTag> request);
   void delete(@NotBlank String accountId, @NotBlank String key);
   void delete(@NotNull HarnessTag tag);
   void attachTag(HarnessTagLink tagLink);
   void detachTag(@NotBlank String accountId, @NotBlank String entityId, @NotBlank String key);
   PageResponse<HarnessTagLink> listResourcesWithTag(PageRequest<HarnessTagLink> request);
+  void pruneTagLinks(String accountId, String entityId);
 }

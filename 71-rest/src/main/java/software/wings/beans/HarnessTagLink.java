@@ -1,6 +1,9 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
@@ -21,6 +24,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.HarnessTagLink.HarnessTagLinkKeys;
+import software.wings.jersey.JsonViews;
 
 import javax.validation.constraints.NotNull;
 
@@ -39,6 +43,7 @@ import javax.validation.constraints.NotNull;
 })
 @Data
 @Builder
+@JsonInclude(Include.NON_NULL)
 @FieldNameConstants(innerTypeName = "HarnessTagLinkKeys")
 public class HarnessTagLink
     implements PersistentEntity, UuidAware, UpdatedAtAware, UpdatedByAware, CreatedAtAware, CreatedByAware {
@@ -49,9 +54,8 @@ public class HarnessTagLink
   @NotEmpty private EntityType entityType;
   @NotEmpty private String entityId;
 
-  @SchemaIgnore private EmbeddedUser createdBy;
-  @SchemaIgnore private long createdAt;
-
-  @SchemaIgnore private EmbeddedUser lastUpdatedBy;
-  @SchemaIgnore @NotNull private long lastUpdatedAt;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private EmbeddedUser createdBy;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private long createdAt;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private EmbeddedUser lastUpdatedBy;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore @NotNull private long lastUpdatedAt;
 }
