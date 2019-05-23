@@ -319,7 +319,7 @@ public class UserServiceImpl implements UserService {
   @Override
   public boolean accountJoinRequest(AccountJoinRequest accountJoinRequest) {
     final String emailAddress = accountJoinRequest.getEmail().toLowerCase();
-    validateTrialSignup(emailAddress);
+    checkEmailAndDomain(emailAddress);
 
     Map<String, String> params = new HashMap<>();
     params.put("email", emailAddress);
@@ -385,6 +385,10 @@ public class UserServiceImpl implements UserService {
           .addParam("message", "Trial registration is not allowed in this cluster.");
     }
 
+    checkEmailAndDomain(email);
+  }
+
+  private void checkEmailAndDomain(String email) {
     // Only validate if the email address is valid. Won't check if the email has been registered already.
     checkIfEmailIsValid(email);
 
