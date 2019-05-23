@@ -103,6 +103,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -143,6 +144,7 @@ public class TriggerServiceImpl implements TriggerService {
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private HarnessTagService harnessTagService;
 
   @Value
   @Builder
@@ -205,8 +207,11 @@ public class TriggerServiceImpl implements TriggerService {
     Trigger trigger = get(appId, triggerId);
     boolean answer = triggerServiceHelper.delete(triggerId);
 
-    // TODO: AUDIT: Once this entity is yamlized, this can be removed
     if (answer) {
+      String accountId = appService.getAccountIdByAppId(appId);
+      harnessTagService.pruneTagLinks(accountId, triggerId);
+
+      // TODO: AUDIT: Once this entity is yamlized, this can be removed
       auditServiceHelper.reportDeleteForAuditing(trigger.getAppId(), trigger);
     }
 

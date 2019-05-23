@@ -27,6 +27,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
@@ -54,6 +55,7 @@ public class PruneEntityListener extends QueueListener<PruneEvent> {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private WorkflowService workflowService;
   @Inject private ExecutorService executorService;
+  @Inject private HarnessTagService harnessTagService;
 
   public PruneEntityListener() {
     super(true);
@@ -89,6 +91,8 @@ public class PruneEntityListener extends QueueListener<PruneEvent> {
       }
     }
 
+    boolean pruneTagLinks = false;
+
     try {
       if (clz.equals(Activity.class)) {
         activityService.pruneDescendingEntities(appId, entityId);
@@ -97,21 +101,30 @@ public class PruneEntityListener extends QueueListener<PruneEvent> {
       } else if (clz.equals(ArtifactStream.class)) {
         artifactStreamService.pruneDescendingEntities(appId, entityId);
       } else if (clz.equals(Environment.class)) {
+        pruneTagLinks = true;
         environmentService.pruneDescendingEntities(appId, entityId);
       } else if (clz.equals(Host.class)) {
         hostService.pruneDescendingEntities(appId, entityId);
       } else if (clz.equals(InfrastructureMapping.class)) {
         infrastructureMappingService.pruneDescendingEntities(appId, entityId);
       } else if (clz.equals(Pipeline.class)) {
+        pruneTagLinks = true;
         pipelineService.pruneDescendingEntities(appId, entityId);
       } else if (clz.equals(Service.class)) {
+        pruneTagLinks = true;
         serviceResourceService.pruneDescendingEntities(appId, entityId);
       } else if (clz.equals(Workflow.class)) {
+        pruneTagLinks = true;
         workflowService.pruneDescendingEntities(appId, entityId);
       } else if (clz.equals(InfrastructureProvisioner.class)) {
+        pruneTagLinks = true;
         infrastructureProvisionerService.pruneDescendingEntities(appId, entityId);
       } else {
         logger.error("Unsupported class [{}] was scheduled for pruning.", clz.getCanonicalName());
+      }
+
+      if (pruneTagLinks) {
+        harnessTagService.pruneTagLinks(appService.getAccountIdByAppId(appId), entityId);
       }
     } catch (WingsException exception) {
       ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);

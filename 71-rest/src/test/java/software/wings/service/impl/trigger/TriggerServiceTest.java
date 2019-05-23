@@ -11,6 +11,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -122,6 +123,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -154,6 +156,7 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private AppService appService;
   @Mock private ArtifactCollectionUtils artifactCollectionUtils;
+  @Mock private HarnessTagService harnessTagService;
 
   @Inject @InjectMocks private TriggerService triggerService;
 
@@ -198,6 +201,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
     when(artifactCollectionUtils.getService(APP_ID, ARTIFACT_STREAM_ID))
         .thenReturn(Service.builder().uuid(SERVICE_ID).name(CATALOG_SERVICE_NAME).build());
+    doNothing().when(harnessTagService).pruneTagLinks(anyString(), anyString());
   }
 
   @Test
