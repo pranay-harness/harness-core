@@ -1,6 +1,5 @@
 package io.harness;
 
-import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import graphql.ExecutionResult;
@@ -14,14 +13,12 @@ import software.wings.graphql.datafetcher.environment.EnvironmentDataFetcher;
 import java.util.List;
 import java.util.Map;
 
-public class GraphQLExceptoinHandlingTest extends GraphQLTest {
+public class GraphQLExceptionHandlingTest extends GraphQLTest {
   private static final String INCORRECT_ENVIRONMENT_ID = "TEST";
 
   @Test
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryEnvironment() {
-    initializeLogging();
-
     String query = $GQL(/*
 {
   environment(environmentId: "%s") {

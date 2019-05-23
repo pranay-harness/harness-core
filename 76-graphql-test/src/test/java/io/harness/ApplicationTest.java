@@ -3,6 +3,7 @@ package io.harness;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.graphql.datafetcher.application.ApplicationDataFetcher.APP_DOES_NOT_EXIST_MSG;
 
 import com.google.inject.Inject;
 
@@ -81,9 +82,8 @@ public class ApplicationTest extends GraphQLTest {
     final ExecutionResult result = qlResult(query);
     assertThat(result.getErrors().size()).isEqualTo(1);
 
-    // TODO: this message is wrong
     assertThat(result.getErrors().get(0).getMessage())
-        .isEqualTo("Exception while fetching data (/application) : INVALID_REQUEST");
+        .isEqualTo("Exception while fetching data (/application) : Invalid request: " + APP_DOES_NOT_EXIST_MSG);
   }
 
   @Test

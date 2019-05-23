@@ -47,6 +47,8 @@ public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
   public static final String SELECTION_SET_FIELD_NAME = "selectionSet";
   private static final String EXCEPTION_MSG_DELIMITER = ";; ";
   private static final String GENERIC_EXCEPTION_MSG = "An error has occurred. Please contact the Harness support team.";
+  public static final String NEGATIVE_LIMIT_ARG_MSG = "Limit argument accepts only non negative values";
+  public static final String NEGATIVE_OFFSET_ARG_MSG = "Offset argument accepts only non negative values";
 
   @Inject AuthRuleGraphQL authRuleInstrumentation;
 
@@ -132,10 +134,10 @@ public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
     if (parameters instanceof QLPageQueryParameters) {
       QLPageQueryParameters pageParameters = (QLPageQueryParameters) parameters;
       if (pageParameters.getLimit() < 0) {
-        throw new InvalidRequestException("Limit argument accepts only non negative values");
+        throw new InvalidRequestException(NEGATIVE_LIMIT_ARG_MSG);
       }
       if (pageParameters.getOffset() < 0) {
-        throw new InvalidRequestException("Offset argument accepts only non negative values");
+        throw new InvalidRequestException(NEGATIVE_OFFSET_ARG_MSG);
       }
     }
 

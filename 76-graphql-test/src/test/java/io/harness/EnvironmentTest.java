@@ -24,6 +24,7 @@ import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
+import software.wings.graphql.datafetcher.environment.EnvironmentDataFetcher;
 import software.wings.graphql.scalar.GraphQLDateTimeScalar;
 import software.wings.graphql.schema.type.QLEnvironment.QLEnvironmentKeys;
 import software.wings.graphql.schema.type.QLEnvironmentConnection;
@@ -82,9 +83,9 @@ public class EnvironmentTest extends GraphQLTest {
     final ExecutionResult result = qlResult(query);
     assertThat(result.getErrors().size()).isEqualTo(1);
 
-    // TODO: this message is wrong
     assertThat(result.getErrors().get(0).getMessage())
-        .isEqualTo("Exception while fetching data (/environment) : INVALID_REQUEST");
+        .isEqualTo("Exception while fetching data (/environment) : Invalid request: "
+            + EnvironmentDataFetcher.ENV_DOES_NOT_EXISTS_MSG);
   }
 
   @Test

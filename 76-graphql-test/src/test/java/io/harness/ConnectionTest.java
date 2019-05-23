@@ -6,6 +6,8 @@ import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.graphql.datafetcher.AbstractDataFetcher.NEGATIVE_LIMIT_ARG_MSG;
+import static software.wings.graphql.datafetcher.AbstractDataFetcher.NEGATIVE_OFFSET_ARG_MSG;
 
 import com.google.inject.Inject;
 
@@ -202,9 +204,8 @@ public class ConnectionTest extends GraphQLTest {
       final ExecutionResult result = qlResult(query);
       assertThat(result.getErrors().size()).isEqualTo(1);
 
-      // TODO: this message is wrong
       assertThat(result.getErrors().get(0).getMessage())
-          .isEqualTo("Exception while fetching data (/pipelines) : INVALID_REQUEST");
+          .isEqualTo("Exception while fetching data (/pipelines) : Invalid request: " + NEGATIVE_LIMIT_ARG_MSG);
     }
 
     {
@@ -213,9 +214,8 @@ public class ConnectionTest extends GraphQLTest {
       final ExecutionResult result = qlResult(query);
       assertThat(result.getErrors().size()).isEqualTo(1);
 
-      // TODO: this message is wrong
       assertThat(result.getErrors().get(0).getMessage())
-          .isEqualTo("Exception while fetching data (/pipelines) : INVALID_REQUEST");
+          .isEqualTo("Exception while fetching data (/pipelines) : Invalid request: " + NEGATIVE_OFFSET_ARG_MSG);
     }
   }
 }
