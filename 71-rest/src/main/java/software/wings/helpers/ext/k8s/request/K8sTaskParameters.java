@@ -25,6 +25,7 @@ public class K8sTaskParameters implements TaskParameters {
     BLUE_GREEN_DEPLOY,
     INSTANCE_SYNC,
     DELETE,
-    TRAFFIC_SPLIT;
+    TRAFFIC_SPLIT,
+    APPLY,
   }
 }

@@ -18,6 +18,7 @@ import io.harness.exception.KubernetesValuesException;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.HarnessAnnotations;
+import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import org.apache.commons.lang3.StringUtils;
@@ -138,6 +139,14 @@ public class ManifestHelper {
     return resources.stream()
         .filter(resource -> managedWorkloadKinds.contains(resource.getResourceId().getKind()))
         .filter(resource -> !resource.isDirectApply())
+        .collect(Collectors.toList());
+  }
+
+  public static List<KubernetesResource> getWorkloadsForApplyState(List<KubernetesResource> resources) {
+    return resources.stream()
+        .filter(resource
+            -> ImmutableSet.of(Kind.Deployment.name(), Kind.StatefulSet.name(), Kind.DaemonSet.name(), Kind.Job.name())
+                   .contains(resource.getResourceId().getKind()))
         .collect(Collectors.toList());
   }
 

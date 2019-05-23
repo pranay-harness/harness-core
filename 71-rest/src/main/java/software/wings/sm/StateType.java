@@ -57,6 +57,7 @@ import static software.wings.sm.StateTypeScope.COMMON;
 import static software.wings.sm.StateTypeScope.NONE;
 import static software.wings.sm.StateTypeScope.ORCHESTRATION_STENCILS;
 import static software.wings.sm.StateTypeScope.PIPELINE_STENCILS;
+import static software.wings.sm.states.k8s.K8sApplyState.K8S_APPLY_STATE;
 import static software.wings.sm.states.k8s.K8sTrafficSplitState.K8S_TRAFFIC_SPLIT_STATE_NAME;
 import static software.wings.stencils.StencilCategory.CLOUD;
 import static software.wings.stencils.StencilCategory.COLLABORATION;
@@ -157,6 +158,7 @@ import software.wings.sm.states.SumoLogicAnalysisState;
 import software.wings.sm.states.WaitState;
 import software.wings.sm.states.collaboration.JiraCreateUpdate;
 import software.wings.sm.states.collaboration.ServiceNowCreateUpdateState;
+import software.wings.sm.states.k8s.K8sApplyState;
 import software.wings.sm.states.k8s.K8sBlueGreenDeploy;
 import software.wings.sm.states.k8s.K8sCanaryDeploy;
 import software.wings.sm.states.k8s.K8sDelete;
@@ -603,7 +605,10 @@ public enum StateType implements StateTypeDescriptor {
       ORCHESTRATION_STENCILS, COMMON),
 
   K8S_TRAFFIC_SPLIT(K8sTrafficSplitState.class, KUBERNETES, 0, K8S_TRAFFIC_SPLIT_STATE_NAME, Lists.newArrayList(),
-      asList(), ORCHESTRATION_STENCILS);
+      asList(), ORCHESTRATION_STENCILS),
+
+  K8S_APPLY(
+      K8sApplyState.class, KUBERNETES, 0, K8S_APPLY_STATE, Lists.newArrayList(), asList(), ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";

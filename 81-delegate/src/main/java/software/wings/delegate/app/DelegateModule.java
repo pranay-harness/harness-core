@@ -60,6 +60,7 @@ import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsCommandTaskHandler
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsListenerUpdateBGTaskHandler;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsSetupCommandHandler;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy.EcsDeployCommandHandler;
+import software.wings.delegatetasks.k8s.taskhandler.K8sApplyTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sBlueGreenDeployTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sCanaryDeployTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sDeleteTaskHandler;
@@ -483,6 +484,7 @@ public class DelegateModule extends DependencyModule {
     k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.DELETE.name()).to(K8sDeleteTaskHandler.class);
     k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.TRAFFIC_SPLIT.name())
         .to(K8sTrafficSplitTaskHandler.class);
+    k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.APPLY.name()).to(K8sApplyTaskHandler.class);
   }
 
   @Override
