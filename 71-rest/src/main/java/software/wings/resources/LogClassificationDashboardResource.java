@@ -10,9 +10,9 @@ import retrofit2.http.Body;
 import software.wings.common.VerificationConstants;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.analysis.CVFeedbackRecord;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogLabel;
-import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.intfc.analysis.LogLabelingService;
 
 import java.util.List;
@@ -58,26 +58,44 @@ public class LogClassificationDashboardResource {
   @Path(VerificationConstants.GET_IGNORE_RECORDS_TO_CLASSIFY)
   @Timed
   @ExceptionMetered
-  public RestResponse<LogMLFeedbackRecord> getIgnoreFeedbacksToClassify(
-      @QueryParam("accountId") String accountId, @QueryParam("serviceId") String serviceId) {
-    return new RestResponse<>(logLabelingService.getIgnoreFeedbackToClassify(accountId, serviceId));
+  public RestResponse<CVFeedbackRecord> getIgnoreFeedbacksToClassify(@QueryParam("accountId") String accountId,
+      @QueryParam("serviceId") String serviceId, @QueryParam("envId") String envId) {
+    return new RestResponse<>(logLabelingService.getCVFeedbackToClassify(accountId, serviceId, envId));
   }
 
   @GET
   @Path(VerificationConstants.GET_SAMPLE_LABELS_IGNORE_FEEDBACK)
   @Timed
   @ExceptionMetered
-  public RestResponse<Map<String, List<LogMLFeedbackRecord>>> getSampleLabelsForIgnoreFeedback(
-      @QueryParam("accountId") String accountId, @QueryParam("serviceId") String serviceId) {
-    return new RestResponse<>(logLabelingService.getLabeledSamplesForIgnoreFeedback(accountId, serviceId));
+  public RestResponse<Map<String, List<CVFeedbackRecord>>> getSampleLabelsForIgnoreFeedback(
+      @QueryParam("accountId") String accountId, @QueryParam("serviceId") String serviceId,
+      @QueryParam("envId") String envId) {
+    return new RestResponse<>(logLabelingService.getLabeledSamplesForIgnoreFeedback(accountId, serviceId, envId));
+  }
+
+  @GET
+  @Path(VerificationConstants.GET_GLOBAL_IGNORE_RECORDS_TO_CLASSIFY)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<CVFeedbackRecord> getGlobalFeedbacksToClassify(@QueryParam("accountId") String accountId) {
+    return new RestResponse<>(logLabelingService.getCVFeedbackToClassify(accountId));
+  }
+
+  @GET
+  @Path(VerificationConstants.GET_GLOBAL_SAMPLE_LABELS_IGNORE_FEEDBACK)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<String, List<CVFeedbackRecord>>> getGlobalSampleLabelsForCvFeedback(
+      @QueryParam("accountId") String accountId) {
+    return new RestResponse<>(logLabelingService.getLabeledSamplesForIgnoreFeedback(accountId));
   }
 
   @POST
   @Path(VerificationConstants.GET_IGNORE_RECORDS_TO_CLASSIFY)
   @Timed
   @ExceptionMetered
-  public RestResponse<Boolean> saveLabeledIgnoreFeedback(@QueryParam("accountId") String accountId,
-      @QueryParam("label") String label, LogMLFeedbackRecord feedbackRecord) {
+  public RestResponse<Boolean> saveLabeledIgnoreFeedback(
+      @QueryParam("accountId") String accountId, @QueryParam("label") String label, CVFeedbackRecord feedbackRecord) {
     return new RestResponse<>(logLabelingService.saveLabeledIgnoreFeedback(accountId, feedbackRecord, label));
   }
 }

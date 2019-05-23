@@ -18,7 +18,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.FeatureName;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
-import software.wings.service.impl.analysis.LogMLFeedbackRecord.LogMLFeedbackRecordKeys;
+import software.wings.service.impl.analysis.CVFeedbackRecord.CVFeedbackRecordKeys;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.analysis.LogLabelingService;
@@ -37,11 +37,13 @@ public class LogLabelingServiceTest extends WingsBaseTest {
 
   private String accountId;
   private String serviceId;
+  private String envId;
 
   @Before
   public void setup() throws IllegalAccessException {
     accountId = generateUuid();
     serviceId = generateUuid();
+    envId = generateUuid();
     labelingService = new LogLabelingServiceImpl();
     dataStoreService = new MongoDataStoreServiceImpl(wingsPersistence);
     FieldUtils.writeField(labelingService, "dataStoreService", dataStoreService, true);
@@ -53,12 +55,12 @@ public class LogLabelingServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testLabelIgnoreFeedback() {
     // setup
-    LogMLFeedbackRecord record =
-        LogMLFeedbackRecord.builder().serviceId(serviceId).logMessage("This is a test msg").build();
+    CVFeedbackRecord record =
+        CVFeedbackRecord.builder().serviceId(serviceId).envId(envId).logMessage("This is a test msg").build();
     wingsPersistence.save(record);
 
     // execute
-    LogMLFeedbackRecord labelRecord = labelingService.getIgnoreFeedbackToClassify(accountId, serviceId);
+    CVFeedbackRecord labelRecord = labelingService.getCVFeedbackToClassify(accountId, serviceId, envId);
 
     // verify
     assertNotNull(labelRecord);
@@ -69,16 +71,16 @@ public class LogLabelingServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testLabelIgnoreFeedbackGetFirstNonLabeled() {
     // setup
-    LogMLFeedbackRecord record1 =
-        LogMLFeedbackRecord.builder().serviceId(serviceId).logMessage("This is a test msg").build();
+    CVFeedbackRecord record1 =
+        CVFeedbackRecord.builder().serviceId(serviceId).envId(envId).logMessage("This is a test msg").build();
     record1.setSupervisedLabel("labelA");
     wingsPersistence.save(record1);
-    LogMLFeedbackRecord record2 =
-        LogMLFeedbackRecord.builder().serviceId(serviceId).logMessage("This is second test msg").build();
+    CVFeedbackRecord record2 =
+        CVFeedbackRecord.builder().serviceId(serviceId).envId(envId).logMessage("This is second test msg").build();
     wingsPersistence.save(record2);
 
     // execute
-    LogMLFeedbackRecord labelRecord = labelingService.getIgnoreFeedbackToClassify(accountId, serviceId);
+    CVFeedbackRecord labelRecord = labelingService.getCVFeedbackToClassify(accountId, serviceId, envId);
 
     // verify
     assertNotNull(labelRecord);
@@ -89,31 +91,34 @@ public class LogLabelingServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testLabelIgnoreFeedbackGetLabelSamples() {
     // setup
-    LogMLFeedbackRecord record1 = LogMLFeedbackRecord.builder()
-                                      .serviceId(serviceId)
-                                      .clusterLabel(-1)
-                                      .logMessage("This is a test msg - A")
-                                      .build();
+    CVFeedbackRecord record1 = CVFeedbackRecord.builder()
+                                   .serviceId(serviceId)
+                                   .envId(envId)
+                                   .clusterLabel(-1)
+                                   .logMessage("This is a test msg - A")
+                                   .build();
     record1.setSupervisedLabel("labelA");
     wingsPersistence.save(record1);
-    LogMLFeedbackRecord record2 = LogMLFeedbackRecord.builder()
-                                      .serviceId(serviceId)
-                                      .clusterLabel(-2)
-                                      .logMessage("This is a test msg - B")
-                                      .build();
+    CVFeedbackRecord record2 = CVFeedbackRecord.builder()
+                                   .serviceId(serviceId)
+                                   .envId(envId)
+                                   .clusterLabel(-2)
+                                   .logMessage("This is a test msg - B")
+                                   .build();
     record2.setSupervisedLabel("labelB");
     wingsPersistence.save(record2);
-    LogMLFeedbackRecord record3 = LogMLFeedbackRecord.builder()
-                                      .serviceId(serviceId)
-                                      .clusterLabel(-3)
-                                      .logMessage("This is a test msg - C")
-                                      .build();
+    CVFeedbackRecord record3 = CVFeedbackRecord.builder()
+                                   .serviceId(serviceId)
+                                   .envId(envId)
+                                   .clusterLabel(-3)
+                                   .logMessage("This is a test msg - C")
+                                   .build();
     record3.setSupervisedLabel("labelC");
     wingsPersistence.save(record3);
 
     // execute
-    Map<String, List<LogMLFeedbackRecord>> labelRecordSamples =
-        labelingService.getLabeledSamplesForIgnoreFeedback(accountId, serviceId);
+    Map<String, List<CVFeedbackRecord>> labelRecordSamples =
+        labelingService.getLabeledSamplesForIgnoreFeedback(accountId, serviceId, envId);
 
     // verify
     assertNotNull(labelRecordSamples);
@@ -128,17 +133,16 @@ public class LogLabelingServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testSaveLabelIgnoreFeedback() {
-    LogMLFeedbackRecord record =
-        LogMLFeedbackRecord.builder().serviceId(serviceId).logMessage("This is a test msg").build();
+    CVFeedbackRecord record =
+        CVFeedbackRecord.builder().uuid("cvuuid").serviceId(serviceId).logMessage("This is a test msg").build();
     wingsPersistence.save(record);
 
     // execute
     labelingService.saveLabeledIgnoreFeedback(accountId, record, "labelA");
 
     // verify
-    LogMLFeedbackRecord recordFromDB = wingsPersistence.createQuery(LogMLFeedbackRecord.class)
-                                           .filter(LogMLFeedbackRecordKeys.serviceId, serviceId)
-                                           .get();
+    CVFeedbackRecord recordFromDB =
+        wingsPersistence.createQuery(CVFeedbackRecord.class).filter(CVFeedbackRecordKeys.uuid, "cvuuid").get();
     assertEquals("labelA", recordFromDB.getSupervisedLabel());
   }
 }

@@ -22,6 +22,7 @@ import software.wings.beans.FeatureName;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.GoogleDataStoreServiceImpl;
+import software.wings.service.impl.analysis.CVFeedbackRecord.CVFeedbackRecordKeys;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -181,20 +182,40 @@ public class LogLabelingServiceImpl implements LogLabelingService {
    * @param serviceId
    * @return
    */
-  public LogMLFeedbackRecord getIgnoreFeedbackToClassify(String accountId, String serviceId) {
+  public CVFeedbackRecord getCVFeedbackToClassify(String accountId, String serviceId, String envId) {
     if (!featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)) {
       return null;
     }
-    PageRequest<LogMLFeedbackRecord> feedbackRecordPageRequest =
-        PageRequestBuilder.aPageRequest().addFilter("serviceId", Operator.EQ, serviceId).withLimit(UNLIMITED).build();
-    List<LogMLFeedbackRecord> feedbackRecords =
-        dataStoreService.list(LogMLFeedbackRecord.class, feedbackRecordPageRequest);
-    for (LogMLFeedbackRecord record : feedbackRecords) {
+    PageRequest<CVFeedbackRecord> feedbackRecordPageRequest =
+        PageRequestBuilder.aPageRequest()
+            .addFilter(CVFeedbackRecordKeys.serviceId, Operator.EQ, serviceId)
+            .addFilter(CVFeedbackRecordKeys.envId, Operator.EQ, envId)
+            .withLimit(UNLIMITED)
+            .build();
+    return getUnlabeledFeedback(feedbackRecordPageRequest);
+  }
+
+  private CVFeedbackRecord getUnlabeledFeedback(PageRequest<CVFeedbackRecord> feedbackRecordPageRequest) {
+    List<CVFeedbackRecord> feedbackRecords = dataStoreService.list(CVFeedbackRecord.class, feedbackRecordPageRequest);
+    for (CVFeedbackRecord record : feedbackRecords) {
       if (isEmpty(record.getSupervisedLabel())) {
         return record;
       }
     }
     return null;
+  }
+  /**
+   * This method will return a currently unclassified cv feedback for any account.
+   * @param accountId
+   * @return
+   */
+  public CVFeedbackRecord getCVFeedbackToClassify(String accountId) {
+    if (!featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)) {
+      return null;
+    }
+    PageRequest<CVFeedbackRecord> feedbackRecordPageRequest =
+        PageRequestBuilder.aPageRequest().withLimit(UNLIMITED).build();
+    return getUnlabeledFeedback(feedbackRecordPageRequest);
   }
 
   /**
@@ -203,17 +224,26 @@ public class LogLabelingServiceImpl implements LogLabelingService {
    * @param serviceId
    * @return
    */
-  public Map<String, List<LogMLFeedbackRecord>> getLabeledSamplesForIgnoreFeedback(String accountId, String serviceId) {
+  public Map<String, List<CVFeedbackRecord>> getLabeledSamplesForIgnoreFeedback(
+      String accountId, String serviceId, String envId) {
     if (!featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)) {
       return null;
     }
 
-    PageRequest<LogMLFeedbackRecord> feedbackRecordPageRequest =
-        PageRequestBuilder.aPageRequest().addFilter("serviceId", Operator.EQ, serviceId).withLimit(UNLIMITED).build();
+    PageRequest<CVFeedbackRecord> feedbackRecordPageRequest =
+        PageRequestBuilder.aPageRequest()
+            .addFilter(CVFeedbackRecordKeys.serviceId, Operator.EQ, serviceId)
+            .addFilter(CVFeedbackRecordKeys.envId, Operator.EQ, envId)
+            .withLimit(UNLIMITED)
+            .build();
 
-    Map<String, List<LogMLFeedbackRecord>> sampleRecords = new HashMap<>(), returnSamples = new HashMap<>();
-    List<LogMLFeedbackRecord> feedbackRecords =
-        dataStoreService.list(LogMLFeedbackRecord.class, feedbackRecordPageRequest);
+    return getSupervisedLabelSamplesForFeedback(feedbackRecordPageRequest);
+  }
+
+  private Map<String, List<CVFeedbackRecord>> getSupervisedLabelSamplesForFeedback(
+      PageRequest<CVFeedbackRecord> feedbackRecordPageRequest) {
+    Map<String, List<CVFeedbackRecord>> sampleRecords = new HashMap<>(), returnSamples = new HashMap<>();
+    List<CVFeedbackRecord> feedbackRecords = dataStoreService.list(CVFeedbackRecord.class, feedbackRecordPageRequest);
     feedbackRecords.forEach(feedbackRecord -> {
       String label = feedbackRecord.getSupervisedLabel();
       if (isNotEmpty(label)) {
@@ -227,7 +257,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
     // randomize 2 per label.
     if (isNotEmpty(sampleRecords)) {
       sampleRecords.forEach((label, samples) -> {
-        List<LogMLFeedbackRecord> samplesForLabel = new ArrayList<>();
+        List<CVFeedbackRecord> samplesForLabel = new ArrayList<>();
         if (samples.size() <= 2) {
           samplesForLabel = samples;
         } else {
@@ -244,15 +274,32 @@ public class LogLabelingServiceImpl implements LogLabelingService {
   }
 
   /**
-   * Saves the ignore feedback with a label
+   * This method will return samples (2) of each label from the existing records for any account
+   * @param accountId
    * @return
    */
-  public boolean saveLabeledIgnoreFeedback(String accountId, LogMLFeedbackRecord feedbackRecord, String label) {
+  public Map<String, List<CVFeedbackRecord>> getLabeledSamplesForIgnoreFeedback(String accountId) {
+    if (!featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)) {
+      return null;
+    }
+
+    PageRequest<CVFeedbackRecord> feedbackRecordPageRequest =
+        PageRequestBuilder.aPageRequest().withLimit(UNLIMITED).build();
+
+    return getSupervisedLabelSamplesForFeedback(feedbackRecordPageRequest);
+  }
+
+  /**
+   * Saves the cv feedback with a label
+   * @return
+   */
+  public boolean saveLabeledIgnoreFeedback(String accountId, CVFeedbackRecord feedbackRecord, String label) {
     if (!featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)) {
       return false;
     }
-    feedbackRecord.setSupervisedLabel(label);
-    dataStoreService.save(LogMLFeedbackRecord.class, Arrays.asList(feedbackRecord), false);
+    CVFeedbackRecord recordFromDB = dataStoreService.getEntity(CVFeedbackRecord.class, feedbackRecord.getUuid());
+    recordFromDB.setSupervisedLabel(label);
+    dataStoreService.save(CVFeedbackRecord.class, Arrays.asList(recordFromDB), false);
     return true;
   }
 }
