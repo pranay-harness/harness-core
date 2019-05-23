@@ -22,6 +22,7 @@ import software.wings.security.annotations.AuthRule;
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class WorkflowDataFetcher extends AbstractDataFetcher<QLWorkflow, QLWorkflowQueryParameters> {
+  public static final String WORKFLOW_DOES_NOT_EXIST_MSG = "Workflow does not exist";
   @Inject HPersistence persistence;
 
   @Override
@@ -43,7 +44,7 @@ public class WorkflowDataFetcher extends AbstractDataFetcher<QLWorkflow, QLWorkf
     }
 
     if (workflow == null) {
-      throw new InvalidRequestException("Workflow does not exist", WingsException.USER);
+      throw new InvalidRequestException(WORKFLOW_DOES_NOT_EXIST_MSG, WingsException.USER);
     }
 
     final QLWorkflowBuilder builder = QLWorkflow.builder();

@@ -10,6 +10,7 @@ import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.graphql.datafetcher.workflow.WorkflowDataFetcher.WORKFLOW_DOES_NOT_EXIST_MSG;
 
 import com.google.inject.Inject;
 
@@ -89,6 +90,8 @@ public class WorkflowTest extends GraphQLTest {
 
     final ExecutionResult result = qlResult(query);
     assertThat(result.getErrors().size()).isEqualTo(1);
+    assertThat(result.getErrors().get(0).getMessage())
+        .isEqualTo("Exception while fetching data (/workflow) : Invalid request: " + WORKFLOW_DOES_NOT_EXIST_MSG);
   }
 
   @Test
