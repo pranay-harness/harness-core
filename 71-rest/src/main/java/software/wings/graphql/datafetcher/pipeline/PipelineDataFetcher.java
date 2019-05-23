@@ -19,6 +19,7 @@ import software.wings.security.annotations.AuthRule;
 
 @Slf4j
 public class PipelineDataFetcher extends AbstractDataFetcher<QLPipeline, QLPipelineQueryParameters> {
+  public static final String PIPELINE_DOES_NOT_EXIST_MSG = "Pipeline does not exist";
   @Inject HPersistence persistence;
 
   @Override
@@ -39,7 +40,7 @@ public class PipelineDataFetcher extends AbstractDataFetcher<QLPipeline, QLPipel
     }
 
     if (pipeline == null) {
-      throw new InvalidRequestException("Pipeline does not exist", WingsException.USER);
+      throw new InvalidRequestException(PIPELINE_DOES_NOT_EXIST_MSG, WingsException.USER);
     }
 
     final QLPipelineBuilder builder = QLPipeline.builder();

@@ -1,5 +1,6 @@
 package io.harness.rule;
 
+import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static org.mockito.Mockito.mock;
 
 import com.google.inject.AbstractModule;
@@ -74,6 +75,7 @@ public class GraphQLRule
         injector.getInstance(Key.get(new TypeLiteral<QueryLanguageProvider<GraphQL>>() {}));
     graphQL = instance.getQL();
     injector.getInstance(HPersistence.class).registerUserProvider(new ThreadLocalUserProvider());
+    initializeLogging();
   }
 
   protected MainConfiguration getConfiguration(String dbName) {

@@ -18,6 +18,7 @@ import software.wings.security.annotations.AuthRule;
 
 @Slf4j
 public class ApplicationDataFetcher extends AbstractDataFetcher<QLApplication, QLApplicationQueryParameters> {
+  public static final String APP_DOES_NOT_EXIST_MSG = "Application does not exist";
   @Inject HPersistence persistence;
 
   @Override
@@ -37,7 +38,7 @@ public class ApplicationDataFetcher extends AbstractDataFetcher<QLApplication, Q
       application = persistence.get(Application.class, applicationId);
     }
     if (application == null) {
-      throw new InvalidRequestException("Application does not exist", WingsException.USER);
+      throw new InvalidRequestException(APP_DOES_NOT_EXIST_MSG, WingsException.USER);
     }
 
     final QLApplicationBuilder builder = QLApplication.builder();

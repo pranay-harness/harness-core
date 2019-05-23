@@ -89,10 +89,6 @@ public class WorkflowTest extends GraphQLTest {
 
     final ExecutionResult result = qlResult(query);
     assertThat(result.getErrors().size()).isEqualTo(1);
-
-    // TODO: this message is wrong
-    assertThat(result.getErrors().get(0).getMessage())
-        .isEqualTo("Exception while fetching data (/workflow) : INVALID_REQUEST");
   }
 
   @Test

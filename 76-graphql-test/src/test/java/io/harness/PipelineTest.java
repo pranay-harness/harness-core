@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.PipelineGenerator.Pipelines.BARRIER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.graphql.datafetcher.pipeline.PipelineDataFetcher.PIPELINE_DOES_NOT_EXIST_MSG;
 
 import com.google.inject.Inject;
 
@@ -74,9 +75,8 @@ public class PipelineTest extends GraphQLTest {
     final ExecutionResult result = qlResult(query);
     assertThat(result.getErrors().size()).isEqualTo(1);
 
-    // TODO: this message is wrong
     assertThat(result.getErrors().get(0).getMessage())
-        .isEqualTo("Exception while fetching data (/pipeline) : INVALID_REQUEST");
+        .isEqualTo("Exception while fetching data (/pipeline) : Invalid request: " + PIPELINE_DOES_NOT_EXIST_MSG);
   }
 
   @Test
