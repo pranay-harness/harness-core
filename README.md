@@ -211,7 +211,7 @@ Also make sure that the layout looks like this:
     Use the "+" on the left to add a new application. Call it "DelegateApplication"
 
     _ Set Main class:  
-    'DelegateApplication' class (found at software.wings.delegate.app.DelegateApplication) with the following configurations.
+    'DelegateApplication' class (found at io.harness.delegate.app.DelegateApplication) with the following configurations.
 
     _ VM Options:  
     `-Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Dversion=999.0.0`
