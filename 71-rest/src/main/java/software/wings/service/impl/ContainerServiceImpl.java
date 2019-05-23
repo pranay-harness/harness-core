@@ -4,8 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.command.KubernetesSetupCommandUnit.HARNESS_KUBERNETES_REVISION_LABEL_KEY;
 import static software.wings.beans.infrastructure.instance.info.EcsContainerInfo.Builder.anEcsContainerInfo;
-import static software.wings.common.Constants.HARNESS_KUBERNETES_REVISION_LABEL_KEY;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;

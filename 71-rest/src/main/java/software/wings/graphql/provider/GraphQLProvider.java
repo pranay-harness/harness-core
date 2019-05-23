@@ -17,6 +17,8 @@ import org.reflections.scanners.ResourcesScanner;
 import software.wings.graphql.directive.DataFetcherDirective;
 import software.wings.graphql.instrumentation.QueryDepthInstrumentation;
 import software.wings.graphql.scalar.GraphQLDateTimeScalar;
+import software.wings.graphql.scalar.LongScalar;
+import software.wings.graphql.scalar.NumberScalar;
 import software.wings.graphql.schema.TypeResolverManager;
 
 import java.io.IOException;
@@ -69,7 +71,10 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
     typeResolverManager.getTypeResolverMap().forEach(
         (k, v) -> builder.type(k, typeWiring -> typeWiring.typeResolver(v)));
 
-    builder.scalar(GraphQLDateTimeScalar.type).directive("dataFetcher", dataFetcherDirective);
+    builder.scalar(GraphQLDateTimeScalar.type)
+        .scalar(LongScalar.type)
+        .scalar(NumberScalar.type)
+        .directive("dataFetcher", dataFetcherDirective);
     return builder.build();
   }
 

@@ -553,13 +553,6 @@ public interface Constants {
   String CF_AWSCONFIG_VAR_DESC = "Variable for CloudFormation AWS Config entity";
   String HELM_GITCONFIG_VAR_DESC = "Variable for Helm Git Config entity";
 
-  String HARNESS_KUBERNETES_MANAGED_LABEL_KEY = "harness.io/managed";
-  String HARNESS_KUBERNETES_APP_LABEL_KEY = "harness.io/application";
-  String HARNESS_KUBERNETES_SERVICE_LABEL_KEY = "harness.io/service";
-  String HARNESS_KUBERNETES_ENV_LABEL_KEY = "harness.io/environment";
-  String HARNESS_KUBERNETES_REVISION_LABEL_KEY = "harness.io/revision";
-  String HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY = "harness.io/service-infra-id";
-
   String URL_STRING = "Url";
 
   String PRIMARY_SERVICE_NAME_EXPRESSION = "${PRIMARY_SERVICE_NAME}";

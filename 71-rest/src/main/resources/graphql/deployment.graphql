@@ -1,0 +1,28 @@
+enum DeploymentFilterType {
+  Application
+  Service
+  Environment
+  Artifact
+  Cloud
+  Provider
+  Status
+  Note
+  CreatedAt
+}
+
+enum DeploymentAggregation {
+  Application
+  Service
+  Environment
+  Artifact
+  Cloud
+  Provider
+  Status
+  Note
+  CreatedAt
+}
+
+type DeploymentFilter {
+  type: DeploymentFilterType
+  values: [String]
+}

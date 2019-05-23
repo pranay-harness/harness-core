@@ -9,6 +9,11 @@ import software.wings.graphql.schema.type.QLExecutedAlongPipeline;
 import software.wings.graphql.schema.type.QLExecutedByUser;
 import software.wings.graphql.schema.type.QLPipelineExecution;
 import software.wings.graphql.schema.type.QLWorkflowExecution;
+import software.wings.graphql.schema.type.aggregation.QLAggregatedData;
+import software.wings.graphql.schema.type.aggregation.QLSinglePointData;
+import software.wings.graphql.schema.type.aggregation.QLStackedData;
+import software.wings.graphql.schema.type.aggregation.QLStackedTimeSeriesData;
+import software.wings.graphql.schema.type.aggregation.QLTimeSeriesData;
 import software.wings.graphql.schema.type.cloudProvider.QLAwsCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLAzureCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLGcpCloudProvider;
@@ -33,6 +38,7 @@ public class TypeResolverManager {
   public static final class TypeResolverManagerUnifaces {
     public static final String Cause = "Cause";
     public static final String CloudProvider = "CloudProvider";
+    public static final String Data = "Data";
     public static final String Execution = "Execution";
     public static final String Instance = "Instance";
     public static final String Outcome = "Outcome";
@@ -40,6 +46,7 @@ public class TypeResolverManager {
   }
 
   public static final class TypeResolverManagerTypes {
+    public static final String AggregatedData = "AggregatedData";
     public static final String AutoScalingGroupInstance = "AutoScalingGroupInstance";
     public static final String AwsCloudProvider = "AwsCloudProvider";
     public static final String AzureCloudProvider = "AzureCloudProvider";
@@ -57,6 +64,10 @@ public class TypeResolverManager {
     public static final String PhysicalDataCenterCloudProvider = "PhysicalDataCenterCloudProvider";
     public static final String PhysicalHostInstance = "PhysicalHostInstance";
     public static final String PipelineExecution = "PipelineExecution";
+    public static final String SinglePointData = "SinglePointData";
+    public static final String StackedData = "StackedData";
+    public static final String StackedTimeSeriesData = "StackedTimeSeriesData";
+    public static final String TimeSeriesData = "TimeSeriesData";
     public static final String WorkflowExecution = "WorkflowExecution";
   }
 
@@ -111,6 +122,15 @@ public class TypeResolverManager {
                     .put(QLEc2Instance.class, TypeResolverManagerTypes.Ec2Instance)
                     .put(QLCodeDeployInstance.class, TypeResolverManagerTypes.CodeDeployInstance)
                     .put(QLAutoScalingGroupInstance.class, TypeResolverManagerTypes.AutoScalingGroupInstance)
+                    .build()))
+        .put(TypeResolverManagerUnifaces.Data,
+            getResultTypeResolver(
+                ImmutableMap.<Class, String>builder()
+                    .put(QLAggregatedData.class, TypeResolverManagerTypes.AggregatedData)
+                    .put(QLSinglePointData.class, TypeResolverManagerTypes.SinglePointData)
+                    .put(QLStackedData.class, TypeResolverManagerTypes.StackedData)
+                    .put(QLTimeSeriesData.class, TypeResolverManagerTypes.TimeSeriesData)
+                    .put(QLStackedTimeSeriesData.class, TypeResolverManagerTypes.StackedTimeSeriesData)
                     .build()))
         .build();
   }
