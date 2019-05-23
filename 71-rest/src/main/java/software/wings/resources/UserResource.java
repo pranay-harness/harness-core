@@ -226,7 +226,7 @@ public class UserResource {
   @Path("join-account")
   @Timed
   @ExceptionMetered
-  public RestResponse<Boolean> trialSignup(AccountJoinRequest accountJoinRequest) {
+  public RestResponse<Boolean> accountJoinRequest(AccountJoinRequest accountJoinRequest) {
     return new RestResponse<>(userService.accountJoinRequest(accountJoinRequest));
   }
 
