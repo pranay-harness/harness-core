@@ -285,8 +285,8 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
       logger.warn("taskId is null");
       return;
     }
-    wingsPersistence.updateField(
-        LearningEngineExperimentalAnalysisTask.class, taskId, "executionStatus", ExecutionStatus.SUCCESS);
+    wingsPersistence.updateField(LearningEngineExperimentalAnalysisTask.class, taskId,
+        LearningEngineExperimentalAnalysisTaskKeys.executionStatus, ExecutionStatus.SUCCESS);
   }
 
   @Override

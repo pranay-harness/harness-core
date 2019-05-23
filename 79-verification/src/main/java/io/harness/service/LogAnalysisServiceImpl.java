@@ -276,7 +276,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       }
       return true;
     } catch (Exception ex) {
-      logger.error("Save log data failed " + ex);
+      logger.error("Save log data failed for {}", stateExecutionId, ex);
       return false;
     }
   }
@@ -306,7 +306,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       return true;
     }
 
-    logger.error("for {} got logs for minutes {} which are already clustered", fieldValueForQuery, clusteredMinutes);
+    logger.info("for {} got logs for minutes {} which are already clustered", fieldValueForQuery, clusteredMinutes);
     return false;
   }
 
@@ -452,13 +452,17 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       pageRequest.addFilter(LogDataRecordKeys.host, Operator.IN, logRequest.getNodes().toArray());
     }
 
-    PageResponse<LogDataRecord> response = wingsPersistence.query(LogDataRecord.class, pageRequest, excludeAuthority);
+    PageResponse<LogDataRecord> response = logRequest.isExperimental()
+        ? dataStoreService.list(LogDataRecord.class, pageRequest)
+        : wingsPersistence.query(LogDataRecord.class, pageRequest, excludeAuthority);
     while (!response.isEmpty()) {
       logDataRecords.addAll(response.getResponse());
 
       previousOffset += response.size();
       pageRequest.setOffset(String.valueOf(previousOffset));
-      response = wingsPersistence.query(LogDataRecord.class, pageRequest, excludeAuthority);
+      response = logRequest.isExperimental()
+          ? dataStoreService.list(LogDataRecord.class, pageRequest)
+          : wingsPersistence.query(LogDataRecord.class, pageRequest, excludeAuthority);
     }
     return logDataRecords;
   }

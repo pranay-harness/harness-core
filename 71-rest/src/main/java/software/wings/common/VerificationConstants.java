@@ -28,7 +28,6 @@ public class VerificationConstants {
   public static final String NOTIFY_WORKFLOW_VERIFICATION_STATE = "/notify-workflow-verification-state";
   public static final String COLLECT_24_7_DATA = "/collect-24-7-data";
   public static final String COLLECT_DATA = "/collect-data";
-  public static final String NOTIFY_LOG_STATE = "/notify-log-state";
   public static final String CHECK_STATE_VALID = "/state-valid";
   public static final String GET_DEPLOYMENTS_24_7 = "/cv24-7-deployment-list";
   public static final String GET_DEPLOYMENTS_SERVICE_24_7 = "/service-deployment-list";
@@ -57,6 +56,7 @@ public class VerificationConstants {
   public static final String DEFAULT_GROUP_NAME = "default";
   public static final String ECS_HOST_NAME = "ECS_HOST";
   public static final String WORKFLOW_CV_COLLECTION_CRON_GROUP = "_WORKFLOW_CV_COLLECTION_CRON_GROUP";
+  public static final String IS_EXPERIMENTAL = "isExperimental";
 
   public static final String STATIC_CLOUD_WATCH_METRIC_URL = "/configs/cloudwatch_metrics.yml";
 

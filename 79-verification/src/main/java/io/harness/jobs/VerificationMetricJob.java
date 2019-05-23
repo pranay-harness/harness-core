@@ -56,7 +56,7 @@ public class VerificationMetricJob implements Job {
     LearningEngineAnalysisTask lastQueuedAnalysisTask =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
             .filter(LearningEngineAnalysisTaskKeys.executionStatus, QUEUED)
-            .filter(LearningEngineAnalysisTaskKeys.service_guard_backoff_count, 0)
+            .filter(LearningEngineAnalysisTaskKeys.service_guard_backoff_count, 1)
             .order(Sort.ascending("createdAt"))
             .get();
 
