@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -881,7 +882,7 @@ public class KmsTest extends WingsBaseTest {
         wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
     assertEquals(1, query.count());
     EncryptedData encryptedData = query.get();
-    assertNull(encryptedData.getKmsId());
+    assertNotNull(encryptedData.getKmsId());
 
     verifyChangeLogs(savedAttributeId, savedAttribute, user1);
 
@@ -909,7 +910,7 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(accountId, encryptedData.getAccountId());
     assertEquals(EncryptionType.LOCAL, encryptedData.getEncryptionType());
     assertEquals(SettingVariableTypes.APP_DYNAMICS, encryptedData.getType());
-    assertNull(encryptedData.getKmsId());
+    assertNotNull(encryptedData.getKmsId());
     assertNotNull(encryptedData.getEncryptionKey());
     assertNotNull(encryptedData.getEncryptedValue());
 
@@ -1004,7 +1005,7 @@ public class KmsTest extends WingsBaseTest {
         wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedServiceVariableId);
     assertEquals(1, query.count());
     EncryptedData encryptedData = query.get();
-    assertNull(encryptedData.getKmsId());
+    assertNotNull(encryptedData.getKmsId());
 
     encryptionService.decrypt(
         savedVariable, secretManager.getEncryptionDetails(serviceVariable, appId, workflowExecutionId));
@@ -1030,7 +1031,7 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(accountId, encryptedData.getAccountId());
     assertEquals(EncryptionType.LOCAL, encryptedData.getEncryptionType());
     assertEquals(SettingVariableTypes.SECRET_TEXT, encryptedData.getType());
-    assertNull(encryptedData.getKmsId());
+    assertNotNull(encryptedData.getKmsId());
     assertNotNull(encryptedData.getEncryptionKey());
     assertNotNull(encryptedData.getEncryptedValue());
 
@@ -2609,7 +2610,7 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(renameAccountId, encryptedData.getEncryptionKey());
     assertEquals(SettingVariableTypes.CONFIG_FILE, encryptedData.getType());
     assertTrue(encryptedData.isEnabled());
-    assertTrue(isBlank(encryptedData.getKmsId()));
+    assertTrue(isNotEmpty(encryptedData.getKmsId()));
     assertEquals(EncryptionType.LOCAL, encryptedData.getEncryptionType());
 
     // now make the same file not encrypted
@@ -2995,7 +2996,7 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(EncryptionType.LOCAL, encryptedData.getEncryptionType());
     assertEquals(accountId, encryptedData.getAccountId());
     assertTrue(encryptedData.isEnabled());
-    assertNull(encryptedData.getKmsId());
+    assertNotNull(encryptedData.getKmsId());
     assertEquals(SettingVariableTypes.APP_DYNAMICS, encryptedData.getType());
     assertEquals(numOfSettingAttributes, encryptedData.getParentIds().size());
     assertEquals(attributeIds, encryptedData.getParentIds());
@@ -3028,7 +3029,7 @@ public class KmsTest extends WingsBaseTest {
         assertEquals(EncryptionType.LOCAL, encryptedData.getEncryptionType());
         assertEquals(accountId, encryptedData.getAccountId());
         assertTrue(encryptedData.isEnabled());
-        assertNull(encryptedData.getKmsId());
+        assertNotNull(encryptedData.getKmsId());
         assertEquals(SettingVariableTypes.APP_DYNAMICS, encryptedData.getType());
         assertEquals(numOfSettingAttributes - (i + 1), encryptedData.getParentIds().size());
 

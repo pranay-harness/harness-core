@@ -31,6 +31,7 @@ import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.VaultConfig;
 import software.wings.security.encryption.EncryptedData;
@@ -42,6 +43,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -74,6 +76,8 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   private VaultConfig vaultConfigWithBasePath3;
 
   private KmsConfig kmsConfig;
+
+  private LocalEncryptionConfig localEncryptionConfig;
 
   @Before
   public void setUp() {
@@ -133,6 +137,25 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
                     .region("us-east-1")
                     .isDefault(true)
                     .build();
+
+    localEncryptionConfig = localEncryptionService.getEncryptionConfig(accountId);
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public void test_LocalEncryption_shouldSucceed() {
+    String secretValue = "TestSecret";
+    EncryptedData encryptedData =
+        localEncryptionService.encrypt(secretValue.toCharArray(), accountId, localEncryptionConfig);
+    char[] decrypted = localEncryptionService.decrypt(encryptedData, accountId, localEncryptionConfig);
+    assertEquals(secretValue, new String(decrypted));
+
+    String fileContent = "This file is to be encrypted";
+    EncryptedData encryptedFileData = localEncryptionService.encryptFile(
+        accountId, localEncryptionConfig, "TestEncryptedFile", fileContent.getBytes());
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    localEncryptionService.decryptToStream(accountId, encryptedFileData, outputStream);
+    assertEquals(fileContent, new String(outputStream.toByteArray()));
   }
 
   @Test

@@ -202,7 +202,7 @@ public class SecretTextTest extends WingsBaseTest {
 
     switch (encryptionType) {
       case LOCAL:
-        kmsId = null;
+        kmsId = accountId;
         encryptedBy = HARNESS_DEFAULT_SECRET_MANAGER;
         break;
 

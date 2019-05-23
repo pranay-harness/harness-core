@@ -3,7 +3,6 @@ package software.wings.service.impl.security;
 import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
-import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -13,6 +12,7 @@ import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.SecretString.SECRET_MASK;
+import static io.harness.persistence.CreatedAtAware.CREATED_AT_KEY;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeCount;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
@@ -20,7 +20,6 @@ import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Base.CREATED_AT_KEY;
 import static software.wings.beans.ConfigFile.ENCRYPTED_FILE_ID_KEY;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.ServiceVariable.ENCRYPTED_VALUE_KEY;
@@ -47,7 +46,6 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
@@ -67,7 +65,6 @@ import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Account;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.Base;
-import software.wings.beans.BaseFile;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -90,7 +87,6 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.security.encryption.EncryptionUtils;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
 import software.wings.service.impl.AuditServiceHelper;
@@ -114,11 +110,9 @@ import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 import software.wings.utils.Validator;
 import software.wings.utils.WingsReflectionUtils;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -859,6 +853,11 @@ public class SecretManagerImpl implements SecretManager {
 
     EncryptedData encryptedFileData;
     switch (toEncryptionType) {
+      case LOCAL:
+        encryptedFileData = localEncryptionService.encryptFile(
+            accountId, (LocalEncryptionConfig) toConfig, encryptedData.getName(), decryptedFileContent);
+        break;
+
       case KMS:
         encryptedFileData =
             kmsService.encryptFile(accountId, (KmsConfig) toConfig, encryptedData.getName(), decryptedFileContent);
@@ -878,17 +877,26 @@ public class SecretManagerImpl implements SecretManager {
         throw new IllegalArgumentException("Invalid target encryption type " + toEncryptionType);
     }
 
+    String savedFileId = String.valueOf(encryptedData.getEncryptedValue());
     switch (fromEncryptionType) {
+      case LOCAL:
+        // Fall through so as the old file will be deleted just like in KMS case.
       case KMS:
         // Delete file from file service only if the source secret manager is of KMS type.
-        String savedFileId = String.valueOf(encryptedData.getEncryptedValue());
         fileService.deleteFile(savedFileId, CONFIGS);
         break;
+      case VAULT:
+        // Delete the Vault secret corresponding to the encrypted file if it's not a path reference
+        if (isEmpty(encryptedData.getPath())) {
+          vaultService.deleteSecret(accountId, encryptedData.getEncryptionKey(), (VaultConfig) fromConfig);
+        }
+        break;
       case AWS_SECRETS_MANAGER:
-        // Delete the AWS secrets (encrypted file type) after it's transitioned out.
-        String awsSecretName =
-            isEmpty(encryptedData.getPath()) ? encryptedData.getEncryptionKey() : encryptedData.getPath();
-        secretsManagerService.deleteSecret(accountId, awsSecretName, (AwsSecretsManagerConfig) fromConfig);
+        // Delete the AWS secrets (encrypted file type) after it's transitioned out if it's not a referenced secret
+        if (isEmpty(encryptedData.getPath())) {
+          secretsManagerService.deleteSecret(
+              accountId, encryptedData.getEncryptionKey(), (AwsSecretsManagerConfig) fromConfig);
+        }
         break;
       default:
         break;
@@ -1261,8 +1269,7 @@ public class SecretManagerImpl implements SecretManager {
     EncryptionType encryptionType = encryptedData.getEncryptionType();
     switch (encryptionType) {
       case LOCAL:
-        fileService.download(String.valueOf(encryptedData.getEncryptedValue()), readInto, CONFIGS);
-        return EncryptionUtils.decrypt(readInto, encryptedData.getEncryptionKey(), encryptedData.isBase64Encoded());
+        return localEncryptionService.decryptFile(readInto, accountId, encryptedData);
 
       case KMS:
         fileService.download(String.valueOf(encryptedData.getEncryptedValue()), readInto, CONFIGS);
@@ -1292,11 +1299,7 @@ public class SecretManagerImpl implements SecretManager {
     try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
       switch (encryptionType) {
         case LOCAL:
-          file = new File(Files.createTempDir(), generateUuid());
-          logger.info("Temp file path [{}]", file.getAbsolutePath());
-          fileService.download(String.valueOf(encryptedData.getEncryptedValue()), file, CONFIGS);
-          EncryptionUtils.decryptToStream(
-              file, encryptedData.getEncryptionKey(), output, encryptedData.isBase64Encoded());
+          localEncryptionService.decryptToStream(accountId, encryptedData, output);
           break;
 
         case KMS:
@@ -1400,23 +1403,10 @@ public class SecretManagerImpl implements SecretManager {
     if (isNotEmpty(inputBytes)) {
       switch (encryptionType) {
         case LOCAL:
-          try {
-            byte[] base64Encoded = encodeBase64ToByteArray(inputBytes);
-            byte[] encryptedFileContent = EncryptionUtils.encrypt(base64Encoded, accountId);
-            try (InputStream encryptedInputStream = new ByteArrayInputStream(encryptedFileContent)) {
-              BaseFile baseFile = new BaseFile();
-              baseFile.setFileName(name);
-              baseFile.setAccountId(accountId);
-              baseFile.setFileUuid(UUIDGenerator.generateUuid());
-              String fileId = fileService.saveFile(baseFile, encryptedInputStream, CONFIGS);
-              newEncryptedFile =
-                  EncryptedData.builder().encryptionKey(accountId).encryptedValue(fileId.toCharArray()).build();
-              if (update) {
-                fileService.deleteFile(savedFileId, CONFIGS);
-              }
-            }
-          } catch (IOException e) {
-            throw new WingsException(DEFAULT_ERROR_CODE, e);
+          LocalEncryptionConfig localEncryptionConfig = localEncryptionService.getEncryptionConfig(accountId);
+          newEncryptedFile = localEncryptionService.encryptFile(accountId, localEncryptionConfig, name, inputBytes);
+          if (update) {
+            fileService.deleteFile(savedFileId, CONFIGS);
           }
           break;
 
