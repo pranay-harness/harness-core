@@ -44,6 +44,7 @@ import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
+import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.common.Constants;
@@ -61,6 +62,7 @@ import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.YamlArtifactStreamService;
@@ -88,6 +90,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private EnvironmentService environmentService;
   @Inject private PipelineService pipelineService;
   @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private TriggerService triggerService;
   @Inject private YamlArtifactStreamService yamlArtifactStreamService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private InfrastructureMappingService infraMappingService;
@@ -190,7 +193,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    * @param artifactStreamId the artifact stream id
    * @return the rest response
    */
-  public RestResponse<YamlPayload> getTrigger(String appId, String artifactStreamId) {
+  public RestResponse<YamlPayload> getArtifactTrigger(String appId, String artifactStreamId) {
     if (!appId.equals(GLOBAL_APP_ID)) {
       ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
 
@@ -238,6 +241,20 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
       return YamlHelper.getYamlRestResponse(artifactStreamYaml, payLoadName + ".yaml");
     }
+  }
+
+  /**
+   * Gets the yaml version of a trigger by trigger id
+   *
+   * @param appId     the app id
+   * @param triggerId the trigger id
+   * @return the rest response
+   */
+  public RestResponse<YamlPayload> getTrigger(String appId, String triggerId) {
+    String accountId = appService.getAccountIdByAppId(appId);
+    Validator.notNullCheck("No account found for appId:" + appId, accountId);
+    Trigger trigger = triggerService.get(appId, triggerId);
+    return null;
   }
 
   /**

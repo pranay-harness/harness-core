@@ -826,7 +826,7 @@ public class TriggerServiceImpl implements TriggerService {
       msg.append("Trigger rejected. Reason: ")
           .append(PIPELINE.equals(workflowType) ? "Pipeline" : "Workflow")
           .append(" [")
-          .append(trigger.getWorkflowName())
+          .append(trigger.fetchWorkflowOrPipelineName())
           .append("] does not need artifacts. However, trigger received with the artifacts");
       logger.warn(msg.toString());
       //      throw new WingsException(msg.toString());
@@ -855,7 +855,7 @@ public class TriggerServiceImpl implements TriggerService {
           new StringBuilder("Trigger rejected. Reason: More artifacts received than required artifacts for ");
       msg.append(PIPELINE.equals(workflowType) ? "Pipeline" : "Workflow")
           .append(" [")
-          .append(trigger.getWorkflowName())
+          .append(trigger.fetchWorkflowOrPipelineName())
           .append(']');
       logger.warn(msg.toString());
       //      throw new WingsException(msg.toString());
@@ -1325,7 +1325,7 @@ public class TriggerServiceImpl implements TriggerService {
   private Map<String, String> resolveWorkflowServices(Trigger trigger) {
     Workflow workflow = workflowService.readWorkflow(trigger.getAppId(), trigger.getWorkflowId());
     if (workflow == null) {
-      throw new WingsException("Workflow " + trigger.getWorkflowName() + " does not exist.", USER);
+      throw new WingsException("Workflow " + trigger.fetchWorkflowOrPipelineName() + " does not exist.", USER);
     }
     List<Service> workflowServices = workflow.getServices();
     if (!BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())

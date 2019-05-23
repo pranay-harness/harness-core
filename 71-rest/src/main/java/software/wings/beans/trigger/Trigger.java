@@ -104,13 +104,6 @@ public class Trigger extends Base implements NameAccess {
     return pipelineId;
   }
 
-  public String getPipelineName() {
-    if (this.pipelineName == null) {
-      return this.workflowName;
-    }
-    return this.pipelineName;
-  }
-
   public String getWorkflowId() {
     if (workflowId == null) {
       return pipelineId;
@@ -118,7 +111,7 @@ public class Trigger extends Base implements NameAccess {
     return workflowId;
   }
 
-  public String getWorkflowName() {
+  public String fetchWorkflowOrPipelineName() {
     if (workflowName == null) {
       return pipelineName;
     }
