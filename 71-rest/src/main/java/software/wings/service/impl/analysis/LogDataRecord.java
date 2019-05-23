@@ -7,6 +7,7 @@ import static io.harness.govern.Switch.noop;
 import static software.wings.common.Constants.ML_RECORDS_TTL_MONTHS;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.addFieldIfNotEmpty;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.readBlob;
+import static software.wings.service.impl.GoogleDataStoreServiceImpl.readLong;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.readString;
 
 import com.google.cloud.datastore.Blob;
@@ -157,13 +158,13 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware {
     dataStoreRecordBuilder.set(LogDataRecordKeys.timeStamp, timeStamp);
     dataStoreRecordBuilder.set(LogDataRecordKeys.logCollectionMinute, logCollectionMinute);
 
-    addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.timesLabeled, String.valueOf(timesLabeled), true);
+    addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.timesLabeled, timesLabeled, true);
     addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.query, query, true);
     addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.clusterLabel, clusterLabel, true);
     addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.logMD5Hash, logMD5Hash, true);
 
-    addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.clusterLevel, String.valueOf(clusterLevel), true);
-    addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.count, String.valueOf(count), true);
+    addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.clusterLevel, String.valueOf(clusterLevel), false);
+    addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.count, count, true);
     try {
       Blob compressedLog = Blob.copyFrom(compressString(logMessage));
       addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.logMessage, compressedLog, true);
@@ -190,9 +191,9 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware {
             .query(readString(entity, LogDataRecordKeys.query))
             .clusterLabel(readString(entity, LogDataRecordKeys.clusterLabel))
             .host(readString(entity, LogDataRecordKeys.host))
-            .timeStamp(Long.parseLong(readString(entity, LogDataRecordKeys.timeStamp)))
-            .timesLabeled(Integer.parseInt(readString(entity, LogDataRecordKeys.timesLabeled)))
-            .count(Integer.parseInt(readString(entity, LogDataRecordKeys.count)))
+            .timeStamp(readLong(entity, LogDataRecordKeys.timeStamp))
+            .timesLabeled((int) readLong(entity, LogDataRecordKeys.timesLabeled))
+            .count((int) readLong(entity, LogDataRecordKeys.count))
             .logMD5Hash(readString(entity, LogDataRecordKeys.logMD5Hash))
             .clusterLevel(ClusterLevel.valueOf(readString(entity, LogDataRecordKeys.clusterLevel)))
             .workflowId(readString(entity, LogDataRecordKeys.workflowId))

@@ -248,7 +248,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     logElements.add(logElement);
 
     final LogRequest logRequest = new LogRequest(
-        query, appId, stateExecutionId, workflowId, serviceId, Collections.singleton(host), logCollectionMinute);
+        query, appId, stateExecutionId, workflowId, serviceId, Collections.singleton(host), logCollectionMinute, false);
 
     Set<LogDataRecord> logDataRecords = analysisService.getLogData(
         logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
@@ -300,7 +300,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     logElements.add(logElement);
 
     final LogRequest logRequest = new LogRequest(
-        query, appId, stateExecutionId, workflowId, serviceId, Collections.singleton(host), logCollectionMinute);
+        query, appId, stateExecutionId, workflowId, serviceId, Collections.singleton(host), logCollectionMinute, false);
 
     boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId,
         workflowId, workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
@@ -349,7 +349,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     logElements.add(logElement);
 
     final LogRequest logRequest = new LogRequest(
-        query, appId, stateExecutionId, workflowId, serviceId, Collections.singleton(host), logCollectionMinute);
+        query, appId, stateExecutionId, workflowId, serviceId, Collections.singleton(host), logCollectionMinute, false);
 
     boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId,
         workflowId, workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
@@ -402,7 +402,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertTrue(status);
 
     final LogRequest logRequest = new LogRequest(
-        query, appId, stateExecutionId, workflowId, serviceId, Collections.singleton(host), logCollectionMinute);
+        query, appId, stateExecutionId, workflowId, serviceId, Collections.singleton(host), logCollectionMinute, false);
     Set<LogDataRecord> logDataRecords = analysisService.getLogData(
         logRequest, true, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
     assertEquals(1, logDataRecords.size());

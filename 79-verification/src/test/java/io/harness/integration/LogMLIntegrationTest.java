@@ -418,12 +418,12 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
         new LogMLClusterGenerator(learningEngineService, logClusterContext, ClusterLevel.L0, ClusterLevel.L1,
             new LogRequest(query, appId, stateExecutionId, workflowId, serviceId,
-                Sets.newHashSet(Collections.singletonList(host)), logCollectionMinute),
+                Sets.newHashSet(Collections.singletonList(host)), logCollectionMinute, false),
             0)
             .run();
 
-        final LogRequest logRequest = new LogRequest(
-            query, appId, stateExecutionId, workflowId, serviceId, Collections.singleton(host), logCollectionMinute);
+        final LogRequest logRequest = new LogRequest(query, appId, stateExecutionId, workflowId, serviceId,
+            Collections.singleton(host), logCollectionMinute, false);
 
         WebTarget getTarget = client.target(VERIFICATION_API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS
             + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId
@@ -1242,7 +1242,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
           + "/get-logs?accountId=" + accountId + "&clusterLevel=" + ClusterLevel.L0.name()
           + "&compareCurrent=true&workflowExecutionId=" + workflowExecution.getUuid()
           + "&stateType=" + StateType.SPLUNKV2);
-      final LogRequest logRequest = new LogRequest(query, appId, "se2", workflowId, serviceId, hosts, collectionMinute);
+      final LogRequest logRequest =
+          new LogRequest(query, appId, "se2", workflowId, serviceId, hosts, collectionMinute, false);
       RestResponse<Set<LogDataRecord>> restResponse = getRequestBuilderWithLearningAuthHeader(target).post(
           entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<Set<LogDataRecord>>>() {});
       assertEquals(
@@ -1328,8 +1329,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
           + "/get-logs?accountId=" + accountId + "&clusterLevel=" + ClusterLevel.L0.name()
           + "&compareCurrent=false&workflowExecutionId=" + workflowExecution.getUuid()
           + "&stateType=" + StateType.SPLUNKV2);
-      final LogRequest logRequest =
-          new LogRequest(query, appId, UUID.randomUUID().toString(), workflowId, serviceId, hosts, collectionMinute);
+      final LogRequest logRequest = new LogRequest(
+          query, appId, UUID.randomUUID().toString(), workflowId, serviceId, hosts, collectionMinute, false);
       RestResponse<Set<LogDataRecord>> restResponse = getRequestBuilderWithLearningAuthHeader(target).post(
           entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<Set<LogDataRecord>>>() {});
       assertEquals("failed for minute " + collectionMinute, addedMessages.get(numOfExecutions, collectionMinute),

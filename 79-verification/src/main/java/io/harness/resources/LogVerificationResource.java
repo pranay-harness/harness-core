@@ -1,5 +1,7 @@
 package io.harness.resources;
 
+import static software.wings.common.VerificationConstants.IS_EXPERIMENTAL;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -68,9 +70,9 @@ public class LogVerificationResource {
   public RestResponse<Set<LogDataRecord>> getAllRawLogData(@QueryParam("appId") String appId,
       @QueryParam("cvConfigId") String cvConfigId, @QueryParam("clusterLevel") ClusterLevel clusterLevel,
       @QueryParam("logCollectionMinute") int logCollectionMinute, @QueryParam("startMinute") int startMinute,
-      @QueryParam("endMinute") int endMinute) {
-    return getRawLogData(
-        appId, cvConfigId, clusterLevel, logCollectionMinute, startMinute, endMinute, new LogRequest());
+      @QueryParam("endMinute") int endMinute, @QueryParam(IS_EXPERIMENTAL) boolean isExperimental) {
+    return getRawLogData(appId, cvConfigId, clusterLevel, logCollectionMinute, startMinute, endMinute,
+        LogRequest.builder().isExperimental(isExperimental).build());
   }
 
   @Produces({"application/json", "application/v1+json"})

@@ -259,87 +259,87 @@ public enum StateType implements StateTypeDescriptor {
   NEW_RELIC(NewRelicState.class, VERIFICATIONS, 3, "New Relic", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
+   * New relic deployment marker state type.
+   */
+  NEW_RELIC_DEPLOYMENT_MARKER(NewRelicDeploymentMarkerState.class, VERIFICATIONS, 4, "New Relic Deployment Marker",
+      asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+
+  /**
    * dyna trace state type.
    */
-  DYNA_TRACE(DynatraceState.class, VERIFICATIONS, 4, asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  DYNA_TRACE(DynatraceState.class, VERIFICATIONS, 5, asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Prometheus state type.
    */
-  PROMETHEUS(PrometheusState.class, VERIFICATIONS, 5, asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  PROMETHEUS(PrometheusState.class, VERIFICATIONS, 6, asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Splunk state type.
    */
-  SPLUNK(SplunkState.class, VERIFICATIONS, 6, asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  SPLUNK(SplunkState.class, VERIFICATIONS, 7, asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Splunk V2 state type.
    */
-  SPLUNKV2(SplunkV2State.class, VERIFICATIONS, 7, asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  SPLUNKV2(SplunkV2State.class, VERIFICATIONS, 8, asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Elk state type.
    */
-  ELK(ElkAnalysisState.class, VERIFICATIONS, 8, "ELK", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  ELK(ElkAnalysisState.class, VERIFICATIONS, 9, "ELK", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * LOGZ state type.
    */
-  LOGZ(LogzAnalysisState.class, VERIFICATIONS, 9, "LOGZ", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  LOGZ(LogzAnalysisState.class, VERIFICATIONS, 10, "LOGZ", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Sumo state type.
    */
-  SUMO(SumoLogicAnalysisState.class, VERIFICATIONS, 10, "Sumo Logic", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  SUMO(SumoLogicAnalysisState.class, VERIFICATIONS, 11, "Sumo Logic", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Sumo state type.
    */
-  DATA_DOG(DatadogState.class, VERIFICATIONS, 11, "Datadog", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  DATA_DOG(DatadogState.class, VERIFICATIONS, 12, "Datadog Metrics", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+
+  /**
+   * DatadogLog state type.
+   */
+  DATA_DOG_LOG(DatadogLogState.class, VERIFICATIONS, 13, "Datadog Log", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Cloud watch state type.
    */
-  CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 12, "CloudWatch", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
-
-  /**
-   * New relic deployment marker state type.
-   */
-  NEW_RELIC_DEPLOYMENT_MARKER(NewRelicDeploymentMarkerState.class, VERIFICATIONS, 13, "New Relic Deployment Marker",
-      asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 14, "CloudWatch", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   AWS_LAMBDA_VERIFICATION(
-      AwsLambdaVerification.class, VERIFICATIONS, 14, "AWS Lambda Verification", asList(), ORCHESTRATION_STENCILS),
+      AwsLambdaVerification.class, VERIFICATIONS, 15, "AWS Lambda Verification", asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Generic APM verification state type.
    */
-  APM_VERIFICATION(APMVerificationState.class, VERIFICATIONS, 15, "APM Verification", asList(K8S_PHASE_STEP),
+  APM_VERIFICATION(APMVerificationState.class, VERIFICATIONS, 16, "APM Verification", asList(K8S_PHASE_STEP),
       ORCHESTRATION_STENCILS),
 
   /**
 
    * Generic LOG verification state type.
    */
-  LOG_VERIFICATION(CustomLogVerificationState.class, VERIFICATIONS, -1, "Log Verification", asList(K8S_PHASE_STEP),
+  LOG_VERIFICATION(CustomLogVerificationState.class, VERIFICATIONS, 17, "Log Verification", asList(K8S_PHASE_STEP),
       ORCHESTRATION_STENCILS),
 
   /**
    * Bugsnag verification state type.
    */
-  BUG_SNAG(BugsnagState.class, VERIFICATIONS, 17, "Bugsnag", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  BUG_SNAG(BugsnagState.class, VERIFICATIONS, 18, "Bugsnag", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * StackDriver state type.
    */
   STACK_DRIVER(
-      StackDriverState.class, VERIFICATIONS, 18, "Stackdriver", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
-
-  /**
-   * DatadogLog state type.
-   */
-  DATA_DOG_LOG(DatadogLogState.class, VERIFICATIONS, 19, "Datadog Log", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+      StackDriverState.class, VERIFICATIONS, 19, "Stackdriver", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Env state state type.

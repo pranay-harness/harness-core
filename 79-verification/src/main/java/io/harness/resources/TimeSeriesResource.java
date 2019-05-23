@@ -8,6 +8,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.entities.TimeSeriesAnomaliesRecord;
 import io.harness.entities.TimeSeriesCumulativeSums;
 import io.harness.rest.RestResponse;
+import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import io.swagger.annotations.Api;
 import software.wings.metrics.TimeSeriesMetricDefinition;
@@ -39,6 +40,7 @@ import javax.ws.rs.QueryParam;
 @Scope(ResourceType.SETTING)
 public class TimeSeriesResource {
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
+  @Inject private LearningEngineService learningEngineService;
 
   @VisibleForTesting
   @Inject
@@ -217,7 +219,8 @@ public class TimeSeriesResource {
   @Timed
   @LearningEngineAuth
   @ExceptionMetered
-  public RestResponse<Boolean> saveDummy247ExperimentalAnalysis() {
+  public RestResponse<Boolean> saveDummy247ExperimentalAnalysis(@QueryParam("taskId") String taskId) {
+    learningEngineService.markExpTaskCompleted(taskId);
     return new RestResponse<>(true);
   }
 }

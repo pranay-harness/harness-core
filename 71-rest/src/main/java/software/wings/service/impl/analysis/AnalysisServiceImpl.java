@@ -524,37 +524,43 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Override
   public String getLastSuccessfulWorkflowExecutionIdWithLogs(
       String stateExecutionId, StateType stateType, String appId, String serviceId, String workflowId, String query) {
-    // TODO should we limit the number of executions to search in ??
-    List<String> successfulExecutions = new ArrayList<>();
-    List<ContinuousVerificationExecutionMetaData> cvList =
-        wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class, excludeAuthority)
-            .filter(ContinuousVerificationExecutionMetaDataKeys.workflowId, workflowId)
-            .filter(ContinuousVerificationExecutionMetaDataKeys.stateType, stateType)
-            .filter(ContinuousVerificationExecutionMetaDataKeys.executionStatus, ExecutionStatus.SUCCESS)
-            .order(Sort.descending(ContinuousVerificationExecutionMetaDataKeys.workflowStartTs))
-            .asList();
-    logger.info("Fetched {} CVExecutionMetadata for stateExecutionId {}", cvList.size(), stateExecutionId);
-    cvList.forEach(cvMetadata -> successfulExecutions.add(cvMetadata.getWorkflowExecutionId()));
-    for (String successfulExecution : successfulExecutions) {
-      if (wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
-              .filter(LogDataRecordKeys.workflowExecutionId, successfulExecution)
-              .filter(LogDataRecordKeys.clusterLevel, ClusterLevel.L2)
-              .filter(LogDataRecordKeys.query, query)
-              .count(new CountOptions().limit(1))
-          > 0) {
-        logger.info("Found an execution for auto baseline. WorkflowExecutionId {}, stateExecutionId {}",
-            successfulExecution, stateExecutionId);
-        return successfulExecution;
+    try (HIterator<ContinuousVerificationExecutionMetaData> cvMetaDateIterator = new HIterator<>(
+             wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class, excludeAuthority)
+                 .filter(ContinuousVerificationExecutionMetaDataKeys.workflowId, workflowId)
+                 .filter(ContinuousVerificationExecutionMetaDataKeys.stateType, stateType)
+                 .filter(ContinuousVerificationExecutionMetaDataKeys.executionStatus, ExecutionStatus.SUCCESS)
+                 .order(Sort.descending(ContinuousVerificationExecutionMetaDataKeys.workflowStartTs))
+                 .fetch())) {
+      boolean hasSuccessfulExecution = false;
+      String lastSuccessFulExecution = null;
+      while (cvMetaDateIterator.hasNext()) {
+        final ContinuousVerificationExecutionMetaData cvMetaData = cvMetaDateIterator.next();
+        if (!hasSuccessfulExecution) {
+          hasSuccessfulExecution = true;
+          lastSuccessFulExecution = cvMetaData.getWorkflowExecutionId();
+        }
+        if (wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
+                .filter(LogDataRecordKeys.workflowExecutionId, cvMetaData.getWorkflowExecutionId())
+                .filter(LogDataRecordKeys.clusterLevel, ClusterLevel.L2)
+                .filter(LogDataRecordKeys.query, query)
+                .count(new CountOptions().limit(1))
+            > 0) {
+          logger.info("Found an execution for auto baseline. WorkflowExecutionId {}, stateExecutionId {}",
+              cvMetaData.getWorkflowExecutionId(), stateExecutionId);
+          return cvMetaData.getWorkflowExecutionId();
+        }
       }
+
+      if (hasSuccessfulExecution) {
+        logger.info(
+            "We did not find any execution with data. Returning workflowExecution {} as baseline for stateExecutionId {}",
+            lastSuccessFulExecution, stateExecutionId);
+        return lastSuccessFulExecution;
+      }
+      logger.warn(
+          "Could not get a successful workflow to find control nodes for stateExecutionId: {}", stateExecutionId);
+      return null;
     }
-    if (isNotEmpty(successfulExecutions)) {
-      logger.info(
-          "We did not find any execution with data. Returning workflowExecution {} as baseline for stateExecutionId {}",
-          cvList.get(0).getWorkflowExecutionId(), stateExecutionId);
-      return cvList.get(0).getWorkflowExecutionId();
-    }
-    logger.warn("Could not get a successful workflow to find control nodes for stateExecutionId: {}", stateExecutionId);
-    return null;
   }
 
   private Map<CLUSTER_TYPE, Map<Integer, LogMLFeedbackRecord>> get24x7MLUserFeedbacks(String cvConfigId, String appId) {

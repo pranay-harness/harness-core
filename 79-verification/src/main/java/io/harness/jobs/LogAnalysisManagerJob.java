@@ -87,8 +87,15 @@ public class LogAnalysisManagerJob implements Job {
         throw new RuntimeException("Test nodes empty! " + JsonUtils.asJson(context));
       }
 
-      LogRequest logRequest = new LogRequest(query, context.getAppId(), context.getStateExecutionId(),
-          context.getWorkflowId(), context.getServiceId(), nodes, logAnalysisMinute);
+      LogRequest logRequest = LogRequest.builder()
+                                  .query(query)
+                                  .applicationId(context.getAppId())
+                                  .stateExecutionId(context.getStateExecutionId())
+                                  .workflowId(context.getWorkflowId())
+                                  .serviceId(context.getServiceId())
+                                  .nodes(nodes)
+                                  .logCollectionMinute(logAnalysisMinute)
+                                  .build();
 
       switch (context.getStateType()) {
         case SUMO:

@@ -85,3 +85,10 @@ indexes:
   - name: envId
   - name: analysisMinute
     direction: desc
+
+- kind: logDataRecords
+  properties:
+  - name: cvConfigId
+  - name: clusterLevel
+  - name: logCollectionMinute
+    direction: desc

@@ -13,6 +13,7 @@ import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTIO
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_TASKS_PER_MINUTE;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.GET_LOG_FEEDBACKS;
+import static software.wings.common.VerificationConstants.IS_EXPERIMENTAL;
 import static software.wings.common.VerificationConstants.TIME_DELAY_QUERY_MINS;
 import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_BASE_URL;
 import static software.wings.common.VerificationConstants.getLogAnalysisStates;
@@ -351,7 +352,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .previous_analysis_url(getPreviousAnalysisUrl(cvConfiguration, tag))
             .historical_analysis_url(historicalAnalysisUrl)
             .control_input_url("")
-            .analysis_save_url(getSaveUrlForExperimentalTask())
+            .analysis_save_url(getSaveUrlForExperimentalTask(learningTaskId))
             .metric_template_url(metricTemplateUrl)
             .previous_anomalies_url(getPreviousAnomaliesUrl(cvConfiguration, tag))
             .cumulative_sums_url(getCumulativeSumsUrl(cvConfiguration, (int) endMin, tag))
@@ -375,9 +376,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return learningEngineAnalysisTask;
   }
 
-  private String getSaveUrlForExperimentalTask() {
+  private String getSaveUrlForExperimentalTask(String taskId) {
     return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL
-        + "/save-dummy-experimental-247?cvConfigId=Dummy";
+        + "/save-dummy-experimental-247?cvConfigId=Dummy&taskId=" + taskId;
   }
 
   private String getMetricTemplateUrl(
@@ -624,7 +625,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 LearningEngineExperimentalAnalysisTask expTask =
                     LearningEngineExperimentalAnalysisTask.builder()
                         .control_input_url(inputLogsUrl)
-                        .analysis_save_url(getSaveUrlForExperimentalTask())
+                        .analysis_save_url(getSaveUrlForExperimentalTask(taskId))
                         .state_execution_id(
                             "LOGS_CLUSTER_L1_" + cvConfiguration.getUuid() + "_" + logRecordMinute + generateUuid())
                         .service_id(cvConfiguration.getServiceId())
@@ -766,7 +767,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 LearningEngineExperimentalAnalysisTask expTask =
                     LearningEngineExperimentalAnalysisTask.builder()
                         .control_input_url(inputLogsUrl)
-                        .analysis_save_url(getSaveUrlForExperimentalTask())
+                        .analysis_save_url(getSaveUrlForExperimentalTask(taskId))
                         .state_execution_id("LOGS_CLUSTER_L2_" + cvConfiguration.getUuid() + "_" + maxLogRecordL1Minute
                             + "-" + generateUUID())
                         .service_id(cvConfiguration.getServiceId())
@@ -1069,11 +1070,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                         .query(Lists.newArrayList(logsCVConfiguration.getQuery()))
                         .sim_threshold(0.9)
                         .analysis_minute(analysisEndMin)
-                        .analysis_save_url(getSaveUrlForExperimentalTask())
+                        .analysis_save_url(getSaveUrlForExperimentalTask(taskId))
                         .log_analysis_get_url(logAnalysisGetUrl)
                         .ml_analysis_type(MLAnalysisType.LOG_ML)
-                        .test_input_url(testInputUrl)
-                        .control_input_url(controlInputUrl)
+                        .test_input_url(isEmpty(testInputUrl) ? null : testInputUrl + "&" + IS_EXPERIMENTAL + "=true")
+                        .control_input_url(
+                            isEmpty(controlInputUrl) ? null : controlInputUrl + "&" + IS_EXPERIMENTAL + "=true")
                         .test_nodes(Sets.newHashSet(DUMMY_HOST_NAME))
                         .feature_name("NEURAL_NET")
                         .is24x7Task(true)
@@ -1084,6 +1086,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                         .experiment_name(experiment.getExperimentName())
                         .build();
                 expTask.setAppId(cvConfiguration.getAppId());
+                expTask.setUuid(taskId);
                 learningEngineService.addLearningEngineExperimentalAnalysisTask(expTask);
               }
             }

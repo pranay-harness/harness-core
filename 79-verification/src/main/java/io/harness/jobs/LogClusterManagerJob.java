@@ -118,9 +118,15 @@ public class LogClusterManagerJob implements Job {
                     context.getStateExecutionId(), context.getStateType(), Sets.newHashSet(log.getHost()),
                     ClusterLevel.L0, log.getLogCollectionMinute());
 
-                final LogRequest logRequest = new LogRequest(log.getQuery(), context.getAppId(),
-                    context.getStateExecutionId(), context.getWorkflowId(), context.getServiceId(),
-                    Collections.singleton(log.getHost()), log.getLogCollectionMinute());
+                final LogRequest logRequest = LogRequest.builder()
+                                                  .query(log.getQuery())
+                                                  .applicationId(context.getAppId())
+                                                  .stateExecutionId(context.getStateExecutionId())
+                                                  .workflowId(context.getWorkflowId())
+                                                  .serviceId(context.getServiceId())
+                                                  .nodes(Collections.singleton(log.getHost()))
+                                                  .logCollectionMinute(log.getLogCollectionMinute())
+                                                  .build();
 
                 if (hasDataRecords) {
                   logger.info("Running cluster task for stateExecutionId {}, minute {}, stateType {}, ",
