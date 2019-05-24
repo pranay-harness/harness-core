@@ -386,7 +386,6 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
     jenkinsExecutionData.setBuildFullDisplayName(jenkinsExecutionResponse.getBuildFullDisplayName());
     jenkinsExecutionData.setDescription(jenkinsExecutionResponse.getDescription());
     jenkinsExecutionData.setMetadata(jenkinsExecutionResponse.getMetadata());
-    jenkinsExecutionData.setDelegateMetaInfo(jenkinsExecutionResponse.getDelegateMetaInfo());
 
     // Async response for START_TASK received, start POLL_TASK
     if (isNotEmpty(jenkinsExecutionResponse.getSubTaskType().name())

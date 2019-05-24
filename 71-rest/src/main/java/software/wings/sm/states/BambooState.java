@@ -228,7 +228,6 @@ public class BambooState extends State {
     bambooExecutionData.setErrorMsg(bambooExecutionResponse.getErrorMessage());
     bambooExecutionData.setParameters(bambooExecutionResponse.getParameters());
     bambooExecutionData.setFilePathAssertionEntries(bambooExecutionResponse.getFilePathAssertionMap());
-    bambooExecutionData.setDelegateMetaInfo(bambooExecutionResponse.getDelegateMetaInfo());
 
     return anExecutionResponse()
         .withExecutionStatus(bambooExecutionResponse.getExecutionStatus())

@@ -395,7 +395,6 @@ public class HttpState extends State implements SweepingOutputStateMixin {
       executionData.setHttpResponseBody(httpStateExecutionResponse.getHttpResponseBody());
       executionData.setStatus(httpStateExecutionResponse.getExecutionStatus());
       executionData.setErrorMsg(httpStateExecutionResponse.getErrorMessage());
-      executionData.setDelegateMetaInfo(httpStateExecutionResponse.getDelegateMetaInfo());
 
       String errorMessage = httpStateExecutionResponse.getErrorMessage();
       executionData.setAssertionStatement(assertion);
