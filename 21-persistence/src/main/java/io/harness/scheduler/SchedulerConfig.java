@@ -15,7 +15,7 @@ public class SchedulerConfig {
   @JsonProperty(defaultValue = "false") private boolean isClustered;
 
   private String mongoUri;
-  @JsonProperty(defaultValue = "20000") private String mongoOptionWriteConcernTimeoutMillis = "20000";
+  @JsonProperty(defaultValue = "30000") private String mongoOptionWriteConcernTimeoutMillis = "30000";
 
   public String getJobStoreClass() {
     return jobStoreClass;
