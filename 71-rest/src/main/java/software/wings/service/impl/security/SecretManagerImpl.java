@@ -19,6 +19,7 @@ import static io.harness.security.encryption.EncryptionType.LOCAL;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ConfigFile.ENCRYPTED_FILE_ID_KEY;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -993,17 +994,51 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public boolean switchToHarnessSecretManager(String accountId) {
+  public boolean transitionAllSecretsToHarnessSecretManager(String accountId) {
     // For now, the default/harness secret manager is the LOCAL secret manager, and it's HIDDEN from end-user
     EncryptionConfig harnessSecretManager = localEncryptionService.getEncryptionConfig(accountId);
     List<EncryptionConfig> allEncryptionConfigs = listEncryptionConfig(accountId);
     for (EncryptionConfig encryptionConfig : allEncryptionConfigs) {
-      logger.info("Transitioning secret from secret manager {} of type {} into LOCAL secret manager for account {}",
+      logger.info("Transitioning secret from secret manager {} of type {} into Harness secret manager for account {}",
           encryptionConfig.getUuid(), encryptionConfig.getEncryptionType(), accountId);
       transitionSecrets(accountId, encryptionConfig.getEncryptionType(), encryptionConfig.getUuid(),
           harnessSecretManager.getEncryptionType(), harnessSecretManager.getUuid());
     }
     return true;
+  }
+
+  @Override
+  public void clearDefaultFlagOfSecretManagers(String accountId) {
+    // Set custom secret managers as non-default
+    List<EncryptionConfig> defaultSecretManagerConfigs =
+        listEncryptionConfig(accountId).stream().filter(EncryptionConfig::isDefault).collect(Collectors.toList());
+
+    for (EncryptionConfig config : defaultSecretManagerConfigs) {
+      switch (config.getEncryptionType()) {
+        case VAULT:
+          VaultConfig vaultConfig = vaultService.getVaultConfig(accountId, config.getUuid());
+          vaultConfig.setDefault(false);
+          vaultService.saveVaultConfig(accountId, vaultConfig);
+          break;
+        case LOCAL:
+          break;
+        case KMS:
+          KmsConfig kmsConfig = kmsService.getKmsConfig(accountId, config.getUuid());
+          if (!kmsConfig.getAccountId().equals(GLOBAL_ACCOUNT_ID) && kmsConfig.isDefault()) {
+            kmsConfig.setDefault(false);
+            kmsService.saveKmsConfig(accountId, kmsConfig);
+          }
+          break;
+        case AWS_SECRETS_MANAGER:
+          AwsSecretsManagerConfig awsConfig =
+              secretsManagerService.getAwsSecretsManagerConfig(accountId, config.getUuid());
+          awsConfig.setDefault(false);
+          secretsManagerService.saveAwsSecretsManagerConfig(accountId, awsConfig);
+          break;
+        default:
+          throw new IllegalStateException("Unexpected value: " + config.getEncryptionType());
+      }
+    }
   }
 
   @Override

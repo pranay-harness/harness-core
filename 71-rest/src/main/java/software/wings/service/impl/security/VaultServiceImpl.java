@@ -361,8 +361,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       }
 
       VaultConfig savedVaultConfig = getSavedVaultConfig(vaultConfigId);
-      if ((vaultConfig.isDefault() && !savedVaultConfig.isDefault())
-          || (!vaultConfig.isDefault() && savedVaultConfig.isDefault())) {
+      if (vaultConfig.isDefault() && !savedVaultConfig.isDefault()) {
         throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER)
             .addParam(REASON_KEY, "Cannot change default Secret Manager in Harness Community.");
       }

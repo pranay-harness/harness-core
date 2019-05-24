@@ -29,6 +29,7 @@ import software.wings.sm.StateType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 import javax.validation.constraints.NotNull;
 
@@ -43,15 +44,11 @@ public class LiveNotificationViolationChecker implements FeatureViolationChecker
     this.workflowService = workflowService;
   }
 
-  public static final Predicate<GraphNode> IS_JIRA_STATE_PRESENT = gn -> {
-    StateType stateType = StateType.valueOf(gn.getType());
-    return stateType == StateType.JIRA_CREATE_UPDATE;
-  };
+  public static final Predicate<GraphNode> IS_JIRA_STATE_PRESENT =
+      gn -> Objects.equals(StateType.JIRA_CREATE_UPDATE.name(), gn.getType());
 
-  private static final Predicate<GraphNode> IS_SNOW_STATE_PRESENT = gn -> {
-    StateType stateType = StateType.valueOf(gn.getType());
-    return stateType == StateType.SERVICENOW_CREATE_UPDATE;
-  };
+  private static final Predicate<GraphNode> IS_SNOW_STATE_PRESENT =
+      gn -> Objects.equals(StateType.SERVICENOW_CREATE_UPDATE.name(), gn.getType());
 
   @Override
   public List<FeatureViolation> getViolationsForCommunityAccount(String accountId) {

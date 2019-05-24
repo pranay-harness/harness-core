@@ -72,6 +72,7 @@ public class ServiceInstanceUsageCheckerJob implements Job {
     }
 
     jobScheduler.ensureJob__UnderConstruction(job, triggerBuilder.build());
+    logger.info("Scheduled SI usage check job. accountId={}", accountId);
   }
 
   @Override
@@ -80,12 +81,14 @@ public class ServiceInstanceUsageCheckerJob implements Job {
       String accountId = (String) jobExecutionContext.getJobDetail().getJobDataMap().get(ACCOUNT_ID_KEY);
       Objects.requireNonNull(accountId, "[ServiceInstanceUsageCheckerJob] accountId must be passed in job context");
 
-      if (accountService.isCommunityAccount(accountId)) {
+      // Skip for non-CE accounts
+      if (!accountService.isCommunityAccount(accountId)) {
         return;
       }
 
       logger.info("Triggered: {} accountId: {}", ServiceInstanceUsageCheckerJob.class.getSimpleName(), accountId);
       double usage = InstanceStatsUtils.actualUsage(accountId, instanceStatService);
+
       instanceUsageLimitExcessHandler.updateViolationCount(accountId, usage);
     });
   }

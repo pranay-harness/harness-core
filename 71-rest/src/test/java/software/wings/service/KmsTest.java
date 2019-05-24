@@ -569,7 +569,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testNewKmsConfigForLiteAccount() {
+  public void testNewKmsConfigForCommunityAccount() {
     Account account = getAccount(AccountType.COMMUNITY);
     String accountId = account.getUuid();
 
@@ -589,7 +589,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testUpdateKmsConfigFromNonDefaultToDefaultForLiteAccount() {
+  public void testUpdateKmsConfigFromNonDefaultToDefaultForCommunityAccount() {
     Account account = getAccount(AccountType.PAID);
     String accountId = account.getUuid();
 
@@ -614,7 +614,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testUpdateKmsConfigFromDefaultToNonDefaultForLiteAccount() {
+  public void testUpdateKmsConfigFromDefaultToNonDefaultForCommunityAccount() {
     Account account = getAccount(AccountType.PAID);
     String accountId = account.getUuid();
 
@@ -629,17 +629,15 @@ public class KmsTest extends WingsBaseTest {
     KmsConfig updatedKmsConfig = kmsService.getKmsConfig(accountId, kmsConfigId);
     updatedKmsConfig.setDefault(false);
 
-    try {
-      kmsService.saveKmsConfig(accountId, updatedKmsConfig);
-      fail();
-    } catch (WingsException e) {
-      assertEquals(ErrorCode.KMS_OPERATION_ERROR, e.getCode());
-    }
+    kmsService.saveKmsConfig(accountId, updatedKmsConfig);
+
+    assertEquals(updatedKmsConfig.getUuid(), kmsService.getKmsConfig(accountId, kmsConfigId).getUuid());
+    assertEquals(updatedKmsConfig.isDefault(), kmsService.getKmsConfig(accountId, kmsConfigId).isDefault());
   }
 
   @Test
   @Category(UnitTests.class)
-  public void testUpdateKmsConfigFromNonDefaultToDefaultForNonLiteAccount() {
+  public void testUpdateKmsConfigFromNonDefaultToDefaultForNonCommunityAccount() {
     Account account = getAccount(AccountType.PAID);
     String accountId = account.getUuid();
 
@@ -659,7 +657,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testUpdateKmsConfigFromDefaultToNonDefaultForNonLiteAccount() {
+  public void testUpdateKmsConfigFromDefaultToNonDefaultForNonCommunityAccount() {
     Account account = getAccount(AccountType.PAID);
     String accountId = account.getUuid();
 

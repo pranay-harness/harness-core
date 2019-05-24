@@ -187,6 +187,9 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionBaselineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.deployment.PreDeploymentChecker;
+import software.wings.service.intfc.deployment.RateLimitCheck;
+import software.wings.service.intfc.deployment.ServiceInstanceUsage;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionEventAdvisor;
@@ -266,9 +269,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private UserGroupService userGroupService;
   @Inject private AuthHandler authHandler;
   @Inject private SweepingOutputService sweepingOutputService;
-  @Inject private PreDeploymentChecker preDeploymentChecker;
+  @Inject private PreDeploymentChecks preDeploymentChecks;
+
   @Inject private AlertService alertService;
   @Inject private WorkflowServiceHelper workflowServiceHelper;
+
+  @Inject @RateLimitCheck private PreDeploymentChecker deployLimitChecker;
+  @Inject @ServiceInstanceUsage private PreDeploymentChecker siUsageChecker;
 
   @Override
   public HIterator<WorkflowExecution> executions(
@@ -907,7 +914,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   public WorkflowExecution triggerPipelineExecution(String appId, String pipelineId, ExecutionArgs executionArgs,
       WorkflowExecutionUpdate workflowExecutionUpdate, Trigger trigger) {
-    preDeploymentChecker.isDeploymentAllowed(appId);
+    preDeploymentChecks.isDeploymentAllowed(appId);
     Pipeline pipeline =
         pipelineService.readPipelineWithResolvedVariables(appId, pipelineId, executionArgs.getWorkflowVariables());
     if (pipeline == null) {
@@ -916,8 +923,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (isEmpty(pipeline.getPipelineStages())) {
       throw new WingsException("You can not deploy an empty pipeline.", WingsException.USER);
     }
-    // Checking whether pipeline or
-    preDeploymentChecker.checkIfPipelineUsingRestrictedFeatures(pipeline);
+    preDeploymentChecks.checkIfPipelineUsingRestrictedFeatures(pipeline);
 
     List<WorkflowExecution> runningWorkflowExecutions =
         getRunningWorkflowExecutions(WorkflowType.PIPELINE, appId, pipelineId);
@@ -1014,7 +1020,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public WorkflowExecution triggerOrchestrationWorkflowExecution(String appId, String envId, String workflowId,
       String pipelineExecutionId, @NotNull ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate,
       Trigger trigger) {
-    preDeploymentChecker.isDeploymentAllowed(appId);
+    preDeploymentChecks.isDeploymentAllowed(appId);
 
     // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
 
@@ -1024,7 +1030,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       throw new InvalidRequestException("Workflow requested for execution is not valid/complete.");
     }
     // Doing this check here so that workflow is already fetched from databae.
-    preDeploymentChecker.checkIfWorkflowUsingRestrictedFeatures(workflow);
+    preDeploymentChecks.checkIfWorkflowUsingRestrictedFeatures(workflow);
 
     StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
         ((CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getGraph(),
@@ -1572,7 +1578,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   private void checkDeploymentRateLimit(String accountId, String appId) {
     try {
-      preDeploymentChecker.checkDeploymentRateLimit(accountId, appId);
+      deployLimitChecker.check(accountId, appId);
       alertService.closeAlertsOfType(accountId, GLOBAL_APP_ID, AlertType.DEPLOYMENT_RATE_APPROACHING_LIMIT);
     } catch (LimitApproachingException e) {
       String errMsg = e.getPercent()
@@ -1589,7 +1595,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   private void checkInstanceUsageLimit(String accountId, String appId) {
     try {
-      preDeploymentChecker.checkInstanceUsageLimit(accountId, appId);
+      siUsageChecker.check(accountId, appId);
     } catch (InstanceUsageExceededLimitException e) {
       throw new WingsException(ErrorCode.USAGE_LIMITS_EXCEEDED,
           "You have reached your service instance limits. Some deployments might be blocked.", USER);

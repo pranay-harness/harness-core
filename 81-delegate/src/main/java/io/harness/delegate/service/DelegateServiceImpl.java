@@ -599,6 +599,8 @@ public class DelegateServiceImpl implements DelegateService {
       }
     } else if (StringUtils.equals(message, SELF_DESTRUCT)) {
       initiateSelfDestruct();
+    } else if (StringUtils.equals(message, SELF_DESTRUCT + "-" + delegateId)) {
+      initiateSelfDestruct();
     } else if (!StringUtils.equals(message, "X")) {
       logger.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
       try {

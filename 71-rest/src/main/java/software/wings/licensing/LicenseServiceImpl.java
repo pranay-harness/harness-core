@@ -24,6 +24,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
+import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.DefaultSalesContacts;
@@ -136,10 +137,17 @@ public class LicenseServiceImpl implements LicenseService {
                     EMAIL_BODY_ACCOUNT_ABOUT_TO_EXPIRE, paidDefaultContacts);
               }
             } else if (accountType.equals(AccountType.TRIAL)) {
-              if (!account.isEmailSentToSales() && ((expiryTime - currentTime) <= Duration.ofDays(7).toMillis())) {
+              boolean lessThan7DaysLeftForLicenseExpiry = (expiryTime - currentTime) <= Duration.ofDays(7).toMillis();
+              boolean daySinceLastExpiryReminderSent =
+                  (currentTime - account.getLastLicenseExpiryReminderSentAt()) >= Duration.ofDays(1).toMillis();
+
+              if (lessThan7DaysLeftForLicenseExpiry && daySinceLastExpiryReminderSent) {
+                sendEmailToAdminBeforeLicenseExpiration(account);
+              }
+
+              if (!account.isEmailSentToSales() && lessThan7DaysLeftForLicenseExpiry) {
                 sendEmailToSales(account, expiryTime, accountType, EMAIL_SUBJECT_ACCOUNT_ABOUT_TO_EXPIRE,
                     EMAIL_BODY_ACCOUNT_ABOUT_TO_EXPIRE, trialDefaultContacts);
-                // sendEmailToAdminBeforeLicenseExpiration(account);
               }
             }
           } else if (AccountStatus.ACTIVE.equals(accountStatus)) {
@@ -147,7 +155,9 @@ public class LicenseServiceImpl implements LicenseService {
             sendEmailToSales(account, expiryTime, accountType, EMAIL_SUBJECT_ACCOUNT_EXPIRED,
                 EMAIL_BODY_ACCOUNT_EXPIRED,
                 accountType.equals(AccountType.PAID) ? paidDefaultContacts : trialDefaultContacts);
-            // sendEmailToAdminAfterLicenseExpiration(account);
+            if (accountType.equals(AccountType.TRIAL)) {
+              sendEmailToAdminAfterLicenseExpiration(account);
+            }
           }
         } catch (Exception e) {
           logger.warn("Failed to check license info for account id {}", account.getUuid(), e);
@@ -226,7 +236,8 @@ public class LicenseServiceImpl implements LicenseService {
 
     if (isEmpty(accountAdminsContacts)) {
       logger.info(
-          "Skipping the sending of email for account {} since no admin contacts are configured", account.getUuid());
+          "Skipping the sending of reminder email about license expiration for account {} since no admin contacts are configured",
+          account.getUuid());
       return;
     }
 
@@ -251,9 +262,16 @@ public class LicenseServiceImpl implements LicenseService {
     emailData.setCc(Collections.emptyList());
     emailData.setRetries(3);
     boolean sent = emailNotificationService.send(emailData);
-    if (!sent) {
-      logger.warn("Couldn't send email to admins for account {}", account.getUuid());
+    if (sent) {
+      updateLastReminderSentToAdminBeforeLicenseExpiration(account.getUuid());
+    } else {
+      logger.warn("Couldn't send reminder email to admins for account {}", account.getUuid());
     }
+  }
+
+  private void updateLastReminderSentToAdminBeforeLicenseExpiration(String accountId) {
+    wingsPersistence.updateField(
+        Account.class, accountId, AccountKeys.lastLicenseExpiryReminderSentAt, System.currentTimeMillis());
   }
 
   private void sendEmailToAdminAfterLicenseExpiration(Account account) {
@@ -261,7 +279,9 @@ public class LicenseServiceImpl implements LicenseService {
 
     if (isEmpty(accountAdminsContacts)) {
       logger.info(
-          "Skipping the sending of email for account {} since no admin contacts are configured", account.getUuid());
+          "Skipping the sending of email after license expiration for account {} since no admin contacts are configured",
+          account.getUuid());
+
       return;
     }
 
@@ -287,7 +307,7 @@ public class LicenseServiceImpl implements LicenseService {
     emailData.setRetries(3);
     boolean sent = emailNotificationService.send(emailData);
     if (!sent) {
-      logger.warn("Couldn't send email to admins for account {}", account.getUuid());
+      logger.warn("Couldn't send email after license expiration to admins for account {}", account.getUuid());
     }
   }
 
@@ -365,8 +385,7 @@ public class LicenseServiceImpl implements LicenseService {
     return calendar.getTimeInMillis();
   }
 
-  private byte[] getEncryptedLicenseInfoForUpdate(
-      String accountId, LicenseInfo currentLicenseInfo, LicenseInfo newLicenseInfo) {
+  private byte[] getEncryptedLicenseInfoForUpdate(LicenseInfo currentLicenseInfo, LicenseInfo newLicenseInfo) {
     if (newLicenseInfo == null) {
       throw new WingsException("Invalid / Null license info for update", USER);
     }
@@ -462,7 +481,7 @@ public class LicenseServiceImpl implements LicenseService {
 
     UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class);
 
-    byte[] encryptedLicenseInfo = getEncryptedLicenseInfoForUpdate(accountId, oldLicenseInfo, licenseInfo);
+    byte[] encryptedLicenseInfo = getEncryptedLicenseInfoForUpdate(oldLicenseInfo, licenseInfo);
 
     updateOperations.set("encryptedLicenseInfo", encryptedLicenseInfo);
 

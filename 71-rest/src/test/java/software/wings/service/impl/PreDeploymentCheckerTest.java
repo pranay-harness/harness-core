@@ -49,6 +49,8 @@ import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.deployment.PreDeploymentChecker;
+import software.wings.service.intfc.deployment.RateLimitCheck;
 import software.wings.sm.StateType;
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
 
@@ -67,7 +69,8 @@ public class PreDeploymentCheckerTest extends WingsBaseTest {
 
   @Mock private LimitCheckerFactory limitCheckerFactory;
 
-  @InjectMocks @Inject private PreDeploymentChecker preDeploymentChecker;
+  @InjectMocks @Inject private PreDeploymentChecks preDeploymentChecker;
+  @InjectMocks @Inject @RateLimitCheck private PreDeploymentChecker rateLimitChecker;
   @Mock private MainConfiguration mainConfiguration;
 
   @Test
@@ -78,7 +81,7 @@ public class PreDeploymentCheckerTest extends WingsBaseTest {
 
     String accountId = "some-account-id";
     String appId = "some-app-id";
-    preDeploymentChecker.checkDeploymentRateLimit(accountId, appId);
+    rateLimitChecker.check(accountId, appId);
 
     verifyZeroInteractions(limitCheckerFactory);
   }

@@ -120,5 +120,7 @@ public interface SecretManager extends OwnedByAccount {
   String saveSecretUsingLocalMode(
       String accountId, String name, String value, String path, UsageRestrictions usageRestrictions);
 
-  boolean switchToHarnessSecretManager(String accountId);
+  boolean transitionAllSecretsToHarnessSecretManager(String accountId);
+
+  void clearDefaultFlagOfSecretManagers(String accountId);
 }

@@ -19,6 +19,7 @@ import software.wings.beans.WorkflowPhase;
 import software.wings.sm.StateType;
 import software.wings.stencils.StencilCategory;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -29,10 +30,11 @@ import javax.validation.constraints.NotNull;
 public interface WorkflowViolationCheckerMixin {
   Predicate<Workflow> WORFKFLOW_TEMPLAE_USAGE_PREDICATE = wf -> isNotEmpty(wf.getLinkedTemplateUuids());
 
-  Predicate<GraphNode> FLOW_CONTROL_STEP_PREDICATE = gn -> {
-    StateType stateType = StateType.valueOf(gn.getType());
-    return StencilCategory.FLOW_CONTROLS.equals(stateType.getStencilCategory());
-  };
+  Predicate<GraphNode> FLOW_CONTROL_STEP_PREDICATE = gn
+      -> Arrays.stream(StateType.values())
+             .filter(stateType -> stateType.getStencilCategory() == StencilCategory.FLOW_CONTROLS)
+             .map(Enum::name)
+             .anyMatch(stateType -> Objects.equals(stateType, gn.getType()));
 
   Predicate<GraphNode> WORKFLOW_COMMUNITY_VIOLATION_PREDICATE =
       gn -> FLOW_CONTROL_STEP_PREDICATE.test(gn) || WORKFLOW_APPROVAL_STEP_PREDICATE.test(gn);
