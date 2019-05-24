@@ -1198,7 +1198,7 @@ public class K8sTaskHelper {
     if (virtualServiceResources.size() > 1) {
       String msg = "More than 1 VirtualService found";
       executionLogCallback.saveExecutionLog(msg + "\n", ERROR, FAILURE);
-      throw new WingsException("msg", USER);
+      throw new WingsException(msg, USER);
     }
 
     KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList());

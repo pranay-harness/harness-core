@@ -153,12 +153,8 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
         releaseName, stageColor);
 
     releaseHistory.setReleaseStatus(Status.Succeeded);
-    success = kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
+    kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
         k8sBlueGreenDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
-    if (!success) {
-      logger.error("Failed to save release history");
-      return getFailureResponse();
-    }
 
     return k8sTaskHelper.getK8sTaskExecutionResponse(K8sBlueGreenDeployResponse.builder()
                                                          .releaseNumber(currentRelease.getNumber())

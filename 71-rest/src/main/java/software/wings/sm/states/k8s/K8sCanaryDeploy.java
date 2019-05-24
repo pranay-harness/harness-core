@@ -127,6 +127,20 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
         executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
                                                                                              : ExecutionStatus.FAILED;
 
+    K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
+    stateExecutionData.setStatus(executionStatus);
+    stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
+
+    String activityId = stateExecutionData.getActivityId();
+    activityService.updateStatus(activityId, appId, executionStatus);
+
+    if (ExecutionStatus.FAILED.equals(executionStatus)) {
+      return anExecutionResponse()
+          .withExecutionStatus(executionStatus)
+          .withStateExecutionData(context.getStateExecutionData())
+          .build();
+    }
+
     K8sCanaryDeployResponse k8sCanaryDeployResponse = (K8sCanaryDeployResponse) executionResponse.getK8sTaskResponse();
 
     Integer targetInstances = parseInt(context.renderExpression(this.instances));
@@ -134,14 +148,8 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
       targetInstances = k8sCanaryDeployResponse.getCurrentInstances();
     }
 
-    K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
-
     stateExecutionData.setReleaseNumber(k8sCanaryDeployResponse.getReleaseNumber());
     stateExecutionData.setTargetInstances(targetInstances);
-    stateExecutionData.setStatus(executionStatus);
-
-    String activityId = stateExecutionData.getActivityId();
-    activityService.updateStatus(activityId, appId, executionStatus);
 
     InstanceElementListParam instanceElementListParam =
         k8sStateHelper.getInstanceElementListParam(k8sCanaryDeployResponse.getK8sPodList());

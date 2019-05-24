@@ -132,12 +132,8 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
 
     wrapUp(k8sDelegateTaskParams, getLogCallBack(k8sCanaryDeployTaskParameters, WrapUp));
 
-    success = kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
+    kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
         k8sCanaryDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
-    if (!success) {
-      logger.error("Failed to save release history");
-      return getFailureResponse();
-    }
 
     K8sCanaryDeployResponse k8sCanaryDeployResponse =
         K8sCanaryDeployResponse.builder()
