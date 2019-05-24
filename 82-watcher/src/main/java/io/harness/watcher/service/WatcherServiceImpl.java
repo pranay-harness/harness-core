@@ -1,4 +1,4 @@
-package software.wings.watcher.service;
+package io.harness.watcher.service;
 
 import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -34,6 +34,7 @@ import static io.harness.delegate.message.MessageConstants.WATCHER_VERSION;
 import static io.harness.delegate.message.MessengerType.DELEGATE;
 import static io.harness.delegate.message.MessengerType.WATCHER;
 import static io.harness.threading.Morpheus.sleep;
+import static io.harness.watcher.app.WatcherApplication.getProcessId;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
@@ -52,8 +53,6 @@ import static org.apache.commons.io.filefilter.FileFilterUtils.trueFileFilter;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
-import static software.wings.managerclient.SafeHttpCall.execute;
-import static software.wings.watcher.app.WatcherApplication.getProcessId;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.LinkedHashMultimap;
@@ -74,8 +73,12 @@ import io.harness.delegate.message.MessageService;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
+import io.harness.managerclient.ManagerClient;
+import io.harness.managerclient.SafeHttpCall;
 import io.harness.network.Http;
 import io.harness.rest.RestResponse;
+import io.harness.watcher.app.WatcherApplication;
+import io.harness.watcher.app.WatcherConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
@@ -84,9 +87,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
-import software.wings.managerclient.ManagerClient;
-import software.wings.watcher.app.WatcherApplication;
-import software.wings.watcher.app.WatcherConfiguration;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -527,7 +527,7 @@ public class WatcherServiceImpl implements WatcherService {
     try {
       RestResponse<String> restResponse = timeLimiter.callWithTimeout(
           ()
-              -> execute(managerClient.getAccountStatus(watcherConfiguration.getAccountId())),
+              -> SafeHttpCall.execute(managerClient.getAccountStatus(watcherConfiguration.getAccountId())),
           5L, TimeUnit.SECONDS, true);
       if ("DELETED".equals(restResponse.getResource())) {
         selfDestruct();
@@ -542,7 +542,7 @@ public class WatcherServiceImpl implements WatcherService {
       if (multiVersion) {
         RestResponse<DelegateConfiguration> restResponse = timeLimiter.callWithTimeout(
             ()
-                -> execute(managerClient.getDelegateConfiguration(watcherConfiguration.getAccountId())),
+                -> SafeHttpCall.execute(managerClient.getDelegateConfiguration(watcherConfiguration.getAccountId())),
             15L, TimeUnit.SECONDS, true);
         DelegateConfiguration config = restResponse.getResource();
         return config.getDelegateVersions();
@@ -578,7 +578,7 @@ public class WatcherServiceImpl implements WatcherService {
 
     RestResponse<DelegateScripts> restResponse = timeLimiter.callWithTimeout(
         ()
-            -> execute(managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), version)),
+            -> SafeHttpCall.execute(managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), version)),
         1L, TimeUnit.MINUTES, true);
     DelegateScripts delegateScripts = restResponse.getResource();
 
@@ -616,7 +616,8 @@ public class WatcherServiceImpl implements WatcherService {
     String minorVersion = getMinorVersion(version).toString();
     RestResponse<String> restResponse = timeLimiter.callWithTimeout(
         ()
-            -> execute(managerClient.getDelegateDownloadUrl(minorVersion, watcherConfiguration.getAccountId())),
+            -> SafeHttpCall.execute(
+                managerClient.getDelegateDownloadUrl(minorVersion, watcherConfiguration.getAccountId())),
         30L, TimeUnit.SECONDS, true);
     String downloadUrl = restResponse.getResource();
     logger.info("Downloading delegate jar version {}", version);

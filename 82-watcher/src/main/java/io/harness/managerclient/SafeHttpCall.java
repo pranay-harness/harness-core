@@ -1,4 +1,4 @@
-package software.wings.managerclient;
+package io.harness.managerclient;
 
 import retrofit2.Call;
 import retrofit2.Response;

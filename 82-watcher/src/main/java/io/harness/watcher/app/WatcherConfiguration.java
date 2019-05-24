@@ -1,4 +1,4 @@
-package software.wings.watcher.app;
+package io.harness.watcher.app;
 
 import lombok.Data;
 

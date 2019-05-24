@@ -1,4 +1,4 @@
-package software.wings.watcher.app;
+package io.harness.watcher.app;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -9,8 +9,8 @@ import io.harness.delegate.message.MessageServiceImpl;
 import io.harness.delegate.message.MessengerType;
 import io.harness.govern.DependencyModule;
 import io.harness.time.TimeModule;
-import software.wings.watcher.service.WatcherService;
-import software.wings.watcher.service.WatcherServiceImpl;
+import io.harness.watcher.service.WatcherService;
+import io.harness.watcher.service.WatcherServiceImpl;
 
 import java.time.Clock;
 import java.util.Set;
