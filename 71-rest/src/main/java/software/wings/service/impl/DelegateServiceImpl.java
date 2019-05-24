@@ -1037,10 +1037,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         if (currentDelegateCount < MAX_DELEGATES_ALLOWED_FOR_COMMUNITY_ACCOUNT) {
           savedDelegate = saveDelegate(delegate);
         } else {
-          throw new WingsException(
+          throw new WingsException(ErrorCode.USAGE_LIMITS_EXCEEDED,
               String.format("Can not add delegate to the account. Community account supports maximum %d delegates.",
                   MAX_DELEGATES_ALLOWED_FOR_COMMUNITY_ACCOUNT),
-              USER_SRE);
+              USER);
         }
       }
     } else {
@@ -1121,23 +1121,30 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       return Delegate.builder().uuid(SELF_DESTRUCT).build();
     }
 
+    Query<Delegate> delegateQuery = wingsPersistence.createQuery(Delegate.class)
+                                        .filter(DelegateKeys.accountId, delegate.getAccountId())
+                                        .filter(DelegateKeys.hostName, delegate.getHostName());
+    // For delegates running in a kubernetes cluster we include lowercase account ID in the hostname to identify it.
+    // We ignore IP address because that can change with every restart of the pod.
+    if (!delegate.getHostName().contains(getAccountIdentifier(delegate.getAccountId()))) {
+      delegateQuery.filter(DelegateKeys.ip, delegate.getIp());
+    }
+
+    Delegate existingDelegate =
+        delegateQuery.project(DelegateKeys.status, true).project(DelegateKeys.delegateProfileId, true).get();
+    if (existingDelegate != null && existingDelegate.getStatus() == Status.DELETED) {
+      broadcasterFactory.lookup("/stream/delegate/" + delegate.getAccountId(), true)
+          .broadcast(SELF_DESTRUCT + "-" + existingDelegate.getUuid());
+
+      return Delegate.builder().uuid(SELF_DESTRUCT).build();
+    }
+
     logger.info("Registering delegate for account {}: Hostname: {} IP: {}", delegate.getAccountId(),
         delegate.getHostName(), delegate.getIp());
 
     if (ECS.equals(delegate.getDelegateType())) {
       return handleEcsDelegateRequest(delegate);
     } else {
-      Query<Delegate> delegateQuery = wingsPersistence.createQuery(Delegate.class)
-                                          .filter(DelegateKeys.accountId, delegate.getAccountId())
-                                          .filter(DelegateKeys.hostName, delegate.getHostName());
-      // For delegates running in a kubernetes cluster we include lowercase account ID in the hostname to identify it.
-      // We ignore IP address because that can change with every restart of the pod.
-      if (!delegate.getHostName().contains(getAccountIdentifier(delegate.getAccountId()))) {
-        delegateQuery.filter(DelegateKeys.ip, delegate.getIp());
-      }
-
-      Delegate existingDelegate =
-          delegateQuery.project(DelegateKeys.status, true).project(DelegateKeys.delegateProfileId, true).get();
       return upsertDelegateOperation(existingDelegate, delegate);
     }
   }

@@ -17,8 +17,6 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.beans.Activity;
@@ -84,13 +82,6 @@ public class ActivityResource {
   @ExceptionMetered
   public RestResponse<PageResponse<Activity>> list(@QueryParam("accountId") String accountId,
       @QueryParam("envId") String envId, @BeanParam PageRequest<Activity> request) {
-    // keeping it at resource level instead of service level because we only want to block UI
-    // and not if some other service is calling list. (since we still save audit trails in CE (community edition))
-    if (accountService.isCommunityAccount(accountId)) {
-      throw new WingsException(ErrorCode.FEAT_UNAVAILABLE_IN_COMMUNITY_VERSION,
-          "Audit Trails are not supported in Harness Community Edition.", WingsException.USER);
-    }
-
     if (isNotEmpty(envId)) {
       request.addFilter("environmentId", EQ, envId);
     }

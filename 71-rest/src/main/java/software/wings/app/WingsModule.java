@@ -207,6 +207,8 @@ import software.wings.service.impl.aws.manager.AwsIamHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsLambdaHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsRoute53HelperServiceManagerImpl;
 import software.wings.service.impl.compliance.GovernanceConfigServiceImpl;
+import software.wings.service.impl.deployment.checks.DeploymentRateLimitChecker;
+import software.wings.service.impl.deployment.checks.SIUsageChecker;
 import software.wings.service.impl.dynatrace.DynaTraceServiceImpl;
 import software.wings.service.impl.elk.ElkAnalysisServiceImpl;
 import software.wings.service.impl.expression.ExpressionBuilderServiceImpl;
@@ -376,6 +378,9 @@ import software.wings.service.intfc.aws.manager.AwsIamHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsLambdaHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsRoute53HelperServiceManager;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
+import software.wings.service.intfc.deployment.PreDeploymentChecker;
+import software.wings.service.intfc.deployment.RateLimitCheck;
+import software.wings.service.intfc.deployment.ServiceInstanceUsage;
 import software.wings.service.intfc.dynatrace.DynaTraceService;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.expression.ExpressionBuilderService;
@@ -726,6 +731,9 @@ public class WingsModule extends DependencyModule {
     bind(new TypeLiteral<NotificationDispatcher<NotificationGroup>>() {})
         .annotatedWith(UseNotificationGroup.class)
         .to(NotificationGroupBasedDispatcher.class);
+
+    bind(PreDeploymentChecker.class).annotatedWith(RateLimitCheck.class).to(DeploymentRateLimitChecker.class);
+    bind(PreDeploymentChecker.class).annotatedWith(ServiceInstanceUsage.class).to(SIUsageChecker.class);
 
     bind(ExecutorService.class)
         .annotatedWith(Names.named("verificationDataCollector"))

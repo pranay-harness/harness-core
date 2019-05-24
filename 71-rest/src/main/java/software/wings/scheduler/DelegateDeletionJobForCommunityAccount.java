@@ -10,6 +10,8 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.persistence.UuidAware;
 import io.harness.scheduler.PersistentScheduler;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -19,6 +21,8 @@ import org.quartz.TriggerBuilder;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
+import software.wings.beans.Delegate.Status;
+import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateService;
@@ -29,7 +33,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 @DisallowConcurrentExecution
@@ -37,16 +40,18 @@ import java.util.concurrent.TimeUnit;
 public class DelegateDeletionJobForCommunityAccount implements Job {
   private static final String GROUP = "RESTRICT_DELEGATE_COUNT_FOR_COMMUNITY_ACCOUNT_GROUP";
   private static final String PREFERRED_DELEGATE_TO_RETAIN_KEY = "DELEGATE_TO_RETAIN";
+  private static final int MAX_RETRIES = 2;
+
   private static final int MAX_DELEGATES_ALLOWED_FOR_COMMUNITY_ACCOUNT = 1;
 
   @Inject private AccountService accountService;
   @Inject private DelegateService delegateService;
   @Inject private EmailNotificationService emailNotificationService;
+  @Inject private WingsPersistence wingsPersistence;
 
   public static void addWithDelay(
       PersistentScheduler jobScheduler, String accountId, String preferredDelegateToRetain, int delayInMinutes) {
-    // Add some randomness in the trigger start time to avoid overloading quartz by firing jobs at the same time.
-    long startTime = System.currentTimeMillis() + new Random().nextInt((int) TimeUnit.MINUTES.toMillis(delayInMinutes));
+    long startTime = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(delayInMinutes);
     addInternal(jobScheduler, accountId, preferredDelegateToRetain, new Date(startTime));
   }
 
@@ -77,26 +82,56 @@ public class DelegateDeletionJobForCommunityAccount implements Job {
       return;
     }
 
-    try {
-      Optional<String> delegateToRetain = selectDelegateToRetain(accountId, preferredDelegateToRetain);
+    int retryCount = 0;
+    while (true) {
+      try {
+        Optional<String> delegateToRetain = selectDelegateToRetain(accountId, preferredDelegateToRetain);
 
-      if (delegateToRetain.isPresent()) {
-        delegateService.retainOnlySelectedDelegatesAndDeleteRest(
-            accountId, Collections.singletonList(delegateToRetain.get()));
-        logger.info("Deleted all delegates for account : {} except {}", accountId, delegateToRetain.get());
+        if (delegateToRetain.isPresent()) {
+          logger.info("Deleting all delegates for account : {} except {}", accountId, delegateToRetain.get());
+
+          retainOnlySelectedDelegatesAndDeleteRest(accountId, Collections.singletonList(delegateToRetain.get()));
+
+          logger.info("Deleted all delegates for account : {} except {}", accountId, delegateToRetain.get());
+        } else {
+          logger.info("No delegate found to retain for account : {}", accountId);
+        }
+
+        break;
+      } catch (Exception ex) {
+        if (retryCount >= MAX_RETRIES) {
+          logger.error("Couldn't delete delegates for account: {}. Current Delegate Count : {}", accountId,
+              getDelegates(accountId).size(), ex);
+          break;
+        }
+        retryCount++;
       }
-    } catch (Exception ex) {
-      logger.error("Couldn't delete delegates for account: {}. Current Delegate Count : {}", accountId,
-          getDelegates(accountId).size(), ex);
     }
 
-    /*int numDelegates = getDelegates(accountId).size();
+    int numDelegates = getDelegates(accountId).size();
     if (numDelegates > MAX_DELEGATES_ALLOWED_FOR_COMMUNITY_ACCOUNT) {
-      sendEmailAboutDelegatesRestrictionViolation(accountId, numDelegates);
-    }*/
+      sendEmailAboutDelegatesOverUsage(accountId, numDelegates);
+    }
   }
 
-  private void sendEmailAboutDelegatesRestrictionViolation(String accountId, int numDelegates) {
+  private void retainOnlySelectedDelegatesAndDeleteRest(String accountId, List<String> delegatesToRetain)
+      throws InterruptedException {
+    Query<Delegate> query = wingsPersistence.createQuery(Delegate.class)
+                                .filter(DelegateKeys.accountId, accountId)
+                                .field(DelegateKeys.uuid)
+                                .notIn(delegatesToRetain);
+
+    UpdateOperations<Delegate> updateOps =
+        wingsPersistence.createUpdateOperations(Delegate.class).set(DelegateKeys.status, Status.DELETED);
+    wingsPersistence.update(query, updateOps);
+
+    // Waiting for 2 minutes to ensure shutdown msg reach delegates before removing their entries from DB
+    TimeUnit.MINUTES.sleep(2);
+
+    delegateService.retainOnlySelectedDelegatesAndDeleteRest(accountId, delegatesToRetain);
+  }
+
+  private void sendEmailAboutDelegatesOverUsage(String accountId, int numDelegates) {
     Account account = accountService.get(accountId);
     String body = String.format(
         "Community Account is using more than 1 delegate. Account Id : [%s], Company Name : [%s], Account Name : [%s], Delegate Count : [%d]",

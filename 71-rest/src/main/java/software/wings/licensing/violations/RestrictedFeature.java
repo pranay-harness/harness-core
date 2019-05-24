@@ -12,6 +12,7 @@ import software.wings.licensing.violations.checkers.GovernanceViolationChecker;
 import software.wings.licensing.violations.checkers.IpWhitelistViolationChecker;
 import software.wings.licensing.violations.checkers.LiveNotificationViolationChecker;
 import software.wings.licensing.violations.checkers.SSOViolationChecker;
+import software.wings.licensing.violations.checkers.SecretManagementViolationChecker;
 import software.wings.licensing.violations.checkers.TemplateLibraryViolationChecker;
 import software.wings.licensing.violations.checkers.TwoFactorAuthenticationViolationChecker;
 import software.wings.licensing.violations.checkers.UserGroupsViolationChecker;
@@ -32,7 +33,8 @@ public enum RestrictedFeature {
   DELEGATE(DelegateViolationChecker.class),
   APPROVAL_STEP(ApprovalStepViolationChecker.class),
   LIVE_NOTIFICATIONS(LiveNotificationViolationChecker.class),
-  GIT_OPS(GitOpsViolationChecker.class);
+  GIT_OPS(GitOpsViolationChecker.class),
+  SECRET_MANAGEMENT(SecretManagementViolationChecker.class);
 
   private final Class<? extends FeatureViolationChecker> violationsCheckerClass;
 

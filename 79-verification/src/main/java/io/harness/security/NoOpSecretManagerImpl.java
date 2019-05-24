@@ -226,9 +226,12 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public boolean switchToHarnessSecretManager(String accountId) {
+  public boolean transitionAllSecretsToHarnessSecretManager(String accountId) {
     return false;
   }
+
+  @Override
+  public void clearDefaultFlagOfSecretManagers(String accountId) {}
 
   @Override
   public void deleteByAccountId(String accountId) {}

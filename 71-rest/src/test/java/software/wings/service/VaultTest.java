@@ -499,7 +499,7 @@ public class VaultTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testNewVaultConfigForLiteAccount() {
+  public void testNewVaultConfigForCommunityAccount() {
     Account account = getAccount(AccountType.COMMUNITY);
     String accountId = account.getUuid();
 
@@ -519,7 +519,7 @@ public class VaultTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testUpdateVaultConfigFromNonDefaultToDefaultForLiteAccount() {
+  public void testUpdateVaultConfigFromNonDefaultToDefaultForCommunityAccount() {
     Account account = getAccount(AccountType.PAID);
     String accountId = account.getUuid();
 
@@ -544,7 +544,7 @@ public class VaultTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testUpdateVaultConfigFromDefaultToNonDefaultForLiteAccount() {
+  public void testUpdateVaultConfigFromDefaultToNonDefaultForCommunityAccount() {
     Account account = getAccount(AccountType.PAID);
     String accountId = account.getUuid();
 
@@ -559,17 +559,15 @@ public class VaultTest extends WingsBaseTest {
     VaultConfig updatedVaultConfig = vaultService.getVaultConfig(accountId, vaultConfigId);
     updatedVaultConfig.setDefault(false);
 
-    try {
-      vaultService.saveVaultConfig(accountId, updatedVaultConfig);
-      fail();
-    } catch (WingsException e) {
-      assertEquals(ErrorCode.VAULT_OPERATION_ERROR, e.getCode());
-    }
+    vaultService.saveVaultConfig(accountId, updatedVaultConfig);
+
+    assertEquals(updatedVaultConfig.getUuid(), vaultService.getVaultConfig(accountId, vaultConfigId).getUuid());
+    assertEquals(updatedVaultConfig.isDefault(), vaultService.getVaultConfig(accountId, vaultConfigId).isDefault());
   }
 
   @Test
   @Category(UnitTests.class)
-  public void testUpdateVaultConfigFromNonDefaultToDefaultForNonLiteAccount() {
+  public void testUpdateVaultConfigFromNonDefaultToDefaultForNonCommunityAccount() {
     Account account = getAccount(AccountType.PAID);
     String accountId = account.getUuid();
 
@@ -589,7 +587,7 @@ public class VaultTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testUpdateVaultConfigFromDefaultToNonDefaultForNonLiteAccount() {
+  public void testUpdateVaultConfigFromDefaultToNonDefaultForNonCommunityAccount() {
     Account account = getAccount(AccountType.PAID);
     String accountId = account.getUuid();
 

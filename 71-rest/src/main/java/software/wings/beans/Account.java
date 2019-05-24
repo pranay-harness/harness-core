@@ -11,7 +11,9 @@ import io.harness.encryption.Encrypted;
 import io.harness.validation.Create;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.IndexOptions;
@@ -51,6 +53,11 @@ public class Account extends Base {
 
   @JsonIgnore private boolean emailSentToSales;
 
+  @Getter(onMethod = @__({ @JsonIgnore }))
+  @Setter(onMethod = @__({ @JsonIgnore }))
+  @JsonIgnore
+  private long lastLicenseExpiryReminderSentAt;
+
   @JsonIgnore private EncryptionInterface encryption;
   private boolean twoFactorAdminEnforced;
 
@@ -68,6 +75,10 @@ public class Account extends Base {
   private DelegateConfiguration delegateConfiguration;
 
   private transient Map<String, String> defaults = new HashMap<>();
+  /**
+   * Default mechanism is USER_PASSWORD
+   */
+  @JsonIgnore private AuthenticationMechanism authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
 
   public Map<String, String> getDefaults() {
     return defaults;
@@ -77,12 +88,12 @@ public class Account extends Base {
     this.defaults = defaults;
   }
 
-  public void setTwoFactorAdminEnforced(boolean twoFactorAdminEnforced) {
-    this.twoFactorAdminEnforced = twoFactorAdminEnforced;
-  }
-
   public boolean isTwoFactorAdminEnforced() {
     return twoFactorAdminEnforced;
+  }
+
+  public void setTwoFactorAdminEnforced(boolean twoFactorAdminEnforced) {
+    this.twoFactorAdminEnforced = twoFactorAdminEnforced;
   }
 
   public boolean isForImport() {
@@ -100,11 +111,6 @@ public class Account extends Base {
   public void setLocalEncryptionEnabled(boolean localEncryptionEnabled) {
     this.localEncryptionEnabled = localEncryptionEnabled;
   }
-
-  /**
-   * Default mechanism is USER_PASSWORD
-   */
-  @JsonIgnore private AuthenticationMechanism authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
 
   /**
    * Getter for property 'companyName'.
@@ -203,21 +209,21 @@ public class Account extends Base {
     return authenticationMechanism;
   }
 
+  public void setAuthenticationMechanism(AuthenticationMechanism authenticationMechanism) {
+    this.authenticationMechanism = authenticationMechanism;
+  }
+
   @JsonIgnore
   public boolean isCommunity() {
     return licenseInfo != null && AccountType.isCommunity(licenseInfo.getAccountType());
   }
 
-  public void setAuthenticationMechanism(AuthenticationMechanism authenticationMechanism) {
-    this.authenticationMechanism = authenticationMechanism;
+  public DelegateConfiguration getDelegateConfiguration() {
+    return delegateConfiguration;
   }
 
   public void setDelegateConfiguration(DelegateConfiguration delegateConfiguration) {
     this.delegateConfiguration = delegateConfiguration;
-  }
-
-  public DelegateConfiguration getDelegateConfiguration() {
-    return delegateConfiguration;
   }
 
   @JsonIgnore
@@ -286,6 +292,7 @@ public class Account extends Base {
     private Map<String, String> defaults = new HashMap<>();
     private LicenseInfo licenseInfo;
     private boolean emailSentToSales;
+    private long lastLicenseExpiryReminderSentAt;
 
     private Builder() {}
 
@@ -368,6 +375,11 @@ public class Account extends Base {
       return this;
     }
 
+    public Builder withLastLicenseExpiryReminderSentAt(long lastLicenseExpiryReminderSentAt) {
+      this.lastLicenseExpiryReminderSentAt = lastLicenseExpiryReminderSentAt;
+      return this;
+    }
+
     public Builder but() {
       return anAccount()
           .withCompanyName(companyName)
@@ -384,7 +396,8 @@ public class Account extends Base {
           .withDelegateConfiguration(delegateConfiguration)
           .withDefaults(defaults)
           .withLicenseInfo(licenseInfo)
-          .withEmailSentToSales(emailSentToSales);
+          .withEmailSentToSales(emailSentToSales)
+          .withLastLicenseExpiryReminderSentAt(lastLicenseExpiryReminderSentAt);
     }
 
     public Account build() {
@@ -404,6 +417,7 @@ public class Account extends Base {
       account.setDefaults(defaults);
       account.setLicenseInfo(licenseInfo);
       account.setEmailSentToSales(emailSentToSales);
+      account.setLastLicenseExpiryReminderSentAt(lastLicenseExpiryReminderSentAt);
       return account;
     }
   }
