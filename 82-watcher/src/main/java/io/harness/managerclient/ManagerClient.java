@@ -1,4 +1,4 @@
-package software.wings.managerclient;
+package io.harness.managerclient;
 
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateScripts;

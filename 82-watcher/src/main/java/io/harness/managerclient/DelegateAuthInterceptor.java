@@ -1,4 +1,4 @@
-package software.wings.managerclient;
+package io.harness.managerclient;
 
 import static io.harness.network.Localhost.getLocalHostName;
 

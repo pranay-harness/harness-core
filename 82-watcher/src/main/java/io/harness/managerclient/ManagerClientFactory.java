@@ -1,4 +1,4 @@
-package software.wings.managerclient;
+package io.harness.managerclient;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Provider;
