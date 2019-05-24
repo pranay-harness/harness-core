@@ -50,6 +50,7 @@
         <fastxml.version>2.7.7</fastxml.version>
         <gitBranch>default</gitBranch>
         <gitCommitId>default</gitCommitId>
+        <influxdb.java.version>2.15</influxdb.java.version>
         <jgit.version>5.3.0.201903130848-r</jgit.version>
         <maven.build.timestamp.format>yyMMdd-HHmm</maven.build.timestamp.format>
         <maven.deploy.skip>true</maven.deploy.skip>
@@ -932,6 +933,11 @@
                 <groupId>org.glassfish.web</groupId>
                 <artifactId>javax.el</artifactId>
                 <version>2.2.6</version>
+            </dependency>
+            <dependency>
+                <groupId>org.influxdb</groupId>
+                <artifactId>influxdb-java</artifactId>
+                <version>${influxdb.java.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.javassist</groupId>

@@ -23,6 +23,7 @@ import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
+import io.harness.influx.InfluxConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.scheduler.SchedulerConfig;
 import lombok.Data;
@@ -60,6 +61,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConnectionFactory = MongoConfig.builder().build();
+  @JsonProperty("influx") private InfluxConfig influxConfig = InfluxConfig.builder().build();
   @JsonProperty private PortalConfig portal = new PortalConfig();
   @JsonProperty(defaultValue = "true") private boolean enableAuth = true;
   @JsonProperty(defaultValue = "50") private int jenkinsBuildQuerySize = 50;

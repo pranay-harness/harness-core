@@ -140,6 +140,12 @@ logging:
       key: 9a3e6eac4dcdbdc41a93ca99100537df
       programName: manager-saas
 
+influx:
+  influxUri:
+  influxUserName:
+  influxPassword:
+  influxDatabase: harness
+
 mongo:
   uri: mongodb://localhost:27017/harness
   #locksUri: mongodb://localhost:27017/impermanent

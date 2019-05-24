@@ -49,6 +49,7 @@ import io.harness.event.model.EventsMorphiaClasses;
 import io.harness.event.usagemetrics.EventsModuleHelper;
 import io.harness.exception.WingsException;
 import io.harness.health.HealthService;
+import io.harness.influx.InfluxModule;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
 import io.harness.limits.LimitsMorphiaClasses;
@@ -278,6 +279,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new EventsModule(configuration));
     modules.add(new GraphQLModule());
     modules.add(new FeatureViolationsModule());
+    InfluxModule influxModule = new InfluxModule(configuration.getInfluxConfig());
+    modules.add(influxModule);
 
     Injector injector = Guice.createInjector(modules);
 
@@ -347,6 +350,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         }
       }
     });
+    environment.lifecycle().manage(influxModule);
 
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
 
