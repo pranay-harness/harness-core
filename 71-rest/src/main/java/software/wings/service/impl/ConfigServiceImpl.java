@@ -211,17 +211,17 @@ public class ConfigServiceImpl implements ConfigService {
 
     String columnName;
     if (EntityType.SERVICE.equals(entityType)) {
-      columnName = ConfigFile.ENTITY_ID_KEY;
-      query.filter(ConfigFile.ENTITY_TYPE_KEY, entityType.name());
+      columnName = ConfigFileKeys.entityId;
+      query.filter(ConfigFileKeys.entityType, entityType.name());
     } else if (EntityType.ENVIRONMENT.equals(entityType)) {
-      columnName = ConfigFile.ENV_ID_KEY;
+      columnName = ConfigFileKeys.envId;
     } else {
       return null;
     }
 
     return query.filter(columnName, entityId)
         .filter(ConfigFile.APP_ID_KEY, appId)
-        .filter(ConfigFile.RELATIVE_FILE_PATH_KEY, relativeFilePath)
+        .filter(ConfigFileKeys.relativeFilePath, relativeFilePath)
         .get();
   }
 
@@ -458,9 +458,9 @@ public class ConfigServiceImpl implements ConfigService {
   public void delete(String appId, String entityId, EntityType entityType, String configFileName) {
     ConfigFile configFile = wingsPersistence.createQuery(ConfigFile.class)
                                 .filter(ConfigFile.APP_ID_KEY, appId)
-                                .filter(ConfigFile.ENTITY_TYPE_KEY, entityType.name())
-                                .filter(ConfigFile.ENTITY_ID_KEY, entityId)
-                                .filter(ConfigFile.RELATIVE_FILE_PATH_KEY, configFileName)
+                                .filter(ConfigFileKeys.entityType, entityType.name())
+                                .filter(ConfigFileKeys.entityId, entityId)
+                                .filter(ConfigFileKeys.relativeFilePath, configFileName)
                                 .get();
 
     boolean deleted = wingsPersistence.delete(ConfigFile.class, configFile.getUuid());
@@ -574,9 +574,9 @@ public class ConfigServiceImpl implements ConfigService {
       String appId, String templateId, String entityId, String envId, String relativeFilePath) {
     return wingsPersistence.createQuery(ConfigFile.class)
         .filter(ConfigFile.APP_ID_KEY, appId)
-        .filter(ConfigFile.TEMPLATE_ID_KEY, templateId)
-        .filter(ConfigFile.ENTITY_ID_KEY, entityId)
-        .filter(ConfigFile.RELATIVE_FILE_PATH_KEY, relativeFilePath)
+        .filter(ConfigFileKeys.templateId, templateId)
+        .filter(ConfigFileKeys.entityId, entityId)
+        .filter(ConfigFileKeys.relativeFilePath, relativeFilePath)
         .get();
   }
 }
