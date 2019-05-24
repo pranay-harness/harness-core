@@ -115,15 +115,24 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
         executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
                                                                                              : ExecutionStatus.FAILED;
 
-    K8sBlueGreenDeployResponse k8sBlueGreenDeployResponse =
-        (K8sBlueGreenDeployResponse) executionResponse.getK8sTaskResponse();
-
     activityService.updateStatus(
         k8sStateHelper.getActivityId(context), k8sStateHelper.getAppId(context), executionStatus);
 
     K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
-    stateExecutionData.setReleaseNumber(k8sBlueGreenDeployResponse.getReleaseNumber());
     stateExecutionData.setStatus(executionStatus);
+    stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
+
+    if (ExecutionStatus.FAILED.equals(executionStatus)) {
+      return anExecutionResponse()
+          .withExecutionStatus(executionStatus)
+          .withStateExecutionData(context.getStateExecutionData())
+          .build();
+    }
+
+    K8sBlueGreenDeployResponse k8sBlueGreenDeployResponse =
+        (K8sBlueGreenDeployResponse) executionResponse.getK8sTaskResponse();
+
+    stateExecutionData.setReleaseNumber(k8sBlueGreenDeployResponse.getReleaseNumber());
 
     InstanceElementListParam instanceElementListParam =
         k8sStateHelper.getInstanceElementListParam(k8sBlueGreenDeployResponse.getK8sPodList());

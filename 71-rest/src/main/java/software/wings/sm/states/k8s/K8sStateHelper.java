@@ -83,6 +83,7 @@ import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.impl.HelmChartConfigHelperService;
+import software.wings.service.impl.KubernetesHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -362,6 +363,7 @@ public class K8sStateHelper {
 
     K8sClusterConfig k8sClusterConfig = containerDeploymentManagerHelper.getK8sClusterConfig(infraMapping);
     k8sClusterConfig.setNamespace(context.renderExpression(k8sClusterConfig.getNamespace()));
+    KubernetesHelperService.validateNamespace(k8sClusterConfig.getNamespace());
 
     k8sTaskParameters.setAccountId(app.getAccountId());
     k8sTaskParameters.setAppId(app.getUuid());

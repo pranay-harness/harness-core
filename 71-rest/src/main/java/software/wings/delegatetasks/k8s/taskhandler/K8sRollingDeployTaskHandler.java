@@ -141,12 +141,8 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     wrapUp(k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, WrapUp));
 
     releaseHistory.setReleaseStatus(Status.Succeeded);
-    success = kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
+    kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
         k8sRollingDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
-    if (!success) {
-      logger.error("Failed to save release history");
-      return getFailureResponse();
-    }
 
     K8sRollingDeployResponse rollingSetupResponse =
         K8sRollingDeployResponse.builder()

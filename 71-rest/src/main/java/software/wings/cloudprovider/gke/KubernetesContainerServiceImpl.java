@@ -1460,7 +1460,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public boolean saveReleaseHistory(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
+  public void saveReleaseHistory(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
       String releaseName, String releaseHistory) {
     try {
       ConfigMap configMap = getConfigMap(kubernetesConfig, encryptedDataDetails, releaseName);
@@ -1478,10 +1478,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         configMap.setData(data);
       }
       createOrReplaceConfigMap(kubernetesConfig, encryptedDataDetails, configMap);
-      return true;
     } catch (Exception e) {
-      logger.error("Failed to save release History", e);
-      return false;
+      throw new WingsException(ErrorCode.GENERAL_ERROR, e)
+          .addParam("message", "Failed to save release History. " + ExceptionUtils.getMessage(e));
     }
   }
 

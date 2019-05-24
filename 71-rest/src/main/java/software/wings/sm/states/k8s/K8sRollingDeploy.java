@@ -124,15 +124,24 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
         executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
                                                                                              : ExecutionStatus.FAILED;
 
-    K8sRollingDeployResponse k8sRollingDeployResponse =
-        (K8sRollingDeployResponse) executionResponse.getK8sTaskResponse();
-
     activityService.updateStatus(k8sStateHelper.getActivityId(context), app.getUuid(), executionStatus);
 
     K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
+    stateExecutionData.setStatus(executionStatus);
+    stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
+
+    if (ExecutionStatus.FAILED.equals(executionStatus)) {
+      return anExecutionResponse()
+          .withExecutionStatus(executionStatus)
+          .withStateExecutionData(context.getStateExecutionData())
+          .build();
+    }
+
+    K8sRollingDeployResponse k8sRollingDeployResponse =
+        (K8sRollingDeployResponse) executionResponse.getK8sTaskResponse();
+
     stateExecutionData.setReleaseNumber(k8sRollingDeployResponse.getReleaseNumber());
     stateExecutionData.setLoadBalancer(k8sRollingDeployResponse.getLoadBalancer());
-    stateExecutionData.setStatus(executionStatus);
 
     InstanceElementListParam instanceElementListParam =
         k8sStateHelper.getInstanceElementListParam(k8sRollingDeployResponse.getK8sPodList());

@@ -16,6 +16,7 @@ import static io.harness.network.Http.joinHostPort;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static okhttp3.ConnectionSpec.CLEARTEXT;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.utils.KubernetesConvention.DASH;
 
@@ -109,6 +110,15 @@ public class KubernetesHelperService {
   @Inject private EncryptionService encryptionService;
 
   public static void validateNamespace(String namespace) {
+    if (isBlank(namespace)) {
+      throw new InvalidArgumentsException(Pair.of("Namespace", "Namespace cannot be empty"));
+    }
+
+    if (namespace.length() != namespace.trim().length()) {
+      throw new InvalidArgumentsException(
+          Pair.of("Namespace", "[" + namespace + "] contains leading or trailing whitespaces"));
+    }
+
     if (!ExpressionEvaluator.containsVariablePattern(namespace)) {
       try {
         new NamespaceBuilder().withNewMetadata().withName(namespace).endMetadata().build();
