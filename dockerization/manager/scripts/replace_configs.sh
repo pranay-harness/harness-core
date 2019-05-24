@@ -271,3 +271,15 @@ fi
 if [[ -v "ALLOW_BLACKLISTED_EMAIL_DOMAINS" ]]; then
     sed -i "s|blacklistedEmailDomainsAllowed: true|blacklistedEmailDomainsAllowed: ${ALLOW_BLACKLISTED_EMAIL_DOMAINS}|" /opt/harness/config.yml
 fi
+
+if [[ -v "INFLUX_URI" ]]; then
+    sed -i "s|influxUri:|influxUri: ${INFLUX_URI}|" /opt/harness/config.yml
+fi
+
+if [[ -v "INFLUX_USERNAME" ]]; then
+    sed -i "s|influxUserName:|influxUserName: ${INFLUX_USERNAME}|" /opt/harness/config.yml
+fi
+
+if [[ -v "INFLUX_PASSWORD" ]]; then
+    sed -i "s|influxPassword:|influxPassword: ${INFLUX_PASSWORD}|" /opt/harness/config.yml
+fi
