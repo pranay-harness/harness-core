@@ -137,6 +137,8 @@ public class ArtifactResourceTest {
 
     when(ARTIFACT_STREAM_SERVICE.get(APP_ID, ARTIFACT_STREAM_ID).getUuid()).thenReturn(ARTIFACT_STREAM_ID);
 
+    when(ARTIFACT_STREAM_SERVICE.get(APP_ID, ARTIFACT_STREAM_ID).getAppId()).thenReturn(APP_ID);
+
     RestResponse<Artifact> restResponse =
         RESOURCES.client()
             .target("/artifacts?appId=" + APP_ID)

@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.SERVICE;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
@@ -125,12 +126,21 @@ public class ArtifactResource {
     if (artifactStream.getFailedCronAttempts() != 0) {
       artifactStreamService.updateFailedCronAttempts(appId, artifact.getArtifactStreamId(), 0);
       permitService.releasePermitByKey(artifactStream.getUuid());
-      alertService.closeAlert(appService.getAccountIdByAppId(appId), appId, AlertType.ARTIFACT_COLLECTION_FAILED,
-          ArtifactCollectionFailedAlert.builder()
-              .appId(appId)
-              .serviceId(artifactStream.getServiceId())
-              .artifactStreamId(artifactStream.getUuid())
-              .build());
+      if (!artifactStream.getAppId().equals(GLOBAL_APP_ID)) {
+        alertService.closeAlert(appService.getAccountIdByAppId(appId), appId, AlertType.ARTIFACT_COLLECTION_FAILED,
+            ArtifactCollectionFailedAlert.builder()
+                .appId(appId)
+                .serviceId(artifactStream.getServiceId())
+                .artifactStreamId(artifactStream.getUuid())
+                .build());
+      } else {
+        alertService.closeAlert(appService.getAccountIdByAppId(appId), appId, AlertType.ARTIFACT_COLLECTION_FAILED,
+            ArtifactCollectionFailedAlert.builder()
+                .appId(appId)
+                .settingId(artifactStream.getSettingId())
+                .artifactStreamId(artifactStream.getUuid())
+                .build());
+      }
     }
     return new RestResponse<>(savedArtifact);
   }
