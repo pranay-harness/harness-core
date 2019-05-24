@@ -129,12 +129,21 @@ public class BuildSourceCallback implements NotifyCallback {
           "ASYNC_ARTIFACT_COLLECTION: failed to fetch/process builds for artifactStream[{}], totalFailedAttempt:[{}]",
           artifactStreamId, failedCronAttempts);
       if (PermitServiceImpl.shouldSendAlert(failedCronAttempts)) {
-        alertService.openAlert(accountId, appId, AlertType.ARTIFACT_COLLECTION_FAILED,
-            ArtifactCollectionFailedAlert.builder()
-                .appId(appId)
-                .serviceId(artifactStream.getServiceId())
-                .artifactStreamId(artifactStreamId)
-                .build());
+        if (!artifactStream.getAppId().equals(GLOBAL_APP_ID)) {
+          alertService.openAlert(accountId, appId, AlertType.ARTIFACT_COLLECTION_FAILED,
+              ArtifactCollectionFailedAlert.builder()
+                  .appId(appId)
+                  .serviceId(artifactStream.getServiceId())
+                  .artifactStreamId(artifactStreamId)
+                  .build());
+        } else {
+          alertService.openAlert(accountId, appId, AlertType.ARTIFACT_COLLECTION_FAILED,
+              ArtifactCollectionFailedAlert.builder()
+                  .appId(appId)
+                  .settingId(artifactStream.getSettingId())
+                  .artifactStreamId(artifactStreamId)
+                  .build());
+        }
       }
     } else {
       if (artifactStream.getFailedCronAttempts() != 0) {
@@ -142,12 +151,21 @@ public class BuildSourceCallback implements NotifyCallback {
             artifactStream.getFailedCronAttempts(), artifactStreamId);
         artifactStreamService.updateFailedCronAttempts(artifactStream.getAppId(), artifactStream.getUuid(), 0);
         permitService.releasePermitByKey(artifactStream.getUuid());
-        alertService.closeAlert(accountId, appId, AlertType.ARTIFACT_COLLECTION_FAILED,
-            ArtifactCollectionFailedAlert.builder()
-                .appId(appId)
-                .serviceId(artifactStream.getServiceId())
-                .artifactStreamId(artifactStreamId)
-                .build());
+        if (!artifactStream.getAppId().equals(GLOBAL_APP_ID)) {
+          alertService.closeAlert(accountId, appId, AlertType.ARTIFACT_COLLECTION_FAILED,
+              ArtifactCollectionFailedAlert.builder()
+                  .appId(appId)
+                  .serviceId(artifactStream.getServiceId())
+                  .artifactStreamId(artifactStreamId)
+                  .build());
+        } else {
+          alertService.closeAlert(accountId, appId, AlertType.ARTIFACT_COLLECTION_FAILED,
+              ArtifactCollectionFailedAlert.builder()
+                  .appId(appId)
+                  .settingId(artifactStream.getSettingId())
+                  .artifactStreamId(artifactStreamId)
+                  .build());
+        }
       }
     }
   }

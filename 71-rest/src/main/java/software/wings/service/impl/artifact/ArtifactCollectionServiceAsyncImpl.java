@@ -96,12 +96,21 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
     if (artifactStream.getFailedCronAttempts() != 0) {
       artifactStreamService.updateFailedCronAttempts(appId, artifact.getArtifactStreamId(), 0);
       permitService.releasePermitByKey(artifactStream.getUuid());
-      alertService.closeAlert(appService.getAccountIdByAppId(appId), appId, AlertType.ARTIFACT_COLLECTION_FAILED,
-          ArtifactCollectionFailedAlert.builder()
-              .appId(appId)
-              .serviceId(artifactStream.getServiceId())
-              .artifactStreamId(artifactStream.getUuid())
-              .build());
+      if (!artifactStream.getAppId().equals(GLOBAL_APP_ID)) {
+        alertService.closeAlert(appService.getAccountIdByAppId(appId), appId, AlertType.ARTIFACT_COLLECTION_FAILED,
+            ArtifactCollectionFailedAlert.builder()
+                .appId(appId)
+                .serviceId(artifactStream.getServiceId())
+                .artifactStreamId(artifactStream.getUuid())
+                .build());
+      } else {
+        alertService.closeAlert(appService.getAccountIdByAppId(appId), appId, AlertType.ARTIFACT_COLLECTION_FAILED,
+            ArtifactCollectionFailedAlert.builder()
+                .appId(appId)
+                .artifactStreamId(artifactStream.getUuid())
+                .settingId(artifactStream.getSettingId())
+                .build());
+      }
     }
     return artifact;
   }
@@ -175,12 +184,21 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
         artifactStreamService.updateFailedCronAttempts(
             artifactStream.getAppId(), artifactStream.getUuid(), failedCronAttempts);
         if (PermitServiceImpl.shouldSendAlert(failedCronAttempts)) {
-          alertService.openAlert(appService.getAccountIdByAppId(appId), appId, AlertType.ARTIFACT_COLLECTION_FAILED,
-              ArtifactCollectionFailedAlert.builder()
-                  .appId(appId)
-                  .serviceId(artifactStream.getServiceId())
-                  .artifactStreamId(artifactStream.getUuid())
-                  .build());
+          if (!artifactStream.getAppId().equals(GLOBAL_APP_ID)) {
+            alertService.openAlert(appService.getAccountIdByAppId(appId), appId, AlertType.ARTIFACT_COLLECTION_FAILED,
+                ArtifactCollectionFailedAlert.builder()
+                    .appId(appId)
+                    .serviceId(artifactStream.getServiceId())
+                    .artifactStreamId(artifactStream.getUuid())
+                    .build());
+          } else {
+            alertService.openAlert(appService.getAccountIdByAppId(appId), appId, AlertType.ARTIFACT_COLLECTION_FAILED,
+                ArtifactCollectionFailedAlert.builder()
+                    .appId(appId)
+                    .settingId(artifactStream.getSettingId())
+                    .artifactStreamId(artifactStream.getUuid())
+                    .build());
+          }
         }
         return;
       }
