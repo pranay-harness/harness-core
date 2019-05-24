@@ -17,6 +17,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.api.cloudformation.CloudFormationElement;
 import software.wings.api.cloudformation.CloudFormationOutputInfoElement;
 import software.wings.api.cloudformation.CloudFormationRollbackInfoElement;
@@ -71,6 +72,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
       throw new WingsException("Create type is not set on cloud provisioner");
     }
     builder.stackNameSuffix(getStackNameSuffix(executionContext, provisioner.getUuid()))
+        .customStackName(useCustomStackName ? executionContext.renderExpression(customStackName) : StringUtils.EMPTY)
         .region(region)
         .commandType(CloudFormationCommandType.CREATE_STACK)
         .accountId(executionContext.getApp().getAccountId())
@@ -117,6 +119,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
               .awsConfigId(fetchResolvedAwsConfigId(context))
               .region(region)
               .stackNameSuffix(getStackNameSuffix((ExecutionContextImpl) context, provisionerId))
+              .customStackName(useCustomStackName ? context.renderExpression(customStackName) : StringUtils.EMPTY)
               .oldStackBody(existingStackInfo.getOldStackBody())
               .oldStackParameters(existingStackInfo.getOldStackParameters())
               .build();

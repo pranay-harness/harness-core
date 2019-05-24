@@ -24,7 +24,7 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.exception.InvalidRequestException;
 import lombok.Getter;
 import lombok.Setter;
-import org.mongodb.morphia.annotations.Transient;
+import lombok.experimental.FieldNameConstants;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.cloudformation.CloudFormationElement;
 import software.wings.beans.Activity;
@@ -71,20 +71,23 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+@FieldNameConstants(innerTypeName = "CloudFormationStateKeys")
 public abstract class CloudFormationState extends State {
-  @Inject @Transient private transient ActivityService activityService;
-  @Inject @Transient protected transient DelegateService delegateService;
-  @Inject @Transient private transient SettingsService settingsService;
-  @Inject @Transient private transient AppService appService;
-  @Inject @Transient protected transient SecretManager secretManager;
-  @Inject @Transient protected transient InfrastructureProvisionerService infrastructureProvisionerService;
-  @Inject @Transient protected transient LogService logService;
-  @Transient @Inject protected TemplateExpressionProcessor templateExpressionProcessor;
+  @Inject private transient ActivityService activityService;
+  @Inject protected transient DelegateService delegateService;
+  @Inject private transient SettingsService settingsService;
+  @Inject private transient AppService appService;
+  @Inject protected transient SecretManager secretManager;
+  @Inject protected transient InfrastructureProvisionerService infrastructureProvisionerService;
+  @Inject protected transient LogService logService;
+  @Inject protected TemplateExpressionProcessor templateExpressionProcessor;
 
   @Attributes(title = "Provisioner") @Getter @Setter protected String provisionerId;
   @Attributes(title = "Region") @DefaultValue("us-east-1") @Getter @Setter protected String region = "us-east-1";
   @Attributes(title = "AwsConfigId") @Getter @Setter protected String awsConfigId;
   @Attributes(title = "Variables") @Getter @Setter private List<NameValuePair> variables;
+  @Attributes(title = "Use Custom Stack Name") @Getter @Setter protected boolean useCustomStackName;
+  @Attributes(title = "Custom Stack Name") @Getter @Setter protected String customStackName;
 
   private static final int IDSIZE = 8;
   private static final Set<Character> ALLOWED_CHARS =

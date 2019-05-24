@@ -46,8 +46,8 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
     CloudFormationCreateStackRequest upsertRequest = (CloudFormationCreateStackRequest) request;
 
     executionLogCallback.saveExecutionLog("# Checking if stack already exists...");
-    Optional<Stack> stackOptional =
-        getIfStackExists(upsertRequest.getStackNameSuffix(), awsConfig, request.getRegion());
+    Optional<Stack> stackOptional = getIfStackExists(
+        upsertRequest.getCustomStackName(), upsertRequest.getStackNameSuffix(), awsConfig, request.getRegion());
 
     if (!stackOptional.isPresent()) {
       executionLogCallback.saveExecutionLog("# Stack does not exist, creating new stack");
@@ -108,7 +108,12 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
   private CloudFormationCommandExecutionResponse createStack(
       CloudFormationCreateStackRequest createRequest, ExecutionLogCallback executionLogCallback) {
     CloudFormationCommandExecutionResponseBuilder builder = CloudFormationCommandExecutionResponse.builder();
-    String stackName = stackNamePrefix + createRequest.getStackNameSuffix();
+    String stackName;
+    if (isNotEmpty(createRequest.getCustomStackName())) {
+      stackName = createRequest.getCustomStackName();
+    } else {
+      stackName = stackNamePrefix + createRequest.getStackNameSuffix();
+    }
     try {
       executionLogCallback.saveExecutionLog(format("# Creating stack with name: %s", stackName));
       CreateStackRequest createStackRequest = new CreateStackRequest().withStackName(stackName);

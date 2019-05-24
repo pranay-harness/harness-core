@@ -32,15 +32,15 @@ public class CloudFormationDeleteStackHandler extends CloudFormationCommandTaskH
     CloudFormationCommandExecutionResponseBuilder builder = CloudFormationCommandExecutionResponse.builder();
     AwsConfig awsConfig = cloudFormationDeleteStackRequest.getAwsConfig();
     encryptionService.decrypt(awsConfig, details);
-    Optional<Stack> existingStack =
-        getIfStackExists(cloudFormationDeleteStackRequest.getStackNameSuffix(), awsConfig, request.getRegion());
+    Optional<Stack> existingStack = getIfStackExists(cloudFormationDeleteStackRequest.getCustomStackName(),
+        cloudFormationDeleteStackRequest.getStackNameSuffix(), awsConfig, request.getRegion());
     String stackId;
     String stackName;
     if (existingStack.isPresent()) {
       stackId = existingStack.get().getStackId();
       stackName = existingStack.get().getStackName();
     } else {
-      String message = String.format("# No stack found Returning");
+      String message = "# No stack found. Returning";
       executionLogCallback.saveExecutionLog(message);
       builder.errorMessage(message).commandExecutionStatus(CommandExecutionStatus.SUCCESS);
       return builder.build();

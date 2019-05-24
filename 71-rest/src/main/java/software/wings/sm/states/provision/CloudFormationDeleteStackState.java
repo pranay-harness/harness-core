@@ -9,6 +9,7 @@ import static software.wings.beans.TaskType.CLOUD_FORMATION_TASK;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.api.cloudformation.CloudFormationElement;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
@@ -38,6 +39,8 @@ public class CloudFormationDeleteStackState extends CloudFormationState {
         CloudFormationDeleteStackRequest.builder()
             .region(region)
             .stackNameSuffix(getStackNameSuffix(executionContext, provisioner.getUuid()))
+            .customStackName(
+                useCustomStackName ? executionContext.renderExpression(customStackName) : StringUtils.EMPTY)
             .commandType(CloudFormationCommandType.DELETE_STACK)
             .accountId(executionContext.getApp().getAccountId())
             .appId(executionContext.getApp().getUuid())
