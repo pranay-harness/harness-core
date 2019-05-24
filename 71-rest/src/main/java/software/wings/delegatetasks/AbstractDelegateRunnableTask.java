@@ -1,4 +1,3 @@
-
 package software.wings.delegatetasks;
 
 import static io.harness.exception.WingsException.ExecutionContext.DELEGATE;
@@ -7,6 +6,8 @@ import static java.lang.String.format;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.beans.DelegateMetaInfo;
+import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
@@ -15,6 +16,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.waiter.ErrorNotifyResponseData;
+import io.harness.waiter.ErrorNotifyResponseData.ErrorNotifyResponseDataBuilder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.DelegateTaskResponse;
@@ -31,6 +33,7 @@ import java.util.function.Supplier;
 
 @Slf4j
 public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTask {
+  private String delegateHostname;
   private String delegateId;
   private String accountId;
   private String appId;
@@ -73,9 +76,13 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
       return;
     }
 
+    DelegateMetaInfo delegateMetaInfo = DelegateMetaInfo.builder().hostName(delegateHostname).id(delegateId).build();
+
     DelegateTaskResponseBuilder taskResponse =
         DelegateTaskResponse.builder().accountId(accountId).responseCode(ResponseCode.OK);
 
+    ErrorNotifyResponseDataBuilder errorNotifyResponseDataBuilder =
+        ErrorNotifyResponseData.builder().delegateMetaInfo(delegateMetaInfo);
     try {
       logger.info("Started executing task {}", taskId);
 
@@ -84,6 +91,9 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
           : run(parameters);
 
       if (result != null) {
+        if (result instanceof DelegateTaskNotifyResponseData) {
+          ((DelegateTaskNotifyResponseData) result).setDelegateMetaInfo(delegateMetaInfo);
+        }
         taskResponse.response(result);
         if (result instanceof RemoteMethodReturnValueData) {
           RemoteMethodReturnValueData returnValueData = (RemoteMethodReturnValueData) result;
@@ -94,28 +104,25 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
       } else {
         String errorMessage = "No response from delegate task " + taskId;
         logger.error(errorMessage);
-        taskResponse.response(ErrorNotifyResponseData.builder().errorMessage(errorMessage).build());
+        taskResponse.response(errorNotifyResponseDataBuilder.errorMessage(errorMessage).build());
         taskResponse.responseCode(ResponseCode.FAILED);
       }
       logger.info("Completed executing task {}", taskId);
     } catch (DelegateRetryableException exception) {
       exception.addContext(DelegateTask.class, taskId);
       ExceptionLogger.logProcessedMessages(exception, DELEGATE, logger);
-      taskResponse.response(
-          ErrorNotifyResponseData.builder().errorMessage(ExceptionUtils.getMessage(exception)).build());
+      taskResponse.response(errorNotifyResponseDataBuilder.errorMessage(ExceptionUtils.getMessage(exception)).build());
       taskResponse.responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE);
     } catch (WingsException exception) {
       exception.addContext(DelegateTask.class, taskId);
       ExceptionLogger.logProcessedMessages(exception, DELEGATE, logger);
-      taskResponse.response(
-          ErrorNotifyResponseData.builder().errorMessage(ExceptionUtils.getMessage(exception)).build());
+      taskResponse.response(errorNotifyResponseDataBuilder.errorMessage(ExceptionUtils.getMessage(exception)).build());
       taskResponse.responseCode(ResponseCode.FAILED);
     } catch (Throwable exception) {
       logger.error(
           format("Unexpected error while executing delegate taskId: [%s] in accountId: [%s]", taskId, accountId),
           exception);
-      taskResponse.response(
-          ErrorNotifyResponseData.builder().errorMessage(ExceptionUtils.getMessage(exception)).build());
+      taskResponse.response(errorNotifyResponseDataBuilder.errorMessage(ExceptionUtils.getMessage(exception)).build());
       taskResponse.responseCode(ResponseCode.FAILED);
     } finally {
       if (consumer != null) {
@@ -170,5 +177,9 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
   @Override
   public String toString() {
     return "DelegateRunnableTask - " + getTaskType() + " - " + getTaskId() + " - " + (isAsync() ? "async" : "sync");
+  }
+
+  public void setDelegateHostname(String delegateHostname) {
+    this.delegateHostname = delegateHostname;
   }
 }

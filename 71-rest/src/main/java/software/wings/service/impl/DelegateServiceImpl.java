@@ -74,9 +74,7 @@ import io.harness.beans.PageResponse;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateConfiguration;
-import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateScripts;
-import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.CapabilityUtils;
@@ -1751,7 +1749,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     if (delegateTask.isAsync()) {
       String waitId = delegateTask.getWaitId();
       if (waitId != null) {
-        applyDelegateInfoToDelegateTaskResponse(delegateId, response);
         waitNotifyEngine.notify(waitId, response.getResponse());
       } else {
         logger.error("Async task {} has no wait ID", taskId);
@@ -2003,25 +2000,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   private String getVersion() {
     return versionInfoManager.getVersionInfo().getVersion();
-  }
-
-  private void applyDelegateInfoToDelegateTaskResponse(String delegateId, DelegateTaskResponse response) {
-    if (response != null && response.getResponse() instanceof DelegateTaskNotifyResponseData) {
-      try {
-        DelegateTaskNotifyResponseData delegateTaskNotifyResponseData =
-            (DelegateTaskNotifyResponseData) response.getResponse();
-        Optional<Delegate> delegate = delegateCache.get(delegateId);
-        delegateTaskNotifyResponseData.setDelegateMetaInfo(
-            DelegateMetaInfo.builder()
-                .id(delegateId)
-                .hostName(delegate.isPresent() ? delegate.get().getHostName() : delegateId)
-                .build());
-      } catch (ExecutionException e) {
-        logger.error("Execution exception", e);
-      } catch (UncheckedExecutionException e) {
-        logger.error("Delegate not found exception", e);
-      }
-    }
   }
 
   @Override

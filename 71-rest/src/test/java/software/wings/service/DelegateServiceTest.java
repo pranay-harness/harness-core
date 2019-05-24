@@ -31,7 +31,7 @@ import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusDat
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
-import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.HOST_NAME;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.CharStreams;
@@ -45,6 +45,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateConfiguration;
+import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -797,8 +798,6 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testProcessDelegateTaskResponseWithDelegateMetaInfo() {
-    Delegate delegate = Delegate.builder().uuid(DELEGATE_ID).hostName(USER_NAME).build();
-
     DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
@@ -812,20 +811,20 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .tags(new ArrayList<>())
                                     .build();
 
-    JenkinsExecutionResponse jenkinsExecutionResponse = new JenkinsExecutionResponse();
+    DelegateMetaInfo delegateMetaInfo = DelegateMetaInfo.builder().id(DELEGATE_ID).hostName(HOST_NAME).build();
+    JenkinsExecutionResponse jenkinsExecutionResponse =
+        JenkinsExecutionResponse.builder().delegateMetaInfo(delegateMetaInfo).build();
 
-    wingsPersistence.save(delegate);
     wingsPersistence.save(delegateTask);
     delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
         DelegateTaskResponse.builder().accountId(ACCOUNT_ID).response(jenkinsExecutionResponse).build());
     DelegateTaskNotifyResponseData delegateTaskNotifyResponseData = jenkinsExecutionResponse;
-    assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getHostName()).isEqualTo(USER_NAME);
+    assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getHostName()).isEqualTo(HOST_NAME);
     assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getId()).isEqualTo(DELEGATE_ID);
 
-    jenkinsExecutionResponse = new JenkinsExecutionResponse();
+    jenkinsExecutionResponse = JenkinsExecutionResponse.builder().delegateMetaInfo(delegateMetaInfo).build();
     delegateTaskNotifyResponseData = jenkinsExecutionResponse;
     wingsPersistence.save(delegateTask);
-    wingsPersistence.delete(delegate);
     delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
         DelegateTaskResponse.builder().accountId(ACCOUNT_ID).response(jenkinsExecutionResponse).build());
     assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getId()).isEqualTo(DELEGATE_ID);

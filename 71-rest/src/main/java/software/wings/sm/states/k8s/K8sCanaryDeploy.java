@@ -139,7 +139,6 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
     stateExecutionData.setReleaseNumber(k8sCanaryDeployResponse.getReleaseNumber());
     stateExecutionData.setTargetInstances(targetInstances);
     stateExecutionData.setStatus(executionStatus);
-    stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
 
     String activityId = stateExecutionData.getActivityId();
     activityService.updateStatus(activityId, appId, executionStatus);

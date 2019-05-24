@@ -134,6 +134,7 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
+import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.LogSanitizer;
 import software.wings.delegatetasks.TaskLogContext;
@@ -1400,6 +1401,9 @@ public class DelegateServiceImpl implements DelegateService {
             .getDelegateRunnableTask(delegateId, delegateTask,
                 getPostExecutionFunction(delegateTask.getUuid(), sanitizer.orElse(null)),
                 getPreExecutionFunction(delegateTask, sanitizer.orElse(null)));
+    if (delegateRunnableTask instanceof AbstractDelegateRunnableTask) {
+      ((AbstractDelegateRunnableTask) delegateRunnableTask).setDelegateHostname(hostName);
+    }
     injector.injectMembers(delegateRunnableTask);
     ExecutorService executorService = delegateTask.isAsync()
         ? asyncExecutorService

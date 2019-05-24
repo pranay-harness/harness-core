@@ -57,6 +57,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageResponse;
+import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
@@ -1648,6 +1649,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     @Override
     public void run() {
       try (ExecutionLogContext ctx = new ExecutionLogContext(context.getWorkflowExecutionId())) {
+        populateDelegateMetaData();
         if (asyncError) {
           StateExecutionData stateExecutionData = context.getStateExecutionInstance().fetchStateExecutionData();
           ErrorNotifyResponseData errorNotifyResponseData =
@@ -1673,6 +1675,20 @@ public class StateMachineExecutor implements StateInspectionListener {
         stateMachineExecutor.handleExecuteResponseException(context, ex);
       } catch (Exception ex) {
         stateMachineExecutor.handleExecuteResponseException(context, new WingsException(ex));
+      }
+    }
+
+    private void populateDelegateMetaData() {
+      try {
+        if (response != null) {
+          ResponseData responseData = response.values().iterator().next();
+          if (responseData instanceof DelegateTaskNotifyResponseData) {
+            context.getStateExecutionData().setDelegateMetaInfo(
+                ((DelegateTaskNotifyResponseData) responseData).getDelegateMetaInfo());
+          }
+        }
+      } catch (Exception ex) {
+        logger.warn("Failed to extract delegate metadata", ex);
       }
     }
   }
