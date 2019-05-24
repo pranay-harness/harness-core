@@ -9,12 +9,14 @@ import software.wings.beans.AwsConfig;
 @EqualsAndHashCode(callSuper = false)
 public class CloudFormationDeleteStackRequest extends CloudFormationCommandRequest {
   private String stackNameSuffix;
+  private String customStackName;
 
   @Builder
   public CloudFormationDeleteStackRequest(CloudFormationCommandType commandType, String accountId, String appId,
       String activityId, String commandName, AwsConfig awsConfig, int timeoutInMs, String stackNameSuffix,
-      String region) {
+      String region, String customStackName) {
     super(commandType, accountId, appId, activityId, commandName, awsConfig, timeoutInMs, region);
     this.stackNameSuffix = stackNameSuffix;
+    this.customStackName = customStackName;
   }
 }

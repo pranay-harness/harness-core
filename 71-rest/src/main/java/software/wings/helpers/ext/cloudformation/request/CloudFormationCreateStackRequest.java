@@ -15,16 +15,18 @@ public class CloudFormationCreateStackRequest extends CloudFormationCommandReque
   private String createType;
   private String data;
   private String stackNameSuffix;
+  private String customStackName;
   private Map<String, String> variables;
 
   @Builder
   public CloudFormationCreateStackRequest(CloudFormationCommandType commandType, String accountId, String appId,
       String activityId, String commandName, AwsConfig awsConfig, int timeoutInMs, String createType, String data,
-      String stackNameSuffix, Map<String, String> variables, String region) {
+      String stackNameSuffix, Map<String, String> variables, String region, String customStackName) {
     super(commandType, accountId, appId, activityId, commandName, awsConfig, timeoutInMs, region);
     this.createType = createType;
     this.data = data;
     this.stackNameSuffix = stackNameSuffix;
     this.variables = variables;
+    this.customStackName = customStackName;
   }
 }

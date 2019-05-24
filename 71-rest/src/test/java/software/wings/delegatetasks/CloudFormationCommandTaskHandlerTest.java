@@ -1,5 +1,6 @@
 package software.wings.delegatetasks;
 
+import static java.util.Collections.singletonList;
 import static org.joor.Reflect.on;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -52,6 +53,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
   @Mock private EncryptionService mockEncryptionService;
@@ -66,6 +68,20 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
     on(createStackHandler).set("awsCFHelperServiceDelegate", mockAwsCFHelperServiceDelegate);
     on(listStacksHandler).set("awsCFHelperServiceDelegate", mockAwsCFHelperServiceDelegate);
     on(deleteStackHandler).set("awsCFHelperServiceDelegate", mockAwsCFHelperServiceDelegate);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetIfStackExists() {
+    String customStackName = "CUSTOM_STACK_NAME";
+    String stackId = "STACK_ID";
+    doReturn(singletonList(new Stack().withStackId(stackId).withStackName(customStackName)))
+        .when(mockAwsHelperService)
+        .getAllStacks(anyString(), anyString(), any(), any(), anyBoolean());
+    Optional<Stack> stack =
+        createStackHandler.getIfStackExists(customStackName, "foo", AwsConfig.builder().build(), "us-east-1");
+    assertTrue(stack.isPresent());
+    assertEquals(stack.get().getStackId(), stackId);
   }
 
   @Test
@@ -96,13 +112,13 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
     doReturn(createStackResult)
         .when(mockAwsHelperService)
         .createStack(anyString(), anyString(), any(), any(), anyBoolean());
-    List<Stack> createProgressList = Collections.singletonList(new Stack().withStackStatus("CREATE_IN_PROGRESS"));
+    List<Stack> createProgressList = singletonList(new Stack().withStackStatus("CREATE_IN_PROGRESS"));
     List<Stack> createCompleteList =
-        Collections.singletonList(new Stack()
-                                      .withStackStatus("CREATE_COMPLETE")
-                                      .withOutputs(new Output().withOutputKey("vpcs").withOutputValue("vpcs"),
-                                          new Output().withOutputKey("subnets").withOutputValue("subnets"),
-                                          new Output().withOutputKey("securityGroups").withOutputValue("sgs")));
+        singletonList(new Stack()
+                          .withStackStatus("CREATE_COMPLETE")
+                          .withOutputs(new Output().withOutputKey("vpcs").withOutputValue("vpcs"),
+                              new Output().withOutputKey("subnets").withOutputValue("subnets"),
+                              new Output().withOutputKey("securityGroups").withOutputValue("sgs")));
     doReturn(Collections.emptyList())
         .doReturn(createProgressList)
         .doReturn(createCompleteList)
@@ -153,10 +169,10 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
             .stackNameSuffix(stackNameSuffix)
             .build();
     doReturn(null).when(mockEncryptionService).decrypt(any(), any());
-    List<Stack> exitingList = Collections.singletonList(
-        new Stack().withStackStatus("CREATE_COMPLETE").withStackName("HarnessStack-" + stackNameSuffix));
-    List<Stack> updateProgressList = Collections.singletonList(new Stack().withStackStatus("UPDATE_IN_PROGRESS"));
-    List<Stack> updateCompleteList = Collections.singletonList(new Stack().withStackStatus("UPDATE_COMPLETE"));
+    List<Stack> exitingList =
+        singletonList(new Stack().withStackStatus("CREATE_COMPLETE").withStackName("HarnessStack-" + stackNameSuffix));
+    List<Stack> updateProgressList = singletonList(new Stack().withStackStatus("UPDATE_IN_PROGRESS"));
+    List<Stack> updateCompleteList = singletonList(new Stack().withStackStatus("UPDATE_COMPLETE"));
     doReturn(exitingList)
         .doReturn(updateProgressList)
         .doReturn(updateCompleteList)
@@ -199,11 +215,10 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
     String stackId = "Stack Id 01";
 
     List<Stack> existingStackList =
-        Collections.singletonList(new Stack().withStackName("HarnessStack-" + stackNameSuffix).withStackId(stackId));
+        singletonList(new Stack().withStackName("HarnessStack-" + stackNameSuffix).withStackId(stackId));
     List<Stack> deleteInProgressList =
-        Collections.singletonList(new Stack().withStackId(stackId).withStackStatus("DELETE_IN_PROGRESS"));
-    List<Stack> deleteCompleteList =
-        Collections.singletonList(new Stack().withStackId(stackId).withStackStatus("DELETE_COMPLETE"));
+        singletonList(new Stack().withStackId(stackId).withStackStatus("DELETE_IN_PROGRESS"));
+    List<Stack> deleteCompleteList = singletonList(new Stack().withStackId(stackId).withStackStatus("DELETE_COMPLETE"));
     doReturn(existingStackList)
         .doReturn(deleteInProgressList)
         .doReturn(deleteCompleteList)

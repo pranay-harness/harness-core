@@ -18,6 +18,7 @@ public class CloudFormationRollbackInfoElement extends CloudFormationElement {
   private boolean stackExisted;
   private String oldStackBody;
   private String stackNameSuffix;
+  private String customStackName;
   private String provisionerId;
   private Map<String, String> oldStackParameters;
 

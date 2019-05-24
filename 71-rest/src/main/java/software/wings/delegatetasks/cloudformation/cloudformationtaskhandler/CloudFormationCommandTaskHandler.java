@@ -33,14 +33,18 @@ public abstract class CloudFormationCommandTaskHandler {
 
   protected static final String stackNamePrefix = "HarnessStack-";
 
-  protected Optional<Stack> getIfStackExists(String suffix, AwsConfig awsConfig, String region) {
+  public Optional<Stack> getIfStackExists(String customStackName, String suffix, AwsConfig awsConfig, String region) {
     List<Stack> stacks = awsHelperService.getAllStacks(region, awsConfig.getAccessKey(), awsConfig.getSecretKey(),
         new DescribeStacksRequest(), awsConfig.isUseEc2IamCredentials());
     if (isEmpty(stacks)) {
       return Optional.empty();
     }
 
-    return stacks.stream().filter(stack -> stack.getStackName().endsWith(suffix)).findFirst();
+    if (isNotEmpty(customStackName)) {
+      return stacks.stream().filter(stack -> stack.getStackName().equals(customStackName)).findFirst();
+    } else {
+      return stacks.stream().filter(stack -> stack.getStackName().endsWith(suffix)).findFirst();
+    }
   }
 
   // ten minutes default timeout for polling stack operations

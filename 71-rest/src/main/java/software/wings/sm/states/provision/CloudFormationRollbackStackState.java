@@ -110,6 +110,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
       CloudFormationDeleteStackRequest request = CloudFormationDeleteStackRequest.builder()
                                                      .region(stackElement.getRegion())
                                                      .stackNameSuffix(stackElement.getStackNameSuffix())
+                                                     .customStackName(stackElement.getCustomStackName())
                                                      .commandType(CloudFormationCommandType.DELETE_STACK)
                                                      .accountId(executionContext.getApp().getAccountId())
                                                      .appId(executionContext.getApp().getUuid())
@@ -137,6 +138,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
       builder.createType(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY)
           .data(stackElement.getOldStackBody());
       builder.stackNameSuffix(stackElement.getStackNameSuffix())
+          .customStackName(stackElement.getCustomStackName())
           .region(stackElement.getRegion())
           .commandType(CloudFormationCommandType.CREATE_STACK)
           .accountId(executionContext.getApp().getAccountId())
