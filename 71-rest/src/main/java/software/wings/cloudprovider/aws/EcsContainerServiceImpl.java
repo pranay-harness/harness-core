@@ -1317,15 +1317,23 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   private String generateTaskMetadataEndpointUrl(
       com.amazonaws.services.ec2.model.Instance ec2Instance, ExecutionLogCallback logCallback) {
     String url = format(CONTAINER_METADATA_FORMAT_STRING, ec2Instance.getPrivateDnsName());
-    logCallback.saveExecutionLog(format("Testing private Dns: [%s] for connectivity", url));
+    if (logCallback != null) {
+      logCallback.saveExecutionLog(format("Testing private Dns: [%s] for connectivity", url));
+    }
     if (Http.connectableHttpUrl(url)) {
-      logCallback.saveExecutionLog(format("[%s] is reachable. Using it for container meta data", url));
+      if (logCallback != null) {
+        logCallback.saveExecutionLog(format("[%s] is reachable. Using it for container meta data", url));
+      }
       return url;
     }
     url = format(CONTAINER_METADATA_FORMAT_STRING, ec2Instance.getPrivateIpAddress());
-    logCallback.saveExecutionLog(format("Testing private ip: [%s] for connectivity", url));
+    if (logCallback != null) {
+      logCallback.saveExecutionLog(format("Testing private ip: [%s] for connectivity", url));
+    }
     if (Http.connectableHttpUrl(url)) {
-      logCallback.saveExecutionLog(format("[%s] is reachable. Using it for container meta data", url));
+      if (logCallback != null) {
+        logCallback.saveExecutionLog(format("[%s] is reachable. Using it for container meta data", url));
+      }
       return url;
     }
     return StringUtils.EMPTY;
