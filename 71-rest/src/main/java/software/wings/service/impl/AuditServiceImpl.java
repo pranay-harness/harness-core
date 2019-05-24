@@ -51,7 +51,6 @@ import software.wings.beans.EntityType;
 import software.wings.beans.EntityYamlRecord;
 import software.wings.beans.EntityYamlRecord.EntityYamlRecordKeys;
 import software.wings.beans.Event.Type;
-import software.wings.beans.FeatureName;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
@@ -317,10 +316,6 @@ public class AuditServiceImpl implements AuditService {
 
   @Override
   public <T> void registerAuditActions(String accountId, T oldEntity, T newEntity, Type type) {
-    if (!featureFlagService.isEnabled(FeatureName.AUDIT_TRAIL, accountId)) {
-      return;
-    }
-
     try {
       String auditHeaderId = getAuditHeaderIdFromGlobalContext();
       if (isEmpty(auditHeaderId)) {

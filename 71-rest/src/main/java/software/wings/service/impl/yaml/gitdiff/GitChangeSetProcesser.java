@@ -8,7 +8,6 @@ import io.harness.manage.GlobalContextManager;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.audit.AuditHeader;
-import software.wings.beans.FeatureName;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
 import software.wings.service.impl.yaml.gitdiff.gitaudit.YamlAuditRecordGenerationUtils;
@@ -32,12 +31,6 @@ public class GitChangeSetProcesser {
     if (commitAlreadyProcessed) {
       // do nothing
       logger.warn("Commit [{}] already processed for account {}", gitDiffResult.getCommitId(), accountId);
-      return;
-    }
-
-    // Currently Audit is behind feature flag.
-    if (!featureFlagService.isEnabled(FeatureName.AUDIT_TRAIL, accountId)) {
-      gitChangesToEntityConverter.ingestGitYamlChangs(accountId, gitDiffResult);
       return;
     }
 
