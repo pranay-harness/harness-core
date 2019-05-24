@@ -52,7 +52,6 @@ public class ThirdPartyApiCallLogsIntegrationTest extends BaseIntegrationTest {
     List<ThirdPartyApiCallLog> apiCallLogs = new ArrayList<>();
     for (int i = 0; i < numOfApiCallLogs; i++) {
       apiCallLogs.add(ThirdPartyApiCallLog.builder()
-                          .appId(appId)
                           .accountId(accountId)
                           .stateExecutionId(stateExecutionId)
                           .requestTimeStamp(i)

@@ -37,11 +37,13 @@ import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
+import software.wings.dl.WingsPersistence;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.PublicApi;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DataStoreService;
@@ -84,17 +86,19 @@ public class DelegateResource {
   private MainConfiguration mainConfiguration;
   private DataStoreService dataStoreService;
   private AccountService accountService;
+  private WingsPersistence wingsPersistence;
 
   @Inject
   public DelegateResource(DelegateService delegateService, DelegateScopeService delegateScopeService,
       DownloadTokenService downloadTokenService, MainConfiguration mainConfiguration, DataStoreService dataStoreService,
-      AccountService accountService) {
+      AccountService accountService, WingsPersistence wingsPersistence) {
     this.delegateService = delegateService;
     this.delegateScopeService = delegateScopeService;
     this.downloadTokenService = downloadTokenService;
     this.mainConfiguration = mainConfiguration;
     this.dataStoreService = dataStoreService;
     this.accountService = accountService;
+    this.wingsPersistence = wingsPersistence;
   }
 
   @GET
@@ -575,5 +579,8 @@ public class DelegateResource {
   public void saveApiCallLogs(@PathParam("delegateId") String delegateId, @QueryParam("accountId") String accountId,
       List<ThirdPartyApiCallLog> logs) {
     dataStoreService.save(ThirdPartyApiCallLog.class, logs, false);
+    if (dataStoreService instanceof GoogleDataStoreServiceImpl) {
+      wingsPersistence.save(logs);
+    }
   }
 }

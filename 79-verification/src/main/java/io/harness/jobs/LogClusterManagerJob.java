@@ -90,7 +90,6 @@ public class LogClusterManagerJob implements Job {
     private void cluster() {
       ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.builder()
                                             .stateExecutionId(context.getStateExecutionId())
-                                            .appId(context.getAppId())
                                             .title("Triggering L0->L1 clustering task")
                                             .requestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli())
                                             .build();

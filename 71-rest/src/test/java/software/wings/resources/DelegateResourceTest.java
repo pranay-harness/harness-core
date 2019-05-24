@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,12 +32,12 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.common.Constants;
+import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DataStoreService;
@@ -68,9 +69,10 @@ public class DelegateResourceTest {
 
   private static HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
 
-  @Mock private static MainConfiguration mainConfiguration = mock(MainConfiguration.class);
-  @Mock private static DataStoreService dataStoreService = mock(DataStoreService.class);
-  @Mock private static AccountService accountService = mock(AccountService.class);
+  private static MainConfiguration mainConfiguration = mock(MainConfiguration.class);
+  private static DataStoreService dataStoreService = mock(DataStoreService.class);
+  private static AccountService accountService = mock(AccountService.class);
+  private static WingsPersistence wingsPersistence = mock(WingsPersistence.class);
 
   @Parameter public String apiUrl;
 
@@ -83,7 +85,7 @@ public class DelegateResourceTest {
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
           .addResource(new DelegateResource(DELEGATE_SERVICE, DELEGATE_SCOPE_SERVICE, DOWNLOAD_TOKEN_SERVICE,
-              mainConfiguration, dataStoreService, accountService))
+              mainConfiguration, dataStoreService, accountService, wingsPersistence))
           .addResource(new AbstractBinder() {
             @Override
             protected void configure() {
@@ -245,16 +247,20 @@ public class DelegateResourceTest {
   @Category(UnitTests.class)
   public void shouldGetDownloadUrl() {
     when(httpServletRequest.getRequestURI()).thenReturn("/delegates/downloadUrl");
-    when(DOWNLOAD_TOKEN_SERVICE.createDownloadToken("delegate." + ACCOUNT_ID)).thenReturn("token");
+    String accountId = generateUuid();
+    String tokenId = generateUuid();
+    when(DOWNLOAD_TOKEN_SERVICE.createDownloadToken("delegate." + accountId)).thenReturn(tokenId);
     RestResponse<Map<String, String>> restResponse = RESOURCES.client()
-                                                         .target("/delegates/downloadUrl?accountId=" + ACCOUNT_ID)
+                                                         .target("/delegates/downloadUrl?accountId=" + accountId)
                                                          .request()
                                                          .get(new GenericType<RestResponse<Map<String, String>>>() {});
 
     assertThat(restResponse.getResource())
         .containsKey("downloadUrl")
-        .containsValue("null://null:0/delegates/download?accountId=ACCOUNT_ID&token=token");
-    verify(DOWNLOAD_TOKEN_SERVICE, atLeastOnce()).createDownloadToken("delegate." + ACCOUNT_ID);
+        .containsValue(apiUrl == null
+                ? apiUrl + "://" + apiUrl + ":0/delegates/download?accountId=" + accountId + "&token=" + tokenId
+                : apiUrl + "/delegates/download?accountId=" + accountId + "&token=" + tokenId);
+    verify(DOWNLOAD_TOKEN_SERVICE, atLeastOnce()).createDownloadToken("delegate." + accountId);
   }
 
   @Test

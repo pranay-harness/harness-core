@@ -137,7 +137,6 @@ public class LogAnalysisManagerJob implements Job {
       long logAnalysisMinute = -1;
       ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.builder()
                                             .stateExecutionId(context.getStateExecutionId())
-                                            .appId(context.getAppId())
                                             .title("Triggering Log analysis task")
                                             .requestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli())
                                             .build();

@@ -84,10 +84,6 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
       }
     }
 
-    if (isEmpty(rv)) {
-      return mongoDataStoreService.list(clazz, pageRequest);
-    }
-
     return aPageResponse()
         .withResponse(rv)
         .withTotal(total)

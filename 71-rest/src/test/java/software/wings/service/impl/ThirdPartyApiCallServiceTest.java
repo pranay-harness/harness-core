@@ -50,7 +50,6 @@ public class ThirdPartyApiCallServiceTest extends WingsBaseTest {
       apiCallLogs.add(ThirdPartyApiCallLog.builder()
                           .stateExecutionId(stateExecutionId)
                           .accountId(accountId)
-                          .appId(appId)
                           .requestTimeStamp(System.currentTimeMillis())
                           .responseTimeStamp(System.currentTimeMillis())
                           .request(Lists.newArrayList(ThirdPartyApiCallField.builder()
@@ -84,7 +83,6 @@ public class ThirdPartyApiCallServiceTest extends WingsBaseTest {
     assertEquals(numOfApiCallLogs, savedApiCallLogs.size());
     for (int i = 0; i < numOfApiCallLogs; i++) {
       assertEquals(numOfApiCallLogs - i, savedApiCallLogs.get(i).getCreatedAt());
-      assertEquals(appId, savedApiCallLogs.get(i).getAppId());
       assertEquals(accountId, savedApiCallLogs.get(i).getAccountId());
       assertEquals(stateExecutionId, savedApiCallLogs.get(i).getStateExecutionId());
       assertEquals(apiCallLogs.get(numOfApiCallLogs - i - 1).getRequestTimeStamp(),

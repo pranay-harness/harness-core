@@ -17,6 +17,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.persistence.CreatedAtAware;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.beans.Activity;
@@ -25,6 +26,7 @@ import software.wings.beans.command.CommandUnitDetails;
 import software.wings.common.Constants;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallLogKeys;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DataStoreService;
@@ -171,14 +173,13 @@ public class ActivityResource {
       @QueryParam("endTime") long endTime, @BeanParam PageRequest<ThirdPartyApiCallLog> request) {
     Preconditions.checkState(endTime >= startTime, "End time should be greater than start time");
 
-    request.addFilter("appId", EQ, appId);
-    request.addFilter("stateExecutionId", EQ, stateExecutionId);
+    request.addFilter(ThirdPartyApiCallLogKeys.stateExecutionId, EQ, stateExecutionId);
     if (startTime > 0) {
-      request.addFilter(ThirdPartyApiCallLog.CREATED_AT_KEY, GE, startTime);
+      request.addFilter(CreatedAtAware.CREATED_AT_KEY, GE, startTime);
     }
 
     if (endTime > 0) {
-      request.addFilter(ThirdPartyApiCallLog.CREATED_AT_KEY, LT_EQ, endTime);
+      request.addFilter(CreatedAtAware.CREATED_AT_KEY, LT_EQ, endTime);
     }
 
     if (isEmpty(request.getOrders())) {
