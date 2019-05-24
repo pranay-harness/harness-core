@@ -21,7 +21,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.ConfigFile.ENCRYPTED_FILE_ID_KEY;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.ServiceVariable.ENCRYPTED_VALUE_KEY;
 import static software.wings.security.EnvFilter.FilterType.NON_PROD;
@@ -67,6 +66,7 @@ import software.wings.beans.Account;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.ConfigFile.ConfigFileKeys;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
@@ -1589,7 +1589,7 @@ public class SecretManagerImpl implements SecretManager {
 
     List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)
                                        .filter(ACCOUNT_ID_KEY, accountId)
-                                       .filter(ENCRYPTED_FILE_ID_KEY, uuId)
+                                       .filter(ConfigFileKeys.encryptedFileId, uuId)
                                        .asList();
     if (!configFiles.isEmpty()) {
       StringBuilder errorMessage = new StringBuilder("Being used by ");

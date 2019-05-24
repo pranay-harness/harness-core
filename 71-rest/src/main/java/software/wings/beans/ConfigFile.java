@@ -63,12 +63,6 @@ import javax.ws.rs.DefaultValue;
 @FieldNameConstants(innerTypeName = "ConfigFileKeys")
 public class ConfigFile extends BaseFile implements EncryptableSetting {
   public static final String DEFAULT_TEMPLATE_ID = "__TEMPLATE_ID";
-  public static final String ENTITY_TYPE_KEY = "entityType";
-  public static final String ENTITY_ID_KEY = "entityId";
-  public static final String ENV_ID_KEY = "envId";
-  public static final String RELATIVE_FILE_PATH_KEY = "relativeFilePath";
-  public static final String TEMPLATE_ID_KEY = "templateId";
-  public static final String ENCRYPTED_FILE_ID_KEY = "encryptedFileId";
 
   @FormDataParam("templateId") @DefaultValue(DEFAULT_TEMPLATE_ID) private String templateId;
 
