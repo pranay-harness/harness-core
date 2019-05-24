@@ -19,10 +19,10 @@
         <module>71-rest</module>
         <module>79-verification</module>
         <module>75-model-test</module>
-        <module>76-functional-test</module>
         <module>76-graphql-test</module>
         <module>81-delegate</module>
         <module>82-watcher</module>
+        <module>85-functional-test</module>
         <module>91-model-gen-tool</module>
         <module>95-e2e</module>
     </modules>
