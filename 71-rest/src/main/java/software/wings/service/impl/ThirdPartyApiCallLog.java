@@ -21,11 +21,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.WingsException;
+import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.GoogleDataStoreAware;
+import io.harness.persistence.UuidAware;
 import io.harness.serializer.JsonUtils;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
@@ -36,9 +38,13 @@ import lombok.experimental.FieldNameConstants;
 import org.apache.http.HttpStatus;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
-import software.wings.beans.Base;
+import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.utils.IndexType;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -51,50 +57,41 @@ import java.util.List;
  */
 @Entity(value = "thirdPartyApiCallLog")
 @Data
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @ToString(exclude = {"validUntil"})
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "ThirdPartyApiCallLogKeys")
-public class ThirdPartyApiCallLog extends Base implements GoogleDataStoreAware {
+@Indexes({
+  @Index(fields = {
+    @Field("stateExecutionId"), @Field(value = CreatedAtAware.CREATED_AT_KEY, type = IndexType.DESC)
+  }, options = @IndexOptions(name = "queryIdx"))
+})
+public class ThirdPartyApiCallLog implements GoogleDataStoreAware, CreatedAtAware, UuidAware {
   public static final String NO_STATE_EXECUTION_ID = "NO_STATE_EXECUTION";
   private static final int MAX_JSON_RESPONSE_LENGTH = 16384;
   public static final String PAYLOAD = "Payload";
   public static final String RESPONSE_BODY = "Response Body";
   public static final String STATUS_CODE = "Status Code";
 
-  @NotEmpty @Indexed private String stateExecutionId;
+  @NotEmpty private String stateExecutionId;
   @NotEmpty private String accountId;
   @NotEmpty private String delegateId;
   @NotEmpty private String delegateTaskId;
   private String title;
-  private List<ThirdPartyApiCallField> request = new ArrayList<>();
-  private List<ThirdPartyApiCallField> response = new ArrayList<>();
+  private List<ThirdPartyApiCallField> request;
+  private List<ThirdPartyApiCallField> response;
   private long requestTimeStamp;
   private long responseTimeStamp;
+  private long createdAt;
+  @Id private String uuid;
 
   @JsonIgnore
   @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusWeeks(1).toInstant());
-
-  @Builder
-  public ThirdPartyApiCallLog(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
-      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String stateExecutionId, String accountId,
-      String delegateId, String delegateTaskId, String title, List<ThirdPartyApiCallField> request,
-      List<ThirdPartyApiCallField> response, long requestTimeStamp, long responseTimeStamp) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
-    this.stateExecutionId = stateExecutionId;
-    this.accountId = accountId;
-    this.delegateId = delegateId;
-    this.delegateTaskId = delegateTaskId;
-    this.title = title;
-    this.request = request;
-    this.response = response;
-    this.requestTimeStamp = requestTimeStamp;
-    this.responseTimeStamp = responseTimeStamp;
-    this.validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
-  }
 
   public ThirdPartyApiCallLog copy() {
     return ThirdPartyApiCallLog.builder()
@@ -102,7 +99,6 @@ public class ThirdPartyApiCallLog extends Base implements GoogleDataStoreAware {
         .accountId(accountId)
         .delegateId(delegateId)
         .delegateTaskId(delegateTaskId)
-        .appId(appId)
         .request(new ArrayList<>())
         .response(new ArrayList<>())
         .build();
@@ -137,7 +133,6 @@ public class ThirdPartyApiCallLog extends Base implements GoogleDataStoreAware {
   public static ThirdPartyApiCallLog createApiCallLog(String accountId, String appId, String stateExecutionId) {
     return ThirdPartyApiCallLog.builder()
         .accountId(accountId)
-        .appId(appId)
         .stateExecutionId(isEmpty(stateExecutionId) ? NO_STATE_EXECUTION_ID : stateExecutionId)
         .build();
   }
@@ -150,35 +145,36 @@ public class ThirdPartyApiCallLog extends Base implements GoogleDataStoreAware {
     try {
       com.google.cloud.datastore.Entity.Builder logEntityBuilder =
           com.google.cloud.datastore.Entity.newBuilder(taskKey)
-              .set("stateExecutionId", getStateExecutionId())
-              .set("title", StringValue.newBuilder(getTitle()).setExcludeFromIndexes(true).build())
-              .set("requestTimeStamp", LongValue.newBuilder(getRequestTimeStamp()).setExcludeFromIndexes(true).build())
-              .set(
-                  "responseTimeStamp", LongValue.newBuilder(getResponseTimeStamp()).setExcludeFromIndexes(true).build())
-              .set("request",
+              .set(ThirdPartyApiCallLogKeys.stateExecutionId, getStateExecutionId())
+              .set(ThirdPartyApiCallLogKeys.title,
+                  StringValue.newBuilder(getTitle()).setExcludeFromIndexes(true).build())
+              .set(ThirdPartyApiCallLogKeys.requestTimeStamp,
+                  LongValue.newBuilder(getRequestTimeStamp()).setExcludeFromIndexes(true).build())
+              .set(ThirdPartyApiCallLogKeys.responseTimeStamp,
+                  LongValue.newBuilder(getResponseTimeStamp()).setExcludeFromIndexes(true).build())
+              .set(ThirdPartyApiCallLogKeys.request,
                   BlobValue.newBuilder(Blob.copyFrom(compressString(JsonUtils.asJson(getRequest()))))
                       .setExcludeFromIndexes(true)
                       .build())
-              .set("response",
+              .set(ThirdPartyApiCallLogKeys.response,
                   BlobValue.newBuilder(Blob.copyFrom(compressString(JsonUtils.asJson(getResponse()))))
                       .setExcludeFromIndexes(true)
                       .build())
               .set(CREATED_AT_KEY, currentTimeMillis());
-      if (isNotEmpty(getAppId())) {
-        logEntityBuilder.set("appId", getAppId());
-      }
       if (isNotEmpty(getAccountId())) {
-        logEntityBuilder.set("accountId", StringValue.newBuilder(getAccountId()).setExcludeFromIndexes(true).build());
+        logEntityBuilder.set(ThirdPartyApiCallLogKeys.accountId,
+            StringValue.newBuilder(getAccountId()).setExcludeFromIndexes(true).build());
       }
       if (isNotEmpty(getDelegateId())) {
-        logEntityBuilder.set("delegateId", StringValue.newBuilder(getDelegateId()).setExcludeFromIndexes(true).build());
+        logEntityBuilder.set(ThirdPartyApiCallLogKeys.delegateId,
+            StringValue.newBuilder(getDelegateId()).setExcludeFromIndexes(true).build());
       }
       if (isNotEmpty(getDelegateTaskId())) {
-        logEntityBuilder.set(
-            "delegateTaskId", StringValue.newBuilder(getDelegateTaskId()).setExcludeFromIndexes(true).build());
+        logEntityBuilder.set(ThirdPartyApiCallLogKeys.delegateTaskId,
+            StringValue.newBuilder(getDelegateTaskId()).setExcludeFromIndexes(true).build());
       }
       if (validUntil != null) {
-        logEntityBuilder.set("validUntil", validUntil.getTime());
+        logEntityBuilder.set(ThirdPartyApiCallLogKeys.validUntil, validUntil.getTime());
       }
       return logEntityBuilder.build();
     } catch (IOException e) {
@@ -187,25 +183,25 @@ public class ThirdPartyApiCallLog extends Base implements GoogleDataStoreAware {
   }
   @Override
   public GoogleDataStoreAware readFromCloudStorageEntity(com.google.cloud.datastore.Entity entity) {
-    final ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.builder()
-                                                .uuid(entity.getKey().getName())
-                                                .stateExecutionId(readString(entity, "stateExecutionId"))
-                                                .accountId(readString(entity, "accountId"))
-                                                .delegateId(readString(entity, "delegateId"))
-                                                .delegateTaskId(readString(entity, "delegateTaskId"))
-                                                .title(readString(entity, "title"))
-                                                .requestTimeStamp(readLong(entity, "requestTimeStamp"))
-                                                .responseTimeStamp(readLong(entity, "responseTimeStamp"))
-                                                .createdAt(readLong(entity, "createdAt"))
-                                                .appId(readString(entity, "appId"))
-                                                .build();
+    final ThirdPartyApiCallLog apiCallLog =
+        ThirdPartyApiCallLog.builder()
+            .uuid(entity.getKey().getName())
+            .stateExecutionId(readString(entity, ThirdPartyApiCallLogKeys.stateExecutionId))
+            .accountId(readString(entity, ThirdPartyApiCallLogKeys.accountId))
+            .delegateId(readString(entity, ThirdPartyApiCallLogKeys.delegateId))
+            .delegateTaskId(readString(entity, ThirdPartyApiCallLogKeys.delegateTaskId))
+            .title(readString(entity, ThirdPartyApiCallLogKeys.title))
+            .requestTimeStamp(readLong(entity, ThirdPartyApiCallLogKeys.requestTimeStamp))
+            .responseTimeStamp(readLong(entity, ThirdPartyApiCallLogKeys.responseTimeStamp))
+            .createdAt(readLong(entity, ThirdPartyApiCallLogKeys.createdAt))
+            .build();
     try {
-      byte[] requestBlob = readBlob(entity, "request");
+      byte[] requestBlob = readBlob(entity, ThirdPartyApiCallLogKeys.request);
       if (isNotEmpty(requestBlob)) {
         apiCallLog.setRequest(
             JsonUtils.asObject(deCompressString(requestBlob), new TypeReference<List<ThirdPartyApiCallField>>() {}));
       }
-      byte[] responseBlob = readBlob(entity, "response");
+      byte[] responseBlob = readBlob(entity, ThirdPartyApiCallLogKeys.response);
       if (isNotEmpty(responseBlob)) {
         apiCallLog.setResponse(
             JsonUtils.asObject(deCompressString(responseBlob), new TypeReference<List<ThirdPartyApiCallField>>() {}));

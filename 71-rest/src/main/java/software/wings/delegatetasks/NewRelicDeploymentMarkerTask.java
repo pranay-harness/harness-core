@@ -47,7 +47,6 @@ public class NewRelicDeploymentMarkerTask extends AbstractDelegateRunnableTask {
           dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), payload,
           ThirdPartyApiCallLog.builder()
               .accountId(getAccountId())
-              .appId(getAppId())
               .delegateId(getDelegateId())
               .delegateTaskId(getTaskId())
               .stateExecutionId(dataCollectionInfo.getStateExecutionId())

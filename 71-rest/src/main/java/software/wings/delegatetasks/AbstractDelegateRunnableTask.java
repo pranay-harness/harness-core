@@ -166,11 +166,9 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
   public ThirdPartyApiCallLog createApiCallLog(String stateExecutionId) {
     return ThirdPartyApiCallLog.builder()
         .accountId(getAccountId())
-        .appId(getAppId())
         .delegateId(getDelegateId())
         .delegateTaskId(getTaskId())
         .stateExecutionId(stateExecutionId)
-        .appId(getAppId())
         .build();
   }
 
