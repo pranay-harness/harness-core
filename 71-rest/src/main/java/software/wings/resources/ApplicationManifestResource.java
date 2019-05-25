@@ -153,4 +153,14 @@ public class ApplicationManifestResource {
       @PathParam("appManifestId") String appManifestId, @QueryParam("appId") String appId) {
     return new RestResponse<>(applicationManifestService.listManifestFiles(appManifestId, appId));
   }
+
+  @POST
+  @Path("{appManifestId}/manifest-files/delete-all")
+  @Timed
+  @ExceptionMetered
+  public RestResponse deleteAllManifestFilesByAppManifestId(
+      @QueryParam("appId") String appId, @PathParam("appManifestId") String appManifestId) {
+    applicationManifestService.deleteAllManifestFilesByAppManifestId(appId, appManifestId);
+    return new RestResponse();
+  }
 }
