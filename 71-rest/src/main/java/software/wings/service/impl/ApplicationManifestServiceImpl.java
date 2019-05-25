@@ -8,8 +8,6 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Base.APP_ID_KEY;
-import static software.wings.beans.appmanifest.ManifestFile.APPLICATION_MANIFEST_ID_KEY;
-import static software.wings.beans.appmanifest.ManifestFile.FILE_NAME_KEY;
 import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
@@ -44,6 +42,7 @@ import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
 import software.wings.beans.appmanifest.ApplicationManifest.ApplicationManifestKeys;
 import software.wings.beans.appmanifest.ManifestFile;
+import software.wings.beans.appmanifest.ManifestFile.ManifestFileKeys;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
@@ -92,41 +91,31 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
   @Override
   public ManifestFile createManifestFileByServiceId(ManifestFile manifestFile, String serviceId) {
+    return createManifestFileByServiceId(manifestFile, serviceId, false);
+  }
+
+  @Override
+  public ManifestFile createManifestFileByServiceId(
+      ManifestFile manifestFile, String serviceId, boolean removeNamespace) {
     doFileValidations(manifestFile);
+    if (removeNamespace) {
+      removeNamespace(manifestFile);
+    }
     return upsertManifestFileForService(manifestFile, serviceId, true);
-  }
-
-  private void doFileValidations(ManifestFile manifestFile) {
-    doFileSizeValidation(manifestFile);
-  }
-
-  @VisibleForTesting
-  public void doFileSizeValidation(ManifestFile manifestFile) {
-    if (isEmpty(manifestFile.getFileContent())) {
-      return;
-    }
-    byte[] bytes;
-    try {
-      bytes = manifestFile.getFileContent().getBytes("UTF-8");
-    } catch (UnsupportedEncodingException e) {
-      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
-    }
-    if (bytes.length > 16 * 1024) {
-      throw new InvalidRequestException(format("File size: %s bytes exceeded the limit", bytes.length), USER);
-    }
-  }
-
-  private void doFileExtensionValidation(ManifestFile manifestFile) {
-    List<String> allowedExtensions = Arrays.asList("yaml", "yml");
-    String fileExtension = FilenameUtils.getExtension(manifestFile.getFileName());
-    if (!allowedExtensions.contains(fileExtension)) {
-      throw new InvalidRequestException(format("Extension: %s is not allowed", fileExtension), USER);
-    }
   }
 
   @Override
   public ManifestFile updateManifestFileByServiceId(ManifestFile manifestFile, String serviceId) {
+    return updateManifestFileByServiceId(manifestFile, serviceId, false);
+  }
+
+  @Override
+  public ManifestFile updateManifestFileByServiceId(
+      ManifestFile manifestFile, String serviceId, boolean removeNamespace) {
     doFileValidations(manifestFile);
+    if (removeNamespace) {
+      removeNamespace(manifestFile);
+    }
     return upsertManifestFileForService(manifestFile, serviceId, false);
   }
 
@@ -213,7 +202,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Override
   public List<ManifestFile> getManifestFilesByAppManifestId(String appId, String applicationManifestId) {
     return wingsPersistence.createQuery(ManifestFile.class)
-        .filter(APPLICATION_MANIFEST_ID_KEY, applicationManifestId)
+        .filter(ManifestFileKeys.applicationManifestId, applicationManifestId)
         .filter(ManifestFile.APP_ID_KEY, appId)
         .asList();
   }
@@ -245,15 +234,15 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   public List<ManifestFile> listManifestFiles(String appManifestId, String appId) {
     Query<ManifestFile> query = wingsPersistence.createQuery(ManifestFile.class)
                                     .filter(APP_ID_KEY, appId)
-                                    .filter(APPLICATION_MANIFEST_ID_KEY, appManifestId);
+                                    .filter(ManifestFileKeys.applicationManifestId, appManifestId);
     return query.asList();
   }
 
   @Override
   public ManifestFile getManifestFileByFileName(String applicationManifestId, String fileName) {
     Query<ManifestFile> query = wingsPersistence.createQuery(ManifestFile.class)
-                                    .filter(APPLICATION_MANIFEST_ID_KEY, applicationManifestId)
-                                    .filter(ManifestFile.FILE_NAME_KEY, fileName);
+                                    .filter(ManifestFileKeys.applicationManifestId, applicationManifestId)
+                                    .filter(ManifestFileKeys.fileName, fileName);
     return query.get();
   }
 
@@ -317,11 +306,12 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   }
 
   private void validateFileNamePrefixForDirectory(ManifestFile manifestFile) {
-    List<ManifestFile> manifestFiles = wingsPersistence.createQuery(ManifestFile.class)
-                                           .filter(APP_ID_KEY, manifestFile.getAppId())
-                                           .filter(APPLICATION_MANIFEST_ID_KEY, manifestFile.getApplicationManifestId())
-                                           .project(FILE_NAME_KEY, true)
-                                           .asList();
+    List<ManifestFile> manifestFiles =
+        wingsPersistence.createQuery(ManifestFile.class)
+            .filter(APP_ID_KEY, manifestFile.getAppId())
+            .filter(ManifestFileKeys.applicationManifestId, manifestFile.getApplicationManifestId())
+            .project(ManifestFileKeys.fileName, true)
+            .asList();
 
     if (isEmpty(manifestFiles)) {
       return;
@@ -371,8 +361,10 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     validateFileNamePrefixForDirectory(manifestFile);
     notNullCheck("applicationManifest", applicationManifest, USER);
 
-    ManifestFile savedManifestFile = duplicateCheck(
-        () -> wingsPersistence.saveAndGet(ManifestFile.class, manifestFile), FILE_NAME_KEY, manifestFile.getFileName());
+    ManifestFile savedManifestFile =
+        duplicateCheck(()
+                           -> wingsPersistence.saveAndGet(ManifestFile.class, manifestFile),
+            ManifestFileKeys.fileName, manifestFile.getFileName());
 
     String appId = applicationManifest.getAppId();
     String accountId = appService.getAccountIdByAppId(appId);
@@ -718,6 +710,45 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
   }
 
+  @VisibleForTesting
+  public void removeNamespace(ManifestFile manifestFile) {
+    if (manifestFile == null) {
+      return;
+    }
+    String fileContent = manifestFile.getFileContent();
+    if (isEmpty(fileContent)) {
+      return;
+    }
+    String[] fileContentByLine = fileContent.split("\\r?\\n");
+
+    StringBuilder builder = new StringBuilder(fileContent.length());
+
+    boolean inMetadataSection = false;
+    boolean firstLine = true;
+
+    for (String line : fileContentByLine) {
+      boolean append = true;
+
+      if (line.startsWith("metadata:")) {
+        inMetadataSection = true;
+      } else if (inMetadataSection && line.charAt(0) != ' ') {
+        inMetadataSection = false;
+      } else if (inMetadataSection && line.startsWith("  namespace:")) {
+        append = false;
+      }
+
+      if (append) {
+        if (!firstLine) {
+          builder.append(System.lineSeparator());
+        }
+        builder.append(line);
+      }
+
+      firstLine = false;
+    }
+    manifestFile.setFileContent(builder.toString());
+  }
+
   @Override
   public AppManifestSource getAppManifestType(ApplicationManifest applicationManifest) {
     String serviceId = applicationManifest.getServiceId();
@@ -748,6 +779,34 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
     for (ApplicationManifest applicationManifest : appManifests) {
       deleteAppManifest(appId, applicationManifest.getUuid());
+    }
+  }
+
+  private void doFileValidations(ManifestFile manifestFile) {
+    doFileSizeValidation(manifestFile);
+  }
+
+  @VisibleForTesting
+  public void doFileSizeValidation(ManifestFile manifestFile) {
+    if (isEmpty(manifestFile.getFileContent())) {
+      return;
+    }
+    byte[] bytes;
+    try {
+      bytes = manifestFile.getFileContent().getBytes("UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+    }
+    if (bytes.length > 16 * 1024) {
+      throw new InvalidRequestException(format("File size: %s bytes exceeded the limit", bytes.length), USER);
+    }
+  }
+
+  private void doFileExtensionValidation(ManifestFile manifestFile) {
+    List<String> allowedExtensions = Arrays.asList("yaml", "yml");
+    String fileExtension = FilenameUtils.getExtension(manifestFile.getFileName());
+    if (!allowedExtensions.contains(fileExtension)) {
+      throw new InvalidRequestException(format("Extension: %s is not allowed", fileExtension), USER);
     }
   }
 }

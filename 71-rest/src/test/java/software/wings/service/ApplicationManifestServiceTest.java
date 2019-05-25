@@ -3,6 +3,7 @@ package software.wings.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
@@ -677,6 +678,221 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
 
     manifestFile = getManifestFileWithName(fileName2);
     applicationManifestService.upsertApplicationManifestFile(manifestFile, appManifest, true);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testRemoveNamespace() {
+    applicationManifestServiceImpl.removeNamespace(null);
+
+    ManifestFile manifestFile = ManifestFile.builder().build();
+    applicationManifestServiceImpl.removeNamespace(manifestFile);
+
+    String fileContent = null;
+    manifestFile.setFileContent(fileContent);
+    applicationManifestServiceImpl.removeNamespace(manifestFile);
+    assertTrue(manifestFile.getFileContent() == null);
+
+    fileContent = "";
+    manifestFile.setFileContent(fileContent);
+    applicationManifestServiceImpl.removeNamespace(manifestFile);
+    assertTrue(manifestFile.getFileContent().equals(""));
+
+    fileContent = "{{- if .Values.env.config}}\n"
+        + "apiVersion: v1\n"
+        + "kind: ConfigMap\n"
+        + "metadata:\n"
+        + "  name: {{.Values.name}}\n"
+        + "data:\n"
+        + "{{.Values.env.config | toYaml | indent 2}}\n"
+        + "---\n"
+        + "{{- end}}\n"
+        + "\n"
+        + "{{- if .Values.env.secrets}}\n"
+        + "apiVersion: v1\n"
+        + "kind: Secret\n"
+        + "metadata:\n"
+        + "  name: {{.Values.name}}\n"
+        + "stringData:\n"
+        + "{{.Values.env.secrets | toYaml | indent 2}}\n"
+        + "---\n"
+        + "{{- end}}\n"
+        + "\n"
+        + "{{- if .Values.createImagePullSecret}}\n"
+        + "apiVersion: v1\n"
+        + "kind: Secret\n"
+        + "metadata:\n"
+        + "  name: {{.Values.name}}-dockercfg\n"
+        + "  annotations:\n"
+        + "    harness.io/skip-versioning: true\n"
+        + "data:\n"
+        + "  .dockercfg: {{.Values.dockercfg}}\n"
+        + "type: kubernetes.io/dockercfg\n"
+        + "---\n"
+        + "{{- end}}\n"
+        + "\n"
+        + "apiVersion: apps/v1\n"
+        + "kind: Deployment\n"
+        + "metadata:\n"
+        + "  name: {{.Values.name}}-deployment\n"
+        + "spec:\n"
+        + "  replicas: {{int .Values.replicas}}\n"
+        + "  selector:\n"
+        + "    matchLabels:\n"
+        + "      app: {{.Values.name}}\n"
+        + "  template:\n"
+        + "    metadata:\n"
+        + "      labels:\n"
+        + "        app: {{.Values.name}}\n"
+        + "    spec:\n"
+        + "      {{- if .Values.createImagePullSecret}}\n"
+        + "      imagePullSecrets:\n"
+        + "      - name: {{.Values.name}}-dockercfg\n"
+        + "      {{- end}}\n"
+        + "      containers:\n"
+        + "      - name: {{.Values.name}}\n"
+        + "        image: {{.Values.image}}\n"
+        + "        {{- if or .Values.env.config .Values.env.secrets}}\n"
+        + "        envFrom:\n"
+        + "        {{- if .Values.env.config}}\n"
+        + "        - configMapRef:\n"
+        + "            name: {{.Values.name}}\n"
+        + "        {{- end}}\n"
+        + "        {{- if .Values.env.secrets}}\n"
+        + "        - secretRef:\n"
+        + "            name: {{.Values.name}}\n"
+        + "        {{- end}}\n"
+        + "        {{- end}}";
+    manifestFile.setFileContent(fileContent);
+    applicationManifestServiceImpl.removeNamespace(manifestFile);
+    assertTrue(manifestFile.getFileContent().equals(fileContent));
+
+    fileContent = "{{- if .Values.env.config}}\n"
+        + "apiVersion: v1\n"
+        + "kind: ConfigMap\n"
+        + "metadata:\n"
+        + "  name: {{.Values.name}}\n"
+        + "data:\n"
+        + "{{.Values.env.config | toYaml | indent 2}}\n"
+        + "---\n"
+        + "{{- end}}\n"
+        + "\n"
+        + "{{- if .Values.env.secrets}}\n"
+        + "apiVersion: v1\n"
+        + "kind: Secret\n"
+        + "metadata:\n"
+        + "  name: {{.Values.name}}\n"
+        + "stringData:\n"
+        + "{{.Values.env.secrets | toYaml | indent 2}}\n"
+        + "---\n"
+        + "{{- end}}\n"
+        + "\n"
+        + "{{- if .Values.createImagePullSecret}}\n"
+        + "apiVersion: v1\n"
+        + "kind: Secret\n"
+        + "metadata:\n"
+        + "  name: {{.Values.name}}-dockercfg\n"
+        + "  annotations:\n"
+        + "    harness.io/skip-versioning: true\n"
+        + "  namespace: abc\n"
+        + "data:\n"
+        + "  .dockercfg: {{.Values.dockercfg}}\n"
+        + "type: kubernetes.io/dockercfg\n"
+        + "---\n"
+        + "{{- end}}\n"
+        + "\n"
+        + "apiVersion: apps/v1\n"
+        + "kind: Deployment\n"
+        + "metadata:\n"
+        + "  name: {{.Values.name}}-deployment\n"
+        + "spec:\n"
+        + "  replicas: {{int .Values.replicas}}\n"
+        + "  selector:\n"
+        + "    matchLabels:\n"
+        + "      app: {{.Values.name}}\n"
+        + "  template:\n"
+        + "    metadata:\n"
+        + "      labels:\n"
+        + "        app: {{.Values.name}}\n"
+        + "    spec:\n"
+        + "      - name: {{.Values.name}}\n"
+        + "        image: {{.Values.image}}\n"
+        + "        {{- if or .Values.env.config .Values.env.secrets}}\n"
+        + "        envFrom:\n"
+        + "        {{- if .Values.env.config}}\n"
+        + "        - configMapRef:\n"
+        + "            name: {{.Values.name}}\n"
+        + "        {{- end}}\n"
+        + "        {{- if .Values.env.secrets}}\n"
+        + "        - secretRef:\n"
+        + "            name: {{.Values.name}}\n"
+        + "        {{- end}}\n"
+        + "        {{- end}}";
+
+    String expectedFileContent = "{{- if .Values.env.config}}\n"
+        + "apiVersion: v1\n"
+        + "kind: ConfigMap\n"
+        + "metadata:\n"
+        + "  name: {{.Values.name}}\n"
+        + "data:\n"
+        + "{{.Values.env.config | toYaml | indent 2}}\n"
+        + "---\n"
+        + "{{- end}}\n"
+        + "\n"
+        + "{{- if .Values.env.secrets}}\n"
+        + "apiVersion: v1\n"
+        + "kind: Secret\n"
+        + "metadata:\n"
+        + "  name: {{.Values.name}}\n"
+        + "stringData:\n"
+        + "{{.Values.env.secrets | toYaml | indent 2}}\n"
+        + "---\n"
+        + "{{- end}}\n"
+        + "\n"
+        + "{{- if .Values.createImagePullSecret}}\n"
+        + "apiVersion: v1\n"
+        + "kind: Secret\n"
+        + "metadata:\n"
+        + "  name: {{.Values.name}}-dockercfg\n"
+        + "  annotations:\n"
+        + "    harness.io/skip-versioning: true\n"
+        + "data:\n"
+        + "  .dockercfg: {{.Values.dockercfg}}\n"
+        + "type: kubernetes.io/dockercfg\n"
+        + "---\n"
+        + "{{- end}}\n"
+        + "\n"
+        + "apiVersion: apps/v1\n"
+        + "kind: Deployment\n"
+        + "metadata:\n"
+        + "  name: {{.Values.name}}-deployment\n"
+        + "spec:\n"
+        + "  replicas: {{int .Values.replicas}}\n"
+        + "  selector:\n"
+        + "    matchLabels:\n"
+        + "      app: {{.Values.name}}\n"
+        + "  template:\n"
+        + "    metadata:\n"
+        + "      labels:\n"
+        + "        app: {{.Values.name}}\n"
+        + "    spec:\n"
+        + "      - name: {{.Values.name}}\n"
+        + "        image: {{.Values.image}}\n"
+        + "        {{- if or .Values.env.config .Values.env.secrets}}\n"
+        + "        envFrom:\n"
+        + "        {{- if .Values.env.config}}\n"
+        + "        - configMapRef:\n"
+        + "            name: {{.Values.name}}\n"
+        + "        {{- end}}\n"
+        + "        {{- if .Values.env.secrets}}\n"
+        + "        - secretRef:\n"
+        + "            name: {{.Values.name}}\n"
+        + "        {{- end}}\n"
+        + "        {{- end}}";
+
+    manifestFile.setFileContent(fileContent);
+    applicationManifestServiceImpl.removeNamespace(manifestFile);
+    assertTrue(manifestFile.getFileContent().equals(expectedFileContent));
   }
 
   @Test
