@@ -20,6 +20,7 @@ import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.yaml.directory.DirectoryNode;
 
 import java.util.List;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -91,10 +92,11 @@ public class ApplicationManifestResource {
   @AuthRule(permissionType = PermissionType.SERVICE, action = Action.CREATE)
   public RestResponse<ManifestFile> createManifestFile(@QueryParam("appId") String appId,
       @QueryParam("serviceId") String serviceId, @PathParam("appManifestId") String appManifestId,
-      ManifestFile manifestFile) {
+      @NotNull ManifestFile manifestFile, @QueryParam("removeNamespace") boolean removeNamespace) {
     manifestFile.setAppId(appId);
     manifestFile.setApplicationManifestId(appManifestId);
-    return new RestResponse<>(applicationManifestService.createManifestFileByServiceId(manifestFile, serviceId));
+    return new RestResponse<>(
+        applicationManifestService.createManifestFileByServiceId(manifestFile, serviceId, removeNamespace));
   }
 
   @GET
@@ -114,11 +116,13 @@ public class ApplicationManifestResource {
   @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
   public RestResponse<ManifestFile> updateManifestFile(@QueryParam("appId") String appId,
       @QueryParam("serviceId") String serviceId, @PathParam("appManifestId") String appManifestId,
-      @PathParam("manifestFileId") String manifestFileId, ManifestFile manifestFile) {
+      @PathParam("manifestFileId") String manifestFileId, @NotNull ManifestFile manifestFile,
+      @QueryParam("removeNamespace") boolean removeNamespace) {
     manifestFile.setUuid(manifestFileId);
     manifestFile.setAppId(appId);
     manifestFile.setApplicationManifestId(appManifestId);
-    return new RestResponse<>(applicationManifestService.updateManifestFileByServiceId(manifestFile, serviceId));
+    return new RestResponse<>(
+        applicationManifestService.updateManifestFileByServiceId(manifestFile, serviceId, removeNamespace));
   }
 
   @DELETE

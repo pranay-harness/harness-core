@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -21,10 +22,9 @@ import software.wings.yaml.BaseEntityYaml;
                , @Field("fileName") }))
 @Data
 @Builder
+@FieldNameConstants(innerTypeName = "ManifestFileKeys")
 @EqualsAndHashCode(callSuper = false)
 public class ManifestFile extends Base {
-  public static final String FILE_NAME_KEY = "fileName";
-  public static final String APPLICATION_MANIFEST_ID_KEY = "applicationManifestId";
   public static final String VALUES_YAML_KEY = "values.yaml";
 
   @NotEmpty String fileName;
