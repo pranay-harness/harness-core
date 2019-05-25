@@ -20,6 +20,7 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.User;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.security.authentication.AuthenticationManager;
@@ -48,6 +49,7 @@ public class UserResourceTest {
   public static final CacheHelper CACHE_HELPER = mock(CacheHelper.class);
   public static final AuthService AUTH_SERVICE = mock(AuthService.class);
   public static final AccountService ACCOUNT_SERVICE = mock(AccountService.class);
+  public static final MainConfiguration MAIN_CONFIGURATION = mock(MainConfiguration.class);
   public static final AuthenticationManager AUTHENTICATION_MANAGER = mock(AuthenticationManager.class);
   public static final TwoFactorAuthenticationManager TWO_FACTOR_AUTHENTICATION_MANAGER =
       mock(TwoFactorAuthenticationManager.class);
@@ -62,7 +64,7 @@ public class UserResourceTest {
       ResourceTestRule.builder()
           .addResource(new UserResource(USER_SERVICE, AUTH_SERVICE, ACCOUNT_SERVICE, USAGE_RESTRICTIONS_SERVICE,
               ACCOUNT_PERMISSION_UTILS, AUTHENTICATION_MANAGER, TWO_FACTOR_AUTHENTICATION_MANAGER, CACHE_HELPER,
-              HARNESS_USER_GROUP_SERVICE, USER_GROUP_SERVICE))
+              HARNESS_USER_GROUP_SERVICE, USER_GROUP_SERVICE, MAIN_CONFIGURATION))
           .addProvider(WingsExceptionMapper.class)
           .addProvider(MultiPartFeature.class)
           .build();
