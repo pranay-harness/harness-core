@@ -42,6 +42,8 @@ import io.harness.event.model.EventsMorphiaClasses;
 import io.harness.health.HealthService;
 import io.harness.jobs.VerificationJob;
 import io.harness.jobs.VerificationMetricJob;
+import io.harness.jobs.housekeeping.UsageMetricsJob;
+import io.harness.jobs.sg247.ServiceGuardMainJob;
 import io.harness.limits.LimitsMorphiaClasses;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.ManageDistributedLockSvc;
@@ -55,7 +57,7 @@ import io.harness.mongo.PersistenceMorphiaClasses;
 import io.harness.persistence.HPersistence;
 import io.harness.resources.LogVerificationResource;
 import io.harness.scheduler.PersistentScheduler;
-import io.harness.scheduler.VerificationServiceExecutorService;
+import io.harness.scheduler.WorkflowVerificationTaskPoller;
 import io.harness.security.VerificationServiceAuthenticationFilter;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.service.intfc.LearningEngineService;
@@ -274,9 +276,10 @@ public class VerificationServiceApplication extends Application<VerificationServ
       // If we do not get the lock, that's not critical - that's most likely because other managers took it
       // and they will initialize the jobs.
       if (acquiredLock != null) {
-        VerificationServiceExecutorService.addJob(jobScheduler);
-        VerificationJob.addJob(jobScheduler);
-        VerificationMetricJob.addJob(jobScheduler);
+        VerificationJob.removeJob(jobScheduler);
+        ServiceGuardMainJob.addJob(jobScheduler);
+        VerificationMetricJob.removeJob(jobScheduler);
+        UsageMetricsJob.addJob(jobScheduler);
       }
     }
   }
@@ -288,6 +291,6 @@ public class VerificationServiceApplication extends Application<VerificationServ
   }
 
   private void initializeServiceTaskPoll(Injector injector) {
-    injector.getInstance(VerificationServiceExecutorService.class).scheduleTaskPoll();
+    injector.getInstance(WorkflowVerificationTaskPoller.class).scheduleTaskPoll();
   }
 }

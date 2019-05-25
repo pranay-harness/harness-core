@@ -9,13 +9,14 @@ import static software.wings.common.VerificationConstants.WORKFLOW_CV_COLLECTION
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import io.harness.jobs.DataCollectionForWorkflowJob;
-import io.harness.jobs.LogAnalysisManagerJob;
-import io.harness.jobs.LogClusterManagerJob;
-import io.harness.jobs.MetricAnalysisJob;
+import io.harness.jobs.workflow.collection.WorkflowDataCollectionJob;
+import io.harness.jobs.workflow.logs.WorkflowLogAnalysisJob;
+import io.harness.jobs.workflow.logs.WorkflowLogClusterJob;
+import io.harness.jobs.workflow.timeseries.WorkflowTimeSeriesAnalysisJob;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.serializer.JsonUtils;
@@ -45,11 +46,14 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Delete all learning engine tasks in queue older than 7 days.
+ * Looks at the workflow analysis task queue for tasks and schedules them periodically.
+ * Main entry - {@link #scheduleTaskPoll()}
+ * Called from - {@link io.harness.app.VerificationServiceApplication#initializeServiceTaskPoll(Injector)}
  */
 @Singleton
 @Slf4j
-public class VerificationServiceExecutorService {
+public class WorkflowVerificationTaskPoller {
+  // TODO - give better cron names
   private static final String VERIFICATION_CRON_NAME = "VERIFICATION_SERVICE_EXECUTOR_CRON_NAME";
   private static final String VERIFICATION_CRON_GROUP = "VERIFICATION_SERVICE_EXECUTOR_CRON_GROUP";
 
@@ -101,7 +105,7 @@ public class VerificationServiceExecutorService {
             .getResource()) {
       if (context.getStateType().equals(StateType.SUMO) || context.getStateType().equals(StateType.DATA_DOG_LOG)) {
         Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(DELAY_MINUTES));
-        JobDetail job = JobBuilder.newJob(DataCollectionForWorkflowJob.class)
+        JobDetail job = JobBuilder.newJob(WorkflowDataCollectionJob.class)
                             .withIdentity(context.getStateExecutionId(),
                                 context.getStateType().name().toUpperCase() + WORKFLOW_CV_COLLECTION_CRON_GROUP)
                             .usingJobData("jobParams", JsonUtils.asJson(context))
@@ -214,9 +218,9 @@ public class VerificationServiceExecutorService {
 
   private void scheduleTimeSeriesAnalysisCronJob(AnalysisContext context) {
     Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(DELAY_MINUTES + 1));
-    JobDetail job = JobBuilder.newJob(MetricAnalysisJob.class)
+    JobDetail job = JobBuilder.newJob(WorkflowTimeSeriesAnalysisJob.class)
                         .withIdentity(context.getStateExecutionId(),
-                            context.getStateType().name().toUpperCase() + "METRIC_VERIFY_CRON_GROUP")
+                            context.getStateType().name().toUpperCase() + "WORKFLOW_TIME_SERIES_VERIFY_CRON_GROUP")
                         .usingJobData("jobParams", JsonUtils.asJson(context))
                         .usingJobData("timestamp", System.currentTimeMillis())
                         .usingJobData("delegateTaskId", context.getDelegateTaskId())
@@ -225,7 +229,7 @@ public class VerificationServiceExecutorService {
 
     Trigger trigger = TriggerBuilder.newTrigger()
                           .withIdentity(context.getStateExecutionId(),
-                              context.getStateType().name().toUpperCase() + "METRIC_VERIFY_CRON_GROUP")
+                              context.getStateType().name().toUpperCase() + "WORKFLOW_TIME_SERIES_VERIFY_CRON_GROUP")
                           .withSchedule(SimpleScheduleBuilder.simpleSchedule()
                                             .withIntervalInSeconds(60)
                                             .withMisfireHandlingInstructionNowWithExistingCount()
@@ -239,8 +243,8 @@ public class VerificationServiceExecutorService {
 
   private void scheduleLogAnalysisCronJob(AnalysisContext context) {
     Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(DELAY_MINUTES + 1));
-    JobDetail job = JobBuilder.newJob(LogAnalysisManagerJob.class)
-                        .withIdentity(context.getStateExecutionId(), "LOG_VERIFY_CRON_GROUP")
+    JobDetail job = JobBuilder.newJob(WorkflowLogAnalysisJob.class)
+                        .withIdentity(context.getStateExecutionId(), "WORKFLOW_LOG_ANALYSIS_CRON_GROUP")
                         .usingJobData("jobParams", JsonUtils.asJson(context))
                         .usingJobData("timestamp", System.currentTimeMillis())
                         .usingJobData("delegateTaskId", context.getDelegateTaskId())
@@ -248,7 +252,7 @@ public class VerificationServiceExecutorService {
                         .build();
 
     Trigger trigger = TriggerBuilder.newTrigger()
-                          .withIdentity(context.getStateExecutionId(), "LOG_VERIFY_CRON_GROUP")
+                          .withIdentity(context.getStateExecutionId(), "WORKFLOW_LOG_ANALYSIS_CRON_GROUP")
                           .withSchedule(SimpleScheduleBuilder.simpleSchedule()
                                             .withIntervalInSeconds(60)
                                             .repeatForever()
@@ -263,7 +267,7 @@ public class VerificationServiceExecutorService {
   private void scheduleClusterCronJob(AnalysisContext context) {
     Date startDate = new Date(new Date().getTime() + 3 * 60000);
 
-    JobDetail job = JobBuilder.newJob(LogClusterManagerJob.class)
+    JobDetail job = JobBuilder.newJob(WorkflowLogClusterJob.class)
                         .withIdentity(context.getStateExecutionId(), "LOG_CLUSTER_CRON_GROUP")
                         .usingJobData("jobParams", JsonUtils.asJson(context))
                         .usingJobData("timestamp", System.currentTimeMillis())

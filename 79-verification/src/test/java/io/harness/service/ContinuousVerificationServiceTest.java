@@ -373,7 +373,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     AnalysisContext context =
         createMockAnalysisContext(TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()));
     wingsPersistence.save(context);
-    continuousVerificationService.triggerLogDataCollection(context);
+    continuousVerificationService.triggerWorkflowDataCollection(context);
     List<DelegateTask> delegateTasks =
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
     assertEquals(1, delegateTasks.size());
@@ -398,7 +398,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     AnalysisContext context =
         createMockAnalysisContext(TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()));
     wingsPersistence.save(context);
-    boolean isTriggered = continuousVerificationService.triggerLogDataCollection(context);
+    boolean isTriggered = continuousVerificationService.triggerWorkflowDataCollection(context);
     assertFalse(isTriggered);
   }
 
@@ -415,7 +415,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     LogDataRecord record = createLogDataRecord(startTimeInterval);
     wingsPersistence.save(record);
 
-    boolean isTriggered = continuousVerificationService.triggerLogDataCollection(context);
+    boolean isTriggered = continuousVerificationService.triggerWorkflowDataCollection(context);
     assertFalse(isTriggered);
   }
 
@@ -433,7 +433,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     LogDataRecord record = createLogDataRecord(startTimeInterval);
     wingsPersistence.save(record);
 
-    boolean isTriggered = continuousVerificationService.triggerLogDataCollection(context);
+    boolean isTriggered = continuousVerificationService.triggerWorkflowDataCollection(context);
     assertTrue(isTriggered);
   }
 

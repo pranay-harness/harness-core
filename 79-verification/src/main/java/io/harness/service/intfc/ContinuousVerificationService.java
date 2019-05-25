@@ -13,7 +13,7 @@ public interface ContinuousVerificationService {
    * Creates tasks for Learning Engine
    * @param accountId
    */
-  void triggerMetricDataAnalysis(String accountId);
+  void triggerServiceGuardTimeSeriesAnalysis(String accountId);
 
   boolean triggerLogDataCollection(String accountId);
 
@@ -27,7 +27,7 @@ public interface ContinuousVerificationService {
 
   void cleanupStuckLocks();
 
-  boolean triggerLogDataCollection(AnalysisContext context);
+  boolean triggerWorkflowDataCollection(AnalysisContext context);
 
   void triggerTimeSeriesAlertIfNecessary(String cvConfigId, double riskScore, long analysisMinute);
 

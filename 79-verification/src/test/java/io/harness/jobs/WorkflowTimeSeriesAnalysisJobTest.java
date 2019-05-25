@@ -12,6 +12,7 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.VerificationBaseTest;
 import io.harness.category.element.UnitTests;
+import io.harness.jobs.workflow.timeseries.WorkflowTimeSeriesAnalysisJob;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
@@ -37,7 +38,7 @@ import java.util.UUID;
 /**
  * Created by Pranjal on 09/18/2018
  */
-public class MetricAnalysisJobTest extends VerificationBaseTest {
+public class WorkflowTimeSeriesAnalysisJobTest extends VerificationBaseTest {
   private String accountId;
   private String appId;
   private String stateExecutionId;
@@ -50,7 +51,7 @@ public class MetricAnalysisJobTest extends VerificationBaseTest {
   private String correlationId;
   private String preWorkflowExecutionId;
   private AnalysisContext analysisContext;
-  MetricAnalysisJob metricAnalysisJob;
+  WorkflowTimeSeriesAnalysisJob workflowTimeSeriesAnalysisJob;
 
   @Mock VerificationManagerClientHelper managerClient;
   @Mock LearningEngineService learningEngineService;
@@ -102,10 +103,11 @@ public class MetricAnalysisJobTest extends VerificationBaseTest {
     jobDataMap.put("delegateTaskId", delegateTaskId);
     when(jobExecutionContext.getMergedJobDataMap()).thenReturn(jobDataMap);
 
-    metricAnalysisJob = new MetricAnalysisJob(timeSeriesAnalysisService, learningEngineService, managerClient);
+    workflowTimeSeriesAnalysisJob =
+        new WorkflowTimeSeriesAnalysisJob(timeSeriesAnalysisService, learningEngineService, managerClient);
 
-    FieldUtils.writeField(metricAnalysisJob, "timeSeriesAnalysisService", timeSeriesAnalysisService, true);
-    FieldUtils.writeField(metricAnalysisJob, "learningEngineService", learningEngineService, true);
+    FieldUtils.writeField(workflowTimeSeriesAnalysisJob, "timeSeriesAnalysisService", timeSeriesAnalysisService, true);
+    FieldUtils.writeField(workflowTimeSeriesAnalysisJob, "learningEngineService", learningEngineService, true);
   }
 
   @Test
@@ -150,7 +152,7 @@ public class MetricAnalysisJobTest extends VerificationBaseTest {
           .thenReturn(18);
     }
 
-    metricAnalysisJob.execute(jobExecutionContext);
+    workflowTimeSeriesAnalysisJob.execute(jobExecutionContext);
 
     verify(learningEngineService, times(3)).hasAnalysisTimedOut(anyString(), anyString(), anyString());
     verify(timeSeriesAnalysisService, times(3))

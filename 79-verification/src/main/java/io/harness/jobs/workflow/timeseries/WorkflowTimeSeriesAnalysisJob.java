@@ -1,9 +1,9 @@
-package io.harness.jobs;
+package io.harness.jobs.workflow.timeseries;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
-import static software.wings.delegatetasks.AppdynamicsDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
+import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -15,12 +15,14 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.resources.intfc.ExperimentalMetricAnalysisResource;
+import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
+import org.quartz.SchedulerException;
 import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
 import software.wings.metrics.MetricType;
@@ -29,15 +31,13 @@ import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.MLAnalysisType;
-import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
+import software.wings.service.impl.analysis.TimeSeriesMetricGroup;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.newrelic.MLExperiments;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
-import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
-import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.MetricDataAnalysisService;
@@ -52,17 +52,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 /**
  * Cron to schedule time series processing for workflow verification.
- * Created by rsingh on 9/11/17.
  */
-@Deprecated
 @DisallowConcurrentExecution
 @Slf4j
-public class MetricAnalysisJob implements Job {
+public class WorkflowTimeSeriesAnalysisJob implements Job {
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Inject private LearningEngineService learningEngineService;
 
@@ -70,7 +67,7 @@ public class MetricAnalysisJob implements Job {
 
   @VisibleForTesting
   @Inject
-  public MetricAnalysisJob(TimeSeriesAnalysisService timeSeriesAnalysisService,
+  public WorkflowTimeSeriesAnalysisJob(TimeSeriesAnalysisService timeSeriesAnalysisService,
       LearningEngineService learningEngineService, VerificationManagerClientHelper managerClientHelper) {
     this.timeSeriesAnalysisService = timeSeriesAnalysisService;
     this.learningEngineService = learningEngineService;
@@ -79,7 +76,24 @@ public class MetricAnalysisJob implements Job {
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
-    logger.warn("Deprecating MetricAnalysisJob ...");
+    try {
+      String params = jobExecutionContext.getMergedJobDataMap().getString("jobParams");
+      String delegateTaskId = jobExecutionContext.getMergedJobDataMap().getString("delegateTaskId");
+
+      AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
+      new WorkflowTimeSeriesAnalysisJob
+          .MetricAnalysisGenerator(
+              timeSeriesAnalysisService, learningEngineService, managerClientHelper, context, jobExecutionContext)
+          .run();
+      logger.info("Triggering scheduled job with params {} and delegateTaskId {}", params, delegateTaskId);
+    } catch (Exception ex) {
+      logger.warn("Metric analysis cron failed with error", ex);
+      try {
+        jobExecutionContext.getScheduler().deleteJob(jobExecutionContext.getJobDetail().getKey());
+      } catch (SchedulerException e) {
+        logger.error("Unable to clean up cron", e);
+      }
+    }
   }
 
   public static class MetricAnalysisGenerator implements Runnable {
@@ -112,7 +126,7 @@ public class MetricAnalysisJob implements Job {
 
     private Map<String, MetricType> getMetricTypeMap(Map<String, TimeSeriesMetricDefinition> stateValuesToAnalyze) {
       Map<String, MetricType> stateValuesToThresholds = new HashMap<>();
-      for (Entry<String, TimeSeriesMetricDefinition> entry : stateValuesToAnalyze.entrySet()) {
+      for (Map.Entry<String, TimeSeriesMetricDefinition> entry : stateValuesToAnalyze.entrySet()) {
         String metricName = entry.getValue().getMetricName();
         stateValuesToThresholds.put(metricName, entry.getValue().getMetricType());
       }
@@ -179,22 +193,23 @@ public class MetricAnalysisJob implements Job {
           throw new IllegalStateException("Invalid stateType " + context.getStateType());
       }
 
-      for (Entry<String, List<NewRelicMetricDataRecord>> metric : testRecordsByMetric.entrySet()) {
+      for (Map.Entry<String, List<NewRelicMetricDataRecord>> metric : testRecordsByMetric.entrySet()) {
         final String metricName = metric.getKey();
-        NewRelicMetricAnalysis metricAnalysis = NewRelicMetricAnalysis.builder()
-                                                    .metricName(metricName)
-                                                    .riskLevel(RiskLevel.LOW)
-                                                    .metricValues(new ArrayList<>())
-                                                    .build();
+        NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis metricAnalysis =
+            NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis.builder()
+                .metricName(metricName)
+                .riskLevel(RiskLevel.LOW)
+                .metricValues(new ArrayList<>())
+                .build();
 
-        for (Entry<String, MetricType> valuesToAnalyze : stateValuesToAnalyze.entrySet()) {
+        for (Map.Entry<String, MetricType> valuesToAnalyze : stateValuesToAnalyze.entrySet()) {
           NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
                                                                     .metricName(metricName)
                                                                     .metricValueName(valuesToAnalyze.getKey())
                                                                     .metricType(valuesToAnalyze.getValue())
                                                                     .build();
 
-          NewRelicMetricAnalysisValue metricAnalysisValue =
+          NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue metricAnalysisValue =
               metricValueDefinition.analyze(metric.getValue(), controlRecordsByMetric.get(metricName));
           metricAnalysis.addNewRelicMetricAnalysisValue(metricAnalysisValue);
 
@@ -307,11 +322,11 @@ public class MetricAnalysisJob implements Job {
           return;
         }
 
-        Map<String, TimeSeriesMlAnalysisGroupInfo> metricGroups =
+        Map<String, TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo> metricGroups =
             analysisService.getMetricGroups(context.getAppId(), context.getStateExecutionId());
 
-        for (Entry<String, TimeSeriesMlAnalysisGroupInfo> entry : metricGroups.entrySet()) {
-          TimeSeriesMlAnalysisGroupInfo timeSeriesMlAnalysisGroupInfo = entry.getValue();
+        for (Map.Entry<String, TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo> entry : metricGroups.entrySet()) {
+          TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo timeSeriesMlAnalysisGroupInfo = entry.getValue();
           String groupName = timeSeriesMlAnalysisGroupInfo.getGroupName();
           TimeSeriesMlAnalysisType timeSeriesMlAnalysisType = timeSeriesMlAnalysisGroupInfo.getMlAnalysisType();
           final NewRelicMetricDataRecord heartBeatRecord =

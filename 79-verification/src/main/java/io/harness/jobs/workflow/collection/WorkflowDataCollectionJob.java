@@ -1,24 +1,36 @@
-package io.harness.jobs;
+package io.harness.jobs.workflow.collection;
 
 import com.google.inject.Inject;
 
+import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.ContinuousVerificationService;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.SchedulerException;
+import software.wings.service.impl.analysis.AnalysisContext;
 
 /**
  * Created by Pranjal on 02/06/2019
  */
 @Slf4j
-@Deprecated
-public class DataCollectionForWorkflowJob implements Job {
+public class WorkflowDataCollectionJob implements Job {
   @Inject private ContinuousVerificationService continuousVerificationService;
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
-    logger.warn("Deprecating DataCollectionForWorkflowJob ...");
+    logger.info("Triggering Data collection job");
+    try {
+      String params = jobExecutionContext.getMergedJobDataMap().getString("jobParams");
+      AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
+      boolean jobTriggered = continuousVerificationService.triggerWorkflowDataCollection(context);
+      if (!jobTriggered) {
+        deleteJob(jobExecutionContext);
+      }
+      logger.info("Triggering scheduled job with params {}", params);
+    } catch (Exception ex) {
+      logger.error("Data Collection cron failed with error", ex);
+    }
   }
 
   private void deleteJob(JobExecutionContext jobExecutionContext) {
