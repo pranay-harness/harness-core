@@ -84,6 +84,8 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private ApplicationManifestUtils applicationManifestUtils;
 
+  private static long MAX_MANIFEST_FILES_PER_APPLICATION_MANIFEST = 50L;
+
   @Override
   public ApplicationManifest create(ApplicationManifest applicationManifest) {
     return upsertApplicationManifest(applicationManifest, true);
@@ -360,6 +362,12 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     validateManifestFileName(manifestFile);
     validateFileNamePrefixForDirectory(manifestFile);
     notNullCheck("applicationManifest", applicationManifest, USER);
+
+    if (isCreate
+        && getManifestFilesCount(applicationManifest.getUuid()) >= MAX_MANIFEST_FILES_PER_APPLICATION_MANIFEST) {
+      throw new InvalidRequestException("Cannot add more manifest files. Maximum manifest files supported are "
+          + MAX_MANIFEST_FILES_PER_APPLICATION_MANIFEST);
+    }
 
     ManifestFile savedManifestFile =
         duplicateCheck(()
@@ -808,5 +816,11 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     if (!allowedExtensions.contains(fileExtension)) {
       throw new InvalidRequestException(format("Extension: %s is not allowed", fileExtension), USER);
     }
+  }
+
+  private long getManifestFilesCount(String appManifestId) {
+    return wingsPersistence.createQuery(ManifestFile.class)
+        .filter(ManifestFileKeys.applicationManifestId, appManifestId)
+        .count();
   }
 }
