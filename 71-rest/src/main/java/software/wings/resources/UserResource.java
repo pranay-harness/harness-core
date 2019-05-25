@@ -28,6 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.app.DeployMode;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AccountJoinRequest;
 import software.wings.beans.AccountRole;
@@ -115,6 +117,7 @@ public class UserResource {
   private UserGroupService userGroupService;
   private UsageRestrictionsService usageRestrictionsService;
   private AccountPermissionUtils accountPermissionUtils;
+  private MainConfiguration mainConfiguration;
 
   /**
    * Instantiates a new User resource.
@@ -130,7 +133,8 @@ public class UserResource {
   public UserResource(UserService userService, AuthService authService, AccountService accountService,
       UsageRestrictionsService usageRestrictionsService, AccountPermissionUtils accountPermissionUtils,
       AuthenticationManager authenticationManager, TwoFactorAuthenticationManager twoFactorAuthenticationManager,
-      CacheHelper cacheHelper, HarnessUserGroupService harnessUserGroupService, UserGroupService userGroupService) {
+      CacheHelper cacheHelper, HarnessUserGroupService harnessUserGroupService, UserGroupService userGroupService,
+      MainConfiguration mainConfiguration) {
     this.userService = userService;
     this.authService = authService;
     this.accountService = accountService;
@@ -141,6 +145,7 @@ public class UserResource {
     this.cacheHelper = cacheHelper;
     this.harnessUserGroupService = harnessUserGroupService;
     this.userGroupService = userGroupService;
+    this.mainConfiguration = mainConfiguration;
   }
 
   /**
@@ -550,6 +555,28 @@ public class UserResource {
     // accountId field is optional, it could be null.
     return new RestResponse<>(authenticationManager.defaultLoginAccount(
         authenticationManager.extractToken(authorization, "Basic"), accountId));
+  }
+
+  /**
+   * Harness local login.
+   * To be used in case of lockout scenarios, if the default login mechanism is 3rd party provider.
+   * Only users having account management permissions will be able to login using this.
+   *
+   * @return the rest response
+   */
+  @GET
+  @Path("harness-local-login")
+  @PublicApi
+  @Timed
+  @ExceptionMetered
+  public RestResponse<User> forceLoginUsingHarnessPassword(
+      @HeaderParam(HttpHeaders.AUTHORIZATION) String authorization) {
+    if (!DeployMode.isOnPrem(mainConfiguration.getDeployMode().name())) {
+      throw new InvalidRequestException("Invalid Login mechanism");
+    }
+
+    return new RestResponse<>(
+        authenticationManager.loginUsingHarnessPassword(authenticationManager.extractToken(authorization, "Basic")));
   }
 
   /**

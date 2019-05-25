@@ -8,6 +8,7 @@ import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 import static io.harness.eraro.ErrorCode.USER_DISABLED;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
+import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -35,6 +36,7 @@ import software.wings.security.saml.SamlClientService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserService;
 
 import java.net.URI;
@@ -58,6 +60,7 @@ public class AuthenticationManager {
   @Inject private AccountService accountService;
   @Inject private AuthService authService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private OauthBasedAuthHandler oauthBasedAuthHandler;
   @Inject private OauthOptions oauthOptions;
 
@@ -209,12 +212,17 @@ public class AuthenticationManager {
         .build();
   }
 
+  private String[] decryptBasicToken(String basicToken) {
+    String[] decryptedData = decodeBase64ToString(basicToken).split(":");
+    if (decryptedData.length < 2) {
+      throw new WingsException(INVALID_CREDENTIAL, USER);
+    }
+    return decryptedData;
+  }
+
   public User defaultLoginAccount(String basicToken, String accountId) {
     try {
-      String[] decryptedData = decodeBase64ToString(basicToken).split(":");
-      if (decryptedData.length < 2) {
-        throw new WingsException(INVALID_CREDENTIAL, USER);
-      }
+      String[] decryptedData = decryptBasicToken(basicToken);
       String userName = decryptedData[0];
       String password = decryptedData[1];
 
@@ -274,6 +282,23 @@ public class AuthenticationManager {
     } catch (Exception e) {
       logger.warn("Failed to login via default mechanism", e);
       throw new WingsException(INVALID_CREDENTIAL, USER);
+    }
+  }
+
+  public User loginUsingHarnessPassword(final String basicToken) {
+    String[] decryptedData = decryptBasicToken(basicToken);
+    User user = defaultLoginInternal(decryptedData[0], decryptedData[1], false, AuthenticationMechanism.USER_PASSWORD);
+    if (!hasAccountAdminPermission(user)) {
+      throw new WingsException(USER_NOT_AUTHORIZED, USER);
+    }
+    return user;
+  }
+
+  private boolean hasAccountAdminPermission(final User user) {
+    try {
+      return usageRestrictionsService.isAccountAdmin(authenticationUtils.getPrimaryAccount(user).getUuid());
+    } catch (Exception ex) {
+      throw new WingsException(USER_NOT_AUTHORIZED, USER);
     }
   }
 
