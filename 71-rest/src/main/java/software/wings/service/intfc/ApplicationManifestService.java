@@ -70,4 +70,6 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
 
   void cloneManifestFiles(
       String appId, ApplicationManifest applicationManifestOld, ApplicationManifest applicationManifestNew);
+
+  void deleteAllManifestFilesByAppManifestId(String appId, String appManifestId);
 }

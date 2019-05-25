@@ -823,4 +823,15 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
         .filter(ManifestFileKeys.applicationManifestId, appManifestId)
         .count();
   }
+
+  @Override
+  public void deleteAllManifestFilesByAppManifestId(String appId, String appManifestId) {
+    ApplicationManifest applicationManifest = getById(appId, appManifestId);
+
+    if (applicationManifest == null) {
+      return;
+    }
+
+    deleteManifestFiles(applicationManifest.getAppId(), applicationManifest, false);
+  }
 }
