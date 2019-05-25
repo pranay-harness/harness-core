@@ -104,6 +104,7 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
                                        .serverSelectionTimeout(90000)
                                        .maxConnectionIdleTime(600000)
                                        .connectionsPerHost(30)
+                                       .minConnectionsPerHost(5)
                                        .localThreshold(30);
       MongoClientURI uri = new MongoClientURI(getMongoUri(), mongoClientOptions);
 
