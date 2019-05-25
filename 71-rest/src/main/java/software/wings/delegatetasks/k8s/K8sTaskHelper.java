@@ -12,6 +12,7 @@ import static io.harness.k8s.manifest.ManifestHelper.getFirstLoadBalancerService
 import static io.harness.k8s.manifest.ManifestHelper.validateValuesFileContents;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static io.harness.k8s.manifest.ManifestHelper.yaml_file_extension;
+import static io.harness.k8s.manifest.ManifestHelper.yml_file_extension;
 import static io.harness.k8s.model.Release.Status.Failed;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
@@ -637,7 +638,7 @@ public class K8sTaskHelper {
 
     executionLogCallback.saveExecutionLog(color("Rendering manifest files using go template", White, Bold));
     executionLogCallback.saveExecutionLog(
-        color("Only manifest files with [.yaml] extension will be processed", White, Bold));
+        color("Only manifest files with [.yaml] or [.yml] extension will be processed", White, Bold));
 
     for (ManifestFile manifestFile : manifestFiles) {
       if (StringUtils.equals(values_filename, manifestFile.getFileName())) {
@@ -697,7 +698,8 @@ public class K8sTaskHelper {
   }
 
   private static boolean isValidManifestFile(String filename) {
-    return StringUtils.endsWith(filename, yaml_file_extension) && !StringUtils.equals(filename, values_filename);
+    return (StringUtils.endsWith(filename, yaml_file_extension) || StringUtils.endsWith(filename, yml_file_extension))
+        && !StringUtils.equals(filename, values_filename);
   }
 
   public List<KubernetesResource> readManifests(
