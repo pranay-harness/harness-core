@@ -1,4 +1,4 @@
-package io.harness.jobs;
+package io.harness.jobs.workflow.logs;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -7,6 +7,8 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import io.harness.jobs.LogMLAnalysisGenerator;
+import io.harness.jobs.LogMLClusterGenerator;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.serializer.JsonUtils;
@@ -19,8 +21,8 @@ import org.mongodb.morphia.annotations.Transient;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
+import org.quartz.SchedulerException;
 import software.wings.service.impl.ThirdPartyApiCallLog;
-import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.LogRequest;
@@ -34,14 +36,9 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-/**
- * Created by sriram_parthasarathy on 8/23//"17.
- */
-
 @DisallowConcurrentExecution
 @Slf4j
-@Deprecated
-public class LogAnalysisManagerJob implements Job {
+public class WorkflowLogAnalysisJob implements Job {
   @Transient @Inject private LogAnalysisService analysisService;
 
   @Transient @Inject private LearningEngineService learningEngineService;
@@ -53,7 +50,23 @@ public class LogAnalysisManagerJob implements Job {
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
-    logger.warn("Deprecating LogAnalysisManagerJob ...");
+    try {
+      String params = jobExecutionContext.getMergedJobDataMap().getString("jobParams");
+      AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
+      logger.info("Starting log analysis cron " + JsonUtils.asJson(context));
+      new WorkflowLogAnalysisJob
+          .LogAnalysisTask(analysisService, context, jobExecutionContext, learningEngineService, managerClient,
+              managerClientHelper, dataStoreService)
+          .call();
+      logger.info("Finish log analysis cron " + context.getStateExecutionId());
+    } catch (Exception ex) {
+      logger.warn("Log analysis cron failed with error", ex);
+      try {
+        jobExecutionContext.getScheduler().deleteJob(jobExecutionContext.getJobDetail().getKey());
+      } catch (SchedulerException e) {
+        logger.error("Unable to clean up cron", e);
+      }
+    }
   }
 
   @AllArgsConstructor
@@ -197,7 +210,7 @@ public class LogAnalysisManagerJob implements Job {
         logger.info("Verification Analysis failed for {}", context.getStateExecutionId(), ex);
         apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
         apiCallLog.addFieldToResponse(
-            HttpStatus.SC_INTERNAL_SERVER_ERROR, ExceptionUtils.getMessage(ex), FieldType.TEXT);
+            HttpStatus.SC_INTERNAL_SERVER_ERROR, ExceptionUtils.getMessage(ex), ThirdPartyApiCallLog.FieldType.TEXT);
         dataStoreService.save(ThirdPartyApiCallLog.class, Lists.newArrayList(apiCallLog), false);
       } finally {
         try {

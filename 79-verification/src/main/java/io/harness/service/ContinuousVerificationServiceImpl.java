@@ -140,7 +140,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Override
   @Counted
   @Timed
-  public void triggerMetricDataAnalysis(String accountId) {
+  public void triggerServiceGuardTimeSeriesAnalysis(String accountId) {
     logger.info("Triggering Data Analysis for account {} ", accountId);
     // List all the CV configurations for a given account
     List<CVConfiguration> cvConfigurations = cvConfigurationService.listConfigurations(accountId);
@@ -491,7 +491,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Override
   @Counted
   @Timed
-  public boolean triggerLogDataCollection(AnalysisContext context) {
+  public boolean triggerWorkflowDataCollection(AnalysisContext context) {
     final long lastDataCollectionMinute = logAnalysisService.getLastLogDataCollectedMinute(
         context.getQuery(), context.getAppId(), context.getStateExecutionId(), context.getStateType());
     logger.info("Inside triggerLogDataCollection with stateType {}, stateExecutionId {}", context.getStateType(),

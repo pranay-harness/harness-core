@@ -11,6 +11,7 @@ import io.harness.VerificationTestModule;
 import io.harness.app.VerificationQueueModule;
 import io.harness.app.VerificationServiceConfiguration;
 import io.harness.app.VerificationServiceModule;
+import io.harness.app.VerificationServiceSchedulerModule;
 import io.harness.module.TestMongoModule;
 import io.harness.mongo.MongoConfig;
 import software.wings.rules.SetupScheduler;
@@ -44,7 +45,8 @@ public class VerificationTestRule extends WingsRule {
   @Override
   protected List<Module> getRequiredModules(Configuration configuration, DistributedLockSvc distributedLockSvc) {
     return Lists.newArrayList(new TestMongoModule(datastore, datastore, distributedLockSvc),
-        new VerificationServiceModule((VerificationServiceConfiguration) configuration), new VerificationTestModule());
+        new VerificationServiceModule((VerificationServiceConfiguration) configuration), new VerificationTestModule(),
+        new VerificationServiceSchedulerModule((VerificationServiceConfiguration) configuration));
   }
 
   @Override

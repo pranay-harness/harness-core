@@ -24,9 +24,10 @@ public class VerificationJobScheduler extends HQuartzScheduler {
     super(injector, configuration.getSchedulerConfig(), configuration.getMongoConnectionFactory().getUri());
     try {
       final Properties properties = getDefaultProperties();
-      properties.setProperty("org.quartz.jobStore.collectionPrefix", "quartz_verification");
-      scheduler = createScheduler(properties);
-      scheduler.start();
+      if (configuration.getSchedulerConfig().getAutoStart().equals("true")) {
+        scheduler = createScheduler(properties);
+        scheduler.start();
+      }
     } catch (SchedulerException exception) {
       throw new WingsException(ErrorCode.UNKNOWN_ERROR, exception)
           .addParam("message", "Could not initialize cron scheduler");

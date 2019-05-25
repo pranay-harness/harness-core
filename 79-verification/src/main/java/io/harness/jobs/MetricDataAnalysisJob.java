@@ -1,8 +1,5 @@
 package io.harness.jobs;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.harness.service.intfc.ContinuousVerificationService;
@@ -15,17 +12,14 @@ import org.quartz.JobExecutionContext;
  * Created by Pranjal on 10/04/2018
  */
 @Slf4j
+@Deprecated
 public class MetricDataAnalysisJob implements Job {
-  public static final String METRIC_DATA_ANALYSIS_CRON_GROUP = "METRIC_DATA_ANALYSIS_CRON_GROUP";
+  static final String METRIC_DATA_ANALYSIS_CRON_GROUP = "METRIC_DATA_ANALYSIS_CRON_GROUP";
 
   @Inject private ContinuousVerificationService continuousVerificationService;
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
-    final String accountId = jobExecutionContext.getMergedJobDataMap().getString("accountId");
-    Preconditions.checkState(isNotEmpty(accountId), "account Id not found for " + jobExecutionContext);
-
-    logger.info("Executing APM data analysis Job for {}", accountId);
-    continuousVerificationService.triggerMetricDataAnalysis(accountId);
+    logger.warn("Deprecating MetricDataAnalysisJob ...");
   }
 }

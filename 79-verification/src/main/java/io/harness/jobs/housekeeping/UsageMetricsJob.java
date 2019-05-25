@@ -1,4 +1,4 @@
-package io.harness.jobs;
+package io.harness.jobs.housekeeping;
 
 import static io.harness.beans.ExecutionStatus.QUEUED;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -38,12 +38,11 @@ import java.util.concurrent.TimeUnit;
 @PersistJobDataAfterExecution
 @DisallowConcurrentExecution
 @Slf4j
-@Deprecated
-public class VerificationMetricJob implements Job {
+public class UsageMetricsJob implements Job {
   // Cron name to uniquely identify the cron
-  public static final String VERIFICATION_METRIC_CRON_NAME = "VERIFICATION_METRIC_CRON_NAME";
+  public static final String VERIFICATION_METRIC_CRON_NAME = "USAGE_METRIC_CRON";
   // Cron Group name
-  public static final String VERIFICATION_METRIC_CRON_GROUP = "VERIFICATION_METRIC_CRON_GROUP";
+  public static final String VERIFICATION_METRIC_CRON_GROUP = "USAGE_METRIC_CRON";
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private HarnessMetricRegistry metricRegistry;
@@ -53,15 +52,10 @@ public class VerificationMetricJob implements Job {
     recordQueuedTaskMetric();
   }
 
-  public static void removeJob(PersistentScheduler jobScheduler) {
-    jobScheduler.deleteJob(VERIFICATION_METRIC_CRON_NAME, VERIFICATION_METRIC_CRON_GROUP);
-  }
-
   private void recordQueuedTaskMetric() {
     LearningEngineAnalysisTask lastQueuedAnalysisTask =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
             .filter(LearningEngineAnalysisTaskKeys.executionStatus, QUEUED)
-            .filter(LearningEngineAnalysisTaskKeys.service_guard_backoff_count, 1)
             .order(Sort.ascending("createdAt"))
             .get();
 
@@ -74,7 +68,6 @@ public class VerificationMetricJob implements Job {
     lastQueuedAnalysisTask = wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
                                  .filter(LearningEngineAnalysisTaskKeys.executionStatus, QUEUED)
                                  .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, MLAnalysisType.LOG_CLUSTER)
-                                 .filter(LearningEngineAnalysisTaskKeys.service_guard_backoff_count, 1)
                                  .order(Sort.ascending("createdAt"))
                                  .get();
 
@@ -101,7 +94,7 @@ public class VerificationMetricJob implements Job {
 
   public static void addJob(PersistentScheduler jobScheduler) {
     if (!jobScheduler.checkExists(VERIFICATION_METRIC_CRON_NAME, VERIFICATION_METRIC_CRON_GROUP)) {
-      JobDetail job = JobBuilder.newJob(VerificationMetricJob.class)
+      JobDetail job = JobBuilder.newJob(UsageMetricsJob.class)
                           .withIdentity(VERIFICATION_METRIC_CRON_NAME, VERIFICATION_METRIC_CRON_GROUP)
                           .withDescription("Verification job ")
                           .build();
