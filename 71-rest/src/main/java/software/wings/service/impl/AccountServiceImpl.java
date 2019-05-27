@@ -530,7 +530,8 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public List<Account> listAllAccounts() {
-    List<Account> accountList = wingsPersistence.createQuery(Account.class).filter(APP_ID_KEY, GLOBAL_APP_ID).asList();
+    List<Account> accountList =
+        wingsPersistence.createQuery(Account.class, excludeAuthority).filter(APP_ID_KEY, GLOBAL_APP_ID).asList();
     decryptLicenseInfo(accountList);
     return accountList;
   }
