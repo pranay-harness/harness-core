@@ -18,7 +18,6 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
-import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import software.wings.api.AwsLambdaContextElement;
@@ -49,7 +48,6 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,9 +67,11 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
 
   @Attributes(title = "Region") @DefaultValue("us-east-1") private String region = "us-east-1";
 
-  @SchemaIgnore @Builder.Default private Map<String, List<CloudWatchMetric>> loadBalancerMetrics = new HashMap<>();
+  private Map<String, List<CloudWatchMetric>> loadBalancerMetrics;
 
-  @SchemaIgnore @Builder.Default private List<CloudWatchMetric> ec2Metrics = new ArrayList<>();
+  private List<CloudWatchMetric> ec2Metrics;
+
+  private Map<String, List<CloudWatchMetric>> ecsMetrics;
 
   @SchemaIgnore private boolean shouldDoLambdaVerification;
 
@@ -116,6 +116,17 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
   }
 
   @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> results = new HashMap<>();
+    // any new cloudwatch configuration should go with this check.
+    if (!shouldDoLambdaVerification && !shouldDoECSClusterVerification && isEmpty(ecsMetrics) && isEmpty(ec2Metrics)
+        && isEmpty(loadBalancerMetrics)) {
+      results.put("No metrics provided", "No metrics provided for Verification");
+    }
+    return results;
+  }
+
+  @Override
   @SchemaIgnore
   public Logger getLogger() {
     return logger;
@@ -137,17 +148,11 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
 
     Map<String, String> lambdaFunctions = new HashMap<>();
-    String clusterName = null;
     if (shouldDoLambdaVerification && getDeploymentType(context).equals(DeploymentType.AWS_LAMBDA)) {
       AwsLambdaContextElement elements = context.getContextElement(ContextElementType.PARAM);
       elements.getFunctionArns().forEach(contextElement -> {
         lambdaFunctions.put(contextElement.getFunctionName(), contextElement.getFunctionArn());
       });
-    }
-
-    if (shouldDoECSClusterVerification && getDeploymentType(context).equals(DeploymentType.ECS)) {
-      ContainerServiceElement containerServiceElement = context.getContextElement(ContextElementType.PARAM);
-      clusterName = containerServiceElement.getClusterName();
     }
 
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
@@ -164,6 +169,17 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
 
     metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.CLOUD_WATCH,
         context.getStateExecutionInstanceId(), null, fetchMetricTemplates(cloudWatchMetrics));
+
+    if (shouldDoECSClusterVerification && getDeploymentType(context).equals(DeploymentType.ECS)) {
+      // If shouldDoECSClusterVerification but no ecs metrics map is provided. This is to handle backword compatibility
+      // in-case no ecsMetrics provided than fetch cluster details from the context and use default ecs metrics for
+      // verification.
+      if (isEmpty(ecsMetrics)) {
+        ContainerServiceElement containerServiceElement = context.getContextElement(ContextElementType.PARAM);
+        String clusterName = containerServiceElement.getClusterName();
+        ecsMetrics = createECSMetrics(clusterName, cloudWatchMetrics);
+      }
+    }
     final CloudWatchDataCollectionInfo dataCollectionInfo =
         CloudWatchDataCollectionInfo.builder()
             .awsConfig(awsConfig)
@@ -183,7 +199,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
             .loadBalancerMetrics(loadBalancerMetrics)
             .ec2Metrics(ec2Metrics)
             .lambdaFunctionNames(createLambdaMetrics(lambdaFunctions.keySet(), cloudWatchMetrics))
-            .metricsByECSClusterName(createECSMetrics(clusterName, cloudWatchMetrics))
+            .metricsByECSClusterName(ecsMetrics)
             .build();
 
     analysisContext.getTestNodes().put(TEST_HOST_NAME, DEFAULT_GROUP_NAME);
@@ -281,7 +297,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
     this.region = region;
   }
 
-  public Map<String, List<CloudWatchMetric>> getLoadBalancerMetrics() {
+  public Map<String, List<CloudWatchMetric>> fetchLoadBalancerMetrics() {
     return loadBalancerMetrics;
   }
 
@@ -289,11 +305,15 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
     this.loadBalancerMetrics = loadBalancerMetrics;
   }
 
-  public List<CloudWatchMetric> getEc2Metrics() {
-    return ec2Metrics;
+  public Map<String, List<CloudWatchMetric>> fetchEcsMetrics() {
+    return ecsMetrics;
   }
 
-  public boolean getShouldDoLambdaVerification() {
+  public void setEcsMetrics(Map<String, List<CloudWatchMetric>> ecsMetrics) {
+    this.ecsMetrics = ecsMetrics;
+  }
+
+  public boolean isShouldDoLambdaVerification() {
     return shouldDoLambdaVerification;
   }
 
@@ -301,15 +321,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
     this.shouldDoLambdaVerification = shouldDoLambdaVerification;
   }
 
-  public boolean isShouldDoECSClusterVerification() {
-    return shouldDoECSClusterVerification;
-  }
-
   public void setShouldDoECSClusterVerification(boolean shouldDoECSClusterVerification) {
     this.shouldDoECSClusterVerification = shouldDoECSClusterVerification;
-  }
-
-  public void setEc2Metrics(List<CloudWatchMetric> ec2Metrics) {
-    this.ec2Metrics = ec2Metrics;
   }
 }
