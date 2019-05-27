@@ -17,4 +17,6 @@ enum DataFetcherEnum {
   serviceConnection
   workflow
   workflowConnection
+  executionStats
+  instanceStats
 }

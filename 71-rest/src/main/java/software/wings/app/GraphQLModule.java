@@ -8,6 +8,7 @@ import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
 
 import graphql.GraphQL;
+import graphql.schema.DataFetcher;
 import org.dataloader.MappedBatchLoader;
 import org.hibernate.validator.constraints.NotBlank;
 import org.jetbrains.annotations.NotNull;
@@ -19,7 +20,6 @@ import software.wings.beans.infrastructure.instance.info.K8sPodInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
-import software.wings.graphql.datafetcher.AbstractDataFetcher;
 import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
 import software.wings.graphql.datafetcher.application.ApplicationConnectionDataFetcher;
 import software.wings.graphql.datafetcher.application.ApplicationDataFetcher;
@@ -32,8 +32,10 @@ import software.wings.graphql.datafetcher.environment.EnvironmentConnectionDataF
 import software.wings.graphql.datafetcher.environment.EnvironmentDataFetcher;
 import software.wings.graphql.datafetcher.execution.ExecutionConnectionDataFetcher;
 import software.wings.graphql.datafetcher.execution.ExecutionDataFetcher;
+import software.wings.graphql.datafetcher.execution.ExecutionStatsDataFetcher;
 import software.wings.graphql.datafetcher.instance.InstanceConnectionDataFetcher;
 import software.wings.graphql.datafetcher.instance.InstanceCountDataFetcher;
+import software.wings.graphql.datafetcher.instance.InstanceStatsDataFetcher;
 import software.wings.graphql.datafetcher.instance.instanceInfo.AutoScalingGroupInstanceController;
 import software.wings.graphql.datafetcher.instance.instanceInfo.CodeDeployInstanceController;
 import software.wings.graphql.datafetcher.instance.instanceInfo.Ec2InstanceController;
@@ -128,6 +130,8 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(CloudProviderDataFetcher.class);
     bindDataFetcherWithAnnotation(CloudProviderConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(ArtifactDataFetcher.class);
+    bindDataFetcherWithAnnotation(ExecutionStatsDataFetcher.class);
+    bindDataFetcherWithAnnotation(InstanceStatsDataFetcher.class);
   }
 
   @NotNull
@@ -140,12 +144,12 @@ public class GraphQLModule extends AbstractModule {
     return new String(c);
   }
 
-  private void bindDataFetcherWithAnnotation(Class<? extends AbstractDataFetcher> clazz, String suffix) {
+  private void bindDataFetcherWithAnnotation(Class<? extends DataFetcher> clazz, String suffix) {
     String annotationName = calculateAnnotationName(clazz, suffix);
-    bind(AbstractDataFetcher.class).annotatedWith(Names.named(annotationName)).to(clazz);
+    bind(DataFetcher.class).annotatedWith(Names.named(annotationName)).to(clazz);
   }
 
-  private void bindDataFetcherWithAnnotation(Class<? extends AbstractDataFetcher> clazz) {
+  private void bindDataFetcherWithAnnotation(Class<? extends DataFetcher> clazz) {
     bindDataFetcherWithAnnotation(clazz, DATA_FETCHER_SUFFIX);
   }
 

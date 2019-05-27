@@ -20,8 +20,8 @@ type Request {
   entityType: EntityType
   filters: [Filter]
   groupBy: [GroupBy]
-  aggregateFunction: AggregateFunction
-  groupByTime: TimeSeriesAggregation
+  #  aggregateFunction: AggregateFunction
+  #  groupByTime: TimeSeriesAggregation
 }
 
 enum EntityType {
@@ -63,7 +63,7 @@ type SinglePointData implements Data {
   request: Request
 }
 
-type AggregateFunction {
+input AggregateFunction {
   aggregateValue: String
   aggregateOperation: AggregateOperation
 }
@@ -96,12 +96,12 @@ enum TimeAggregationType {
   MONTH
 }
 
-type TimeRange {
+input TimeRange {
   from: Long
   to: Long
 }
 
-type TimeSeriesAggregation {
+input TimeSeriesAggregation {
   timeAggregationType: TimeAggregationType
   timeAggregationValue: Int
 }
