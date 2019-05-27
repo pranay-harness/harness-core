@@ -34,7 +34,6 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.ElkConfig;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
@@ -386,18 +385,16 @@ public class PluginServiceImpl implements PluginService {
                        .withPluginCategories(asList(HelmRepo))
                        .withUiSchema(readUiSchema(SettingVariableTypes.GCS_HELM_REPO.name()))
                        .build());
-    boolean serviceNowEnabled = featureFlagService.isEnabled(FeatureName.SERVICENOW, accountId);
-    if (serviceNowEnabled) {
-      pluginList.add(anAccountPlugin()
-                         .withSettingClass(ServiceNowConfig.class)
-                         .withAccountId(accountId)
-                         .withIsEnabled(true)
-                         .withDisplayName(SettingVariableTypes.SERVICENOW.getDisplayName())
-                         .withType(SettingVariableTypes.SERVICENOW.toString())
-                         .withPluginCategories(asList(Collaboration))
-                         .withUiSchema(readUiSchema("SERVICENOW"))
-                         .build());
-    }
+
+    pluginList.add(anAccountPlugin()
+                       .withSettingClass(ServiceNowConfig.class)
+                       .withAccountId(accountId)
+                       .withIsEnabled(true)
+                       .withDisplayName(SettingVariableTypes.SERVICENOW.getDisplayName())
+                       .withType(SettingVariableTypes.SERVICENOW.toString())
+                       .withPluginCategories(asList(Collaboration))
+                       .withUiSchema(readUiSchema("SERVICENOW"))
+                       .build());
 
     return pluginList;
   }
