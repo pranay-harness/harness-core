@@ -50,6 +50,10 @@ import static software.wings.beans.command.CommandUnitType.RESIZE;
 import static software.wings.beans.command.CommandUnitType.RESIZE_KUBERNETES;
 import static software.wings.beans.command.CommandUnitType.SCP;
 import static software.wings.beans.command.CommandUnitType.SETUP_ENV;
+import static software.wings.beans.trigger.TriggerConditionType.NEW_ARTIFACT;
+import static software.wings.beans.trigger.TriggerConditionType.PIPELINE_COMPLETION;
+import static software.wings.beans.trigger.TriggerConditionType.SCHEDULED;
+import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
@@ -159,6 +163,7 @@ import software.wings.service.impl.yaml.handler.setting.verificationprovider.Pro
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.SplunkConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.SumoConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.VerificationProviderYamlHandler;
+import software.wings.service.impl.yaml.handler.trigger.TriggerConditionYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.BasicWorkflowYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.BlueGreenWorkflowYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.BuildWorkflowYamlHandler;
@@ -186,6 +191,10 @@ import software.wings.verification.ElkCVConfigurationYamlHandler;
 import software.wings.verification.LogsCVConfigurationYamlHandler;
 import software.wings.verification.NewRelicCVConfigurationYamlHandler;
 import software.wings.verification.PrometheusCVConfigurationYamlHandler;
+import software.wings.yaml.trigger.ArtifactTriggerConditionHandler;
+import software.wings.yaml.trigger.PipelineTriggerConditionHandler;
+import software.wings.yaml.trigger.ScheduledTriggerConditionHandler;
+import software.wings.yaml.trigger.WebhookTriggerConditionHandler;
 
 /**
  * Guice Module for initializing all yaml classes.
@@ -344,6 +353,13 @@ public class YamlModule extends AbstractModule {
     workflowYamlHelperMapBinder.addBinding(BUILD.name()).to(BuildWorkflowYamlHandler.class);
     workflowYamlHelperMapBinder.addBinding(CANARY.name()).to(CanaryWorkflowYamlHandler.class);
     workflowYamlHelperMapBinder.addBinding(MULTI_SERVICE.name()).to(MultiServiceWorkflowYamlHandler.class);
+
+    MapBinder<String, TriggerConditionYamlHandler> triggerYamlHelperMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, TriggerConditionYamlHandler.class);
+    triggerYamlHelperMapBinder.addBinding(SCHEDULED.name()).to(ScheduledTriggerConditionHandler.class);
+    triggerYamlHelperMapBinder.addBinding(NEW_ARTIFACT.name()).to(ArtifactTriggerConditionHandler.class);
+    triggerYamlHelperMapBinder.addBinding(WEBHOOK.name()).to(WebhookTriggerConditionHandler.class);
+    triggerYamlHelperMapBinder.addBinding(PIPELINE_COMPLETION.name()).to(PipelineTriggerConditionHandler.class);
 
     MapBinder<String, CommandUnitYamlHandler> commandUnitYamlHandlerMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitYamlHandler.class);

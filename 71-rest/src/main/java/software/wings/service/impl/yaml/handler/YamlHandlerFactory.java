@@ -32,6 +32,7 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
+import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.app.ApplicationYamlHandler;
@@ -63,6 +64,9 @@ import software.wings.service.impl.yaml.handler.setting.collaborationprovider.Co
 import software.wings.service.impl.yaml.handler.setting.loadbalancer.ElasticLoadBalancerConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.VerificationProviderYamlHandler;
 import software.wings.service.impl.yaml.handler.template.TemplateExpressionYamlHandler;
+import software.wings.service.impl.yaml.handler.trigger.ArtifactSelectionYamlHandler;
+import software.wings.service.impl.yaml.handler.trigger.TriggerConditionYamlHandler;
+import software.wings.service.impl.yaml.handler.trigger.TriggerYamlHandler;
 import software.wings.service.impl.yaml.handler.usagerestrictions.UsageRestrictionsYamlHandler;
 import software.wings.service.impl.yaml.handler.variable.VariableYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.FailureStrategyYamlHandler;
@@ -97,6 +101,7 @@ public class YamlHandlerFactory {
   @Inject private Map<String, ArtifactStreamYamlHandler> artifactStreamHelperMap;
   @Inject private Map<String, InfraMappingYamlHandler> infraMappingHelperMap;
   @Inject private Map<String, WorkflowYamlHandler> workflowYamlHelperMap;
+  @Inject private Map<String, TriggerConditionYamlHandler> triggerYamlHelperMapBinder;
   @Inject private Map<String, InfrastructureProvisionerYamlHandler> provisionerYamlHandlerMap;
   @Inject private Map<String, CommandUnitYamlHandler> commandUnitYamlHandlerMap;
   @Inject private Map<String, DeploymentSpecificationYamlHandler> deploymentSpecYamlHandlerMap;
@@ -109,6 +114,7 @@ public class YamlHandlerFactory {
   @Inject private Map<String, HelmRepoYamlHandler> helmRepoYamlHelperMap;
 
   @Inject private ApplicationYamlHandler applicationYamlHandler;
+  @Inject private TriggerYamlHandler triggerYamlHandler;
   @Inject private EnvironmentYamlHandler environmentYamlHandler;
   @Inject private ServiceYamlHandler serviceYamlHandler;
   @Inject private ConfigFileYamlHandler configFileYamlHandler;
@@ -133,6 +139,7 @@ public class YamlHandlerFactory {
   @Inject private FunctionSpecificationYamlHandler functionSpecificationYamlHandler;
   @Inject private ElasticLoadBalancerConfigYamlHandler elbConfigYamlHandler;
   @Inject private DefaultVariablesYamlHandler defaultsYamlHandler;
+  @Inject private ArtifactSelectionYamlHandler artifactSelectionYamlHandler;
   @Inject private ApplicationManifestYamlHandler applicationManifestYamlHandler;
   @Inject private ManifestFileYamlHandler manifestFileYamlHandler;
   @Inject private UsageRestrictionsYamlHandler usageRestrictionsYamlHandler;
@@ -172,6 +179,9 @@ public class YamlHandlerFactory {
       case VERIFICATION_PROVIDER:
         yamlHandler = verificationProviderYamlHelperMap.get(subType);
         break;
+      case TRIGGER:
+        yamlHandler = triggerYamlHandler;
+        break;
       case APPLICATION:
         yamlHandler = applicationYamlHandler;
         break;
@@ -209,6 +219,9 @@ public class YamlHandlerFactory {
         break;
       case WORKFLOW:
         yamlHandler = workflowYamlHelperMap.get(subType);
+        break;
+      case TRIGGER_CONDITION:
+        yamlHandler = triggerYamlHelperMapBinder.get(subType);
         break;
       case PROVISIONER:
         yamlHandler = provisionerYamlHandlerMap.get(subType);
@@ -280,6 +293,9 @@ public class YamlHandlerFactory {
       case CV_CONFIGURATION:
         yamlHandler = cvConfigurationYamlHelperMap.get(subType);
         break;
+      case ARTIFACT_SELECTION:
+        yamlHandler = artifactSelectionYamlHandler;
+        break;
       default:
         break;
     }
@@ -326,6 +342,8 @@ public class YamlHandlerFactory {
       return YamlType.DEPLOYMENT_SPECIFICATION;
     } else if (entity instanceof CVConfiguration) {
       return YamlType.CV_CONFIGURATION;
+    } else if (entity instanceof Trigger) {
+      return YamlType.TRIGGER;
     }
 
     throw new InvalidRequestException(
@@ -377,6 +395,8 @@ public class YamlHandlerFactory {
       return YamlConstants.INDEX;
     } else if (entity instanceof CVConfiguration) {
       return ((CVConfiguration) entity).getName();
+    } else if (entity instanceof Trigger) {
+      return ((Trigger) entity).getName();
     }
 
     throw new InvalidRequestException(

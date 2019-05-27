@@ -69,10 +69,12 @@ import software.wings.beans.container.LogConfiguration;
 import software.wings.beans.container.PortMapping;
 import software.wings.beans.container.StorageConfiguration;
 import software.wings.beans.defaults.Defaults;
+import software.wings.beans.trigger.ArtifactSelection;
 import software.wings.beans.trigger.Trigger;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.verification.CVConfiguration;
+import software.wings.yaml.trigger.TriggerConditionYaml;
 
 /**
  * @author rktummala on 10/17/17
@@ -261,7 +263,9 @@ public enum YamlType {
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY), Defaults.class),
   ACCOUNT_DEFAULTS(ObjectType.ACCOUNT_DEFAULTS, generatePath(PATH_DELIMITER, false, SETUP_FOLDER, DEFAULTS_YAML),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, ANY), Defaults.class),
-  USAGE_RESTRICTIONS(ObjectType.USAGE_RESTRICTIONS, "", "", UsageRestrictions.class);
+  USAGE_RESTRICTIONS(ObjectType.USAGE_RESTRICTIONS, "", "", UsageRestrictions.class),
+  TRIGGER_CONDITION(ObjectType.TRIGGER_CONDITION, "", "", TriggerConditionYaml.class),
+  ARTIFACT_SELECTION(ObjectType.ARTIFACT_SELECTION, "", "", ArtifactSelection.Yaml.class);
 
   private String entityType;
   private String pathExpression;

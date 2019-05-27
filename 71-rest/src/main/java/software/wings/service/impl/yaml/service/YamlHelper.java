@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.service;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlType.ARTIFACT_SERVER;
@@ -11,6 +12,8 @@ import static software.wings.beans.yaml.YamlType.CLOUD_PROVIDER_OVERRIDE;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.SearchFilter.Operator;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.DeploymentSpecification;
@@ -28,6 +31,7 @@ import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
@@ -42,6 +46,7 @@ import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
@@ -72,6 +77,7 @@ public class YamlHelper {
   @Inject EntityUpdateService entityUpdateService;
   @Inject ConfigService configService;
   @Inject FeatureFlagService featureFlagService;
+  @Inject TriggerService triggerService;
 
   public SettingAttribute getCloudProvider(String accountId, String yamlFilePath) {
     return getSettingAttribute(accountId, YamlType.CLOUD_PROVIDER, yamlFilePath);
@@ -141,6 +147,22 @@ public class YamlHelper {
     Service service = getService(appId, yamlFilePath);
     Validator.notNullCheck("Service null in the given yaml file: " + yamlFilePath, service);
     return service.getUuid();
+  }
+
+  public Trigger getTrigger(String appId, String yamlFilePath) {
+    String triggerName =
+        extractEntityNameFromYamlPath(YamlType.TRIGGER.getPathExpression(), yamlFilePath, PATH_DELIMITER);
+    Validator.notNullCheck("Trigger name null in the given yaml file: " + yamlFilePath, triggerName);
+
+    PageRequest<Trigger> pageRequest =
+        aPageRequest().addFilter("appId", Operator.EQ, appId).addFilter("name", Operator.EQ, triggerName).build();
+
+    Optional<Trigger> trigger = triggerService.list(pageRequest).getResponse().stream().findFirst();
+    if (!trigger.isPresent()) {
+      Validator.notNullCheck("Could not lookup trigger for the yaml file: " + yamlFilePath, triggerName);
+    }
+
+    return trigger.get();
   }
 
   public Service getService(String appId, String yamlFilePath) {
@@ -381,6 +403,30 @@ public class YamlHelper {
     return workflowService.readWorkflowByName(appId, workflowName);
   }
 
+  public Workflow getWorkflowFromName(String appId, String workflowName) {
+    Workflow workflow = workflowService.readWorkflowByName(appId, workflowName);
+    Validator.notNullCheck("workflow name does not exist " + workflowName, workflow);
+    return workflow;
+  }
+
+  public String getWorkflowName(String appId, String workflowId) {
+    String workflowName = workflowService.readWorkflow(appId, workflowId).getName();
+    Validator.notNullCheck("workflow name does not exist " + workflowId, workflowName);
+    return workflowName;
+  }
+
+  public String getPipelineName(String appId, String pipelineId) {
+    String pipelineName = pipelineService.readPipeline(appId, pipelineId, false).getName();
+    Validator.notNullCheck("workflow name does not exist " + pipelineId, pipelineName);
+    return pipelineName;
+  }
+
+  public String getPipelineId(String appId, String pipelineName) {
+    String pipelineId = pipelineService.getPipelineByName(appId, pipelineName).getUuid();
+    Validator.notNullCheck("pipeline name does not exist " + pipelineName, pipelineId);
+    return pipelineId;
+  }
+
   public Pipeline getPipeline(String accountId, String yamlFilePath) {
     String appId = getAppId(accountId, yamlFilePath);
     Validator.notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
@@ -512,6 +558,21 @@ public class YamlHelper {
     String artifactStreamName =
         extractEntityNameFromYamlPath(YamlType.ARTIFACT_STREAM.getPathExpression(), yamlFilePath, PATH_DELIMITER);
     Validator.notNullCheck("Artifact stream name null in the given yaml file: " + yamlFilePath, artifactStreamName);
+    return artifactStreamService.getArtifactStreamByName(applicationId, serviceId, artifactStreamName);
+  }
+
+  public String getArtifactStreamName(String applicationId, String artifactStreamId) {
+    return artifactStreamService.get(artifactStreamId).getName();
+  }
+
+  public String getServiceNameFromArtifactId(String applicationId, String artifactStreamId) {
+    String serviceId = artifactStreamService.get(artifactStreamId).getServiceId();
+    return serviceResourceService.get(applicationId, serviceId).getName();
+  }
+
+  public ArtifactStream getArtifactStreamWithName(String applicationId, String serviceName, String artifactStreamName) {
+    String serviceId = serviceResourceService.getServiceByName(applicationId, serviceName).getUuid();
+
     return artifactStreamService.getArtifactStreamByName(applicationId, serviceId, artifactStreamName);
   }
 

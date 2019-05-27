@@ -46,6 +46,7 @@ import static software.wings.beans.yaml.YamlType.NOTIFICATION_GROUP;
 import static software.wings.beans.yaml.YamlType.PIPELINE;
 import static software.wings.beans.yaml.YamlType.PROVISIONER;
 import static software.wings.beans.yaml.YamlType.SERVICE;
+import static software.wings.beans.yaml.YamlType.TRIGGER;
 import static software.wings.beans.yaml.YamlType.VERIFICATION_PROVIDER;
 import static software.wings.beans.yaml.YamlType.WORKFLOW;
 import static software.wings.utils.Validator.notNullCheck;
@@ -160,7 +161,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         APPLICATION_MANIFEST_VALUES_SERVICE_OVERRIDE, MANIFEST_FILE_VALUES_SERVICE_OVERRIDE, ENVIRONMENT, INFRA_MAPPING,
         CONFIG_FILE_OVERRIDE_CONTENT, CONFIG_FILE_OVERRIDE, APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE,
         APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE, MANIFEST_FILE_VALUES_ENV_OVERRIDE,
-        MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE, WORKFLOW, PIPELINE);
+        MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE, WORKFLOW, PIPELINE, TRIGGER);
   }
 
   @Override
