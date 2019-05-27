@@ -254,7 +254,14 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     String accountId = appService.getAccountIdByAppId(appId);
     Validator.notNullCheck("No account found for appId:" + appId, accountId);
     Trigger trigger = triggerService.get(appId, triggerId);
-    return null;
+
+    Trigger.Yaml triggerYaml = (Trigger.Yaml) yamlHandlerFactory
+                                   .getYamlHandler(YamlType.TRIGGER)
+
+                                   .toYaml(trigger, appId);
+
+    return YamlHelper.getYamlRestResponse(
+        yamlGitSyncService, trigger.getUuid(), accountId, triggerYaml, trigger.getName() + YAML_EXTENSION);
   }
 
   /**

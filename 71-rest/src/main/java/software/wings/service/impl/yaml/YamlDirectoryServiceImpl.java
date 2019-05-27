@@ -294,6 +294,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             appId = ((AppLevelYamlNode) dn).getAppId();
             yaml = yamlResourceService.getWorkflow(appId, entityId).getResource().getYaml();
             break;
+          case "Trigger":
+            appId = ((AppLevelYamlNode) dn).getAppId();
+            yaml = yamlResourceService.getTrigger(appId, entityId).getResource().getYaml();
+            break;
           case "InfrastructureProvisioner":
             appId = ((AppLevelYamlNode) dn).getAppId();
             yaml = yamlResourceService.getProvisioner(appId, entityId).getResource().getYaml();

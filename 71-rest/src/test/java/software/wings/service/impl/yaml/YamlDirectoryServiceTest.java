@@ -23,6 +23,7 @@ import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
 import static software.wings.utils.WingsTestConstants.PROVISIONER_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
@@ -143,6 +144,11 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
               validateFolderNodeGotAppAccId((FolderNode) node, "Setup/Applications/APP_NAME/Provisioners");
           performProvisionerNodeValidation(provisionerFolderNode);
           break;
+        case "Triggers":
+          FolderNode triggerFolderNode =
+              validateFolderNodeGotAppAccId((FolderNode) node, "Setup/Applications/APP_NAME/Triggers");
+          performTriggerNodeValidation(triggerFolderNode);
+          break;
         default:
           throw new IllegalArgumentException("Unknown node name: " + node.getName());
       }
@@ -183,6 +189,17 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     assertEquals(ACCOUNT_ID, provisionerYamlNode.getAccountId());
     assertEquals(PROVISIONER_ID, provisionerYamlNode.getUuid());
     assertEquals("PROVISIONER_NAME.yaml", provisionerYamlNode.getName());
+  }
+  private void performTriggerNodeValidation(FolderNode triggerFolderNode) {
+    assertNotNull(triggerFolderNode.getChildren());
+    assertEquals(1, triggerFolderNode.getChildren().size());
+    AppLevelYamlNode triggerYamlNode = (AppLevelYamlNode) triggerFolderNode.getChildren().get(0);
+    assertEquals(
+        "Setup/Applications/APP_NAME/Triggers/TRIGGER_NAME.yaml", triggerYamlNode.getDirectoryPath().getPath());
+    assertEquals(APP_ID, triggerYamlNode.getAppId());
+    assertEquals(ACCOUNT_ID, triggerYamlNode.getAccountId());
+    assertEquals(TRIGGER_ID, triggerYamlNode.getUuid());
+    assertEquals("TRIGGER_NAME.yaml", triggerYamlNode.getName());
   }
 
   private void performEnvironmentNodeValidation(FolderNode envFolderNode) {
