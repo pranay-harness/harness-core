@@ -8,6 +8,7 @@ import com.google.inject.name.Names;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLFieldsContainer;
@@ -51,14 +52,17 @@ public class DataFetcherDirective implements SchemaDirectiveWiring {
 
     Map<String, String> contextFieldArgsMap = getContextFieldArgsMap(environment);
     GraphQLFieldDefinition field = environment.getElement();
-    AbstractDataFetcher dataFetcher = getDataFetcherForField(dataFetcherName, useBatch);
-    dataFetcher.addDataFetcherDirectiveAttributesForParent(
-        environment.getElementParentTree().getParentInfo().get().getElement().getName(),
-        DataFetcherDirectiveAttributes.builder()
-            .dataFetcherName(dataFetcherName)
-            .contextFieldArgsMap(contextFieldArgsMap)
-            .useBatch(useBatch)
-            .build());
+    DataFetcher dataFetcher = getDataFetcherForField(dataFetcherName, useBatch);
+    if (dataFetcher instanceof AbstractDataFetcher) {
+      AbstractDataFetcher abstractDataFetcher = (AbstractDataFetcher) dataFetcher;
+      abstractDataFetcher.addDataFetcherDirectiveAttributesForParent(
+          environment.getElementParentTree().getParentInfo().get().getElement().getName(),
+          DataFetcherDirectiveAttributes.builder()
+              .dataFetcherName(dataFetcherName)
+              .contextFieldArgsMap(contextFieldArgsMap)
+              .useBatch(useBatch)
+              .build());
+    }
 
     GraphQLFieldsContainer parentType = environment.getFieldsContainer();
     environment.getCodeRegistry().dataFetcher(parentType, field, dataFetcher);
@@ -91,16 +95,16 @@ public class DataFetcherDirective implements SchemaDirectiveWiring {
     return argumentValue;
   }
 
-  private AbstractDataFetcher getDataFetcherForField(String dataFetcherName, Boolean useBatch) {
-    AbstractDataFetcher dataFetcher = null;
+  private DataFetcher getDataFetcherForField(String dataFetcherName, Boolean useBatch) {
+    DataFetcher dataFetcher = null;
     if (useBatch) {
       dataFetcher = getDataFetcherByName(GraphQLModule.getBatchDataLoaderAnnotationName(dataFetcherName));
     }
     return Objects.isNull(dataFetcher) ? getDataFetcherByName(dataFetcherName) : dataFetcher;
   }
 
-  private AbstractDataFetcher getDataFetcherByName(String dataFetcherName) {
-    return injector.getInstance(Key.get(AbstractDataFetcher.class, Names.named(dataFetcherName)));
+  private DataFetcher getDataFetcherByName(String dataFetcherName) {
+    return injector.getInstance(Key.get(DataFetcher.class, Names.named(dataFetcherName)));
   }
 
   @Value

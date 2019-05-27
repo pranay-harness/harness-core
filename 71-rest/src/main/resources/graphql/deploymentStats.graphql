@@ -1,0 +1,37 @@
+enum DeploymentFilterType {
+  Application
+  Service
+  Environment
+  Artifact
+  CloudProvider
+  Status
+  Note
+  CreatedAt
+}
+
+enum DeploymentAggregation {
+  Application
+  Service
+  Environment
+  Artifact
+  CloudProvider
+  Status
+  Note
+  CreatedAt
+}
+
+input DeploymentFilter {
+  type: DeploymentFilterType
+  values: [String]
+}
+
+extend type Query {
+  # Get deployment stats.
+  deploymentStats(
+    aggregateFunction: AggregateFunction
+    timeRange: TimeRange
+    filters: [DeploymentFilter]
+    groupBy: [DeploymentAggregation]
+    groupByTime: TimeSeriesAggregation
+  ): Data @dataFetcher(name: executionStats)
+}

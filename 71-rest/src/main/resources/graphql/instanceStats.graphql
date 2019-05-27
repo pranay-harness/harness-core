@@ -1,0 +1,40 @@
+enum InstanceFilterType {
+  Name
+  CreatedAt
+  Application
+  Service
+  Environment
+  Cloud
+  Provider
+  Instance
+  Type
+}
+
+enum InstanceAggregation {
+  Name
+  CreatedAt
+  Application
+  Service
+  Environment
+  Cloud
+  Provider
+  Instance
+  Type
+}
+
+input InstanceFilter {
+  type: InstanceFilterType
+  values: [String]
+}
+
+extend type Query {
+  # Get instance stats.
+  # select * from Instance where applicationid = 123 group by
+  instanceStats(
+    aggregateFunction: AggregateFunction
+    timeRange: TimeRange
+    filters: [InstanceFilter]
+    groupBy: [InstanceAggregation]
+    groupByTime: TimeSeriesAggregation
+  ): Data @dataFetcher(name: instanceStats)
+}
