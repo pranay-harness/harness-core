@@ -280,6 +280,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     if (EmptyPredicate.isNotEmpty(newNotificationSettings.getPagerDutyIntegrationKey())) {
       pagerDutyService.validateKey(newNotificationSettings.getPagerDutyIntegrationKey());
+      pagerDutyService.validateCreateTestEvent(newNotificationSettings.getPagerDutyIntegrationKey());
     }
 
     UpdateOperations<UserGroup> update =

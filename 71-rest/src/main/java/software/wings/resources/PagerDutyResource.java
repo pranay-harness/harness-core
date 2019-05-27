@@ -22,8 +22,17 @@ public class PagerDutyResource {
   @Path("validate-key")
   @Timed
   @ExceptionMetered
-  public RestResponse validatePagerDutyIntegrationKey(@QueryParam("appId") String appId,
+  public RestResponse validatePagerDutyIntegrationKey(
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("pagerDutyKey") String pagerDutyKey) {
     return new RestResponse<>(pagerDutyService.validateKey(pagerDutyKey));
+  }
+
+  @GET
+  @Path("create-test-incident")
+  @Timed
+  @ExceptionMetered
+  public RestResponse createTestIncident(
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("pagerDutyKey") String pagerDutyKey) {
+    return new RestResponse<>(pagerDutyService.validateCreateTestEvent(pagerDutyKey));
   }
 }

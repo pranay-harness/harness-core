@@ -6,6 +6,7 @@ import com.github.dikhan.pagerduty.client.events.PagerDutyEventsClient;
 import com.github.dikhan.pagerduty.client.events.domain.EventResult;
 import com.github.dikhan.pagerduty.client.events.domain.LinkContext;
 import com.github.dikhan.pagerduty.client.events.domain.Payload;
+import com.github.dikhan.pagerduty.client.events.domain.ResolveIncident.ResolveIncidentBuilder;
 import com.github.dikhan.pagerduty.client.events.domain.Severity;
 import com.github.dikhan.pagerduty.client.events.domain.TriggerIncident;
 import com.github.dikhan.pagerduty.client.events.domain.TriggerIncident.TriggerIncidentBuilder;
@@ -32,13 +33,43 @@ public class PagerDutyServiceImpl implements PagerDutyService {
   public boolean validateKey(String pagerDutyKey) {
     if (pagerDutyKey.length() != 32) {
       throw new WingsException(ErrorCode.PAGERDUTY_ERROR, WingsException.USER)
-          .addParam("message", "Integration Key is invalid, should be 32 digits. length =  " + pagerDutyKey.length());
+          .addParam("message", "Integration Key is invalid, should be 32 digits. Length =  " + pagerDutyKey.length());
     }
     if (pagerDutyKey.matches(hexRegex)) {
       return true;
     }
     throw new WingsException(ErrorCode.PAGERDUTY_ERROR, WingsException.USER)
         .addParam("message", "Integration Key is invalid, Not a valid hexadecimal");
+  }
+
+  @Override
+  public boolean validateCreateTestEvent(String pagerDutyKey) {
+    PagerDutyEventsClient pagerDutyEventsClient = PagerDutyEventsClient.create();
+    String errorMsg = "Failed to create test incident";
+
+    String summary = "Test ticket to validate new key ";
+    Payload payload = Payload.Builder.newBuilder()
+                          .setTimestamp(OffsetDateTime.now())
+                          .setSeverity(Severity.INFO)
+                          .setSummary(summary)
+                          .setSource("HARNESS")
+                          .build();
+    TriggerIncident incident = TriggerIncidentBuilder.newBuilder(pagerDutyKey, payload).build();
+    try {
+      EventResult result = pagerDutyEventsClient.trigger(incident);
+      logger.debug("Event result {} for {}", result, incident);
+
+      if (result != null && result.getErrors() == null) {
+        String dedupKey = result.getDedupKey();
+        pagerDutyEventsClient.resolve(ResolveIncidentBuilder.newBuilder(pagerDutyKey, dedupKey).build());
+        return true;
+      } else {
+        logger.error(errorMsg + "result: {} ", result);
+        throw new WingsException(ErrorCode.PAGERDUTY_ERROR, WingsException.USER).addParam("message", errorMsg);
+      }
+    } catch (NotifyEventException e) {
+      throw new WingsException(ErrorCode.PAGERDUTY_ERROR, WingsException.USER, e).addParam("message", errorMsg);
+    }
   }
 
   @Override

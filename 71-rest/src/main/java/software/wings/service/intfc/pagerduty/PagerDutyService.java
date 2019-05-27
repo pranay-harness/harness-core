@@ -5,5 +5,6 @@ import software.wings.common.NotificationMessageResolver.PagerDutyTemplate;
 
 public interface PagerDutyService {
   boolean validateKey(String pagerDutyKey);
+  boolean validateCreateTestEvent(String pagerDutyKey);
   boolean sendPagerDutyEvent(Notification notification, String pagerDutyKey, PagerDutyTemplate template);
 }
