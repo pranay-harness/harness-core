@@ -166,6 +166,7 @@ helper shell scripts:
 6. Setup code style. Preferences > Code Style > Scheme > Gear icon > Import > IntelliJ XML.
    Select portal/tools/config/src/main/resources/intellij-java-google-style.xml
 7. Setup your imports settings. From Preferences | Editor > Code Style > Java | Imports make sure that your limits are big enough to not take affect
+8. Increase Build Process Heap Size (Preferences > Build, Execution, Development > Compiler, search for "Build Process Heap Size" and set it to 2048 or higher if you still see an out of memory exception in future) 
 
 ![config image](img/imports_limits.png)
 
