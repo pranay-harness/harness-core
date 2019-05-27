@@ -40,6 +40,7 @@ import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.PrometheusConfig;
+import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.SftpConfig;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SmbConfig;
@@ -81,7 +82,7 @@ public class PluginServiceTest {
   @Category(UnitTests.class)
   public void shouldGetInstalledPlugins() throws Exception {
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(33)
+        .hasSize(34)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -345,6 +346,14 @@ public class PluginServiceTest {
                 .withDisplayName(SettingVariableTypes.GCS_HELM_REPO.getDisplayName())
                 .withType(SettingVariableTypes.GCS_HELM_REPO.name())
                 .withPluginCategories(asList(HelmRepo))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(ServiceNowConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("ServiceNow")
+                .withType("SERVICENOW")
+                .withPluginCategories(asList(Collaboration))
                 .build());
   }
 
@@ -352,11 +361,11 @@ public class PluginServiceTest {
   @Category(UnitTests.class)
   public void shouldGetPluginSettingSchema() throws Exception {
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(33)
+        .hasSize(34)
         .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "PROMETHEUS", "APM_VERIFICATION", "DATA_DOG",
             "JENKINS", "BAMBOO", "SMTP", "SLACK", "BUG_SNAG", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE",
             "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS",
             "ARTIFACTORY", "PCF", "GIT", "JIRA", "SMB", "SFTP", "HTTP_HELM_REPO", "AMAZON_S3_HELM_REPO",
-            "GCS_HELM_REPO");
+            "GCS_HELM_REPO", "SERVICENOW");
   }
 }
