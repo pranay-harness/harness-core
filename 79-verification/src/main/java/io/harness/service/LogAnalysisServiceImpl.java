@@ -245,7 +245,11 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       wingsPersistence.saveIgnoringDuplicateKeys(logDataRecords);
 
       if (dataStoreService instanceof GoogleDataStoreServiceImpl && clusterLevel == L2) {
-        dataStoreService.save(LogDataRecord.class, logDataRecords, true);
+        try {
+          dataStoreService.save(LogDataRecord.class, logDataRecords, true);
+        } catch (Exception e) {
+          logger.error("Error saving log records for cvConfig {} stateExecution {}", cvConfigId, stateExecutionId, e);
+        }
       }
 
       // bump the level for clustered data
@@ -660,8 +664,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     if (mlAnalysisResponse.getLogCollectionMinute() == -1 || !isEmpty(mlAnalysisResponse.getControl_events())
         || !isEmpty(mlAnalysisResponse.getTest_events())) {
       wingsPersistence.delete(
-          wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class)
-              .filter("appId", mlAnalysisResponse.getAppId())
+          wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class, excludeAuthority)
               .filter(ExperimentalLogMLAnalysisRecordKeys.stateExecutionId, mlAnalysisResponse.getStateExecutionId())
               .filter(ExperimentalLogMLAnalysisRecordKeys.logCollectionMinute,
                   mlAnalysisResponse.getLogCollectionMinute()));
@@ -697,14 +700,11 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   @Override
   public LogMLAnalysisRecord getLogAnalysisRecords(
       String appId, String stateExecutionId, String query, StateType stateType, int logCollectionMinute) {
-    LogMLAnalysisRecord logMLAnalysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+    LogMLAnalysisRecord logMLAnalysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
                                                   .filter(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId)
-                                                  .filter("appId", appId)
-                                                  .filter(LogMLAnalysisRecordKeys.query, query)
-                                                  .filter(LogMLAnalysisRecordKeys.stateType, stateType)
-                                                  .field("logCollectionMinute")
+                                                  .field(LogMLAnalysisRecordKeys.logCollectionMinute)
                                                   .lessThanOrEq(logCollectionMinute)
-                                                  .order("-logCollectionMinute")
+                                                  .order(Sort.descending(LogMLAnalysisRecordKeys.logCollectionMinute))
                                                   .get();
     if (logMLAnalysisRecord != null) {
       logMLAnalysisRecord.decompressLogAnalysisRecord();
@@ -714,13 +714,12 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
   @Override
   public LogMLAnalysisRecord getLogAnalysisRecords(String appId, String cvConfigId, int analysisMinute) {
-    LogMLAnalysisRecord logMLAnalysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+    LogMLAnalysisRecord logMLAnalysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
                                                   .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
-                                                  .filter("appId", appId)
-                                                  .field("logCollectionMinute")
+                                                  .field(LogMLAnalysisRecordKeys.logCollectionMinute)
                                                   .lessThanOrEq(analysisMinute)
                                                   .filter(LogMLAnalysisRecordKeys.deprecated, false)
-                                                  .order("-logCollectionMinute")
+                                                  .order(LogMLAnalysisRecordKeys.logCollectionMinute)
                                                   .get();
     if (logMLAnalysisRecord != null) {
       logMLAnalysisRecord.decompressLogAnalysisRecord();
@@ -732,13 +731,13 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   public List<LogMLExpAnalysisInfo> getExpAnalysisInfoList() {
     final Query<ExperimentalLogMLAnalysisRecord> analysisRecords =
         wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class, excludeAuthority)
-            .project("stateExecutionId", true)
+            .project(ExperimentalLogMLAnalysisRecordKeys.stateExecutionId, true)
             .project("appId", true)
-            .project("stateType", true)
-            .project("experiment_name", true)
+            .project(ExperimentalLogMLAnalysisRecordKeys.stateType, true)
+            .project(ExperimentalLogMLAnalysisRecordKeys.experiment_name, true)
             .project("createdAt", true)
-            .project("envId", true)
-            .project("workflowExecutionId", true);
+            .project(ExperimentalLogMLAnalysisRecordKeys.envId, true)
+            .project(ExperimentalLogMLAnalysisRecordKeys.workflowExecutionId, true);
 
     List<ExperimentalLogMLAnalysisRecord> experimentalLogMLAnalysisRecords = analysisRecords.asList();
 

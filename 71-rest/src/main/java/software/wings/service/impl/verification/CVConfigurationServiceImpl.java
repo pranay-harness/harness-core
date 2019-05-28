@@ -372,8 +372,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     deleteConfiguration(logsCVConfiguration.getAccountId(), logsCVConfiguration.getAppId(), cvConfigId);
     final String newCvConfigId = saveConfiguration(
         cvConfiguration.getAccountId(), cvConfiguration.getAppId(), cvConfiguration.getStateType(), cvConfiguration);
-    wingsPersistence.update(wingsPersistence.createQuery(LogMLAnalysisRecord.class)
-                                .filter(LogMLAnalysisRecord.APP_ID_KEY, appId)
+    wingsPersistence.update(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
                                 .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId),
         wingsPersistence.createUpdateOperations(LogMLAnalysisRecord.class)
             .set(LogMLAnalysisRecordKeys.cvConfigId, newCvConfigId));

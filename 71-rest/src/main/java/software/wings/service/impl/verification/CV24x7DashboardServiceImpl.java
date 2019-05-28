@@ -2,6 +2,7 @@ package software.wings.service.impl.verification;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeCount;
 import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
@@ -227,8 +228,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
   private List<LogMLAnalysisRecord> getLogAnalysisRecordsInTimeRange(
       String appId, long startTime, long endTime, boolean readDetails, CVConfiguration cvConfiguration) {
     Query<LogMLAnalysisRecord> analysisRecordQuery =
-        wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeCount)
-            .filter("appId", appId)
+        wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
             .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfiguration.getUuid())
             .field(LogMLAnalysisRecordKeys.logCollectionMinute)
             .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(endTime))
@@ -241,21 +241,20 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
           LogMLAnalysisRecordKeys.analysisStatus, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
     }
     if (readDetails) {
-      analysisRecordQuery =
-          analysisRecordQuery.field("logCollectionMinute").greaterThan(TimeUnit.MILLISECONDS.toMinutes(startTime));
+      analysisRecordQuery = analysisRecordQuery.field(LogMLAnalysisRecordKeys.logCollectionMinute)
+                                .greaterThan(TimeUnit.MILLISECONDS.toMinutes(startTime));
     } else {
       analysisRecordQuery =
-          analysisRecordQuery.field("logCollectionMinute")
+          analysisRecordQuery.field(LogMLAnalysisRecordKeys.logCollectionMinute)
               .greaterThanOrEq(TimeUnit.MILLISECONDS.toMinutes(startTime) + CRON_POLL_INTERVAL_IN_MINUTES);
     }
     return analysisRecordQuery.asList();
   }
 
   private LogMLAnalysisRecord getLastAnalysisRecord(String appId, String cvConfigId) {
-    return wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+    return wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
         .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
-        .filter("appId", appId)
-        .order("-logCollectionMinute")
+        .order(Sort.descending(LogMLAnalysisRecordKeys.logCollectionMinute))
         .get();
   }
 
@@ -303,9 +302,8 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
     // if empty response and is not baseline then send baseline data
     if (analysisSummary.isEmptyResult()
         && TimeUnit.MILLISECONDS.toMinutes(endTime) > cvConfiguration.getBaselineEndMinute()) {
-      LogMLAnalysisRecord record = wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+      LogMLAnalysisRecord record = wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
                                        .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
-                                       .filter("appId", appId)
                                        .field(LogMLAnalysisRecordKeys.logCollectionMinute)
                                        .lessThanOrEq(cvConfiguration.getBaselineEndMinute())
                                        .filter(LogMLAnalysisRecordKeys.deprecated, false)
