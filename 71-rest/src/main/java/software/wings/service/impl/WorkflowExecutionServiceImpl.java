@@ -58,6 +58,7 @@ import static software.wings.sm.StateType.PHASE;
 import static software.wings.sm.StateType.PHASE_STEP;
 import static software.wings.utils.Validator.notNullCheck;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -97,7 +98,6 @@ import lombok.NoArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.json.JSONObject;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -912,9 +912,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    * @param workflowExecutionUpdate the workflow execution update  @return the workflow execution
    * @return the workflow execution
    */
-  public WorkflowExecution triggerPipelineExecution(String appId, String pipelineId, ExecutionArgs executionArgs,
+  @VisibleForTesting
+  WorkflowExecution triggerPipelineExecution(String appId, String pipelineId, ExecutionArgs executionArgs,
       WorkflowExecutionUpdate workflowExecutionUpdate, Trigger trigger) {
-    preDeploymentChecks.isDeploymentAllowed(appId);
+    String accountId = appService.getAccountIdByAppId(appId);
+    logger.info("Execution Triggered. Type: {}, accountId={}", executionArgs.getWorkflowType(), accountId);
+    checkPreDeploymentConditions(accountId, appId);
+
     Pipeline pipeline =
         pipelineService.readPipelineWithResolvedVariables(appId, pipelineId, executionArgs.getWorkflowVariables());
     if (pipeline == null) {
@@ -997,6 +1001,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         workflowExecution, stateMachine, workflowExecutionUpdate, stdParams, trigger, pipeline, null);
   }
 
+  // validations to check is a deployment should be allowed or not
+  private void checkPreDeploymentConditions(String accountId, String appId) {
+    preDeploymentChecks.isDeploymentAllowed(appId);
+    checkDeploymentRateLimit(accountId, appId);
+    checkInstanceUsageLimit(accountId, appId);
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -1020,7 +1031,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public WorkflowExecution triggerOrchestrationWorkflowExecution(String appId, String envId, String workflowId,
       String pipelineExecutionId, @NotNull ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate,
       Trigger trigger) {
-    preDeploymentChecks.isDeploymentAllowed(appId);
+    String accountId = appService.getAccountIdByAppId(appId);
+    logger.info("Execution Triggered. Type: {}, accountId={}", executionArgs.getWorkflowType(), accountId);
+    checkPreDeploymentConditions(accountId, appId);
 
     // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
 
@@ -1538,20 +1551,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   WorkflowExecution triggerEnvExecution(String appId, String envId, ExecutionArgs executionArgs,
       WorkflowExecutionUpdate workflowExecutionUpdate, Trigger trigger) {
-    // logging as JSON because logDNA automatically parses json objects.
-    // https://docs.logdna.com/docs/ingestion#section-json-parsing
-    // Update: for some reason they don't parse JSON even as they claim it. Had to write a custom parsing rule in logDNA
-    // for this log
-    JSONObject context = new JSONObject().put("appId", appId);
-    String accountId = appService.getAccountIdByAppId(appId);
-    context.put("accountId", accountId);
-
-    // This log is used to derive deployment metrics in logDNA, so if you change it, update the logDNA dashboard.
-    logger.info("Execution Triggered. {}", context.toString());
-
-    checkDeploymentRateLimit(accountId, appId);
-    checkInstanceUsageLimit(accountId, appId);
-
     switch (executionArgs.getWorkflowType()) {
       case PIPELINE: {
         logger.debug("Received an pipeline execution request");
@@ -1598,7 +1597,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       siUsageChecker.check(accountId, appId);
     } catch (InstanceUsageExceededLimitException e) {
       throw new WingsException(ErrorCode.USAGE_LIMITS_EXCEEDED,
-          "You have reached your service instance limits. Some deployments might be blocked.", USER);
+          "You have reached your service instance limits. Deployments will be blocked.", USER);
     } catch (Exception e) {
       logger.error("Error while checking SI usage limit. accountId={}", accountId, e);
     }
