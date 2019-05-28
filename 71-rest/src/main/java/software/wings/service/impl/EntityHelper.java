@@ -50,6 +50,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.Event.Type;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
@@ -101,6 +102,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.yaml.service.YamlHelper;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.verification.CVConfiguration;
@@ -112,6 +114,7 @@ import java.util.List;
 public class EntityHelper {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private YamlHelper yamlHelper;
+  @Inject private FeatureFlagService featureFlagService;
   private static final String DEPLOYMENT_SPECIFICATION_YAML_PATH_FORMAT =
       "Setup/Application/%s/Services/%s/Deloyment Specifications/%s.yaml";
   private static final String COMMANDS_YAML_PATH_FORMAT = "Setup/Application/%s/Services/%s/Commands/%s.yaml";
@@ -725,10 +728,18 @@ public class EntityHelper {
       } else if (entity instanceof SettingAttribute) {
         SettingAttribute settingAttribute = (SettingAttribute) entity;
         SettingValue settingValue = settingAttribute.getValue();
-        if (SettingVariableTypes.STRING.name().equals(settingValue.getType())) {
-          finalYaml = format("Setup/Applications/%s/%s", record.getAppName(), DEFAULTS_YAML);
+        if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, settingAttribute.getAccountId())) {
+          if (SettingVariableTypes.STRING.name().equals(settingValue.getType())) {
+            finalYaml = format("Setup/Applications/%s/%s", record.getAppName(), DEFAULTS_YAML);
+          } else {
+            finalYaml = format("%s/%s%s", yamlPrefix, settingAttribute.getName(), YAML_EXTENSION);
+          }
         } else {
-          finalYaml = format("%s/%s%s", yamlPrefix, settingAttribute.getName(), YAML_EXTENSION);
+          if (SettingVariableTypes.STRING.name().equals(settingValue.getType())) {
+            finalYaml = format("Setup/Applications/%s/%s", record.getAppName(), DEFAULTS_YAML);
+          } else {
+            finalYaml = format("%s/%s", yamlPrefix, INDEX_YAML);
+          }
         }
       } else if (entity instanceof ApplicationManifest) {
         ApplicationManifest applicationManifest = (ApplicationManifest) entity;
