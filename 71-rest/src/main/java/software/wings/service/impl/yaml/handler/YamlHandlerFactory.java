@@ -507,7 +507,7 @@ public class YamlHandlerFactory {
 
   private static List<String> obtainLeafEntities() {
     return Lists.newArrayList("NotificationGroup", "Pipeline", "InfrastructureMapping", "PhysicalInfrastructureMapping",
-        "PhysicalInfrastructureMappingWinRm", "", "Workflow", "PcfInfrastructureMapping",
+        "PhysicalInfrastructureMappingWinRm", "", "Workflow", "Trigger", "PcfInfrastructureMapping",
         "GcpKubernetesInfrastructureMapping", "EcsInfrastructureMapping", "DirectKubernetesInfrastructureMapping",
         "CodeDeployInfrastructureMapping", "AzureKubernetesInfrastructureMapping", "AwsLambdaInfraStructureMapping",
         "AwsInfrastructureMapping", "AwsAmiInfrastructureMapping", "ArtifactStream", "InfrastructureProvisioner",
@@ -524,7 +524,7 @@ public class YamlHandlerFactory {
 
   private static List<String> obtainLeafEntitiesWithFeatureFlag() {
     return Lists.newArrayList("NotificationGroup", "Pipeline", "InfrastructureMapping", "PhysicalInfrastructureMapping",
-        "PhysicalInfrastructureMappingWinRm", "", "Workflow", "PcfInfrastructureMapping",
+        "PhysicalInfrastructureMappingWinRm", "", "Workflow", "Trigger", "PcfInfrastructureMapping",
         "GcpKubernetesInfrastructureMapping", "EcsInfrastructureMapping", "DirectKubernetesInfrastructureMapping",
         "CodeDeployInfrastructureMapping", "AzureKubernetesInfrastructureMapping", "AwsLambdaInfraStructureMapping",
         "AwsInfrastructureMapping", "AwsAmiInfrastructureMapping", "ArtifactStream", "InfrastructureProvisioner",
