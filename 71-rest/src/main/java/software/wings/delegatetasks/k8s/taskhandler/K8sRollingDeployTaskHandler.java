@@ -200,6 +200,10 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       releaseHistory = (StringUtils.isEmpty(releaseHistoryData)) ? ReleaseHistory.createNew()
                                                                  : ReleaseHistory.createFromData(releaseHistoryData);
 
+      List<ManifestFile> manifestFilesForDeploy =
+          k8sTaskHelper.filterSkippedManifestFiles(request.getK8sDelegateManifestConfig().getManifestFiles());
+      request.getK8sDelegateManifestConfig().setManifestFiles(manifestFilesForDeploy);
+
       List<ManifestFile> manifestFiles =
           k8sTaskHelper.renderTemplate(k8sDelegateTaskParams, request.getK8sDelegateManifestConfig(),
               request.getValuesYamlList(), releaseName, kubernetesConfig.getNamespace(), executionLogCallback);

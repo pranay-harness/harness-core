@@ -64,6 +64,7 @@ import static software.wings.sm.StateType.ECS_DAEMON_SERVICE_SETUP;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 import static software.wings.sm.StateType.HTTP;
+import static software.wings.sm.StateType.K8S_APPLY;
 import static software.wings.sm.StateType.K8S_BLUE_GREEN_DEPLOY;
 import static software.wings.sm.StateType.K8S_CANARY_DEPLOY;
 import static software.wings.sm.StateType.K8S_DELETE;
@@ -244,8 +245,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private static final List<String> kubernetesArtifactNeededStateTypes =
       Arrays.asList(KUBERNETES_SETUP.name(), KUBERNETES_DEPLOY.name());
 
-  private static final List<String> k8sV2ArtifactNeededStateTypes =
-      Arrays.asList(K8S_DEPLOYMENT_ROLLING.name(), K8S_CANARY_DEPLOY.name(), K8S_BLUE_GREEN_DEPLOY.name());
+  private static final List<String> k8sV2ArtifactNeededStateTypes = Arrays.asList(
+      K8S_DEPLOYMENT_ROLLING.name(), K8S_CANARY_DEPLOY.name(), K8S_BLUE_GREEN_DEPLOY.name(), K8S_APPLY.name());
 
   private static final List<String> ecsArtifactNeededStateTypes =
       Arrays.asList(ECS_SERVICE_DEPLOY.name(), ECS_SERVICE_SETUP.name(), ECS_DAEMON_SERVICE_SETUP.name());

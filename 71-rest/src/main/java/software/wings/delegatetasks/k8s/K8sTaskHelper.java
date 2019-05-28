@@ -29,6 +29,7 @@ import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
 import static software.wings.delegatetasks.k8s.taskhandler.K8sTrafficSplitTaskHandler.ISTIO_DESTINATION_TEMPLATE;
+import static software.wings.sm.states.k8s.K8sApplyState.SKIP_FILE_FOR_DEPLOY_PLACEHOLDER_TEXT;
 import static software.wings.sm.states.k8s.K8sTrafficSplitState.K8S_CANARY_DESTINATION_PLACEHOLDER;
 import static software.wings.sm.states.k8s.K8sTrafficSplitState.K8S_STABLE_DESTINATION_PLACEHOLDER;
 
@@ -1216,5 +1217,13 @@ public class K8sTaskHelper {
     kubernetesResource.setSpec(KubernetesHelper.toYaml(virtualService));
 
     return virtualService;
+  }
+
+  public List<ManifestFile> filterSkippedManifestFiles(List<ManifestFile> manifestFiles) {
+    return manifestFiles.stream()
+        .filter(manifestFile -> isNotBlank(manifestFile.getFileContent()))
+        .filter(manifestFile
+            -> !manifestFile.getFileContent().split("\\r?\\n")[0].contains(SKIP_FILE_FOR_DEPLOY_PLACEHOLDER_TEXT))
+        .collect(Collectors.toList());
   }
 }
