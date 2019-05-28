@@ -77,6 +77,7 @@ import static software.wings.sm.StateType.PCF_SETUP;
 import static software.wings.sm.StateType.SHELL_SCRIPT;
 import static software.wings.sm.StateType.TERRAFORM_ROLLBACK;
 import static software.wings.sm.StateType.values;
+import static software.wings.sm.states.provision.TerraformProvisionState.INHERIT_APPROVED_PLAN;
 import static software.wings.sm.states.provision.TerraformProvisionState.RUN_PLAN_ONLY_KEY;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -1343,15 +1344,36 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     if (step.getType().equals(StateType.TERRAFORM_PROVISION.name())) {
+      if (isTerraformPlanState(step)) {
+        // We are only running plan in the TF state
+        return null;
+      } else {
+        return TERRAFORM_ROLLBACK;
+      }
+    }
+    return null;
+  }
+
+  private boolean isTerraformPlanState(GraphNode step) {
+    if (step.getType().equals(StateType.TERRAFORM_PROVISION.name())) {
       Map<String, Object> properties = step.getProperties();
       Object o = properties.get(RUN_PLAN_ONLY_KEY);
       if ((o instanceof Boolean) && ((Boolean) o)) {
-        // We are only running plan in the TF state
-        return null;
+        return true;
       }
-      return TERRAFORM_ROLLBACK;
     }
-    return null;
+    return false;
+  }
+
+  private boolean isTerraformInheritState(GraphNode step) {
+    if (step.getType().equals(StateType.TERRAFORM_PROVISION.name())) {
+      Map<String, Object> properties = step.getProperties();
+      Object o = properties.get(INHERIT_APPROVED_PLAN);
+      if ((o instanceof Boolean) && ((Boolean) o)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private PhaseStep generateRollbackProvisioners(PhaseStep preDeploymentSteps) {
@@ -1366,14 +1388,22 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return null;
     }
     List<GraphNode> rollbackProvisionerNodes = Lists.newArrayList();
+    Map<String, String> provisionerIdWorkspaceMap = new HashMap<>();
     PhaseStep rollbackProvisionerStep = new PhaseStep(PhaseStepType.ROLLBACK_PROVISIONERS, ROLLBACK_PROVISIONERS);
     rollbackProvisionerStep.setUuid(generateUuid());
     provisionerSteps.forEach(step -> {
       StateType stateType = getCorrespondingRollbackState(step);
+      if (isTerraformPlanState(step) && step.getProperties().get("workspace") != null) {
+        provisionerIdWorkspaceMap.put(
+            (String) step.getProperties().get("provisionerId"), (String) step.getProperties().get("workspace"));
+      }
       if (stateType != null) {
         Map<String, Object> propertiesMap = Maps.newHashMap();
         propertiesMap.put("provisionerId", step.getProperties().get("provisionerId"));
         propertiesMap.put("timeoutMillis", step.getProperties().get("timeoutMillis"));
+        propertiesMap.put("workspace",
+            isTerraformInheritState(step) ? provisionerIdWorkspaceMap.get(step.getProperties().get("provisionerId"))
+                                          : step.getProperties().get("workspace"));
         rollbackProvisionerNodes.add(GraphNode.builder()
                                          .type(stateType.name())
                                          .rollback(true)

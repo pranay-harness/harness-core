@@ -64,8 +64,9 @@ public class TerraformRollbackState extends TerraformProvisionState {
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
     String path = context.renderExpression(terraformProvisioner.getPath());
-
-    String entityId = generateEntityId(context);
+    String workspace = context.renderExpression(getWorkspace());
+    workspace = handleDefaultWorkspace(workspace);
+    String entityId = generateEntityId(context, workspace);
     Iterator<TerraformConfig> configIterator = wingsPersistence.createQuery(TerraformConfig.class)
                                                    .filter(TerraformConfig.APP_ID_KEY, context.getAppId())
                                                    .filter(TerraformConfig.ENTITY_ID_KEY, entityId)
@@ -150,6 +151,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
             .targets(targets)
             .runPlanOnly(false)
             .tfVarFiles(configParameter.getTfVarFiles())
+            .workspace(workspace)
             .build();
 
     return createAndRunTask(activityId, executionContext, parameters);
@@ -169,7 +171,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
       } else if (terraformExecutionData.getCommandExecuted() == TerraformCommand.DESTROY) {
         Query<TerraformConfig> query =
             wingsPersistence.createQuery(TerraformConfig.class)
-                .filter(TerraformConfig.ENTITY_ID_KEY, generateEntityId((ExecutionContextImpl) context))
+                .filter(TerraformConfig.ENTITY_ID_KEY, generateEntityId(context, terraformExecutionData.getWorkspace()))
                 .filter(TerraformConfig.WORKFLOW_EXECUTION_ID_KEY, context.getWorkflowExecutionId());
 
         wingsPersistence.delete(query);

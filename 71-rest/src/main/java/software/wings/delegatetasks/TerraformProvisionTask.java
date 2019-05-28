@@ -1,7 +1,9 @@
 package software.wings.delegatetasks;
 
 import static com.google.common.base.Joiner.on;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
@@ -23,12 +25,12 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
-import io.harness.filesystem.FileIo;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -62,6 +64,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -77,6 +80,8 @@ import java.util.regex.Pattern;
 public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   private static final String USER_DIR_KEY = "user.dir";
   private static final String TERRAFORM_STATE_FILE_NAME = "terraform.tfstate";
+  private static final String WORKSPACE_DIR_BASE = "terraform.tfstate.d";
+  private static final String WORKSPACE_STATE_FILE_PATH_FORMAT = WORKSPACE_DIR_BASE + "/%s/terraform.tfstate";
   private static final String TERRAFORM_PLAN_FILE_NAME = "terraform.tfplan";
   private static final String TERRAFORM_VARIABLES_FILE_NAME = "terraform-%s.tfvars";
   private static final String TERRAFORM_SCRIPT_FILE_EXTENSION = "tf";
@@ -103,6 +108,16 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   @Override
   public TerraformExecutionData run(Object[] parameters) {
     return run((TerraformProvisionParameters) parameters[0]);
+  }
+
+  private enum WorkspaceCommand {
+    SELECT("select"),
+    NEW("new");
+    private String command;
+
+    WorkspaceCommand(String command) {
+      this.command = command;
+    }
   }
 
   private Pattern varList = Pattern.compile("^\\s*\\[.*?]\\s*$");
@@ -152,18 +167,22 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     String scriptDirectory = resolveScriptDirectory(gitConfig, parameters.getScriptPath());
     logger.info("Script Directory: " + scriptDirectory);
 
-    ensureLocalCleanup(scriptDirectory);
-    String sourceRepoReference = getLatestCommitSHAFromLocalRepo(gitConfig);
-
-    File tfVariablesFile =
-        Paths.get(scriptDirectory, format(TERRAFORM_VARIABLES_FILE_NAME, parameters.getEntityId())).toFile();
-    File tfBackendConfigsFile = Paths.get(scriptDirectory, TERRAFORM_BACKEND_CONFIGS_FILE_NAME).toFile();
-
-    boolean usingRemoteState = isRemoteStateConfigured(scriptDirectory);
+    File tfVariablesFile = null, tfBackendConfigsFile = null;
 
     try {
+      ensureLocalCleanup(scriptDirectory);
+      String sourceRepoReference = getLatestCommitSHAFromLocalRepo(gitConfig);
+
+      tfVariablesFile =
+          Paths.get(scriptDirectory, format(TERRAFORM_VARIABLES_FILE_NAME, parameters.getEntityId())).toFile();
+      tfBackendConfigsFile = Paths.get(scriptDirectory, TERRAFORM_BACKEND_CONFIGS_FILE_NAME).toFile();
+
+      boolean usingRemoteState = isRemoteStateConfigured(scriptDirectory);
+
       if (!usingRemoteState) {
-        File tfStateFile = Paths.get(scriptDirectory, TERRAFORM_STATE_FILE_NAME).toFile();
+        File tfStateFile = (isEmpty(parameters.getWorkspace()))
+            ? Paths.get(scriptDirectory, TERRAFORM_STATE_FILE_NAME).toFile()
+            : Paths.get(scriptDirectory, format(WORKSPACE_STATE_FILE_PATH_FORMAT, parameters.getWorkspace())).toFile();
 
         if (parameters.getCurrentStateFileId() != null) {
           try (InputStream stateRemoteInputStream = delegateFileManager.downloadByFileId(
@@ -238,6 +257,14 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
                   tfBackendConfigsFile.exists() ? format("-backend-config=%s", tfBackendConfigsFile.getAbsolutePath())
                                                 : ""),
               scriptDirectory, parameters, activityLogOutputStream);
+
+          if (isNotEmpty(parameters.getWorkspace())) {
+            WorkspaceCommand workspaceCommand =
+                getWorkspaceCommand(scriptDirectory, parameters.getWorkspace(), parameters.getTimeoutInMillis());
+            code = executeShellCommand(format("terraform workspace %s %s && echo \"Terraform workspace ... done\"",
+                                           workspaceCommand.command, parameters.getWorkspace()),
+                scriptDirectory, parameters, activityLogOutputStream);
+          }
           if (code == 0) {
             code = executeShellCommand(
                 format("terraform refresh -input=false %s %s && echo \"Terraform refresh ... done\"", targetArgs,
@@ -266,6 +293,15 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
                   tfBackendConfigsFile.exists() ? format("-backend-config=%s", tfBackendConfigsFile.getAbsolutePath())
                                                 : ""),
               scriptDirectory, parameters, activityLogOutputStream);
+
+          if (isNotEmpty(parameters.getWorkspace())) {
+            WorkspaceCommand workspaceCommand =
+                getWorkspaceCommand(scriptDirectory, parameters.getWorkspace(), parameters.getTimeoutInMillis());
+            code = executeShellCommand(format("terraform workspace %s %s && echo \"Terraform workspace ... done\"",
+                                           workspaceCommand.command, parameters.getWorkspace()),
+                scriptDirectory, parameters, activityLogOutputStream);
+          }
+
           if (code == 0) {
             code =
                 executeShellCommand(format("terraform refresh -input=false %s %s && echo \"Terraform refresh... done\"",
@@ -306,7 +342,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
                                             .withFileName(TERRAFORM_STATE_FILE_NAME)
                                             .build();
 
-      File tfStateFile = getTerraformStateFile(scriptDirectory);
+      File tfStateFile = getTerraformStateFile(scriptDirectory, parameters.getWorkspace());
       if (tfStateFile != null) {
         try (InputStream initialStream = new FileInputStream(tfStateFile)) {
           delegateFileManager.upload(delegateFile, initialStream);
@@ -367,7 +403,9 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               .targets(parameters.getTargets())
               .tfVarFiles(parameters.getTfVarFiles())
               .executionStatus(code == 0 ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED)
-              .errorMessage(code == 0 ? null : "The terraform command exited with code " + code);
+              .errorMessage(code == 0 ? null : "The terraform command exited with code " + code)
+              .isRemoteState(usingRemoteState)
+              .workspace(parameters.getWorkspace());
 
       if (parameters.getCommandUnit() != TerraformCommandUnit.Destroy
           && commandExecutionStatus == CommandExecutionStatus.SUCCESS && !parameters.isRunPlanOnly()) {
@@ -392,6 +430,52 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     }
   }
 
+  private WorkspaceCommand getWorkspaceCommand(String scriptDir, String workspace, long timeoutInMillis)
+      throws InterruptedException, IOException, TimeoutException {
+    List<String> workspaces = getWorkspacesList(scriptDir, timeoutInMillis);
+    return workspaces.contains(workspace) ? WorkspaceCommand.SELECT : WorkspaceCommand.NEW;
+  }
+
+  private List<String> getWorkspacesList(String scriptDir, long timeout)
+      throws InterruptedException, TimeoutException, IOException {
+    String command = "terraform workspace list";
+    ProcessExecutor processExecutor = new ProcessExecutor()
+                                          .command("/bin/sh", "-c", command)
+                                          .readOutput(true)
+                                          .timeout(timeout, TimeUnit.MILLISECONDS)
+                                          .directory(Paths.get(scriptDir).toFile());
+
+    ProcessResult processResult = processExecutor.execute();
+    String output = processResult.outputString();
+    if (processResult.getExitValue() != 0) {
+      throw new WingsException("Failed to list workspaces. " + output);
+    }
+    return parseOutput(output);
+  }
+
+  @VisibleForTesting
+  public List<String> parseOutput(String workspaceOutput) {
+    List<String> outputs = Arrays.asList(StringUtils.split(workspaceOutput, "\n"));
+    List<String> workspaces = new ArrayList<>();
+    for (String output : outputs) {
+      if (output.charAt(0) == '*') {
+        output = output.substring(1);
+      }
+      output = output.trim();
+      workspaces.add(output);
+    }
+    return workspaces;
+  }
+
+  private void cleanup(String workingDirectory) {
+    try {
+      logger.info("Cleaning up directory " + workingDirectory);
+      deleteDirectoryAndItsContentIfExists(workingDirectory);
+    } catch (Exception ex) {
+      logger.warn("Exception in directory cleanup.", ex);
+    }
+  }
+
   private int executeShellCommand(String command, String directory, TerraformProvisionParameters parameters,
       LogOutputStream logOutputStream) throws RuntimeException, IOException, InterruptedException, TimeoutException {
     String joinedCommands = format("cd \"%s\" && %s", directory, command);
@@ -405,13 +489,14 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     return processResult.getExitValue();
   }
 
-  private void ensureLocalCleanup(String scriptDirectory) {
+  private void ensureLocalCleanup(String scriptDirectory) throws IOException {
     FileUtils.deleteQuietly(Paths.get(scriptDirectory, TERRAFORM_STATE_FILE_NAME).toFile());
     try {
-      FileIo.deleteDirectoryAndItsContentIfExists(Paths.get(scriptDirectory, TERRAFORM_INTERNAL_FOLDER).toString());
+      deleteDirectoryAndItsContentIfExists(Paths.get(scriptDirectory, TERRAFORM_INTERNAL_FOLDER).toString());
     } catch (IOException e) {
       logger.warn("Failed to delete .terraform folder");
     }
+    deleteDirectoryAndItsContentIfExists(Paths.get(scriptDirectory, WORKSPACE_DIR_BASE).toString());
   }
 
   @VisibleForTesting
@@ -459,8 +544,10 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     return false;
   }
 
-  private File getTerraformStateFile(String scriptDirectory) {
-    File tfStateFile = Paths.get(scriptDirectory, TERRAFORM_STATE_FILE_NAME).toFile();
+  private File getTerraformStateFile(String scriptDirectory, String workspace) {
+    File tfStateFile = isEmpty(workspace)
+        ? Paths.get(scriptDirectory, TERRAFORM_STATE_FILE_NAME).toFile()
+        : Paths.get(scriptDirectory, format(WORKSPACE_STATE_FILE_PATH_FORMAT, workspace)).toFile();
 
     if (tfStateFile.exists()) {
       return tfStateFile;

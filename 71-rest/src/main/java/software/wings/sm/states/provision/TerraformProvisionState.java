@@ -96,11 +96,13 @@ import java.util.stream.Collectors;
 @Slf4j
 public abstract class TerraformProvisionState extends State {
   public static final String RUN_PLAN_ONLY_KEY = "runPlanOnly";
+  public static final String INHERIT_APPROVED_PLAN = "inheritApprovedPlan";
 
   private static final String VARIABLES_KEY = "variables";
   private static final String BACKEND_CONFIGS_KEY = "backend_configs";
   private static final String TARGETS_KEY = "targets";
   private static final String TF_VAR_FILES_KEY = "tf_var_files";
+  private static final String WORKSPACE_KEY = "tf_workspace";
   private static final String ENCRYPTED_VARIABLES_KEY = "encrypted_variables";
   private static final String ENCRYPTED_BACKEND_CONFIGS_KEY = "encrypted_backend_configs";
   private static final int DEFAULT_TERRAFORM_ASYNC_CALL_TIMEOUT = 30 * 60 * 1000; // 10 minutes
@@ -130,6 +132,7 @@ public abstract class TerraformProvisionState extends State {
 
   @Getter @Setter private boolean runPlanOnly;
   @Getter @Setter private boolean inheritApprovedPlan;
+  @Getter @Setter private String workspace;
 
   /**
    * Instantiates a new state.
@@ -200,7 +203,7 @@ public abstract class TerraformProvisionState extends State {
 
     TerraformProvisionInheritPlanElement inheritPlanElement =
         TerraformProvisionInheritPlanElement.builder()
-            .entityId(generateEntityId(context))
+            .entityId(generateEntityId(context, terraformExecutionData.getWorkspace()))
             .provisionerId(provisionerId)
             .targets(terraformExecutionData.getTargets())
             .tfVarFiles(terraformExecutionData.getTfVarFiles())
@@ -208,6 +211,7 @@ public abstract class TerraformProvisionState extends State {
             .sourceRepoReference(terraformExecutionData.getSourceRepoReference())
             .variables(terraformExecutionData.getVariables())
             .backendConfigs(terraformExecutionData.getBackendConfigs())
+            .workspace(terraformExecutionData.getWorkspace())
             .build();
 
     return anExecutionResponse()
@@ -227,6 +231,7 @@ public abstract class TerraformProvisionState extends State {
     terraformExecutionData.setActivityId(activityId);
 
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
+    String workspace = terraformExecutionData.getWorkspace();
 
     Map<String, Object> others = Maps.newHashMap();
     if (!(this instanceof DestroyTerraformProvisionState)) {
@@ -269,6 +274,10 @@ public abstract class TerraformProvisionState extends State {
         others.put(TF_VAR_FILES_KEY, tfVarFiles);
       }
 
+      if (isNotEmpty(workspace)) {
+        others.put(WORKSPACE_KEY, workspace);
+      }
+
       if (terraformExecutionData.getExecutionStatus() == SUCCESS) {
         saveTerraformConfig(context, terraformProvisioner, terraformExecutionData);
       }
@@ -279,7 +288,7 @@ public abstract class TerraformProvisionState extends State {
           if (isNotEmpty(getTargets())) {
             saveTerraformConfig(context, terraformProvisioner, terraformExecutionData);
           } else {
-            deleteTerraformConfig(context);
+            deleteTerraformConfig(context, terraformExecutionData);
           }
         }
       }
@@ -287,6 +296,9 @@ public abstract class TerraformProvisionState extends State {
 
     fileService.updateParentEntityIdAndVersion(PhaseStep.class, terraformExecutionData.getEntityId(), null,
         terraformExecutionData.getStateFileId(), others, FileBucket.TERRAFORM_STATE);
+    if (isNotEmpty(workspace) && !terraformExecutionData.isRemoteState()) {
+      updateProvisionerWorkspaces(terraformProvisioner, workspace);
+    }
     TerraformOutputInfoElement outputInfoElement = context.getContextElement(ContextElementType.TERRAFORM_PROVISION);
     if (outputInfoElement == null) {
       outputInfoElement = TerraformOutputInfoElement.builder().build();
@@ -315,6 +327,18 @@ public abstract class TerraformProvisionState extends State {
         .withExecutionStatus(terraformExecutionData.getExecutionStatus())
         .withErrorMessage(terraformExecutionData.getErrorMessage())
         .build();
+  }
+
+  protected void updateProvisionerWorkspaces(
+      TerraformInfrastructureProvisioner terraformProvisioner, String workspace) {
+    if (isNotEmpty(terraformProvisioner.getWorkspaces()) && terraformProvisioner.getWorkspaces().contains(workspace)) {
+      return;
+    }
+    List<String> workspaces =
+        isNotEmpty(terraformProvisioner.getWorkspaces()) ? terraformProvisioner.getWorkspaces() : new ArrayList<>();
+    workspaces.add(workspace);
+    terraformProvisioner.setWorkspaces(workspaces);
+    infrastructureProvisionerService.update(terraformProvisioner);
   }
 
   protected void updateActivityStatus(String activityId, String appId, ExecutionStatus status) {
@@ -382,7 +406,8 @@ public abstract class TerraformProvisionState extends State {
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
     String path = context.renderExpression(terraformProvisioner.getPath());
 
-    String entityId = generateEntityId(context);
+    String workspace = context.renderExpression(element.getWorkspace());
+    String entityId = generateEntityId(context, workspace);
     String fileId = fileService.getLatestFileId(entityId, TERRAFORM_STATE);
     GitConfig gitConfig = getGitConfig(element.getSourceRepoSettingId());
     if (isNotEmpty(element.getSourceRepoReference())) {
@@ -436,6 +461,7 @@ public abstract class TerraformProvisionState extends State {
             .targets(targets)
             .tfVarFiles(element.getTfVarFiles())
             .runPlanOnly(false)
+            .workspace(workspace)
             .build();
 
     return createAndRunTask(activityId, executionContext, parameters);
@@ -477,7 +503,9 @@ public abstract class TerraformProvisionState extends State {
     String path = context.renderExpression(terraformProvisioner.getPath());
 
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
-    final String entityId = generateEntityId(context);
+    String workspace = context.renderExpression(this.workspace);
+    workspace = handleDefaultWorkspace(workspace);
+    final String entityId = generateEntityId(context, workspace);
     final String fileId = fileService.getLatestFileId(entityId, TERRAFORM_STATE);
 
     Map<String, String> variables = null;
@@ -559,7 +587,6 @@ public abstract class TerraformProvisionState extends State {
       if (isNotEmpty(tfVarFiles)) {
         setTfVarFiles(tfVarFiles);
       }
-
     } else {
       final List<NameValuePair> validVariables =
           validateAndFilterVariables(getAllVariables(), terraformProvisioner.getVariables());
@@ -595,9 +622,15 @@ public abstract class TerraformProvisionState extends State {
             .targets(targets)
             .runPlanOnly(runPlanOnly)
             .tfVarFiles(getRenderedTfVarFiles(tfVarFiles, context))
+            .workspace(workspace)
             .build();
 
     return createAndRunTask(activityId, executionContext, parameters);
+  }
+
+  protected String handleDefaultWorkspace(String workspace) {
+    // Default is as good as no workspace
+    return isNotEmpty(workspace) && workspace.equals("default") ? null : workspace;
   }
 
   private List<String> getRenderedTfVarFiles(List<String> tfVarFiles, ExecutionContext context) {
@@ -626,7 +659,7 @@ public abstract class TerraformProvisionState extends State {
   protected void saveTerraformConfig(
       ExecutionContext context, TerraformInfrastructureProvisioner provisioner, TerraformExecutionData executionData) {
     TerraformConfig terraformfConfig = TerraformConfig.builder()
-                                           .entityId(generateEntityId(context))
+                                           .entityId(generateEntityId(context, executionData.getWorkspace()))
                                            .sourceRepoSettingId(provisioner.getSourceRepoSettingId())
                                            .sourceRepoReference(executionData.getSourceRepoReference())
                                            .variables(executionData.getVariables())
@@ -640,14 +673,16 @@ public abstract class TerraformProvisionState extends State {
     wingsPersistence.save(terraformfConfig);
   }
 
-  protected String generateEntityId(ExecutionContext context) {
+  protected String generateEntityId(ExecutionContext context, String workspace) {
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
-    return provisionerId + "-" + executionContext.getEnv().getUuid();
+    return isEmpty(workspace) ? (provisionerId + "-" + executionContext.getEnv().getUuid())
+                              : (provisionerId + "-" + executionContext.getEnv().getUuid() + "-" + workspace);
   }
 
-  protected void deleteTerraformConfig(ExecutionContext context) {
-    Query<TerraformConfig> query = wingsPersistence.createQuery(TerraformConfig.class)
-                                       .filter(TerraformConfig.ENTITY_ID_KEY, generateEntityId(context));
+  protected void deleteTerraformConfig(ExecutionContext context, TerraformExecutionData terraformExecutionData) {
+    Query<TerraformConfig> query =
+        wingsPersistence.createQuery(TerraformConfig.class)
+            .filter(TerraformConfig.ENTITY_ID_KEY, generateEntityId(context, terraformExecutionData.getWorkspace()));
 
     wingsPersistence.delete(query);
   }

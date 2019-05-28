@@ -2,7 +2,6 @@ package software.wings.verification.cloudwatch;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.reinert.jjschema.Attributes;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
