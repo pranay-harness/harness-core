@@ -7,6 +7,7 @@ import static io.harness.beans.SortOrder.Builder.aSortOrder;
 import static io.harness.beans.SortOrder.OrderType.DESC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
@@ -24,10 +25,11 @@ import software.wings.beans.Activity;
 import software.wings.beans.Log;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.common.Constants;
+import software.wings.dl.WingsPersistence;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallLogKeys;
-import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.LogService;
@@ -55,7 +57,7 @@ public class ActivityResource {
   private ActivityService activityService;
   private LogService logService;
   private DataStoreService dataStoreService;
-  private AccountService accountService;
+  private WingsPersistence wingsPersistence;
 
   /**
    * Instantiates a new activity resource.
@@ -65,11 +67,11 @@ public class ActivityResource {
    */
   @Inject
   public ActivityResource(ActivityService activityService, LogService logService, DataStoreService dataStoreService,
-      AccountService accountService) {
+      WingsPersistence wingsPersistence) {
     this.activityService = activityService;
     this.logService = logService;
     this.dataStoreService = dataStoreService;
-    this.accountService = accountService;
+    this.wingsPersistence = wingsPersistence;
   }
 
   /**
@@ -185,6 +187,12 @@ public class ActivityResource {
     if (isEmpty(request.getOrders())) {
       request.setOrders(asList(aSortOrder().withField(ThirdPartyApiCallLog.CREATED_AT_KEY, DESC).build()));
     }
-    return new RestResponse<>(dataStoreService.list(ThirdPartyApiCallLog.class, request));
+    PageResponse<ThirdPartyApiCallLog> response =
+        wingsPersistence.query(ThirdPartyApiCallLog.class, request, excludeAuthority);
+
+    if (response.isEmpty() && dataStoreService instanceof GoogleDataStoreServiceImpl) {
+      response = dataStoreService.list(ThirdPartyApiCallLog.class, request);
+    }
+    return new RestResponse<>(response);
   }
 }

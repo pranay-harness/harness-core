@@ -36,10 +36,9 @@ import software.wings.beans.Log;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.common.Constants;
+import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
-import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ActivityService;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.LogService;
 import software.wings.utils.ResourceTestRule;
@@ -53,20 +52,10 @@ import javax.ws.rs.core.Response;
  * Created by peeyushaggarwal on 4/1/16.
  */
 public class ActivityResourceTest {
-  public static final AppService APP_SERVICE = mock(AppService.class);
-
-  /**
-   * The constant ACTIVITY_SERVICE.
-   */
-  public static final ActivityService ACTIVITY_SERVICE = mock(ActivityService.class);
-  /**
-   * The constant LOG_SERVICE.
-   */
-  public static final LogService LOG_SERVICE = mock(LogService.class);
-
-  public static final AccountService ACCOUNT_SERVICE = mock(AccountService.class);
-
-  public static final DataStoreService LOG_DATA_STORE_SERVICE = mock(DataStoreService.class);
+  private static final ActivityService ACTIVITY_SERVICE = mock(ActivityService.class);
+  private static final LogService LOG_SERVICE = mock(LogService.class);
+  private static final DataStoreService LOG_DATA_STORE_SERVICE = mock(DataStoreService.class);
+  private static final WingsPersistence WINGS_PERSISTENCE = mock(WingsPersistence.class);
 
   /**
    * The constant RESOURCES.
@@ -74,7 +63,7 @@ public class ActivityResourceTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(new ActivityResource(ACTIVITY_SERVICE, LOG_SERVICE, LOG_DATA_STORE_SERVICE, ACCOUNT_SERVICE))
+          .addResource(new ActivityResource(ACTIVITY_SERVICE, LOG_SERVICE, LOG_DATA_STORE_SERVICE, WINGS_PERSISTENCE))
           .addProvider(WingsExceptionMapper.class)
           .build();
 
