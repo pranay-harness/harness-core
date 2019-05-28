@@ -647,7 +647,6 @@ public class SettingResource {
   public RestResponse<PageResponse<ArtifactStream>> list(
       @QueryParam("settingId") String settingId, @BeanParam PageRequest<ArtifactStream> pageRequest) {
     pageRequest.addFilter("settingId", EQ, settingId);
-    pageRequest.addFilter("appId", EQ, GLOBAL_APP_ID);
     return new RestResponse<>(artifactStreamService.list(pageRequest));
   }
 
@@ -708,7 +707,6 @@ public class SettingResource {
   @ExceptionMetered
   public RestResponse<PageResponse<Artifact>> list(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<Artifact> pageRequest) {
-    pageRequest.addFilter("appId", EQ, GLOBAL_APP_ID);
     return new RestResponse<>(artifactService.listSortByBuildNo(pageRequest));
   }
 
