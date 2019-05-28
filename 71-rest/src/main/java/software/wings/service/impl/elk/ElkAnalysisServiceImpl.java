@@ -114,7 +114,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
       logger.info("Error while getting data ", ex);
       return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
     }
-    List<LogElement> logElements = parseElkResponse(responseWithoutHost, elkSetupTestNodeData.getQuery(),
+    List<LogElement> logElementsWithoutHost = parseElkResponse(responseWithoutHost, elkSetupTestNodeData.getQuery(),
         elkSetupTestNodeData.getTimeStampField(), elkSetupTestNodeData.getTimeStampFieldFormat(),
         elkSetupTestNodeData.getHostNameField(),
         elkSetupTestNodeData.isServiceLevel() ? null : elkSetupTestNodeData.getInstanceElement().getHostName(),
@@ -125,27 +125,28 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
           .loadResponse(VerificationLoadResponse.builder()
-                            .isLoadPresent(!logElements.isEmpty())
-                            .loadResponse(responseWithoutHost)
+                            .isLoadPresent(!logElementsWithoutHost.isEmpty())
+                            .loadResponse(logElementsWithoutHost)
                             .build())
           .build();
     }
 
-    if (logElements.isEmpty()) {
+    if (logElementsWithoutHost.isEmpty()) {
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
           .loadResponse(VerificationLoadResponse.builder().isLoadPresent(false).build())
           .build();
     }
 
+    String hostNameField = elkSetupTestNodeData.getHostNameField();
     String hostName = mlServiceUtils.getHostNameFromExpression(elkSetupTestNodeData);
-    logger.info("Hostname Expression : " + hostName);
 
+    logger.info("Hostname Expression : " + hostName);
     final ElkLogFetchRequest elkFetchRequestWithHost =
         ElkLogFetchRequest.builder()
             .query(elkSetupTestNodeData.getQuery())
             .indices(elkSetupTestNodeData.getIndices())
-            .hostnameField(hostName)
+            .hostnameField(hostNameField)
             .hosts(Collections.singleton(elkSetupTestNodeData.getInstanceElement().getHostName()))
             .messageField(elkSetupTestNodeData.getMessageField())
             .timestampField(elkSetupTestNodeData.getTimeStampField())
@@ -167,14 +168,17 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
       return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
     }
     List<LogElement> logElementsWithHost = parseElkResponse(responseWithHost, elkSetupTestNodeData.getQuery(),
-        elkSetupTestNodeData.getTimeStampField(), elkSetupTestNodeData.getTimeStampFieldFormat(), hostName,
+        elkSetupTestNodeData.getTimeStampField(), elkSetupTestNodeData.getTimeStampFieldFormat(), hostNameField,
         elkSetupTestNodeData.getInstanceElement().getHostName(), elkSetupTestNodeData.getMessageField(), 0, false, -1,
         -1);
 
     return VerificationNodeDataSetupResponse.builder()
         .providerReachable(true)
-        .loadResponse(VerificationLoadResponse.builder().loadResponse(responseWithoutHost).isLoadPresent(true).build())
-        .dataForNode(logElementsWithHost.isEmpty() ? null : responseWithHost)
+        .loadResponse(VerificationLoadResponse.builder()
+                          .loadResponse(logElementsWithoutHost)
+                          .isLoadPresent(!logElementsWithHost.isEmpty())
+                          .build())
+        .dataForNode(logElementsWithHost.isEmpty() ? null : logElementsWithoutHost)
         .build();
   }
 
