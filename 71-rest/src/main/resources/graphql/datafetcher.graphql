@@ -15,6 +15,8 @@ enum DataFetcherEnum {
   pipelineConnection
   service
   serviceConnection
+  trigger
+  triggerConnection
   workflow
   workflowConnection
   executionStats
