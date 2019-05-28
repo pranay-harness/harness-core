@@ -64,6 +64,7 @@ import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
+import io.harness.limits.counter.service.CounterSyncer;
 import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
 import io.harness.stream.BoundedInputStream;
@@ -219,6 +220,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
   }
 
+  @Inject private CounterSyncer counterSyncer;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AppService appService;
   @Inject private ArtifactService artifactService;
@@ -983,12 +985,21 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public void pruneByApplication(String appId) {
-    findServicesByApp(appId).forEach(service -> {
+    String accountId = null;
+
+    List<Service> services = findServicesByApp(appId);
+
+    for (Service service : services) {
       wingsPersistence.delete(Service.class, service.getUuid());
+      accountId = service.getAccountId();
       auditServiceHelper.reportDeleteForAuditing(service.getAppId(), service);
       pruneDeploymentSpecifications(service);
       pruneDescendingEntities(appId, service.getUuid());
-    });
+    }
+
+    if (!StringUtils.isEmpty(accountId)) {
+      counterSyncer.syncServiceCount(accountId);
+    }
   }
 
   @Override

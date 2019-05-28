@@ -41,10 +41,12 @@ import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
+import io.harness.limits.counter.service.CounterSyncer;
 import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
 import io.harness.validation.Create;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.UpdateOperations;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
@@ -112,6 +114,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private EnvironmentService environmentService;
   @Inject private LimitCheckerFactory limitCheckerFactory;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private CounterSyncer counterSyncer;
 
   @Inject private Queue<PruneEvent> pruneQueue;
 
@@ -328,13 +331,21 @@ public class PipelineServiceImpl implements PipelineService {
     List<Pipeline> pipelines = wingsPersistence.createQuery(Pipeline.class)
                                    .filter(PipelineKeys.appId, appId)
                                    .project(PipelineKeys.name, true)
+                                   .project(PipelineKeys.accountId, true)
                                    .project(PipelineKeys.appId, true)
                                    .project(PipelineKeys.uuid, true)
                                    .asList();
+
+    String accountId = null;
     for (Pipeline pipeline : pipelines) {
+      accountId = pipeline.getAccountId();
       if (prunePipeline(appId, pipeline.getUuid())) {
         auditServiceHelper.reportDeleteForAuditing(appId, pipeline);
       }
+    }
+
+    if (StringUtils.isNotEmpty(accountId)) {
+      counterSyncer.syncPipelineCount(accountId);
     }
   }
 

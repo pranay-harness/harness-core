@@ -103,6 +103,7 @@ import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
+import io.harness.limits.counter.service.CounterSyncer;
 import io.harness.observer.Rejection;
 import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
@@ -257,23 +258,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private static final List<String> pcfArtifactNeededStateTypes = Arrays.asList(PCF_SETUP.name(), PCF_RESIZE.name());
 
-  private static final Comparator<Stencil> stencilDefaultSorter = (o1, o2) -> {
-    int comp = o1.getStencilCategory().getDisplayOrder().compareTo(o2.getStencilCategory().getDisplayOrder());
-    if (comp != 0) {
-      return comp;
-    }
-    comp = o1.getDisplayOrder().compareTo(o2.getDisplayOrder());
-    if (comp != 0) {
-      return comp;
-    }
-    return o1.getType().compareTo(o2.getType());
-  };
+  private static final Comparator<Stencil> stencilDefaultSorter =
+      Comparator.comparingInt((Stencil o) -> o.getStencilCategory().getDisplayOrder())
+          .thenComparingInt(Stencil::getDisplayOrder)
+          .thenComparing(Stencil::getType);
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private StencilPostProcessor stencilPostProcessor;
   @Inject private StaticConfiguration staticConfiguration;
   @Inject private UserGroupService userGroupService;
-
+  @Inject private CounterSyncer counterSyncer;
   @Inject private AccountService accountService;
   @Inject private AppService appService;
   @Inject private ArtifactStreamService artifactStreamService;
@@ -1307,13 +1301,21 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     List<Workflow> workflows = wingsPersistence.createQuery(Workflow.class)
                                    .filter(WorkflowKeys.appId, appId)
                                    .project(WorkflowKeys.name, true)
+                                   .project(WorkflowKeys.accountId, true)
                                    .project(WorkflowKeys.appId, true)
                                    .project(WorkflowKeys.uuid, true)
                                    .asList();
+
+    String accountId = null;
     for (Workflow workflow : workflows) {
+      accountId = workflow.getAccountId();
       if (pruneWorkflow(appId, workflow.getUuid())) {
         auditServiceHelper.reportDeleteForAuditing(appId, workflow);
       }
+    }
+
+    if (StringUtils.isNotEmpty(accountId)) {
+      counterSyncer.syncWorkflowCount(accountId);
     }
 
     // prune state machines
