@@ -30,6 +30,7 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
   @NotNull private String path;
   private List<NameValuePair> backendConfigs;
   private boolean templatized;
+  private List<String> workspaces;
 
   @Override
   public String variableKey() {
