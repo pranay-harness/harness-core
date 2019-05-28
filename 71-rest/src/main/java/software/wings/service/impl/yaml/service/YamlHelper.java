@@ -159,7 +159,7 @@ public class YamlHelper {
 
     Optional<Trigger> trigger = triggerService.list(pageRequest).getResponse().stream().findFirst();
     if (!trigger.isPresent()) {
-      Validator.notNullCheck("Could not lookup trigger for the yaml file: " + yamlFilePath, triggerName);
+      return null;
     }
 
     return trigger.get();

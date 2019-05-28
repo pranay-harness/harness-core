@@ -4,10 +4,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("NEW_ARTIFACT")
 @JsonPropertyOrder({"harnessApiVersion"})
@@ -17,6 +15,9 @@ public class ArtifactTriggerConditionYaml extends TriggerConditionYaml {
   private boolean regex;
   private String artifactFilter;
 
+  ArtifactTriggerConditionYaml() {
+    super.setType("NEW_ARTIFACT");
+  }
   @lombok.Builder
   ArtifactTriggerConditionYaml(String serviceName, String artifactStreamName, boolean regex, String artifactFilter) {
     super.setType("NEW_ARTIFACT");

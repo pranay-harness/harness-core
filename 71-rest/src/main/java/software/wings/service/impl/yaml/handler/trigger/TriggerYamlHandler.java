@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler.trigger;
 
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.exception.WingsException.USER;
+import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -27,6 +28,7 @@ import software.wings.utils.Validator;
 import software.wings.yaml.trigger.TriggerConditionYaml;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -66,23 +68,31 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
             .map(artifactSelection -> { return artifactSelectionYamlHandler.toYaml(artifactSelection, appId); })
             .collect(Collectors.toList());
 
-    Trigger.Yaml yaml = Trigger.Yaml.builder()
-                            .description(bean.getDescription())
-                            .executionType(executionType)
-                            .triggerCondition(handler.toYaml(bean.getCondition(), appId))
-                            .executionName(executionName)
-                            .workflowVariables(bean.getWorkflowVariables())
-                            .artifactSelections(artifactSelectionList)
-                            .build();
-
-    yaml.setType(bean.getCondition().getConditionType().name());
-    return yaml;
+    TriggerConditionYaml triggerConditionYaml = handler.toYaml(bean.getCondition(), appId);
+    return Trigger.Yaml.builder()
+        .description(bean.getDescription())
+        .executionType(executionType)
+        .triggerCondition(Arrays.asList(triggerConditionYaml))
+        .executionName(executionName)
+        .workflowVariables(bean.getWorkflowVariables())
+        .artifactSelections(artifactSelectionList)
+        .build();
   }
 
   @Override
   public Trigger upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Trigger trigger = toBean(changeContext, changeSetContext);
-    triggerService.update(trigger);
+    Change change = changeContext.getChange();
+    String appId = yamlHelper.getAppId(change.getAccountId(), change.getFilePath());
+    notNullCheck("Could not locate app info in file path:" + change.getFilePath(), appId, USER);
+
+    Trigger existingTrigger = yamlHelper.getTrigger(appId, change.getFilePath());
+
+    Trigger trigger = toBean(appId, changeContext, changeSetContext);
+    if (existingTrigger == null) {
+      triggerService.save(trigger);
+    } else {
+      triggerService.update(trigger);
+    }
     return trigger;
   }
 
@@ -98,23 +108,29 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
     return yamlHelper.getTrigger(appId, yamlFilePath);
   }
 
-  private Trigger toBean(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  private Trigger toBean(String appId, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     Yaml yaml = changeContext.getYaml();
     Change change = changeContext.getChange();
-    String appId = yamlHelper.getAppId(change.getAccountId(), change.getFilePath());
-    notNullCheck("Could not locate app info in file path:" + change.getFilePath(), appId, USER);
+    TriggerConditionYaml condition = yaml.getTriggerCondition().get(0);
 
-    TriggerConditionYamlHandler handler = yamlHandlerFactory.getYamlHandler(YamlType.TRIGGER_CONDITION, yaml.getType());
+    TriggerConditionYamlHandler handler =
+        yamlHandlerFactory.getYamlHandler(YamlType.TRIGGER_CONDITION, condition.getType());
 
     ArtifactSelectionYamlHandler artifactSelectionYamlHandler =
         yamlHandlerFactory.getYamlHandler(YamlType.ARTIFACT_SELECTION);
-
-    TriggerConditionYaml condition = yaml.getTriggerCondition();
 
     ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, condition);
     TriggerCondition triggerCondition = handler.upsertFromYaml(clonedContext.build(), changeSetContext);
 
     Trigger trigger = yamlHelper.getTrigger(appId, change.getFilePath());
+
+    String uuid = null;
+    if (trigger != null) {
+      uuid = trigger.getUuid();
+    }
+
+    String triggerName = yamlHelper.extractEntityNameFromYamlPath(
+        YamlType.TRIGGER.getPathExpression(), change.getFilePath(), PATH_DELIMITER);
 
     List<ArtifactSelection> artifactSelectionList = new ArrayList<>();
     yaml.getArtifactSelections().forEach(artifactSelectionYaml -> {
@@ -127,17 +143,15 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
     WorkflowType workflowType = getWorkflowType(changeContext.getChange().getFilePath(), yaml.getExecutionType());
     Trigger updatedTrigger = Trigger.builder()
                                  .description(yaml.getDescription())
-                                 .name(trigger.getName())
+                                 .name(triggerName)
                                  .workflowName(yaml.getExecutionName())
                                  .workflowType(workflowType)
                                  .condition(triggerCondition)
                                  .appId(appId)
-                                 .uuid(trigger.getUuid())
+                                 .uuid(uuid)
                                  .artifactSelections(artifactSelectionList)
                                  .workflowVariables(yaml.getWorkflowVariables())
                                  .build();
-
-    updatedTrigger.setWebHookToken(trigger.getWebHookToken());
 
     if (workflowType == ORCHESTRATION) {
       Workflow workflow = yamlHelper.getWorkflowFromName(appId, yaml.getExecutionName());

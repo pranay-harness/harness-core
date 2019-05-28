@@ -25,7 +25,7 @@ import software.wings.beans.Base;
 import software.wings.beans.trigger.ArtifactTriggerCondition.ArtifactTriggerConditionKeys;
 import software.wings.beans.trigger.Trigger.TriggerKeys;
 import software.wings.beans.trigger.TriggerCondition.TriggerConditionKeys;
-import software.wings.yaml.BaseEntityYaml;
+import software.wings.yaml.BaseYaml;
 import software.wings.yaml.trigger.TriggerConditionYaml;
 
 import java.util.ArrayList;
@@ -137,9 +137,9 @@ public class Trigger extends Base implements NameAccess {
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseEntityYaml {
+  public static final class Yaml extends BaseYaml {
     private String description;
-    @NotEmpty TriggerConditionYaml triggerCondition;
+    @NotEmpty List<TriggerConditionYaml> triggerCondition = new ArrayList<>();
     private String executionType;
     private String executionName;
     // private Map<String, String> workflowVariables;
@@ -148,7 +148,7 @@ public class Trigger extends Base implements NameAccess {
 
     @lombok.Builder
     public Yaml(String description, String executionType, String executionName, Map<String, String> workflowVariables,
-        TriggerConditionYaml triggerCondition, List<ArtifactSelection.Yaml> artifactSelections) {
+        List<TriggerConditionYaml> triggerCondition, List<ArtifactSelection.Yaml> artifactSelections) {
       this.description = description;
       this.executionType = executionType;
       this.executionName = executionName;
