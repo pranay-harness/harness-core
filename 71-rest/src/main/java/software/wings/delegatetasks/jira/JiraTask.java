@@ -8,6 +8,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import net.rcarz.jiraclient.BasicCredentials;
@@ -23,7 +24,6 @@ import net.rcarz.jiraclient.RestException;
 import net.rcarz.jiraclient.Transition;
 import net.sf.json.JSON;
 import net.sf.json.JSONArray;
-import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.NotImplementedException;
@@ -79,7 +79,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
     ResponseData responseData = null;
 
-    logger.info("Executing JiraTask. Action: {}, IssueId: {}", jiraAction, parameters.getIssueId());
+    logger.info("Executing JiraTask. Action: {}", jiraAction);
 
     switch (jiraAction) {
       case AUTH:
@@ -123,10 +123,10 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     }
 
     if (responseData != null) {
-      logger.info("Done executing JiraTask. Action: {}, IssueId: {}, ExecutionStatus: {}", jiraAction,
-          parameters.getIssueId(), ((JiraExecutionData) responseData).getExecutionStatus());
+      logger.info("Done executing JiraTask. Action: {},  ExecutionStatus: {}", jiraAction,
+          ((JiraExecutionData) responseData).getExecutionStatus());
     } else {
-      logger.error("JiraTask Action: {}. IssueId: {}. null response.", jiraAction, parameters.getIssueId());
+      logger.error("JiraTask Action: {}. null response.", jiraAction);
     }
 
     return responseData;
@@ -240,73 +240,84 @@ public class JiraTask extends AbstractDelegateRunnableTask {
   }
 
   private ResponseData updateTicket(JiraTaskParameters parameters) {
-    CommandExecutionStatus commandExecutionStatus;
-    Issue issue = null;
+    JiraClient jiraClient;
     try {
-      JiraClient jira = getJiraClient(parameters);
-      issue = jira.getIssue(parameters.getIssueId());
-    } catch (JiraException e) {
-      String errorMessage = "Failed to fetch jira issue : " + parameters.getIssueId();
-      logger.error(errorMessage, e);
+      jiraClient = getJiraClient(parameters);
+    } catch (JiraException j) {
+      String errorMessage = "Failed to create jira client while trying to update : " + parameters.getUpdateIssueIds();
+      logger.error(errorMessage, j);
       return JiraExecutionData.builder()
           .executionStatus(ExecutionStatus.FAILED)
           .errorMessage(errorMessage)
-          .jiraServerResponse(extractResponseMessage(e))
+          .jiraServerResponse(extractResponseMessage(j))
           .build();
     }
 
-    try {
-      boolean fieldsUpdated = false;
-      FluentUpdate update = issue.update();
-      if (EmptyPredicate.isNotEmpty(parameters.getSummary())) {
-        update.field(Field.SUMMARY, parameters.getSummary());
-        fieldsUpdated = true;
-      }
+    List<String> issueKeys = new ArrayList<>();
+    List<String> issueUrls = new ArrayList<>();
 
-      if (EmptyPredicate.isNotEmpty(parameters.getLabels())) {
-        update.field(Field.LABELS, parameters.getLabels());
-        fieldsUpdated = true;
-      }
+    for (String issueId : parameters.getUpdateIssueIds()) {
+      try {
+        Issue issue = jiraClient.getIssue(issueId);
 
-      if (EmptyPredicate.isNotEmpty(parameters.getCustomFields())) {
-        for (Entry<String, JiraCustomFieldValue> customField : parameters.getCustomFields().entrySet()) {
-          update.field(customField.getKey(), getCustomFieldValue(customField));
+        boolean fieldsUpdated = false;
+        FluentUpdate update = issue.update();
+
+        if (EmptyPredicate.isNotEmpty(parameters.getSummary())) {
+          update.field(Field.SUMMARY, parameters.getSummary());
           fieldsUpdated = true;
         }
+
+        if (EmptyPredicate.isNotEmpty(parameters.getLabels())) {
+          update.field(Field.LABELS, parameters.getLabels());
+          fieldsUpdated = true;
+        }
+
+        if (EmptyPredicate.isNotEmpty(parameters.getCustomFields())) {
+          for (Entry<String, JiraCustomFieldValue> customField : parameters.getCustomFields().entrySet()) {
+            update.field(customField.getKey(), getCustomFieldValue(customField));
+            fieldsUpdated = true;
+          }
+        }
+
+        if (fieldsUpdated) {
+          update.execute();
+        }
+
+        if (EmptyPredicate.isNotEmpty(parameters.getComment())) {
+          issue.addComment(parameters.getComment());
+        }
+
+        if (EmptyPredicate.isNotEmpty(parameters.getStatus())) {
+          updateStatus(issue, parameters.getStatus());
+        }
+
+        logger.info("Successfully updates ticket : " + issueId);
+        issueKeys.add(issue.getKey());
+        issueUrls.add(getIssueUrl(parameters.getJiraConfig(), issue));
+      } catch (JiraException j) {
+        String errorMessage = "Failed to update jira issue : " + issueId;
+        logger.error(errorMessage, j);
+        return JiraExecutionData.builder()
+            .executionStatus(ExecutionStatus.FAILED)
+            .errorMessage(errorMessage)
+            .jiraServerResponse(extractResponseMessage(j))
+            .build();
+      } catch (WingsException we) {
+        return JiraExecutionData.builder()
+            .executionStatus(ExecutionStatus.FAILED)
+            .errorMessage(ExceptionUtils.getMessage(we))
+            .build();
       }
-
-      if (fieldsUpdated) {
-        update.execute();
-      }
-
-      if (EmptyPredicate.isNotEmpty(parameters.getComment())) {
-        issue.addComment(parameters.getComment());
-      }
-
-      if (EmptyPredicate.isNotEmpty(parameters.getStatus())) {
-        updateStatus(issue, parameters.getStatus());
-      }
-
-      logger.info("Script execution finished with status: " + ExecutionStatus.SUCCESS);
-      return JiraExecutionData.builder()
-          .executionStatus(ExecutionStatus.SUCCESS)
-          .errorMessage("Updated Jira ticket " + issue.getKey())
-          .issueUrl(getIssueUrl(parameters.getJiraConfig(), issue))
-          .issueId(issue.getId())
-          .issueKey(issue.getKey())
-          .build();
-
-    } catch (JiraException e) {
-      String errorMessage = "Failed to update the new Jira ticket " + issue.getKey();
-      logger.error(errorMessage, e);
-      return JiraExecutionData.builder()
-          .executionStatus(ExecutionStatus.FAILED)
-          .errorMessage(errorMessage)
-          .jiraServerResponse(extractResponseMessage(e))
-          .build();
-    } catch (WingsException we) {
-      return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(we.getMessage()).build();
     }
+
+    return JiraExecutionData.builder()
+        .executionStatus(ExecutionStatus.SUCCESS)
+        .errorMessage("Updated Jira ticket " + issueKeys.toString().replaceAll("[\\[\\]]", ""))
+        .issueUrl(issueUrls.toString().replaceAll("[\\[\\]]", ""))
+        .issueId(parameters.getUpdateIssueIds().get(0))
+        .issueKey(issueKeys.get(0))
+        .build();
   }
 
   public void updateStatus(Issue issue, String status) throws JiraException {
@@ -412,7 +423,10 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           .jiraServerResponse(extractResponseMessage(e))
           .build();
     } catch (WingsException e) {
-      return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(e.getMessage()).build();
+      return JiraExecutionData.builder()
+          .executionStatus(ExecutionStatus.FAILED)
+          .errorMessage(ExceptionUtils.getMessage(e))
+          .build();
     }
   }
 
@@ -445,15 +459,6 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       default:
         throw new WingsException("FieldType " + type + "not supported in Harness for " + fieldName);
     }
-  }
-
-  private boolean isJSONArrayString(String test) {
-    try {
-      JSONArray.fromObject(test);
-    } catch (JSONException ex) {
-      return false;
-    }
-    return true;
   }
 
   private ResponseData checkJiraApproval(JiraTaskParameters parameters) {

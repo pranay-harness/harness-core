@@ -27,6 +27,7 @@ public class JiraTaskParameters implements ExecutionCapabilityDemander {
   private Map<String, JiraCustomFieldValue> customFields;
 
   private String issueId;
+  private List<String> updateIssueIds;
   private String status;
   private String comment;
   private String createmetaExpandParam;
