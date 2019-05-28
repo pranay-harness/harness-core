@@ -41,17 +41,16 @@ import java.util.Map;
 @FieldNameConstants(innerTypeName = "StateExecutionInstanceKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "stateTypes"),
+  @Index(options = @IndexOptions(name = "stateTypes2"),
       fields =
       {
-        @Field(StateExecutionInstanceKeys.appId)
-        , @Field(StateExecutionInstanceKeys.executionUuid), @Field(StateExecutionInstanceKeys.stateType)
+        @Field(StateExecutionInstanceKeys.executionUuid)
+        , @Field(StateExecutionInstanceKeys.stateType), @Field(StateExecutionInstanceKeys.createdAt)
       })
   ,
-      @Index(options = @IndexOptions(name = "parentInstances"), fields = {
-        @Field(StateExecutionInstanceKeys.appId)
-        , @Field(StateExecutionInstanceKeys.executionUuid), @Field(StateExecutionInstanceKeys.parentInstanceId),
-            @Field(StateExecutionInstanceKeys.createdAt)
+      @Index(options = @IndexOptions(name = "parentInstances2"), fields = {
+        @Field(StateExecutionInstanceKeys.executionUuid)
+        , @Field(StateExecutionInstanceKeys.parentInstanceId), @Field(StateExecutionInstanceKeys.createdAt)
       })
 })
 public class StateExecutionInstance implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
