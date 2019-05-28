@@ -22,6 +22,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.trigger.ArtifactTriggerCondition.ArtifactTriggerConditionKeys;
 import software.wings.beans.trigger.Trigger.TriggerKeys;
 import software.wings.beans.trigger.TriggerCondition.TriggerConditionKeys;
@@ -142,12 +143,11 @@ public class Trigger extends Base implements NameAccess {
     @NotEmpty List<TriggerConditionYaml> triggerCondition = new ArrayList<>();
     private String executionType;
     private String executionName;
-    // private Map<String, String> workflowVariables;
     private List<ArtifactSelection.Yaml> artifactSelections = new ArrayList<>();
-    private Map<String, String> workflowVariables;
+    private List<TriggerVariable> workflowVariables = new ArrayList<>();
 
     @lombok.Builder
-    public Yaml(String description, String executionType, String executionName, Map<String, String> workflowVariables,
+    public Yaml(String description, String executionType, String executionName, List<TriggerVariable> workflowVariables,
         List<TriggerConditionYaml> triggerCondition, List<ArtifactSelection.Yaml> artifactSelections) {
       this.description = description;
       this.executionType = executionType;
@@ -155,6 +155,19 @@ public class Trigger extends Base implements NameAccess {
       this.workflowVariables = workflowVariables;
       this.triggerCondition = triggerCondition;
       this.artifactSelections = artifactSelections;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @EqualsAndHashCode(callSuper = true)
+    public static class TriggerVariable extends NameValuePair.AbstractYaml {
+      String entityType;
+
+      @Builder
+      public TriggerVariable(String entityType, String name, String value, String valueType) {
+        super(name, value, valueType);
+        this.entityType = entityType;
+      }
     }
   }
   public static final class TriggerKeys {
