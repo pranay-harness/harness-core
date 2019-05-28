@@ -69,6 +69,7 @@ import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
+import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask.LearningEngineExperimentalAnalysisTaskKeys;
 import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.LogMLClusterScores.LogMLScore;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
@@ -160,8 +161,9 @@ public class AnalysisServiceImpl implements AnalysisService {
                                 .filter(LearningEngineAnalysisTaskKeys.state_execution_id, stateExecutionId));
 
     // delete experimental learning engine tasks
-    wingsPersistence.delete(wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class)
-                                .filter("state_execution_id", stateExecutionId));
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class)
+            .filter(LearningEngineExperimentalAnalysisTaskKeys.state_execution_id, stateExecutionId));
 
     // delete experimental log analysis records
     wingsPersistence.delete(wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class)
@@ -642,11 +644,9 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   @Override
   public LogMLAnalysisSummary getAnalysisSummary(String stateExecutionId, String appId, StateType stateType) {
-    LogMLAnalysisRecord analysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+    LogMLAnalysisRecord analysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
                                              .filter(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId)
-                                             .filter("appId", appId)
-                                             .filter(LogMLAnalysisRecordKeys.stateType, stateType)
-                                             .order("-logCollectionMinute")
+                                             .order(Sort.descending(LogMLAnalysisRecordKeys.logCollectionMinute))
                                              .get();
 
     if (analysisRecord == null) {
@@ -1161,13 +1161,13 @@ public class AnalysisServiceImpl implements AnalysisService {
     List<LogMLExpAnalysisInfo> result = new ArrayList<>();
     try (HIterator<ExperimentalLogMLAnalysisRecord> analysisRecords =
              new HIterator<>(wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class, excludeAuthority)
-                                 .project("stateExecutionId", true)
+                                 .project(ExperimentalLogMLAnalysisRecordKeys.stateExecutionId, true)
                                  .project("appId", true)
-                                 .project("stateType", true)
-                                 .project("experiment_name", true)
+                                 .project(ExperimentalLogMLAnalysisRecordKeys.stateType, true)
+                                 .project(ExperimentalLogMLAnalysisRecordKeys.experiment_name, true)
                                  .project("createdAt", true)
-                                 .project("envId", true)
-                                 .project("workflowExecutionId", true)
+                                 .project(ExperimentalLogMLAnalysisRecordKeys.envId, true)
+                                 .project(ExperimentalLogMLAnalysisRecordKeys.workflowExecutionId, true)
                                  .fetch())) {
       while (analysisRecords.hasNext()) {
         final ExperimentalLogMLAnalysisRecord record = analysisRecords.next();
@@ -1189,12 +1189,9 @@ public class AnalysisServiceImpl implements AnalysisService {
   public LogMLAnalysisSummary getExperimentalAnalysisSummary(
       String stateExecutionId, String appId, StateType stateType, String expName) {
     ExperimentalLogMLAnalysisRecord analysisRecord =
-        wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class)
+        wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class, excludeAuthority)
             .filter(ExperimentalLogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId)
-            .filter("appId", appId)
-            .filter(ExperimentalLogMLAnalysisRecordKeys.stateType, stateType)
-            .filter("experiment_name", expName)
-            .order("-logCollectionMinute")
+            .order(Sort.descending(ExperimentalLogMLAnalysisRecordKeys.logCollectionMinute))
             .get();
     if (analysisRecord == null) {
       return null;

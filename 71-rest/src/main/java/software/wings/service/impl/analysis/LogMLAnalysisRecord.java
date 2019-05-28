@@ -53,9 +53,13 @@ import java.util.Map;
  */
 @Entity(value = "logAnalysisRecords", noClassnameStored = true)
 @Indexes({
-  @Index(fields = {
-    @Field("cvConfigId"), @Field("analysisStatus"), @Field(value = "logCollectionMinute", type = IndexType.DESC)
-  }, options = @IndexOptions(name = "service_guard_idx"))
+  @Index(fields = { @Field("cvConfigId")
+                    , @Field(value = "logCollectionMinute", type = IndexType.DESC) },
+      options = @IndexOptions(name = "serviceGuardIdx"))
+  ,
+      @Index(fields = {
+        @Field("stateExecutionId"), @Field(value = "logCollectionMinute", type = IndexType.DESC)
+      }, options = @IndexOptions(name = "stateIdx"))
 })
 @Data
 @NoArgsConstructor
@@ -63,8 +67,8 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "LogMLAnalysisRecordKeys")
 public class LogMLAnalysisRecord extends Base {
-  @NotEmpty @Indexed private String stateExecutionId;
-  @Indexed private String cvConfigId;
+  @NotEmpty private String stateExecutionId;
+  private String cvConfigId;
 
   @NotEmpty private StateType stateType;
 

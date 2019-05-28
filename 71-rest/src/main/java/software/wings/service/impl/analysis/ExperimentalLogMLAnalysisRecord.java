@@ -15,6 +15,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.Base;
 import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
@@ -26,12 +27,9 @@ import java.util.List;
 import java.util.Map;
 
 @Entity(value = "experimentalLogAnalysisRecords", noClassnameStored = true)
-@Indexes(@Index(fields =
-    {
-      @Field("applicationId")
-      , @Field("stateExecutionId"), @Field("stateType"), @Field("experiment_name"), @Field("logCollectionMinute")
-    },
-    options = @IndexOptions(unique = true, name = "explogAnalysisUniqueIdx")))
+@Indexes(@Index(fields = { @Field("stateExecutionId")
+                           , @Field(value = "logCollectionMinute", type = IndexType.DESC) },
+    options = @IndexOptions(name = "stateExecutionIdx")))
 @Data
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @JsonIgnoreProperties(ignoreUnknown = true)
