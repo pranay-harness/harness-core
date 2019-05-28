@@ -43,13 +43,18 @@ public class K8sApplyState extends State implements K8sStateExecutor {
   @Inject private ActivityService activityService;
 
   public static final String K8S_APPLY_STATE = "Apply";
+  public static String SKIP_FILE_FOR_DEPLOY_PLACEHOLDER_TEXT = "harness.io/skip-file-for-deploy";
 
   public K8sApplyState(String name) {
     super(name, K8S_APPLY.name());
   }
 
-  @Trimmed @Getter @Setter @Attributes(title = "File paths") private String filePaths;
-  @Getter @Setter @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") private String stateTimeoutInMinutes;
+  @Trimmed @Getter @Setter @Attributes(title = "File paths", required = true) private String filePaths;
+  @Getter
+  @Setter
+  @Attributes(title = "Timeout (Minutes)", required = true)
+  @DefaultValue("10")
+  private String stateTimeoutInMinutes;
   @Getter @Setter @Attributes(title = "Skip steady state check") private boolean skipSteadyStateCheck;
 
   @Override

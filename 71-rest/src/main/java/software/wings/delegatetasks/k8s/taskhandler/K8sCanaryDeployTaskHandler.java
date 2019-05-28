@@ -177,6 +177,10 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
                                                                : ReleaseHistory.createFromData(releaseHistoryData);
 
     try {
+      List<ManifestFile> manifestFilesForDeploy = k8sTaskHelper.filterSkippedManifestFiles(
+          k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig().getManifestFiles());
+      k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig().setManifestFiles(manifestFilesForDeploy);
+
       List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplate(k8sDelegateTaskParams,
           k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig(),
           k8sCanaryDeployTaskParameters.getValuesYamlList(), releaseName, kubernetesConfig.getNamespace(),

@@ -181,6 +181,10 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
                                                                : ReleaseHistory.createFromData(releaseHistoryData);
 
     try {
+      List<ManifestFile> manifestFilesForDeploy = k8sTaskHelper.filterSkippedManifestFiles(
+          k8sBlueGreenDeployTaskParameters.getK8sDelegateManifestConfig().getManifestFiles());
+      k8sBlueGreenDeployTaskParameters.getK8sDelegateManifestConfig().setManifestFiles(manifestFilesForDeploy);
+
       List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplate(k8sDelegateTaskParams,
           k8sBlueGreenDeployTaskParameters.getK8sDelegateManifestConfig(),
           k8sBlueGreenDeployTaskParameters.getValuesYamlList(), releaseName, kubernetesConfig.getNamespace(),
