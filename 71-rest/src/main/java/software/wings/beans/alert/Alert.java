@@ -12,9 +12,12 @@ import lombok.Builder.Default;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
 import software.wings.alerts.AlertCategory;
 import software.wings.alerts.AlertSeverity;
 import software.wings.alerts.AlertStatus;
@@ -27,16 +30,21 @@ import javax.validation.constraints.NotNull;
  * Created by brett on 10/18/17
  */
 @FieldNameConstants(innerTypeName = "AlertKeys")
+@Indexes({
+  @Index(fields = {
+    @Field("accountId"), @Field("appId"), @Field("type"), @Field("status")
+  }, options = @IndexOptions(name = "accountAppTypeStatusIdx"))
+})
 @Data
 @Builder
 @Entity(value = "alerts")
 public class Alert implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @Indexed @NotNull @SchemaIgnore protected String appId;
-  @SchemaIgnore @Indexed private long createdAt;
+  @SchemaIgnore private long createdAt;
   @SchemaIgnore @NotNull private long lastUpdatedAt;
   @Indexed private String accountId;
-  @Indexed private AlertType type;
+  private AlertType type;
   private AlertStatus status;
   private String title;
   private AlertCategory category;
@@ -49,5 +57,5 @@ public class Alert implements PersistentEntity, UuidAware, CreatedAtAware, Updat
   @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   @Default
-  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
+  private Date validUntil = Date.from(OffsetDateTime.now().plusDays(14).toInstant());
 }
