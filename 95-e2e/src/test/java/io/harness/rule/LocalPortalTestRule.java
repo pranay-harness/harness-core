@@ -40,6 +40,7 @@ import org.junit.runners.model.Statement;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
 import ru.vyarus.guice.validator.ValidationModule;
+import software.wings.app.FeatureViolationsModule;
 import software.wings.app.GraphQLModule;
 import software.wings.app.LicenseModule;
 import software.wings.app.MainConfiguration;
@@ -172,6 +173,7 @@ public class LocalPortalTestRule implements MethodRule, MongoRuleMixin, Injector
     modules.add(new TemplateModule());
     modules.add(new EventsModule((MainConfiguration) configuration));
     modules.add(new GraphQLModule());
+    modules.add(new FeatureViolationsModule());
     return modules;
   }
 
