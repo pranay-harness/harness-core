@@ -39,6 +39,7 @@ import org.mongodb.morphia.query.Sort;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
+import software.wings.api.JiraExecutionData;
 import software.wings.api.PhaseElement;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ElkConfig;
@@ -57,6 +58,7 @@ import software.wings.metrics.RiskLevel;
 import software.wings.resources.AccountResource;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.DelegateServiceImpl;
+import software.wings.service.impl.JiraHelperService;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.CVFeedbackRecord.CVFeedbackRecordKeys;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataKeys;
@@ -140,6 +142,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Inject private HostService hostService;
   @Inject private CVConfigurationService cvConfigurationService;
   @Inject private StateExecutionService stateExecutionService;
+  @Inject private JiraHelperService jiraHelperService;
 
   @Override
   public void cleanUpForLogRetry(String stateExecutionId) {
@@ -393,7 +396,8 @@ public class AnalysisServiceImpl implements AnalysisService {
         feedbackRecord.setStateExecutionId(stateExecutionId);
 
         feedbackRecord.setServiceId(getServiceIdFromStateExecutionInstance(stateExecutionInstance));
-        feedbackRecord.setEnvId(getEnvIdForStateExecutionId(stateExecutionInstance.getAppId(), stateExecutionId));
+        feedbackRecord.setEnvId(
+            getEnvIdForStateExecutionId(stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid()));
       } else {
         throw new WingsException("Incorrect stateExecutionId. No valid instances available");
       }
@@ -407,8 +411,8 @@ public class AnalysisServiceImpl implements AnalysisService {
     return true;
   }
 
-  private String getEnvIdForStateExecutionId(String appId, String stateExecutionId) {
-    WorkflowExecution execution = workflowExecutionService.getWorkflowExecution(appId, stateExecutionId);
+  private String getEnvIdForStateExecutionId(String appId, String workflowExecutionId) {
+    WorkflowExecution execution = workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId);
     if (execution == null) {
       throw new WingsException(
           ErrorCode.GENERAL_ERROR, "This stateExecutionId does not correspond to a valid workflow");
@@ -428,6 +432,34 @@ public class AnalysisServiceImpl implements AnalysisService {
       return phaseElement.getServiceElement().getUuid();
     }
     throw new WingsException("There is no serviceID associated with the stateExecutionId: " + instance.getUuid());
+  }
+
+  @Override
+  public String createCollaborationFeedbackTicket(String accountId, String appId, String cvConfigId,
+      String stateExecutionId, CVCollaborationProviderParameters cvJiraParameters) {
+    if (cvJiraParameters == null || isEmpty(cvJiraParameters.getCollaborationProviderConfigId())
+        || cvJiraParameters.getJiraTaskParameters() == null) {
+      final String errMsg = String.format(
+          "Empty Jira parameters sent in createCollaborationFeedbackTicket for cvConfigId/StateExecutionId %s, %s",
+          cvConfigId, stateExecutionId);
+      logger.error(errMsg);
+      throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("reason", errMsg);
+    }
+
+    JiraExecutionData jiraExecutionData = jiraHelperService.createJira(accountId, appId,
+        cvJiraParameters.getCollaborationProviderConfigId(), cvJiraParameters.getJiraTaskParameters());
+    if (jiraExecutionData == null || jiraExecutionData.getExecutionStatus() != ExecutionStatus.SUCCESS) {
+      logger.error("Unable to create jira ticket for cvConfigId/stateExecutionId {}/{}", cvConfigId, stateExecutionId);
+      throw new WingsException("Unable to create Jira ticket");
+    }
+    String jiraLink = jiraExecutionData.getIssueUrl();
+
+    // create a feedback for this config/time as ADD_TO_BASELINE
+    cvJiraParameters.getCvFeedbackRecord().setPriority(
+        FeedbackPriority.valueOf(cvJiraParameters.getJiraTaskParameters().getPriority()));
+    cvJiraParameters.getCvFeedbackRecord().setJiraLink(jiraLink);
+    addToBaseline(cvConfigId, stateExecutionId, cvJiraParameters.getCvFeedbackRecord());
+    return jiraLink;
   }
 
   @Override

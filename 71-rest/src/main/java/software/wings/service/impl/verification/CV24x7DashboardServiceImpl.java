@@ -22,6 +22,7 @@ import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
+import software.wings.service.impl.analysis.CVFeedbackRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRecordKeys;
 import software.wings.service.impl.analysis.LogMLAnalysisStatus;
@@ -364,6 +365,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
     analysisSummary.setAnalysisSummaryMessage(analysisSummaryMsg);
     analysisSummary.setStateType(cvConfiguration.getStateType());
     analysisSummary.setQuery(((LogsCVConfiguration) cvConfiguration).getQuery());
+    updateFeedbacksWithJira(cvConfiguration, analysisSummary);
     return analysisSummary;
   }
 
@@ -383,6 +385,34 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
     }
 
     return unexpectedFrequency;
+  }
+
+  private void updateFeedbacksWithJira(CVConfiguration cvConfiguration, LogMLAnalysisSummary summary) {
+    List<CVFeedbackRecord> cvFeedbackRecords = analysisService.getFeedbacks(cvConfiguration.getUuid(), null);
+
+    if (!isEmpty(cvFeedbackRecords)) {
+      Map<String, CVFeedbackRecord> feedbackIdMap = new HashMap<>();
+      cvFeedbackRecords.forEach(feedbackRecord -> feedbackIdMap.put(feedbackRecord.getUuid(), feedbackRecord));
+      addJiraLinkToClusters(feedbackIdMap, summary.getControlClusters());
+      addJiraLinkToClusters(feedbackIdMap, summary.getUnknownClusters());
+      addJiraLinkToClusters(feedbackIdMap, summary.getTestClusters());
+    }
+  }
+
+  private void addJiraLinkToClusters(
+      Map<String, CVFeedbackRecord> feedbackRecordMap, List<LogMLClusterSummary> clusterSummary) {
+    if (clusterSummary == null) {
+      return;
+    }
+    clusterSummary.forEach(controlCluster -> {
+      String feedbackId = controlCluster.getLogMLFeedbackId();
+      if (isNotEmpty(feedbackId)) {
+        // add in the Jira link if available
+        if (feedbackRecordMap.containsKey(feedbackId)) {
+          controlCluster.setJiraLink(feedbackRecordMap.get(feedbackId).getJiraLink());
+        }
+      }
+    });
   }
 
   public Map<String, Double> getMetricTags(

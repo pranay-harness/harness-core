@@ -334,6 +334,12 @@ public class JiraHelperService {
     return jiraExecutionData;
   }
 
+  public JiraExecutionData createJira(
+      String accountId, String appId, String jiraConfigId, JiraTaskParameters jiraTaskParameters) {
+    jiraTaskParameters.setJiraAction(JiraAction.CREATE_TICKET);
+    return runTask(accountId, appId, jiraConfigId, jiraTaskParameters);
+  }
+
   public JiraExecutionData getApprovalStatus(ApprovalPollingJobEntity approvalPollingJobEntity) {
     JiraTaskParameters jiraTaskParameters = JiraTaskParameters.builder()
                                                 .accountId(approvalPollingJobEntity.getAccountId())

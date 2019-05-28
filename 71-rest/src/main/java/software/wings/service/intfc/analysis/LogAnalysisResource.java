@@ -84,6 +84,8 @@ public interface LogAnalysisResource {
 
   String FEEDBACK_UPDATE_PRIORITY = "/update-priority";
 
+  String FEEDBACK_CREATE_JIRA = "/create-cv-jira";
+
   /**
    * Url for UI to fetch User Feedbacks by workflow id
    */
