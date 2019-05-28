@@ -63,7 +63,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author Vaibhav Tulsyan
@@ -104,6 +107,11 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
       case DATA_DOG:
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), DatadogCVServiceConfiguration.class);
+        DatadogCVServiceConfiguration ddCVConfig = (DatadogCVServiceConfiguration) cvConfiguration;
+        if (isEmpty(ddCVConfig.getDatadogServiceName()) && isEmpty(ddCVConfig.getDockerMetrics())
+            && isEmpty(ddCVConfig.getEcsMetrics()) && isEmpty(ddCVConfig.getCustomMetrics())) {
+          throw new WingsException("No metrics found in the yaml");
+        }
         break;
 
       case CLOUD_WATCH:
@@ -441,10 +449,34 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             "timeSeriesToAnalyze", ((PrometheusCVServiceConfiguration) cvConfiguration).getTimeSeriesToAnalyze());
         break;
       case DATA_DOG:
-        updateOperations
-            .set("datadogServiceName", ((DatadogCVServiceConfiguration) cvConfiguration).getDatadogServiceName())
-            .set("metrics", ((DatadogCVServiceConfiguration) cvConfiguration).getMetrics())
-            .set("applicationFilter", ((DatadogCVServiceConfiguration) cvConfiguration).getApplicationFilter());
+        DatadogCVServiceConfiguration datadogCVServiceConfiguration = (DatadogCVServiceConfiguration) cvConfiguration;
+        if (isEmpty(datadogCVServiceConfiguration.getDockerMetrics())
+            && isEmpty(datadogCVServiceConfiguration.getEcsMetrics())
+            && isEmpty(datadogCVServiceConfiguration.getCustomMetrics())
+            && isEmpty(datadogCVServiceConfiguration.getDatadogServiceName())) {
+          throw new WingsException("No metric provided in Configuration for configId " + savedConfiguration.getUuid()
+              + " and serviceId " + savedConfiguration.getServiceId());
+        }
+        if (isNotEmpty(datadogCVServiceConfiguration.getDatadogServiceName())) {
+          updateOperations.set("datadogServiceName", datadogCVServiceConfiguration.getDatadogServiceName());
+        } else {
+          updateOperations.unset("datadogServiceName");
+        }
+        if (isNotEmpty(datadogCVServiceConfiguration.getDockerMetrics())) {
+          updateOperations.set("dockerMetrics", datadogCVServiceConfiguration.getDockerMetrics());
+        } else {
+          updateOperations.unset("dockerMetrics");
+        }
+        if (isNotEmpty(datadogCVServiceConfiguration.getEcsMetrics())) {
+          updateOperations.set("ecsMetrics", datadogCVServiceConfiguration.getEcsMetrics());
+        } else {
+          updateOperations.unset("ecsMetrics");
+        }
+        if (isNotEmpty(datadogCVServiceConfiguration.getCustomMetrics())) {
+          updateOperations.set("customMetrics", datadogCVServiceConfiguration.getCustomMetrics());
+        } else {
+          updateOperations.unset("customMetrics");
+        }
         break;
       case CLOUD_WATCH:
         CloudWatchCVServiceConfiguration cloudWatchCVServiceConfiguration =
@@ -582,11 +614,22 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         break;
       case DATA_DOG:
         DatadogCVServiceConfiguration datadogCVServiceConfiguration = (DatadogCVServiceConfiguration) cvConfiguration;
-        List<String> metricNames = isNotEmpty(datadogCVServiceConfiguration.getMetrics())
-            ? Arrays.asList(datadogCVServiceConfiguration.getMetrics().split(","))
-            : new ArrayList<>();
-        metricTemplates = DatadogState.metricDefinitions(
-            DatadogState.metrics(metricNames, datadogCVServiceConfiguration.getDatadogServiceName(), null).values());
+
+        metricTemplates = new HashMap<>();
+        if (isNotEmpty(datadogCVServiceConfiguration.getDockerMetrics())) {
+          metricTemplates.putAll(getMetricTemplates(datadogCVServiceConfiguration.getDockerMetrics()));
+        }
+        if (isNotEmpty(datadogCVServiceConfiguration.getEcsMetrics())) {
+          metricTemplates.putAll(getMetricTemplates(datadogCVServiceConfiguration.getEcsMetrics()));
+        }
+
+        metricTemplates.putAll(DatadogState.metricDefinitions(
+            DatadogState
+                .metrics(Optional.empty(), Optional.ofNullable(datadogCVServiceConfiguration.getDatadogServiceName()),
+                    Optional.ofNullable(datadogCVServiceConfiguration.getCustomMetrics()), Optional.empty(),
+                    Optional.empty())
+                .values()));
+
         metricTemplate = TimeSeriesMetricTemplates.builder()
                              .stateType(stateType)
                              .metricTemplates(metricTemplates)
@@ -602,7 +645,6 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
                              .cvConfigId(cvConfiguration.getUuid())
                              .build();
         break;
-
       case SUMO:
       case ELK:
       case BUG_SNAG:
@@ -615,6 +657,20 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     metricTemplate.setAccountId(accountId);
     metricTemplate.setStateExecutionId(CV_24x7_STATE_EXECUTION + "-" + cvConfiguration.getUuid());
     wingsPersistence.save(metricTemplate);
+  }
+
+  private Map<String, TimeSeriesMetricDefinition> getMetricTemplates(Map<String, String> metrics) {
+    Map<String, TimeSeriesMetricDefinition> metricTemplates = new HashMap<>();
+    for (Entry<String, String> entry : metrics.entrySet()) {
+      List<String> metricNames =
+          Arrays.asList(entry.getValue().split(",")).parallelStream().map(String ::trim).collect(Collectors.toList());
+      metricTemplates.putAll(
+          DatadogState.metricDefinitions(DatadogState
+                                             .metrics(Optional.of(metricNames), Optional.empty(), Optional.empty(),
+                                                 Optional.of(entry.getKey()), Optional.empty())
+                                             .values()));
+    }
+    return metricTemplates;
   }
 
   public void deleteStaleConfigs() {

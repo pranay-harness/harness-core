@@ -4,6 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.common.VerificationConstants.DD_ECS_HOST_NAME;
+import static software.wings.common.VerificationConstants.DD_HOST_NAME_EXPRESSION;
+import static software.wings.common.VerificationConstants.DD_K8s_HOST_NAME;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Sets;
@@ -14,7 +17,6 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.context.ContextElementType;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import io.harness.serializer.YamlUtils;
@@ -23,6 +25,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
+import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.SettingAttribute;
@@ -42,6 +45,7 @@ import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.apm.APMMetricInfo;
 import software.wings.service.impl.apm.APMMetricInfo.APMMetricInfoBuilder;
+import software.wings.service.impl.apm.APMMetricInfo.ResponseMapper;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
@@ -54,10 +58,13 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -78,9 +85,9 @@ public class DatadogState extends AbstractMetricAnalysisState {
 
   @Attributes(required = false, title = "Datadog Service Name") private String datadogServiceName;
 
-  @Attributes(required = true, title = "Metrics") private String metrics;
+  @Attributes(required = false, title = "Metrics") private String metrics;
 
-  private List<Metric> customMetrics;
+  @Attributes(required = false, title = "Custom Metrics") private Map<String, Set<Metric>> customMetrics;
 
   @EnumData(enumDataProvider = AnalysisToleranceProvider.class)
   @Attributes(required = true, title = "Algorithm Sensitivity")
@@ -117,10 +124,13 @@ public class DatadogState extends AbstractMetricAnalysisState {
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
       VerificationStateAnalysisExecutionData executionData, Map<String, String> hosts) {
-    List<String> metricNames = Arrays.asList(metrics.split(","));
+    List<String> metricNames = metrics != null ? Arrays.asList(metrics.split(",")) : Collections.EMPTY_LIST;
+    String hostFilter = getDeploymentType(context).equals(DeploymentType.ECS) ? DD_ECS_HOST_NAME : DD_K8s_HOST_NAME;
     metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.DATA_DOG,
         context.getStateExecutionInstanceId(), null,
-        metricDefinitions(metrics(metricNames, datadogServiceName, customMetrics).values()));
+        metricDefinitions(metrics(Optional.of(metricNames), Optional.ofNullable(datadogServiceName),
+            Optional.ofNullable(customMetrics), Optional.empty(), Optional.of(hostFilter))
+                              .values()));
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
@@ -140,6 +150,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
         serviceName = templateExpressionProcessor.resolveTemplateExpression(context, serviceNameExpression);
       }
     }
+
     if (settingAttribute == null) {
       settingAttribute = settingsService.get(serverConfigId);
       if (settingAttribute == null) {
@@ -166,7 +177,8 @@ public class DatadogState extends AbstractMetricAnalysisState {
             .serviceId(getPhaseServiceId(context))
             .startTime(dataCollectionStartTimeStamp)
             .dataCollectionMinute(0)
-            .metricEndpoints(metricEndpointsInfo(serviceName, metricNames, null, customMetrics))
+            .metricEndpoints(metricEndpointsInfo(Optional.ofNullable(serviceName), Optional.of(metricNames),
+                Optional.empty(), Optional.ofNullable(customMetrics), Optional.ofNullable(getDeploymentType(context))))
             .accountId(accountId)
             .strategy(getComparisonStrategy())
             .dataCollectionFrequency(DATA_COLLECTION_RATE_MINS)
@@ -242,79 +254,81 @@ public class DatadogState extends AbstractMetricAnalysisState {
     this.datadogServiceName = datadogServiceName;
   }
 
-  public static Map<String, List<APMMetricInfo>> metricEndpointsInfo(
-      String datadogServiceName, List<String> metricNames, String applicationFilter, List<Metric> customMetrics) {
+  public Map<String, Set<Metric>> fetchCustomMetrics() {
+    return customMetrics;
+  }
+
+  public void setCustomMetrics(Map<String, Set<Metric>> customMetrics) {
+    this.customMetrics = customMetrics;
+  }
+
+  public static Map<String, List<APMMetricInfo>> metricEndpointsInfo(Optional<String> datadogServiceName,
+      Optional<List<String>> metricNames, Optional<String> applicationFilter,
+      Optional<Map<String, Set<Metric>>> customMetrics, Optional<DeploymentType> deploymentType) {
     YamlUtils yamlUtils = new YamlUtils();
     URL url = DatadogState.class.getResource("/apm/datadog.yml");
     try {
       String yaml = Resources.toString(url, Charsets.UTF_8);
       Map<String, MetricInfo> metricInfos = yamlUtils.read(yaml, new TypeReference<Map<String, MetricInfo>>() {});
-      if (isNotEmpty(datadogServiceName) && metricNames == null) {
-        metricNames = new ArrayList<>();
+
+      if (!metricNames.isPresent()) {
+        metricNames = Optional.of(new ArrayList<>());
       }
-      Map<String, Metric> metricMap = metrics(metricNames, datadogServiceName, customMetrics);
+
+      String hostFilter;
+      if (deploymentType.isPresent() && deploymentType.get().equals(DeploymentType.ECS)) {
+        parseMetricInfo(metricInfos.get("Docker"), DD_ECS_HOST_NAME);
+        hostFilter = DD_ECS_HOST_NAME;
+      } else {
+        parseMetricInfo(metricInfos.get("Docker"), DD_K8s_HOST_NAME);
+        hostFilter = DD_K8s_HOST_NAME;
+      }
+      Map<String, Metric> metricMap =
+          metrics(metricNames, datadogServiceName, customMetrics, applicationFilter, Optional.of(hostFilter));
+
+      // metrics list will have list of metric objects for given MetricNames
       List<Metric> metrics = new ArrayList<>();
-      for (String metricName : metricNames) {
+      for (String metricName : metricNames.get()) {
         if (!metricMap.containsKey(metricName)) {
           throw new WingsException("metric name not found" + metricName);
         }
         metrics.add(metricMap.get(metricName));
       }
-      if (isNotEmpty(customMetrics)) {
-        metrics.addAll(customMetrics);
-      }
+
       Map<String, List<APMMetricInfo>> result = new HashMap<>();
       for (Metric metric : metrics) {
         APMMetricInfoBuilder newMetricInfoBuilder = APMMetricInfo.builder();
         MetricInfo metricInfo = metricInfos.get(metric.getDatadogMetricType());
-        String metricUrl = metricInfo.getUrl();
-        if (isNotEmpty(applicationFilter) || isNotEmpty(datadogServiceName)) {
-          metricUrl = metricInfo.getUrl24x7();
-        }
+
+        String metricUrl = getMetricURL(metricInfo, metric.getDatadogMetricType(), deploymentType);
         newMetricInfoBuilder.responseMappers(metricInfo.responseMapperMap());
-        newMetricInfoBuilder.metricName(metric.getDisplayName());
-        newMetricInfoBuilder.metricType(metric.getMlMetricType());
+        newMetricInfoBuilder.metricType(MetricType.valueOf(metric.getMlMetricType()));
         newMetricInfoBuilder.tag(metric.getDatadogMetricType());
         newMetricInfoBuilder.responseMappers(metricInfo.responseMapperMap());
         newMetricInfoBuilder.metricName(metric.getDisplayName());
 
-        if (Arrays.asList("System", "Kubernetes", "Docker").contains(metric.getDatadogMetricType())) {
+        if (Arrays.asList("System", "Kubernetes", "Docker", "ECS").contains(metric.getDatadogMetricType())) {
           metricUrl = metricUrl.replace("${query}", metric.getMetricName());
-          if (isNotEmpty(applicationFilter)) {
-            metricUrl = metricUrl.replace("${applicationFilter}", applicationFilter);
+          if (applicationFilter.isPresent()) {
+            metricUrl = metricUrl.replace("${applicationFilter}", applicationFilter.get());
           }
-          if (EmptyPredicate.isEmpty(metric.getTransformation())) {
-            metricUrl = metricUrl.replace("${transformUnits}", "");
-          } else {
-            metricUrl = metricUrl.replace("${transformUnits}", metric.getTransformation());
-          }
+
+          metricUrl = parseTransformationUnit(metricUrl, deploymentType, metric);
 
           if (!result.containsKey(metricUrl)) {
             result.put(metricUrl, new ArrayList<>());
           }
           result.get(metricUrl).add(newMetricInfoBuilder.build());
         } else if (metric.getDatadogMetricType().equals("Servlet")) {
-          // today we support servlet metrics only in 24/7
-          metricUrl = metricUrl.replace("${datadogServiceName}", datadogServiceName)
-                          .replace("${query}", metric.getMetricName());
-
-          if (applicationFilter == null) {
-            applicationFilter = "";
+          if (datadogServiceName.isPresent()) {
+            metricUrl = metricUrl.replace("${datadogServiceName}", datadogServiceName.get());
           }
-          metricUrl = metricUrl.replace("${applicationFilter}", applicationFilter);
+          metricUrl = metricUrl.replace("${query}", metric.getMetricName());
 
-          if (!result.containsKey(metricUrl)) {
-            result.put(metricUrl, new ArrayList<>());
+          if (!applicationFilter.isPresent()) {
+            applicationFilter = Optional.of("");
           }
-          result.get(metricUrl).add(newMetricInfoBuilder.build());
-        } else if (metric.getDatadogMetricType().equals("Custom")) {
-          metricUrl = metricUrl.replace("${query}", metric.getMetricName())
-                          .replace("${tag}", metric.getTags().iterator().next());
-
-          if (applicationFilter == null) {
-            applicationFilter = "";
-          }
-          metricUrl = metricUrl.replace("${applicationFilter}", applicationFilter);
+          metricUrl = metricUrl.replace("${applicationFilter}", applicationFilter.get());
 
           if (!result.containsKey(metricUrl)) {
             result.put(metricUrl, new ArrayList<>());
@@ -325,9 +339,81 @@ public class DatadogState extends AbstractMetricAnalysisState {
         }
       }
 
+      if (customMetrics.isPresent()) {
+        for (String identifier : customMetrics.get().keySet()) {
+          // identifier can be host_identifier or application filter
+          if (deploymentType.isPresent()) {
+            parseMetricInfo(metricInfos.get("Custom"), identifier);
+          } else {
+            parseMetricInfo(metricInfos.get("Custom"), DD_K8s_HOST_NAME);
+          }
+          Set<Metric> metricSet = customMetrics.get().get(identifier);
+          metricSet.forEach(metric -> {
+            MetricInfo metricInfo = metricInfos.get(metric.getDatadogMetricType());
+
+            APMMetricInfoBuilder newMetricInfoBuilder = APMMetricInfo.builder();
+            newMetricInfoBuilder.responseMappers(metricInfo.responseMapperMap());
+            newMetricInfoBuilder.metricType(MetricType.valueOf(metric.getMlMetricType()));
+            newMetricInfoBuilder.tag(metric.getDatadogMetricType());
+            newMetricInfoBuilder.metricName(metric.getDisplayName());
+
+            String metricUrl = getMetricURL(metricInfo, metric.getDatadogMetricType(), deploymentType);
+            metricUrl = metricUrl.replace("${query}", metric.getMetricName());
+            if (deploymentType.isPresent()) {
+              metricUrl = metricUrl.replace("${host_identifier}", identifier);
+            } else {
+              metricUrl = metricUrl.replace("${applicationFilter}", identifier);
+            }
+            if (!result.containsKey(metricUrl)) {
+              result.put(metricUrl, new ArrayList<>());
+            }
+            result.get(metricUrl).add(newMetricInfoBuilder.build());
+          });
+        }
+      }
       return result;
     } catch (RuntimeException | IOException ex) {
       throw new WingsException("Unable to get metric info", ex);
+    }
+  }
+
+  private static String parseTransformationUnit(
+      String metricUrl, Optional<DeploymentType> deploymentType, Metric metric) {
+    if (deploymentType.isPresent()) {
+      // workflow based deployment
+      if (isEmpty(metric.getTransformation())) {
+        metricUrl = metricUrl.replace("${transformUnits}", "");
+      } else {
+        metricUrl = metricUrl.replace("${transformUnits}", metric.getTransformation());
+      }
+    } else {
+      if (isEmpty(metric.getTransformation24x7())) {
+        metricUrl = metricUrl.replace("${transformUnits}", "");
+      } else {
+        metricUrl = metricUrl.replace("${transformUnits}", metric.getTransformation24x7());
+      }
+    }
+    return metricUrl;
+  }
+
+  private static String getMetricURL(
+      MetricInfo metricInfo, String datadogMetricType, Optional<DeploymentType> deploymentType) {
+    String metricUrl;
+    if (deploymentType.isPresent()) {
+      metricUrl = deploymentType.get().equals(DeploymentType.ECS) && datadogMetricType.equals("Docker")
+          ? metricInfo.getUrlEcs()
+          : metricInfo.getUrl();
+    } else {
+      metricUrl = metricInfo.getUrl24x7();
+    }
+    return metricUrl;
+  }
+
+  private static void parseMetricInfo(MetricInfo metricInfo, String hostname) {
+    for (ResponseMapper responseMapper : metricInfo.getResponseMappers()) {
+      if (responseMapper.getFieldName().equals("host")) {
+        responseMapper.getRegexs().replaceAll(regex -> regex.replace(DD_HOST_NAME_EXPRESSION, hostname));
+      }
     }
   }
 
@@ -337,31 +423,37 @@ public class DatadogState extends AbstractMetricAnalysisState {
       metricTypeMap.put(metric.getDisplayName(),
           TimeSeriesMetricDefinition.builder()
               .metricName(metric.getDisplayName())
-              .metricType(metric.getMlMetricType())
+              .metricType(MetricType.valueOf(metric.getMlMetricType()))
               .tags(metric.getTags())
               .build());
     }
     return metricTypeMap;
   }
 
-  public static Map<String, Metric> metrics(
-      List<String> metricNames, String datadogServiceName, List<Metric> customMetrics) {
+  public static Map<String, Metric> metrics(Optional<List<String>> metricNames, Optional<String> datadogServiceName,
+      Optional<Map<String, Set<Metric>>> customMetricsByTag, Optional<String> applicationFilter,
+      Optional<String> hostFilter) {
     YamlUtils yamlUtils = new YamlUtils();
     URL url = DatadogState.class.getResource("/apm/datadog_metrics.yml");
     try {
       String yaml = Resources.toString(url, Charsets.UTF_8);
       Map<String, List<Metric>> metrics = yamlUtils.read(yaml, new TypeReference<Map<String, List<Metric>>>() {});
-      if (isNotEmpty(datadogServiceName) && isEmpty(metricNames)) {
+
+      if (!metricNames.isPresent()) {
+        metricNames = Optional.of(new ArrayList<>());
+      }
+      // if datadog service name provided then analysis will be done for servlet metrics
+      if (datadogServiceName.isPresent()) {
         // add the servlet metrics to this list.
         List<String> servletMetrics = new ArrayList<>();
         metrics.get("Servlet").forEach(servletMetric -> { servletMetrics.add(servletMetric.getMetricName()); });
-        if (metricNames == null) {
-          metricNames = new ArrayList<>();
-        }
-        metricNames.addAll(servletMetrics);
+        metricNames.get().addAll(servletMetrics);
       }
+
       Map<String, Metric> metricMap = new HashMap<>();
-      Set<String> metricNamesSet = Sets.newHashSet(metricNames);
+      Set<String> metricNamesSet = Sets.newHashSet(metricNames.get());
+
+      // add servlet, docker, ecs metrics to the map
       for (Map.Entry<String, List<Metric>> entry : metrics.entrySet()) {
         entry.getValue().forEach(metric -> {
           if (metricNamesSet.contains(metric.getMetricName())) {
@@ -369,16 +461,32 @@ public class DatadogState extends AbstractMetricAnalysisState {
               metric.setTags(new HashSet());
             }
             metric.getTags().add(entry.getKey());
+
+            // transformation24x7 needs to use application filter in transformation metric as well.
+            if (applicationFilter.isPresent() && isNotEmpty(metric.getTransformation24x7())) {
+              metric.setTransformation24x7(
+                  metric.getTransformation24x7().replace("${applicationFilter}", applicationFilter.get()));
+            }
+            if (hostFilter.isPresent() && metric.getDatadogMetricType().equals("Docker")
+                && isNotEmpty(metric.getTransformation())) {
+              metric.setTransformation(metric.getTransformation().replace("${hostFilter}", hostFilter.get()));
+            }
+
             metricMap.put(metric.getMetricName(), metric);
           }
         });
       }
-      if (isNotEmpty(customMetrics)) {
-        for (Metric metric : customMetrics) {
-          metricMap.put(metric.getMetricName(), metric);
+
+      // add custom metrics to the map
+      if (customMetricsByTag.isPresent()) {
+        for (Entry<String, Set<Metric>> entry : customMetricsByTag.get().entrySet()) {
+          entry.getValue().forEach(metric -> {
+            metric.setTags(new HashSet<>());
+            metric.getTags().add("Custom");
+            metricMap.put(metric.getMetricName(), metric);
+          });
         }
       }
-
       return metricMap;
     } catch (Exception ex) {
       throw new WingsException("Unable to load datadog metrics", ex);
@@ -409,7 +517,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
   @Builder
   public static class Metric {
     private String metricName;
-    private MetricType mlMetricType;
+    private String mlMetricType;
     private String datadogMetricType;
     private String displayName;
     private String transformation;
@@ -421,6 +529,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
   @Builder
   public static class MetricInfo {
     private String url;
+    private String urlEcs;
     private String url24x7;
     private List<APMMetricInfo.ResponseMapper> responseMappers;
     public Map<String, APMMetricInfo.ResponseMapper> responseMapperMap() {

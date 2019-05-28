@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static software.wings.api.DeploymentType.KUBERNETES;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -21,6 +22,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public class DatadogStateTest extends WingsBaseTest {
@@ -28,20 +30,22 @@ public class DatadogStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void metrics() {
     Map<String, DatadogState.Metric> metrics =
-        DatadogState.metrics(Lists.newArrayList("trace.servlet.request.duration"), "", null);
+        DatadogState.metrics(Optional.of(Lists.newArrayList("trace.servlet.request.duration")), Optional.empty(),
+            Optional.empty(), Optional.empty(), Optional.empty());
     assertTrue(metrics.containsKey("trace.servlet.request.duration"));
     assertEquals("Servlet", metrics.get("trace.servlet.request.duration").getDatadogMetricType());
     assertEquals(Sets.newHashSet("Servlet"), metrics.get("trace.servlet.request.duration").getTags());
     assertEquals("trace.servlet.request.duration", metrics.get("trace.servlet.request.duration").getMetricName());
     assertEquals("Request Duration", metrics.get("trace.servlet.request.duration").getDisplayName());
-    assertEquals(MetricType.RESP_TIME, metrics.get("trace.servlet.request.duration").getMlMetricType());
+    assertEquals(MetricType.RESP_TIME.name(), metrics.get("trace.servlet.request.duration").getMlMetricType());
   }
 
   @Test
   @Category(UnitTests.class)
   public void metricDefinitions() {
     Map<String, DatadogState.Metric> metrics =
-        DatadogState.metrics(Lists.newArrayList("trace.servlet.request.duration", "system.cpu.iowait"), "", null);
+        DatadogState.metrics(Optional.of(Lists.newArrayList("trace.servlet.request.duration", "system.cpu.iowait")),
+            Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
 
     List<DatadogState.Metric> metricList = new ArrayList<>();
     metricList.add(metrics.get("trace.servlet.request.duration"));
@@ -55,9 +59,10 @@ public class DatadogStateTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void metricEndpointsInfo() {
-    Map<String, List<APMMetricInfo>> metricEndpointsInfo = DatadogState.metricEndpointsInfo(
-        "todolist", Lists.newArrayList("system.cpu.iowait", "trace.servlet.request.duration"), null, null);
-    assertEquals(2, metricEndpointsInfo.size());
+    Map<String, List<APMMetricInfo>> metricEndpointsInfo = DatadogState.metricEndpointsInfo(Optional.of("todolist"),
+        Optional.of(Lists.newArrayList("system.cpu.iowait", "trace.servlet.request.duration")), Optional.empty(),
+        Optional.empty(), Optional.of(KUBERNETES));
+    assertEquals(4, metricEndpointsInfo.size());
     List<APMMetricInfo> apmMetricInfos = metricEndpointsInfo.values().iterator().next();
     for (String query : metricEndpointsInfo.keySet()) {
       if (query.contains("system.cpu.iowait")) {
@@ -72,8 +77,9 @@ public class DatadogStateTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void metricEndpointsInfoTransformation() {
-    Map<String, List<APMMetricInfo>> metricEndpointsInfo =
-        DatadogState.metricEndpointsInfo("", Lists.newArrayList("kubernetes.cpu.usage.total"), null, null);
+    Map<String, List<APMMetricInfo>> metricEndpointsInfo = DatadogState.metricEndpointsInfo(Optional.empty(),
+        Optional.of(Lists.newArrayList("kubernetes.cpu.usage.total")), Optional.empty(), Optional.empty(),
+        Optional.of(KUBERNETES));
     assertEquals(1, metricEndpointsInfo.size());
     List<APMMetricInfo> apmMetricInfos = metricEndpointsInfo.values().iterator().next();
     String query =
@@ -88,7 +94,8 @@ public class DatadogStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void metricEndpointsInfoDocker() {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo =
-        DatadogState.metricEndpointsInfo("", Lists.newArrayList("docker.cpu.usage"), null, null);
+        DatadogState.metricEndpointsInfo(Optional.empty(), Optional.of(Lists.newArrayList("docker.cpu.usage")),
+            Optional.empty(), Optional.empty(), Optional.of(KUBERNETES));
     assertEquals(1, metricEndpointsInfo.size());
     List<APMMetricInfo> apmMetricInfos = metricEndpointsInfo.values().iterator().next();
     String query =
@@ -102,9 +109,10 @@ public class DatadogStateTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void metricEndpointsInfoDocker24x7() {
-    Map<String, List<APMMetricInfo>> metricEndpointsInfo = DatadogState.metricEndpointsInfo(
-        "todolist", Lists.newArrayList("docker.cpu.usage"), "cluster:harness-test", null);
-    assertEquals(1, metricEndpointsInfo.size());
+    Map<String, List<APMMetricInfo>> metricEndpointsInfo =
+        DatadogState.metricEndpointsInfo(Optional.of("todolist"), Optional.of(Lists.newArrayList("docker.cpu.usage")),
+            Optional.of("cluster:harness-test"), Optional.empty(), Optional.empty());
+    assertEquals(4, metricEndpointsInfo.size());
     List<APMMetricInfo> apmMetricInfos = metricEndpointsInfo.values().iterator().next();
     String query =
         "query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=docker.cpu.usage{cluster:harness-test}.rollup(avg,60)";
@@ -118,21 +126,24 @@ public class DatadogStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testBadMetric() {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo =
-        DatadogState.metricEndpointsInfo("todolist", Lists.newArrayList("dummyMetricName"), null, null);
+        DatadogState.metricEndpointsInfo(Optional.of("todolist"), Optional.of(Lists.newArrayList("dummyMetricName")),
+            Optional.empty(), Optional.empty(), Optional.of(KUBERNETES));
   }
 
-  @Test(expected = WingsException.class)
+  @Test
   @Category(UnitTests.class)
-  public void testBadServiceName() {
-    Map<String, List<APMMetricInfo>> metricEndpointsInfo = DatadogState.metricEndpointsInfo(
-        null, Lists.newArrayList("trace.servlet.request.duration", "system.cpu.iowait"), null, null);
+  public void testServletSystemMetrics() {
+    Map<String, List<APMMetricInfo>> metricEndpointsInfo = DatadogState.metricEndpointsInfo(Optional.empty(),
+        Optional.of(Lists.newArrayList("trace.servlet.request.duration", "system.cpu.iowait")), Optional.empty(),
+        Optional.empty(), Optional.of(KUBERNETES));
+    assertTrue(metricEndpointsInfo.size() == 2);
   }
 
   @Test
   @Category(UnitTests.class)
   public void testServiceLevelMetrics() {
-    Map<String, List<APMMetricInfo>> metricEndpointsInfo =
-        DatadogState.metricEndpointsInfo("todolist", null, null, null);
+    Map<String, List<APMMetricInfo>> metricEndpointsInfo = DatadogState.metricEndpointsInfo(
+        Optional.of("todolist"), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(KUBERNETES));
     assertEquals(3, metricEndpointsInfo.size());
     Set<String> traceMetrics = new HashSet<>(Arrays.asList("Request Duration", "Errors", "Hits"));
     metricEndpointsInfo.forEach((k, v) -> {

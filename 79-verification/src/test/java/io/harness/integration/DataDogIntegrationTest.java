@@ -53,6 +53,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.WebTarget;
@@ -229,10 +230,11 @@ public class DataDogIntegrationTest extends VerificationBaseIntegrationTest {
         accountId, appId, stateExecutionId, delegateTaskId, Lists.newArrayList(record, record1));
 
     timeSeriesAnalysisService.saveMetricTemplates(appId, StateType.DATA_DOG, stateExecutionId,
-        DatadogState.metricDefinitions(
-            DatadogState
-                .metrics(Lists.newArrayList("trace.servlet.request.duration", "trace.servlet.request.hits"), "", null)
-                .values()));
+        DatadogState.metricDefinitions(DatadogState
+                                           .metrics(Optional.of(Lists.newArrayList("trace.servlet.request.duration",
+                                                        "trace.servlet.request.hits")),
+                                               Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty())
+                                           .values()));
 
     String lastSuccessfulWorkflowExecutionIdWithData =
         timeSeriesAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(

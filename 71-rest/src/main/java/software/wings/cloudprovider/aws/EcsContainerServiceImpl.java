@@ -1316,6 +1316,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   // https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-agent-introspection.html
   private String generateTaskMetadataEndpointUrl(
       com.amazonaws.services.ec2.model.Instance ec2Instance, ExecutionLogCallback logCallback) {
+    logger.info("Ec2 Instance details :" + ec2Instance);
     String url = format(CONTAINER_METADATA_FORMAT_STRING, ec2Instance.getPrivateDnsName());
     if (logCallback != null) {
       logCallback.saveExecutionLog(format("Testing private Dns: [%s] for connectivity", url));

@@ -466,6 +466,7 @@ public abstract class AbstractAnalysisState extends State {
                                      .build());
 
     Map<String, String> map = new HashMap<>();
+    getLogger().info("Container info list : " + containerInfos);
 
     for (software.wings.cloudprovider.ContainerInfo containerInfo : containerInfos) {
       Map<String, Object> containerMap = new HashMap<>();
@@ -474,6 +475,7 @@ public abstract class AbstractAnalysisState extends State {
                                                        : evaluator.substitute(hostnameTemplate, containerMap);
       map.put(evaluatedHost, DEFAULT_GROUP_NAME);
     }
+    getLogger().info("map created : " + map);
     return map;
   }
 
@@ -555,11 +557,12 @@ public abstract class AbstractAnalysisState extends State {
       DeploymentType deploymentType =
           serviceResourceService.getDeploymentType(infrastructureMapping, null, infrastructureMapping.getServiceId());
 
+      Map<String, Object> instanceElementMap = new HashMap<>();
+      instanceElementMap.put("host", instanceElement);
       if (isEmpty(getHostnameTemplate())) {
         rv.put(instanceElement.getHostName(), getGroupName(instanceElement, deploymentType));
       } else {
-        rv.put(context.renderExpression(getHostnameTemplate(),
-                   StateExecutionContext.builder().contextElements(Lists.newArrayList(instanceElement)).build()),
+        rv.put(String.valueOf(evaluator.evaluate(hostnameTemplate, instanceElementMap)),
             getGroupName(instanceElement, deploymentType));
       }
     }
