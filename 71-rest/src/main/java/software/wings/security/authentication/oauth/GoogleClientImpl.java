@@ -38,12 +38,14 @@ public class GoogleClientImpl extends BaseOauthClient implements OauthClient {
   public GoogleClientImpl(MainConfiguration mainConfiguration, SecretManager secretManager) {
     super(secretManager);
     GoogleConfig googleConfig = mainConfiguration.getGoogleConfig();
-    service =
-        new ServiceBuilder(googleConfig.getClientId())
-            .apiSecret(googleConfig.getClientSecret())
-            .callback(googleConfig.getCallbackUrl())
-            .scope("https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile")
-            .build(GoogleApi20.instance());
+    if (googleConfig != null) {
+      service =
+          new ServiceBuilder(googleConfig.getClientId())
+              .apiSecret(googleConfig.getClientSecret())
+              .callback(googleConfig.getCallbackUrl())
+              .scope("https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile")
+              .build(GoogleApi20.instance());
+    }
   }
 
   @Override

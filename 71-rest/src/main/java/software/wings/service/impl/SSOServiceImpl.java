@@ -20,7 +20,6 @@ import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.hibernate.validator.constraints.NotBlank;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.FeatureName;
@@ -72,8 +71,6 @@ public class SSOServiceImpl implements SSOService {
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private SecretManager secretManager;
   @Inject private FeatureFlagService featureFlagService;
-  @Inject private MainConfiguration mainConfiguration;
-  @Inject private software.wings.security.SecretManager jwtTokenHelper;
   @Inject OauthOptions oauthOptions;
   @Inject private AuthHandler authHandler;
 

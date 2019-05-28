@@ -44,16 +44,18 @@ public class AzureClientImpl extends BaseOauthClient implements OauthClient {
       throws UnsupportedEncodingException {
     super(secretManager);
     AzureConfig azureConfig = mainConfiguration.getAzureConfig();
-    String clientId = new String(
-        Base64.decodeBase64(azureConfig.getClientId().getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
-    String clientSecret = new String(
-        Base64.decodeBase64(azureConfig.getClientSecret().getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
-    clientSecret = URLEncoder.encode(clientSecret, StandardCharsets.UTF_8.name());
-    service = new ServiceBuilder(clientId)
-                  .apiSecret(clientSecret)
-                  .scope("User.Read") // replace with desired scope
-                  .callback(azureConfig.getCallbackUrl())
-                  .build(new MicrosoftAzureActiveDirectory20ApiV2());
+    if (azureConfig != null) {
+      String clientId = new String(
+          Base64.decodeBase64(azureConfig.getClientId().getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
+      String clientSecret = new String(
+          Base64.decodeBase64(azureConfig.getClientSecret().getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
+      clientSecret = URLEncoder.encode(clientSecret, StandardCharsets.UTF_8.name());
+      service = new ServiceBuilder(clientId)
+                    .apiSecret(clientSecret)
+                    .scope("User.Read") // replace with desired scope
+                    .callback(azureConfig.getCallbackUrl())
+                    .build(new MicrosoftAzureActiveDirectory20ApiV2());
+    }
   }
 
   @Override

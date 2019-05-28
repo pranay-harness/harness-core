@@ -37,11 +37,13 @@ public class GitlabClient extends BaseOauthClient implements OauthClient {
   public GitlabClient(MainConfiguration mainConfiguration, SecretManager secretManager) {
     super(secretManager);
     GitlabConfig gitlabConfig = mainConfiguration.getGitlabConfig();
-    service = new ServiceBuilder(gitlabConfig.getClientId())
-                  .apiSecret(gitlabConfig.getClientSecret())
-                  .callback(gitlabConfig.getCallbackUrl())
-                  .scope("read_user")
-                  .build(Gitlab.instance());
+    if (gitlabConfig != null) {
+      service = new ServiceBuilder(gitlabConfig.getClientId())
+                    .apiSecret(gitlabConfig.getClientSecret())
+                    .callback(gitlabConfig.getCallbackUrl())
+                    .scope("read_user")
+                    .build(Gitlab.instance());
+    }
   }
 
   @Override

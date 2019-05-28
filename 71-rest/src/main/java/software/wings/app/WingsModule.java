@@ -110,7 +110,6 @@ import software.wings.service.impl.ArtifactStreamServiceBindingServiceImpl;
 import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.impl.AssignDelegateServiceImpl;
 import software.wings.service.impl.AuditServiceImpl;
-import software.wings.service.impl.AuthServiceImpl;
 import software.wings.service.impl.AwsHelperResourceServiceImpl;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.AzureInfrastructureProvider;
@@ -159,8 +158,6 @@ import software.wings.service.impl.PluginServiceImpl;
 import software.wings.service.impl.PreferenceServiceImpl;
 import software.wings.service.impl.ResourceConstraintServiceImpl;
 import software.wings.service.impl.RoleServiceImpl;
-import software.wings.service.impl.SSOServiceImpl;
-import software.wings.service.impl.SSOSettingServiceImpl;
 import software.wings.service.impl.ServiceClassLocator;
 import software.wings.service.impl.ServiceInstanceServiceImpl;
 import software.wings.service.impl.ServiceResourceServiceImpl;
@@ -285,7 +282,6 @@ import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.AuditService;
-import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.AwsHelperResourceService;
 import software.wings.service.intfc.AzureResourceService;
 import software.wings.service.intfc.BambooBuildService;
@@ -336,8 +332,6 @@ import software.wings.service.intfc.PluginService;
 import software.wings.service.intfc.PreferenceService;
 import software.wings.service.intfc.ResourceConstraintService;
 import software.wings.service.intfc.RoleService;
-import software.wings.service.intfc.SSOService;
-import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -458,7 +452,6 @@ public class WingsModule extends DependencyModule {
    */
   @Override
   protected void configure() {
-    bind(AuthService.class).to(AuthServiceImpl.class);
     bind(MainConfiguration.class).toInstance(configuration);
     bind(SchedulerConfig.class)
         .annotatedWith(Names.named("BackgroundSchedule"))
@@ -682,8 +675,6 @@ public class WingsModule extends DependencyModule {
 
     bind(ContainerSync.class).to(ContainerSyncImpl.class);
     bind(AwsLambdaService.class).to(AwsLambdaServiceImpl.class);
-    bind(SSOSettingService.class).to(SSOSettingServiceImpl.class);
-    bind(SSOService.class).to(SSOServiceImpl.class);
     bind(DeploymentService.class).to(DeploymentServiceImpl.class);
     bind(HelmDeployService.class).to(HelmDeployServiceUnsupported.class).in(Singleton.class);
     bind(PcfDeploymentManager.class).to(PcfDeploymentManagerUnsupported.class).in(Singleton.class);

@@ -39,9 +39,11 @@ public class BitbucketClient extends BaseOauthClient implements OauthClient {
   public BitbucketClient(MainConfiguration mainConfiguration, SecretManager secretManager) {
     super(secretManager);
     bitbucketConfig = mainConfiguration.getBitbucketConfig();
-    service = new ServiceBuilder(bitbucketConfig.getClientId())
-                  .apiSecret(bitbucketConfig.getClientSecret())
-                  .build(Bitbucket.instance());
+    if (bitbucketConfig != null) {
+      service = new ServiceBuilder(bitbucketConfig.getClientId())
+                    .apiSecret(bitbucketConfig.getClientSecret())
+                    .build(Bitbucket.instance());
+    }
   }
 
   @Override
