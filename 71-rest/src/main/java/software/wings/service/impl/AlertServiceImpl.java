@@ -230,8 +230,8 @@ public class AlertServiceImpl implements AlertService {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", errorMsg);
     }
     Query<Alert> alertQuery = wingsPersistence.createQuery(Alert.class)
-                                  .filter(AlertKeys.type, alertType)
                                   .filter(AlertKeys.accountId, accountId)
+                                  .filter(AlertKeys.type, alertType)
                                   .field(AlertKeys.status)
                                   .in(STATUS_ACTIVE);
     if (appId != null) {
@@ -249,8 +249,8 @@ public class AlertServiceImpl implements AlertService {
 
   private Iterable<Alert> findExistingAlertsOfType(String accountId, String appId, AlertType alertType) {
     Query<Alert> alertQuery = wingsPersistence.createQuery(Alert.class)
-                                  .filter(AlertKeys.type, alertType)
                                   .filter(AlertKeys.accountId, accountId)
+                                  .filter(AlertKeys.type, alertType)
                                   .field(AlertKeys.status)
                                   .in(STATUS_ACTIVE);
     if (appId != null) {
@@ -261,11 +261,11 @@ public class AlertServiceImpl implements AlertService {
 
   private void close(Alert alert) {
     long now = System.currentTimeMillis();
-    Date expiration = Date.from(OffsetDateTime.now().plusDays(7).toInstant());
+    Date expiration = Date.from(OffsetDateTime.now().plusDays(5).toInstant());
 
     wingsPersistence.update(wingsPersistence.createQuery(Alert.class)
-                                .filter(AlertKeys.accountId, alert.getAccountId())
-                                .filter(AlertKeys.uuid, alert.getUuid()),
+                                .filter(AlertKeys.uuid, alert.getUuid())
+                                .filter(AlertKeys.accountId, alert.getAccountId()),
         wingsPersistence.createUpdateOperations(Alert.class)
             .set(AlertKeys.status, Closed)
             .set(AlertKeys.closedAt, now)
