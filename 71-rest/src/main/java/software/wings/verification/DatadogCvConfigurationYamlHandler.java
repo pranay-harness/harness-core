@@ -1,6 +1,7 @@
 package software.wings.verification;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -12,9 +13,11 @@ import software.wings.sm.states.DatadogState.Metric;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration.DatadogCVConfigurationYaml;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class DatadogCvConfigurationYamlHandler
     extends CVConfigurationYamlHandler<DatadogCVConfigurationYaml, DatadogCVServiceConfiguration> {
@@ -23,8 +26,9 @@ public class DatadogCvConfigurationYamlHandler
     DatadogCVConfigurationYaml yaml = DatadogCVConfigurationYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setDatadogServiceName(bean.getDatadogServiceName());
-    yaml.setMetrics(bean.getMetrics());
-    yaml.setApplicationFilter(bean.getApplicationFilter());
+    yaml.setDockerMetrics(bean.getDockerMetrics());
+    yaml.setEcsMetrics(bean.getEcsMetrics());
+    yaml.setCustomMetrics(bean.getCustomMetrics());
     yaml.setType(StateType.DATA_DOG.name());
     return yaml;
   }
@@ -72,18 +76,33 @@ public class DatadogCvConfigurationYamlHandler
     DatadogCVConfigurationYaml yaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     super.toBean(changeContext, bean, appId, yamlFilePath);
-    if ((isEmpty(yaml.getApplicationFilter()) || isEmpty(yaml.getMetrics())) && isEmpty(yaml.getDatadogServiceName())) {
-      throw new WingsException("Invalid Datadog yaml. Please set valid application filter and metrics");
-    }
+    List<String> metricList = new ArrayList<>();
     // validate if the metrics in yaml are actually supported by Harness.
-    List<String> metricList = Arrays.asList(yaml.getMetrics().split(","));
-    Map<String, Metric> metrics = DatadogState.metrics(metricList, "", null);
-    if (metrics.size() != metricList.size()) {
-      throw new WingsException("Invalid/Unsupported metrics found in the yaml: " + yaml.getMetrics());
+
+    if (isNotEmpty(yaml.getDockerMetrics())) {
+      yaml.getDockerMetrics().values().forEach(metric -> { metricList.addAll(Arrays.asList(metric.split(","))); });
+      bean.setDockerMetrics(yaml.getDockerMetrics());
     }
-    bean.setMetrics(yaml.getMetrics());
+    if (isNotEmpty(yaml.getEcsMetrics())) {
+      yaml.getEcsMetrics().values().forEach(metric -> { metricList.addAll(Arrays.asList(metric.split(","))); });
+      bean.setEcsMetrics(yaml.getEcsMetrics());
+    }
+    if (isNotEmpty(yaml.getCustomMetrics())) {
+      bean.setCustomMetrics(yaml.getCustomMetrics());
+    }
+
+    if (isEmpty(yaml.getDatadogServiceName()) && isEmpty(yaml.getDockerMetrics()) && isEmpty(yaml.getEcsMetrics())
+        && isEmpty(yaml.getCustomMetrics())) {
+      throw new WingsException("No metrics found in the yaml");
+    }
+
+    Map<String, Metric> metrics = DatadogState.metrics(Optional.ofNullable(metricList), Optional.empty(),
+        Optional.ofNullable(yaml.getCustomMetrics()), Optional.empty(), Optional.empty());
+    if (metrics.size() != metricList.size()) {
+      throw new WingsException("Invalid/Unsupported metrics found in the yaml");
+    }
+
     bean.setDatadogServiceName(yaml.getDatadogServiceName() == null ? "" : yaml.getDatadogServiceName());
-    bean.setApplicationFilter(yaml.getApplicationFilter());
     bean.setStateType(StateType.DATA_DOG);
   }
 }

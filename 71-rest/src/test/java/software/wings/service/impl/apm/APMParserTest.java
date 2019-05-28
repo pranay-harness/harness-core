@@ -1,6 +1,7 @@
 package software.wings.service.impl.apm;
 
 import static org.junit.Assert.assertEquals;
+import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.base.Charsets;
@@ -25,6 +26,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class APMParserTest extends WingsBaseTest {
   @Test
@@ -35,8 +37,9 @@ public class APMParserTest extends WingsBaseTest {
     String textMem =
         Resources.toString(APMParserTest.class.getResource("/apm/datadog_sample_response_mem.json"), Charsets.UTF_8);
 
-    Map<String, List<APMMetricInfo>> metricEndpointsInfo =
-        DatadogState.metricEndpointsInfo("", Lists.newArrayList("system.load.1", "system.mem.used"), null, null);
+    Map<String, List<APMMetricInfo>> metricEndpointsInfo = DatadogState.metricEndpointsInfo(Optional.empty(),
+        Optional.of(Lists.newArrayList("system.load.1", "system.mem.used")), Optional.empty(), Optional.empty(),
+        Optional.of(KUBERNETES));
 
     Iterator<List<APMMetricInfo>> metricInfoIterator = metricEndpointsInfo.values().iterator();
     Collection<NewRelicMetricDataRecord> records =
@@ -67,8 +70,9 @@ public class APMParserTest extends WingsBaseTest {
     String textMem =
         Resources.toString(APMParserTest.class.getResource("/apm/datadog_sample_response_mem.json"), Charsets.UTF_8);
 
-    Map<String, List<APMMetricInfo>> metricEndpointsInfo =
-        DatadogState.metricEndpointsInfo("", Lists.newArrayList("system.load.1", "system.mem.used"), null, null);
+    Map<String, List<APMMetricInfo>> metricEndpointsInfo = DatadogState.metricEndpointsInfo(Optional.empty(),
+        Optional.of(Lists.newArrayList("system.load.1", "system.mem.used")), Optional.empty(), Optional.empty(),
+        Optional.of(KUBERNETES));
 
     Iterator<List<APMMetricInfo>> metricInfoIterator = metricEndpointsInfo.values().iterator();
     Collection<NewRelicMetricDataRecord> records =

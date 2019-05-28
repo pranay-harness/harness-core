@@ -29,6 +29,7 @@ import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
 import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -63,8 +64,16 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   }
 
   private String createDDCVConfig() {
-    DatadogCVServiceConfiguration cvServiceConfiguration =
-        DatadogCVServiceConfiguration.builder().metrics("kubernetes.cpu.usage.total,docker.mem.rss").build();
+    DatadogCVServiceConfiguration cvServiceConfiguration = DatadogCVServiceConfiguration.builder().build();
+
+    Map<String, String> dockerMetrics = new HashMap<>();
+    dockerMetrics.put("service_name:harness", "docker.cpu.usage, docker.mem.rss");
+    cvServiceConfiguration.setDockerMetrics(dockerMetrics);
+
+    Map<String, String> ecsMetrics = new HashMap<>();
+    ecsMetrics.put("service_name:harness", "ecs.fargate.cpu.user");
+    cvServiceConfiguration.setEcsMetrics(ecsMetrics);
+
     cvServiceConfiguration.setName(generateUUID());
     cvServiceConfiguration.setConnectorId(connectorId);
     cvServiceConfiguration.setEnvId(envId);
@@ -98,7 +107,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
     // assert
     assertEquals("There are 2 tags", 2, result.size());
     assertTrue("Docker is one of the tags", result.containsKey("Docker"));
-    assertTrue("Kubernetes is one of the tags", result.containsKey("Kubernetes"));
+    assertTrue("ECS is one of the tags", result.containsKey("ECS"));
   }
 
   @Test

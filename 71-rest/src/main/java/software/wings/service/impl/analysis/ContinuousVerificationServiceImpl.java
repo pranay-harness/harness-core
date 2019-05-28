@@ -12,6 +12,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
 import static java.lang.Math.min;
 import static java.util.Collections.emptySet;
+import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.alert.AlertType.CONTINUOUS_VERIFICATION_ALERT;
 import static software.wings.common.VerificationConstants.APPDYNAMICS_DEEPLINK_FORMAT;
@@ -158,6 +159,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TimeZone;
@@ -1265,8 +1267,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           apmValidateCollectorConfig.getOptions().put("from", String.valueOf(config.getFromtime()));
           apmValidateCollectorConfig.getOptions().put("to", String.valueOf(config.getToTime()));
 
-          Map<String, List<APMMetricInfo>> metricInfoByQuery = metricEndpointsInfo(
-              config.getDatadogServiceName(), Arrays.asList(config.getMetrics().split(",")), null, null);
+          Map<String, List<APMMetricInfo>> metricInfoByQuery =
+              metricEndpointsInfo(Optional.ofNullable(config.getDatadogServiceName()),
+                  config.getMetrics() != null ? Optional.of(Arrays.asList(config.getMetrics().split(",")))
+                                              : Optional.empty(),
+                  Optional.empty(), Optional.empty(), Optional.of(KUBERNETES));
           List<Object> loadResponse = new ArrayList<>();
 
           // loop for each metric
@@ -1611,8 +1616,29 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     int timeDuration = (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
     Map<String, String> hostsMap = new HashMap<>();
     hostsMap.put("DUMMY_24_7_HOST", DEFAULT_GROUP_NAME);
-    List<String> ddMetricNames =
-        isNotEmpty(config.getMetrics()) ? Arrays.asList(config.getMetrics().split(",")) : new ArrayList<>();
+
+    Map<String, List<APMMetricInfo>> metricEndPoints = new HashMap<>();
+    if (isNotEmpty(config.getDockerMetrics())) {
+      for (Entry<String, String> entry : config.getDockerMetrics().entrySet()) {
+        String filter = entry.getKey();
+        List<String> dockerMetrics =
+            Arrays.asList(entry.getValue().split(",")).parallelStream().map(String ::trim).collect(Collectors.toList());
+        metricEndPoints.putAll(DatadogState.metricEndpointsInfo(
+            Optional.empty(), Optional.of(dockerMetrics), Optional.of(filter), Optional.empty(), Optional.empty()));
+      }
+    }
+    if (isNotEmpty(config.getEcsMetrics())) {
+      for (Entry<String, String> entry : config.getEcsMetrics().entrySet()) {
+        String filter = entry.getKey();
+        List<String> ecsMetrics =
+            Arrays.asList(entry.getValue().split(",")).parallelStream().map(String ::trim).collect(Collectors.toList());
+        metricEndPoints.putAll(DatadogState.metricEndpointsInfo(
+            Optional.empty(), Optional.of(ecsMetrics), Optional.of(filter), Optional.empty(), Optional.empty()));
+      }
+    }
+    metricEndPoints.putAll(DatadogState.metricEndpointsInfo(Optional.ofNullable(config.getDatadogServiceName()),
+        Optional.empty(), Optional.empty(), Optional.ofNullable(config.getCustomMetrics()), Optional.empty()));
+
     final APMDataCollectionInfo dataCollectionInfo =
         APMDataCollectionInfo.builder()
             .baseUrl(datadogConfig.getUrl())
@@ -1626,8 +1652,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .startTime(startTime)
             .cvConfigId(config.getUuid())
             .dataCollectionMinute(0)
-            .metricEndpoints(DatadogState.metricEndpointsInfo(
-                config.getDatadogServiceName(), ddMetricNames, config.getApplicationFilter(), null))
+            .metricEndpoints(metricEndPoints)
             .accountId(config.getAccountId())
             .strategy(AnalysisComparisonStrategy.PREDICTIVE)
             .dataCollectionFrequency(1)

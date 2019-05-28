@@ -57,6 +57,7 @@ Kubernetes:
 
 Docker:
   url: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{pod_name:${host}}by{pod_name}.rollup(avg,60)${transformUnits}
+  urlEcs: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{container_id:${host}}by{container_id}.rollup(avg,60)${transformUnits}
   url24x7: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{${applicationFilter}}.rollup(avg,60)${transformUnits}
   responseMappers:
         -
@@ -74,10 +75,10 @@ Docker:
             fieldName: host
             jsonPath: series[*].scope
             regexs:
-              - ((?<=pod_name:)([^,]*))
+              - ((?<=${host_identifier}:)([^,]*))
 
 Custom:
-  url: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{${tag}:${host}}by{${tag}}.rollup(avg,60)
+  url: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{${host_identifier}:${host}}by{${host_identifier}}.rollup(avg,60)
   url24x7: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{${applicationFilter}}.rollup(avg,60)
   responseMappers:
         -
@@ -95,5 +96,23 @@ Custom:
             fieldName: host
             jsonPath: series[*].scope
             regexs:
-              - ((?<=${tag}:)([^,]*))
+              - ((?<=${host_identifier}:)([^,]*))
 
+ECS:
+  url: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{container_id:${host}}by{container_id}.rollup(avg,60)${transformUnits}
+  url24x7: query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=${query}{${applicationFilter}}.rollup(avg,60)${transformUnits}
+  responseMappers:
+        -
+            fieldName: txnName
+            jsonPath: series[*].metric
+        -
+            fieldName: timestamp
+            jsonPath: series[*].pointlist[*].[0]
+        -
+            fieldName: value
+            jsonPath: series[*].pointlist[*].[1]
+        -
+            fieldName: host
+            jsonPath: series[*].scope
+            regexs:
+              - ((?<=container_id:)([^,]*))

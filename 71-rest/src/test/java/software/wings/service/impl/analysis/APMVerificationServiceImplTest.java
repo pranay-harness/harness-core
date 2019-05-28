@@ -57,6 +57,7 @@ import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Praveen 9/6/18
@@ -209,8 +210,10 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     SettingAttribute attribute = new SettingAttribute();
     attribute.setValue(dConfg);
 
-    DatadogCVServiceConfiguration config =
-        DatadogCVServiceConfiguration.builder().metrics("docker.mem.rss,kubernetes.memory.usage").build();
+    Map<String, String> dockerMetrics = new HashMap<>();
+    dockerMetrics.put("service_name:harness", "docker.cpu.usage, docker.mem.rss");
+
+    DatadogCVServiceConfiguration config = DatadogCVServiceConfiguration.builder().dockerMetrics(dockerMetrics).build();
     config.setConnectorId("connectorId");
     config.setUuid("cvConfigId");
     config.setAppId("appId");

@@ -58,6 +58,9 @@ public class VerificationConstants {
   public static final String DEFAULT_GROUP_NAME = "default";
   public static final String ECS_HOST_NAME = "ECS_HOST";
   public static final String WORKFLOW_CV_COLLECTION_CRON_GROUP = "_WORKFLOW_CV_COLLECTION_CRON_GROUP";
+  public static final String DD_ECS_HOST_NAME = "container_id";
+  public static final String DD_K8s_HOST_NAME = "pod_name";
+  public static final String DD_HOST_NAME_EXPRESSION = "${host_identifier}";
   public static final String IS_EXPERIMENTAL = "isExperimental";
 
   public static final String STATIC_CLOUD_WATCH_METRIC_URL = "/configs/cloudwatch_metrics.yml";

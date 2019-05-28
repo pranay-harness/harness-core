@@ -14,6 +14,7 @@ Servlet:
     mlMetricType: THROUGHPUT
     datadogMetricType: Servlet
     displayName: Hits
+
 System:
   -
     metricName: system.load.1
@@ -77,11 +78,32 @@ Docker:
       mlMetricType: INFRA
       datadogMetricType: Docker
       displayName: Docker RSS Memory (%)
-      transformation: /docker.mem.limit{pod_name:${host}}.rollup(avg,60)*100
-      transformation24x7: /docker.mem.limit{pod_name:${host}}.rollup(avg,60)*100
+      transformation: /docker.mem.limit{${hostFilter}:${host}}.rollup(avg,60)*100
+      transformation24x7: /docker.mem.limit{${applicationFilter}}.rollup(avg,60)*100
 
   -
       metricName: docker.cpu.throttled
       mlMetricType: INFRA
       datadogMetricType: Docker
       displayName: Docker CPU Throttled
+
+ECS:
+  -
+      metricName: ecs.fargate.cpu.user
+      mlMetricType: INFRA
+      datadogMetricType: ECS
+      displayName: ECS Container CPU Usage
+
+  -
+      metricName: ecs.fargate.mem.rss
+      mlMetricType: INFRA
+      datadogMetricType: ECS
+      displayName: ECS Container RSS Memory
+      transformation: /ecs.fargate.mem.limit{container_id:${host}}.rollup(avg,60)*100
+      transformation24x7: /ecs.fargate.mem.limit{${applicationFilter}}.rollup(avg,60)*100
+
+  -
+      metricName: ecs.fargate.mem.usage
+      mlMetricType: INFRA
+      datadogMetricType: ECS
+      displayName: ECS Container Memory Usage

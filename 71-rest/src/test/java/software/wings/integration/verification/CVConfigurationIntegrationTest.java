@@ -237,6 +237,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
   private void createDatadogConfig() {
     datadogCVServiceConfiguration = new DatadogCVServiceConfiguration();
+    datadogCVServiceConfiguration.setName("datadog config");
     datadogCVServiceConfiguration.setAppId(appId);
     datadogCVServiceConfiguration.setEnvId(envId);
     datadogCVServiceConfiguration.setServiceId(serviceId);
@@ -245,7 +246,10 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     datadogCVServiceConfiguration.setStateType(DATA_DOG);
     datadogCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.HIGH);
     datadogCVServiceConfiguration.setDatadogServiceName(generateUuid());
-    datadogCVServiceConfiguration.setMetrics("trace.servlet.request.errors, system.mem.used, system.cpu.iowait");
+
+    Map<String, String> dockerMetrics = new HashMap<>();
+    dockerMetrics.put("service_name:harness", "docker.cpu.usage, docker.mem.rss");
+    datadogCVServiceConfiguration.setDockerMetrics(dockerMetrics);
   }
 
   private void createElkCVConfig(boolean enabled24x7) {
@@ -461,14 +465,15 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(serviceId, fetchedObject.getServiceId());
     assertEquals(DATA_DOG, fetchedObject.getStateType());
     assertEquals(AnalysisTolerance.HIGH, fetchedObject.getAnalysisTolerance());
-    assertEquals("trace.servlet.request.errors, system.mem.used, system.cpu.iowait", fetchedObject.getMetrics());
+    assertEquals("docker.cpu.usage, docker.mem.rss", fetchedObject.getDockerMetrics().values().iterator().next());
 
     // Test PUT API for Datadog
     datadogCVServiceConfiguration.setName("Datadog Config");
     datadogCVServiceConfiguration.setEnabled24x7(false);
-    datadogCVServiceConfiguration.setMetrics("system.mem.used, system.cpu.iowait");
-    datadogCVServiceConfiguration.setApplicationFilter("cluster:harness-test");
     datadogCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
+    Map<String, String> dockerMetrics = new HashMap<>();
+    dockerMetrics.put("service_name:harness", "docker.cpu.throttled");
+    datadogCVServiceConfiguration.setDockerMetrics(dockerMetrics);
 
     // Call PUT
     url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId
@@ -489,7 +494,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     // Assert
     assertEquals("Datadog Config", fetchedObject.getName());
     assertFalse(fetchedObject.isEnabled24x7());
-    assertEquals("system.mem.used, system.cpu.iowait", fetchedObject.getMetrics());
+    assertEquals("docker.cpu.throttled", fetchedObject.getDockerMetrics().values().iterator().next());
     assertEquals(AnalysisTolerance.MEDIUM, fetchedObject.getAnalysisTolerance());
   }
 

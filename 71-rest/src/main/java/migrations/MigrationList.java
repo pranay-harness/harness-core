@@ -22,6 +22,7 @@ import migrations.all.CleanupOrphanInstances;
 import migrations.all.CreateDefaultAlertNotificationRule;
 import migrations.all.DanglingAppEnvReferenceRemovalMigration;
 import migrations.all.DanglingUserInviteCleanupMigration;
+import migrations.all.DatadogCVServiceConfigurationMigration;
 import migrations.all.DeleteCVAlertsMigration;
 import migrations.all.DeleteLETaskDelCronMigration;
 import migrations.all.DeleteNewRelicMetricNameCronMigration;
@@ -233,6 +234,7 @@ public class MigrationList {
         .add(Pair.of(250, AddAccountIdToArtifactsMigration.class))
         .add(Pair.of(251, AddAccountIdToArtifactStreamsMigration.class))
         .add(Pair.of(252, RemoveUnusedLogDataRecordMigration.class))
+        .add(Pair.of(253, DatadogCVServiceConfigurationMigration.class))
         .build();
   }
 }
