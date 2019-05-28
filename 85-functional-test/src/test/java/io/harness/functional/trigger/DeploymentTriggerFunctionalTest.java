@@ -19,11 +19,11 @@ import io.harness.generator.WorkflowGenerator.Workflows;
 import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.testframework.framework.Setup;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
@@ -56,8 +56,8 @@ public class DeploymentTriggerFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = "srinivas@harness.io", intermittent = true)
   @Category(FunctionalTests.class)
-  @Ignore
   public void shouldCreateNewArtifactTriggerForWorkflow() {
     final Service service =
         owners.obtainService(() -> serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST));
