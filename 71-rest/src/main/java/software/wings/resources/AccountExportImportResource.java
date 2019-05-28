@@ -166,7 +166,7 @@ public class AccountExportImportResource {
       @QueryParam("mode") @DefaultValue("ALL") ExportMode exportMode,
       @QueryParam("entityTypes") List<String> entityTypes) throws Exception {
     // Only if the user the account administrator or in the Harness user group can perform the export operation.
-    if (!usageRestrictionsService.isAccountAdmin(accountId)) {
+    if (!userService.isAccountAdmin(accountId)) {
       String errorMessage = "User is not account administrator and can't perform the export operation.";
       RestResponse<Boolean> restResponse = accountPermissionUtils.checkIfHarnessUser(errorMessage);
       if (restResponse != null) {
@@ -365,7 +365,7 @@ public class AccountExportImportResource {
       @QueryParam("disableSchemaCheck") boolean disableSchemaCheck,
       @FormDataParam("file") final InputStream uploadInputStream) throws Exception {
     // Only if the user the account administrator or in the Harness user group can perform the export operation.
-    if (!usageRestrictionsService.isAccountAdmin(accountId)) {
+    if (!userService.isAccountAdmin(accountId)) {
       String errorMessage = "User is not account administrator and can't perform the import operation.";
       RestResponse<ImportStatusReport> restResponse = accountPermissionUtils.checkIfHarnessUser(errorMessage);
       if (restResponse != null) {

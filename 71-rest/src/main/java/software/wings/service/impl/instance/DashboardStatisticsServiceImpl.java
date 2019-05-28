@@ -94,6 +94,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.UsageRestrictionsService;
+import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.service.intfc.instance.InstanceService;
@@ -122,6 +123,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   @Inject private WingsPersistence wingsPersistence;
   @Inject private InstanceService instanceService;
   @Inject private AppService appService;
+  @Inject private UserService userService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
@@ -1047,7 +1049,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         if (userRequestContext.isAppIdFilterRequired()) {
           Set<String> allowedAppIds = userRequestContext.getAppIds();
 
-          if (includeDeleted && usageRestrictionsService.isAccountAdmin(accountId)) {
+          if (includeDeleted && userService.isAccountAdmin(accountId)) {
             Set<String> deletedAppIds = getDeletedAppIds(accountId, timestamp);
             if (isNotEmpty(deletedAppIds)) {
               allowedAppIds = Sets.newHashSet(allowedAppIds);

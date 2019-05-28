@@ -99,6 +99,7 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
+import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.security.AwsSecretsManagerService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalEncryptionService;
@@ -153,6 +154,7 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private EnvironmentService envService;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private LocalEncryptionService localEncryptionService;
+  @Inject private UserService userService;
 
   @Override
   public EncryptionType getEncryptionType(String accountId) {
@@ -1637,7 +1639,7 @@ public class SecretManagerImpl implements SecretManager {
       batchPageSize = 2 * inputPageSize;
     }
 
-    boolean isAccountAdmin = usageRestrictionsService.isAccountAdmin(accountId);
+    boolean isAccountAdmin = userService.isAccountAdmin(accountId);
 
     RestrictionsAndAppEnvMap restrictionsAndAppEnvMap =
         usageRestrictionsService.getRestrictionsAndAppEnvMapFromCache(accountId, Action.READ);
@@ -1726,7 +1728,7 @@ public class SecretManagerImpl implements SecretManager {
   public PageResponse<EncryptedData> listSecretsMappedToAccount(
       String accountId, PageRequest<EncryptedData> pageRequest, boolean details) throws IllegalAccessException {
     // Also covers the case where its system originated call
-    boolean isAccountAdmin = usageRestrictionsService.isAccountAdmin(accountId);
+    boolean isAccountAdmin = userService.isAccountAdmin(accountId);
 
     if (!isAccountAdmin) {
       return aPageResponse().withResponse(Collections.emptyList()).build();

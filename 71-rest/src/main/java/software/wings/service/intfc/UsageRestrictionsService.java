@@ -127,8 +127,6 @@ public interface UsageRestrictionsService {
   void validateSetupUsagesOnUsageRestrictionsUpdate(
       String accountId, Map<String, Set<String>> setupUsages, UsageRestrictions newUsageRestrictions);
 
-  boolean isAccountAdmin(String accountId);
-
   /**
    * Checks if user can create an entity.
    * @param newUsageRestrictions new usage restrictions in case of update

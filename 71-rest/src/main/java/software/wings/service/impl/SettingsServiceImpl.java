@@ -87,6 +87,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
+import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.manipulation.SettingsServiceManipulationObserver;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -127,6 +128,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Transient @Inject private SecretManager secretManager;
   @Inject private ManagerDecryptionService managerDecryptionService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
+  @Inject private UserService userService;
   @Inject private YamlPushService yamlPushService;
   @Inject private GitConfigHelperService gitConfigHelperService;
   @Inject private AccountService accountService;
@@ -177,7 +179,7 @@ public class SettingsServiceImpl implements SettingsService {
     Map<String, Set<String>> appEnvMapFromUserPermissions = restrictionsAndAppEnvMap.getAppEnvMap();
     UsageRestrictions restrictionsFromUserPermissions = restrictionsAndAppEnvMap.getUsageRestrictions();
 
-    boolean isAccountAdmin = usageRestrictionsService.isAccountAdmin(accountId);
+    boolean isAccountAdmin = userService.isAccountAdmin(accountId);
 
     Set<String> appsByAccountId = appService.getAppIdsAsSetByAccountId(accountId);
     Map<String, List<Base>> appIdEnvMap = envService.getAppIdEnvMap(appsByAccountId);

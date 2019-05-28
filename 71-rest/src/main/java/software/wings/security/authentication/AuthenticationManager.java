@@ -296,7 +296,7 @@ public class AuthenticationManager {
 
   private boolean hasAccountAdminPermission(final User user) {
     try {
-      return usageRestrictionsService.isAccountAdmin(authenticationUtils.getPrimaryAccount(user).getUuid());
+      return userService.isAccountAdmin(authenticationUtils.getPrimaryAccount(user).getUuid());
     } catch (Exception ex) {
       throw new WingsException(USER_NOT_AUTHORIZED, USER);
     }

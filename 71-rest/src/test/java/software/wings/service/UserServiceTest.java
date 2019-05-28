@@ -44,10 +44,14 @@ import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
 import static software.wings.utils.WingsTestConstants.FREEMIUM_ENV_PATH;
 import static software.wings.utils.WingsTestConstants.INVALID_USER_EMAIL;
+import static software.wings.utils.WingsTestConstants.NEW_USER_EMAIL;
+import static software.wings.utils.WingsTestConstants.NEW_USER_NAME;
+import static software.wings.utils.WingsTestConstants.NOTE;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
 import static software.wings.utils.WingsTestConstants.ROLE_ID;
 import static software.wings.utils.WingsTestConstants.ROLE_NAME;
+import static software.wings.utils.WingsTestConstants.SUPPORT_EMAIL;
 import static software.wings.utils.WingsTestConstants.TEMPORARY_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_ID;
@@ -95,6 +99,7 @@ import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Account;
+import software.wings.beans.AccountJoinRequest;
 import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.EmailVerificationToken;
@@ -202,8 +207,8 @@ public class UserServiceTest extends WingsBaseTest {
    */
   @Before
   public void setupMocks() {
+    when(configuration.getSupportEmail()).thenReturn(SUPPORT_EMAIL);
     doNothing().when(userServiceLimitChecker).limitCheck(Mockito.anyString(), Mockito.anyList(), Mockito.anySet());
-
     when(cacheHelper.getUserCache()).thenReturn(cache);
 
     when(wingsPersistence.createQuery(User.class)).thenReturn(query);
@@ -935,6 +940,32 @@ public class UserServiceTest extends WingsBaseTest {
         .startsWith(PORTAL_URL + "/#/reset-password/");
     assertThat(((Map<String, String>) emailDataArgumentCaptor.getValue().getTemplateModel()).get("url").length())
         .isGreaterThan((PORTAL_URL + "/#/reset-password/").length());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldJoinAccount() throws EmailException, TemplateException, IOException {
+    ArrayList<Account> accounts = new ArrayList<>();
+    accounts.add(new Account());
+    when(query.get())
+        .thenReturn(userBuilder.withUuid(USER_ID).withEmail(NEW_USER_EMAIL).withAccounts(accounts).build());
+    when(configuration.getPortal().getJwtPasswordSecret()).thenReturn("SECRET");
+    when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
+    when(configuration.getSupportEmail()).thenReturn(SUPPORT_EMAIL);
+
+    AccountJoinRequest accountJoinRequest = AccountJoinRequest.builder()
+                                                .email(NEW_USER_EMAIL)
+                                                .name(NEW_USER_NAME)
+                                                .note(NOTE)
+                                                .companyName(COMPANY_NAME)
+                                                .build();
+    userService.accountJoinRequest(accountJoinRequest);
+    verify(emailDataNotificationService).send(emailDataArgumentCaptor.capture());
+    assertThat(emailDataArgumentCaptor.getValue().getTo().get(0)).isEqualTo(SUPPORT_EMAIL);
+    assertThat(emailDataArgumentCaptor.getValue().getCc()).isEmpty();
+    assertThat(((Map) emailDataArgumentCaptor.getValue().getTemplateModel()).get("msg"))
+        .asString()
+        .startsWith("Recipient is not a Harness user in production cluster - ");
   }
 
   /**

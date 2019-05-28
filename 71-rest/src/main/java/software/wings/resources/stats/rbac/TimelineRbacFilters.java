@@ -15,7 +15,7 @@ import software.wings.resources.stats.model.InstanceTimeline.Aggregate;
 import software.wings.resources.stats.model.InstanceTimeline.DataPoint;
 import software.wings.security.UserRequestContext;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.UsageRestrictionsService;
+import software.wings.service.intfc.UserService;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,14 +31,14 @@ public class TimelineRbacFilters {
   @Nonnull private User currentUser;
   @Nonnull private String accountId;
   private AppService appService;
-  private UsageRestrictionsService usageRestrictionsService;
+  private UserService userService;
 
-  public TimelineRbacFilters(@Nonnull User currentUser, @Nonnull String accountId, AppService appService,
-      UsageRestrictionsService usageRestrictionsService) {
+  public TimelineRbacFilters(
+      @Nonnull User currentUser, @Nonnull String accountId, AppService appService, UserService userService) {
     this.currentUser = currentUser;
     this.accountId = accountId;
     this.appService = appService;
-    this.usageRestrictionsService = usageRestrictionsService;
+    this.userService = userService;
   }
 
   /**
@@ -47,7 +47,7 @@ public class TimelineRbacFilters {
   public List<InstanceStatsSnapshot> filter(List<InstanceStatsSnapshot> stats, Set<String> deletedAppIds) {
     boolean includeDeletedAppIds = false;
 
-    if (usageRestrictionsService.isAccountAdmin(accountId)) {
+    if (userService.isAccountAdmin(accountId)) {
       includeDeletedAppIds = true;
     }
 
