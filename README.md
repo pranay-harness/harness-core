@@ -133,9 +133,7 @@ then
 
 ### Editing setup
 
-1. Install clang-format - https://clang.llvm.org/docs/ClangFormat.html
-
-`brew install clang-format`
+1. Install clang-format - https://clang.llvm.org/docs/ClangFormat.html ( Please Install version 7.0.0, refer to this link https://gist.github.com/ffeu/0460bb1349fa7e4ab4c459a6192cbb25 instead)
 
 helper shell scripts:
 
