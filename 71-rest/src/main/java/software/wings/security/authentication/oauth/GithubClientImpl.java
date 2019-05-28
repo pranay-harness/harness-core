@@ -42,11 +42,13 @@ public class GithubClientImpl extends BaseOauthClient implements OauthClient {
   public GithubClientImpl(MainConfiguration mainConfiguration, SecretManager secretManager) {
     super(secretManager);
     GithubConfig githubConfig = mainConfiguration.getGithubConfig();
-    service = new ServiceBuilder(githubConfig.getClientId())
-                  .apiSecret(githubConfig.getClientSecret())
-                  .scope("user:email") // replace with desired scope
-                  .callback(githubConfig.getCallbackUrl())
-                  .build(GitHubApi.instance());
+    if (githubConfig != null) {
+      service = new ServiceBuilder(githubConfig.getClientId())
+                    .apiSecret(githubConfig.getClientSecret())
+                    .scope("user:email") // replace with desired scope
+                    .callback(githubConfig.getCallbackUrl())
+                    .build(GitHubApi.instance());
+    }
   }
 
   @Override

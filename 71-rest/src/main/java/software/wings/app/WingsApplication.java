@@ -279,6 +279,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new EventsModule(configuration));
     modules.add(new GraphQLModule());
     modules.add(new FeatureViolationsModule());
+    modules.add(new SSOModule());
+    modules.add(new AuthModule());
     InfluxModule influxModule = new InfluxModule(configuration.getInfluxConfig());
     modules.add(influxModule);
 

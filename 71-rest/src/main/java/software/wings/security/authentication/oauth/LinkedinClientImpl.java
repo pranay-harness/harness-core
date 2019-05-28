@@ -39,11 +39,13 @@ public class LinkedinClientImpl extends BaseOauthClient implements OauthClient {
   public LinkedinClientImpl(MainConfiguration mainConfiguration, SecretManager secretManager) {
     super(secretManager);
     LinkedinConfig linkedinConfig = mainConfiguration.getLinkedinConfig();
-    service = new ServiceBuilder(linkedinConfig.getClientId())
-                  .apiSecret(linkedinConfig.getClientSecret())
-                  .callback(linkedinConfig.getCallbackUrl())
-                  .scope("r_liteprofile r_emailaddress")
-                  .build(LinkedInApi20.instance());
+    if (linkedinConfig != null) {
+      service = new ServiceBuilder(linkedinConfig.getClientId())
+                    .apiSecret(linkedinConfig.getClientSecret())
+                    .callback(linkedinConfig.getCallbackUrl())
+                    .scope("r_liteprofile r_emailaddress")
+                    .build(LinkedInApi20.instance());
+    }
   }
 
   @Override

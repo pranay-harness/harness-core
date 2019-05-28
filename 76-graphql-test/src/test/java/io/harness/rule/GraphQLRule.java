@@ -34,23 +34,19 @@ import org.junit.runners.model.Statement;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
 import ru.vyarus.guice.validator.ValidationModule;
+import software.wings.app.AuthModule;
 import software.wings.app.CacheModule;
 import software.wings.app.FeatureViolationsModule;
 import software.wings.app.GraphQLModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
 import software.wings.app.ManagerQueueModule;
+import software.wings.app.SSOModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
 import software.wings.graphql.provider.QueryLanguageProvider;
 import software.wings.security.ThreadLocalUserProvider;
-import software.wings.security.authentication.oauth.AzureConfig;
-import software.wings.security.authentication.oauth.BitbucketConfig;
-import software.wings.security.authentication.oauth.GithubConfig;
-import software.wings.security.authentication.oauth.GitlabConfig;
-import software.wings.security.authentication.oauth.GoogleConfig;
-import software.wings.security.authentication.oauth.LinkedinConfig;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -93,26 +89,7 @@ public class GraphQLRule
     MarketoConfig marketoConfig =
         MarketoConfig.builder().clientId("client_id").clientSecret("client_secret_id").enabled(false).build();
 
-    AzureConfig azureConfig =
-        AzureConfig.builder().clientId("clientId").clientSecret("secret").callbackUrl("callbackUrl").build();
-    LinkedinConfig linkedinConfig =
-        LinkedinConfig.builder().clientId("clientId").clientSecret("secret").callbackUrl("callbackUrl").build();
-    GoogleConfig googleConfig =
-        GoogleConfig.builder().clientId("clientId").clientSecret("secret").callbackUrl("callbackUrl").build();
-    GitlabConfig gitlabConfig =
-        GitlabConfig.builder().clientId("clientId").clientSecret("secret").callbackUrl("callbackUrl").build();
-    GithubConfig githubConfig =
-        GithubConfig.builder().clientId("clientId").clientSecret("secret").callbackUrl("callbackUrl").build();
-    BitbucketConfig bitbucketConfig =
-        BitbucketConfig.builder().clientId("clientId").clientSecret("secret").callbackUrl("callbackUrl").build();
-
     configuration.setMarketoConfig(marketoConfig);
-    configuration.setAzureConfig(azureConfig);
-    configuration.setLinkedinConfig(linkedinConfig);
-    configuration.setGoogleConfig(googleConfig);
-    configuration.setBitbucketConfig(bitbucketConfig);
-    configuration.setGithubConfig(githubConfig);
-    configuration.setGitlabConfig(gitlabConfig);
     return configuration;
   }
 
@@ -162,7 +139,8 @@ public class GraphQLRule
     modules.add(new EventsModule(configuration));
     modules.add(new FeatureViolationsModule());
     modules.add(new GraphQLModule());
-
+    modules.add(new AuthModule());
+    modules.add(new SSOModule());
     return modules;
   }
 
