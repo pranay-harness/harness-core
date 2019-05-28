@@ -409,10 +409,10 @@ public class YamlHelper {
     return workflow;
   }
 
-  public String getWorkflowName(String appId, String workflowId) {
-    String workflowName = workflowService.readWorkflow(appId, workflowId).getName();
-    Validator.notNullCheck("workflow name does not exist " + workflowId, workflowName);
-    return workflowName;
+  public Workflow getWorkflowFromId(String appId, String workflowId) {
+    Workflow workflow = workflowService.readWorkflow(appId, workflowId);
+    Validator.notNullCheck("workflow name does not exist " + workflowId, workflow);
+    return workflow;
   }
 
   public String getPipelineName(String appId, String pipelineId) {
