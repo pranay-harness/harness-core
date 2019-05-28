@@ -118,16 +118,21 @@ import software.wings.beans.UserInviteSource.SourceType;
 import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.beans.marketplace.MarketPlaceConstants;
 import software.wings.beans.notification.NotificationSettings;
+import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.licensing.LicenseService;
+import software.wings.security.AccountPermissionSummary;
 import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.SecretManager;
 import software.wings.security.SecretManager.JWT_CATEGORY;
+import software.wings.security.UserPermissionInfo;
+import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.AuthenticationMechanism;
@@ -222,7 +227,6 @@ public class UserServiceImpl implements UserService {
   @Inject private AuthenticationUtils authenticationUtils;
   @Inject private SSOService ssoService;
   @Inject private LimitConfigurationService limits;
-  @Inject private MainConfiguration mainConfiguration;
 
   private volatile Set<String> blacklistedDomains = new HashSet<>();
 
@@ -320,19 +324,37 @@ public class UserServiceImpl implements UserService {
   public boolean accountJoinRequest(AccountJoinRequest accountJoinRequest) {
     final String emailAddress = accountJoinRequest.getEmail().toLowerCase();
     checkEmailAndDomain(emailAddress);
-
     Map<String, String> params = new HashMap<>();
     params.put("email", emailAddress);
     params.put("name", accountJoinRequest.getName());
     params.put("url", "https://app.harness.io/#/login");
     params.put("companyName", accountJoinRequest.getCompanyName());
-    params.put("url", "https://app.harness.io/#/login");
     params.put("note", accountJoinRequest.getNote());
-    boolean hasAccountAdminEmail = isNotEmpty(accountJoinRequest.getAccountAdminEmail());
-    String supportEmail = mainConfiguration.getSupportEmail();
-    String to = hasAccountAdminEmail ? accountJoinRequest.getAccountAdminEmail() : supportEmail;
-    String cc = hasAccountAdminEmail ? supportEmail : null;
-    return sendEmail(to, cc, JOIN_EXISTING_TEAM_TEMPLATE_NAME, params);
+    String accountAdminEmail = accountJoinRequest.getAccountAdminEmail();
+    boolean hasAccountAdminEmail = isNotEmpty(accountAdminEmail);
+    User user = hasAccountAdminEmail ? getUserByEmail(accountAdminEmail) : null;
+    String supportEmail = configuration.getSupportEmail();
+    String to = supportEmail;
+    String msg = "";
+    if (user != null) {
+      boolean isValidUser = hasAccountAdminEmail && isUserVerified(user);
+      boolean isAdmin = isValidUser && isUserAdminOfAnyAccount(user);
+
+      if (isAdmin) {
+        to = accountAdminEmail;
+      } else if (isValidUser) {
+        to = supportEmail;
+        msg = "Recipient is not a Harness admin in production cluster - ";
+      } else {
+        to = supportEmail;
+        msg = "Recipient is not a Harness user in production cluster - ";
+      }
+    } else {
+      msg = "Recipient is not a Harness user in production cluster - ";
+    }
+
+    params.put("msg", msg);
+    return sendEmail(to, JOIN_EXISTING_TEAM_TEMPLATE_NAME, params);
   }
 
   /**
@@ -1056,12 +1078,11 @@ public class UserServiceImpl implements UserService {
     emailNotificationService.send(emailData);
   }
 
-  private boolean sendEmail(String toEmail, String cc, String templateName, Map<String, String> templateModel) {
+  private boolean sendEmail(String toEmail, String templateName, Map<String, String> templateModel) {
     List<String> toList = new ArrayList<>();
     toList.add(toEmail);
     EmailData emailData =
         EmailData.builder().to(toList).templateName(templateName).templateModel(templateModel).build();
-    emailData.setCc(isNotEmpty(cc) ? Arrays.asList(cc) : Collections.emptyList());
     emailData.setRetries(2);
     return emailNotificationService.send(emailData);
   }
@@ -2192,6 +2213,61 @@ public class UserServiceImpl implements UserService {
       throw new WingsException(INVALID_CREDENTIAL, USER)
           .addParam("message", "Invalid JWTToken received, failed to decode the token");
     }
+  }
+
+  private boolean isUserAdminOfAnyAccount(User user) {
+    return user.getAccounts().stream().anyMatch(account -> {
+      List<UserGroup> userGroupList = userGroupService.getUserGroupsByAccountId(account.getUuid(), user);
+      if (isNotEmpty(userGroupList)) {
+        return userGroupList.stream().anyMatch(userGroup -> {
+          AccountPermissions accountPermissions = userGroup.getAccountPermissions();
+          if (accountPermissions != null) {
+            Set<PermissionType> permissions = accountPermissions.getPermissions();
+            if (isNotEmpty(permissions)) {
+              return permissions.contains(PermissionType.USER_PERMISSION_MANAGEMENT);
+            }
+          }
+          return false;
+        });
+      }
+      return false;
+    });
+  }
+
+  @Override
+  public boolean isAccountAdmin(String accountId) {
+    User user = UserThreadLocal.get();
+    if (user == null) {
+      return true;
+    }
+    return isAccountAdmin(user, accountId);
+  }
+
+  @Override
+  public boolean isAccountAdmin(User user, String accountId) {
+    UserRequestContext userRequestContext = user.getUserRequestContext();
+    if (userRequestContext == null) {
+      return true;
+    }
+
+    if (!accountId.equals(userRequestContext.getAccountId())) {
+      return false;
+    }
+
+    UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
+
+    AccountPermissionSummary accountPermissionSummary = userPermissionInfo.getAccountPermissionSummary();
+    if (accountPermissionSummary == null) {
+      return false;
+    }
+
+    Set<PermissionType> permissions = accountPermissionSummary.getPermissions();
+
+    if (isEmpty(permissions)) {
+      return false;
+    }
+
+    return permissions.contains(PermissionType.ACCOUNT_MANAGEMENT);
   }
 
   @Override

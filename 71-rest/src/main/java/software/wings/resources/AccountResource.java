@@ -34,7 +34,7 @@ import software.wings.security.annotations.PublicApi;
 import software.wings.service.impl.TransitionToCommunityAccountService;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.UsageRestrictionsService;
+import software.wings.service.intfc.UserService;
 import software.wings.utils.AccountPermissionUtils;
 
 import java.util.List;
@@ -58,10 +58,10 @@ import javax.ws.rs.core.MediaType;
 @Slf4j
 public class AccountResource {
   @Inject private AccountService accountService;
+  @Inject private UserService userService;
   @Inject private LicenseService licenseService;
   @Inject private AccountPermissionUtils accountPermissionUtils;
   @Inject private FeatureViolationsService featureViolationsService;
-  @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private TransitionToCommunityAccountService transitionToCommunityAccountService;
 
   @GET
@@ -274,7 +274,7 @@ public class AccountResource {
     }
 
     // Only if the user the account administrator or in the Harness user group can perform the account transition
-    if (!usageRestrictionsService.isAccountAdmin(accountId)) {
+    if (!userService.isAccountAdmin(accountId)) {
       String errorMessage = "User not allowed to update account license";
       RestResponse<Boolean> restResponse = accountPermissionUtils.checkIfHarnessUser(errorMessage);
       if (restResponse != null) {

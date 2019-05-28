@@ -147,9 +147,17 @@ public interface WingsTestConstants {
 
   String USER_ID = "USER_ID";
 
+  String NEW_USER_EMAIL = "user1@harness.io";
+
+  String NEW_USER_NAME = "user1";
+
+  String NOTE = "sample note";
+
   String USER_INVITE_ID = "USER_INVITE_ID";
 
   String PORTAL_URL = "PORTAL_URL";
+
+  String SUPPORT_EMAIL = "support@harness.io";
 
   String VERIFICATION_PATH = "VERIFICATION_PATH";
 

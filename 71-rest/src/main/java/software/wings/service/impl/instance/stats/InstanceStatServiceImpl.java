@@ -26,7 +26,7 @@ import software.wings.resources.stats.rbac.TimelineRbacFilters;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.instance.stats.collector.SimplePercentile;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.UsageRestrictionsService;
+import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 
@@ -50,7 +50,7 @@ public class InstanceStatServiceImpl implements InstanceStatService {
 
   @Inject private WingsPersistence persistence;
   @Inject private AppService appService;
-  @Inject private UsageRestrictionsService usageRestrictionsService;
+  @Inject private UserService userService;
   @Inject private DashboardStatisticsService dashboardStatsService;
 
   @Override
@@ -89,7 +89,7 @@ public class InstanceStatServiceImpl implements InstanceStatService {
 
     User user = UserThreadLocal.get();
     if (null != user) {
-      TimelineRbacFilters rbacFilters = new TimelineRbacFilters(user, accountId, appService, usageRestrictionsService);
+      TimelineRbacFilters rbacFilters = new TimelineRbacFilters(user, accountId, appService, userService);
       List<InstanceStatsSnapshot> filteredStats = rbacFilters.filter(stats, deletedAppIds);
       log.info("Stats before and after filtering. Before: {}, After: {}", stats.size(), filteredStats.size());
       log.info("Time till RBAC filters: {} ms, accountId={}", stopwatch.elapsed(TimeUnit.MILLISECONDS), accountId);

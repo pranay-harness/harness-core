@@ -83,6 +83,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UserGroupService;
+import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.UsageRestrictions;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction;
@@ -107,6 +108,7 @@ public class UsageRestrictionsServiceImplTest {
   @Mock private AuthHandler authHandler;
   @Mock private Application application;
   @Mock private UserGroupService userGroupService;
+  @Mock private UserService userService;
   @Mock private EnvironmentService envService;
   @Mock private SettingsService settingsService;
   @Mock private SecretManager secretManager;
@@ -129,8 +131,8 @@ public class UsageRestrictionsServiceImplTest {
 
   @Spy
   @InjectMocks
-  private UsageRestrictionsServiceImpl usageRestrictionsService = new UsageRestrictionsServiceImpl(
-      authHandler, userGroupService, appService, envService, settingsService, secretManager, mockWingsPersistence);
+  private UsageRestrictionsServiceImpl usageRestrictionsService = new UsageRestrictionsServiceImpl(authHandler,
+      userGroupService, appService, envService, settingsService, secretManager, mockWingsPersistence, userService);
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   private PageResponse<SettingAttribute> pageResponse =
@@ -866,6 +868,7 @@ public class UsageRestrictionsServiceImplTest {
       Set<Action> actions = allActions;
 
       setPermissions(appIds, envIds, actions, true);
+      when(userService.isAccountAdmin(ACCOUNT_ID)).thenReturn(true);
 
       // Valid Scenarios
       GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();

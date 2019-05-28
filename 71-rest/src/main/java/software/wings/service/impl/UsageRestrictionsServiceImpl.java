@@ -35,7 +35,6 @@ import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.restrictions.AppRestrictionsSummary;
 import software.wings.beans.security.restrictions.RestrictionsSummary;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.AccountPermissionSummary;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.EnvFilter;
@@ -58,6 +57,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserGroupService;
+import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.RestrictionsAndAppEnvMap;
 import software.wings.settings.RestrictionsAndAppEnvMap.RestrictionsAndAppEnvMapBuilder;
@@ -86,6 +86,7 @@ import javax.validation.executable.ValidateOnExecution;
 public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   @Inject private AuthHandler authHandler;
   @Inject private UserGroupService userGroupService;
+  @Inject private UserService userService;
   @Inject private AppService appService;
   @Inject private EnvironmentService environmentService;
   @Inject private SettingsService settingsService;
@@ -95,7 +96,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   @Inject
   public UsageRestrictionsServiceImpl(AuthHandler authHandler, UserGroupService userGroupService, AppService appService,
       EnvironmentService environmentService, SettingsService settingsService, SecretManager secretManager,
-      WingsPersistence wingsPersistence) {
+      WingsPersistence wingsPersistence, UserService userService) {
     this.authHandler = authHandler;
     this.userGroupService = userGroupService;
     this.appService = appService;
@@ -103,6 +104,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     this.settingsService = settingsService;
     this.secretManager = secretManager;
     this.wingsPersistence = wingsPersistence;
+    this.userService = userService;
   }
 
   @Override
@@ -783,7 +785,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       UsageRestrictions restrictionsFromUserPermissions, Map<String, List<Base>> appIdEnvMap) {
     // If no restrictions, only account admin can modify it
     if (hasNoRestrictions(entityUsageRestrictions)) {
-      return isAccountAdmin(accountId);
+      return userService.isAccountAdmin(accountId);
     }
 
     if (hasNoRestrictions(restrictionsFromUserPermissions)) {
@@ -837,43 +839,11 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     if (!hasNoRestrictions(usageRestrictions)) {
       return true;
     }
-    if (isAccountAdmin(accountId)) {
+    if (userService.isAccountAdmin(accountId)) {
       return true;
     }
 
     return hasAllEnvAccess(restrictionsFromUserPermissions);
-  }
-
-  @Override
-  public boolean isAccountAdmin(String accountId) {
-    User user = UserThreadLocal.get();
-    if (user == null) {
-      return true;
-    }
-
-    UserRequestContext userRequestContext = user.getUserRequestContext();
-    if (userRequestContext == null) {
-      return true;
-    }
-
-    if (!accountId.equals(userRequestContext.getAccountId())) {
-      return false;
-    }
-
-    UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
-
-    AccountPermissionSummary accountPermissionSummary = userPermissionInfo.getAccountPermissionSummary();
-    if (accountPermissionSummary == null) {
-      return false;
-    }
-
-    Set<PermissionType> permissions = accountPermissionSummary.getPermissions();
-
-    if (isEmpty(permissions)) {
-      return false;
-    }
-
-    return permissions.contains(PermissionType.ACCOUNT_MANAGEMENT);
   }
 
   @Override

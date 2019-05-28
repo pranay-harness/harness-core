@@ -49,6 +49,7 @@ import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.UsageRestrictionsService;
+import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.RestrictionsAndAppEnvMap;
 import software.wings.settings.UsageRestrictions;
@@ -61,6 +62,7 @@ public class SecretManagerTest {
   @Mock private UsageRestrictionsService usageRestrictionsService;
   @Mock private AppService appService;
   @Mock private EnvironmentService envService;
+  @Mock private UserService userService;
   @Mock private VaultService vaultService;
   @Mock private AuditServiceHelper auditServiceHelper;
   @Inject @InjectMocks private SecretManagerImpl secretManager;
@@ -71,6 +73,7 @@ public class SecretManagerTest {
 
     when(usageRestrictionsService.getRestrictionsAndAppEnvMapFromCache(anyString(), eq(Action.READ)))
         .thenReturn(mock(RestrictionsAndAppEnvMap.class));
+    when(userService.isAccountAdmin(ACCOUNT_ID)).thenReturn(true);
   }
 
   @Test

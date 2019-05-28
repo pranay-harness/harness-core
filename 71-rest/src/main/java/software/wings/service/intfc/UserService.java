@@ -432,6 +432,10 @@ public interface UserService extends OwnedByAccount {
    */
   User verifyJWTToken(@NotEmpty String jwtToken, @NotNull SecretManager.JWT_CATEGORY category);
 
+  boolean isAccountAdmin(String accountId);
+
+  boolean isAccountAdmin(User user, String accountId);
+
   boolean isUserAssignedToAccount(User user, String accountId);
 
   List<String> fetchUserEmailAddressesFromUserIds(List<String> userIds);
