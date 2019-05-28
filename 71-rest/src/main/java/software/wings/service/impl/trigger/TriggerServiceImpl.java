@@ -323,8 +323,9 @@ public class TriggerServiceImpl implements TriggerService {
         for (Artifact artifact : artifacts) {
           logger.info("Triggering deployment with artifact {}", artifact.getUuid());
           try {
-            artifactsFromSelections.add(artifact);
-            triggerDeployment(artifactsFromSelections, trigger, null);
+            List<Artifact> selectedArtifacts = new ArrayList<>(artifactsFromSelections);
+            selectedArtifacts.add(artifact);
+            triggerDeployment(selectedArtifacts, trigger, null);
           } catch (WingsException exception) {
             exception.addContext(Application.class, trigger.getAppId());
             exception.addContext(ArtifactStream.class, artifactStreamId);
