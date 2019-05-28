@@ -4,6 +4,7 @@ import software.wings.api.InstanceElement;
 import software.wings.beans.SettingAttribute;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
+import software.wings.service.impl.analysis.CVCollaborationProviderParameters;
 import software.wings.service.impl.analysis.CVFeedbackRecord;
 import software.wings.service.impl.analysis.FeedbackAction;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
@@ -80,4 +81,6 @@ public interface AnalysisService {
   boolean removeFromBaseline(String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord);
   boolean updateFeedbackPriority(String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord);
   Map<FeedbackAction, List<FeedbackAction>> getNextFeedbackActions();
+  String createCollaborationFeedbackTicket(String accountId, String appId, String cvConfigId, String stateExecutionId,
+      CVCollaborationProviderParameters cvJiraParameters);
 }

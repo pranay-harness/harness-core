@@ -10,7 +10,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
-import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
 import static software.wings.sm.StateType.ELK;
 
 import com.google.common.collect.Lists;
@@ -50,7 +49,6 @@ import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
-import software.wings.service.impl.analysis.AnalysisServiceImpl.LogMLFeedbackType;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
@@ -1037,80 +1035,6 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     List<LogMLFeedbackRecord> mlFeedback =
         managerAnalysisService.getMLFeedback(appId, serviceId, workflowId, workflowExecutionId);
     assertFalse(mlFeedback.isEmpty());
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  public void test24x7UserFeedback() throws Exception {
-    InputStream is = getClass().getClassLoader().getResourceAsStream("verification/LogAnalysisRecord.json");
-    String jsonTxt = IOUtils.toString(is, Charset.defaultCharset());
-
-    createLogsCVConfig(false);
-    String cvConfigId = wingsPersistence.save(logsCVConfiguration);
-    LogMLAnalysisRecord records = JsonUtils.asObject(jsonTxt, LogMLAnalysisRecord.class);
-    records.setStateType(ELK);
-    records.setAppId(appId);
-    records.setStateExecutionId(stateExecutionId);
-    records.setAnalysisSummaryMessage("10");
-    analysisService.save24X7LogAnalysisRecords(
-        appId, cvConfigId, 12345, PREDICTIVE, records, Optional.empty(), Optional.empty());
-
-    LogMLFeedback logMLFeedback = LogMLFeedback.builder()
-                                      .appId(appId)
-                                      .clusterLabel(0)
-                                      .clusterType(AnalysisServiceImpl.CLUSTER_TYPE.UNKNOWN)
-                                      .comment("excellent!!")
-                                      .logMLFeedbackType(AnalysisServiceImpl.LogMLFeedbackType.IGNORE_ALWAYS)
-                                      .stateExecutionId(stateExecutionId)
-                                      .build();
-
-    managerAnalysisService.save24x7Feedback(logMLFeedback, cvConfigId);
-    List<LogMLFeedbackRecord> mlFeedback = managerAnalysisService.get24x7MLFeedback(cvConfigId);
-    assertFalse(mlFeedback.isEmpty());
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  public void test24x7UserFeedbackUpdateExistingFeedback() throws Exception {
-    InputStream is = getClass().getClassLoader().getResourceAsStream("verification/LogAnalysisRecord.json");
-    String jsonTxt = IOUtils.toString(is, Charset.defaultCharset());
-
-    createLogsCVConfig(false);
-    String cvConfigId = wingsPersistence.save(logsCVConfiguration);
-    LogMLAnalysisRecord records = JsonUtils.asObject(jsonTxt, LogMLAnalysisRecord.class);
-    records.setStateType(ELK);
-    records.setAppId(appId);
-    records.setStateExecutionId(stateExecutionId);
-    records.setAnalysisSummaryMessage("10");
-    analysisService.save24X7LogAnalysisRecords(
-        appId, cvConfigId, 12345, PREDICTIVE, records, Optional.empty(), Optional.empty());
-
-    LogMLFeedback logMLFeedback = LogMLFeedback.builder()
-                                      .appId(appId)
-                                      .clusterLabel(0)
-                                      .clusterType(AnalysisServiceImpl.CLUSTER_TYPE.UNKNOWN)
-                                      .comment("excellent!!")
-                                      .logMLFeedbackType(AnalysisServiceImpl.LogMLFeedbackType.IGNORE_ALWAYS)
-                                      .stateExecutionId(stateExecutionId)
-                                      .build();
-
-    managerAnalysisService.save24x7Feedback(logMLFeedback, cvConfigId);
-    List<LogMLFeedbackRecord> mlFeedback = managerAnalysisService.get24x7MLFeedback(cvConfigId);
-    assertFalse(mlFeedback.isEmpty());
-
-    LogMLFeedback feedback = LogMLFeedback.builder()
-                                 .appId(appId)
-                                 .logMLFeedbackId(mlFeedback.iterator().next().getUuid())
-                                 .clusterLabel(0)
-                                 .clusterType(AnalysisServiceImpl.CLUSTER_TYPE.UNKNOWN)
-                                 .comment("excellent!!")
-                                 .logMLFeedbackType(LogMLFeedbackType.DISMISS)
-                                 .stateExecutionId(stateExecutionId)
-                                 .build();
-    managerAnalysisService.save24x7Feedback(feedback, cvConfigId);
-    mlFeedback = managerAnalysisService.get24x7MLFeedback(cvConfigId);
-    assertFalse(mlFeedback.isEmpty());
-    assertTrue(mlFeedback.iterator().next().getLogMLFeedbackType().equals(LogMLFeedbackType.DISMISS));
   }
 
   @Test

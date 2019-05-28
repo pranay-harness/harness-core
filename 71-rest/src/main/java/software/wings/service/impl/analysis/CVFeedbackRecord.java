@@ -57,7 +57,7 @@ public class CVFeedbackRecord implements GoogleDataStoreAware {
 
   private String supervisedLabel;
 
-  private FeedbackPriority priority;
+  @Builder.Default private FeedbackPriority priority = FeedbackPriority.P2;
 
   private String jiraLink;
 

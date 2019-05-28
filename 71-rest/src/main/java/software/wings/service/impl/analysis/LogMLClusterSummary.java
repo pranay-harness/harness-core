@@ -21,4 +21,5 @@ public class LogMLClusterSummary {
   private int clusterLabel;
   private AnalysisServiceImpl.LogMLFeedbackType logMLFeedbackType;
   private String logMLFeedbackId;
+  private String jiraLink;
 }

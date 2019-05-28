@@ -15,6 +15,7 @@ import software.wings.beans.FeatureName;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.analysis.CVCollaborationProviderParameters;
 import software.wings.service.impl.analysis.CVFeedbackRecord;
 import software.wings.service.impl.analysis.FeedbackAction;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
@@ -23,6 +24,7 @@ import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
+import software.wings.service.intfc.verification.CV24x7DashboardService;
 import software.wings.sm.StateType;
 
 import java.io.IOException;
@@ -42,6 +44,7 @@ import javax.ws.rs.QueryParam;
 @Scope(PermissionAttribute.ResourceType.SETTING)
 public class LogMLResource {
   @Inject private AnalysisService analysisService;
+  @Inject private CV24x7DashboardService cv24x7DashboardService;
   @Inject private FeatureFlagService featureFlagService;
 
   @GET
@@ -190,5 +193,16 @@ public class LogMLResource {
       @QueryParam("cvConfigId") String cvConfigId, @QueryParam("stateExecutionId") String stateExecutionId,
       CVFeedbackRecord feedback) {
     return new RestResponse<>(analysisService.updateFeedbackPriority(cvConfigId, stateExecutionId, feedback));
+  }
+
+  @POST
+  @Path(LogAnalysisResource.FEEDBACK_CREATE_JIRA)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> createJiraForAnomaly(@QueryParam("accountId") String accountId,
+      @QueryParam("appId") String appId, @QueryParam("cvConfigId") String cvConfigId,
+      @QueryParam("stateExecutionId") String stateExecutionId, CVCollaborationProviderParameters cvJiraParameters) {
+    return new RestResponse<>(analysisService.createCollaborationFeedbackTicket(
+        accountId, appId, cvConfigId, stateExecutionId, cvJiraParameters));
   }
 }
