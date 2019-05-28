@@ -527,6 +527,7 @@ public class UserServiceImpl implements UserService {
     userSummary.setUuid(user.getUuid());
     userSummary.setEmail(user.getEmail());
     userSummary.setEmailVerified(user.isEmailVerified());
+    userSummary.setTwoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled());
     return userSummary;
   }
 
