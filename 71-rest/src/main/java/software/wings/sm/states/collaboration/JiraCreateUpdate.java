@@ -50,6 +50,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 public class JiraCreateUpdate extends State implements SweepingOutputStateMixin {
@@ -131,6 +132,18 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
                                         .appId(context.getAppId())
                                         .build();
 
+    if (jiraAction.equals(JiraAction.UPDATE_TICKET)) {
+      List<String> issueIds = parseExpression(issueId);
+      if (EmptyPredicate.isEmpty(issueIds)) {
+        return anExecutionResponse()
+            .withExecutionStatus(FAILED)
+            .withErrorMessage("No valid issueId after parsing: " + issueId)
+            .withStateExecutionData(JiraExecutionData.builder().activityId(activityId).build())
+            .build();
+      }
+      parameters.setUpdateIssueIds(issueIds);
+    }
+
     DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
                                     .accountId(executionContext.getApp().getAccountId())
@@ -150,6 +163,13 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
         .withDelegateTaskId(delegateTaskId)
         .withStateExecutionData(JiraExecutionData.builder().activityId(activityId).build())
         .build();
+  }
+
+  private List<String> parseExpression(String issueId) {
+    List<String> issueIds;
+    issueId = issueId.replaceAll("[\\[\\](){}?:!.,;]+", " ").trim();
+    issueIds = Arrays.asList(issueId.split(" "));
+    return issueIds.stream().filter(EmptyPredicate::isNotEmpty).map(String::trim).collect(Collectors.toList());
   }
 
   private void renderExpressions(ExecutionContext context) {
