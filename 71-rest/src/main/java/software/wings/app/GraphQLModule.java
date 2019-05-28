@@ -50,6 +50,8 @@ import software.wings.graphql.datafetcher.pipeline.PipelineConnectionDataFetcher
 import software.wings.graphql.datafetcher.pipeline.PipelineDataFetcher;
 import software.wings.graphql.datafetcher.service.ServiceConnectionDataFetcher;
 import software.wings.graphql.datafetcher.service.ServiceDataFetcher;
+import software.wings.graphql.datafetcher.trigger.TriggerConnectionDataFetcher;
+import software.wings.graphql.datafetcher.trigger.TriggerDataFetcher;
 import software.wings.graphql.datafetcher.workflow.WorkflowConnectionDataFetcher;
 import software.wings.graphql.datafetcher.workflow.WorkflowDataFetcher;
 import software.wings.graphql.directive.DataFetcherDirective;
@@ -132,6 +134,8 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(ArtifactDataFetcher.class);
     bindDataFetcherWithAnnotation(ExecutionStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(InstanceStatsDataFetcher.class);
+    bindDataFetcherWithAnnotation(TriggerDataFetcher.class);
+    bindDataFetcherWithAnnotation(TriggerConnectionDataFetcher.class);
   }
 
   @NotNull

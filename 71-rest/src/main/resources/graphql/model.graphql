@@ -32,6 +32,12 @@ extend type Query {
 
   # Get details about am artifact
   artifact(artifactId: String!): Artifact @dataFetcher(name: artifact)
+
+  # Get details about a trigger
+  trigger(triggerId: String!): Trigger @dataFetcher(name: trigger)
+
+  # Get list of services for applicationId. It will return paginated data
+  triggers(applicationId: String!, limit: Int!, offset: Int): TriggerConnection @dataFetcher(name: triggerConnection)
 }
 
 type Application {
@@ -164,4 +170,20 @@ type Artifact {
 
   # Collected At
   collectedAt: DateTime
+}
+
+type Trigger {
+  # Trigger ID
+  id: String
+  # Name of the trigger
+  name: String
+  # Description of the Trigger
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+
+type TriggerConnection {
+  pageInfo: PageInfo
+  nodes: [Trigger]
 }

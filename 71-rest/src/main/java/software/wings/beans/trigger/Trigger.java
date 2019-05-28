@@ -157,4 +157,10 @@ public class Trigger extends Base implements NameAccess {
       this.artifactSelections = artifactSelections;
     }
   }
+  public static final class TriggerKeys {
+    // Temporary
+    public static final String appId = "appId";
+    public static final String createdAt = "createdAt";
+    public static final String uuid = "uuid";
+  }
 }
