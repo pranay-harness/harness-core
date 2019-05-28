@@ -30,7 +30,10 @@ public class CounterServiceImpl implements CounterService {
 
   @Override
   public Counter upsert(Counter counter) {
-    wingsPersistence.save(counter);
+    Query<Counter> query = wingsPersistence.createQuery(Counter.class).field(CounterKeys.key).equal(counter.getKey());
+    UpdateOperations<Counter> update =
+        wingsPersistence.createUpdateOperations(Counter.class).set(CounterKeys.value, counter.getValue());
+    wingsPersistence.findAndModify(query, update, WingsPersistence.upsertReturnNewOptions);
     return counter;
   }
 }

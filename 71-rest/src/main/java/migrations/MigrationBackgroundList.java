@@ -14,6 +14,9 @@ import migrations.all.CleanupSyncStatusForDeletedEntities;
 import migrations.all.DeleteAndAddInstanceSyncJobToAllAccounts;
 import migrations.all.DeleteOrphanNotificationGroups;
 import migrations.all.ExplodeLogMLFeedbackRecordsMigration;
+import migrations.all.InitPipelineCounters;
+import migrations.all.InitServiceCounters;
+import migrations.all.InitWorkflowCounters;
 import migrations.all.MarkSendMailFlagAsTrueInUserGroup;
 import migrations.all.MigrateLogDataRecordsToGoogle;
 import migrations.all.RemoveSupportEmailFromSalesContacts;
@@ -61,6 +64,9 @@ public class MigrationBackgroundList {
         .add(Pair.of(26, MarkSendMailFlagAsTrueInUserGroup.class))
         .add(Pair.of(27, AddAnalysisStatusMigration.class))
         .add(Pair.of(28, ExplodeLogMLFeedbackRecordsMigration.class))
+        .add(Pair.of(29, InitWorkflowCounters.class))
+        .add(Pair.of(30, InitPipelineCounters.class))
+        .add(Pair.of(31, InitServiceCounters.class))
         .build();
   }
 }
