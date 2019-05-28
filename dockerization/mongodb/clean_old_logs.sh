@@ -2,7 +2,7 @@
 cleanLogs() {
   while true;
   do
-    find /var/log/mongodb-mms-automation -mtime +20 -type f -delete
+    find /var/log/mongodb-mms-automation -mtime +2 -type f -delete
     sleep 30m
   done
 }
