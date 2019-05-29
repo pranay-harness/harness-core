@@ -779,7 +779,7 @@ public class UserServiceTest extends WingsBaseTest {
    */
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldInviteExistingUser() {
     UserInvite userInvite = UserInviteBuilder.anUserInvite()
                                 .withAppId(GLOBAL_APP_ID)
@@ -808,7 +808,7 @@ public class UserServiceTest extends WingsBaseTest {
    */
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldOverrideTwoFactorForUser() {
     when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).build());
     when(wingsPersistence.get(Account.class, ACCOUNT_ID))
@@ -1002,7 +1002,7 @@ public class UserServiceTest extends WingsBaseTest {
    */
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldAddAccount() throws UnsupportedEncodingException {
     Account account =
         anAccount().withUuid(ACCOUNT_ID).withCompanyName(COMPANY_NAME).withAccountName(ACCOUNT_NAME).build();

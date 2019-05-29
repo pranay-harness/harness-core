@@ -68,7 +68,7 @@ public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(emails = "swamy@harness.io")
   @Category(FunctionalTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void secretsTextCRUDTestsWithUsageRestrictions() {
     logger.info("Local secrets text test starts");
     String secretsName = "AnotherSecret-" + System.currentTimeMillis();

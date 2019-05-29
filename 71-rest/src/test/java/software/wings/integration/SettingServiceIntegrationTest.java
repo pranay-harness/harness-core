@@ -60,7 +60,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Repeat(times = 5)
   @Category(IntegrationTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldSaveJenkinsConfig() {
     RestResponse<SettingAttribute> restResponse =
         getRequestBuilderWithAuthHeader(getListWebTarget(accountId))
@@ -88,7 +88,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Category(IntegrationTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldThrowExceptionForUnreachableJenkinsUrl() {
     Response response =
         getRequestBuilderWithAuthHeader(getListWebTarget(accountId))
@@ -115,7 +115,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Category(IntegrationTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldSaveNexusConfig() {
     RestResponse<SettingAttribute> restResponse =
         getRequestBuilderWithAuthHeader(getListWebTarget(accountId))
@@ -141,7 +141,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Category(IntegrationTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldSaveBambooConfig() {
     RestResponse<SettingAttribute> restResponse =
         getRequestBuilderWithAuthHeader(getListWebTarget(accountId))

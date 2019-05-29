@@ -19,7 +19,7 @@ public class AppDynamicsToDoListLoadGenTest extends BaseIntegrationTest {
   //  private final String baseUrl = "http://localhost:8080";
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void generateLoadTest() throws InterruptedException {
     while (true) {
       try {

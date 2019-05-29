@@ -91,7 +91,7 @@ public class ProxyTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testWithProxyAuthSuccess_OkHttpClient() throws IOException {
     Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort));
     OkHttpClient.Builder builder = new OkHttpClient.Builder().proxy(proxy);
@@ -184,7 +184,7 @@ public class ProxyTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetResponseFromUrlProxyAuth() throws IOException {
     Executor executor = Executor.newInstance();
     org.apache.http.client.fluent.Request request =
@@ -201,7 +201,7 @@ public class ProxyTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetResponseFromUrlProxyAuth_Fail() throws IOException {
     Executor executor = Executor.newInstance();
     org.apache.http.client.fluent.Request requestObj =

@@ -136,7 +136,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(emails = "adwait.bhandare@harness.io")
   @Category(FunctionalTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateBasicEcsWorkflow() throws Exception {
     Workflow workflow = getBasicEcsEc2TypeWorkflow();
     Workflow savedWorkflow =
@@ -149,7 +149,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(emails = "adwait.bhandare@harness.io")
   @Category(FunctionalTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateDaemonEcsWorkflow() throws Exception {
     Workflow workflow = getEcsEc2TypeDaemonWorkflow();
     Workflow savedWorkflow = createAndAssertWorkflow(workflow);
@@ -160,7 +160,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(emails = "adwait.bhandare@harness.io")
   @Category(FunctionalTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateCanaryEcsWorkflow() throws Exception {
     Workflow workflow = getEcsEc2TypeCanaryWorkflow();
     Workflow savedWorkflow = createAndAssertWorkflow(workflow);

@@ -299,7 +299,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void getJobs() {
     switch (type) {
       case JENKINS:
@@ -316,7 +316,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void getPlans() {
     switch (type) {
       case AMAZON_S3:
@@ -332,7 +332,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void getPlansWithService() {
     switch (type) {
       case DOCKER:
@@ -350,7 +350,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void getArtifactPaths() {
     switch (type) {
       case DOCKER:
@@ -367,7 +367,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void getBuilds() {
     switch (type) {
       case DOCKER:
@@ -383,7 +383,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void getLastSuccessfulBuild() {
     switch (type) {
       case DOCKER:
@@ -418,7 +418,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void getGroupIds() {
     Set<String> groupIds;
     switch (type) {
@@ -458,7 +458,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void validateArtifactSource() {
     switch (type) {
       case JENKINS:

@@ -439,7 +439,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    */
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldFetchInstanceElements() {
     Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).build();
     app = appService.save(app);

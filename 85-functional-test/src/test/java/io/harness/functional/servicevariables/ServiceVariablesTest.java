@@ -114,7 +114,7 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
   @Test
   @Owner(emails = "swamy@harness.io", resent = false, intermittent = true)
   @Category(FunctionalTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void variablesTest() throws Exception {
     logger.info("Starting the test");
     ServiceVariable normalServiceVariable = new ServiceVariable();

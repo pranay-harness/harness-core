@@ -196,7 +196,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    */
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldThrowExceptionForSessionTimeout() {
     executor = new ScriptSshExecutor(fileService, logService, configBuilder.but().withSshSessionTimeout(1).build());
     assertThatThrownBy(() -> executor.executeCommandString("sleep 10"))
@@ -225,7 +225,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   @Test
   @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldTransferGridFSFile() throws IOException, ExecutionException {
     File file = testFolder.newFile();
     CharStreams.asWriter(new FileWriter(file)).append("ANY_TEXT").close();
@@ -254,7 +254,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   @Test
   @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldTransferGridFSFileWithDifferentName() throws IOException, ExecutionException {
     File file = testFolder.newFile();
     CharStreams.asWriter(new FileWriter(file)).append("ANY_TEXT").close();
@@ -283,7 +283,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   @Test
   @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldTransferFile() throws IOException {
     File file = testFolder.newFile();
     CharStreams.asWriter(new FileWriter(file)).append("ANY_TEXT").close();

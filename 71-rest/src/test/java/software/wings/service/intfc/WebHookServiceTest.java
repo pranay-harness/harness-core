@@ -139,7 +139,7 @@ public class WebHookServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldExecuteByEventTriggerInvalidJson() {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
     String payLoad = "Some payload";

@@ -55,7 +55,7 @@ public class ExecutionResourceTest {
    */
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testListExecutions() {
     String appId = generateUuid();
 

@@ -2821,7 +2821,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
    */
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetHPAYamlStringWithCustomMetric() throws Exception {
     Integer minAutoscaleInstances = 2;
     Integer maxAutoscaleInstances = 10;

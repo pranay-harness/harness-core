@@ -165,7 +165,7 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldSetControllerPodCount() {
     List<ContainerInfo> containerInfos = kubernetesContainerService.setControllerPodCount(
         KUBERNETES_CONFIG, Collections.emptyList(), "foo", "bar", 0, 3, 10, new ExecutionLogCallback());

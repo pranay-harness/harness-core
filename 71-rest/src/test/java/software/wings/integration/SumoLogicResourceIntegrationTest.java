@@ -78,7 +78,7 @@ public class SumoLogicResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(emails = "pranjal@harness.io", intermittent = true)
   @Category(IntegrationTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetSampleLogRecordVerifyCall() {
     WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.SUMO_RESOURCE_BASE_URL
         + LogAnalysisResource.ANALYSIS_STATE_GET_SAMPLE_RECORD_URL + "?accountId=" + accountId
@@ -92,7 +92,7 @@ public class SumoLogicResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(emails = "pranjal@harness.io", intermittent = true)
   @Category(IntegrationTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetLogRecords() {
     SumoLogicSetupTestNodedata testNodedata = getSumoLogicSampledata();
     WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.SUMO_RESOURCE_BASE_URL

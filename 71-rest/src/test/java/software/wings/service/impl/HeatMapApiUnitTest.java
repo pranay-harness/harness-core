@@ -276,7 +276,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   @Test
   @Owner(emails = "vaibhav.tulsyan@harness.io", intermittent = true)
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testTimeSeries() {
     final int DURATION_IN_HOURS = 12;
 
@@ -464,7 +464,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   @Test
   @Owner(emails = {"praveen.sugavanam@harness.io"}, intermittent = true)
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testSortingFromDB() throws IOException {
     String cvConfigId = readAndSaveAnalysisRecords();
     long startTime = TimeUnit.MINUTES.toMillis(25685446);
@@ -481,7 +481,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   @Test
   @Owner(emails = {"praveen.sugavanam@harness.io"}, intermittent = true)
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testDeeplinkUrlAppDynamicsFromDB() throws IOException {
     String cvConfigId = readAndSaveAnalysisRecords();
     long startTime = TimeUnit.MINUTES.toMillis(25685446);
@@ -565,7 +565,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testSorting() throws IOException {
     long currentTime = System.currentTimeMillis();
     AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
@@ -850,7 +850,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   @Test
   @Owner(emails = "vaibhav.tulsyan@harness.io", intermittent = true)
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testRiskArrayEndpointContainment() throws Exception {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
                                                                    .appDynamicsApplicationId(generateUuid())

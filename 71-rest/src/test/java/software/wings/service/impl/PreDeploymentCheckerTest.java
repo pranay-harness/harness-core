@@ -75,7 +75,7 @@ public class PreDeploymentCheckerTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void checkDeploymentRateLimit() {
     when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.ONPREM);
 

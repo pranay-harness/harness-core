@@ -80,7 +80,7 @@ public class SplunkResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Owner(emails = "pranjal@harness.io", intermittent = true)
   @Category(IntegrationTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetLogRecordsWithQuery() {
     SplunkSetupTestNodeData setupTestNodeData = getSplunkSetupTestNodedata("*exception*");
     WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.SPLUNK_RESOURCE_BASE_URL

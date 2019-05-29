@@ -111,7 +111,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testValidConfig() {
     final ElkConfig elkConfig = new ElkConfig();
     elkConfig.setAccountId(accountId);

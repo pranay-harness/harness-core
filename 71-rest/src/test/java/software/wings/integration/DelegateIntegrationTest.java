@@ -42,7 +42,7 @@ public class DelegateIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Category(IntegrationTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldDownloadDelegateZipWithWatcher()
       throws IOException, JSONException, TimeoutException, InterruptedException {
     String url = "https://localhost:9090/api/delegates/downloadUrl?accountId=" + accountId;
@@ -88,7 +88,7 @@ public class DelegateIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Category(IntegrationTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldRunDelegate() throws IOException, JSONException, TimeoutException, InterruptedException {
     String url = "https://localhost:9090/api/delegates/downloadUrl?accountId=" + accountId;
     String responseString = Http.getUnsafeOkHttpClient(url)

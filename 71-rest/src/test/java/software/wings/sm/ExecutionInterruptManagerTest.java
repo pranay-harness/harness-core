@@ -219,7 +219,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
    */
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldThrowAbortAllAlready() {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().name("App1").build());

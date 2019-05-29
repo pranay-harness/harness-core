@@ -382,7 +382,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testInitializeServiceSecretKeys() {
     assertTrue(wingsPersistence.createQuery(ServiceSecretKey.class).asList().isEmpty());
     learningEngineService.initializeServiceSecretKeys();

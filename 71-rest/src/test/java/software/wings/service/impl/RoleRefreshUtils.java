@@ -41,7 +41,7 @@ public class RoleRefreshUtils extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void recreateRoles() {
     PageResponse<User> users = userService.list(aPageRequest().build(), false);
 

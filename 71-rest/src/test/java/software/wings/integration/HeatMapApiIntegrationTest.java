@@ -216,7 +216,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
   //  @Test @Category(IntegrationTests.class)
   // Test to be un-ignored as per https://harness.atlassian.net/browse/LE-1150
   @Owner(emails = "vaibhav.tulsyan@harness.io", intermittent = true)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testTimeSeries() {
     String url = API_BASE + "/cvdash" + VerificationConstants.TIMESERIES + "?accountId=" + accountId
         + "&appId=" + savedApp.getUuid() + "&cvConfigId=" + newRelicCVServiceConfiguration.getUuid()

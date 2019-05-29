@@ -177,7 +177,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Category(IntegrationTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldSelectAwsInfrastructureInstances() {
     List<Key<ServiceTemplate>> templateRefKeysByService =
         serviceTemplateService.getTemplateRefKeysByService(app.getUuid(), service.getUuid(), environment.getUuid());
@@ -215,7 +215,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Category(IntegrationTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldProvisionAwsNodes() {
     List<Key<ServiceTemplate>> templateRefKeysByService =
         serviceTemplateService.getTemplateRefKeysByService(app.getUuid(), service.getUuid(), environment.getUuid());

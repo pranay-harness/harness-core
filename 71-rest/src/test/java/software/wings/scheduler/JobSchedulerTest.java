@@ -54,7 +54,7 @@ public class JobSchedulerTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateScheduler() throws SchedulerException, InterruptedException {
     // define the job and tie it to our HelloJob class
     JobDetail job = JobBuilder.newJob(ArtifactCollectionJob.class)
@@ -81,7 +81,7 @@ public class JobSchedulerTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldResumeIncompleteJob() throws InterruptedException, SchedulerException {
     jobScheduler.getScheduler().resumeAll();
     Thread.sleep(100000);

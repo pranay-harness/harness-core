@@ -90,7 +90,7 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
 
   @Test
   @Category(FunctionalTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldDeployIISAppWithPhysicalInfra() throws Exception {
     Service savedService = serviceGenerator.ensurePredefined(seed, owners, Services.WINDOWS_TEST);
     Environment savedEnvironment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
@@ -134,7 +134,7 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
 
   @Test
   @Category(FunctionalTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldDeployIISAppWithAzureCloudProvider() throws Exception {
     Service savedService = serviceGenerator.ensurePredefined(seed, owners, Services.WINDOWS_TEST);
     Environment savedEnvironment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);

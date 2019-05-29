@@ -95,7 +95,7 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
 
   @Test
   @Category(IntegrationTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetLastExecutionNodesECS()
       throws NoSuchAlgorithmException, KeyManagementException, IllegalAccessException {
     AwsConfig awsConfig = AwsConfig.builder()

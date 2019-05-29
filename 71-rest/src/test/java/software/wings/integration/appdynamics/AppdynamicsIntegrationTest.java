@@ -136,7 +136,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   @Test
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetAllTierBTMetrics() throws Exception {
     SettingAttribute appdSettingAttribute = settingsService.get(appdynamicsSettingId);
     AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) appdSettingAttribute.getValue();
