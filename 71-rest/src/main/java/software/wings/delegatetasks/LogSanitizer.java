@@ -37,7 +37,7 @@ public class LogSanitizer {
       ArrayList<String> secretNames = new ArrayList<>();
       ArrayList<String> secretValues = new ArrayList<>();
       for (Map.Entry<String, String> entry : secrets.entrySet()) {
-        secretNames.add("${" + entry.getKey() + "}");
+        secretNames.add("<<<" + entry.getKey() + ">>>");
         secretValues.add(entry.getValue());
       }
       return replaceEach(log, secretValues.toArray(new String[] {}), secretNames.toArray(new String[] {}));
