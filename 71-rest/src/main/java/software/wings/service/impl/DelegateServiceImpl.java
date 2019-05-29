@@ -36,7 +36,6 @@ import static software.wings.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskA
 import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK;
-import static software.wings.beans.FeatureName.DELEGATE_TASK_VERSIONING;
 import static software.wings.beans.ServiceSecretKey.ServiceType.LEARNING_ENGINE;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.common.Constants.DELEGATE_DIR;
@@ -1960,16 +1959,14 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   private List<DelegateTaskEvent> getQueuedEvents(String accountId, boolean sync) {
-    Query<DelegateTask> delegateTaskQuery = wingsPersistence.createQuery(DelegateTask.class)
-                                                .filter(DelegateTaskKeys.accountId, accountId)
-                                                .filter(DelegateTaskKeys.status, QUEUED)
-                                                .filter(DelegateTaskKeys.async, !sync)
-                                                .field(DelegateTaskKeys.delegateId)
-                                                .doesNotExist();
-
-    if (featureFlagService.isEnabled(DELEGATE_TASK_VERSIONING, accountId)) {
-      delegateTaskQuery.filter(DelegateTaskKeys.version, versionInfoManager.getVersionInfo().getVersion());
-    }
+    Query<DelegateTask> delegateTaskQuery =
+        wingsPersistence.createQuery(DelegateTask.class)
+            .filter(DelegateTaskKeys.accountId, accountId)
+            .filter(DelegateTaskKeys.version, versionInfoManager.getVersionInfo().getVersion())
+            .filter(DelegateTaskKeys.status, QUEUED)
+            .filter(DelegateTaskKeys.async, !sync)
+            .field(DelegateTaskKeys.delegateId)
+            .doesNotExist();
 
     return delegateTaskQuery.asKeyList()
         .stream()

@@ -50,6 +50,8 @@ import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
+import io.harness.version.VersionInfo;
+import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
@@ -124,15 +126,13 @@ import java.util.List;
 import java.util.stream.IntStream;
 import java.util.zip.GZIPInputStream;
 
-/**
- * Created by peeyushaggarwal on 11/28/16.
- */
 public class DelegateServiceTest extends WingsBaseTest {
+  private static final String VERSION = "1.0.0";
   private static final DelegateBuilder BUILDER = Delegate.builder()
                                                      .accountId(ACCOUNT_ID)
                                                      .ip("127.0.0.1")
                                                      .hostName("localhost")
-                                                     .version("1.0.0")
+                                                     .version(VERSION)
                                                      .status(Status.ENABLED)
                                                      .lastHeartBeat(System.currentTimeMillis());
   @Mock private WaitNotifyEngine waitNotifyEngine;
@@ -150,6 +150,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private ManagerDecryptionService managerDecryptionService;
   @Mock private FileService fileService;
   @Mock private AlertService alertService;
+  @Mock private VersionInfoManager versionInfoManager;
 
   @Rule public WireMockRule wireMockRule = new WireMockRule(8888);
 
@@ -193,6 +194,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                              .withHeader("Content-Type", "text/plain")));
 
     when(broadcasterFactory.lookup(anyString(), anyBoolean())).thenReturn(broadcaster);
+    when(versionInfoManager.getVersionInfo()).thenReturn(VersionInfo.builder().version(VERSION).build());
   }
 
   @Test
@@ -217,18 +219,18 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetDelegateStatus() {
     when(accountService.getDelegateConfiguration(anyString()))
-        .thenReturn(DelegateConfiguration.builder().watcherVersion("1.0.0").delegateVersions(asList("1.0.0")).build());
+        .thenReturn(DelegateConfiguration.builder().watcherVersion(VERSION).delegateVersions(asList(VERSION)).build());
     Delegate delegate = BUILDER.build();
     wingsPersistence.save(delegate);
     wingsPersistence.save(
-        DelegateConnection.builder().accountId(ACCOUNT_ID).delegateId(delegate.getUuid()).version("1.0.0").build());
+        DelegateConnection.builder().accountId(ACCOUNT_ID).delegateId(delegate.getUuid()).version(VERSION).build());
     DelegateStatus delegateStatus = delegateService.getDelegateStatus(ACCOUNT_ID);
-    assertThat(delegateStatus.getPublishedVersions()).hasSize(1).contains("1.0.0");
+    assertThat(delegateStatus.getPublishedVersions()).hasSize(1).contains(VERSION);
     assertThat(delegateStatus.getDelegates()).hasSize(1);
     assertThat(delegateStatus.getDelegates().get(0)).hasFieldOrPropertyWithValue("uuid", delegate.getUuid());
     assertThat(delegateStatus.getDelegates().get(0).getConnections()).hasSize(1);
     assertThat(delegateStatus.getDelegates().get(0).getConnections().get(0))
-        .hasFieldOrPropertyWithValue("version", "1.0.0");
+        .hasFieldOrPropertyWithValue("version", VERSION);
   }
 
   @Test
@@ -313,7 +315,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                                 .accountId("DELETED_ACCOUNT")
                                                 .ip("127.0.0.1")
                                                 .hostName("localhost")
-                                                .version("1.0.0")
+                                                .version(VERSION)
                                                 .status(Status.ENABLED)
                                                 .lastHeartBeat(System.currentTimeMillis())
                                                 .build());
@@ -330,7 +332,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .accountId("DELETED_ACCOUNT")
                             .ip("127.0.0.1")
                             .hostName("localhost")
-                            .version("1.0.0")
+                            .version(VERSION)
                             .status(Status.ENABLED)
                             .lastHeartBeat(System.currentTimeMillis())
                             .build();
@@ -349,6 +351,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .accountId(ACCOUNT_ID)
                                     .waitId(generateUuid())
                                     .appId(APP_ID)
+                                    .version(VERSION)
                                     .status(DelegateTask.Status.QUEUED)
                                     .data(TaskData.builder()
                                               .taskType(TaskType.HTTP.name())
@@ -371,6 +374,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .accountId(ACCOUNT_ID)
                                     .waitId(generateUuid())
                                     .appId(APP_ID)
+                                    .version(VERSION)
                                     .data(TaskData.builder()
                                               .taskType(TaskType.HTTP.name())
                                               .parameters(new Object[] {})
@@ -392,6 +396,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .accountId(ACCOUNT_ID)
                                     .waitId(generateUuid())
                                     .appId(APP_ID)
+                                    .version(VERSION)
                                     .data(TaskData.builder()
                                               .taskType(TaskType.HTTP.name())
                                               .parameters(new Object[] {})
@@ -413,6 +418,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .accountId(ACCOUNT_ID)
                                     .waitId(generateUuid())
                                     .appId(APP_ID)
+                                    .version(VERSION)
                                     .data(TaskData.builder()
                                               .taskType(TaskType.HTTP.name())
                                               .parameters(new Object[] {})
@@ -440,6 +446,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .async(true)
                                     .accountId(ACCOUNT_ID)
                                     .appId(APP_ID)
+                                    .version(VERSION)
                                     .data(TaskData.builder()
                                               .taskType(TaskType.HTTP.name())
                                               .parameters(new Object[] {})
@@ -464,6 +471,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(ACCOUNT_ID)
                                     .appId(APP_ID)
+                                    .version(VERSION)
                                     .data(TaskData.builder()
                                               .taskType(TaskType.HTTP.name())
                                               .parameters(new Object[] {})
@@ -491,6 +499,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .waitId(generateUuid())
                                     .delegateId(DELEGATE_ID)
                                     .appId(APP_ID)
+                                    .version(VERSION)
                                     .data(TaskData.builder()
                                               .taskType(TaskType.HTTP.name())
                                               .parameters(new Object[] {})
@@ -527,6 +536,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .waitId(generateUuid())
                                     .delegateId(DELEGATE_ID)
                                     .appId(APP_ID)
+                                    .version(VERSION)
                                     .data(TaskData.builder()
                                               .taskType(TaskType.HTTP.name())
                                               .parameters(new Object[] {})
@@ -709,6 +719,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .accountId(ACCOUNT_ID)
                                     .waitId(generateUuid())
                                     .appId(APP_ID)
+                                    .version(VERSION)
                                     .data(TaskData.builder()
                                               .taskType(TaskType.HTTP.name())
                                               .parameters(new Object[] {})
@@ -732,6 +743,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .accountId(ACCOUNT_ID)
                                     .waitId(generateUuid())
                                     .appId(APP_ID)
+                                    .version(VERSION)
                                     .data(TaskData.builder()
                                               .taskType(TaskType.HTTP.name())
                                               .parameters(new Object[] {})
@@ -756,6 +768,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .accountId(ACCOUNT_ID + "1")
                                     .waitId(generateUuid())
                                     .appId(APP_ID)
+                                    .version(VERSION)
                                     .data(TaskData.builder()
                                               .taskType(TaskType.HTTP.name())
                                               .parameters(new Object[] {})
@@ -778,6 +791,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .accountId(ACCOUNT_ID)
                                     .waitId(generateUuid())
                                     .appId(APP_ID)
+                                    .version(VERSION)
                                     .data(TaskData.builder()
                                               .taskType(TaskType.HTTP.name())
                                               .parameters(new Object[] {})
@@ -803,6 +817,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .accountId(ACCOUNT_ID)
                                     .waitId(generateUuid())
                                     .appId(APP_ID)
+                                    .version(VERSION)
                                     .data(TaskData.builder()
                                               .taskType(TaskType.HTTP.name())
                                               .parameters(new Object[] {})
