@@ -632,7 +632,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   public <T> RestResponse<YamlPayload> obtainEntityYamlVersion(String accountId, T entity) {
     if (entity instanceof ArtifactStream) {
       ArtifactStream artifactStream = (ArtifactStream) entity;
-      return getTrigger(artifactStream.getAppId(), artifactStream.getUuid());
+      return getArtifactTrigger(artifactStream.getAppId(), artifactStream.getUuid());
     } else if (entity instanceof ConfigFile) {
       return getConfigFileYaml(accountId, (ConfigFile) entity);
     } else if (entity instanceof SettingAttribute) {
