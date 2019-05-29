@@ -72,6 +72,7 @@ import io.harness.validation.Create;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -2328,5 +2329,21 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         .field(ServiceKeys.artifactStreamIds)
         .contains(artifactStreamId)
         .asList();
+  }
+
+  @Override
+  public List<String> listServiceNamesByArtifactStreamId(String artifactStreamId) {
+    List<Service> services = wingsPersistence.createQuery(Service.class, excludeAuthority)
+                                 .field(ServiceKeys.artifactStreamIds)
+                                 .contains(artifactStreamId)
+                                 .project(ServiceKeys.name, true)
+                                 .asList(new FindOptions().limit(10));
+    List<String> serviceNames = new ArrayList<>();
+    if (isNotEmpty(services)) {
+      for (Service service : services) {
+        serviceNames.add(service.getName());
+      }
+    }
+    return serviceNames;
   }
 }

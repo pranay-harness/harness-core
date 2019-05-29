@@ -52,6 +52,7 @@ import org.mongodb.morphia.query.UpdateResults;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.Variable;
@@ -418,16 +419,29 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
   }
 
-  private void ensureArtifactStreamSafeToDelete(String appId, String artifactStreamId) {
-    List<software.wings.beans.trigger.Trigger> triggers =
-        triggerService.getTriggersHasArtifactStreamAction(appId, artifactStreamId);
-    if (isEmpty(triggers)) {
-      return;
+  private void ensureArtifactStreamSafeToDelete(String appId, String artifactStreamId, String accountId) {
+    if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+      List<software.wings.beans.trigger.Trigger> triggers =
+          triggerService.getTriggersHasArtifactStreamAction(appId, artifactStreamId);
+      if (isEmpty(triggers)) {
+        return;
+      }
+      List<String> triggerNames =
+          triggers.stream().map(software.wings.beans.trigger.Trigger::getName).collect(toList());
+      throw new InvalidRequestException(
+          format("Artifact Source associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)),
+          USER);
+    } else {
+      // TODO: handle triggers
+      if (appId.equals(GLOBAL_APP_ID)) {
+        List<String> serviceNames = serviceResourceService.listServiceNamesByArtifactStreamId(artifactStreamId);
+        if (isEmpty(serviceNames)) {
+          return;
+        }
+        throw new InvalidRequestException(
+            format("Artifact Stream linked to Services [%s]", Joiner.on(", ").join(serviceNames)), USER);
+      }
     }
-    List<String> triggerNames = triggers.stream().map(software.wings.beans.trigger.Trigger::getName).collect(toList());
-    throw new InvalidRequestException(
-        format("Artifact Source associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)),
-        USER);
   }
 
   @Override
@@ -448,6 +462,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
               accountId, settingsService.getUsageRestrictionsForSettingId(artifactStream.getSettingId()))) {
         throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
       }
+      ensureArtifactStreamSafeToDelete(GLOBAL_APP_ID, artifactStreamId, accountId);
     }
     yamlPushService.pushYamlChangeSet(accountId, artifactStream, null, Type.DELETE, false, false);
 
@@ -464,9 +479,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     if (artifactStream == null) {
       return true;
     }
-    if (!forceDelete) {
-      ensureArtifactStreamSafeToDelete(appId, artifactStreamId);
-    }
 
     String accountId = null;
     if (!appId.equals(GLOBAL_APP_ID)) {
@@ -479,6 +491,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
           throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
         }
       }
+    }
+    if (!forceDelete) {
+      ensureArtifactStreamSafeToDelete(appId, artifactStreamId, accountId);
     }
     yamlPushService.pushYamlChangeSet(accountId, artifactStream, null, Type.DELETE, syncFromGit, false);
 
@@ -693,7 +708,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   public List<ArtifactStreamSummary> listArtifactStreamSummary(String appId) {
     List<ArtifactStream> artifactStreams = wingsPersistence.createQuery(ArtifactStream.class, excludeAuthority)
                                                .project(ArtifactStreamKeys.uuid, true)
-                                               .project(ArtifactStreamKeys.sourceName, true)
+                                               .project(ArtifactStreamKeys.name, true)
                                                .asList();
     List<Service> services = wingsPersistence.createQuery(Service.class)
                                  .filter(ServiceKeys.appId, appId)
@@ -703,7 +718,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                  .asList();
 
     Map<String, String> artifactStreamIdToName =
-        artifactStreams.stream().collect(toMap(ArtifactStream::getUuid, ArtifactStream::getSourceName));
+        artifactStreams.stream().collect(toMap(ArtifactStream::getUuid, ArtifactStream::getName));
     List<ArtifactStreamSummary> artifactStreamSummaries = new ArrayList<>();
     for (Service service : services) {
       List<String> artifactStreamIds = service.getArtifactStreamIds();
