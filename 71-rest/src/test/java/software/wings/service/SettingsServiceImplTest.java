@@ -512,7 +512,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testUsageRestrictionsWithNothingSet() {
     try {
       String ENV_ID_1 = "ENV_ID_1";

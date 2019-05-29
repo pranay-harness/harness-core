@@ -20,7 +20,7 @@ public class WorkflowIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Category(IntegrationTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldReturnSeedBasicWorkflow() {
     Workflow seedBasicWorkflow = workflowResourceRestClient.getSeedBasicWorkflow(client);
     assertThat(seedBasicWorkflow).isNotNull().hasFieldOrPropertyWithValue("name", SEED_BASIC_WORKFLOW_NAME);
@@ -39,7 +39,7 @@ public class WorkflowIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Category(IntegrationTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldReturnSeedRollingWorkflow() {
     Workflow seedRollingWorkflow = workflowResourceRestClient.getSeedRollingWorkflow(client);
     assertThat(seedRollingWorkflow).isNotNull().hasFieldOrPropertyWithValue("name", SEED_ROLLING_WORKFLOW_NAME);

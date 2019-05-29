@@ -63,7 +63,7 @@ public class HTTPWorkflowFunctionalTest extends AbstractFunctionalTest {
 
   @Test
   @Category(FunctionalTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateHTTPStepInWorkflow() throws Exception {
     Environment environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     assertThat(environment).isNotNull();

@@ -40,7 +40,7 @@ public class AwsSecretsManagerServiceFunctionalTest extends AbstractFunctionalTe
 
   @Test
   @Category(FunctionalTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testCRUDSecretsWithAwsSecretsManager() {
     AwsSecretsManagerConfig secretsManagerConfig =
         AwsSecretsManagerConfig.builder()

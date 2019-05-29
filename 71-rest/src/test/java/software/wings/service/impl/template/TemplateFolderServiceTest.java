@@ -413,7 +413,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
 
   @Test(expected = WingsException.class)
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldNotSaveTemplateFoldersWithSameNameApplicationLevel() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     TemplateFolder myAppTemplateFolder =

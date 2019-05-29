@@ -202,7 +202,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetTierDependencies() throws IOException {
     int numOfTiers = 5;
     Call<Set<AppdynamicsTier>> restCall = mock(Call.class);

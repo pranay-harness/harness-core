@@ -41,7 +41,7 @@ public class VaultServiceFunctionalTest extends AbstractFunctionalTest {
 
   @Test
   @Category(FunctionalTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void createVaultWithAppRoleAuth() throws IOException {
     VaultConfig vaultConfigWithAppRoleSecret =
         VaultConfig.builder()

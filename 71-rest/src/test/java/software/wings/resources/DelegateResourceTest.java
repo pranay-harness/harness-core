@@ -287,7 +287,7 @@ public class DelegateResourceTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldAcceptDelegateResponse() {
     DelegateTaskResponse response = DelegateTaskResponse.builder().build();
 

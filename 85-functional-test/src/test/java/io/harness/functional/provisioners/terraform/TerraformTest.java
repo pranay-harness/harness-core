@@ -105,7 +105,7 @@ public class TerraformTest extends AbstractFunctionalTest {
   @Test
   @Owner(emails = "vaibhav.si@harness.io", intermittent = true)
   @Category(FunctionalTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldRunTerraformWorkflow() {
     ExecutionArgs executionArgs = prepareExecutionArgs(workflow);
     WorkflowExecution workflowExecution =

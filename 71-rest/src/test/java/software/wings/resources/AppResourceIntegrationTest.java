@@ -71,7 +71,7 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Repeat(times = 10, successes = 10)
   @Category(IntegrationTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testLimitsEnforcement() throws Exception {
     long appCount = appCount(WingsIntegrationTestConstants.INTEGRATION_TEST_ACCOUNT_ID);
 
@@ -116,7 +116,7 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Repeat(times = 10, successes = 10)
   @Category(IntegrationTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testLimitsEnforcementConcurrent() throws Exception {
     long appCount = appCount(WingsIntegrationTestConstants.INTEGRATION_TEST_ACCOUNT_ID);
 

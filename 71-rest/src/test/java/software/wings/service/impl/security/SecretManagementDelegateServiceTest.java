@@ -45,7 +45,7 @@ public class SecretManagementDelegateServiceTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void test_EncryptDecryptKmsSecret_ShouldSucceed() {
     String secret = "TopSecret";
     EncryptedRecord encryptedRecord =

@@ -55,7 +55,7 @@ public class HostResourceTest extends WingsBaseTest {
    */
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldListHosts() {
     PageResponse<Host> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(host));

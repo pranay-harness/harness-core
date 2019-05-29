@@ -33,7 +33,7 @@ public class ExecutionGenTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void generateData() {
     PageRequest<WorkflowExecution> pageRequest = aPageRequest().withLimit("500").build();
 

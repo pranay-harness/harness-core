@@ -39,12 +39,12 @@ public class BambooServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetJobKeys() {}
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetPlanKeys() {
     wireMockRule.stubFor(
         get(urlEqualTo("/rest/api/latest/plan.json?authType=basic"))
@@ -61,7 +61,7 @@ public class BambooServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetPlanKeysException() {
     wireMockRule.stubFor(get(urlEqualTo("/rest/api/latest/plan.json?authType=basic"))
                              .willReturn(aResponse()
@@ -75,12 +75,12 @@ public class BambooServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetLastSuccessfulBuild() {}
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetBuildsForJob() {
     wireMockRule.stubFor(
         get(urlEqualTo(
@@ -99,7 +99,7 @@ public class BambooServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetBuildsForJobError() {
     wireMockRule.stubFor(get(
         urlEqualTo(
@@ -112,11 +112,11 @@ public class BambooServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetArtifactPath() {}
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldDownloadArtifact() {}
 }

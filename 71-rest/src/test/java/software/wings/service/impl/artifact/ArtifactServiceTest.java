@@ -170,7 +170,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldThrowExceptionWhenArtifactToBeCreatedIsInvalid() {
     assertThatExceptionOfType(ConstraintViolationException.class)
         .isThrownBy(() -> artifactService.create(artifactBuilder.but().withRevision(null).build()));

@@ -63,7 +63,7 @@ public class EmailHandlerIntegrationTest extends WingsBaseTest {
   @Test
   @Repeat(times = 3, successes = 1)
   @Category(IntegrationTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testSMTPConnectivity() {
     SmtpConfig smtpConfig =
         SmtpConfig.builder()

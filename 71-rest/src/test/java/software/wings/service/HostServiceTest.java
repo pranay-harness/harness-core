@@ -206,7 +206,7 @@ public class HostServiceTest extends WingsBaseTest {
    */
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldBulkSave() {
     /*
         ServiceTemplate serviceTemplate = aServiceTemplate().uuid(TEMPLATE_ID).build();
@@ -246,7 +246,7 @@ public class HostServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetInfrastructureHostUsageByApplication() {
     /*
         List<Application> applications =

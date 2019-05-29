@@ -71,7 +71,7 @@ public class SecretsFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(emails = "swamy@harness.io", intermittent = true)
   @Category(FunctionalTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void secretsCRUDTests() {
     logger.info("Secrets test starts");
     String secretsName = "Secret-" + System.currentTimeMillis();

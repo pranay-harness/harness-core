@@ -197,7 +197,7 @@ public class NexusServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetArtifactPathsByRepoStartsWithUrlError() {
     wireMockRule.stubFor(get(urlEqualTo("/nexus/service/local/repositories/releases/content/fakepath"))
                              .willReturn(aResponse()
@@ -486,7 +486,7 @@ public class NexusServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldDownloadArtifact() {
     setPomModelWireMock();
 

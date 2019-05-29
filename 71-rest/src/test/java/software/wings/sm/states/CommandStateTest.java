@@ -315,7 +315,7 @@ public class CommandStateTest extends WingsBaseTest {
   @Test
   @Owner(emails = "rathnakara.malatesha@harness.io")
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void execute() {
     when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
 
@@ -635,7 +635,7 @@ public class CommandStateTest extends WingsBaseTest {
   @Test
   @Owner(emails = "aaditi@harness.io", intermittent = true)
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldFailWhenNestedCommandNotFound() {
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START"))
         .thenReturn(aServiceCommand()

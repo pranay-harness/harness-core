@@ -1465,7 +1465,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    */
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetCommandStencils() {
     when(mockWingsPersistence.getWithAppId(eq(Service.class), anyString(), anyString()))
         .thenReturn(serviceBuilder
@@ -1521,7 +1521,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    */
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetScriptCommandStencilsOnly() {
     when(mockWingsPersistence.getWithAppId(eq(Service.class), anyString(), anyString()))
         .thenReturn(serviceBuilder

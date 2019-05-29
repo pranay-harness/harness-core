@@ -65,7 +65,7 @@ public class MarketoHandlerTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   //  @Repeat(times = 5, successes = 1)
   public void testCreateLeadAndTriggerCampaign() {
     UserThreadLocal.set(user);

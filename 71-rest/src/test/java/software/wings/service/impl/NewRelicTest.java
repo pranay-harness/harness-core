@@ -66,7 +66,7 @@ public class NewRelicTest extends WingsBaseTest {
   @Test
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void getAllApplications() throws IOException, CloneNotSupportedException {
     List<NewRelicApplication> allApplications =
         newRelicDelegateService.getAllApplications(newRelicConfig, Collections.emptyList(), null);
@@ -76,7 +76,7 @@ public class NewRelicTest extends WingsBaseTest {
   @Test
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void getApplicationInstances() throws IOException, CloneNotSupportedException {
     NewRelicApplication demoApp = getDemoApp();
     List<NewRelicApplicationInstance> applicationInstances =
@@ -87,7 +87,7 @@ public class NewRelicTest extends WingsBaseTest {
   @Test
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void getMetricsNameToCollect() throws IOException, CloneNotSupportedException {
     NewRelicApplication demoApp = getDemoApp();
     Collection<NewRelicMetric> metricsNameToCollect =

@@ -66,7 +66,7 @@ public class SlackNotificationServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldAddNotificationRulesForAllApplication() {
     List<Application> applications = appService.list(new PageRequest<>()).getResponse();
     applications.forEach(application -> {
