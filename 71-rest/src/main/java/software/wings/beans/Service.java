@@ -26,6 +26,7 @@ import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.annotations.Version;
 import software.wings.api.DeploymentType;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamBinding;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.utils.ArtifactType;
 import software.wings.yaml.BaseEntityYaml;
@@ -139,10 +140,12 @@ public class Service extends Base implements KeywordsAware, NameAccess {
     private String configMapYaml;
     private String applicationStack;
     private List<NameValuePair.Yaml> configVariables = new ArrayList<>();
+    private List<ArtifactStreamBinding.Yaml> artifactStreamBindings = new ArrayList<>();
 
     @lombok.Builder
     public Yaml(String harnessApiVersion, String description, String artifactType, String deploymentType,
-        String configMapYaml, String applicationStack, List<NameValuePair.Yaml> configVariables) {
+        String configMapYaml, String applicationStack, List<NameValuePair.Yaml> configVariables,
+        List<ArtifactStreamBinding.Yaml> artifactStreamBindings) {
       super(EntityType.SERVICE.name(), harnessApiVersion);
       this.description = description;
       this.artifactType = artifactType;
@@ -150,6 +153,7 @@ public class Service extends Base implements KeywordsAware, NameAccess {
       this.configMapYaml = configMapYaml;
       this.applicationStack = applicationStack;
       this.configVariables = configVariables;
+      this.artifactStreamBindings = artifactStreamBindings;
     }
   }
 

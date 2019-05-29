@@ -1,6 +1,8 @@
 package software.wings.service.impl.yaml.handler.service;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -17,20 +19,31 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
+import software.wings.beans.FeatureName;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
 import software.wings.beans.Service.Yaml;
+import software.wings.beans.Service.Yaml.YamlBuilder;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.ServiceVariableBuilder;
 import software.wings.beans.ServiceVariable.Type;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamBinding;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.Utils;
 
@@ -52,6 +65,10 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
   @Inject SecretManager secretManager;
   @Inject AppContainerService appContainerService;
   @Inject AppService appService;
+  @Inject ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Inject FeatureFlagService featureFlagService;
+  @Inject SettingsService settingsService;
+  @Inject ArtifactStreamService artifactStreamService;
 
   @Override
   public Yaml toYaml(Service service, String appId) {
@@ -59,15 +76,33 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     AppContainer appContainer = service.getAppContainer();
     String applicationStack = appContainer != null ? appContainer.getName() : null;
     String deploymentType = service.getDeploymentType() != null ? service.getDeploymentType().name() : null;
-    return Yaml.builder()
-        .harnessApiVersion(getHarnessApiVersion())
-        .description(service.getDescription())
-        .artifactType(service.getArtifactType().name())
-        .deploymentType(deploymentType)
-        .configMapYaml(service.getConfigMapYaml())
-        .configVariables(nameValuePairList)
-        .applicationStack(applicationStack)
-        .build();
+
+    YamlBuilder yamlBuilder = Yaml.builder()
+                                  .harnessApiVersion(getHarnessApiVersion())
+                                  .description(service.getDescription())
+                                  .artifactType(service.getArtifactType().name())
+                                  .deploymentType(deploymentType)
+                                  .configMapYaml(service.getConfigMapYaml())
+                                  .configVariables(nameValuePairList)
+                                  .applicationStack(applicationStack);
+
+    List<ArtifactStreamBinding.Yaml> artifactStreamBindings = new ArrayList<>();
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, service.getAccountId())) {
+      List<ArtifactStream> artifactStreams =
+          artifactStreamServiceBindingService.listArtifactStreams(service.getAppId(), service.getUuid());
+      if (isNotEmpty(artifactStreams)) {
+        for (ArtifactStream artifactStream : artifactStreams) {
+          SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
+          artifactStreamBindings.add(ArtifactStreamBinding.Yaml.builder()
+                                         .artifactStreamType(artifactStream.getArtifactStreamType())
+                                         .artifactStreamName(artifactStream.getName())
+                                         .artifactServerName(settingAttribute.getName())
+                                         .build());
+        }
+      }
+      yamlBuilder.artifactStreamBindings(artifactStreamBindings);
+    }
+    return yamlBuilder.build();
   }
 
   private List<NameValuePair.Yaml> convertToNameValuePair(List<ServiceVariable> serviceVariables) {
@@ -128,6 +163,37 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     boolean syncFromGit = changeContext.getChange().isSyncFromGit();
     currentService.setSyncFromGit(syncFromGit);
 
+    List<String> artifactStreamIds = new ArrayList<>();
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+      List<ArtifactStreamBinding.Yaml> artifactStreamBindings = yaml.getArtifactStreamBindings();
+      if (isNotEmpty(artifactStreamBindings)) {
+        for (ArtifactStreamBinding.Yaml artifactStreamBinding : artifactStreamBindings) {
+          // Fetch artifact source from artifact source name
+          SettingVariableTypes settingVariableTypes =
+              getSettingVariableTypeFromArtifactStreamType(artifactStreamBinding.getArtifactStreamType());
+          SettingAttribute settingAttribute = settingsService.fetchSettingAttributeByName(
+              accountId, artifactStreamBinding.getArtifactServerName(), settingVariableTypes);
+          if (settingAttribute == null) {
+            throw new WingsException(
+                format("Artifact Server with name: [%s] not found", artifactStreamBinding.getArtifactServerName()),
+                USER);
+          }
+          // Fetch artifact stream from artifact stream name
+          ArtifactStream artifactStream = artifactStreamService.getArtifactStreamByName(
+              settingAttribute.getUuid(), artifactStreamBinding.getArtifactStreamName());
+          if (artifactStream == null) {
+            throw new WingsException(
+                format("Artifact Stream with name: [%s] not found under artifact xxxxxxxx [%s]",
+                    artifactStreamBinding.getArtifactStreamName(), artifactStreamBinding.getArtifactServerName()),
+                USER);
+          }
+          if (!artifactStreamIds.contains(artifactStream.getUuid())) {
+            artifactStreamIds.add(artifactStream.getUuid());
+          }
+        }
+      }
+      currentService.setArtifactStreamIds(artifactStreamIds);
+    }
     if (previousService != null) {
       currentService.setUuid(previousService.getUuid());
       currentService = serviceResourceService.update(currentService, true);
@@ -147,6 +213,50 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
           null, yaml, emptyList(), currentService.getAppId(), currentService.getUuid(), syncFromGit);
     }
     return currentService;
+  }
+
+  private SettingVariableTypes getSettingVariableTypeFromArtifactStreamType(String artifactStreamType) {
+    ArtifactStreamType streamType = ArtifactStreamType.valueOf(artifactStreamType.toUpperCase());
+    SettingVariableTypes settingVariableTypes;
+    switch (streamType) {
+      case JENKINS:
+        settingVariableTypes = SettingVariableTypes.JENKINS;
+        break;
+      case BAMBOO:
+        settingVariableTypes = SettingVariableTypes.BAMBOO;
+        break;
+      case DOCKER:
+        settingVariableTypes = SettingVariableTypes.DOCKER;
+        break;
+      case GCR:
+      case GCS:
+        settingVariableTypes = SettingVariableTypes.GCP;
+        break;
+      case ACR:
+        settingVariableTypes = SettingVariableTypes.ACR;
+        break;
+      case NEXUS:
+        settingVariableTypes = SettingVariableTypes.NEXUS;
+        break;
+      case ARTIFACTORY:
+        settingVariableTypes = SettingVariableTypes.ARTIFACTORY;
+        break;
+      case AMI:
+      case ECR:
+      case AMAZON_S3:
+        settingVariableTypes = SettingVariableTypes.AWS;
+        break;
+      case SMB:
+        settingVariableTypes = SettingVariableTypes.SMB;
+        break;
+      case SFTP:
+        settingVariableTypes = SettingVariableTypes.SFTP;
+        break;
+      case CUSTOM:
+      default:
+        throw new IllegalStateException("Unexpected value: " + artifactStreamType);
+    }
+    return settingVariableTypes;
   }
 
   @Override
