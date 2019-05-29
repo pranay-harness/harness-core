@@ -107,6 +107,7 @@ import com.google.inject.Singleton;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.harness.beans.OrchestrationWorkflowType;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
@@ -1691,7 +1692,10 @@ public class WorkflowServiceHelper {
     if (serviceId == null || oldServiceId == null || serviceId.equals(oldServiceId)) {
       return;
     }
-    Service oldService = serviceResourceService.get(appId, oldServiceId, false);
+    Service oldService = null;
+    if (EmptyPredicate.isNotEmpty(oldServiceId)) {
+      oldService = serviceResourceService.get(appId, oldServiceId, false);
+    }
     if (oldService == null) {
       // As service has been deleted, compatibility check does not make sense here
       return;
