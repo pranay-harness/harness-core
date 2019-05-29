@@ -44,6 +44,7 @@ import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.artifact.CustomBuildSourceService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
@@ -79,6 +80,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private GcsService gcsService;
   @Inject private CustomBuildSourceService customBuildSourceService;
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
+  @Inject private UsageRestrictionsService usageRestrictionsService;
 
   @Override
   public Set<JobDetails> getJobs(String appId, String settingId, String parentJobName) {
@@ -419,6 +421,13 @@ public class BuildSourceServiceImpl implements BuildSourceService {
 
   @Override
   public Artifact collectArtifact(String artifactStreamId, BuildDetails buildDetails) {
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+    notNullCheck("Artifact Stream does not exist ", artifactStream);
+    if (artifactStream.getAppId().equals(GLOBAL_APP_ID)) {
+      usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(artifactStream.getAccountId(),
+          settingsService.getUsageRestrictionsForSettingId(artifactStream.getSettingId()),
+          settingsService.getUsageRestrictionsForSettingId(artifactStream.getSettingId()));
+    }
     if (buildDetails == null) {
       throw new InvalidRequestException("Build details can not null", USER);
     }

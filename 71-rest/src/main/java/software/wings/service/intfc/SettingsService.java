@@ -108,4 +108,6 @@ public interface SettingsService extends OwnedByAccount {
   GitConfig fetchGitConfigFromConnectorId(String gitConnectorId);
 
   String fetchAccountIdBySettingId(String settingId);
+
+  UsageRestrictions getUsageRestrictionsForSettingId(String settingId);
 }

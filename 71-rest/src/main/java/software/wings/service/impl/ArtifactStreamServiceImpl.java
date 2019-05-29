@@ -35,6 +35,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.data.validator.EntityNameValidator;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.queue.Queue;
@@ -53,7 +54,6 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.Variable;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
@@ -77,6 +77,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
+import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.ownership.OwnedByArtifactStream;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.yaml.YamlPushService;
@@ -120,6 +121,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private AlertService alertService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private TriggerService triggerService;
+  @Inject private UsageRestrictionsService usageRestrictionsService;
 
   @Override
   public PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req) {
@@ -163,6 +165,14 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Override
   @ValidationGroups(Create.class)
   public ArtifactStream create(ArtifactStream artifactStream, boolean validate) {
+    String accountId = getAccountIdForArtifactStream(artifactStream);
+    artifactStream.setAccountId(accountId);
+
+    if (artifactStream.getAppId().equals(GLOBAL_APP_ID)) {
+      usageRestrictionsService.validateUsageRestrictionsOnEntitySave(artifactStream.getAccountId(),
+          settingsService.getUsageRestrictionsForSettingId(artifactStream.getSettingId()));
+    }
+
     artifactStream.validateRequiredFields();
     if (validate && artifactStream.getTemplateUuid() == null) {
       validateArtifactSourceData(artifactStream);
@@ -186,16 +196,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         }
       }
     }
-
-    String accountId = null;
-    if (artifactStream.getAppId() == null || !artifactStream.getAppId().equals(GLOBAL_APP_ID)) {
-      accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
-    } else {
-      if (artifactStream.getSettingId() != null) {
-        accountId = settingsService.fetchAccountIdBySettingId(artifactStream.getSettingId());
-      }
-    }
-    artifactStream.setAccountId(accountId);
 
     // Set serviceId equal to SettingId for Connector level artifact streams
     if (artifactStream.getAppId() == null || artifactStream.getAppId().equals(GLOBAL_APP_ID)) {
@@ -259,6 +259,15 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         wingsPersistence.getWithAppId(ArtifactStream.class, artifactStream.getAppId(), artifactStream.getUuid());
     if (existingArtifactStream == null) {
       throw new NotFoundException("Artifact stream with id " + artifactStream.getUuid() + " not found");
+    }
+
+    String accountId = getAccountIdForArtifactStream(artifactStream);
+    artifactStream.setAccountId(accountId);
+
+    if (artifactStream.getAppId().equals(GLOBAL_APP_ID)) {
+      usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(accountId,
+          settingsService.getUsageRestrictionsForSettingId(existingArtifactStream.getSettingId()),
+          settingsService.getUsageRestrictionsForSettingId(artifactStream.getSettingId()));
     }
 
     artifactStream.validateRequiredFields();
@@ -329,20 +338,26 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       throw new WingsException("Please provide valid artifact name", USER);
     }
     boolean isRename = !artifactStream.getName().equals(existingArtifactStream.getName());
-    String accountId;
     if (!artifactStream.getAppId().equals(GLOBAL_APP_ID)) {
-      accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
       yamlPushService.pushYamlChangeSet(accountId, existingArtifactStream, finalArtifactStream, Type.UPDATE,
           artifactStream.isSyncFromGit(), isRename);
     } else {
-      SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
-      if (settingAttribute != null) {
-        accountId = settingAttribute.getAccountId();
-        yamlPushService.pushYamlChangeSet(accountId, existingArtifactStream, finalArtifactStream, Type.UPDATE,
-            artifactStream.isSyncFromGit(), isRename);
-      }
+      yamlPushService.pushYamlChangeSet(accountId, existingArtifactStream, finalArtifactStream, Type.UPDATE,
+          artifactStream.isSyncFromGit(), isRename);
     }
     return finalArtifactStream;
+  }
+
+  private String getAccountIdForArtifactStream(ArtifactStream artifactStream) {
+    String accountId = null;
+    if (artifactStream.getAppId() == null || !artifactStream.getAppId().equals(GLOBAL_APP_ID)) {
+      accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
+    } else {
+      if (artifactStream.getSettingId() != null) {
+        accountId = settingsService.fetchAccountIdBySettingId(artifactStream.getSettingId());
+      }
+    }
+    return accountId;
   }
 
   private void validateRepositoryType(ArtifactStream artifactStream, ArtifactStream existingArtifactStream) {
@@ -426,10 +441,12 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       return true;
     }
     // TODO: check if used in triggers
-    String accountId = null;
-    SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
-    if (settingAttribute != null) {
-      accountId = settingAttribute.getAccountId();
+    String accountId = settingsService.fetchAccountIdBySettingId(artifactStream.getSettingId());
+    if (artifactStream.getAppId().equals(GLOBAL_APP_ID)) {
+      if (!usageRestrictionsService.userHasPermissionsToChangeEntity(
+              accountId, settingsService.getUsageRestrictionsForSettingId(artifactStream.getSettingId()))) {
+        throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
+      }
     }
     yamlPushService.pushYamlChangeSet(accountId, artifactStream, null, Type.DELETE, false, false);
 
@@ -454,9 +471,12 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     if (!appId.equals(GLOBAL_APP_ID)) {
       accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
     } else {
-      SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
-      if (settingAttribute != null) {
-        accountId = settingAttribute.getAccountId();
+      if (artifactStream.getSettingId() != null) {
+        accountId = settingsService.fetchAccountIdBySettingId(artifactStream.getSettingId());
+        if (!usageRestrictionsService.userHasPermissionsToChangeEntity(
+                accountId, settingsService.getUsageRestrictionsForSettingId(artifactStream.getSettingId()))) {
+          throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
+        }
       }
     }
     yamlPushService.pushYamlChangeSet(accountId, artifactStream, null, Type.DELETE, syncFromGit, false);

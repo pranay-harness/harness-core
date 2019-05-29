@@ -933,4 +933,13 @@ public class SettingsServiceImpl implements SettingsService {
     }
     return settingAttribute.getAccountId();
   }
+
+  @Override
+  public UsageRestrictions getUsageRestrictionsForSettingId(String settingId) {
+    SettingAttribute settingAttribute = get(settingId);
+    if (settingAttribute == null) {
+      throw new InvalidRequestException(format("Setting attribute %s not found", settingId), USER);
+    }
+    return getUsageRestriction(settingAttribute);
+  }
 }
