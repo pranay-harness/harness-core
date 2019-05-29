@@ -92,6 +92,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
@@ -659,10 +660,23 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       return new ArrayList<>();
     }
 
-    return wingsPersistence.createQuery(ArtifactStream.class, excludeAuthority)
-        .field("_id")
-        .in(artifactStreamIds)
-        .asList();
+    List<ArtifactStream> artifactStreams = wingsPersistence.createQuery(ArtifactStream.class, excludeAuthority)
+                                               .field("_id")
+                                               .in(artifactStreamIds)
+                                               .asList();
+
+    if (isNotEmpty(artifactStreams)) {
+      List<ArtifactStream> orderedArtifactStreams = new ArrayList<>();
+      Map<String, ArtifactStream> artifactStreamMap =
+          artifactStreams.stream().collect(Collectors.toMap(ArtifactStream::getUuid, Function.identity()));
+      for (String artifactStreamId : artifactStreamIds) {
+        if (artifactStreamMap.containsKey(artifactStreamId)) {
+          orderedArtifactStreams.add(artifactStreamMap.get(artifactStreamId));
+        }
+      }
+      return orderedArtifactStreams;
+    }
+    return new ArrayList<>();
   }
 
   @Override

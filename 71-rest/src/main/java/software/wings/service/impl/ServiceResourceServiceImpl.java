@@ -86,6 +86,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.Event.Type;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
@@ -145,6 +146,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.NotificationService;
@@ -250,6 +252,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private ApplicationManifestService applicationManifestService;
   @Inject private LimitCheckerFactory limitCheckerFactory;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Inject private Queue<PruneEvent> pruneQueue;
   @Inject private ApplicationManifestUtils applicationManifestUtils;
@@ -285,6 +288,16 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public Service save(Service service, boolean createdFromYaml, boolean createDefaultCommands) {
     String accountId = appService.getAccountIdByAppId(service.getAppId());
     service.setAccountId(accountId);
+
+    if (createdFromYaml) {
+      if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+        List<String> artifactStreamIds = service.getArtifactStreamIds();
+        if (artifactStreamIds == null) {
+          artifactStreamIds = new ArrayList<>();
+          service.setArtifactStreamIds(artifactStreamIds);
+        }
+      }
+    }
 
     StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
         new Action(accountId, ActionType.CREATE_SERVICE));
@@ -629,6 +642,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         updateOperations.set("helmValueYaml", service.getHelmValueYaml());
       } else {
         updateOperations.unset("helmValueYaml");
+      }
+      if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, service.getAccountId())) {
+        List<String> artifactStreamIds = service.getArtifactStreamIds();
+        if (artifactStreamIds == null) {
+          artifactStreamIds = new ArrayList<>();
+        }
+        updateOperations.set("artifactStreamIds", artifactStreamIds);
       }
     }
 

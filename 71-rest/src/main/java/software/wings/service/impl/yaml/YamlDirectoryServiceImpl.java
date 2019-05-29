@@ -910,19 +910,21 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         // ------------------- END DEPLOYMENT SPECIFICATION SECTION -----------------------
 
         // ------------------- ARTIFACT STREAMS SECTION -----------------------
-        DirectoryPath artifactStreamsPath = servicePath.clone().add(ARTIFACT_SOURCES_FOLDER);
-        FolderNode artifactStreamsFolder = new FolderNode(accountId, ARTIFACT_SOURCES_FOLDER, ArtifactStream.class,
-            artifactStreamsPath, service.getAppId(), yamlGitSyncService);
-        serviceFolder.addChild(artifactStreamsFolder);
+        if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+          DirectoryPath artifactStreamsPath = servicePath.clone().add(ARTIFACT_SOURCES_FOLDER);
+          FolderNode artifactStreamsFolder = new FolderNode(accountId, ARTIFACT_SOURCES_FOLDER, ArtifactStream.class,
+              artifactStreamsPath, service.getAppId(), yamlGitSyncService);
+          serviceFolder.addChild(artifactStreamsFolder);
 
-        List<ArtifactStream> artifactStreamList =
-            artifactStreamService.getArtifactStreamsForService(service.getAppId(), service.getUuid());
-        artifactStreamList.forEach(artifactStream -> {
-          String artifactYamlFileName = artifactStream.getName() + YAML_EXTENSION;
-          artifactStreamsFolder.addChild(new ServiceLevelYamlNode(accountId, artifactStream.getUuid(),
-              artifactStream.getAppId(), service.getUuid(), artifactYamlFileName, ArtifactStream.class,
-              artifactStreamsPath.clone().add(artifactYamlFileName), yamlGitSyncService, Type.ARTIFACT_STREAM));
-        });
+          List<ArtifactStream> artifactStreamList =
+              artifactStreamService.getArtifactStreamsForService(service.getAppId(), service.getUuid());
+          artifactStreamList.forEach(artifactStream -> {
+            String artifactYamlFileName = artifactStream.getName() + YAML_EXTENSION;
+            artifactStreamsFolder.addChild(new ServiceLevelYamlNode(accountId, artifactStream.getUuid(),
+                artifactStream.getAppId(), service.getUuid(), artifactYamlFileName, ArtifactStream.class,
+                artifactStreamsPath.clone().add(artifactYamlFileName), yamlGitSyncService, Type.ARTIFACT_STREAM));
+          });
+        }
 
         // ------------------- END ARTIFACT STREAMS SECTION -----------------------
 
