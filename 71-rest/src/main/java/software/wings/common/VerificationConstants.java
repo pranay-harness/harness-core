@@ -99,6 +99,10 @@ public class VerificationConstants {
       "learning_engine_task_queued_time_in_seconds";
   public static final String LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS =
       "learning_engine_clustering_task_queued_time_in_seconds";
+  public static final String LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS =
+      "learning_engine_analysis_task_queued_time_in_seconds";
+  public static final String LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_TIME_IN_SECONDS =
+      "learning_engine_feedback_task_queued_time_in_seconds";
   public static final String LEARNING_ENGINE_EXP_TASK_QUEUED_TIME_IN_SECONDS =
       "learning_engine_exp_task_queued_time_in_seconds";
   public static final String IGNORED_ERRORS_METRIC_NAME = "ignored_errors";
