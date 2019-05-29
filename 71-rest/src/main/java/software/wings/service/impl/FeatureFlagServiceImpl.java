@@ -59,7 +59,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
 
   @Override
   public boolean isEnabled(@NotNull FeatureName featureName, String accountId) {
-    FeatureFlag featureFlag = null;
+    FeatureFlag featureFlag;
 
     synchronized (cache) {
       // if the last access to cache was in different epoch reset it. This will allow for potentially outdated
