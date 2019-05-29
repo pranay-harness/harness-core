@@ -39,6 +39,7 @@ import static software.wings.beans.PhaseStepType.ECS_UPDATE_LISTENER_BG;
 import static software.wings.beans.PhaseStepType.ECS_UPDATE_ROUTE_53_DNS_WEIGHT;
 import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
+import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
 import static software.wings.beans.PhaseStepType.PCF_RESIZE;
 import static software.wings.beans.PhaseStepType.PCF_SETUP;
 import static software.wings.beans.PhaseStepType.PCF_SWICH_ROUTES;
@@ -1839,6 +1840,14 @@ public class WorkflowServiceHelper {
 
   public boolean isOrchestrationWorkflowForK8sV2Service(
       String appId, CanaryOrchestrationWorkflow orchestrationWorkflow) {
+    if (isNotEmpty(orchestrationWorkflow.getWorkflowPhases())) {
+      WorkflowPhase firstPhase = orchestrationWorkflow.getWorkflowPhases().get(0);
+      if (isNotEmpty(firstPhase.getPhaseSteps())) {
+        PhaseStep firstPhaseStep = firstPhase.getPhaseSteps().get(0);
+        return firstPhaseStep.getPhaseStepType() == K8S_PHASE_STEP;
+      }
+    }
+
     if (isNotEmpty(orchestrationWorkflow.getServiceIds())) {
       return isK8sV2Service(appId, orchestrationWorkflow.getServiceIds().get(0));
     }
