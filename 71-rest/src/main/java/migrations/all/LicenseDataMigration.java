@@ -11,11 +11,11 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
-import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.licensing.LicenseService;
 import software.wings.service.impl.LicenseUtils;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.instance.licensing.InstanceLimitProvider;
 
 /**
  * Migration script to update license info for all accounts.
@@ -62,7 +62,7 @@ public class LicenseDataMigration implements Migration {
               }
 
               if (licenseUnits <= 0) {
-                licenseInfo.setLicenseUnits(Constants.DEFAULT_PAID_LICENSE_UNITS);
+                licenseInfo.setLicenseUnits(InstanceLimitProvider.defaults(AccountType.PAID));
               }
               break;
 
@@ -72,7 +72,7 @@ public class LicenseDataMigration implements Migration {
               }
 
               if (licenseUnits <= 0) {
-                licenseInfo.setLicenseUnits(Constants.DEFAULT_TRIAL_LICENSE_UNITS);
+                licenseInfo.setLicenseUnits(InstanceLimitProvider.defaults(AccountType.TRIAL));
               }
               break;
 
@@ -82,7 +82,7 @@ public class LicenseDataMigration implements Migration {
               }
 
               if (licenseUnits <= 0) {
-                licenseInfo.setLicenseUnits(Constants.DEFAULT_COMMUNITY_LICENSE_UNITS);
+                licenseInfo.setLicenseUnits(InstanceLimitProvider.defaults(AccountType.COMMUNITY));
               }
               break;
 

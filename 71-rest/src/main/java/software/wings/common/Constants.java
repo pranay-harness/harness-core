@@ -575,11 +575,6 @@ public interface Constants {
   String HARNESS_IO_KEY_ = "Harness.io";
   String HARNESS_SUPPORT_EMAIL_KEY = "support@harness.io";
 
-  int DEFAULT_TRIAL_LICENSE_UNITS = 100;
-  int DEFAULT_COMMUNITY_LICENSE_UNITS = 50;
-
-  int DEFAULT_PAID_LICENSE_UNITS = 100;
-
   Integer REFERENCED_ENTITIES_TO_SHOW = 10;
 
   // ECS BG

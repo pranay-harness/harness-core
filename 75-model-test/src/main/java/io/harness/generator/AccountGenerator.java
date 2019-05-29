@@ -39,7 +39,6 @@ import software.wings.beans.RoleType;
 import software.wings.beans.User;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.beans.security.UserGroup;
-import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -47,6 +46,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.instance.licensing.InstanceLimitProvider;
 
 import java.util.concurrent.TimeUnit;
 
@@ -209,7 +209,7 @@ public class AccountGenerator {
     LicenseInfo licenseInfo = new LicenseInfo();
     licenseInfo.setAccountType(AccountType.PAID);
     licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
-    licenseInfo.setLicenseUnits(Constants.DEFAULT_PAID_LICENSE_UNITS);
+    licenseInfo.setLicenseUnits(InstanceLimitProvider.defaults(AccountType.PAID));
     account.setLicenseInfo(licenseInfo);
   }
 

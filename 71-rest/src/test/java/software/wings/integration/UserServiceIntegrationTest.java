@@ -49,7 +49,6 @@ import software.wings.beans.UserInvite;
 import software.wings.beans.UserInvite.UserInviteKeys;
 import software.wings.beans.UserInviteSource.SourceType;
 import software.wings.beans.security.HarnessUserGroup;
-import software.wings.common.Constants;
 import software.wings.resources.UserResource.ResendInvitationEmailRequest;
 import software.wings.security.AuthenticationFilter;
 import software.wings.security.PermissionAttribute.Action;
@@ -58,6 +57,7 @@ import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.LoginTypeResponse;
 import software.wings.service.impl.UserServiceImpl;
+import software.wings.service.intfc.instance.licensing.InstanceLimitProvider;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -607,7 +607,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
                           .withLicenseInfo(LicenseInfo.builder()
                                                .accountType(AccountType.PAID)
                                                .accountStatus(AccountStatus.ACTIVE)
-                                               .licenseUnits(Constants.DEFAULT_PAID_LICENSE_UNITS)
+                                               .licenseUnits(InstanceLimitProvider.defaults(AccountType.PAID))
                                                .build())
 
                           .build();
