@@ -333,7 +333,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     String metricTemplateUrl = getMetricTemplateUrl(accountId, cvConfiguration.getAppId(),
         cvConfiguration.getStateType(), cvConfiguration.getServiceId(), cvConfiguration.getUuid());
 
-    final String stateExecutionIdForLETask = CV_24x7_STATE_EXECUTION + "-" + cvConfiguration.getUuid() + "-" + tag;
+    final String stateExecutionIdForLETask =
+        CV_24x7_STATE_EXECUTION + "-" + cvConfiguration.getUuid() + "_" + endMin + "-" + tag;
 
     LearningEngineExperimentalAnalysisTask learningEngineAnalysisTask =
         LearningEngineExperimentalAnalysisTask.builder()
