@@ -26,9 +26,9 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.trigger.Trigger;
-import software.wings.common.Constants;
 import software.wings.dl.exportimport.ExportMode;
 import software.wings.dl.exportimport.ImportStatusReport;
+import software.wings.service.intfc.instance.licensing.InstanceLimitProvider;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -240,7 +240,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
                           .withLicenseInfo(LicenseInfo.builder()
                                                .accountType(AccountType.PAID)
                                                .accountStatus(AccountStatus.ACTIVE)
-                                               .licenseUnits(Constants.DEFAULT_PAID_LICENSE_UNITS)
+                                               .licenseUnits(InstanceLimitProvider.defaults(AccountType.PAID))
                                                .build())
                           .build();
     account.setForImport(true);

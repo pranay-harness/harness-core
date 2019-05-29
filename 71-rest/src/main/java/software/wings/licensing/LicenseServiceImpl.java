@@ -6,8 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.LICENSE_EXPIRED;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static software.wings.common.Constants.DEFAULT_COMMUNITY_LICENSE_UNITS;
-import static software.wings.common.Constants.DEFAULT_TRIAL_LICENSE_UNITS;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -32,7 +30,6 @@ import software.wings.beans.DefaultSalesContacts.AccountTypeDefault;
 import software.wings.beans.License;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.User;
-import software.wings.common.Constants;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
@@ -41,6 +38,7 @@ import software.wings.service.impl.LicenseUtils;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.UserGroupService;
+import software.wings.service.intfc.instance.licensing.InstanceLimitProvider;
 import software.wings.utils.Validator;
 
 import java.nio.charset.Charset;
@@ -362,9 +360,9 @@ public class LicenseServiceImpl implements LicenseService {
     }
 
     if (licenseInfo.getAccountType().equals(AccountType.TRIAL)) {
-      licenseInfo.setLicenseUnits(DEFAULT_TRIAL_LICENSE_UNITS);
+      licenseInfo.setLicenseUnits(InstanceLimitProvider.defaults(AccountType.TRIAL));
     } else if (licenseInfo.getAccountType().equals(AccountType.COMMUNITY)) {
-      licenseInfo.setLicenseUnits(DEFAULT_COMMUNITY_LICENSE_UNITS);
+      licenseInfo.setLicenseUnits(InstanceLimitProvider.defaults(AccountType.COMMUNITY));
     }
 
     if (licenseInfo.getLicenseUnits() <= 0) {
@@ -411,10 +409,10 @@ public class LicenseServiceImpl implements LicenseService {
       if (isNotEmpty(newLicenseInfo.getAccountType())
           && !currentLicenseInfo.getAccountType().equals(newLicenseInfo.getAccountType())) {
         if (AccountType.TRIAL.equals(newLicenseInfo.getAccountType())) {
-          resetLicenseUnitsCount = Constants.DEFAULT_TRIAL_LICENSE_UNITS;
+          resetLicenseUnitsCount = InstanceLimitProvider.defaults(AccountType.TRIAL);
           resetExpiryTime = LicenseUtils.getDefaultTrialExpiryTime();
         } else if (AccountType.COMMUNITY.equals(newLicenseInfo.getAccountType())) {
-          resetLicenseUnitsCount = Constants.DEFAULT_COMMUNITY_LICENSE_UNITS;
+          resetLicenseUnitsCount = InstanceLimitProvider.defaults(AccountType.COMMUNITY);
           resetExpiryTime = -1L;
         } else if (AccountType.PAID.equals(newLicenseInfo.getAccountType())) {
           resetExpiryTime = LicenseUtils.getDefaultPaidExpiryTime();

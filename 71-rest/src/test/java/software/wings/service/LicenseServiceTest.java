@@ -21,10 +21,10 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
-import software.wings.common.Constants;
 import software.wings.licensing.LicenseService;
 import software.wings.service.impl.LicenseUtils;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.instance.licensing.InstanceLimitProvider;
 
 import java.util.Calendar;
 
@@ -70,7 +70,8 @@ public class LicenseServiceTest extends WingsBaseTest {
     assertThat(accountFromDB.getLicenseInfo().getAccountType()).isEqualTo(AccountType.TRIAL);
     assertThat(accountFromDB.getLicenseInfo().getAccountStatus()).isEqualTo(AccountStatus.ACTIVE);
     assertThat(accountFromDB.getLicenseInfo().getExpiryTime()).isEqualTo(expiryTime);
-    assertThat(accountFromDB.getLicenseInfo().getLicenseUnits()).isEqualTo(Constants.DEFAULT_TRIAL_LICENSE_UNITS);
+    assertThat(accountFromDB.getLicenseInfo().getLicenseUnits())
+        .isEqualTo(InstanceLimitProvider.defaults(AccountType.TRIAL));
   }
 
   @Test
