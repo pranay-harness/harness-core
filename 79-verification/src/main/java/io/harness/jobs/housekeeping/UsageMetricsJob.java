@@ -3,10 +3,13 @@ package io.harness.jobs.housekeeping;
 import static io.harness.beans.ExecutionStatus.QUEUED;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.common.VerificationConstants.DEFAULT_LE_AUTOSCALE_DATA_COLLECTION_INTERVAL_IN_SECONDS;
+import static software.wings.common.VerificationConstants.LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS;
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS;
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_EXP_TASK_QUEUED_TIME_IN_SECONDS;
+import static software.wings.common.VerificationConstants.LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_TIME_IN_SECONDS;
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.metrics.HarnessMetricRegistry;
@@ -74,9 +77,37 @@ public class UsageMetricsJob implements Job {
     taskQueuedTimeInSeconds = lastQueuedAnalysisTask != null
         ? TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - lastQueuedAnalysisTask.getCreatedAt())
         : 0;
-    logger.info("Learning Engine task has been queued for {} Seconds", taskQueuedTimeInSeconds);
+    logger.info("Learning Engine clustering task has been queued for {} Seconds", taskQueuedTimeInSeconds);
     metricRegistry.recordGaugeValue(
         LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS, null, taskQueuedTimeInSeconds);
+
+    lastQueuedAnalysisTask = wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+                                 .filter(LearningEngineAnalysisTaskKeys.executionStatus, QUEUED)
+                                 .field(LearningEngineAnalysisTaskKeys.ml_analysis_type)
+                                 .in(Lists.newArrayList(MLAnalysisType.LOG_ML, MLAnalysisType.TIME_SERIES))
+                                 .order(Sort.ascending("createdAt"))
+                                 .get();
+
+    taskQueuedTimeInSeconds = lastQueuedAnalysisTask != null
+        ? TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - lastQueuedAnalysisTask.getCreatedAt())
+        : 0;
+    logger.info("Learning Engine analysis task has been queued for {} Seconds", taskQueuedTimeInSeconds);
+    metricRegistry.recordGaugeValue(
+        LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS, null, taskQueuedTimeInSeconds);
+
+    lastQueuedAnalysisTask =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+            .filter(LearningEngineAnalysisTaskKeys.executionStatus, QUEUED)
+            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, MLAnalysisType.FEEDBACK_ANALYSIS)
+            .order(Sort.ascending("createdAt"))
+            .get();
+
+    taskQueuedTimeInSeconds = lastQueuedAnalysisTask != null
+        ? TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - lastQueuedAnalysisTask.getCreatedAt())
+        : 0;
+    logger.info("Learning Engine feedback task has been queued for {} Seconds", taskQueuedTimeInSeconds);
+    metricRegistry.recordGaugeValue(
+        LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_TIME_IN_SECONDS, null, taskQueuedTimeInSeconds);
 
     // Do the same for experimental
     LearningEngineExperimentalAnalysisTask lastQueuedExpAnalysisTask =
