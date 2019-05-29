@@ -557,12 +557,11 @@ public abstract class AbstractAnalysisState extends State {
       DeploymentType deploymentType =
           serviceResourceService.getDeploymentType(infrastructureMapping, null, infrastructureMapping.getServiceId());
 
-      Map<String, Object> instanceElementMap = new HashMap<>();
-      instanceElementMap.put("host", instanceElement);
       if (isEmpty(getHostnameTemplate())) {
         rv.put(instanceElement.getHostName(), getGroupName(instanceElement, deploymentType));
       } else {
-        rv.put(String.valueOf(evaluator.evaluate(hostnameTemplate, instanceElementMap)),
+        rv.put(context.renderExpression(getHostnameTemplate(),
+                   StateExecutionContext.builder().contextElements(Lists.newArrayList(instanceElement)).build()),
             getGroupName(instanceElement, deploymentType));
       }
     }
