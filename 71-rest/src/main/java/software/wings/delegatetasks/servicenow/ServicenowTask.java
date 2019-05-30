@@ -127,8 +127,8 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
       String query = "number=" + parameters.getIssueNumber();
       final Call<JsonNode> request =
           getRestClient(parameters)
-              .getIssueId(Credentials.basic(config.getUsername(), new String(config.getPassword())),
-                  parameters.getTicketType().toString().toLowerCase(), query);
+              .getIssue(Credentials.basic(config.getUsername(), new String(config.getPassword())),
+                  parameters.getTicketType().toString().toLowerCase(), query, "all");
       Response<JsonNode> response = null;
       try {
         response = request.execute();

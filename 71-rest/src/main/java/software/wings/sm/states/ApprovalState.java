@@ -47,6 +47,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.JiraExecutionData;
+import software.wings.api.ServiceNowExecutionData;
 import software.wings.api.ShellScriptApprovalExecutionData;
 import software.wings.api.WorkflowElement;
 import software.wings.beans.Activity;
@@ -312,10 +313,6 @@ public class ApprovalState extends State {
     JiraExecutionData jiraExecutionData = jiraHelperService.fetchIssue(
         jiraApprovalParams, app.getAccountId(), app.getAppId(), context.getWorkflowExecutionId(), approvalId);
 
-    executionData.setIssueUrl(jiraExecutionData.getIssueUrl());
-    executionData.setIssueKey(jiraExecutionData.getIssueKey());
-    executionData.setCurrentStatus(jiraExecutionData.getCurrentStatus());
-
     if (jiraExecutionData.getExecutionStatus().equals(FAILED)) {
       return anExecutionResponse()
           .withExecutionStatus(FAILED)
@@ -323,6 +320,10 @@ public class ApprovalState extends State {
           .withStateExecutionData(executionData)
           .build();
     }
+
+    executionData.setIssueUrl(jiraExecutionData.getIssueUrl());
+    executionData.setIssueKey(jiraExecutionData.getIssueKey());
+    executionData.setCurrentStatus(jiraExecutionData.getCurrentStatus());
 
     if (jiraExecutionData.getCurrentStatus().equalsIgnoreCase(jiraApprovalParams.getApprovalValue())) {
       return anExecutionResponse()
@@ -397,11 +398,30 @@ public class ApprovalState extends State {
     Application app = ((ExecutionContextImpl) context).getApp();
 
     try {
-      String ticketUrl = serviceNowService.getIssueUrl(servicenowApprovalParams.getIssueNumber(),
-          servicenowApprovalParams.getSnowConnectorId(), servicenowApprovalParams.getTicketType(), app.getAppId(),
-          app.getAccountId());
-      executionData.setTicketUrl(ticketUrl);
+      ServiceNowExecutionData serviceNowExecutionData = serviceNowService.getIssueUrl(
+          servicenowApprovalParams.getIssueNumber(), servicenowApprovalParams.getSnowConnectorId(),
+          servicenowApprovalParams.getTicketType(), app.getAppId(), app.getAccountId());
+      executionData.setTicketUrl(serviceNowExecutionData.getIssueUrl());
+      executionData.setCurrentStatus(serviceNowExecutionData.getCurrentState());
       executionData.setTicketType(servicenowApprovalParams.getTicketType());
+
+      if (serviceNowExecutionData.getCurrentState().equalsIgnoreCase(servicenowApprovalParams.getApprovalValue())) {
+        return anExecutionResponse()
+            .withExecutionStatus(SUCCESS)
+            .withErrorMessage("Approval provided on ticket: " + servicenowApprovalParams.getIssueNumber())
+            .withStateExecutionData(executionData)
+            .build();
+      }
+
+      if (servicenowApprovalParams.getRejectionValue() != null
+          && serviceNowExecutionData.getCurrentState().equalsIgnoreCase(servicenowApprovalParams.getRejectionValue())) {
+        return anExecutionResponse()
+            .withExecutionStatus(REJECTED)
+            .withErrorMessage("Rejection provided on ticket: " + servicenowApprovalParams.getIssueNumber())
+            .withStateExecutionData(executionData)
+            .build();
+      }
+
     } catch (WingsException we) {
       return anExecutionResponse()
           .withExecutionStatus(FAILED)
@@ -560,7 +580,7 @@ public class ApprovalState extends State {
     return anExecutionResponse()
         .withStateExecutionData(executionData)
         .withExecutionStatus(approvalNotifyResponse.getStatus())
-        .withErrorMessage(approvalNotifyResponse.getErrorMsg())
+        .withErrorMessage(approvalNotifyResponse.getErrorMsg() + executionData.getIssueKey())
         .build();
   }
 
@@ -580,7 +600,7 @@ public class ApprovalState extends State {
     return anExecutionResponse()
         .withStateExecutionData(executionData)
         .withExecutionStatus(approvalNotifyResponse.getStatus())
-        .withErrorMessage("Approval/Rejection provided on ticket: " + servicenowApprovalParams.getIssueNumber())
+        .withErrorMessage(approvalNotifyResponse.getErrorMsg() + servicenowApprovalParams.getIssueNumber())
         .build();
   }
 

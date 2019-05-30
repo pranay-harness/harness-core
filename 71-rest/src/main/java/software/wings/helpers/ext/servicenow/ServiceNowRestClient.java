@@ -64,10 +64,6 @@ public interface ServiceNowRestClient {
   getChangeRequestTypes(@Header("Authorization") String authorization);
 
   @GET("/api/now/table/{ticketType}")
-  Call<JsonNode> getIssueId(@Header("Authorization") String authorization, @Path("ticketType") String ticketType,
-      @Query("sysparm_query") String query);
-
-  @GET("/api/now/table/{ticketType}")
-  Call<JsonNode> getIssueStatus(@Header("Authorization") String authorization, @Path("ticketType") String ticketType,
+  Call<JsonNode> getIssue(@Header("Authorization") String authorization, @Path("ticketType") String ticketType,
       @Query("sysparm_query") String query, @Query("sysparm_display_value") String displayValue);
 }

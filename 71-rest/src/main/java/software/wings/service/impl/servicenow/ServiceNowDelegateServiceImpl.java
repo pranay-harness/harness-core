@@ -18,6 +18,7 @@ import retrofit2.Converter;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
+import software.wings.api.ServiceNowExecutionData;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.servicenow.ServiceNowTaskParameters;
 import software.wings.helpers.ext.servicenow.ServiceNowRestClient;
@@ -209,14 +210,13 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
     }
   }
 
-  @Override
-  public String getIssueUrl(ServiceNowTaskParameters taskParameters) {
+  private JsonNode getIssue(ServiceNowTaskParameters taskParameters) {
     final Call<JsonNode> request;
     ServiceNowConfig config = taskParameters.getServiceNowConfig();
     String query = "number=" + taskParameters.getIssueNumber();
     request = getRestClient(taskParameters)
-                  .getIssueId(Credentials.basic(config.getUsername(), new String(config.getPassword())),
-                      taskParameters.getTicketType().toString().toLowerCase(), query);
+                  .getIssue(Credentials.basic(config.getUsername(), new String(config.getPassword())),
+                      taskParameters.getTicketType().toString().toLowerCase(), query, "all");
 
     Response<JsonNode> response = null;
     try {
@@ -227,9 +227,7 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
       if (responseObj.isArray()) {
         JsonNode issueObj = responseObj.get(0);
         if (issueObj != null) {
-          String issueId = issueObj.get("sys_id").asText();
-          return getBaseUrl(config) + "nav_to.do?uri=/" + taskParameters.getTicketType().toString().toLowerCase()
-              + ".do?sys_id=" + issueId;
+          return issueObj;
         } else {
           String errorMsg = "Error in fetching issue " + taskParameters.getIssueNumber() + " .Issue does not exist";
           throw new WingsException(SERVICENOW_ERROR, USER).addParam("message", errorMsg);
@@ -250,37 +248,19 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
   }
 
   @Override
-  public String getIssueStatus(ServiceNowTaskParameters taskParameters) {
-    final Call<JsonNode> request;
-    ServiceNowConfig config = taskParameters.getServiceNowConfig();
-    String query = "number=" + taskParameters.getIssueNumber();
-    request = getRestClient(taskParameters)
-                  .getIssueStatus(Credentials.basic(config.getUsername(), new String(config.getPassword())),
-                      taskParameters.getTicketType().toString().toLowerCase(), query, "all");
-    Response<JsonNode> response = null;
-    try {
-      response = request.execute();
-      logger.info("Response received from serviceNow: {}", response);
-      handleResponse(response, "Failed to fetch IssueId : " + taskParameters.getIssueNumber() + " from serviceNow");
-      JsonNode responseObj = response.body().get("result");
-      if (responseObj.isArray()) {
-        JsonNode issueObj = responseObj.get(0);
-        if (issueObj != null) {
-          return issueObj.get("state").get("display_value").asText();
-        } else {
-          String errorMsg = "Error in fetching issue " + taskParameters.getIssueNumber() + " .Issue does not exist";
-          throw new WingsException(SERVICENOW_ERROR, USER).addParam("message", errorMsg);
-        }
+  public ServiceNowExecutionData getIssueUrl(ServiceNowTaskParameters taskParameters) {
+    JsonNode issueObj = getIssue(taskParameters);
+    String issueId = issueObj.get("sys_id").get("display_value").asText();
+    String issueUrl = getBaseUrl(taskParameters.getServiceNowConfig()) + "nav_to.do?uri=/"
+        + taskParameters.getTicketType().toString().toLowerCase() + ".do?sys_id=" + issueId;
+    String state = issueObj.get("state").get("display_value").asText();
+    return ServiceNowExecutionData.builder().issueUrl(issueUrl).currentState(state).build();
+  }
 
-      } else {
-        throw new WingsException(SERVICENOW_ERROR, USER)
-            .addParam(
-                "message", "Failed to fetch issueNumber " + taskParameters.getIssueNumber() + "response: " + response);
-      }
-    } catch (Exception e) {
-      String errorMsg = "Error while fetching issueNumber" + taskParameters.getIssueNumber();
-      throw new WingsException(SERVICENOW_ERROR, USER, e).addParam("message", errorMsg + ExceptionUtils.getMessage(e));
-    }
+  @Override
+  public String getIssueStatus(ServiceNowTaskParameters taskParameters) {
+    JsonNode issueObj = getIssue(taskParameters);
+    return issueObj.get("state").get("display_value").asText();
   }
 
   public static void handleResponse(Response<?> response, String message) throws IOException {

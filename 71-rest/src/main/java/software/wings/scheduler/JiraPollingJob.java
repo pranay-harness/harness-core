@@ -1,26 +1,24 @@
 package software.wings.scheduler;
 
-import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.scheduler.ServiceNowApprovalJob.scheduleJob;
+import static software.wings.service.ApprovalUtils.checkApproval;
 
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.exception.WingsException;
-import io.harness.logging.ExceptionLogger;
 import io.harness.scheduler.PersistentScheduler;
+import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import software.wings.api.JiraExecutionData;
-import software.wings.beans.Application;
-import software.wings.beans.ApprovalDetails;
-import software.wings.beans.WorkflowExecution;
 import software.wings.beans.approval.JiraApprovalParams;
 import software.wings.service.impl.JiraHelperService;
-import software.wings.sm.states.ApprovalState;
+import software.wings.service.intfc.StateExecutionService;
+import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.servicenow.ServiceNowService;
 
 @Slf4j
 public class JiraPollingJob implements Job {
@@ -34,6 +32,10 @@ public class JiraPollingJob implements Job {
   private static final String APP_ID_KEY = "appId";
 
   @Inject private JiraHelperService jiraHelperService;
+  @Inject private ServiceNowService serviceNowService;
+  @Inject WorkflowExecutionService workflowExecutionService;
+  @Inject StateExecutionService stateExecutionService;
+  @Inject WaitNotifyEngine waitNotifyEngine;
 
   public static void doPollingJob(PersistentScheduler jobScheduler, JiraApprovalParams jiraApprovalParams,
       String approvalExecutionId, String accountId, String appId, String workflowExecutionId,
@@ -89,30 +91,9 @@ public class JiraPollingJob implements Job {
     logger.info("Issue: {} Status from JIRA: {} Current Status {} for approvalId: {}, workflowExecutionId: {} ",
         issueId, issueStatus, jiraExecutionData.getCurrentStatus(), approvalId, workflowExecutionId);
 
-    try {
-      if (issueStatus == ExecutionStatus.SUCCESS || issueStatus == ExecutionStatus.REJECTED) {
-        ApprovalDetails.Action action =
-            issueStatus == ExecutionStatus.SUCCESS ? ApprovalDetails.Action.APPROVE : ApprovalDetails.Action.REJECT;
-
-        jiraHelperService.approveWorkflow(action, approvalId, appId, workflowExecutionId, issueStatus,
-            jiraExecutionData.getCurrentStatus(), stateExecutionInstanceId);
-      } else if (issueStatus == ExecutionStatus.PAUSED) {
-        logger.info("Still waiting for approval or rejected for issueId {}. Issue Status {} and Current Status {}",
-            issueId, issueStatus, jiraExecutionData.getCurrentStatus());
-        jiraHelperService.continuePauseWorkflow(approvalId, appId, workflowExecutionId, issueStatus,
-            jiraExecutionData.getCurrentStatus(), stateExecutionInstanceId);
-      } else if (issueStatus == ExecutionStatus.FAILED) {
-        logger.info("Jira delegate task failed with error: " + jiraExecutionData.getErrorMessage());
-      }
-    } catch (WingsException exception) {
-      exception.addContext(Application.class, appId);
-      exception.addContext(WorkflowExecution.class, workflowExecutionId);
-      exception.addContext(ApprovalState.class, approvalId);
-      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
-    } catch (Exception exception) {
-      logger.warn("Error while getting execution data, approvalId: {}, workflowExecutionId: {} , issueId: {}",
-          approvalId, workflowExecutionId, issueId, exception);
-    }
+    checkApproval(workflowExecutionService, stateExecutionService, waitNotifyEngine, appId, approvalId, issueId,
+        workflowExecutionId, stateExecutionInstanceId, jiraExecutionData.getCurrentStatus(),
+        jiraExecutionData.getErrorMessage(), issueStatus);
   }
 
   public static void deleteJob(PersistentScheduler jobScheduler, String approvalId) {

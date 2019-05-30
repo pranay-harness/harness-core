@@ -1,11 +1,14 @@
 package software.wings.scheduler;
 
+import static software.wings.service.ApprovalUtils.checkApproval;
+
 import com.google.inject.Inject;
 
-import io.harness.beans.EmbeddedUser;
+import io.harness.beans.ExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.scheduler.PersistentScheduler;
+import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -14,8 +17,10 @@ import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import software.wings.beans.ApprovalDetails;
+import software.wings.api.ServiceNowExecutionData;
 import software.wings.beans.approval.ServiceNowApprovalParams;
+import software.wings.service.intfc.StateExecutionService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.servicenow.ServiceNowService;
 
 import java.util.Calendar;
@@ -37,11 +42,16 @@ public class ServiceNowApprovalJob implements Job {
   private static final String REJECTION_FIELD = "rejectionField";
   private static final String REJECTION_VALUE = "rejectionValue";
   private static final String WORKFLOW_EXECUTION_ID = "workflowExecutionId";
+  private static final String STATE_EXECUTION_INSTANCE_ID = "stateExecutionInstanceId";
 
   @Inject private ServiceNowService serviceNowService;
+  @Inject WorkflowExecutionService workflowExecutionService;
+  @Inject StateExecutionService stateExecutionService;
+  @Inject WaitNotifyEngine waitNotifyEngine;
 
   public static void doPollingJob(PersistentScheduler jobScheduler, ServiceNowApprovalParams servicenowApprovalParams,
-      String approvalExecutionId, String accountId, String appId, String workflowExecutionId, String ticketType) {
+      String approvalExecutionId, String accountId, String appId, String workflowExecutionId, String ticketType,
+      String stateExecutionInstanceId) {
     if (servicenowApprovalParams.getSnowConnectorId() == null) {
       throw new WingsException(ErrorCode.SERVICENOW_ERROR, WingsException.USER)
           .addParam("message", "ServiceNow ConnectorId cannot be null");
@@ -59,6 +69,7 @@ public class ServiceNowApprovalJob implements Job {
                         .usingJobData(REJECTION_FIELD, servicenowApprovalParams.getRejectionField())
                         .usingJobData(REJECTION_VALUE, servicenowApprovalParams.getRejectionValue())
                         .usingJobData(WORKFLOW_EXECUTION_ID, workflowExecutionId)
+                        .usingJobData(STATE_EXECUTION_INSTANCE_ID, stateExecutionInstanceId)
                         .build();
 
     scheduleJob(jobScheduler, approvalExecutionId, job, GROUP);
@@ -95,23 +106,27 @@ public class ServiceNowApprovalJob implements Job {
     String rejectionValue = jobExecutionContext.getMergedJobDataMap().getString(REJECTION_VALUE);
     String workflowExecutionId = jobExecutionContext.getMergedJobDataMap().getString(WORKFLOW_EXECUTION_ID);
     String ticketType = jobExecutionContext.getMergedJobDataMap().getString(TICKET_TYPE);
+    String stateExecutionInstanceId = jobExecutionContext.getMergedJobDataMap().getString(STATE_EXECUTION_INSTANCE_ID);
 
     logger.info("Polling Approval Status for approvalId {}", approvalId);
+    ServiceNowExecutionData serviceNowExecutionData = null;
     try {
-      ApprovalDetails.Action approval = serviceNowService.getApprovalStatus(connectorId, accountId, appId, issueNumber,
+      serviceNowExecutionData = serviceNowService.getApprovalStatus(connectorId, accountId, appId, issueNumber,
           approvalField, approvalValue, rejectionField, rejectionValue, ticketType);
-      if (approval != null) {
-        logger.info("Servicenow Approval Status: {} for approvalId: {}, workflowExecutionId: {} ", approval, approvalId,
-            workflowExecutionId);
-        EmbeddedUser user = null;
-        serviceNowService.approveWorkflow(approval, approvalId, user, appId, workflowExecutionId);
-      }
 
     } catch (Exception ex) {
       logger.error(
-          "Exception in execute service now polling job. approvalId: {}, workflowExecutionId: {} , issueNumber: {}",
+          "Error occurred while polling issue status. Continuing to poll next minute.. approvalId: {}, workflowExecutionId: {} , issueNumber: {}",
           approvalId, workflowExecutionId, issueNumber, ex);
+      return;
     }
+    ExecutionStatus issueStatus = serviceNowExecutionData.getExecutionStatus();
+    logger.info("Issue: {} Status from SNOW: {} Current Status {} for approvalId: {}, workflowExecutionId: {} ",
+        issueNumber, issueStatus, serviceNowExecutionData.getCurrentState(), approvalId, workflowExecutionId);
+
+    checkApproval(workflowExecutionService, stateExecutionService, waitNotifyEngine, appId, approvalId, issueNumber,
+        workflowExecutionId, stateExecutionInstanceId, serviceNowExecutionData.getCurrentState(),
+        serviceNowExecutionData.getErrorMsg(), issueStatus);
   }
 
   public static void deleteJob(PersistentScheduler jobScheduler, String approvalId) {
