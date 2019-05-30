@@ -43,10 +43,8 @@ import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.PublicApi;
 import software.wings.security.annotations.Scope;
-import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DownloadTokenService;
@@ -84,19 +82,17 @@ public class DelegateResource {
   private DelegateScopeService delegateScopeService;
   private DownloadTokenService downloadTokenService;
   private MainConfiguration mainConfiguration;
-  private DataStoreService dataStoreService;
   private AccountService accountService;
   private WingsPersistence wingsPersistence;
 
   @Inject
   public DelegateResource(DelegateService delegateService, DelegateScopeService delegateScopeService,
-      DownloadTokenService downloadTokenService, MainConfiguration mainConfiguration, DataStoreService dataStoreService,
-      AccountService accountService, WingsPersistence wingsPersistence) {
+      DownloadTokenService downloadTokenService, MainConfiguration mainConfiguration, AccountService accountService,
+      WingsPersistence wingsPersistence) {
     this.delegateService = delegateService;
     this.delegateScopeService = delegateScopeService;
     this.downloadTokenService = downloadTokenService;
     this.mainConfiguration = mainConfiguration;
-    this.dataStoreService = dataStoreService;
     this.accountService = accountService;
     this.wingsPersistence = wingsPersistence;
   }
@@ -578,9 +574,6 @@ public class DelegateResource {
   @ExceptionMetered
   public void saveApiCallLogs(@PathParam("delegateId") String delegateId, @QueryParam("accountId") String accountId,
       List<ThirdPartyApiCallLog> logs) {
-    dataStoreService.save(ThirdPartyApiCallLog.class, logs, false);
-    if (dataStoreService instanceof GoogleDataStoreServiceImpl) {
-      wingsPersistence.save(logs);
-    }
+    wingsPersistence.save(logs);
   }
 }
