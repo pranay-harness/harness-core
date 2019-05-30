@@ -113,7 +113,7 @@ public class DatadogLogState extends AbstractLogAnalysisState {
   }
 
   public static Map<String, Map<String, CustomLogVerificationState.ResponseMapper>> constructLogDefinitions(
-      DatadogConfig datadogConfig, String hostnameField) {
+      DatadogConfig datadogConfig, String hostnameField, boolean is24x7) {
     Map<String, Map<String, CustomLogVerificationState.ResponseMapper>> logDefinition = new HashMap<>();
     Map<String, CustomLogVerificationState.ResponseMapper> responseMappers = new HashMap<>();
     List<String> pathList = Collections.singletonList("logs[*].content.timestamp");
@@ -126,9 +126,13 @@ public class DatadogLogState extends AbstractLogAnalysisState {
     List<String> pathList2 = Collections.singletonList("logs[*].content.message");
     responseMappers.put("logMessage",
         CustomLogVerificationState.ResponseMapper.builder().fieldName("logMessage").jsonPath(pathList2).build());
-    List<String> pathList3 = Collections.singletonList("logs[*].content.tags[*]." + hostnameField);
-    responseMappers.put(
-        "host", CustomLogVerificationState.ResponseMapper.builder().fieldName("host").jsonPath(pathList3).build());
+
+    if (!is24x7) {
+      List<String> pathList3 = Collections.singletonList("logs[*].content.tags[*]." + hostnameField);
+      responseMappers.put(
+          "host", CustomLogVerificationState.ResponseMapper.builder().fieldName("host").jsonPath(pathList3).build());
+    }
+
     String eventsUrl = datadogConfig.getUrl() + DatadogConfig.logAnalysisUrl;
     logDefinition.put(eventsUrl, responseMappers);
     return logDefinition;

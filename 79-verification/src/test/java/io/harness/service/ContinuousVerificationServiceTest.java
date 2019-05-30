@@ -54,6 +54,7 @@ import software.wings.alerts.AlertSeverity;
 import software.wings.alerts.AlertStatus;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
+import software.wings.beans.DatadogConfig;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.alert.Alert;
@@ -66,6 +67,7 @@ import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.CVFeedbackRecord;
 import software.wings.service.impl.analysis.ContinuousVerificationServiceImpl;
+import software.wings.service.impl.analysis.CustomLogDataCollectionInfo;
 import software.wings.service.impl.analysis.FeedbackAction;
 import software.wings.service.impl.analysis.FeedbackPriority;
 import software.wings.service.impl.analysis.LogDataRecord;
@@ -109,8 +111,10 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   private String envId;
   private String serviceId;
   private String connectorId;
+  private String datadogConnectorId;
   private String query;
   private String cvConfigId;
+  private String datadogCvConfigId;
   private String workflowId;
   private String workflowExecutionId;
   private String stateExecutionId;
@@ -128,6 +132,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Mock private SecretManager secretManager;
   @Mock private AppService appService;
   private SumoConfig sumoConfig;
+  private DatadogConfig datadogConfig;
 
   @Before
   public void setUp() throws Exception {
@@ -136,6 +141,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     envId = generateUuid();
     serviceId = generateUuid();
     connectorId = generateUuid();
+    datadogConnectorId = generateUuid();
     query = generateUuid();
     workflowId = generateUuid();
     workflowExecutionId = generateUuid();
@@ -147,6 +153,13 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
                      .accessKey(generateUuid().toCharArray())
                      .accessId(generateUuid().toCharArray())
                      .build();
+    datadogConfig = DatadogConfig.builder()
+                        .url(generateUuid())
+                        .accountId(accountId)
+                        .apiKey(generateUuid().toCharArray())
+                        .applicationKey(generateUuid().toCharArray())
+                        .build();
+
     LogsCVConfiguration logsCVConfiguration = new LogsCVConfiguration();
     logsCVConfiguration.setName(generateUuid());
     logsCVConfiguration.setAccountId(accountId);
@@ -162,13 +175,32 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     logsCVConfiguration.setBaselineEndMinute(TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()));
 
     cvConfigId = wingsPersistence.save(logsCVConfiguration);
-    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(logsCVConfiguration));
+
+    LogsCVConfiguration datadogCVConfiguration = new LogsCVConfiguration();
+    datadogCVConfiguration.setName(generateUuid());
+    datadogCVConfiguration.setAccountId(accountId);
+    datadogCVConfiguration.setAppId(appId);
+    datadogCVConfiguration.setEnvId(envId);
+    datadogCVConfiguration.setServiceId(serviceId);
+    datadogCVConfiguration.setEnabled24x7(true);
+    datadogCVConfiguration.setConnectorId(datadogConnectorId);
+    datadogCVConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
+    datadogCVConfiguration.setStateType(StateType.DATA_DOG_LOG);
+    datadogCVConfiguration.setBaselineStartMinute(
+        TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()) - TimeUnit.DAYS.toMinutes(1));
+    datadogCVConfiguration.setBaselineEndMinute(TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()));
+
+    datadogCvConfigId = wingsPersistence.save(datadogCVConfiguration);
+
+    when(cvConfigurationService.listConfigurations(accountId))
+        .thenReturn(Lists.newArrayList(logsCVConfiguration, datadogCVConfiguration));
     writeField(continuousVerificationService, "cvConfigurationService", cvConfigurationService, true);
     writeField(continuousVerificationService, "metricRegistry", metricRegistry, true);
 
     when(delegateService.queueTask(anyObject()))
         .then(invocation -> wingsPersistence.save((DelegateTask) invocation.getArguments()[0]));
     when(settingsService.get(connectorId)).thenReturn(aSettingAttribute().withValue(sumoConfig).build());
+    when(settingsService.get(datadogConnectorId)).thenReturn(aSettingAttribute().withValue(datadogConfig).build());
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     MainConfiguration mainConfiguration = new MainConfiguration();
     mainConfiguration.setPortal(new PortalConfig());
@@ -243,15 +275,33 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testLogsCollectionBaselineInFuture() {
-    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
-    logger.info("currentMin: {}", currentMinute);
+  public void testDefaultBaselineDatadogLog() {
+    LogsCVConfiguration logsCVConfiguration = new LogsCVConfiguration();
+    logsCVConfiguration.setName(generateUuid());
+    logsCVConfiguration.setAccountId(accountId);
+    logsCVConfiguration.setAppId(appId);
+    logsCVConfiguration.setEnvId(envId);
+    logsCVConfiguration.setServiceId(serviceId);
+    logsCVConfiguration.setEnabled24x7(true);
+    logsCVConfiguration.setConnectorId(datadogConnectorId);
+    logsCVConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
+    logsCVConfiguration.setStateType(StateType.DATA_DOG_LOG);
+
+    datadogCvConfigId = wingsPersistence.save(logsCVConfiguration);
+
+    logsCVConfiguration = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, datadogCvConfigId);
+    assertTrue(logsCVConfiguration.getBaselineStartMinute() < 0);
+    assertTrue(logsCVConfiguration.getBaselineEndMinute() < 0);
+  }
+
+  private DelegateTask updateBaseline(String configId, long currentMinute) {
     LogsCVConfiguration logsCVConfiguration =
-        (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
+        (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, configId);
     logsCVConfiguration.setBaselineStartMinute(currentMinute + CRON_POLL_INTERVAL_IN_MINUTES);
     logsCVConfiguration.setBaselineEndMinute(
         logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES * 3);
     wingsPersistence.save(logsCVConfiguration);
+
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(logsCVConfiguration));
     continuousVerificationService.triggerLogDataCollection(accountId);
     List<DelegateTask> delegateTasks =
@@ -271,22 +321,66 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
     assertEquals(1, delegateTasks.size());
 
-    DelegateTask delegateTask = delegateTasks.get(0);
-    assertEquals(accountId, delegateTask.getAccountId());
+    wingsPersistence.save(logsCVConfiguration);
+
+    return delegateTasks.get(0);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testLogsCollectionBaselineInFuture() {
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
+    logger.info("currentMin: {}", currentMinute);
+
+    DelegateTask delegateTask = updateBaseline(cvConfigId, currentMinute);
+    LogsCVConfiguration logsCVConfiguration =
+        (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
+
     assertEquals(appId, delegateTask.getAppId());
+    assertEquals(accountId, delegateTask.getAccountId());
     assertEquals(TaskType.SUMO_COLLECT_24_7_LOG_DATA, TaskType.valueOf(delegateTask.getData().getTaskType()));
+
     SumoDataCollectionInfo sumoDataCollectionInfo = (SumoDataCollectionInfo) delegateTask.getData().getParameters()[0];
-    assertEquals(sumoConfig, sumoDataCollectionInfo.getSumoConfig());
-    assertEquals(cvConfigId, sumoDataCollectionInfo.getCvConfigId());
-    assertEquals(appId, sumoDataCollectionInfo.getApplicationId());
-    assertEquals(accountId, sumoDataCollectionInfo.getAccountId());
-    assertEquals(serviceId, sumoDataCollectionInfo.getServiceId());
 
     assertEquals(
         TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()), sumoDataCollectionInfo.getStartTime());
     assertEquals(
         TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1),
         sumoDataCollectionInfo.getEndTime());
+
+    assertEquals(sumoConfig, sumoDataCollectionInfo.getSumoConfig());
+    assertEquals(cvConfigId, sumoDataCollectionInfo.getCvConfigId());
+    assertEquals(accountId, sumoDataCollectionInfo.getAccountId());
+    assertEquals(serviceId, sumoDataCollectionInfo.getServiceId());
+    assertEquals(appId, sumoDataCollectionInfo.getApplicationId());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testLogsCollectionBaselineInFutureDatadogLog() {
+    long currentMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
+    logger.info("currentMin: {}", currentMinute);
+
+    DelegateTask delegateTask = updateBaseline(datadogCvConfigId, currentMinute);
+    LogsCVConfiguration logsCVConfiguration =
+        (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, datadogCvConfigId);
+
+    CustomLogDataCollectionInfo customLogDataCollectionInfo =
+        (CustomLogDataCollectionInfo) delegateTask.getData().getParameters()[0];
+
+    assertEquals(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()),
+        customLogDataCollectionInfo.getStartTime());
+    assertEquals(
+        TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1),
+        customLogDataCollectionInfo.getEndTime());
+
+    assertEquals(accountId, delegateTask.getAccountId());
+    assertEquals(appId, delegateTask.getAppId());
+    assertEquals(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA, TaskType.valueOf(delegateTask.getData().getTaskType()));
+    assertEquals(datadogCvConfigId, customLogDataCollectionInfo.getCvConfigId());
+    assertEquals(appId, customLogDataCollectionInfo.getApplicationId());
+    assertEquals(serviceId, customLogDataCollectionInfo.getServiceId());
+    assertEquals(accountId, customLogDataCollectionInfo.getAccountId());
   }
 
   @Test
@@ -306,21 +400,38 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void testLogsCollectionNoBaselineSetDatadogLog() {
+    LogsCVConfiguration logsCVConfiguration =
+        (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, datadogCvConfigId);
+    logsCVConfiguration.setBaselineStartMinute(-1);
+    logsCVConfiguration.setBaselineEndMinute(-1);
+    wingsPersistence.save(logsCVConfiguration);
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(logsCVConfiguration));
+    continuousVerificationService.triggerLogDataCollection(accountId);
+    List<DelegateTask> delegateTasks =
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
+    assertEquals(0, delegateTasks.size());
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void testLogsCollection() {
     continuousVerificationService.triggerLogDataCollection(accountId);
     List<DelegateTask> delegateTasks =
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
-    assertEquals(1, delegateTasks.size());
+    assertEquals(2, delegateTasks.size());
+
     DelegateTask delegateTask = delegateTasks.get(0);
+    SumoDataCollectionInfo sumoDataCollectionInfo = (SumoDataCollectionInfo) delegateTask.getData().getParameters()[0];
+
     assertEquals(accountId, delegateTask.getAccountId());
     assertEquals(appId, delegateTask.getAppId());
     assertEquals(TaskType.SUMO_COLLECT_24_7_LOG_DATA, TaskType.valueOf(delegateTask.getData().getTaskType()));
-    SumoDataCollectionInfo sumoDataCollectionInfo = (SumoDataCollectionInfo) delegateTask.getData().getParameters()[0];
-    assertEquals(sumoConfig, sumoDataCollectionInfo.getSumoConfig());
     assertEquals(cvConfigId, sumoDataCollectionInfo.getCvConfigId());
     assertEquals(appId, sumoDataCollectionInfo.getApplicationId());
     assertEquals(accountId, sumoDataCollectionInfo.getAccountId());
     assertEquals(serviceId, sumoDataCollectionInfo.getServiceId());
+    assertEquals(sumoConfig, sumoDataCollectionInfo.getSumoConfig());
 
     LogsCVConfiguration logsCVConfiguration =
         (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
@@ -344,9 +455,9 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     continuousVerificationService.triggerLogDataCollection(accountId);
     delegateTasks =
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
-    assertEquals(2, delegateTasks.size());
+    assertEquals(4, delegateTasks.size());
 
-    delegateTask = delegateTasks.get(1);
+    delegateTask = delegateTasks.get(2);
     assertEquals(accountId, delegateTask.getAccountId());
     assertEquals(appId, delegateTask.getAppId());
     assertEquals(TaskType.SUMO_COLLECT_24_7_LOG_DATA, TaskType.valueOf(delegateTask.getData().getTaskType()));
@@ -366,12 +477,71 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void testDatadogLogsCollection() {
+    continuousVerificationService.triggerLogDataCollection(accountId);
+    List<DelegateTask> delegateTasks =
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
+    assertEquals(2, delegateTasks.size());
+    DelegateTask delegateTask = delegateTasks.get(1);
+    assertEquals(accountId, delegateTask.getAccountId());
+    assertEquals(appId, delegateTask.getAppId());
+    assertEquals(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA, TaskType.valueOf(delegateTask.getData().getTaskType()));
+    CustomLogDataCollectionInfo customLogDataCollectionInfo =
+        (CustomLogDataCollectionInfo) delegateTask.getData().getParameters()[0];
+    assertEquals(datadogCvConfigId, customLogDataCollectionInfo.getCvConfigId());
+    assertEquals(appId, customLogDataCollectionInfo.getApplicationId());
+    assertEquals(accountId, customLogDataCollectionInfo.getAccountId());
+    assertEquals(serviceId, customLogDataCollectionInfo.getServiceId());
+
+    LogsCVConfiguration logsCVConfiguration =
+        (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, datadogCvConfigId);
+    assertEquals(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()),
+        customLogDataCollectionInfo.getStartTime());
+    assertEquals(
+        TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1),
+        customLogDataCollectionInfo.getEndTime());
+
+    // save some log and trigger again
+    long numOfMinutesSaved = 100;
+    for (long i = logsCVConfiguration.getBaselineStartMinute();
+         i <= logsCVConfiguration.getBaselineStartMinute() + numOfMinutesSaved; i++) {
+      LogDataRecord logDataRecord = new LogDataRecord();
+      logDataRecord.setAppId(appId);
+      logDataRecord.setCvConfigId(datadogCvConfigId);
+      logDataRecord.setLogCollectionMinute((int) i);
+      logDataRecord.setClusterLevel(ClusterLevel.H0);
+      wingsPersistence.save(logDataRecord);
+    }
+    continuousVerificationService.triggerLogDataCollection(accountId);
+    delegateTasks =
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
+    assertEquals(4, delegateTasks.size());
+
+    delegateTask = delegateTasks.get(3);
+    assertEquals(accountId, delegateTask.getAccountId());
+    assertEquals(appId, delegateTask.getAppId());
+    assertEquals(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA, TaskType.valueOf(delegateTask.getData().getTaskType()));
+    customLogDataCollectionInfo = (CustomLogDataCollectionInfo) delegateTask.getData().getParameters()[0];
+    assertEquals(datadogCvConfigId, customLogDataCollectionInfo.getCvConfigId());
+    assertEquals(appId, customLogDataCollectionInfo.getApplicationId());
+    assertEquals(accountId, customLogDataCollectionInfo.getAccountId());
+    assertEquals(serviceId, customLogDataCollectionInfo.getServiceId());
+
+    assertEquals(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute() + numOfMinutesSaved + 1),
+        customLogDataCollectionInfo.getStartTime());
+    assertEquals(TimeUnit.MINUTES.toMillis(
+                     logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES + numOfMinutesSaved),
+        customLogDataCollectionInfo.getEndTime());
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void testTriggerLogsCollection() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
-    AnalysisContext context =
-        createMockAnalysisContext(TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()));
+    AnalysisContext context = createMockAnalysisContext(
+        TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()), StateType.SUMO, connectorId);
     wingsPersistence.save(context);
     continuousVerificationService.triggerWorkflowDataCollection(context);
     List<DelegateTask> delegateTasks =
@@ -391,12 +561,50 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void testTriggerDatadogLogsCollection() throws IOException {
+    Call<RestResponse<Boolean>> managerCall = mock(Call.class);
+    when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
+    AnalysisContext context = createMockAnalysisContext(
+        TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()), StateType.DATA_DOG_LOG, datadogConnectorId);
+    wingsPersistence.save(context);
+    continuousVerificationService.triggerWorkflowDataCollection(context);
+    List<DelegateTask> delegateTasks =
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
+    assertEquals(1, delegateTasks.size());
+    DelegateTask delegateTask = delegateTasks.get(0);
+
+    assertEquals(accountId, delegateTask.getAccountId());
+    assertEquals(appId, delegateTask.getAppId());
+    assertEquals(TaskType.CUSTOM_LOG_COLLECTION_TASK, TaskType.valueOf(delegateTask.getData().getTaskType()));
+    CustomLogDataCollectionInfo customLogDataCollectionInfo =
+        (CustomLogDataCollectionInfo) delegateTask.getData().getParameters()[0];
+    assertEquals(appId, customLogDataCollectionInfo.getApplicationId());
+    assertEquals(accountId, customLogDataCollectionInfo.getAccountId());
+    assertEquals(serviceId, customLogDataCollectionInfo.getServiceId());
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void testTriggerLogsCollectionInvalidState() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
-    AnalysisContext context =
-        createMockAnalysisContext(TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()));
+    AnalysisContext context = createMockAnalysisContext(
+        TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()), StateType.SUMO, connectorId);
+    wingsPersistence.save(context);
+    boolean isTriggered = continuousVerificationService.triggerWorkflowDataCollection(context);
+    assertFalse(isTriggered);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testTriggerDatadogLogsCollectionInvalidState() throws IOException {
+    Call<RestResponse<Boolean>> managerCall = mock(Call.class);
+    when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
+    when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
+    AnalysisContext context = createMockAnalysisContext(
+        TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()), StateType.DATA_DOG_LOG, datadogConnectorId);
     wingsPersistence.save(context);
     boolean isTriggered = continuousVerificationService.triggerWorkflowDataCollection(context);
     assertFalse(isTriggered);
@@ -409,10 +617,27 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
     long startTimeInterval = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
-    AnalysisContext context = createMockAnalysisContext(startTimeInterval);
+    AnalysisContext context = createMockAnalysisContext(startTimeInterval, StateType.SUMO, connectorId);
     wingsPersistence.save(context);
 
-    LogDataRecord record = createLogDataRecord(startTimeInterval);
+    LogDataRecord record = createLogDataRecord(startTimeInterval, StateType.SUMO);
+    wingsPersistence.save(record);
+
+    boolean isTriggered = continuousVerificationService.triggerWorkflowDataCollection(context);
+    assertFalse(isTriggered);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testTriggerDatadogLogsCollectionCompletedCollection() throws IOException {
+    Call<RestResponse<Boolean>> managerCall = mock(Call.class);
+    when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
+    long startTimeInterval = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    AnalysisContext context = createMockAnalysisContext(startTimeInterval, StateType.DATA_DOG_LOG, datadogConnectorId);
+    wingsPersistence.save(context);
+
+    LogDataRecord record = createLogDataRecord(startTimeInterval, StateType.DATA_DOG_LOG);
     wingsPersistence.save(record);
 
     boolean isTriggered = continuousVerificationService.triggerWorkflowDataCollection(context);
@@ -426,20 +651,38 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
     long startTimeInterval = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
-    AnalysisContext context = createMockAnalysisContext(startTimeInterval);
+    AnalysisContext context = createMockAnalysisContext(startTimeInterval, StateType.SUMO, connectorId);
     context.setTimeDuration(2);
     wingsPersistence.save(context);
 
-    LogDataRecord record = createLogDataRecord(startTimeInterval);
+    LogDataRecord record = createLogDataRecord(startTimeInterval, StateType.SUMO);
     wingsPersistence.save(record);
 
     boolean isTriggered = continuousVerificationService.triggerWorkflowDataCollection(context);
     assertTrue(isTriggered);
   }
 
-  private LogDataRecord createLogDataRecord(long startTimeInterval) {
+  @Test
+  @Category(UnitTests.class)
+  public void testTriggerDatadogLogsCollectionNextMinuteDataCollection() throws IOException {
+    Call<RestResponse<Boolean>> managerCall = mock(Call.class);
+    when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
+    long startTimeInterval = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    AnalysisContext context = createMockAnalysisContext(startTimeInterval, StateType.DATA_DOG_LOG, datadogConnectorId);
+    context.setTimeDuration(2);
+    wingsPersistence.save(context);
+
+    LogDataRecord record = createLogDataRecord(startTimeInterval, StateType.DATA_DOG_LOG);
+    wingsPersistence.save(record);
+
+    boolean isTriggered = continuousVerificationService.triggerWorkflowDataCollection(context);
+    assertTrue(isTriggered);
+  }
+
+  private LogDataRecord createLogDataRecord(long startTimeInterval, StateType stateType) {
     LogDataRecord record = new LogDataRecord();
-    record.setStateType(StateType.SUMO);
+    record.setStateType(stateType);
     record.setWorkflowId(workflowId);
     record.setLogCollectionMinute(startTimeInterval);
     record.setQuery(query);
@@ -448,7 +691,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     return record;
   }
 
-  private AnalysisContext createMockAnalysisContext(long startTimeInterval) {
+  private AnalysisContext createMockAnalysisContext(long startTimeInterval, StateType stateType, String connectorId) {
     return AnalysisContext.builder()
         .accountId(accountId)
         .appId(appId)
@@ -464,10 +707,11 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         .appPort(9090)
         .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
         .timeDuration(1)
-        .stateType(StateType.SUMO)
+        .stateType(stateType)
         .correlationId(UUID.randomUUID().toString())
         .prevWorkflowExecutionId("-1")
         .startDataCollectionMinute(startTimeInterval)
+        .hostNameField("pod_name")
         .build();
   }
 

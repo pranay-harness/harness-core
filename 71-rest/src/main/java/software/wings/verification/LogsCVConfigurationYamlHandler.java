@@ -19,6 +19,7 @@ public class LogsCVConfigurationYamlHandler
     LogsCVConfigurationYaml yaml;
     switch (bean.getStateType()) {
       case SUMO:
+      case DATA_DOG_LOG:
         yaml = new LogsCVConfigurationYaml();
         break;
       case ELK:

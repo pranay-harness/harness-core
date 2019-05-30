@@ -1420,6 +1420,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         task = createCloudWatchDelegateTask(cloudWatchCVServiceConfiguration, waitId, startTime, endTime);
         break;
       case SUMO:
+      case DATA_DOG_LOG:
         LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
         task = createDataCollectionDelegateTask(logsCVConfiguration, waitId, startTime, endTime);
         isLogCollection = true;
@@ -1748,6 +1749,33 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 .build();
         return createDelegateTask(TaskType.SUMO_COLLECT_24_7_LOG_DATA, config.getAccountId(), config.getAppId(), waitId,
             new Object[] {dataCollectionInfo}, config.getEnvId());
+
+      case DATA_DOG_LOG:
+        DatadogConfig datadogConfig = (DatadogConfig) settingsService.get(config.getConnectorId()).getValue();
+        final CustomLogDataCollectionInfo customLogDataCollectionInfo =
+            CustomLogDataCollectionInfo.builder()
+                .baseUrl(datadogConfig.getUrl())
+                .validationUrl(DatadogConfig.validationUrl)
+                .dataUrl(DatadogConfig.logAnalysisUrl)
+                .headers(new HashMap<>())
+                .options(datadogConfig.fetchLogOptionsMap())
+                .query(config.getQuery())
+                .body(datadogConfig.fetchLogBodyMap(true))
+                .encryptedDataDetails(secretManager.getEncryptionDetails(datadogConfig, config.getAppId(), null))
+                .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
+                .stateType(StateType.DATA_DOG_LOG)
+                .applicationId(config.getAppId())
+                .serviceId(config.getServiceId())
+                .stateExecutionId(stateExecutionId)
+                .startTime(startTime)
+                .endTime(endTime)
+                .accountId(config.getAccountId())
+                .cvConfidId(config.getUuid())
+                .responseDefinition(DatadogLogState.constructLogDefinitions(datadogConfig, null, true))
+                .build();
+        return createDelegateTask(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA, config.getAccountId(), config.getAppId(),
+            waitId, new Object[] {customLogDataCollectionInfo}, config.getEnvId());
+
       default:
         throw new IllegalStateException("Invalid state: " + config.getStateType());
     }
@@ -1856,7 +1884,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         .dataUrl(DatadogConfig.logAnalysisUrl)
         .headers(new HashMap<>())
         .options(datadogConfig.fetchLogOptionsMap())
-        .body(DatadogLogState.resolveHostnameField(datadogConfig.fetchLogBodyMap(), context.getHostNameField()))
+        .body(DatadogLogState.resolveHostnameField(datadogConfig.fetchLogBodyMap(false), context.getHostNameField()))
         .query(context.getQuery())
         .encryptedDataDetails(
             secretManager.getEncryptionDetails(datadogConfig, context.getAppId(), context.getWorkflowExecutionId()))
@@ -1872,7 +1900,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         .accountId(context.getAccountId())
         .hostnameField(context.getHostNameField())
         .hostnameSeparator(DatadogLogState.hostNameSeparator)
-        .responseDefinition(DatadogLogState.constructLogDefinitions(datadogConfig, context.getHostNameField()))
+        .responseDefinition(DatadogLogState.constructLogDefinitions(datadogConfig, context.getHostNameField(), false))
         .build();
   }
 

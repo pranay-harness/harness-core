@@ -141,7 +141,8 @@ public class WorkflowVerificationTaskPoller {
       CVConfiguration cvConfiguration;
       switch (context.getStateType()) {
         case SUMO:
-          cvConfiguration = createSUMOCVConfiguration(context, cvConfigUuid);
+        case DATA_DOG_LOG:
+          cvConfiguration = createLogCVConfiguration(context, cvConfigUuid);
           break;
         case ELK:
           cvConfiguration = createELKCVConfiguration(context, cvConfigUuid);
@@ -158,7 +159,7 @@ public class WorkflowVerificationTaskPoller {
     }
   }
 
-  private LogsCVConfiguration createSUMOCVConfiguration(AnalysisContext context, String cvConfigUuid) {
+  private LogsCVConfiguration createLogCVConfiguration(AnalysisContext context, String cvConfigUuid) {
     LogsCVConfiguration logsCVConfiguration = new LogsCVConfiguration();
     logsCVConfiguration.setAppId(context.getAppId());
     logsCVConfiguration.setQuery(context.getQuery());
