@@ -473,7 +473,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .headers(new HashMap<>())
             .options(datadogConfig.fetchLogOptionsMap())
             .body(DatadogLogState.resolveHostnameField(
-                datadogConfig.fetchLogBodyMap(), analysisContext.getHostNameField()))
+                datadogConfig.fetchLogBodyMap(false), analysisContext.getHostNameField()))
             .query(getRenderedQuery())
             .encryptedDataDetails(secretManager.getEncryptionDetails(
                 datadogConfig, analysisContext.getAppId(), analysisContext.getWorkflowExecutionId()))
@@ -487,7 +487,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .hostnameSeparator(DatadogLogState.hostNameSeparator)
             .hostnameField(analysisContext.getHostNameField())
             .responseDefinition(
-                datadogLogState.constructLogDefinitions(datadogConfig, analysisContext.getHostNameField()))
+                datadogLogState.constructLogDefinitions(datadogConfig, analysisContext.getHostNameField(), false))
             .shouldInspectHosts(true)
             .collectionFrequency(1)
             .collectionTime(Integer.parseInt(getTimeDuration()))

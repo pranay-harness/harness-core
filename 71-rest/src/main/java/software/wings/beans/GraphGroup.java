@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * The Class GraphGroup.
  */
-@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
+@EqualsAndHashCode(callSuper = true)
 public class GraphGroup extends GraphNode {
   private List<GraphNode> elements = new ArrayList<>();
 

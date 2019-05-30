@@ -322,6 +322,7 @@ public class YamlModule extends AbstractModule {
     cvConfigYamlHelperMapBinder.addBinding(StateType.BUG_SNAG.name()).to(BugsnagCVConfigurationYamlHandler.class);
     cvConfigYamlHelperMapBinder.addBinding(StateType.PROMETHEUS.name()).to(PrometheusCVConfigurationYamlHandler.class);
     cvConfigYamlHelperMapBinder.addBinding(StateType.CLOUD_WATCH.name()).to(CloudWatchCVConfigurationYamlHandler.class);
+    cvConfigYamlHelperMapBinder.addBinding(StateType.DATA_DOG_LOG.name()).to(LogsCVConfigurationYamlHandler.class);
 
     MapBinder<String, CollaborationProviderYamlHandler> collaborationProviderYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CollaborationProviderYamlHandler.class);

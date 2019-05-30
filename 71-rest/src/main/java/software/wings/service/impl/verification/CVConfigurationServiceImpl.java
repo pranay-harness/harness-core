@@ -127,6 +127,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         break;
 
       case SUMO:
+      case DATA_DOG_LOG:
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), LogsCVConfiguration.class);
         break;
 
@@ -513,6 +514,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         }
         break;
       case SUMO:
+      case DATA_DOG_LOG:
         LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
         updateOperations.set("query", logsCVConfiguration.getQuery())
             .set("baselineStartMinute", logsCVConfiguration.getBaselineStartMinute())

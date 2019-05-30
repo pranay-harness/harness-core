@@ -76,9 +76,13 @@ public class DatadogConfig extends SettingValue implements EncryptableSetting {
     return paramsMap;
   }
 
-  public Map<String, Object> fetchLogBodyMap() {
+  public Map<String, Object> fetchLogBodyMap(boolean is24x7) {
     Map<String, Object> body = new HashMap<>();
-    body.put("query", "${hostname_field}:(${host}) ${query}");
+    if (is24x7) {
+      body.put("query", "${query}");
+    } else {
+      body.put("query", "${hostname_field}:(${host}) ${query}");
+    }
     Map<String, String> timeMap = new HashMap<>();
     timeMap.put("from", "${start_time}");
     timeMap.put("to", "${end_time}");
