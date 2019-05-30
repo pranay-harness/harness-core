@@ -228,6 +228,7 @@ public abstract class CloudFormationState extends State {
             "There are not outputs in the CF Stack. No infra mappings would be updated.");
       }
     }
+    executionLogCallback.saveExecutionLog("Completed CF Create Stack", LogLevel.INFO, CommandExecutionStatus.SUCCESS);
   }
 
   protected Map<String, String> getVariableMap(

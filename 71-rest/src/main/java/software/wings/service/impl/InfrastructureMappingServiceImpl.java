@@ -560,7 +560,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       } else {
         fieldsToRemove.add("region");
       }
-      keyValuePairs.put("autoScalingGroupName", awsAmiInfrastructureMapping.getAutoScalingGroupName());
+      if (awsAmiInfrastructureMapping.getAutoScalingGroupName() != null) {
+        keyValuePairs.put("autoScalingGroupName", awsAmiInfrastructureMapping.getAutoScalingGroupName());
+      } else {
+        fieldsToRemove.add("autoScalingGroupName");
+      }
       if (awsAmiInfrastructureMapping.getClassicLoadBalancers() != null) {
         keyValuePairs.put("classicLoadBalancers", awsAmiInfrastructureMapping.getClassicLoadBalancers());
       } else {

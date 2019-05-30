@@ -31,6 +31,7 @@ import com.amazonaws.services.autoscaling.model.Tag;
 import com.amazonaws.services.autoscaling.model.TagDescription;
 import com.amazonaws.services.ec2.model.Instance;
 import io.fabric8.utils.Lists;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
@@ -473,8 +474,7 @@ public class AwsAmiHelperServiceDelegateImpl
         awsAsgHelperServiceDelegate.deleteLaunchConfig(awsConfig, encryptionDetails, region, newAutoScalingGroupName);
       }
 
-      logCallback.saveExecutionLog(
-          format("Creating new launch configuration [%s]", baseLaunchConfiguration.getLaunchConfigurationName()));
+      logCallback.saveExecutionLog(format("Creating new launch configuration [%s]", newAutoScalingGroupName));
       awsAsgHelperServiceDelegate.createLaunchConfiguration(awsConfig, encryptionDetails, region,
           createNewLaunchConfigurationRequest(awsConfig, encryptionDetails, region, request.getArtifactRevision(),
               baseLaunchConfiguration, newAutoScalingGroupName, request.getUserData()));
@@ -498,10 +498,9 @@ public class AwsAmiHelperServiceDelegateImpl
       deleteOldHarnessManagedAutoScalingGroups(
           encryptionDetails, region, awsConfig, harnessManagedAutoScalingGroups, lastDeployedAsgName, logCallback);
       logCallback.saveExecutionLog(
-          format("Completed AWS AMI Setup with new autoScalingGroupName [%s]", newAutoScalingGroupName));
-
+          format("Completed AWS AMI Setup with new autoScalingGroupName [%s]", newAutoScalingGroupName), INFO,
+          CommandExecutionStatus.SUCCESS);
       return builder.build();
-
     } catch (Exception exception) {
       logCallback.saveExecutionLog(format("Exception: [%s].", exception.getMessage()), ERROR);
       logger.error(exception.getMessage(), exception);
@@ -571,6 +570,14 @@ public class AwsAmiHelperServiceDelegateImpl
             .stream()
             .filter(tagDescription
                 -> !Arrays.asList(HARNESS_AUTOSCALING_GROUP_TAG, NAME_TAG).contains(tagDescription.getKey()))
+            /**
+             * In case of dynamic base Asg provisioning the base Asg would have a tags like the following,
+             * which a user can't create. So we must filter those ones out
+             * - aws:cloudformation:logical-id
+             * - aws:cloudformation:stack-id
+             * - aws:cloudformation:stack-name
+             */
+            .filter(tagDescription -> !tagDescription.getKey().startsWith("aws:"))
             .map(tagDescription
                 -> new Tag()
                        .withKey(tagDescription.getKey())
