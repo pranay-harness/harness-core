@@ -22,7 +22,7 @@ import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.NotifyCallback;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.Application;
+import software.wings.beans.Account;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ArtifactCollectionFailedAlert;
 import software.wings.beans.artifact.Artifact;
@@ -35,6 +35,7 @@ import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.PermitService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
@@ -56,7 +57,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class BuildSourceCallback implements NotifyCallback {
   private String accountId;
-  private String appId;
   private String artifactStreamId;
   private String permitId;
   private String settingId;
@@ -70,11 +70,11 @@ public class BuildSourceCallback implements NotifyCallback {
   @Inject private transient PermitService permitService;
   @Inject private transient AlertService alertService;
   @Inject private transient ArtifactCollectionUtils artifactCollectionUtils;
+  @Inject private transient ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
-  public BuildSourceCallback(String accountId, String appId, String artifactStreamId, String permitId,
+  public BuildSourceCallback(String accountId, String artifactStreamId, String permitId,
       String settingId) { // todo: new constr with settingId
     this.accountId = accountId;
-    this.appId = appId;
     this.artifactStreamId = artifactStreamId;
     this.permitId = permitId;
     this.settingId = settingId;
@@ -83,7 +83,7 @@ public class BuildSourceCallback implements NotifyCallback {
   @Override
   public void notify(Map<String, ResponseData> response) {
     ResponseData notifyResponseData = response.values().iterator().next();
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
     logger.info("In notify for artifact stream id: [{}]", artifactStreamId);
     if (notifyResponseData instanceof BuildSourceExecutionResponse) {
       if (SUCCESS.equals(((BuildSourceExecutionResponse) notifyResponseData).getCommandExecutionStatus())) {
@@ -97,14 +97,15 @@ public class BuildSourceCallback implements NotifyCallback {
               buildSourceExecutionResponse, artifactStreamId);
         }
         try {
-          List<Artifact> artifacts = processBuilds(appId, artifactStream);
+          List<Artifact> artifacts = processBuilds(artifactStream);
           if (isNotEmpty(artifacts)) {
             logger.info("[{}] new artifacts collected for artifactStreamId {}",
                 artifacts.stream().map(Artifact::getBuildNo).collect(Collectors.toList()), artifactStream.getUuid());
-            triggerService.triggerExecutionPostArtifactCollectionAsync(accountId, appId, artifactStreamId, artifacts);
+            triggerService.triggerExecutionPostArtifactCollectionAsync(
+                accountId, artifactStream.fetchAppId(), artifactStreamId, artifacts);
           }
         } catch (WingsException ex) {
-          ex.addContext(Application.class, appId);
+          ex.addContext(Account.class, accountId);
           ex.addContext(ArtifactStream.class, artifactStreamId);
           ExceptionLogger.logProcessedMessages(ex, MANAGER, logger);
           updatePermit(artifactStream, true);
@@ -124,22 +125,22 @@ public class BuildSourceCallback implements NotifyCallback {
     if (failed) {
       int failedCronAttempts = artifactStream.getFailedCronAttempts() + 1;
       artifactStreamService.updateFailedCronAttempts(
-          artifactStream.getAppId(), artifactStream.getUuid(), failedCronAttempts);
+          artifactStream.getAccountId(), artifactStream.getUuid(), failedCronAttempts);
       logger.warn(
           "ASYNC_ARTIFACT_COLLECTION: failed to fetch/process builds for artifactStream[{}], totalFailedAttempt:[{}]",
           artifactStreamId, failedCronAttempts);
       if (PermitServiceImpl.shouldSendAlert(failedCronAttempts)) {
-        if (!artifactStream.getAppId().equals(GLOBAL_APP_ID)) {
-          alertService.openAlert(accountId, appId, AlertType.ARTIFACT_COLLECTION_FAILED,
+        String appId = artifactStream.fetchAppId();
+        if (!GLOBAL_APP_ID.equals(appId)) {
+          alertService.openAlert(accountId, null, AlertType.ARTIFACT_COLLECTION_FAILED,
               ArtifactCollectionFailedAlert.builder()
                   .appId(appId)
                   .serviceId(artifactStream.getServiceId())
                   .artifactStreamId(artifactStreamId)
                   .build());
         } else {
-          alertService.openAlert(accountId, appId, AlertType.ARTIFACT_COLLECTION_FAILED,
+          alertService.openAlert(accountId, null, AlertType.ARTIFACT_COLLECTION_FAILED,
               ArtifactCollectionFailedAlert.builder()
-                  .appId(appId)
                   .settingId(artifactStream.getSettingId())
                   .artifactStreamId(artifactStreamId)
                   .build());
@@ -149,23 +150,10 @@ public class BuildSourceCallback implements NotifyCallback {
       if (artifactStream.getFailedCronAttempts() != 0) {
         logger.warn("ASYNC_ARTIFACT_COLLECTION: successfully fetched builds after [{}] failures for artifactStream[{}]",
             artifactStream.getFailedCronAttempts(), artifactStreamId);
-        artifactStreamService.updateFailedCronAttempts(artifactStream.getAppId(), artifactStream.getUuid(), 0);
+        artifactStreamService.updateFailedCronAttempts(artifactStream.getAccountId(), artifactStream.getUuid(), 0);
         permitService.releasePermitByKey(artifactStream.getUuid());
-        if (!artifactStream.getAppId().equals(GLOBAL_APP_ID)) {
-          alertService.closeAlert(accountId, appId, AlertType.ARTIFACT_COLLECTION_FAILED,
-              ArtifactCollectionFailedAlert.builder()
-                  .appId(appId)
-                  .serviceId(artifactStream.getServiceId())
-                  .artifactStreamId(artifactStreamId)
-                  .build());
-        } else {
-          alertService.closeAlert(accountId, appId, AlertType.ARTIFACT_COLLECTION_FAILED,
-              ArtifactCollectionFailedAlert.builder()
-                  .appId(appId)
-                  .settingId(artifactStream.getSettingId())
-                  .artifactStreamId(artifactStreamId)
-                  .build());
-        }
+        alertService.closeAlert(accountId, null, AlertType.ARTIFACT_COLLECTION_FAILED,
+            ArtifactCollectionFailedAlert.builder().artifactStreamId(artifactStreamId).build());
       }
     }
   }
@@ -173,7 +161,7 @@ public class BuildSourceCallback implements NotifyCallback {
   @Override
   public void notifyError(Map<String, ResponseData> response) {
     ResponseData notifyResponseData = response.values().iterator().next();
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
 
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
       logger.info("Request for artifactStreamId:[{}] failed :[{}]", artifactStreamId,
@@ -185,7 +173,7 @@ public class BuildSourceCallback implements NotifyCallback {
     updatePermit(artifactStream, true);
   }
 
-  private List<Artifact> processBuilds(String appId, ArtifactStream artifactStream) {
+  private List<Artifact> processBuilds(ArtifactStream artifactStream) {
     List<Artifact> newArtifacts = new ArrayList<>();
     if (artifactStream == null) {
       logger.info("Artifact Stream {} does not exist. Returning", artifactStreamId);
@@ -195,13 +183,13 @@ public class BuildSourceCallback implements NotifyCallback {
     if (metadataOnlyStreams.contains(artifactStreamType)) {
       collectMetaDataOnlyArtifacts(artifactStream, newArtifacts);
     } else if (ARTIFACTORY.name().equals(artifactStreamType)) {
-      collectArtifactoryArtifacts(appId, artifactStream, newArtifacts);
+      collectArtifactoryArtifacts(artifactStream, newArtifacts);
     } else if (AMAZON_S3.name().equals(artifactStreamType) || GCS.name().equals(artifactStreamType)) {
       collectGenericArtifacts(artifactStream, newArtifacts);
     } else {
       // Jenkins or Bamboo case
-      if (!appId.equals(GLOBAL_APP_ID)) {
-        collectLatestArtifact(appId, artifactStream, newArtifacts);
+      if (!GLOBAL_APP_ID.equals(artifactStream.fetchAppId())) {
+        collectLatestArtifact(artifactStream, newArtifacts);
       } else {
         collectSuccessfulArtifacts(artifactStream, newArtifacts);
       }
@@ -209,9 +197,10 @@ public class BuildSourceCallback implements NotifyCallback {
     return newArtifacts;
   }
 
-  private void collectArtifactoryArtifacts(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
-    if (!appId.equals(GLOBAL_APP_ID)) {
-      if (artifactCollectionUtils.getService(appId, artifactStream.getUuid())
+  private void collectArtifactoryArtifacts(ArtifactStream artifactStream, List<Artifact> newArtifacts) {
+    String appId = artifactStream.fetchAppId();
+    if (!GLOBAL_APP_ID.equals(appId)) {
+      if (artifactStreamServiceBindingService.getService(appId, artifactStream.getUuid(), true)
               .getArtifactType()
               .equals(ArtifactType.DOCKER)) {
         collectMetaDataOnlyArtifacts(artifactStream, newArtifacts);
@@ -227,7 +216,7 @@ public class BuildSourceCallback implements NotifyCallback {
     }
   }
 
-  private void collectLatestArtifact(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
+  private void collectLatestArtifact(ArtifactStream artifactStream, List<Artifact> newArtifacts) {
     if (isEmpty(builds)) {
       return;
     }

@@ -9,7 +9,5 @@ import java.util.List;
 public interface CustomBuildSourceService {
   List<BuildDetails> getBuilds(@NotEmpty String artifactStreamId);
 
-  List<BuildDetails> getBuilds(@NotEmpty String appId, @NotEmpty String artifactStreamId);
-
   boolean validateArtifactSource(ArtifactStream artifactStream);
 }

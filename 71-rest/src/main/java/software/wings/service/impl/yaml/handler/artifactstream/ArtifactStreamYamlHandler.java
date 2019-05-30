@@ -142,7 +142,7 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
     String yamlFilePath = changeContext.getChange().getFilePath();
     B previous = get(changeContext.getChange().getAccountId(), yamlFilePath);
     if (previous != null) {
-      toBean(previous, changeContext, previous.getAppId());
+      toBean(previous, changeContext, previous.fetchAppId());
       previous.setSyncFromGit(changeContext.getChange().isSyncFromGit());
       return (B) artifactStreamService.update(previous, !previous.isSyncFromGit());
     } else {

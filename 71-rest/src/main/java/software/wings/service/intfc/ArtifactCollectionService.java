@@ -7,11 +7,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import java.util.List;
 
 public interface ArtifactCollectionService {
-  Artifact collectArtifact(String appId, String artifactStreamId, BuildDetails buildDetails);
-
   Artifact collectArtifact(String artifactStreamId, BuildDetails buildDetails);
-
-  void collectNewArtifactsAsync(String appId, ArtifactStream artifactStream, String permitId);
 
   void collectNewArtifactsAsync(ArtifactStream artifactStream, String permitId);
 

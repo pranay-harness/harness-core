@@ -443,12 +443,8 @@ public class CommandStateTest extends WingsBaseTest {
   @Owner(emails = "rathnakara.malatesha@harness.io")
   @Category(UnitTests.class)
   public void executeWithArtifact() throws Exception {
-    Artifact artifact = anArtifact()
-                            .withUuid(ARTIFACT_ID)
-                            .withAppId(APP_ID)
-                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
-                            .withServiceIds(asList(SERVICE_ID))
-                            .build();
+    Artifact artifact =
+        anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).build();
 
     ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder().metadataOnly(false).build();
     Command command =
@@ -459,7 +455,7 @@ public class CommandStateTest extends WingsBaseTest {
 
     setWorkflowStandardParams(artifact, command);
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
-    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(artifactStream);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(artifactStream);
     when(artifactStream.fetchArtifactStreamAttributes()).thenReturn(artifactStreamAttributes);
     when(artifactStream.getSettingId()).thenReturn(SETTING_ID);
     when(artifactStream.getUuid()).thenReturn(ARTIFACT_STREAM_ID);
@@ -513,7 +509,7 @@ public class CommandStateTest extends WingsBaseTest {
 
     verify(workflowExecutionService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
     verify(workflowExecutionService).incrementSuccess(eq(APP_ID), anyString(), eq(1));
-    verify(artifactStreamService).get(APP_ID, ARTIFACT_STREAM_ID);
+    verify(artifactStreamService).get(ARTIFACT_STREAM_ID);
     verifyNoMoreInteractions(serviceResourceService, serviceInstanceService, activityHelperService,
         serviceCommandExecutorService, settingsService, workflowExecutionService, artifactStreamService);
     verify(activityService).getCommandUnits(APP_ID, ACTIVITY_ID);
@@ -572,12 +568,8 @@ public class CommandStateTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void executeFailWhenNoArtifactStreamOrSettingAttribute() throws Exception {
-    Artifact artifact = anArtifact()
-                            .withUuid(ARTIFACT_ID)
-                            .withAppId(APP_ID)
-                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
-                            .withServiceIds(asList(SERVICE_ID))
-                            .build();
+    Artifact artifact =
+        anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).build();
 
     ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder().metadataOnly(false).build();
 
@@ -594,7 +586,7 @@ public class CommandStateTest extends WingsBaseTest {
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
 
     // Now Setting attribute null
-    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(artifactStream);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(artifactStream);
     when(artifactStream.fetchArtifactStreamAttributes()).thenReturn(artifactStreamAttributes);
     when(artifactStream.getSettingId()).thenReturn(SETTING_ID);
     when(artifactStream.getUuid()).thenReturn(ARTIFACT_STREAM_ID);
@@ -626,7 +618,7 @@ public class CommandStateTest extends WingsBaseTest {
                                        .accountId(ACCOUNT_ID)
                                        .build())
                         .build());
-    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(null);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(null);
   }
 
   /**

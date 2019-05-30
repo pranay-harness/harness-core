@@ -315,6 +315,7 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public List<EncryptedDataDetail> getEncryptionDetails(
       EncryptableSetting object, String appId, String workflowExecutionId) {
+    // NOTE: appId should not used anywhere in this method
     if (object.isDecrypted()) {
       return Collections.emptyList();
     }
@@ -371,7 +372,7 @@ public class SecretManagerImpl implements SecretManager {
                                             .accountId(encryptedData.getAccountId())
                                             .envId(workflowExecution.getEnvId())
                                             .build();
-              usageLog.setAppId(appId);
+              usageLog.setAppId(workflowExecution.getAppId());
               wingsPersistence.save(usageLog);
             }
           }

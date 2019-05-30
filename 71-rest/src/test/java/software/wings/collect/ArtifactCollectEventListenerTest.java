@@ -90,15 +90,18 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
                                          .jobname(JOB_NAME)
                                          .artifactPaths(asList(ARTIFACT_PATH))
                                          .build();
-    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(ARTIFACT_SOURCE);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(ARTIFACT_SOURCE);
 
-    artifactCollectEventListener.onMessage(
-        aCollectEvent()
-            .withArtifact(
-                anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).build())
-            .build());
+    artifactCollectEventListener.onMessage(aCollectEvent()
+                                               .withArtifact(anArtifact()
+                                                                 .withUuid(ARTIFACT_ID)
+                                                                 .withAccountId(ACCOUNT_ID)
+                                                                 .withAppId(APP_ID)
+                                                                 .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                                                                 .build())
+                                               .build());
 
-    verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, RUNNING, DOWNLOADING);
+    verify(artifactService).updateStatus(ARTIFACT_ID, ACCOUNT_ID, RUNNING, DOWNLOADING);
 
     ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
@@ -124,15 +127,18 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
                                          .artifactPaths(asList(ARTIFACT_PATH))
                                          .build();
 
-    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(ARTIFACT_SOURCE);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(ARTIFACT_SOURCE);
 
-    artifactCollectEventListener.onMessage(
-        aCollectEvent()
-            .withArtifact(
-                anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).build())
-            .build());
+    artifactCollectEventListener.onMessage(aCollectEvent()
+                                               .withArtifact(anArtifact()
+                                                                 .withUuid(ARTIFACT_ID)
+                                                                 .withAccountId(ACCOUNT_ID)
+                                                                 .withAppId(APP_ID)
+                                                                 .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                                                                 .build())
+                                               .build());
 
-    verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, RUNNING, DOWNLOADING);
+    verify(artifactService).updateStatus(ARTIFACT_ID, ACCOUNT_ID, RUNNING, DOWNLOADING);
 
     ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
@@ -145,9 +151,11 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldFailToCollectArtifactWhenSourceIsMissing() throws Exception {
     artifactCollectEventListener.onMessage(
-        aCollectEvent().withArtifact(anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).build()).build());
+        aCollectEvent()
+            .withArtifact(anArtifact().withUuid(ARTIFACT_ID).withAccountId(ACCOUNT_ID).withAppId(APP_ID).build())
+            .build());
 
-    verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, RUNNING, DOWNLOADING);
-    verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, FAILED, Artifact.ContentStatus.FAILED);
+    verify(artifactService).updateStatus(ARTIFACT_ID, ACCOUNT_ID, RUNNING, DOWNLOADING);
+    verify(artifactService).updateStatus(ARTIFACT_ID, ACCOUNT_ID, FAILED, Artifact.ContentStatus.FAILED);
   }
 }

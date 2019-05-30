@@ -36,7 +36,6 @@ import io.harness.network.Http;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.DockerConfig;
@@ -122,7 +121,7 @@ public class ArtifactCollectionUtils {
     }
 
     Builder builder = anArtifact()
-                          .withAppId(artifactStream.getAppId())
+                          .withAppId(artifactStream.fetchAppId())
                           .withArtifactStreamId(artifactStream.getUuid())
                           .withArtifactSourceName(artifactStream.getSourceName())
                           .withDisplayName(getDisplayName(artifactStream, buildDetails))
@@ -208,8 +207,8 @@ public class ArtifactCollectionUtils {
     return metadata;
   }
 
-  public ImageDetails fetchContainerImageDetails(Artifact artifact, String appId, String workflowExecutionId) {
-    ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
+  public ImageDetails fetchContainerImageDetails(Artifact artifact, String workflowExecutionId) {
+    ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
     if (artifactStream == null) {
       throw new InvalidRequestException("Artifact Stream [" + artifact.getArtifactSourceName() + "] was deleted");
     }
@@ -219,8 +218,8 @@ public class ArtifactCollectionUtils {
     return imageDetails;
   }
 
-  public String getDockerConfig(String appId, String artifactStreamId) {
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+  public String getDockerConfig(String artifactStreamId) {
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
     if (artifactStream == null) {
       return "";
     }
@@ -237,13 +236,12 @@ public class ArtifactCollectionUtils {
 
   private ImageDetails getDockerImageDetailsInternal(ArtifactStream artifactStream, String workflowExecutionId) {
     ImageDetailsBuilder imageDetailsBuilder = ImageDetails.builder();
-    String appId = artifactStream.getAppId();
     String settingId = artifactStream.getSettingId();
     if (artifactStream.getArtifactStreamType().equals(DOCKER.name())) {
       DockerArtifactStream dockerArtifactStream = (DockerArtifactStream) artifactStream;
       DockerConfig dockerConfig = (DockerConfig) settingsService.get(settingId).getValue();
       managerDecryptionService.decrypt(
-          dockerConfig, secretManager.getEncryptionDetails(dockerConfig, appId, workflowExecutionId));
+          dockerConfig, secretManager.getEncryptionDetails(dockerConfig, null, workflowExecutionId));
 
       String domainName = Http.getDomainWithPort(dockerConfig.getDockerRegistryUrl());
       String imageName = dockerArtifactStream.getImageName();
@@ -263,7 +261,7 @@ public class ArtifactCollectionUtils {
       }
     } else if (artifactStream.getArtifactStreamType().equals(ECR.name())) {
       EcrArtifactStream ecrArtifactStream = (EcrArtifactStream) artifactStream;
-      String imageUrl = getImageUrl(ecrArtifactStream, workflowExecutionId, appId);
+      String imageUrl = getImageUrl(ecrArtifactStream, workflowExecutionId);
       // name should be 830767422336.dkr.ecr.us-east-1.amazonaws.com/todolist
       // sourceName should be todolist
       // registryUrl should be https://830767422336.dkr.ecr.us-east-1.amazonaws.com/
@@ -277,14 +275,14 @@ public class ArtifactCollectionUtils {
       if (SettingVariableTypes.AWS.name().equals(settingValue.getType())) {
         AwsConfig awsConfig = (AwsConfig) settingsService.get(settingId).getValue();
         imageDetailsBuilder.password(
-            getAmazonEcrAuthToken(awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, workflowExecutionId),
-                imageUrl.substring(0, imageUrl.indexOf('.')), ecrArtifactStream.getRegion(), appId));
+            getAmazonEcrAuthToken(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, workflowExecutionId),
+                imageUrl.substring(0, imageUrl.indexOf('.')), ecrArtifactStream.getRegion()));
       } else {
         // There is a point when old ECR artifact streams would be using the old ECR Artifact Server
         // definition until migration happens. The deployment code handles both the cases.
         EcrConfig ecrConfig = (EcrConfig) settingsService.get(settingId).getValue();
         imageDetailsBuilder.password(awsHelperService.getAmazonEcrAuthToken(
-            ecrConfig, secretManager.getEncryptionDetails(ecrConfig, appId, workflowExecutionId)));
+            ecrConfig, secretManager.getEncryptionDetails(ecrConfig, null, workflowExecutionId)));
       }
     } else if (artifactStream.getArtifactStreamType().equals(GCR.name())) {
       GcrArtifactStream gcrArtifactStream = (GcrArtifactStream) artifactStream;
@@ -294,7 +292,7 @@ public class ArtifactCollectionUtils {
       AcrArtifactStream acrArtifactStream = (AcrArtifactStream) artifactStream;
       AzureConfig azureConfig = (AzureConfig) settingsService.get(settingId).getValue();
       String loginServer = azureHelperService.getLoginServerForRegistry(azureConfig,
-          secretManager.getEncryptionDetails(azureConfig, appId, workflowExecutionId),
+          secretManager.getEncryptionDetails(azureConfig, null, workflowExecutionId),
           acrArtifactStream.getSubscriptionId(), acrArtifactStream.getRegistryName());
 
       imageDetailsBuilder.registryUrl(azureHelperService.getUrl(loginServer))
@@ -306,7 +304,7 @@ public class ArtifactCollectionUtils {
       ArtifactoryArtifactStream artifactoryArtifactStream = (ArtifactoryArtifactStream) artifactStream;
       ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingsService.get(settingId).getValue();
       managerDecryptionService.decrypt(
-          artifactoryConfig, secretManager.getEncryptionDetails(artifactoryConfig, appId, workflowExecutionId));
+          artifactoryConfig, secretManager.getEncryptionDetails(artifactoryConfig, null, workflowExecutionId));
       String registryUrl = ArtifactUtilities.getArtifactoryRegistryUrl(artifactoryConfig.getArtifactoryUrl(),
           artifactoryArtifactStream.getDockerRepositoryServer(), artifactoryArtifactStream.getJobname());
       String repositoryName = ArtifactUtilities.getArtifactoryRepositoryName(artifactoryConfig.getArtifactoryUrl(),
@@ -328,7 +326,7 @@ public class ArtifactCollectionUtils {
       NexusArtifactStream nexusArtifactStream = (NexusArtifactStream) artifactStream;
       NexusConfig nexusConfig = (NexusConfig) settingsService.get(settingId).getValue();
       managerDecryptionService.decrypt(
-          nexusConfig, secretManager.getEncryptionDetails(nexusConfig, appId, workflowExecutionId));
+          nexusConfig, secretManager.getEncryptionDetails(nexusConfig, null, workflowExecutionId));
 
       String registryUrl = ArtifactUtilities.getNexusRegistryUrl(
           nexusConfig.getNexusUrl(), nexusArtifactStream.getDockerPort(), nexusArtifactStream.getDockerRegistryUrl());
@@ -356,14 +354,13 @@ public class ArtifactCollectionUtils {
     return imageDetailsBuilder.build();
   }
 
-  private String getImageUrl(EcrArtifactStream ecrArtifactStream, String workflowExecutionId, String appId) {
+  private String getImageUrl(EcrArtifactStream ecrArtifactStream, String workflowExecutionId) {
     SettingAttribute settingAttribute = settingsService.get(ecrArtifactStream.getSettingId());
     SettingValue value = settingAttribute.getValue();
     if (SettingVariableTypes.AWS.name().equals(value.getType())) {
       AwsConfig awsConfig = (AwsConfig) value;
-      return getEcrImageUrl(awsConfig,
-          secretManager.getEncryptionDetails(awsConfig, ecrArtifactStream.getAppId(), workflowExecutionId),
-          ecrArtifactStream.getRegion(), ecrArtifactStream, appId);
+      return getEcrImageUrl(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, workflowExecutionId),
+          ecrArtifactStream.getRegion(), ecrArtifactStream);
     } else {
       EcrConfig ecrConfig = (EcrConfig) value;
       return ecrClassicService.getEcrImageUrl(ecrConfig, ecrArtifactStream);
@@ -371,26 +368,25 @@ public class ArtifactCollectionUtils {
   }
 
   private String getEcrImageUrl(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
-      EcrArtifactStream ecrArtifactStream, String appId) {
+      EcrArtifactStream ecrArtifactStream) {
     return awsEcrHelperServiceManager.getEcrImageUrl(
-        awsConfig, encryptionDetails, region, ecrArtifactStream.getImageName(), appId);
+        awsConfig, encryptionDetails, region, ecrArtifactStream.getImageName(), null);
   }
 
-  private String getAmazonEcrAuthToken(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
-      String awsAccount, String region, String appId) {
-    return awsEcrHelperServiceManager.getAmazonEcrAuthToken(awsConfig, encryptionDetails, awsAccount, region, appId);
+  private String getAmazonEcrAuthToken(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String awsAccount, String region) {
+    return awsEcrHelperServiceManager.getAmazonEcrAuthToken(awsConfig, encryptionDetails, awsAccount, region, null);
   }
 
   public ArtifactStreamAttributes renderCustomArtifactScriptString(CustomArtifactStream customArtifactStream) {
-    Application app = appService.get(customArtifactStream.getAppId());
-    Validator.notNullCheck("Application does not exist", app, USER);
+    Validator.notNullCheck("Account does not exist", customArtifactStream.getAccountId(), USER);
 
     Map<String, Object> context = new HashMap<>();
     context.put("secrets",
         SecretFunctor.builder()
             .managerDecryptionService(managerDecryptionService)
             .secretManager(secretManager)
-            .accountId(app.getAccountId())
+            .accountId(customArtifactStream.getAccountId())
             .build());
 
     // Find the FETCH VERSION Script from artifact stream
@@ -414,7 +410,7 @@ public class ArtifactCollectionUtils {
     String scriptString = versionScript.getScriptString();
     Validator.notNullCheck("Script string can not be empty", scriptString, USER);
     artifactStreamAttributes.setCustomArtifactStreamScript(evaluator.substitute(scriptString, context));
-    artifactStreamAttributes.setAccountId(app.getAccountId());
+    artifactStreamAttributes.setAccountId(customArtifactStream.getAccountId());
     artifactStreamAttributes.setCustomScriptTimeout(evaluator.substitute(versionScript.getTimeout(), context));
     if (versionScript.getCustomRepositoryMapping() != null) {
       validateAttributeMapping(versionScript.getCustomRepositoryMapping().getArtifactRoot(),
@@ -473,18 +469,6 @@ public class ArtifactCollectionUtils {
     return artifactStreamAttributes;
   }
 
-  // TODO: ASR: remove this method after migration. Most invocations will use setting instead of service.
-  public Service getService(String appId, String artifactStreamId) {
-    List<Service> services = artifactStreamServiceBindingService.listServices(appId, artifactStreamId);
-    if (isEmpty(services)) {
-      // artifactStreamService.delete(appId, artifactStreamId);
-      throw new WingsException(ErrorCode.GENERAL_ERROR, USER)
-          .addParam("message", format("Artifact stream %s is a zombie.", artifactStreamId));
-    }
-
-    return services.get(0);
-  }
-
   private static boolean isArtifactoryDockerOrGenric(ArtifactStream artifactStream, ArtifactType artifactType) {
     if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
       return ArtifactType.DOCKER.equals(artifactType)
@@ -528,7 +512,7 @@ public class ArtifactCollectionUtils {
   }
 
   public BuildSourceParameters getBuildSourceParameters(
-      String appId, ArtifactStream artifactStream, SettingAttribute settingAttribute) {
+      ArtifactStream artifactStream, SettingAttribute settingAttribute) {
     String artifactStreamType = artifactStream.getArtifactStreamType();
     SettingValue settingValue = settingAttribute.getValue();
 
@@ -537,8 +521,9 @@ public class ArtifactCollectionUtils {
 
     ArtifactStreamAttributes artifactStreamAttributes;
     BuildSourceRequestType requestType;
-    if (!appId.equals(GLOBAL_APP_ID)) {
-      Service service = getService(appId, artifactStream.getUuid());
+    String appId = artifactStream.fetchAppId();
+    if (!GLOBAL_APP_ID.equals(appId)) {
+      Service service = artifactStreamServiceBindingService.getService(appId, artifactStream.getUuid(), true);
       artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
       requestType = getRequestType(artifactStream, service.getArtifactType());
     } else {
@@ -548,7 +533,7 @@ public class ArtifactCollectionUtils {
 
     return BuildSourceParameters.builder()
         .accountId(settingAttribute.getAccountId())
-        .appId(artifactStream.getAppId())
+        .appId(appId)
         .artifactStreamAttributes(artifactStreamAttributes)
         .artifactStreamType(artifactStreamType)
         .settingValue(settingValue)

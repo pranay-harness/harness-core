@@ -46,9 +46,10 @@ public class Artifact extends Base {
   }
 
   public static final class ArtifactKeys {
+    public static final String uuid = "uuid";
+    public static final String appId = "appId";
     public static final String metadata_image = metadata + "." + ArtifactMetadataKeys.image;
     public static final String metadata_tag = metadata + "." + ArtifactMetadataKeys.tag;
-    public static final String appId = "appId";
   }
 
   private String artifactStreamId;
@@ -138,6 +139,11 @@ public class Artifact extends Base {
       return getMetadata().get(ArtifactMetadataKeys.artifactFileName);
     }
     return null;
+  }
+
+  // TODO: ASR: IMP: remove this method after refactor
+  public String fetchAppId() {
+    return appId;
   }
 
   /**

@@ -39,7 +39,7 @@ public class YamlArtifactStreamServiceImpl implements YamlArtifactStreamService 
 
   @Override
   public RestResponse<YamlPayload> getArtifactStreamYaml(String appId, String artifactStreamId) {
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
 
     if (artifactStream != null) {
       if (!appId.equals(GLOBAL_APP_ID)) {
@@ -54,15 +54,6 @@ public class YamlArtifactStreamServiceImpl implements YamlArtifactStreamService 
 
     throw new WingsException(ErrorCode.GENERAL_YAML_ERROR, USER)
         .addParam("message", "ArtifactStream with this Id: '" + artifactStreamId + "' was not found!");
-  }
-
-  @Override
-  public ArtifactStream.Yaml getArtifactStreamYamlObject(String appId, String artifactStreamId) {
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-    if (artifactStream != null) {
-      return getArtifactStreamYamlObject(artifactStream);
-    }
-    return null;
   }
 
   @Override
@@ -81,7 +72,7 @@ public class YamlArtifactStreamServiceImpl implements YamlArtifactStreamService 
 
   @Override
   public String getArtifactStreamYamlString(String appId, String artifactStreamId) {
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
     if (artifactStream != null) {
       return getArtifactStreamYamlString(artifactStream);
     }
@@ -100,7 +91,7 @@ public class YamlArtifactStreamServiceImpl implements YamlArtifactStreamService 
   private ArtifactStream.Yaml getArtifactStreamYamlObject(ArtifactStream artifactStream) {
     return (ArtifactStream.Yaml) yamlHandlerFactory
         .getYamlHandler(YamlType.ARTIFACT_STREAM, artifactStream.getArtifactStreamType())
-        .toYaml(artifactStream, artifactStream.getAppId());
+        .toYaml(artifactStream, artifactStream.fetchAppId());
   }
 
   @Override
@@ -110,7 +101,7 @@ public class YamlArtifactStreamServiceImpl implements YamlArtifactStreamService 
     if (!appId.equals(GLOBAL_APP_ID)) {
       accountId = appService.getAccountIdByAppId(appId);
     } else {
-      ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+      ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
       if (artifactStream != null) {
         SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
         if (settingAttribute != null) {

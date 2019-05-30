@@ -58,7 +58,7 @@ public class ArtifactCollectionState extends State {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    ArtifactStream artifactStream = artifactStreamService.get(context.getAppId(), artifactStreamId);
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
     if (artifactStream == null) {
       logger.info("Artifact Stream {} might have been deleted", artifactStreamId);
       return anExecutionResponse()
@@ -113,7 +113,7 @@ public class ArtifactCollectionState extends State {
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    ArtifactStream artifactStream = artifactStreamService.get(context.getAppId(), artifactStreamId);
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
     notNullCheck("ArtifactStream was deleted", artifactStream);
 
     String evaluatedBuildNo = getEvaluatedBuildNo(context);
@@ -188,8 +188,7 @@ public class ArtifactCollectionState extends State {
                 + artifactCollectionExecutionData.getBuildNo() + ")")
             .buildUrl(buildUrl)
             .build();
-    workflowExecutionService.refreshBuildExecutionSummary(
-        artifactStream.getAppId(), context.getWorkflowExecutionId(), buildExecutionSummary);
+    workflowExecutionService.refreshBuildExecutionSummary(context.getWorkflowExecutionId(), buildExecutionSummary);
   }
 
   @Override

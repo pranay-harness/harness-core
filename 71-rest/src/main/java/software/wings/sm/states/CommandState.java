@@ -477,7 +477,7 @@ public class CommandState extends State {
         context.getStateExecutionInstanceId());
     commandExecutionContextBuilder.withMetadata(artifact.getMetadata());
     // Observed NPE in alerts
-    ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
+    ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
     if (artifactStream == null) {
       throw new WingsException(format("Unable to find artifact stream for service %s, artifact %s", service.getName(),
                                    artifact.getArtifactSourceName()),

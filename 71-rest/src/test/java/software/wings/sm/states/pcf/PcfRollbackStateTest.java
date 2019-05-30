@@ -1,7 +1,6 @@
 package software.wings.sm.states.pcf;
 
 import static java.util.Collections.emptyMap;
-import static java.util.Collections.singletonList;
 import static org.joor.Reflect.on;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -13,20 +12,16 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.common.Constants.URL;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
-import static software.wings.utils.WingsTestConstants.BUILD_NO;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
-
-import com.google.common.collect.ImmutableMap;
 
 import io.harness.category.element.UnitTests;
 import io.harness.expression.VariableResolverTracker;
@@ -47,7 +42,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.artifact.Artifact;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
@@ -85,12 +79,6 @@ public class PcfRollbackStateTest extends WingsBaseTest {
       aSettingAttribute()
           .withValue(PcfConfig.builder().accountId(ACCOUNT_ID).endpointUrl(URL).username(USER_NAME).build())
           .build();
-
-  private Artifact artifact = anArtifact()
-                                  .withArtifactSourceName("source")
-                                  .withMetadata(ImmutableMap.of(BUILD_NO, "bn"))
-                                  .withServiceIds(singletonList(SERVICE_ID))
-                                  .build();
 
   private ExecutionContextImpl context;
 

@@ -405,8 +405,9 @@ public class EcsStateHelper {
     if (artifact == null) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Artifact is null");
     }
-    ImageDetails imageDetails = artifactCollectionUtils.fetchContainerImageDetails(
-        artifact, context.getAppId(), context.getWorkflowExecutionId());
+
+    ImageDetails imageDetails =
+        artifactCollectionUtils.fetchContainerImageDetails(artifact, context.getWorkflowExecutionId());
     Application app = workflowStandardParams.getApp();
     Environment env = workflowStandardParams.getEnv();
 

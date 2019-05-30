@@ -77,6 +77,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_NAME;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.BUILD_NO;
 import static software.wings.utils.WingsTestConstants.PIPELINE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_NAME;
@@ -476,9 +477,9 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
       ExecutionArgs executionArgs = new ExecutionArgs();
       executionArgs.setArtifacts(asList(Artifact.Builder.anArtifact()
                                             .withAppId(APP_1_ID)
-                                            .withServiceIds(asList(SERVICE_1_ID))
                                             .withDisplayName(ARTIFACT_NAME)
                                             .withUuid(ARTIFACT_ID)
+                                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
                                             .withArtifactSourceName(ARTIFACT_SOURCE_NAME)
                                             .build()));
 
@@ -500,7 +501,12 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
           .thenReturn(executionsPageResponse);
 
       List<Service> serviceList = Lists.newArrayList();
-      Service service1 = Service.builder().uuid(SERVICE_1_ID).name(SERVICE_NAME).appId(APP_1_ID).build();
+      Service service1 = Service.builder()
+                             .uuid(SERVICE_1_ID)
+                             .name(SERVICE_NAME)
+                             .appId(APP_1_ID)
+                             .artifactStreamIds(asList(ARTIFACT_STREAM_ID))
+                             .build();
       serviceList.add(service1);
       Service service2 = Service.builder().uuid(SERVICE_2_ID).name(SERVICE_NAME).appId(APP_1_ID).build();
       serviceList.add(service2);

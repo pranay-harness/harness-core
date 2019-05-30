@@ -121,7 +121,7 @@ public class ArtifactStreamResource {
   @Timed
   @ExceptionMetered
   public RestResponse<ArtifactStream> get(@QueryParam("appId") String appId, @PathParam("streamId") String streamId) {
-    return new RestResponse<>(artifactStreamService.get(appId, streamId));
+    return new RestResponse<>(artifactStreamService.get(streamId));
   }
 
   /**

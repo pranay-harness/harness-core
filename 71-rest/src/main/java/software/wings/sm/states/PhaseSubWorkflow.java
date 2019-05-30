@@ -208,7 +208,8 @@ public class PhaseSubWorkflow extends SubWorkflowState {
         String rollbackArtifactId = null;
         if (service != null) {
           for (Artifact artifact : workflowExecution.getExecutionArgs().getArtifacts()) {
-            if (artifact.getServiceIds().contains(service.getUuid())) {
+            if (isNotEmpty(service.getArtifactStreamIds())
+                && service.getArtifactStreamIds().contains(artifact.getArtifactStreamId())) {
               rollbackArtifactId = artifact.getUuid();
               break;
             }

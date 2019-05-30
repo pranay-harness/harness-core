@@ -35,6 +35,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.artifact.CustomBuildSourceService;
 import software.wings.utils.ArtifactType;
@@ -63,20 +64,12 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
   @Inject private CustomBuildSourceService customBuildSourceService;
+  @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   public static final Duration timeout = Duration.ofMinutes(10);
 
   private static final List<String> metadataOnlyStreams = Collections.unmodifiableList(asList(DOCKER.name(), ECR.name(),
       GCR.name(), NEXUS.name(), AMI.name(), ACR.name(), SMB.name(), SFTP.name(), CUSTOM.name()));
-
-  @Override
-  public Artifact collectArtifact(String appId, String artifactStreamId, BuildDetails buildDetails) {
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-    if (artifactStream == null) {
-      throw new WingsException("Artifact Stream was deleted", USER);
-    }
-    return artifactService.create(artifactCollectionUtils.getArtifact(artifactStream, buildDetails));
-  }
 
   @Override
   public Artifact collectArtifact(String artifactStreamId, BuildDetails buildDetails) {
@@ -86,9 +79,6 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
     }
     return artifactService.create(artifactCollectionUtils.getArtifact(artifactStream, buildDetails));
   }
-
-  @Override
-  public void collectNewArtifactsAsync(String appId, ArtifactStream artifactStream, String permitId) {}
 
   @Override
   public void collectNewArtifactsAsync(ArtifactStream artifactStream, String permitId) {}
@@ -101,7 +91,7 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
       Optional<BuildDetails> buildDetails =
           builds.stream().filter(build -> buildNumber.equals(build.getNumber())).findFirst();
       if (buildDetails.isPresent()) {
-        return collectArtifact(appId, artifactStream.getUuid(), buildDetails.get());
+        return collectArtifact(artifactStream.getUuid(), buildDetails.get());
       }
     }
     return null;
@@ -111,7 +101,7 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
   public List<Artifact> collectNewArtifacts(String appId, String artifactStreamId) {
     try (AcquiredLock ignored = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
       List<Artifact> newArtifacts = new ArrayList<>();
-      ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+      ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
       if (artifactStream == null) {
         logger.info("Artifact Stream {} does not exist. Returning", artifactStreamId);
         return newArtifacts;
@@ -139,11 +129,11 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
     List<BuildDetails> builds;
     if (CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
       logger.info("Collecting custom repository build details for artifact stream id {}", artifactStream.getUuid());
-      builds = customBuildSourceService.getBuilds(artifactStream.getAppId(), artifactStream.getUuid());
+      builds = customBuildSourceService.getBuilds(artifactStream.getUuid());
       logger.info("Collected custom repository build details for artifact stream id {}", artifactStream.getUuid());
     } else {
       builds = buildSourceService.getBuilds(
-          artifactStream.getAppId(), artifactStream.getUuid(), artifactStream.getSettingId());
+          artifactStream.fetchAppId(), artifactStream.getUuid(), artifactStream.getSettingId());
     }
 
     if (!isEmpty(builds)) {
@@ -178,8 +168,8 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
   }
 
   private void collectArtifactoryArtifacts(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
-    if (!appId.equals(GLOBAL_APP_ID)) {
-      if (artifactCollectionUtils.getService(appId, artifactStream.getUuid())
+    if (!GLOBAL_APP_ID.equals(appId)) {
+      if (artifactStreamServiceBindingService.getService(appId, artifactStream.getUuid(), true)
               .getArtifactType()
               .equals(ArtifactType.DOCKER)) {
         collectMetaDataOnlyArtifacts(artifactStream, newArtifacts);

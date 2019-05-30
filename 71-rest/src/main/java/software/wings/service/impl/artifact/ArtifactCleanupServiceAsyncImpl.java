@@ -39,7 +39,7 @@ public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
   public static final Duration timeout = Duration.ofMinutes(10);
 
   @Override
-  public void cleanupArtifactsAsync(String appId, ArtifactStream artifactStream) {
+  public void cleanupArtifactsAsync(ArtifactStream artifactStream) {
     logger.info("Collecting build details for artifact stream id {} type {} and source name {} ",
         artifactStream.getUuid(), artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
 
@@ -63,7 +63,7 @@ public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
       }
 
       accountId = settingAttribute.getAccountId();
-      buildSourceRequest = artifactCollectionUtils.getBuildSourceParameters(appId, artifactStream, settingAttribute);
+      buildSourceRequest = artifactCollectionUtils.getBuildSourceParameters(artifactStream, settingAttribute);
       delegateTaskBuilder.accountId(accountId);
       dataBuilder.parameters(new Object[] {buildSourceRequest}).timeout(TimeUnit.MINUTES.toMillis(1));
       delegateTaskBuilder.tags(awsCommandHelper.getAwsConfigTagsFromSettingAttribute(settingAttribute));
@@ -74,7 +74,7 @@ public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
 
     delegateTaskBuilder.data(dataBuilder.build());
 
-    waitNotifyEngine.waitForAll(new BuildSourceCleanupCallback(accountId, appId, artifactStream.getUuid()), waitId);
+    waitNotifyEngine.waitForAll(new BuildSourceCleanupCallback(accountId, artifactStream.getUuid()), waitId);
     logger.info("Queuing delegate task for artifactStreamId {} with waitId {}", artifactStream.getUuid(), waitId);
     final String taskId = delegateService.queueTask(delegateTaskBuilder.build());
     logger.info("Queued delegate taskId {} for artifactStreamId {}", taskId, artifactStream.getUuid());

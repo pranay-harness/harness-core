@@ -181,7 +181,7 @@ public class AwsAmiServiceDeployState extends State {
     if (artifact == null) {
       throw new WingsException(format("Unable to find artifact for service %s", service.getName()));
     }
-    ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
+    ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
 
     Command command =
         serviceResourceService.getCommandByName(app.getUuid(), serviceId, env.getUuid(), getCommandName()).getCommand();

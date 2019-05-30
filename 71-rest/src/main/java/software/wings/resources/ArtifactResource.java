@@ -1,9 +1,6 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.security.PermissionAttribute.PermissionType.SERVICE;
-import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.google.inject.Inject;
 
@@ -20,7 +17,6 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -50,8 +46,6 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 @Api("artifacts")
 @Path("/artifacts")
 @Produces("application/json")
-@Scope(APPLICATION)
-@AuthRule(permissionType = SERVICE)
 public class ArtifactResource {
   private ArtifactService artifactService;
   private ArtifactStreamService artifactStreamService;
@@ -85,11 +79,19 @@ public class ArtifactResource {
   @GET
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.READ, dbFieldName = "serviceIds")
   public RestResponse<PageResponse<Artifact>> list(@QueryParam("appId") String appId,
       @QueryParam("serviceId") String serviceId, @BeanParam PageRequest<Artifact> pageRequest) {
     pageRequest.addFilter("appId", EQ, appId);
     return new RestResponse<>(artifactService.listSortByBuildNo(appId, serviceId, pageRequest));
+  }
+
+  @GET
+  @Path("/v2")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<PageResponse<Artifact>> listArtifactsByServiceId(@QueryParam("serviceId") String serviceId,
+      @QueryParam("accountId") String accountId, @BeanParam PageRequest<Artifact> pageRequest) {
+    return new RestResponse<>(artifactService.listSortByBuildNo(serviceId, pageRequest));
   }
 
   /**
@@ -103,9 +105,8 @@ public class ArtifactResource {
   @Path("{artifactId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.READ, skipAuth = true)
   public RestResponse<Artifact> get(@QueryParam("appId") String appId, @PathParam("artifactId") String artifactId) {
-    return new RestResponse<>(artifactService.get(appId, artifactId, true));
+    return new RestResponse<>(artifactService.getWithServices(artifactId, appId));
   }
 
   /**
@@ -120,27 +121,14 @@ public class ArtifactResource {
   @ExceptionMetered
   public RestResponse<Artifact> save(@QueryParam("appId") String appId, Artifact artifact) {
     artifact.setAppId(appId);
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifact.getArtifactStreamId());
+    ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
     artifact.setDisplayName(artifactStream.fetchArtifactDisplayName(artifact.getBuildNo()));
     Artifact savedArtifact = artifactService.create(artifact);
     if (artifactStream.getFailedCronAttempts() != 0) {
-      artifactStreamService.updateFailedCronAttempts(appId, artifact.getArtifactStreamId(), 0);
+      artifactStreamService.updateFailedCronAttempts(artifactStream.getAccountId(), artifact.getArtifactStreamId(), 0);
       permitService.releasePermitByKey(artifactStream.getUuid());
-      if (!artifactStream.getAppId().equals(GLOBAL_APP_ID)) {
-        alertService.closeAlert(appService.getAccountIdByAppId(appId), appId, AlertType.ARTIFACT_COLLECTION_FAILED,
-            ArtifactCollectionFailedAlert.builder()
-                .appId(appId)
-                .serviceId(artifactStream.getServiceId())
-                .artifactStreamId(artifactStream.getUuid())
-                .build());
-      } else {
-        alertService.closeAlert(appService.getAccountIdByAppId(appId), appId, AlertType.ARTIFACT_COLLECTION_FAILED,
-            ArtifactCollectionFailedAlert.builder()
-                .appId(appId)
-                .settingId(artifactStream.getSettingId())
-                .artifactStreamId(artifactStream.getUuid())
-                .build());
-      }
+      alertService.closeAlert(artifactStream.getAccountId(), null, AlertType.ARTIFACT_COLLECTION_FAILED,
+          ArtifactCollectionFailedAlert.builder().artifactStreamId(artifactStream.getUuid()).build());
     }
     return new RestResponse<>(savedArtifact);
   }
@@ -177,7 +165,8 @@ public class ArtifactResource {
   @Timed
   @ExceptionMetered
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("artifactId") String artifactId) {
-    artifactService.delete(appId, artifactId);
+    String accountId = appService.getAccountIdByAppId(appId);
+    artifactService.delete(accountId, artifactId);
     return new RestResponse();
   }
 
@@ -195,7 +184,8 @@ public class ArtifactResource {
   @ExceptionMetered
   @AuthRule(skipAuth = true)
   public Response download(@QueryParam("appId") String appId, @PathParam("artifactId") String artifactId) {
-    File artifactFile = artifactService.download(appId, artifactId);
+    String accountId = appService.getAccountIdByAppId(appId);
+    File artifactFile = artifactService.download(accountId, artifactId);
     ResponseBuilder response = Response.ok(artifactFile, MediaType.APPLICATION_OCTET_STREAM);
     response.header("Content-Disposition", "attachment; filename=" + artifactFile.getName());
     return response.build();
@@ -212,6 +202,7 @@ public class ArtifactResource {
   @ExceptionMetered
   public RestResponse<Artifact> collectArtifactContent(@QueryParam("appId") String appId, Artifact artifact) {
     artifact.setAppId(appId);
-    return new RestResponse<>(artifactService.startArtifactCollection(appId, artifact.getUuid()));
+    return new RestResponse<>(
+        artifactService.startArtifactCollection(appService.getAccountIdByAppId(appId), artifact.getUuid()));
   }
 }

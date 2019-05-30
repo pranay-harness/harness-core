@@ -2,6 +2,7 @@ package software.wings.sm;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Mockito.when;
@@ -14,6 +15,7 @@ import static software.wings.service.intfc.ServiceTemplateService.EncryptedField
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.common.collect.ImmutableList;
@@ -45,6 +47,7 @@ import software.wings.api.ServiceTemplateElement;
 import software.wings.api.WorkflowElement;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
@@ -53,6 +56,7 @@ import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -75,6 +79,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   @Mock private ArtifactService artifactService;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private LimitCheckerFactory limitCheckerFactory;
+  @Mock private ServiceResourceService serviceResourceService;
 
   @Before
   public void setup() {
@@ -184,9 +189,12 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     when(serviceTemplateService.getTemplateRefKeysByService(
              context.getAppId(), svc.getUuid(), context.getEnv().getUuid()))
         .thenReturn(asList(new Key(ServiceTemplate.class, "serviceTemplates", st.getUuid())));
-    when(artifactService.get(context.getAppId(), ARTIFACT_ID)).thenReturn(artifact);
+    when(artifactService.get(ARTIFACT_ID)).thenReturn(artifact);
+    when(serviceResourceService.get(svc.getUuid()))
+        .thenReturn(Service.builder().artifactStreamIds(singletonList(ARTIFACT_STREAM_ID)).build());
     on(std).set("artifactService", artifactService);
     on(std).set("serviceTemplateService", serviceTemplateService);
+    on(std).set("serviceResourceService", serviceResourceService);
   }
 
   @Test
@@ -287,7 +295,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     context.pushContextElement(phaseElement);
 
     Artifact artifact = Artifact.Builder.anArtifact()
-                            .withServiceIds(asList(svc.getUuid()))
+                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
                             .withMetadata(Maps.newHashMap("buildNo", "123-SNAPSHOT"))
                             .build();
 
@@ -313,12 +321,8 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     stateExecutionInstance.setExecutionUuid(generateUuid());
     stateExecutionInstance.setDisplayName("http");
     ExecutionContextImpl context = prepareContext(stateExecutionInstance);
-    ServiceElement svc = context.getContextElement(ContextElementType.SERVICE);
 
-    Artifact artifact = Artifact.Builder.anArtifact()
-                            .withServiceIds(asList(svc.getUuid()))
-                            .withMetadata(Maps.newHashMap("buildNo", "123-SNAPSHOT"))
-                            .build();
+    Artifact artifact = Artifact.Builder.anArtifact().withMetadata(Maps.newHashMap("buildNo", "123-SNAPSHOT")).build();
 
     programServiceTemplateService(context, artifact);
 

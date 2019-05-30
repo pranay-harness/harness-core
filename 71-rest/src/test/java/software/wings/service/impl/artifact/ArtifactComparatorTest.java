@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
-import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -26,8 +25,7 @@ public class ArtifactComparatorTest {
                                                  .withRevision("1.0")
                                                  .withDisplayName("DISPLAY_NAME")
                                                  .withCreatedAt(System.currentTimeMillis())
-                                                 .withCreatedBy(EmbeddedUser.builder().uuid("USER_ID").build())
-                                                 .withServiceIds(asList(SERVICE_ID));
+                                                 .withCreatedBy(EmbeddedUser.builder().uuid("USER_ID").build());
 
   @Test
   @Category(UnitTests.class)

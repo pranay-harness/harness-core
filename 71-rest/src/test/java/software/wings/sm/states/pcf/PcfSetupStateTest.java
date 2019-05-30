@@ -30,6 +30,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
@@ -150,11 +151,16 @@ public class PcfSetupStateTest extends WingsBaseTest {
 
   private Application app = anApplication().uuid(APP_ID).name(APP_NAME).build();
   private Environment env = anEnvironment().appId(APP_ID).uuid(ENV_ID).name(ENV_NAME).build();
-  private Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build();
+  private Service service = Service.builder()
+                                .appId(APP_ID)
+                                .uuid(SERVICE_ID)
+                                .name(SERVICE_NAME)
+                                .artifactStreamIds(singletonList(ARTIFACT_STREAM_ID))
+                                .build();
   private Artifact artifact = anArtifact()
                                   .withArtifactSourceName("source")
                                   .withMetadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "bn"))
-                                  .withServiceIds(singletonList(SERVICE_ID))
+                                  .withArtifactStreamId(ARTIFACT_STREAM_ID)
                                   .build();
   private ArtifactStream artifactStream =
       JenkinsArtifactStream.builder().appId(APP_ID).sourceName("").jobname("").artifactPaths(null).build();
@@ -178,6 +184,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     when(appService.get(APP_ID)).thenReturn(app);
     when(appService.getApplicationWithDefaults(APP_ID)).thenReturn(app);
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(service);
+    when(serviceResourceService.get(SERVICE_ID)).thenReturn(service);
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(env);
 
     ServiceCommand serviceCommand =
@@ -196,9 +203,10 @@ public class PcfSetupStateTest extends WingsBaseTest {
     on(workflowStandardParams).set("serviceTemplateService", serviceTemplateService);
     on(workflowStandardParams).set("configuration", configuration);
     on(workflowStandardParams).set("artifactStreamService", artifactStreamService);
+    on(workflowStandardParams).set("serviceResourceService", serviceResourceService);
 
-    when(artifactService.get(any(), any())).thenReturn(artifact);
-    when(artifactStreamService.get(any(), any())).thenReturn(artifactStream);
+    when(artifactService.get(any())).thenReturn(artifact);
+    when(artifactStreamService.get(any())).thenReturn(artifactStream);
 
     InfrastructureMapping infrastructureMapping = PcfInfrastructureMapping.builder()
                                                       .organization(ORG)

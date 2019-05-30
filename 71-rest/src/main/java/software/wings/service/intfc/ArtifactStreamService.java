@@ -10,6 +10,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.service.intfc.ownership.OwnedByService;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import javax.validation.Valid;
@@ -27,15 +28,6 @@ public interface ArtifactStreamService extends OwnedByService {
    * @return the page response
    */
   PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req);
-
-  /**
-   * Get artifact stream.
-   *
-   * @param appId            the app id
-   * @param artifactStreamId the id
-   * @return the artifact stream
-   */
-  ArtifactStream get(String appId, String artifactStreamId);
 
   /**
    * Get artifact stream.
@@ -96,9 +88,10 @@ public interface ArtifactStreamService extends OwnedByService {
    * Delete.
    *
    * @param artifactStreamId the id
+   * @param syncFromGit
    * @return true, if successful
    */
-  boolean delete(@NotEmpty String artifactStreamId);
+  boolean delete(@NotEmpty String artifactStreamId, boolean syncFromGit);
 
   /**
    * Prune owned from the app entities.
@@ -121,21 +114,17 @@ public interface ArtifactStreamService extends OwnedByService {
 
   List<ArtifactStream> getArtifactStreamsForService(String appId, String serviceId);
 
-  Map<String, String> fetchArtifactSourceProperties(String accountId, String appId, String artifactStreamId);
+  Map<String, String> fetchArtifactSourceProperties(String accountId, String artifactStreamId);
 
   List<ArtifactStream> fetchArtifactStreamsForService(String appId, String serviceId);
 
   List<String> fetchArtifactStreamIdsForService(String appId, String serviceId);
 
-  boolean updateFailedCronAttempts(String appId, String artifactStreamId, int counter);
-
-  boolean updateFailedCronAttempts(String artifactStreamId, int counter);
+  boolean updateFailedCronAttempts(String accountId, String artifactStreamId, int counter);
 
   List<ArtifactStream> listBySettingId(String settingId);
 
-  List<ArtifactStream> listByIds(List<String> artifactStreamIds);
-
-  List<ArtifactStream> listByServiceId(String appId, String serviceId);
+  List<ArtifactStream> listByIds(Collection<String> artifactStreamIds);
 
   List<ArtifactStreamSummary> listArtifactStreamSummary(String appId);
 
@@ -144,4 +133,6 @@ public interface ArtifactStreamService extends OwnedByService {
   boolean deleteWithBinding(String appId, String artifactStreamId, boolean forceDelete, boolean syncFromGit);
 
   List<ArtifactStream> listBySettingId(String appId, String settingId);
+
+  List<ArtifactStream> listByAppId(String appId);
 }

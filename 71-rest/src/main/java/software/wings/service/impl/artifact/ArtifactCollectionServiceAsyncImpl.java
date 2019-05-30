@@ -47,7 +47,6 @@ import software.wings.delegatetasks.buildsource.BuildSourceParameters.BuildSourc
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.PermitServiceImpl;
 import software.wings.service.intfc.AlertService;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -77,7 +76,6 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
   @Inject private AwsCommandHelper awsCommandHelper;
   @Inject private PermitService permitService;
-  @Inject private AppService appService;
   @Inject private AlertService alertService;
 
   public static final Duration timeout = Duration.ofMinutes(10);
@@ -87,35 +85,6 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
           AMAZON_S3.name(), GCS.name(), SMB.name(), SFTP.name(), CUSTOM.name()));
 
   @Override
-  public Artifact collectArtifact(String appId, String artifactStreamId, BuildDetails buildDetails) {
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-    if (artifactStream == null) {
-      throw new WingsException("Artifact Stream was deleted", USER);
-    }
-    final Artifact artifact = artifactService.create(artifactCollectionUtils.getArtifact(artifactStream, buildDetails));
-    if (artifactStream.getFailedCronAttempts() != 0) {
-      artifactStreamService.updateFailedCronAttempts(appId, artifact.getArtifactStreamId(), 0);
-      permitService.releasePermitByKey(artifactStream.getUuid());
-      if (!artifactStream.getAppId().equals(GLOBAL_APP_ID)) {
-        alertService.closeAlert(appService.getAccountIdByAppId(appId), appId, AlertType.ARTIFACT_COLLECTION_FAILED,
-            ArtifactCollectionFailedAlert.builder()
-                .appId(appId)
-                .serviceId(artifactStream.getServiceId())
-                .artifactStreamId(artifactStream.getUuid())
-                .build());
-      } else {
-        alertService.closeAlert(appService.getAccountIdByAppId(appId), appId, AlertType.ARTIFACT_COLLECTION_FAILED,
-            ArtifactCollectionFailedAlert.builder()
-                .appId(appId)
-                .artifactStreamId(artifactStream.getUuid())
-                .settingId(artifactStream.getSettingId())
-                .build());
-      }
-    }
-    return artifact;
-  }
-
-  @Override
   public Artifact collectArtifact(String artifactStreamId, BuildDetails buildDetails) {
     ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
     if (artifactStream == null) {
@@ -123,14 +92,16 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
     }
     final Artifact artifact = artifactService.create(artifactCollectionUtils.getArtifact(artifactStream, buildDetails));
     if (artifactStream.getFailedCronAttempts() != 0) {
-      artifactStreamService.updateFailedCronAttempts(artifact.getArtifactStreamId(), 0);
+      artifactStreamService.updateFailedCronAttempts(artifactStream.getAccountId(), artifact.getArtifactStreamId(), 0);
       permitService.releasePermitByKey(artifactStream.getUuid());
+      alertService.closeAlert(artifactStream.getAccountId(), null, AlertType.ARTIFACT_COLLECTION_FAILED,
+          ArtifactCollectionFailedAlert.builder().artifactStreamId(artifactStream.getUuid()).build());
     }
     return artifact;
   }
 
   @Override
-  public void collectNewArtifactsAsync(String appId, ArtifactStream artifactStream, String permitId) {
+  public void collectNewArtifactsAsync(ArtifactStream artifactStream, String permitId) {
     logger.info("Collecting build details for artifact stream id {} type {} and source name {} ",
         artifactStream.getUuid(), artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
 
@@ -159,7 +130,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
       buildSourceRequest =
           BuildSourceParameters.builder()
               .accountId(artifactStreamAttributes.getAccountId())
-              .appId(appId)
+              .appId(artifactStream.fetchAppId())
               .artifactStreamAttributes(artifactStreamAttributes)
               .artifactStreamType(artifactStreamType)
               .buildSourceRequestType(requestType)
@@ -182,19 +153,19 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
         // TODO:: mark inactive maybe
         int failedCronAttempts = artifactStream.getFailedCronAttempts() + 1;
         artifactStreamService.updateFailedCronAttempts(
-            artifactStream.getAppId(), artifactStream.getUuid(), failedCronAttempts);
+            artifactStream.getAccountId(), artifactStream.getUuid(), failedCronAttempts);
         if (PermitServiceImpl.shouldSendAlert(failedCronAttempts)) {
-          if (!artifactStream.getAppId().equals(GLOBAL_APP_ID)) {
-            alertService.openAlert(appService.getAccountIdByAppId(appId), appId, AlertType.ARTIFACT_COLLECTION_FAILED,
+          String appId = artifactStream.fetchAppId();
+          if (!GLOBAL_APP_ID.equals(appId)) {
+            alertService.openAlert(artifactStream.getAccountId(), null, AlertType.ARTIFACT_COLLECTION_FAILED,
                 ArtifactCollectionFailedAlert.builder()
                     .appId(appId)
                     .serviceId(artifactStream.getServiceId())
                     .artifactStreamId(artifactStream.getUuid())
                     .build());
           } else {
-            alertService.openAlert(appService.getAccountIdByAppId(appId), appId, AlertType.ARTIFACT_COLLECTION_FAILED,
+            alertService.openAlert(artifactStream.getAccountId(), null, AlertType.ARTIFACT_COLLECTION_FAILED,
                 ArtifactCollectionFailedAlert.builder()
-                    .appId(appId)
                     .settingId(artifactStream.getSettingId())
                     .artifactStreamId(artifactStream.getUuid())
                     .build());
@@ -204,7 +175,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
       }
 
       accountId = settingAttribute.getAccountId();
-      buildSourceRequest = artifactCollectionUtils.getBuildSourceParameters(appId, artifactStream, settingAttribute);
+      buildSourceRequest = artifactCollectionUtils.getBuildSourceParameters(artifactStream, settingAttribute);
       dataBuilder.parameters(new Object[] {buildSourceRequest}).timeout(TimeUnit.MINUTES.toMillis(1));
       delegateTaskBuilder.tags(awsCommandHelper.getAwsConfigTagsFromSettingAttribute(settingAttribute));
     }
@@ -213,16 +184,10 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
     delegateTaskBuilder.data(dataBuilder.build());
 
     waitNotifyEngine.waitForAll(
-        new BuildSourceCallback(accountId, appId, artifactStream.getUuid(), permitId, artifactStream.getSettingId()),
-        waitId);
+        new BuildSourceCallback(accountId, artifactStream.getUuid(), permitId, artifactStream.getSettingId()), waitId);
     logger.info("Queuing delegate task for artifactStreamId {} with waitId {}", artifactStream.getUuid(), waitId);
     final String taskId = delegateService.queueTask(delegateTaskBuilder.build());
     logger.info("Queued delegate taskId {} for artifactStreamId {}", taskId, artifactStream.getUuid());
-  }
-
-  @Override
-  public void collectNewArtifactsAsync(ArtifactStream artifactStream, String permitId) {
-    collectNewArtifactsAsync(artifactStream.getAppId(), artifactStream, permitId);
   }
 
   @Override
@@ -233,7 +198,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
       Optional<BuildDetails> buildDetails =
           builds.stream().filter(build -> buildNumber.equals(build.getNumber())).findFirst();
       if (buildDetails.isPresent()) {
-        return collectArtifact(appId, artifactStream.getUuid(), buildDetails.get());
+        return collectArtifact(artifactStream.getUuid(), buildDetails.get());
       }
     }
     return null;

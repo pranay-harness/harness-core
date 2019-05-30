@@ -51,7 +51,7 @@ public class ApprovalNotification extends ActionableNotification {
   public boolean performAction(NotificationActionType actionType) {
     if (EntityType.ARTIFACT.equals(getEntityType())) {
       artifactService.updateStatus(
-          getEntityId(), getAppId(), actionType.equals(APPROVE) ? Status.APPROVED : Status.REJECTED);
+          getEntityId(), getAccountId(), actionType.equals(APPROVE) ? Status.APPROVED : Status.REJECTED);
     }
     wingsPersistence.updateFields(ApprovalNotification.class, getUuid(),
         ImmutableMap.of("stage", actionType.equals(APPROVE) ? APPROVED : REJECTED));

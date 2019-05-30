@@ -41,13 +41,6 @@ public class CustomBuildSourceServiceImpl implements CustomBuildSourceService {
     return getBuildDetails(artifactStream);
   }
 
-  @Override
-  public List<BuildDetails> getBuilds(String appId, String artifactStreamId) {
-    logger.info("Retrieving the builds for Custom Repository artifactStreamId {}", artifactStreamId);
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-    return getBuildDetails(artifactStream);
-  }
-
   private List<BuildDetails> getBuildDetails(ArtifactStream artifactStream) {
     Validator.notNullCheck("Artifact source does not exist", artifactStream, USER);
 
@@ -69,7 +62,7 @@ public class CustomBuildSourceServiceImpl implements CustomBuildSourceService {
 
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(artifactStreamAttributes.getAccountId())
-                                          .appId(artifactStream.getAppId())
+                                          .appId(artifactStream.fetchAppId())
                                           .timeout(Duration.ofSeconds(timeout).toMillis())
                                           .tags(tags)
                                           .build();
@@ -83,8 +76,6 @@ public class CustomBuildSourceServiceImpl implements CustomBuildSourceService {
   public boolean validateArtifactSource(ArtifactStream artifactStream) {
     logger.info("Validating artifact source for Custom Repository artifactStreamId {}",
         artifactStream.fetchArtifactStreamAttributes().getArtifactStreamId());
-    //    ArtifactStream artifactStream = artifactStreamService.get(appId,
-    //    artifactStreamAttributes.getArtifactStreamId());
     Validator.notNullCheck("Artifact source does not exist", artifactStream, USER);
 
     CustomArtifactStream customArtifactStream = (CustomArtifactStream) artifactStream;
@@ -105,7 +96,7 @@ public class CustomBuildSourceServiceImpl implements CustomBuildSourceService {
 
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(streamAttributes.getAccountId())
-                                          .appId(artifactStream.getAppId())
+                                          .appId(artifactStream.fetchAppId())
                                           .timeout(Duration.ofSeconds(timeout).toMillis())
                                           .tags(tags)
                                           .build();

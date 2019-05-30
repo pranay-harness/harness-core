@@ -50,7 +50,7 @@ public class AwsLambdaRollback extends AwsLambdaState {
                                  .addFilter("artifactId", EXISTS)
                                  .build());
     if (isNotEmpty(pageResponse)) {
-      return artifactService.get(appId, pageResponse.getResponse().get(0).getArtifactId());
+      return artifactService.get(pageResponse.getResponse().get(0).getArtifactId());
     }
     return null;
   }

@@ -457,14 +457,11 @@ public class WorkflowNotificationHelper {
       serviceIds.addAll(workflowExecution.getServiceIds());
     }
 
-    Map<String, Artifact> serviceIdArtifacts = new HashMap<>();
-
+    Map<String, Artifact> artifactStreamIdArtifacts = new HashMap<>();
     List<Artifact> artifacts = ((ExecutionContextImpl) context).getArtifacts();
     if (isNotEmpty(artifacts)) {
       for (Artifact artifact : artifacts) {
-        for (String serviceId : artifact.getServiceIds()) {
-          serviceIdArtifacts.put(serviceId, artifact);
-        }
+        artifactStreamIdArtifacts.put(artifact.getArtifactStreamId(), artifact);
       }
     }
 
@@ -474,15 +471,27 @@ public class WorkflowNotificationHelper {
       Service service = serviceResourceService.get(context.getAppId(), serviceId, false);
       notNullCheck("Service might have been deleted", service, USER);
       serviceMsg.append(service.getName()).append(": ");
-      if (serviceIdArtifacts.containsKey(serviceId)) {
-        Artifact artifact = serviceIdArtifacts.get(serviceId);
-        serviceMsg.append(artifact.getArtifactSourceName())
-            .append(" (build# ")
-            .append(artifact.getBuildNo().replaceAll("\\*", "٭"))
-            .append(')');
-      } else {
+
+      List<String> artifactStreamIds = service.getArtifactStreamIds();
+      boolean found = false;
+      if (isNotEmpty(artifactStreamIds)) {
+        for (String artifactStreamId : artifactStreamIds) {
+          if (artifactStreamIdArtifacts.containsKey(artifactStreamId)) {
+            Artifact artifact = artifactStreamIdArtifacts.get(artifactStreamId);
+            serviceMsg.append(artifact.getArtifactSourceName())
+                .append(" (build# ")
+                .append(artifact.getBuildNo().replaceAll("\\*", "٭"))
+                .append(')');
+            found = true;
+            break;
+          }
+        }
+      }
+
+      if (!found) {
         serviceMsg.append("no artifact");
       }
+
       serviceMsgs.add(serviceMsg.toString());
     }
 

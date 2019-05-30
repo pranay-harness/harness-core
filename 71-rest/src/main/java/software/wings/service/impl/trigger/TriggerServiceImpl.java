@@ -26,7 +26,6 @@ import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
 import static software.wings.service.impl.trigger.TriggerServiceHelper.constructWebhookToken;
 import static software.wings.service.impl.trigger.TriggerServiceHelper.notNullCheckWorkflow;
-import static software.wings.service.impl.trigger.TriggerServiceHelper.obtainCollectedArtifactServiceIds;
 import static software.wings.service.impl.trigger.TriggerServiceHelper.overrideTriggerVariables;
 import static software.wings.service.impl.trigger.TriggerServiceHelper.validateAndSetCronExpression;
 import static software.wings.service.impl.workflow.WorkflowServiceTemplateHelper.getServiceWorkflowVariables;
@@ -95,12 +94,12 @@ import software.wings.helpers.ext.trigger.response.TriggerDeploymentNeededRespon
 import software.wings.helpers.ext.trigger.response.TriggerResponse;
 import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.service.impl.AuditServiceHelper;
-import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessTagService;
@@ -141,10 +140,10 @@ public class TriggerServiceImpl implements TriggerService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private WorkflowService workflowService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
-  @Inject private ArtifactCollectionUtils artifactCollectionUtils;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private HarnessTagService harnessTagService;
+  @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   @Value
   @Builder
@@ -406,6 +405,11 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   @Override
+  public void updateByArtifactStream(String artifactStreamId) {
+    triggerServiceHelper.getTriggersByArtifactStream(artifactStreamId).forEach(this ::update);
+  }
+
+  @Override
   public String getCronDescription(String cronExpression) {
     return TriggerServiceHelper.getCronDescription(cronExpression);
   }
@@ -566,13 +570,14 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   private void addLastCollectedArtifact(String appId, ArtifactSelection artifactSelection, List<Artifact> artifacts) {
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactSelection.getArtifactStreamId());
+    ArtifactStream artifactStream = artifactStreamService.get(artifactSelection.getArtifactStreamId());
     notNullCheck("ArtifactStream was deleted", artifactStream, USER);
     Artifact lastCollectedArtifact;
     if (isEmpty(artifactSelection.getArtifactFilter())) {
       lastCollectedArtifact = artifactService.fetchLastCollectedArtifact(artifactStream);
       if (lastCollectedArtifact != null
-          && lastCollectedArtifact.getServiceIds().contains(artifactSelection.getServiceId())) {
+          && artifactStreamServiceBindingService.listArtifactStreamIds(appId, artifactSelection.getServiceId())
+                 .contains(lastCollectedArtifact.getArtifactStreamId())) {
         artifacts.add(lastCollectedArtifact);
       }
     } else {
@@ -592,9 +597,14 @@ public class TriggerServiceImpl implements TriggerService {
   private List<Artifact> getLastDeployedArtifacts(String appId, String workflowId, String serviceId) {
     List<Artifact> lastDeployedArtifacts = workflowExecutionService.obtainLastGoodDeployedArtifacts(appId, workflowId);
     if (lastDeployedArtifacts != null && serviceId != null) {
-      lastDeployedArtifacts = lastDeployedArtifacts.stream()
-                                  .filter(artifact1 -> artifact1.getServiceIds().contains(serviceId))
-                                  .collect(toList());
+      List<String> artifactStreamIds = artifactStreamServiceBindingService.listArtifactStreamIds(appId, serviceId);
+      if (isEmpty(artifactStreamIds)) {
+        lastDeployedArtifacts = new ArrayList<>();
+      } else {
+        lastDeployedArtifacts = lastDeployedArtifacts.stream()
+                                    .filter(artifact1 -> artifactStreamIds.contains(artifact1.getArtifactStreamId()))
+                                    .collect(toList());
+      }
     }
     return lastDeployedArtifacts == null ? new ArrayList<>() : lastDeployedArtifacts;
   }
@@ -824,7 +834,7 @@ public class TriggerServiceImpl implements TriggerService {
   private void validateRequiredArtifacts(
       Trigger trigger, ExecutionArgs executionArgs, List<String> artifactNeededServiceIds) {
     // Artifact serviceIds
-    List<String> collectedArtifactServiceIds = obtainCollectedArtifactServiceIds(executionArgs);
+    List<String> collectedArtifactServiceIds = triggerServiceHelper.obtainCollectedArtifactServiceIds(executionArgs);
 
     if (isEmpty(artifactNeededServiceIds) && isNotEmpty(collectedArtifactServiceIds)) {
       WorkflowType workflowType = trigger.getWorkflowType() == null ? PIPELINE : trigger.getWorkflowType();
@@ -1035,10 +1045,10 @@ public class TriggerServiceImpl implements TriggerService {
     if (isNotEmpty(artifactFilter)) {
       validateArtifactFilter(artifactTriggerCondition.isRegex(), artifactFilter);
     }
-    ArtifactStream artifactStream =
-        artifactStreamService.get(trigger.getAppId(), artifactTriggerCondition.getArtifactStreamId());
+    ArtifactStream artifactStream = artifactStreamService.get(artifactTriggerCondition.getArtifactStreamId());
     notNullCheck("Artifact Source is mandatory for New Artifact Condition Trigger", artifactStream, USER);
-    Service service = artifactCollectionUtils.getService(trigger.getAppId(), artifactStream.getUuid());
+    Service service =
+        artifactStreamServiceBindingService.getService(trigger.getAppId(), artifactStream.getUuid(), false);
     notNullCheck("Service does not exist", service, USER);
     artifactTriggerCondition.setArtifactSourceName(artifactStream.getSourceName() + " (" + service.getName() + ")");
   }
@@ -1106,10 +1116,10 @@ public class TriggerServiceImpl implements TriggerService {
   private void validateAndSetLastCollectedArtifactSelection(
       Trigger trigger, ArtifactSelection artifactSelection, String s) {
     if (isNotEmpty(artifactSelection.getArtifactStreamId())) {
-      ArtifactStream artifactStream =
-          artifactStreamService.get(trigger.getAppId(), artifactSelection.getArtifactStreamId());
+      ArtifactStream artifactStream = artifactStreamService.get(artifactSelection.getArtifactStreamId());
       notNullCheck("Artifact Source does not exist", artifactStream, USER);
-      Service service = artifactCollectionUtils.getService(trigger.getAppId(), artifactStream.getUuid());
+      Service service =
+          artifactStreamServiceBindingService.getService(trigger.getAppId(), artifactStream.getUuid(), false);
       notNullCheck("Service might have been deleted", service, USER);
       artifactSelection.setArtifactSourceName(artifactStream.getSourceName() + " (" + service.getName() + ")");
     }
@@ -1274,7 +1284,7 @@ public class TriggerServiceImpl implements TriggerService {
           throw new InvalidRequestException("More than one artifact source defined for the service ["
               + serviceArtifactSummaryEntry.getKey() + "]. Please provide artifact source name");
         }
-        artifactStream = artifactStreamService.get(appId, artifactStreamIds.get(0));
+        artifactStream = artifactStreamService.get(artifactStreamIds.get(0));
       }
       if (artifactStream == null) {
         throw new InvalidRequestException("Artifact Source [" + artifactSummary.getName()
@@ -1293,7 +1303,7 @@ public class TriggerServiceImpl implements TriggerService {
 
   private Artifact getAlreadyCollectedOrCollectNewArtifactForBuildNumber(
       String appId, String artifactStreamId, String buildNumber) {
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
     Validator.notNullCheck("Artifact Source doesn't exist", artifactStream, USER);
     Artifact collectedArtifactForBuildNumber =
         artifactService.getArtifactByBuildNumber(artifactStream, buildNumber, false);

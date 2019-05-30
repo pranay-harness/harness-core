@@ -99,6 +99,7 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -177,6 +178,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private ExecutorService executorService;
   @Inject private ApplicationManifestService applicationManifestService;
   @Inject private TriggerService triggerService;
+  @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   @Override
   public YamlGitConfig weNeedToPushChanges(String accountId, String appId) {
@@ -921,7 +923,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           artifactStreamList.forEach(artifactStream -> {
             String artifactYamlFileName = artifactStream.getName() + YAML_EXTENSION;
             artifactStreamsFolder.addChild(new ServiceLevelYamlNode(accountId, artifactStream.getUuid(),
-                artifactStream.getAppId(), service.getUuid(), artifactYamlFileName, ArtifactStream.class,
+                artifactStream.fetchAppId(), service.getUuid(), artifactYamlFileName, ArtifactStream.class,
                 artifactStreamsPath.clone().add(artifactYamlFileName), yamlGitSyncService, Type.ARTIFACT_STREAM));
           });
         }
@@ -1923,8 +1925,17 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   @Override
   public String getRootPathByArtifactStream(ArtifactStream artifactStream) {
-    if (!artifactStream.getAppId().equals(GLOBAL_APP_ID)) {
-      Service service = serviceResourceService.get(artifactStream.getAppId(), artifactStream.getServiceId());
+    String appId = artifactStream.fetchAppId();
+    if (!GLOBAL_APP_ID.equals(appId)) {
+      // TODO: ASR: IMP: hack to make yaml push work as yaml changes require binding info but the binding info is
+      // deleted in parallel
+      Service service;
+      if (artifactStream.getService() != null) {
+        service = artifactStream.getService();
+      } else {
+        service = artifactStreamServiceBindingService.getService(appId, artifactStream.getUuid(), true);
+      }
+
       return getRootPathByService(service) + PATH_DELIMITER + ARTIFACT_SOURCES_FOLDER;
     } else {
       SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());

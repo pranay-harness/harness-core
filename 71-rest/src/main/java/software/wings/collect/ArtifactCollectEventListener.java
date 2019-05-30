@@ -40,7 +40,6 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DelegateService;
@@ -55,7 +54,6 @@ import software.wings.service.intfc.security.SecretManager;
 @Singleton
 @Slf4j
 public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
-  @Inject private AppService appService;
   @Inject private ArtifactService artifactService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private SettingsService settingsService;
@@ -74,42 +72,36 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
   @Override
   public void onMessage(CollectEvent message) {
     Artifact artifact = message.getArtifact();
+    String accountId = artifact.getAccountId();
     try {
-      logger.info("Received artifact collection event for artifactId {} and of appId {}", artifact.getUuid(),
-          artifact.getAppId());
-      artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.RUNNING, ContentStatus.DOWNLOADING);
-      ArtifactStream artifactStream;
-      String accountId;
-      if (!artifact.getAppId().equals(GLOBAL_APP_ID)) {
-        eventEmitter.send(Channel.ARTIFACTS,
-            anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());
-        artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
-        if (artifactStream == null) {
-          throw new WingsException("Artifact Stream does not exist", USER);
-        }
-        accountId = appService.get(artifactStream.getAppId()).getAccountId();
-      } else {
-        artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
-        if (artifactStream == null) {
-          throw new WingsException("Artifact Stream does not exist", USER);
-        }
-        accountId = artifact.getAccountId();
-      }
-      String waitId = generateUuid();
+      logger.info(
+          "Received artifact collection event for artifactId {} and of accountId {}", artifact.getUuid(), accountId);
 
+      artifactService.updateStatus(artifact.getUuid(), accountId, Status.RUNNING, ContentStatus.DOWNLOADING);
+
+      if (!GLOBAL_APP_ID.equals(artifact.fetchAppId())) {
+        eventEmitter.send(Channel.ARTIFACTS,
+            anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.fetchAppId()).build());
+      }
+
+      ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
+      if (artifactStream == null) {
+        throw new WingsException("Artifact Stream does not exist", USER);
+      }
+
+      String waitId = generateUuid();
       DelegateTask delegateTask = createDelegateTask(accountId, artifactStream, artifact, waitId);
       logger.info("Registering callback for the artifact artifactId {} with waitId {}", artifact.getUuid(), waitId);
-      waitNotifyEngine.waitForAll(new ArtifactCollectionCallback(artifact.getAppId(), artifact.getUuid()), waitId);
+      waitNotifyEngine.waitForAll(new ArtifactCollectionCallback(artifact.getUuid()), waitId);
       logger.info("Queuing delegate task {} for artifactId {} of artifactSourceName {} ", delegateTask.getUuid(),
           artifact.getUuid(), artifact.getArtifactSourceName());
       delegateService.queueTask(delegateTask);
-
     } catch (Exception ex) {
       logger.error(format("Failed to collect artifact. Reason %s", ExceptionUtils.getMessage(ex)), ex);
-      artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.FAILED, ContentStatus.FAILED);
-      if (!artifact.getAppId().equals(GLOBAL_APP_ID)) {
+      artifactService.updateStatus(artifact.getUuid(), accountId, Status.FAILED, ContentStatus.FAILED);
+      if (!GLOBAL_APP_ID.equals(artifact.fetchAppId())) {
         eventEmitter.send(Channel.ARTIFACTS,
-            anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());
+            anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.fetchAppId()).build());
       }
     }
   }
@@ -125,7 +117,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         return DelegateTask.builder()
             .async(true)
             .accountId(accountId)
-            .appId(jenkinsArtifactStream.getAppId())
+            .appId(GLOBAL_APP_ID)
             .waitId(waitId)
             .data(TaskData.builder()
                       .taskType(TaskType.JENKINS_COLLECTION.name())
@@ -145,7 +137,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         return DelegateTask.builder()
             .async(true)
             .accountId(accountId)
-            .appId(bambooArtifactStream.getAppId())
+            .appId(GLOBAL_APP_ID)
             .waitId(waitId)
             .data(
                 TaskData.builder()
@@ -165,7 +157,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         return DelegateTask.builder()
             .async(true)
             .accountId(accountId)
-            .appId(nexusArtifactStream.getAppId())
+            .appId(GLOBAL_APP_ID)
             .waitId(waitId)
             .data(
                 TaskData.builder()
@@ -185,7 +177,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         return DelegateTask.builder()
             .async(true)
             .accountId(accountId)
-            .appId(artifactoryArtifactStream.getAppId())
+            .appId(GLOBAL_APP_ID)
             .waitId(waitId)
             .data(TaskData.builder()
                       .taskType(TaskType.ARTIFACTORY_COLLECTION.name())
@@ -205,7 +197,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
             .async(true)
             .accountId(accountId)
             .tags(isNotEmpty(awsConfig.getTag()) ? singletonList(awsConfig.getTag()) : null)
-            .appId(amazonS3ArtifactStream.getAppId())
+            .appId(GLOBAL_APP_ID)
             .waitId(waitId)
             .data(TaskData.builder()
                       .taskType(TaskType.AMAZON_S3_COLLECTION.name())

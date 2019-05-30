@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADED;
 import static software.wings.beans.artifact.ArtifactFile.Builder.anArtifactFile;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_PATH;
@@ -48,8 +49,12 @@ public class ArtifactCollectionCallbackTest extends WingsBaseTest {
 
   @InjectMocks @Inject private ArtifactCollectionCallback artifactCollectionCallback;
 
-  private final Artifact ARTIFACT =
-      anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).build();
+  private final Artifact ARTIFACT = anArtifact()
+                                        .withUuid(ARTIFACT_ID)
+                                        .withAccountId(ACCOUNT_ID)
+                                        .withAppId(APP_ID)
+                                        .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                                        .build();
 
   private final ArtifactStream ARTIFACT_SOURCE = JenkinsArtifactStream.builder()
                                                      .sourceName(ARTIFACT_STREAM_NAME)
@@ -65,9 +70,8 @@ public class ArtifactCollectionCallbackTest extends WingsBaseTest {
 
   @Before
   public void setupMocks() {
-    when(artifactService.get(APP_ID, ARTIFACT_ID)).thenReturn(ARTIFACT);
-    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(ARTIFACT_SOURCE);
-    artifactCollectionCallback.setAppId(APP_ID);
+    when(artifactService.get(ARTIFACT_ID)).thenReturn(ARTIFACT);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(ARTIFACT_SOURCE);
     artifactCollectionCallback.setArtifactId(ARTIFACT_ID);
   }
 
@@ -75,7 +79,7 @@ public class ArtifactCollectionCallbackTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldNotify() {
     artifactCollectionCallback.notify(Maps.newHashMap("", aListNotifyResponseData().addData(ARTIFACT_FILE).build()));
-    verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.APPROVED, DOWNLOADED, "");
-    verify(artifactService).addArtifactFile(ARTIFACT_ID, APP_ID, Lists.newArrayList(ARTIFACT_FILE));
+    verify(artifactService).updateStatus(ARTIFACT_ID, ACCOUNT_ID, Status.APPROVED, DOWNLOADED, "");
+    verify(artifactService).addArtifactFile(ARTIFACT_ID, ACCOUNT_ID, Lists.newArrayList(ARTIFACT_FILE));
   }
 }

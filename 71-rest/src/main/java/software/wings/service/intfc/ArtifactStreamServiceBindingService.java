@@ -38,6 +38,14 @@ public interface ArtifactStreamServiceBindingService extends OwnedByArtifactStre
   List<String> listArtifactStreamIds(@NotEmpty String appId, @NotEmpty String serviceId);
 
   /**
+   * List artifact stream ids with bindings to service.
+   *
+   * @param serviceId  the service id
+   * @return list of artifact stream ids
+   */
+  List<String> listArtifactStreamIds(@NotEmpty String serviceId);
+
+  /**
    * List artifact streams with bindings to service.
    *
    * @param appId      the app id
@@ -45,6 +53,14 @@ public interface ArtifactStreamServiceBindingService extends OwnedByArtifactStre
    * @return list of artifact streams
    */
   List<ArtifactStream> listArtifactStreams(@NotEmpty String appId, @NotEmpty String serviceId);
+
+  /**
+   * List artifact streams with bindings to service.
+   *
+   * @param serviceId  the service id
+   * @return list of artifact streams
+   */
+  List<ArtifactStream> listArtifactStreams(@NotEmpty String serviceId);
 
   /**
    * List service ids with bindings to artifact stream.
@@ -79,4 +95,8 @@ public interface ArtifactStreamServiceBindingService extends OwnedByArtifactStre
    * @return list of services
    */
   List<Service> listServices(@NotEmpty String artifactStreamId);
+
+  Service getService(@NotEmpty String appId, @NotEmpty String artifactStreamId, boolean throwException);
+
+  Service getService(@NotEmpty String artifactStreamId, boolean throwException);
 }

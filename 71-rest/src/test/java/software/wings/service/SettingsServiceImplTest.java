@@ -277,7 +277,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                                                            .build())
                                             .build();
     when(mockWingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
-    when(artifactStreamService.list(any(PageRequest.class)))
+    when(artifactStreamService.listBySettingId(anyString()))
         .thenReturn(
             aPageResponse().withResponse(asList(JenkinsArtifactStream.builder().sourceName(JOB_NAME).build())).build());
 

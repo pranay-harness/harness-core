@@ -55,6 +55,7 @@ import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhysicalInfrastructureMapping;
+import software.wings.beans.Service;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.Host;
@@ -72,6 +73,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.PhaseStepExecutionSummary;
@@ -103,6 +105,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Mock private HostService hostService;
   @Mock private AppService appService;
   @Mock private ArtifactService artifactService;
+  @Mock private ServiceResourceService serviceResourceService;
   @Mock private Queue<DeploymentEvent> deploymentEventQueue;
   @Mock private ExecutionContext context;
   @Mock private ContainerSync containerSync;
@@ -154,29 +157,36 @@ public class InstanceHelperTest extends WingsBaseTest {
 
     // This mocking will be used for
     // workflowStandardParams.getArtifactForService(phaseExecutionData.getK8sManifestByServiceId())
+    final String ARTIFACT_ID_1 = "artifact_1";
+    final String ARTIFACT_ID_2 = "artifact_2";
+    final String ARTIFACT_STREAM_ID_1 = "artifactStream_1";
+    final String ARTIFACT_STREAM_ID_2 = "artifactStream_2";
+    final String SERVICE_ID_2 = "service_2";
     workflowStandardParams.setAppId(APP_ID);
-    workflowStandardParams.setArtifactIds(asList("artifact_1", "artifact_2"));
-    when(artifactService.get(anyString(), anyString())).thenAnswer(invocation -> {
-      if (invocation.getArgumentAt(1, String.class).equals("artifact_1")) {
+    workflowStandardParams.setArtifactIds(asList(ARTIFACT_ID_1, ARTIFACT_ID_2));
+    when(artifactService.get(anyString())).thenAnswer(invocation -> {
+      if (invocation.getArgumentAt(0, String.class).equals(ARTIFACT_ID_1)) {
         return Artifact.Builder.anArtifact()
-            .withUuid("artifact_1")
+            .withUuid(ARTIFACT_ID_1)
             .withDisplayName("artifact1")
-            .withArtifactStreamId("artifactStream_1")
+            .withArtifactStreamId(ARTIFACT_STREAM_ID_1)
             .withArtifactSourceName("sourceName")
             .withMetadata(Collections.singletonMap("buildNo", "1.0"))
-            .withServiceIds(asList(SERVICE_ID))
             .build();
       } else {
         return Artifact.Builder.anArtifact()
-            .withUuid("artifact_2")
+            .withUuid(ARTIFACT_ID_2)
             .withDisplayName("artifact2")
-            .withArtifactStreamId("artifactStream_2")
+            .withArtifactStreamId(ARTIFACT_STREAM_ID_2)
             .withArtifactSourceName("sourceName")
             .withMetadata(Collections.singletonMap("buildNo", "1.0"))
-            .withServiceIds(asList("service_2"))
             .build();
       }
     });
+    when(serviceResourceService.get(SERVICE_ID))
+        .thenReturn(Service.builder().artifactStreamIds(Collections.singletonList(ARTIFACT_STREAM_ID_1)).build());
+    when(serviceResourceService.get(SERVICE_ID_2))
+        .thenReturn(Service.builder().artifactStreamIds(Collections.singletonList(ARTIFACT_STREAM_ID_2)).build());
     // ------------------------------------------
 
     instance1 = new com.amazonaws.services.ec2.model.Instance();

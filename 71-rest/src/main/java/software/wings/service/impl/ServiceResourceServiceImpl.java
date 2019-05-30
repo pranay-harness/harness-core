@@ -22,7 +22,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
@@ -168,7 +167,6 @@ import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ApplicationManifestUtils;
 import software.wings.utils.ArtifactType;
-import software.wings.utils.Validator;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -683,12 +681,20 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         wingsPersistence.createUpdateOperations(Service.class).set(ServiceKeys.artifactStreamIds, artifactStreamIds);
 
     wingsPersistence.update(savedService, updateOperations);
-    return get(service.getAppId(), service.getUuid(), false);
+    Service updatedService = get(service.getAppId(), service.getUuid(), false);
+
+    String accountId = appService.getAccountIdByAppId(service.getAppId());
+    yamlPushService.pushYamlChangeSet(
+        accountId, savedService, updatedService, Type.UPDATE, service.isSyncFromGit(), false);
+
+    return updatedService;
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  @Override
+  public Service get(String serviceId) {
+    return wingsPersistence.get(Service.class, serviceId);
+  }
+
   @Override
   public Service get(String appId, String serviceId) {
     return get(appId, serviceId, true);
@@ -887,17 +893,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public Service deleteByYamlGit(String appId, String serviceId, String commandId, boolean syncFromGit) {
     return deleteCommand(appId, serviceId, commandId, syncFromGit);
-  }
-
-  @Override
-  public String fetchServiceName(String appId, String serviceId) {
-    Service service = wingsPersistence.createQuery(Service.class)
-                          .project(Workflow.NAME_KEY, true)
-                          .filter(APP_ID_KEY, appId)
-                          .filter(Service.ID_KEY, serviceId)
-                          .get();
-    Validator.notNullCheck("Service does not exist", USER);
-    return service.getName();
   }
 
   @Override
@@ -1976,7 +1971,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (activity == null) {
       return null;
     }
-    return artifactService.get(appId, activity.getArtifactId());
+    return artifactService.get(activity.getArtifactId());
   }
 
   private boolean isCommandUnitsOrderChanged(List<CommandUnit> commandUnits, List<CommandUnit> oldCommandUnits) {

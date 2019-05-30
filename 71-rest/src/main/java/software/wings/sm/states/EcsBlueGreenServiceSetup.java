@@ -179,8 +179,8 @@ public class EcsBlueGreenServiceSetup extends State {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Artifact is null");
     }
 
-    ImageDetails imageDetails = artifactCollectionUtils.fetchContainerImageDetails(
-        artifact, context.getAppId(), context.getWorkflowExecutionId());
+    ImageDetails imageDetails =
+        artifactCollectionUtils.fetchContainerImageDetails(artifact, context.getWorkflowExecutionId());
     ContainerServiceElement containerServiceElement = ecsStateHelper.buildContainerServiceElement(context,
         setupExecutionData, executionStatus, imageDetails, getMaxInstances(), getFixedInstances(),
         getDesiredInstanceCount(), getResizeStrategy(), getServiceSteadyStateTimeout(), logger);

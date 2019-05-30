@@ -324,7 +324,7 @@ public abstract class NodeSelectState extends State {
       if (serviceArtifactElement != null) {
         String artifactId = serviceArtifactElement.getInstanceArtifactMap().get(instanceElement.getUuid());
         if (artifactId != null) {
-          return artifactService.get(context.getAppId(), artifactId);
+          return artifactService.get(artifactId);
         }
       }
     }

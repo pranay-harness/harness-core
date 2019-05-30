@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.yaml.BaseYaml;
 
@@ -12,6 +13,7 @@ import software.wings.yaml.BaseYaml;
  */
 @Data
 @Builder
+@FieldNameConstants(innerTypeName = "ArtifactSelectionKeys")
 public class ArtifactSelection {
   @NotEmpty private String serviceId;
   private String serviceName;

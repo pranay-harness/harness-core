@@ -15,7 +15,7 @@ import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.NotifyCallback;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.Application;
+import software.wings.beans.Account;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -33,23 +33,21 @@ import java.util.stream.Collectors;
 @Slf4j
 public class BuildSourceCleanupCallback implements NotifyCallback {
   private String accountId;
-  private String appId;
   private String artifactStreamId;
   private List<BuildDetails> builds;
 
   @Inject private transient ArtifactService artifactService;
   @Inject private transient ArtifactStreamService artifactStreamService;
 
-  public BuildSourceCleanupCallback(String accountId, String appId, String artifactStreamId) {
+  public BuildSourceCleanupCallback(String accountId, String artifactStreamId) {
     this.accountId = accountId;
-    this.appId = appId;
     this.artifactStreamId = artifactStreamId;
   }
 
   @Override
   public void notify(Map<String, ResponseData> response) {
     ResponseData notifyResponseData = response.values().iterator().next();
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
     if (notifyResponseData instanceof BuildSourceExecutionResponse) {
       if (SUCCESS.equals(((BuildSourceExecutionResponse) notifyResponseData).getCommandExecutionStatus())) {
         BuildSourceExecutionResponse buildSourceExecutionResponse = (BuildSourceExecutionResponse) notifyResponseData;
@@ -67,7 +65,7 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
                 artifacts.stream().map(Artifact::getBuildNo).collect(Collectors.toList()), artifactStream.getUuid());
           }
         } catch (WingsException ex) {
-          ex.addContext(Application.class, appId);
+          ex.addContext(Account.class, accountId);
           ex.addContext(ArtifactStream.class, artifactStreamId);
           ExceptionLogger.logProcessedMessages(ex, MANAGER, logger);
         }
@@ -120,7 +118,7 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
       return;
     }
 
-    artifactService.deleteArtifacts(appId, deletedArtifactsNew);
+    artifactService.deleteArtifacts(deletedArtifactsNew);
     deletedArtifacts.addAll(deletedArtifactsNew);
   }
 }

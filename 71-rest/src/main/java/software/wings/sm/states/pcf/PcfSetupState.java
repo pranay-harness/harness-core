@@ -213,7 +213,7 @@ public class PcfSetupState extends State {
     ServiceElement serviceElement = phaseElement.getServiceElement();
 
     Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceElement.getUuid());
-    ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
+    ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
     // Observed NPE in alerts
     if (artifactStream == null) {
       throw new WingsException(format(

@@ -48,6 +48,7 @@ public class CustomBuildSourceServiceTest extends WingsBaseTest {
   public void shouldGetBuilds() {
     ArtifactStream customArtifactStream =
         CustomArtifactStream.builder()
+            .accountId(ACCOUNT_ID)
             .appId(APP_ID)
             .serviceId(SERVICE_ID)
             .name("Custom Artifact Stream" + System.currentTimeMillis())
@@ -58,7 +59,7 @@ public class CustomBuildSourceServiceTest extends WingsBaseTest {
                                 .build()))
             .build();
 
-    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(customArtifactStream);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(customArtifactStream);
     when(appService.get(APP_ID))
         .thenReturn(Application.Builder.anApplication()
                         .name("Custom Repository App")
@@ -69,9 +70,8 @@ public class CustomBuildSourceServiceTest extends WingsBaseTest {
     when(delegateProxyFactory.get(any(), any())).thenReturn(customBuildService);
     when(customBuildService.getBuilds(any(ArtifactStreamAttributes.class)))
         .thenReturn(asList(BuildDetails.Builder.aBuildDetails().withNumber("1").build()));
-    final List<BuildDetails> builds = customBuildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID);
+    final List<BuildDetails> builds = customBuildSourceService.getBuilds(ARTIFACT_STREAM_ID);
     assertThat(builds).isNotEmpty();
-    verify(appService).get(APP_ID);
     verify(evaluator, times(2)).substitute(any(), any());
   }
 }

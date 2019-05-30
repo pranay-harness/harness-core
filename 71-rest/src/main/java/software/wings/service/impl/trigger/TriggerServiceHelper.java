@@ -42,6 +42,7 @@ import software.wings.beans.WebHookToken;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactFile;
+import software.wings.beans.trigger.ArtifactSelection.ArtifactSelectionKeys;
 import software.wings.beans.trigger.ArtifactTriggerCondition;
 import software.wings.beans.trigger.ArtifactTriggerCondition.ArtifactTriggerConditionKeys;
 import software.wings.beans.trigger.PipelineTriggerCondition;
@@ -54,14 +55,17 @@ import software.wings.beans.trigger.TriggerConditionType;
 import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.ScheduledTriggerJob;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.utils.CryptoUtils;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -74,6 +78,7 @@ import java.util.stream.Stream;
 @Slf4j
 public class TriggerServiceHelper {
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   public void deletePipelineCompletionTriggers(String appId, String pipelineId) {
     getMatchedSourcePipelineTriggers(appId, pipelineId).collect(toList()).forEach(trigger -> delete(trigger.getUuid()));
@@ -81,6 +86,25 @@ public class TriggerServiceHelper {
 
   public List<Trigger> getTriggersByApp(String appId) {
     return wingsPersistence.query(Trigger.class, aPageRequest().addFilter("appId", EQ, appId).build()).getResponse();
+  }
+
+  public List<Trigger> getTriggersByArtifactStream(String artifactStreamId) {
+    List<Trigger> triggers = getNewArtifactTriggers(artifactStreamId);
+    Set<String> triggerIds = triggers.stream().map(Trigger::getUuid).collect(Collectors.toSet());
+    getTriggersByArtifactStreamSelection(artifactStreamId).forEach(trigger -> {
+      if (!triggerIds.contains(trigger.getUuid())) {
+        triggerIds.add(trigger.getUuid());
+        triggers.add(trigger);
+      }
+    });
+    return triggers;
+  }
+
+  public List<Trigger> getTriggersByArtifactStreamSelection(String artifactStreamId) {
+    return wingsPersistence.createQuery(Trigger.class, excludeAuthority)
+        .disableValidation()
+        .filter(TriggerKeys.artifactSelections + "." + ArtifactSelectionKeys.artifactStreamId, artifactStreamId)
+        .asList();
   }
 
   public boolean delete(String triggerId) {
@@ -97,7 +121,20 @@ public class TriggerServiceHelper {
         .collect(toList());
   }
 
+  public List<Trigger> getTriggersHasArtifactStreamAction(String artifactStreamId) {
+    return getTriggersByArtifactStreamSelection(artifactStreamId)
+        .stream()
+        .filter(trigger
+            -> trigger.getArtifactSelections().stream().anyMatch(
+                artifactSelection -> artifactSelection.getType().equals(LAST_COLLECTED)))
+        .collect(toList());
+  }
+
   public List<Trigger> getTriggersHasArtifactStreamAction(String appId, String artifactStreamId) {
+    if (GLOBAL_APP_ID.equals(appId)) {
+      return getTriggersHasArtifactStreamAction(artifactStreamId);
+    }
+
     return getTriggersByApp(appId)
         .stream()
         .filter(trigger
@@ -282,17 +319,20 @@ public class TriggerServiceHelper {
     }
   }
 
-  public static List<String> obtainCollectedArtifactServiceIds(ExecutionArgs executionArgs) {
-    List<String> artifactServiceIds = new ArrayList<>();
+  public List<String> obtainCollectedArtifactServiceIds(ExecutionArgs executionArgs) {
     final List<Artifact> artifacts = executionArgs.getArtifacts();
     if (isEmpty(artifacts)) {
       return new ArrayList<>();
     }
-    artifacts.stream()
-        .filter(artifact -> isNotEmpty(artifact.getServiceIds()))
-        .map(Artifact::getServiceIds)
-        .forEach(artifactServiceIds::addAll);
-    return artifactServiceIds;
+
+    Set<String> artifactServiceIds = new HashSet<>();
+    artifacts.forEach(artifact -> {
+      List<String> serviceIds = artifactStreamServiceBindingService.listServiceIds(artifact.getArtifactStreamId());
+      if (isNotEmpty(serviceIds)) {
+        artifactServiceIds.addAll(serviceIds);
+      }
+    });
+    return new ArrayList<>(artifactServiceIds);
   }
 
   public static Map<String, String> overrideTriggerVariables(Trigger trigger, ExecutionArgs executionArgs) {

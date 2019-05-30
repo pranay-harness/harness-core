@@ -99,6 +99,14 @@ public interface ServiceResourceService extends OwnedByApplication {
   /**
    * Gets the.
    *
+   * @param serviceId the service id
+   * @return the service
+   */
+  Service get(@NotEmpty String serviceId);
+
+  /**
+   * Gets the.
+   *
    * @param appId     the app id
    * @param serviceId the service id
    * @return the service
@@ -456,8 +464,6 @@ public interface ServiceResourceService extends OwnedByApplication {
   void deleteByYamlGit(String appId, String serviceId, boolean syncFromGit);
 
   Service deleteByYamlGit(String appId, String serviceId, String commandId, boolean syncFromGit);
-
-  String fetchServiceName(@NotEmpty String appId, @NotEmpty String serviceId);
 
   boolean exists(@NotEmpty String appId, @NotEmpty String serviceId);
 

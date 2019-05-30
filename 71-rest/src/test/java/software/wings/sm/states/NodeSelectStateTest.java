@@ -145,7 +145,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
     when(serviceInstanceArtifactParam.getInstanceArtifactMap())
         .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
-    when(artifactService.get(APP_ID, ARTIFACT_ID)).thenReturn(artifact);
+    when(artifactService.get(ARTIFACT_ID)).thenReturn(artifact);
     when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(false);
 
     PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();
@@ -172,7 +172,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
     when(serviceInstanceArtifactParam.getInstanceArtifactMap())
         .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
-    when(artifactService.get(APP_ID, ARTIFACT_ID)).thenReturn(artifact);
+    when(artifactService.get(ARTIFACT_ID)).thenReturn(artifact);
     when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
 
     PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();
@@ -198,7 +198,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
     when(serviceInstanceArtifactParam.getInstanceArtifactMap())
         .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
-    when(artifactService.get(APP_ID, ARTIFACT_ID)).thenReturn(artifact);
+    when(artifactService.get(ARTIFACT_ID)).thenReturn(artifact);
     when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
 
     PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();
@@ -228,7 +228,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
     when(serviceInstanceArtifactParam.getInstanceArtifactMap())
         .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
-    when(artifactService.get(APP_ID, ARTIFACT_ID)).thenReturn(artifact);
+    when(artifactService.get(ARTIFACT_ID)).thenReturn(artifact);
     when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
 
     PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();
@@ -252,7 +252,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
     when(serviceInstanceArtifactParam.getInstanceArtifactMap())
         .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
-    when(artifactService.get(APP_ID, ARTIFACT_ID)).thenReturn(artifact);
+    when(artifactService.get(ARTIFACT_ID)).thenReturn(artifact);
     when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
 
     PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();
@@ -283,7 +283,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
     when(serviceInstanceArtifactParam.getInstanceArtifactMap())
         .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
-    when(artifactService.get(APP_ID, ARTIFACT_ID)).thenReturn(artifact);
+    when(artifactService.get(ARTIFACT_ID)).thenReturn(artifact);
     when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
 
     PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();

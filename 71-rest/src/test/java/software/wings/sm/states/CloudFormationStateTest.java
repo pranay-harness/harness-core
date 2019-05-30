@@ -33,6 +33,7 @@ import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
@@ -195,11 +196,16 @@ public class CloudFormationStateTest extends WingsBaseTest {
 
   private Application app = anApplication().uuid(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).build();
   private Environment env = anEnvironment().appId(APP_ID).uuid(ENV_ID_CF).name(ENV_NAME).build();
-  private Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build();
+  private Service service = Service.builder()
+                                .appId(APP_ID)
+                                .uuid(SERVICE_ID)
+                                .name(SERVICE_NAME)
+                                .artifactStreamIds(singletonList(ARTIFACT_STREAM_ID))
+                                .build();
   private Artifact artifact = anArtifact()
                                   .withArtifactSourceName("source")
                                   .withMetadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "bn"))
-                                  .withServiceIds(singletonList(SERVICE_ID))
+                                  .withArtifactStreamId(ARTIFACT_STREAM_ID)
                                   .build();
   private ArtifactStream artifactStream =
       JenkinsArtifactStream.builder().appId(APP_ID).sourceName("").jobname("").artifactPaths(null).build();
@@ -259,8 +265,8 @@ public class CloudFormationStateTest extends WingsBaseTest {
     workflowStandardParams.setCurrentUser(EmbeddedUser.builder().name("test").email("test@harness.io").build());
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
 
-    when(artifactService.get(any(), any())).thenReturn(artifact);
-    when(artifactStreamService.get(any(), any())).thenReturn(artifactStream);
+    when(artifactService.get(any())).thenReturn(artifact);
+    when(artifactStreamService.get(any())).thenReturn(artifactStream);
 
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(anAwsInfrastructureMapping().build());
 

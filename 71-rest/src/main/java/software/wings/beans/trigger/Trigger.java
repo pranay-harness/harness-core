@@ -23,6 +23,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.trigger.ArtifactSelection.ArtifactSelectionKeys;
 import software.wings.beans.trigger.ArtifactTriggerCondition.ArtifactTriggerConditionKeys;
 import software.wings.beans.trigger.Trigger.TriggerKeys;
 import software.wings.beans.trigger.TriggerCondition.TriggerConditionKeys;
@@ -47,12 +48,12 @@ import javax.validation.constraints.NotNull;
 @Indexes({
   @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("appId")
                                                                            , @Field("name") })
-  ,
-
-      @Index(options = @IndexOptions(name = "conditionArtifactStreamId"), fields = {
-        @Field(TriggerKeys.condition + "." + TriggerConditionKeys.conditionType)
-        , @Field(TriggerKeys.condition + "." + ArtifactTriggerConditionKeys.artifactStreamId)
-      })
+  , @Index(options = @IndexOptions(name = "conditionArtifactStreamId"), fields = {
+    @Field(TriggerKeys.condition + "." + TriggerConditionKeys.conditionType)
+    , @Field(TriggerKeys.condition + "." + ArtifactTriggerConditionKeys.artifactStreamId)
+  }), @Index(options = @IndexOptions(name = "artifactSelectionsArtifactStreamId"), fields = {
+    @Field(TriggerKeys.artifactSelections + "." + ArtifactSelectionKeys.artifactStreamId)
+  })
 })
 public class Trigger extends Base implements NameAccess {
   @NotEmpty private String name;
