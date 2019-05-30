@@ -2,7 +2,6 @@ package software.wings.service.impl.yaml;
 
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -121,7 +120,9 @@ public class YamlPushServiceImpl implements YamlPushService {
             break;
 
           case DELETE:
-            yamlChangeSetHelper.entityYamlChangeSet(accountId, helperEntity, entity, ChangeType.DELETE);
+            if (canGenerateYamlPath(entity)) {
+              yamlChangeSetHelper.entityYamlChangeSet(accountId, helperEntity, entity, ChangeType.DELETE);
+            }
             break;
 
           default:
@@ -158,65 +159,29 @@ public class YamlPushServiceImpl implements YamlPushService {
   }
 
   private <T> void pushYamlChangeSetOnDelete(String accountId, T entity) {
-    if (parentEntityExists(accountId, entity)) {
+    if (canGenerateYamlPath(entity)) {
       yamlChangeSetHelper.entityYamlChangeSet(accountId, entity, ChangeType.DELETE);
     }
   }
 
   /**
    * When any app, service is deleted, all nested entities are deleted in background thread.
-   * So lets say, service was deleted. This change will propogate to git and remove entire service folder.
+   * If we fail to generate yaml path, then we cannot push that change to git
    *
-   * Now, in background thread, when artifact stream, ApplicationManifestFiles are deleted,
-   * We dont need to generate yamlChangeSets, as they have already been deleted as a part of deletion of entire service
-   * folder. Also, as service is deleted, we wont be able to find this service in db, which will result into NPE.
-   *
-   * @param accountId
    * @param entity
    * @return
    */
-  private boolean parentEntityExists(String accountId, Object entity) {
+  private boolean canGenerateYamlPath(Object entity) {
     if (entity instanceof Application) {
       return true;
     }
 
     try {
-      String yamlFilePath = yamlHelper.getYamlPathForEntity(entity);
-
-      String appName = yamlHelper.getAppName(yamlFilePath);
-      String appId = null;
-      UuidAware uuidAware = null;
-      if (isNotBlank(appName)) {
-        uuidAware = yamlHelper.getApp(accountId, yamlFilePath);
-        if (uuidAware == null) {
-          return false;
-        }
-        appId = uuidAware.getUuid();
-      } else {
-        // This is shared entity
-        return true;
-      }
-
-      String serviceName = yamlHelper.getServiceName(yamlFilePath);
-      if (isNotBlank(serviceName)) {
-        uuidAware = yamlHelper.getService(appId, yamlFilePath);
-        if (uuidAware == null) {
-          return false;
-        }
-      }
-
-      String envName = yamlHelper.getEnvironmentName(yamlFilePath);
-      if (isNotBlank(envName)) {
-        uuidAware = yamlHelper.getEnvironment(appId, yamlFilePath);
-        if (uuidAware == null) {
-          return false;
-        }
-      }
+      yamlHelper.getYamlPathForEntity(entity);
     } catch (Exception e) {
-      // In case we failed to determine, just return true and try to push this delete change to GIT.
-      // This is just a safegaurd to see, git sync is not affected duw to any issue in determining
-      // parentEntityExists.
-      return true;
+      // If we fail to generate yaml path, then we cannot push that change to git.
+      logger.info("Exception while generating yaml path", e);
+      return false;
     }
 
     return true;
