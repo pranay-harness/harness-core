@@ -3,7 +3,6 @@ package software.wings.service.impl.yaml.gitdiff;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.manage.GlobalContextManager;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import lombok.extern.slf4j.Slf4j;
@@ -43,8 +42,7 @@ public class GitChangeSetProcesser {
 
     Map<String, ChangeWithErrorMsg> changeWithErrorMsgs = null;
 
-    try (GlobalContextGuard guard = GlobalContextManager.globalContextGuard(
-             AuditGlobalContextData.builder().auditId(auditHeader.getUuid()).build())) {
+    try (GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
       // changeWithErrorMsgs is a map of <YamlPath, ErrorMessage> for failed yaml changes
       changeWithErrorMsgs = gitChangesToEntityConverter.ingestGitYamlChangs(accountId, gitDiffResult);
 
