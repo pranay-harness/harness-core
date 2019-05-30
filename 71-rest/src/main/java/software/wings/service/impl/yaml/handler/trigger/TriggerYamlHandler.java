@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.WorkflowType;
+import io.harness.data.structure.EmptyPredicate;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
@@ -233,7 +234,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
 
   private List<TriggerVariable> convertToTriggerYamlVariables(
       String appId, Map<String, String> workflowVariables, Workflow workflow) {
-    if (workflow == null) {
+    if (workflow == null || EmptyPredicate.isEmpty(workflowVariables)) {
       return null;
     }
 
