@@ -14,6 +14,7 @@ import io.harness.serializer.JsonUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
@@ -34,6 +35,7 @@ import java.util.Map;
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
+@FieldNameConstants(innerTypeName = "MetricAnalysisRecordKeys")
 public class MetricAnalysisRecord extends Base {
   @NotEmpty private StateType stateType;
 

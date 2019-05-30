@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.common.VerificationConstants.DEMO_APPLICAITON_ID;
 import static software.wings.common.VerificationConstants.DEMO_FAILURE_TS_STATE_EXECUTION_ID;
 import static software.wings.common.VerificationConstants.DEMO_SUCCESS_TS_STATE_EXECUTION_ID;
@@ -37,6 +38,7 @@ import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataKeys;
+import software.wings.service.impl.analysis.MetricAnalysisRecord.MetricAnalysisRecordKeys;
 import software.wings.service.impl.analysis.TimeSeriesMLScores.TimeSeriesMLScoresKeys;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
@@ -142,11 +144,11 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     /* Ignore analysisMinutue. Leaving it as a parameter since UI sends it.
        Fetch the latest */
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
-        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-            .filter("stateExecutionId", stateExecutionId)
-            .filter("workflowExecutionId", workflowExecutionId)
-            .filter("groupName", isEmpty(groupName) ? NewRelicMetricDataRecord.DEFAULT_GROUP_NAME : groupName)
-            .order("-analysisMinute")
+        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
+            .filter(MetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
+            .filter(MetricAnalysisRecordKeys.groupName,
+                isEmpty(groupName) ? NewRelicMetricDataRecord.DEFAULT_GROUP_NAME : groupName)
+            .order(Sort.descending(MetricAnalysisRecordKeys.analysisMinute))
             .get();
     if (timeSeriesMLAnalysisRecord == null) {
       return null;
@@ -299,10 +301,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       final String appId, final String stateExecutionId, final String workflowExecutionId) {
     List<NewRelicMetricAnalysisRecord> analysisRecords = new ArrayList<>();
     List<TimeSeriesMLAnalysisRecord> allAnalysisRecords =
-        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-            .filter("appId", appId)
-            .filter("stateExecutionId", stateExecutionId)
-            .filter("workflowExecutionId", workflowExecutionId)
+        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
+            .filter(MetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
             .order(Sort.descending(TimeSeriesMLAnalysisRecord.CREATED_AT_KEY))
             .asList();
 
@@ -482,10 +482,9 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                              .filter("stateExecutionId", analysisRecord.getStateExecutionId())
                                              .filter("groupName", analysisRecord.getGroupName())
                                              .count(),
-          wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-              .filter("appId", analysisRecord.getAppId())
-              .filter("stateExecutionId", analysisRecord.getStateExecutionId())
-              .filter("groupName", analysisRecord.getGroupName())
+          wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
+              .filter(MetricAnalysisRecordKeys.stateExecutionId, analysisRecord.getStateExecutionId())
+              .filter(MetricAnalysisRecordKeys.groupName, analysisRecord.getGroupName())
               .count());
       int duration = analysisContext.getTimeDuration();
       analysisRecord.setProgress((numOfAnalysis * 100) / duration);
@@ -574,8 +573,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class).filter("stateExecutionId", stateExecutionId));
 
     // delete time series analysis records
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class).filter("stateExecutionId", stateExecutionId));
+    wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+                                .filter(MetricAnalysisRecordKeys.stateExecutionId, stateExecutionId));
 
     // delete time series scores records
     wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMLScores.class)

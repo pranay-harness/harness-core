@@ -3,7 +3,6 @@ package software.wings.service.impl.verification;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.persistence.HQuery.excludeCount;
 import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
 import static java.lang.Math.min;
@@ -28,6 +27,7 @@ import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRec
 import software.wings.service.impl.analysis.LogMLAnalysisStatus;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterSummary;
+import software.wings.service.impl.analysis.MetricAnalysisRecord.MetricAnalysisRecordKeys;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates.TimeSeriesMetricTemplatesKeys;
@@ -432,24 +432,23 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
       });
     }
     if (tags.size() > 1) {
-      tags.forEach(tag -> tagScoreMap.put(tag, computeOverallScoreForTag(appId, startTime, endTIme, cvConfigId, tag)));
+      tags.forEach(tag -> tagScoreMap.put(tag, computeOverallScoreForTag(startTime, endTIme, cvConfigId, tag)));
     }
     return tagScoreMap;
   }
 
-  private Double computeOverallScoreForTag(String appId, long startTime, long endTime, String cvConfigId, String tag) {
+  private Double computeOverallScoreForTag(long startTime, long endTime, String cvConfigId, String tag) {
     final List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords =
-        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeCount)
-            .filter("appId", appId)
-            .filter("cvConfigId", cvConfigId)
-            .field("analysisMinute")
+        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
+            .filter(MetricAnalysisRecordKeys.cvConfigId, cvConfigId)
+            .field(MetricAnalysisRecordKeys.analysisMinute)
             .greaterThanOrEq(TimeUnit.MILLISECONDS.toMinutes(startTime))
-            .field("analysisMinute")
+            .field(MetricAnalysisRecordKeys.analysisMinute)
             .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(endTime))
-            .filter("tag", tag)
-            .order("analysisMinute")
-            .project("transactions", false)
-            .project("transactionsCompressedJson", false)
+            .filter(MetricAnalysisRecordKeys.tag, tag)
+            .order(MetricAnalysisRecordKeys.analysisMinute)
+            .project(MetricAnalysisRecordKeys.transactions, false)
+            .project(MetricAnalysisRecordKeys.transactionsCompressedJson, false)
             .asList();
 
     List<Double> scoreList = new ArrayList<>();
