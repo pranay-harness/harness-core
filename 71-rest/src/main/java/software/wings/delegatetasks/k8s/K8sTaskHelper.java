@@ -730,6 +730,19 @@ public class K8sTaskHelper {
     return result.stream().sorted(new KubernetesResourceComparer()).collect(Collectors.toList());
   }
 
+  public void setNamespaceToKubernetesResourcesIfRequired(
+      List<KubernetesResource> kubernetesResources, String namespace) {
+    if (isEmpty(kubernetesResources)) {
+      return;
+    }
+
+    for (KubernetesResource kubernetesResource : kubernetesResources) {
+      if (isBlank(kubernetesResource.getResourceId().getNamespace())) {
+        kubernetesResource.getResourceId().setNamespace(namespace);
+      }
+    }
+  }
+
   public static String getResourcesInTableFormat(List<KubernetesResource> resources) {
     int maxKindLength = 16;
     int maxNameLength = 36;

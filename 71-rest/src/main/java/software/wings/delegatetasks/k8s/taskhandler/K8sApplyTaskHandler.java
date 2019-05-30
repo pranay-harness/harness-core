@@ -147,6 +147,7 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
               .collect(Collectors.toList());
 
       resources = k8sTaskHelper.readManifests(filteredManifestFiles, executionLogCallback);
+      k8sTaskHelper.setNamespaceToKubernetesResourcesIfRequired(resources, kubernetesConfig.getNamespace());
 
       executionLogCallback.saveExecutionLog(color("\nManifests [Post template rendering] :\n", White, Bold));
       executionLogCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(resources));

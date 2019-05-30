@@ -7,7 +7,6 @@ import static io.harness.k8s.manifest.ManifestHelper.getWorkloads;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
 import static java.util.Arrays.asList;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.LogColor.Cyan;
 import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogColor.Yellow;
@@ -159,10 +158,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
   private List<K8sPod> getPods() {
     if (managedWorkload != null) {
-      return k8sTaskHelper.getPodDetails(kubernetesConfig,
-          isNotBlank(managedWorkload.getResourceId().getNamespace()) ? managedWorkload.getResourceId().getNamespace()
-                                                                     : kubernetesConfig.getNamespace(),
-          releaseName);
+      return k8sTaskHelper.getPodDetails(kubernetesConfig, managedWorkload.getResourceId().getNamespace(), releaseName);
     }
     return new ArrayList<>();
   }
@@ -209,6 +205,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
               request.getValuesYamlList(), releaseName, kubernetesConfig.getNamespace(), executionLogCallback);
 
       resources = k8sTaskHelper.readManifests(manifestFiles, executionLogCallback);
+      k8sTaskHelper.setNamespaceToKubernetesResourcesIfRequired(resources, kubernetesConfig.getNamespace());
 
       if (request.isInCanaryWorkflow()) {
         updateDestinationRuleManifestFilesWithSubsets(executionLogCallback);
