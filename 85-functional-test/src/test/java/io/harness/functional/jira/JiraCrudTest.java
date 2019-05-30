@@ -53,10 +53,10 @@ public class JiraCrudTest extends AbstractFunctionalTest {
   @Inject private SettingGenerator settingGenerator;
   @Inject private WorkflowExecutionService workflowExecutionService;
 
-  Application application;
+  private Application application;
 
-  final Seed seed = new Seed(0);
-  Owners owners;
+  private final Seed seed = new Seed(0);
+  private Owners owners;
 
   @Before
   public void setUp() {

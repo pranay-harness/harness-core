@@ -50,6 +50,9 @@ public class WorkflowRestUtils {
                                                                          .body(executionArgs, ObjectMapperType.GSON)
                                                                          .post("/executions")
                                                                          .as(workflowExecutionType.getType());
+    if (savedWorkflowExecutionResponse.getResource() == null) {
+      throw new WingsException(String.valueOf(savedWorkflowExecutionResponse.getResponseMessages()));
+    }
 
     return savedWorkflowExecutionResponse.getResource();
   }

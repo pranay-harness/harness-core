@@ -36,6 +36,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
+import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.WinRmConnectionAttributes;
@@ -55,6 +56,7 @@ public class SettingGenerator {
   private static final String HARNESS_NEXUS = "Harness Nexus";
   private static final String HARNESS_JENKINS = "Harness Jenkins";
   private static final String HARNESS_JIRA = "Harness Jira";
+  private static final String SNOW_CONNECTOR = "Service Now Connector";
   private static final String HARNESS_NEXUS_THREE = "Harness Nexus 3";
   private static final String HARNESS_ARTIFACTORY = "Harness Artifactory";
   private static final String HARNESS_BAMBOO = "Harness Bamboo";
@@ -89,6 +91,7 @@ public class SettingGenerator {
     HARNESS_GCP_EXPLORATION,
     HARNESS_EXPLORATION_GCS,
     HARNESS_JIRA,
+    SERVICENOW_CONNECTOR,
     PHYSICAL_DATA_CENTER,
     WINRM_TEST_CONNECTOR,
     PAID_EMAIL_SMTP_CONNECTOR,
@@ -130,6 +133,8 @@ public class SettingGenerator {
         return ensureHarnessExplorationGcs(seed, owners);
       case HARNESS_JIRA:
         return ensureHarnessJira(seed, owners);
+      case SERVICENOW_CONNECTOR:
+        return ensureServiceNowConnector(seed, owners);
       case PHYSICAL_DATA_CENTER:
         return ensurePhysicalDataCenter(seed, owners);
       case WINRM_TEST_CONNECTOR:
@@ -146,6 +151,25 @@ public class SettingGenerator {
         unhandled(predefined);
     }
     return null;
+  }
+
+  private SettingAttribute ensureServiceNowConnector(Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withName(SNOW_CONNECTOR)
+            .withCategory(CONNECTOR)
+            .withAccountId(account.getUuid())
+            .withValue(ServiceNowConfig.builder()
+                           .accountId(account.getUuid())
+                           .baseUrl("https://dev76919.service-now.com")
+                           .username("admin")
+                           .password(scmSecret.decryptToCharArray(new SecretName("snow_connector")))
+                           .build())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+            .build();
+    return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
   private SettingAttribute ensureTerraformMainGitRepo(Seed seed, Owners owners) {
