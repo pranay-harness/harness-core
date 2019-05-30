@@ -98,6 +98,6 @@ public interface TimeSeriesAnalysisService {
   TimeSeriesAnomaliesRecord getPreviousAnomalies(
       String appId, String cvConfigId, Map<String, List<String>> metrics, String tag);
 
-  List<TimeSeriesCumulativeSums> getCumulativeSumsForRange(
+  Set<TimeSeriesCumulativeSums> getCumulativeSumsForRange(
       String appId, String cvConfigId, int startMinute, int endMinute, String tag);
 }

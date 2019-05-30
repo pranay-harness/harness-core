@@ -130,6 +130,7 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware {
         case H0:
         case H1:
         case H2:
+        case L2:
           record.setValidUntil(Date.from(OffsetDateTime.now().plusWeeks(1).toInstant()));
           break;
         default:

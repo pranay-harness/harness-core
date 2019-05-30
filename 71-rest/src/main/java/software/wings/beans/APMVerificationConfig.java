@@ -44,6 +44,8 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
 
   private Method validationMethod;
 
+  @SchemaIgnore private boolean logVerification;
+
   @SchemaIgnore @NotEmpty private String accountId;
 
   private List<KeyValues> headersList;
