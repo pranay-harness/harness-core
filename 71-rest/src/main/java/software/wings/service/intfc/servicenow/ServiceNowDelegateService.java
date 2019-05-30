@@ -1,5 +1,6 @@
 package software.wings.service.intfc.servicenow;
 
+import software.wings.api.ServiceNowExecutionData;
 import software.wings.beans.TaskType;
 import software.wings.beans.servicenow.ServiceNowTaskParameters;
 import software.wings.delegatetasks.DelegateTaskType;
@@ -14,6 +15,7 @@ public interface ServiceNowDelegateService {
   List<ServiceNowMetaDTO> getStates(ServiceNowTaskParameters taskParameters);
   @DelegateTaskType(TaskType.SERVICENOW_SYNC)
   Map<String, List<ServiceNowMetaDTO>> getCreateMeta(ServiceNowTaskParameters taskParameters);
-  @DelegateTaskType(TaskType.SERVICENOW_SYNC) String getIssueUrl(ServiceNowTaskParameters taskParameters);
+  @DelegateTaskType(TaskType.SERVICENOW_SYNC)
+  ServiceNowExecutionData getIssueUrl(ServiceNowTaskParameters taskParameters);
   @DelegateTaskType(TaskType.SERVICENOW_SYNC) String getIssueStatus(ServiceNowTaskParameters taskParameters);
 }

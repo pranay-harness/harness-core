@@ -1,8 +1,6 @@
 package software.wings.service.intfc.servicenow;
 
-import io.harness.beans.EmbeddedUser;
-import software.wings.beans.ApprovalDetails;
-import software.wings.beans.ApprovalDetails.Action;
+import software.wings.api.ServiceNowExecutionData;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.approval.ApprovalPollingJobEntity;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowMetaDTO;
@@ -17,11 +15,11 @@ public interface ServiceNowService {
       ServiceNowTicketType ticketType, String accountId, String connectorId, String appId);
   Map<String, List<ServiceNowMetaDTO>> getCreateMeta(
       ServiceNowTicketType ticketType, String accountId, String connectorId, String appId);
-  String getIssueUrl(
+  ServiceNowExecutionData getIssueUrl(
       String issueNumber, String connectorId, ServiceNowTicketType ticketType, String appId, String accountId);
-  ApprovalDetails.Action getApprovalStatus(String connectorId, String accountId, String appId, String issueNumber,
+  ServiceNowExecutionData getApprovalStatus(String connectorId, String accountId, String appId, String issueNumber,
       String approvalField, String approvalValue, String rejectionField, String rejectionValue, String ticketType);
-  ApprovalDetails.Action getApprovalStatus(ApprovalPollingJobEntity entity);
-  void approveWorkflow(Action action, String approvalId, EmbeddedUser user, String appId, String workflowExecutionId);
+  ServiceNowExecutionData getApprovalStatus(ApprovalPollingJobEntity entity);
+
   void handleServiceNowPolling(ApprovalPollingJobEntity entity);
 }

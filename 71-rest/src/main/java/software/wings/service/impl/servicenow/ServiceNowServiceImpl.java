@@ -2,11 +2,11 @@ package software.wings.service.impl.servicenow;
 
 import static io.harness.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.service.ApprovalUtils.checkApproval;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -17,9 +17,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.api.ApprovalStateExecutionData;
-import software.wings.beans.ApprovalDetails;
-import software.wings.beans.ApprovalDetails.Action;
+import software.wings.api.ServiceNowExecutionData;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
@@ -27,6 +25,7 @@ import software.wings.beans.approval.ApprovalPollingJobEntity;
 import software.wings.beans.servicenow.ServiceNowTaskParameters;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.servicenow.ServiceNowDelegateService;
@@ -41,6 +40,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
   @Inject @Transient private transient SecretManager secretManager;
   @Inject WorkflowExecutionService workflowExecutionService;
   @Inject WaitNotifyEngine waitNotifyEngine;
+  @Inject StateExecutionService stateExecutionService;
 
   private static final String WORKFLOW_EXECUTION_ID = "workflow-execution-id";
   private static final String APP_ID = "app-id";
@@ -131,7 +131,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
     return delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext).getCreateMeta(taskParameters);
   }
 
-  public String getIssueUrl(
+  public ServiceNowExecutionData getIssueUrl(
       String issueNumber, String connectorId, ServiceNowTicketType ticketType, String appId, String accountId) {
     ServiceNowConfig serviceNowConfig;
     try {
@@ -158,7 +158,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
 
   // Todo: Cleanup this method after about 6 months. Keeping it for older approval jobs only.
   @Override
-  public ApprovalDetails.Action getApprovalStatus(String connectorId, String accountId, String appId,
+  public ServiceNowExecutionData getApprovalStatus(String connectorId, String accountId, String appId,
       String issueNumber, String approvalField, String approvalValue, String rejectionField, String rejectionValue,
       String ticketType) {
     ServiceNowConfig serviceNowConfig;
@@ -184,15 +184,21 @@ public class ServiceNowServiceImpl implements ServiceNowService {
     String issueStatus =
         delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext).getIssueStatus(taskParameters);
     if (approvalValue != null && approvalValue.equalsIgnoreCase(issueStatus)) {
-      return Action.APPROVE;
+      return ServiceNowExecutionData.builder()
+          .executionStatus(ExecutionStatus.SUCCESS)
+          .currentState(issueStatus)
+          .build();
     }
     if (rejectionValue != null && rejectionValue.equalsIgnoreCase(issueStatus)) {
-      return Action.REJECT;
+      return ServiceNowExecutionData.builder()
+          .executionStatus(ExecutionStatus.REJECTED)
+          .currentState(issueStatus)
+          .build();
     }
     return null;
   }
 
-  public ApprovalDetails.Action getApprovalStatus(ApprovalPollingJobEntity approvalPollingJobEntity) {
+  public ServiceNowExecutionData getApprovalStatus(ApprovalPollingJobEntity approvalPollingJobEntity) {
     ServiceNowConfig serviceNowConfig;
     try {
       serviceNowConfig = (ServiceNowConfig) settingService.get(approvalPollingJobEntity.getConnectorId()).getValue();
@@ -217,62 +223,54 @@ public class ServiceNowServiceImpl implements ServiceNowService {
                                           .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                           .build();
 
-    String issueStatus =
-        delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext).getIssueStatus(taskParameters);
-    if (approvalPollingJobEntity.getApprovalValue() != null
-        && approvalPollingJobEntity.getApprovalValue().equalsIgnoreCase(issueStatus)) {
-      return Action.APPROVE;
+    try {
+      String issueStatus =
+          delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext).getIssueStatus(taskParameters);
+      if (approvalPollingJobEntity.getApprovalValue() != null
+          && approvalPollingJobEntity.getApprovalValue().equalsIgnoreCase(issueStatus)) {
+        return ServiceNowExecutionData.builder()
+            .executionStatus(ExecutionStatus.SUCCESS)
+            .currentState(issueStatus)
+            .build();
+      }
+      if (approvalPollingJobEntity.getRejectionValue() != null
+          && approvalPollingJobEntity.getRejectionValue().equalsIgnoreCase(issueStatus)) {
+        return ServiceNowExecutionData.builder()
+            .executionStatus(ExecutionStatus.REJECTED)
+            .currentState(issueStatus)
+            .build();
+      }
+      return ServiceNowExecutionData.builder()
+          .executionStatus(ExecutionStatus.PAUSED)
+          .currentState(issueStatus)
+          .build();
+    } catch (WingsException we) {
+      return ServiceNowExecutionData.builder().executionStatus(ExecutionStatus.FAILED).build();
     }
-    if (approvalPollingJobEntity.getRejectionValue() != null
-        && approvalPollingJobEntity.getRejectionValue().equalsIgnoreCase(issueStatus)) {
-      return Action.REJECT;
-    }
-    return null;
   }
 
   public void handleServiceNowPolling(ApprovalPollingJobEntity entity) {
+    ServiceNowExecutionData serviceNowExecutionData = null;
     String approvalId = entity.getApprovalId();
+    String issueNumber = entity.getIssueNumber();
     String workflowExecutionId = entity.getWorkflowExecutionId();
     String appId = entity.getAppId();
     String stateExecutionInstanceId = entity.getStateExecutionInstanceId();
     try {
-      ApprovalDetails.Action approval = getApprovalStatus(entity);
-      if (approval != null) {
-        logger.info("Servicenow Approval Status: {} for approvalId: {}, workflowExecutionId: {} ", approval, approvalId,
-            workflowExecutionId);
-        EmbeddedUser user = null;
-        approveWorkflow(approval, approvalId, user, appId, workflowExecutionId);
-      }
-
+      serviceNowExecutionData = getApprovalStatus(entity);
     } catch (Exception ex) {
       logger.error(
-          "Exception in execute service now polling job. approvalId: {}, workflowExecutionId: {} , issueNumber: {}",
+          "Error occurred while polling issue status. Continuing to poll next minute. approvalId: {}, workflowExecutionId: {} , issueNumber: {}",
           approvalId, workflowExecutionId, entity.getIssueNumber(), ex);
+      return;
     }
-  }
+    ExecutionStatus issueStatus = serviceNowExecutionData.getExecutionStatus();
+    logger.info("Issue: {} Status from SNOW: {} Current Status {} for approvalId: {}, workflowExecutionId: {} ",
+        entity.getIssueNumber(), issueStatus, serviceNowExecutionData.getCurrentState(), approvalId,
+        workflowExecutionId);
 
-  public void approveWorkflow(
-      Action action, String approvalId, EmbeddedUser user, String appId, String workflowExecutionId) {
-    ApprovalDetails approvalDetails = new ApprovalDetails();
-    approvalDetails.setAction(action);
-    approvalDetails.setApprovalId(approvalId);
-
-    if (user != null) {
-      approvalDetails.setApprovedBy(user);
-    }
-    ApprovalStateExecutionData executionData =
-        workflowExecutionService.fetchApprovalStateExecutionDataFromWorkflowExecution(
-            appId, workflowExecutionId, null, approvalDetails);
-    if (action == Action.APPROVE) {
-      executionData.setStatus(ExecutionStatus.SUCCESS);
-    } else {
-      executionData.setStatus(ExecutionStatus.REJECTED);
-    }
-    executionData.setApprovedOn(System.currentTimeMillis());
-    if (user != null) {
-      executionData.setApprovedBy(user);
-    }
-    logger.info("Sending notify for approvalId: {}, workflowExecutionId: {} ", approvalId, workflowExecutionId);
-    waitNotifyEngine.notify(approvalId, executionData);
+    checkApproval(workflowExecutionService, stateExecutionService, waitNotifyEngine, appId, approvalId, issueNumber,
+        workflowExecutionId, stateExecutionInstanceId, serviceNowExecutionData.getCurrentState(),
+        serviceNowExecutionData.getErrorMsg(), issueStatus);
   }
 }

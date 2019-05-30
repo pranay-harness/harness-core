@@ -23,6 +23,9 @@ public class ServiceNowExecutionData extends StateExecutionData implements Respo
   private String responseMsg;
   private ServiceNowTicketType ticketType;
 
+  // approvalField
+  private String currentState;
+
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
@@ -39,6 +42,11 @@ public class ServiceNowExecutionData extends StateExecutionData implements Respo
     if (ticketType != null && issueUrl != null) {
       putNotNull(executionDetails, "issueUrl",
           ExecutionDataValue.builder().displayName(ticketType.getDisplayName() + " Url").value(issueUrl).build());
+    }
+
+    if (currentState != null) {
+      putNotNull(executionDetails, "currentState",
+          ExecutionDataValue.builder().displayName("current state").value(currentState).build());
     }
     return executionDetails;
   }
