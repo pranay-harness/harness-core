@@ -29,11 +29,9 @@ import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -57,11 +55,49 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
     try {
       encryptionService.decrypt(splunkConfig, encryptedDataDetails);
       logger.info("Validating splunk, url {}, for user {} ", splunkConfig.getSplunkUrl(), splunkConfig.getUsername());
-      initSplunkService(splunkConfig, encryptedDataDetails);
+      Service splunkService = initSplunkService(splunkConfig, encryptedDataDetails);
+      createSearchJob(splunkService, getQuery("*exception*", null, null),
+          System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(5), System.currentTimeMillis());
       return true;
     } catch (Exception exception) {
       throw new WingsException("Error connecting to Splunk " + ExceptionUtils.getMessage(exception), exception);
     }
+  }
+
+  private Job createSearchJob(Service splunkService, String query, long startTimeMillis, long endTimeMillis) {
+    JobArgs jobargs = new JobArgs();
+    jobargs.setExecutionMode(JobArgs.ExecutionMode.BLOCKING);
+
+    jobargs.setEarliestTime(String.valueOf(TimeUnit.MILLISECONDS.toSeconds(startTimeMillis)));
+    jobargs.setLatestTime(String.valueOf(TimeUnit.MILLISECONDS.toSeconds(endTimeMillis)));
+
+    return splunkService.getJobs().create(query, jobargs);
+  }
+
+  private List<LogElement> fetchSearchResults(Job job, String basicQuery, String host, long logCollectionMinute)
+      throws Exception {
+    JobResultsArgs resultsArgs = new JobResultsArgs();
+    resultsArgs.setOutputMode(JobResultsArgs.OutputMode.JSON);
+
+    InputStream results = job.getResults(resultsArgs);
+    ResultsReaderJson resultsReader = new ResultsReaderJson(results);
+    List<LogElement> logElements = new ArrayList<>();
+
+    Event event;
+    while ((event = resultsReader.getNextEvent()) != null) {
+      final LogElement splunkLogElement = new LogElement();
+      splunkLogElement.setQuery(basicQuery);
+      splunkLogElement.setClusterLabel(event.get("cluster_label"));
+      splunkLogElement.setHost(host);
+      splunkLogElement.setCount(Integer.parseInt(event.get("cluster_count")));
+      splunkLogElement.setLogMessage(event.get("_raw"));
+      splunkLogElement.setTimeStamp(SPLUNK_DATE_FORMATER.parse(event.get("_time")).getTime());
+      splunkLogElement.setLogCollectionMinute(logCollectionMinute);
+      logElements.add(splunkLogElement);
+    }
+    resultsReader.close();
+
+    return logElements;
   }
 
   @Override
@@ -70,11 +106,6 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       ThirdPartyApiCallLog apiCallLog, int logCollectionMinute) {
     Service splunkService = initSplunkService(splunkConfig, encryptedDataDetails);
     String query = getQuery(basicQuery, hostNameField, host);
-    JobArgs jobargs = new JobArgs();
-    jobargs.setExecutionMode(JobArgs.ExecutionMode.BLOCKING);
-
-    jobargs.setEarliestTime(String.valueOf(TimeUnit.MILLISECONDS.toSeconds(startTime)));
-    jobargs.setLatestTime(String.valueOf(TimeUnit.MILLISECONDS.toSeconds(endTime)));
 
     apiCallLog.setTitle("Fetch request to " + splunkConfig.getSplunkUrl());
     apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
@@ -85,55 +116,27 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
     apiCallLog.addFieldToRequest(
         ThirdPartyApiCallField.builder().name("Query").value(query).type(FieldType.TEXT).build());
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+
     logger.info("triggering splunk query startTime: " + startTime + " endTime: " + endTime + " query: " + query
         + " url: " + splunkConfig.getSplunkUrl());
-    Job job = splunkService.getJobs().create(query, jobargs);
 
-    JobResultsArgs resultsArgs = new JobResultsArgs();
-    resultsArgs.setOutputMode(JobResultsArgs.OutputMode.JSON);
-
-    InputStream results;
     try {
-      results = job.getResults(resultsArgs);
+      Job job = createSearchJob(splunkService, query, startTime, endTime);
+      List<LogElement> logElements = fetchSearchResults(job, basicQuery, host, logCollectionMinute);
+
+      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+      apiCallLog.addFieldToResponse(
+          HttpStatus.SC_OK, "splunk query done. Num of events: " + job.getEventCount(), FieldType.TEXT);
+      delegateLogService.save(splunkConfig.getAccountId(), apiCallLog);
+
+      return logElements;
+
     } catch (Exception e) {
       apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
       apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
       delegateLogService.save(splunkConfig.getAccountId(), apiCallLog);
-      logger.warn("Failed to get job results from Splunk Server.");
-      throw new WingsException(e.getMessage());
+      throw new WingsException(e);
     }
-    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-    apiCallLog.addFieldToResponse(
-        HttpStatus.SC_OK, "splunk query done. Num of events: " + job.getEventCount(), FieldType.TEXT);
-    delegateLogService.save(splunkConfig.getAccountId(), apiCallLog);
-    ResultsReaderJson resultsReader;
-    try {
-      resultsReader = new ResultsReaderJson(results);
-    } catch (IOException e) {
-      throw new WingsException("Unable to parse response to JSON : " + results);
-    }
-    List<LogElement> logElements = new ArrayList<>();
-    try {
-      Event event;
-      while ((event = resultsReader.getNextEvent()) != null) {
-        final LogElement splunkLogElement = new LogElement();
-        splunkLogElement.setQuery(basicQuery);
-        splunkLogElement.setClusterLabel(event.get("cluster_label"));
-        splunkLogElement.setHost(host);
-        splunkLogElement.setCount(Integer.parseInt(event.get("cluster_count")));
-        splunkLogElement.setLogMessage(event.get("_raw"));
-        splunkLogElement.setTimeStamp(SPLUNK_DATE_FORMATER.parse(event.get("_time")).getTime());
-        splunkLogElement.setLogCollectionMinute(logCollectionMinute);
-        logElements.add(splunkLogElement);
-      }
-      resultsReader.close();
-    } catch (IOException e) {
-      throw new WingsException(e.getMessage());
-    } catch (ParseException e) {
-      throw new WingsException("Unable to parse cluster count to integer " + e.getMessage());
-    }
-    logger.info("for host {} got records {}", host, logElements.size());
-    return logElements;
   }
 
   @Override
