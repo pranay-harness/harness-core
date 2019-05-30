@@ -57,7 +57,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
-import software.wings.utils.CacheHelper;
+import software.wings.utils.CacheManager;
 
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
@@ -76,7 +76,7 @@ public class AuthServiceTest extends WingsBaseTest {
   private final String AUTH_SECRET = "AUTH_SECRET";
 
   @Mock private GenericDbCache cache;
-  @Mock private static CacheHelper cacheHelper;
+  @Mock private static CacheManager cacheManager;
   @Mock private Cache<String, User> userCache;
 
   @Mock private AccountService accountService;
@@ -96,7 +96,7 @@ public class AuthServiceTest extends WingsBaseTest {
    */
   @Before
   public void setUp() throws Exception {
-    when(cacheHelper.getUserCache()).thenReturn(userCache);
+    when(cacheManager.getUserCache()).thenReturn(userCache);
     when(userCache.get(USER_ID)).thenReturn(User.Builder.anUser().withUuid(USER_ID).build());
 
     when(cache.get(AuthToken.class, VALID_TOKEN)).thenReturn(new AuthToken(ACCOUNT_ID, USER_ID, 86400000L));

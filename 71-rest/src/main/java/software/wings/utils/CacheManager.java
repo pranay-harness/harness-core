@@ -1,7 +1,12 @@
 package software.wings.utils;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import lombok.Builder;
+import lombok.Value;
 import software.wings.beans.User;
 import software.wings.beans.security.access.WhitelistConfig;
 import software.wings.security.UserPermissionInfo;
@@ -9,6 +14,7 @@ import software.wings.security.UserRestrictionInfo;
 import software.wings.service.impl.newrelic.NewRelicApplication.NewRelicApplications;
 
 import java.util.Optional;
+import java.util.Set;
 import javax.cache.Cache;
 import javax.cache.CacheException;
 import javax.cache.Caching;
@@ -19,48 +25,31 @@ import javax.cache.expiry.Duration;
 import javax.cache.expiry.EternalExpiryPolicy;
 import javax.cache.expiry.ExpiryPolicy;
 
-/**
- * Created by peeyushaggarwal on 1/26/17.
- */
 @Singleton
-public class CacheHelper {
-  /**
-   * A cache to map api key client type to api key value;
-   */
-  private static final String HARNESS_API_KEY_CACHE = "harnessApiKeyCache";
-
-  /**
-   * The constant NEW_RELIC_APPLICATION_CACHE.
-   */
-  private static final String NEW_RELIC_APPLICATION_CACHE = "nrApplicationCache";
-
-  /**
-   * A cache to track the trial registration email for rate limiting purpose.
-   */
-  private static final String TRIAL_EMAIL_CACHE = "trialEmailCache";
-
-  /**
-   * The constant USER_CACHE.
-   */
+public class CacheManager {
   public static final String USER_CACHE = "userCache";
 
-  /**
-   * The constant USER_PERMISSION_CACHE.
-   */
+  private static final String HARNESS_API_KEY_CACHE = "harnessApiKeyCache";
+  private static final String NEW_RELIC_APPLICATION_CACHE = "nrApplicationCache";
+  private static final String TRIAL_EMAIL_CACHE = "trialEmailCache";
   private static final String USER_PERMISSION_CACHE = "userPermissionCache";
-
-  /**
-   * The constant USER_RESTRICTION_CACHE.
-   */
   private static final String USER_RESTRICTION_CACHE = "userRestrictionCache";
-
-  /**
-   * The constant
-   */
   private static final String WHITELIST_CACHE = "whitelistCache";
+
+  @Value
+  @Builder
+  public static class CacheManagerConfig {
+    Set<String> disabled;
+  }
+
+  @Inject CacheManagerConfig config;
 
   public <K, V> Cache<K, V> getCache(
       String cacheName, Class<K> keyType, Class<V> valueType, Factory<ExpiryPolicy> expiryPolicy) {
+    if (isNotEmpty(config.getDisabled()) && config.getDisabled().contains(cacheName)) {
+      return null;
+    }
+
     MutableConfiguration<K, V> configuration = new MutableConfiguration<>();
     configuration.setTypes(keyType, valueType);
     configuration.setStoreByValue(true);

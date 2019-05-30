@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * Wrapper class created for holding all the white list configs for an account. It was needed for CacheHelper.
+ * Wrapper class created for holding all the white list configs for an account. It was needed for CacheManager.
  * @author rktummala on 04/11/2018
  */
 @Data

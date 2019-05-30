@@ -91,7 +91,7 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WhitelistService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.utils.CacheHelper;
+import software.wings.utils.CacheManager;
 import software.wings.utils.ResourceTestRule;
 
 import java.util.Date;
@@ -125,7 +125,7 @@ public class SecureResourceTest {
   private static GenericDbCache genericDbCache = mock(GenericDbCache.class);
   private static AccountService accountService = mock(AccountService.class);
   private static WingsPersistence wingsPersistence = mock(WingsPersistence.class);
-  private static CacheHelper cacheHelper = mock(CacheHelper.class);
+  private static CacheManager cacheManager = mock(CacheManager.class);
 
   private static AppService appService = mock(AppService.class);
   private static UserService userService = mock(UserService.class);
@@ -144,7 +144,7 @@ public class SecureResourceTest {
   private static SSOSettingService ssoSettingService = mock(SSOSettingService.class);
 
   private static AuthService authService = new AuthServiceImpl(genericDbCache, wingsPersistence, userService,
-      userGroupService, usageRestrictionsService, workflowService, envService, cacheHelper, configuration,
+      userGroupService, usageRestrictionsService, workflowService, envService, cacheManager, configuration,
       learningEngineService, authHandler, featureFlagService, harnessUserGroupService, secretManager,
       usageMetricsEventPublisher, whitelistService, ssoSettingService, appService);
 
@@ -255,9 +255,9 @@ public class SecureResourceTest {
    */
   @Before
   public void setUp() throws Exception {
-    when(cacheHelper.getUserCache()).thenReturn(cache);
+    when(cacheManager.getUserCache()).thenReturn(cache);
     when(cache.get(USER_ID)).thenReturn(user);
-    when(cacheHelper.getUserPermissionInfoCache()).thenReturn(cachePermissionInfo);
+    when(cacheManager.getUserPermissionInfoCache()).thenReturn(cachePermissionInfo);
     when(cachePermissionInfo.get(ACCOUNT_ID + "~" + USER_ID)).thenReturn(userPermissionInfo);
 
     when(genericDbCache.get(AuthToken.class, VALID_TOKEN))

@@ -21,7 +21,7 @@ import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.annotations.HarnessApiKeyAuth;
 import software.wings.security.encryption.EncryptionUtils;
 import software.wings.service.intfc.HarnessApiKeyService;
-import software.wings.utils.CacheHelper;
+import software.wings.utils.CacheManager;
 import software.wings.utils.CryptoUtils;
 import software.wings.utils.Validator;
 
@@ -39,7 +39,7 @@ import javax.ws.rs.core.HttpHeaders;
 public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SecretManager secretManager;
-  @Inject private CacheHelper cacheHelper;
+  @Inject private CacheManager cacheManager;
 
   @Override
   public String generate(String clientType) {
@@ -58,7 +58,7 @@ public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
                                 .encryptedKey(EncryptionUtils.encrypt(apiKey.getBytes(Charset.forName("UTF-8")), null))
                                 .clientType(clientTypeObject)
                                 .build());
-      cacheHelper.getHarnessApiKeyCache().put(clientType, apiKey);
+      cacheManager.getHarnessApiKeyCache().put(clientType, apiKey);
     }
     return apiKey;
   }
@@ -82,7 +82,7 @@ public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
       throw new WingsException("Invalid client type : " + clientType);
     }
 
-    Cache<String, String> harnessApiKeyCache = cacheHelper.getHarnessApiKeyCache();
+    Cache<String, String> harnessApiKeyCache = cacheManager.getHarnessApiKeyCache();
     String apiKey = harnessApiKeyCache.get(clientType);
     if (apiKey == null) {
       HarnessApiKey globalApiKey =
@@ -111,7 +111,7 @@ public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
     HarnessApiKey apiKeyObject = getApiKeyObject(ClientType.valueOf(clientType));
     if (apiKeyObject != null) {
       wingsPersistence.delete(HarnessApiKey.class, apiKeyObject.getUuid());
-      cacheHelper.getHarnessApiKeyCache().remove(clientType);
+      cacheManager.getHarnessApiKeyCache().remove(clientType);
       return true;
     }
 

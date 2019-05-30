@@ -96,7 +96,7 @@ import software.wings.settings.RestrictionsAndAppEnvMap;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
-import software.wings.utils.CacheHelper;
+import software.wings.utils.CacheManager;
 import software.wings.utils.CryptoUtils;
 
 import java.util.ArrayList;
@@ -134,7 +134,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private AccountService accountService;
 
   @Getter private Subject<SettingsServiceManipulationObserver> manipulationSubject = new Subject<>();
-  @Inject private CacheHelper cacheHelper;
+  @Inject private CacheManager cacheManager;
   @Inject private EnvironmentService envService;
   @Inject private AuditServiceHelper auditServiceHelper;
 
@@ -548,7 +548,7 @@ public class SettingsServiceImpl implements SettingsService {
       yamlPushService.pushYamlChangeSet(settingAttribute.getAccountId(), savedSettingAttributes,
           updatedSettingAttribute, Type.UPDATE, settingAttribute.isSyncFromGit(), isRename);
     }
-    cacheHelper.getNewRelicApplicationCache().remove(updatedSettingAttribute.getUuid());
+    cacheManager.getNewRelicApplicationCache().remove(updatedSettingAttribute.getUuid());
 
     return updatedSettingAttribute;
   }
@@ -595,7 +595,7 @@ public class SettingsServiceImpl implements SettingsService {
     boolean deleted = wingsPersistence.delete(settingAttribute);
     if (deleted && shouldBeSynced(settingAttribute, pushToGit)) {
       yamlPushService.pushYamlChangeSet(accountId, settingAttribute, null, Type.DELETE, syncFromGit, false);
-      cacheHelper.getNewRelicApplicationCache().remove(settingAttribute.getUuid());
+      cacheManager.getNewRelicApplicationCache().remove(settingAttribute.getUuid());
     } else {
       auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, settingAttribute);
     }

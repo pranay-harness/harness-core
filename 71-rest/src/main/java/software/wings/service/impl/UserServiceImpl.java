@@ -154,7 +154,7 @@ import software.wings.service.intfc.SSOService;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
-import software.wings.utils.CacheHelper;
+import software.wings.utils.CacheManager;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -214,7 +214,7 @@ public class UserServiceImpl implements UserService {
   @Inject private UserGroupService userGroupService;
   @Inject private HarnessUserGroupService harnessUserGroupService;
   @Inject private AppService appService;
-  @Inject private CacheHelper cacheHelper;
+  @Inject private CacheManager cacheManager;
   @Inject private AuthHandler authHandler;
   @Inject private SecretManager secretManager;
   @Inject private TwoFactorAuthenticationManager twoFactorAuthenticationManager;
@@ -479,7 +479,7 @@ public class UserServiceImpl implements UserService {
     // HAR-7639: If the same email is being used repeatedly for trial signup, it's likely a spam activity.
     // Reject/throttle these registration request to avoid the verification or access-your-account email spamming
     // the legitimate trial user's mailbox.
-    Cache<String, Integer> trialEmailCache = cacheHelper.getTrialRegistrationEmailCache();
+    Cache<String, Integer> trialEmailCache = cacheManager.getTrialRegistrationEmailCache();
     String emailAddress = userInvite.getEmail();
     Integer registrationCount = trialEmailCache.get(emailAddress);
     if (registrationCount == null) {
@@ -1935,7 +1935,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public User getUserFromCacheOrDB(String userId) {
-    Cache<String, User> userCache = cacheHelper.getUserCache();
+    Cache<String, User> userCache = cacheManager.getUserCache();
     User user;
     try {
       user = userCache.get(userId);
@@ -1958,7 +1958,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public void evictUserFromCache(String userId) {
-    cacheHelper.getUserCache().remove(userId);
+    cacheManager.getUserCache().remove(userId);
   }
 
   /* (non-Javadoc)

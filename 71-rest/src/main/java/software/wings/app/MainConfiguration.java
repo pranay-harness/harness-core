@@ -43,6 +43,7 @@ import software.wings.security.authentication.oauth.LinkedinConfig;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Used to load all the application configuration.
@@ -98,6 +99,8 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("mktPlaceConfig") private MarketPlaceConfig marketPlaceConfig;
   @JsonProperty("sampleTargetEnv") private String sampleTargetEnv;
   @JsonProperty("sampleTargetStatusHost") private String sampleTargetStatusHost;
+
+  @JsonProperty("disabledCache") private Set<String> disabledCache;
 
   private int applicationPort;
   private boolean sslEnabled;

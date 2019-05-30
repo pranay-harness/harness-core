@@ -131,7 +131,7 @@ import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
-import software.wings.utils.CacheHelper;
+import software.wings.utils.CacheManager;
 import software.wings.utils.WingsTestConstants;
 
 import java.io.IOException;
@@ -187,7 +187,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private AuthService authService;
   @Mock private UserGroupService userGroupService;
-  @Mock private CacheHelper cacheHelper;
+  @Mock private CacheManager cacheManager;
   @Mock private LimitCheckerFactory limitCheckerFactory;
   @Mock private AuthenticationManager authenticationManager;
   @Mock private UserServiceLimitChecker userServiceLimitChecker;
@@ -211,7 +211,7 @@ public class UserServiceTest extends WingsBaseTest {
   public void setupMocks() {
     when(configuration.getSupportEmail()).thenReturn(SUPPORT_EMAIL);
     doNothing().when(userServiceLimitChecker).limitCheck(Mockito.anyString(), Mockito.anyList(), Mockito.anySet());
-    when(cacheHelper.getUserCache()).thenReturn(cache);
+    when(cacheManager.getUserCache()).thenReturn(cache);
 
     when(wingsPersistence.createQuery(User.class)).thenReturn(query);
     when(query.filter(any(), any())).thenReturn(query);
