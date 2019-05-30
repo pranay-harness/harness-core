@@ -1,5 +1,6 @@
 package io.harness.distribution.idempotent;
 
+import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static org.junit.Assert.assertEquals;
@@ -20,6 +21,7 @@ import io.harness.distribution.idempotence.IdempotentRegistry.State;
 import io.harness.distribution.idempotence.IdempotentResult;
 import io.harness.distribution.idempotence.InprocIdempotentRegistry;
 import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationException;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.threading.Concurrent;
 import lombok.Builder;
@@ -91,8 +93,9 @@ public class IdempotentTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = GEORGE)
   @Category(UnitTests.class)
-  @Ignore // TODO: find more reliable way to test this
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testIdempotentAfterTtl() {
     final IdempotentRegistry<BooleanIdempotentResult> idempotentRegistry = new InprocIdempotentRegistry<>();
     try (IdempotentLock<BooleanIdempotentResult> idempotent =

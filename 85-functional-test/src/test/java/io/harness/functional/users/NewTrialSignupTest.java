@@ -1,5 +1,6 @@
 package io.harness.functional.users;
 
+import static io.harness.rule.OwnerRule.RAMA;
 import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -51,7 +52,7 @@ public class NewTrialSignupTest extends AbstractFunctionalTest {
   }
 
   @Test()
-  @Owner(emails = "rama@harness.io", resent = false)
+  @Owner(emails = RAMA, resent = false)
   @Category(FunctionalTests.class)
   public void verifyTrialUserSignup() {
     UserInvite invite = constructInvite("password");
@@ -64,7 +65,7 @@ public class NewTrialSignupTest extends AbstractFunctionalTest {
   }
 
   @Test()
-  @Owner(emails = "rama@harness.io", resent = false)
+  @Owner(emails = RAMA, resent = false)
   @Category(FunctionalTests.class)
   public void verifyTrialUserSignupInvalidPassword() {
     UserInvite invite = constructInvite("pass");

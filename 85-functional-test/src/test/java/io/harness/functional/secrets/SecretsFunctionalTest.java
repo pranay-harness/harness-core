@@ -1,5 +1,6 @@
 package io.harness.functional.secrets;
 
+import static io.harness.rule.OwnerRule.SWAMY;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -69,7 +70,7 @@ public class SecretsFunctionalTest extends AbstractFunctionalTest {
    * Disbaling this temporarily until our team completes this from framework level.
    */
   @Test
-  @Owner(emails = "swamy@harness.io", intermittent = true)
+  @Owner(emails = SWAMY, intermittent = true)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void secretsCRUDTests() {

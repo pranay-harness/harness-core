@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rest.RestResponse.Builder.aRestResponse;
+import static io.harness.rule.OwnerRule.PARNIAN;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -30,6 +31,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.persistence.ReadPref;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
@@ -381,6 +383,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = PARNIAN)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testInitializeServiceSecretKeys() {

@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.mail;
 
+import static io.harness.rule.OwnerRule.ANUBHAW;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.common.Constants.HARNESS_NAME;
 
@@ -54,7 +55,7 @@ public class MailerTest extends WingsBaseTest {
    * @throws MessagingException the messaging exception
    */
   @Test
-  @Owner(emails = "anubhaw@harness.io", intermittent = true)
+  @Owner(emails = ANUBHAW, intermittent = true)
   @Category(UnitTests.class)
   public void shouldSendNormalEmail() throws MessagingException {
     mailer.send(SmtpConfig.builder()
@@ -93,7 +94,7 @@ public class MailerTest extends WingsBaseTest {
    * @throws IOException        the io exception
    */
   @Test
-  @Owner(emails = "anubhaw@harness.io", intermittent = true)
+  @Owner(emails = ANUBHAW, intermittent = true)
   @Category(UnitTests.class)
   public void shouldSendHtmlEmail() throws MessagingException {
     mailer.send(SmtpConfig.builder()

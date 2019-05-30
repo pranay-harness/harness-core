@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -107,7 +108,7 @@ public class EnvStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = "srinivas@harness.io")
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldExecuteOnError() {
     when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);

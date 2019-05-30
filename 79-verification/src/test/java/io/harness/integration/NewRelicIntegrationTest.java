@@ -3,6 +3,8 @@ package io.harness.integration;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.PRANJAL;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -145,7 +147,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = "raghu@harness.io", intermittent = true)
+  @Owner(emails = RAGHU, intermittent = true)
   @Category(IntegrationTests.class)
   public void getNewRelicApplications() throws Exception {
     WebTarget target =
@@ -163,7 +165,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = "raghu@harness.io", intermittent = true)
+  @Owner(emails = RAGHU, intermittent = true)
   @Category(IntegrationTests.class)
   public void getAllTxnNames() throws Exception {
     SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, newRelicConfigId);
@@ -204,7 +206,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = "pranjal@harness.io", intermittent = true)
+  @Owner(emails = PRANJAL, intermittent = true)
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
   public void getNewRelicDataForNode() {

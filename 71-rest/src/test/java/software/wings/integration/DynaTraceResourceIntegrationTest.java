@@ -1,6 +1,7 @@
 package software.wings.integration;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.PRANJAL;
 import static javax.ws.rs.client.Entity.entity;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -42,7 +43,6 @@ import javax.ws.rs.core.Response;
 /**
  * Created by Pranjal on 09/13/2018
  */
-@Ignore
 public class DynaTraceResourceIntegrationTest extends BaseIntegrationTest {
   public static final String url = "https://bdv73347.live.dynatrace.com";
   @Inject private ScmSecret scmSecret;
@@ -79,9 +79,10 @@ public class DynaTraceResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = "pranjal@harness.io", intermittent = true)
+  @Owner(emails = PRANJAL, intermittent = true)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Category(IntegrationTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetLogRecords() {
     DynaTraceSetupTestNodeData testNodedata = getSampledata();
     WebTarget target = client.target(API_BASE + "/"

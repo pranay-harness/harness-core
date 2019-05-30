@@ -1,5 +1,6 @@
 package software.wings.service.impl.template;
 
+import static io.harness.rule.OwnerRule.AADITI;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -24,6 +25,7 @@ import static software.wings.utils.WingsTestConstants.INVALID_NAME;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -412,6 +414,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Owner(emails = AADITI)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldNotSaveTemplateFoldersWithSameNameApplicationLevel() {

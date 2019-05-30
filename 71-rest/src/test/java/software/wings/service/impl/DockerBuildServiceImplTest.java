@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.GARVIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -7,6 +8,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +29,6 @@ import java.util.List;
 /**
  * Created by anubhaw on 1/6/17.
  */
-@Ignore
 @Integration
 @Slf4j
 public class DockerBuildServiceImplTest extends WingsBaseTest {
@@ -39,7 +40,9 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks private DockerBuildService dockerBuildService;
 
   @Test
+  @Owner(emails = GARVIT)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetBuildsWithoutCredentials() {
     DockerConfig dockerConfig = DockerConfig.builder().dockerRegistryUrl(DOCKER_REGISTRY_URL).build();
     List<BuildDetails> builds = dockerRegistryService.getBuilds(dockerConfig, null, "library/mysql", 5);
@@ -48,7 +51,9 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = GARVIT)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetBuildsWithCredentials() {
     DockerConfig dockerConfig =
         DockerConfig.builder()
@@ -62,7 +67,9 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = GARVIT)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetLastSuccessfulBuild() {
     DockerConfig dockerConfig =
         DockerConfig.builder()
@@ -75,7 +82,9 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = GARVIT)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldValidateInvalidUrl() {
     DockerConfig dockerConfig =
         DockerConfig.builder()
@@ -93,7 +102,9 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = GARVIT)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldValidateCredentials() {
     DockerConfig dockerConfig =
         DockerConfig.builder()

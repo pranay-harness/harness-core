@@ -1,5 +1,6 @@
 package io.harness.functional.cloudProviders;
 
+import static io.harness.rule.OwnerRule.SUNIL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -30,7 +31,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
   private static String cloudProviderId;
 
   @Test
-  @Owner(emails = "sunil@harness.io", resent = false)
+  @Owner(emails = SUNIL, resent = false)
   @Category(FunctionalTests.class)
   public void TC0_listCloudProviders() {
     JsonPath cloudProviders = SettingsUtils.listCloudproviderConnector(bearerToken, getAccount().getUuid(), CATEGORY);
@@ -38,7 +39,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = "sunil@harness.io", resent = false)
+  @Owner(emails = SUNIL, resent = false)
   @Category(FunctionalTests.class)
   public void TC1_createCloudProvider() {
     SettingAttribute settingAttribute =
@@ -65,7 +66,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = "sunil@harness.io", resent = false)
+  @Owner(emails = SUNIL, resent = false)
   @Category(FunctionalTests.class)
   public void TC2_deleteCloudProvider() {
     SettingsUtils.delete(bearerToken, getAccount().getUuid(), cloudProviderId);

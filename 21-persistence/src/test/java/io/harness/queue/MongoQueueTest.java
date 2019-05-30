@@ -1,5 +1,6 @@
 package io.harness.queue;
 
+import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
@@ -14,6 +15,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.mongo.MongoQueue;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.Queue.Filter;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.version.VersionInfoManager;
 import org.junit.Before;
@@ -338,8 +340,9 @@ public class MongoQueueTest extends PersistenceTest {
    * Should send message.
    */
   @Test
+  @Owner(emails = GEORGE)
   @Category(UnitTests.class)
-  @Ignore // this test is intermittently failing
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldSendMessage() {
     TestQueuableObject message = new TestQueuableObject(1);
 

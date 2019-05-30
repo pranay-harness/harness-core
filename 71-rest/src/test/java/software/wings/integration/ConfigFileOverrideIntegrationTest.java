@@ -1,5 +1,6 @@
 package software.wings.integration;
 
+import static io.harness.rule.OwnerRule.BRETT;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,6 +20,7 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.category.element.IntegrationTests;
 import io.harness.persistence.ReadPref;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.stream.BoundedInputStream;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -79,7 +81,6 @@ import java.util.List;
  * |    |    |...Host9
  * |
  */
-@Ignore
 public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
   /**
    * The Test folder.
@@ -181,7 +182,9 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
+  @Owner(emails = BRETT)
   @Category(IntegrationTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldApplyServiceConfigFilesIT() throws IOException {
     attacheConfigFileToEntity(template.getServiceId(), EntityType.SERVICE);
 

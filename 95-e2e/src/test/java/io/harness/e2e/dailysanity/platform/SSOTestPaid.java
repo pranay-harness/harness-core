@@ -1,5 +1,6 @@
 package io.harness.e2e.dailysanity.platform;
 
+import static io.harness.rule.OwnerRule.SWAMY;
 import static junit.framework.TestCase.assertTrue;
 
 import io.harness.category.element.E2ETests;
@@ -17,7 +18,7 @@ import software.wings.beans.sso.OauthSettings;
 @Slf4j
 public class SSOTestPaid extends AbstractE2ETest {
   @Test()
-  @Owner(emails = "swamy@harness.io", resent = false)
+  @Owner(emails = SWAMY, resent = false)
   @Category(E2ETests.class)
   public void createGoogleOauth() {
     logger.info("Starting the google oauth test");
@@ -32,7 +33,7 @@ public class SSOTestPaid extends AbstractE2ETest {
   }
 
   @Test()
-  @Owner(emails = "swamy@harness.io", resent = false)
+  @Owner(emails = SWAMY, resent = false)
   @Category(E2ETests.class)
   public void createLDAPSettings() {
     logger.info("Starting the LDAP test");
@@ -44,7 +45,7 @@ public class SSOTestPaid extends AbstractE2ETest {
   }
 
   @Test()
-  @Owner(emails = "swamy@harness.io", resent = false)
+  @Owner(emails = SWAMY, resent = false)
   @Category(E2ETests.class)
   public void createSAMLSettingsInPaid() {
     logger.info("Starting the LDAP test");

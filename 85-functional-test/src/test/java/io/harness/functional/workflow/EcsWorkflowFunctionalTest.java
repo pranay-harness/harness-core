@@ -3,6 +3,7 @@ package io.harness.functional.workflow;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
@@ -71,6 +72,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
 @Slf4j
 public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
@@ -134,7 +136,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = "adwait.bhandare@harness.io")
+  @Owner(emails = ADWAIT)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateBasicEcsWorkflow() throws Exception {
@@ -147,7 +149,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = "adwait.bhandare@harness.io")
+  @Owner(emails = ADWAIT)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateDaemonEcsWorkflow() throws Exception {
@@ -158,7 +160,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = "adwait.bhandare@harness.io")
+  @Owner(emails = ADWAIT)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateCanaryEcsWorkflow() throws Exception {

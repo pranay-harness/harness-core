@@ -4,11 +4,9 @@ import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Ignore;
 import software.wings.rules.Integration;
 
 @Integration
-@Ignore
 @Slf4j
 public class KubernetesCertificateIntegrationTest {
   public static void main(String[] args) {

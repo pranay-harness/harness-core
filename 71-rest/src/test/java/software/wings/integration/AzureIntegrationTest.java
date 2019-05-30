@@ -1,5 +1,6 @@
 package software.wings.integration;
 
+import static io.harness.rule.OwnerRule.PUNEET;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -112,7 +113,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = "puneet.saraswat@harness.io", intermittent = true)
+  @Owner(emails = PUNEET, intermittent = true)
   @Category(IntegrationTests.class)
   public void getAvailableTags() {
     AzureConfig config = getAzureConfig();

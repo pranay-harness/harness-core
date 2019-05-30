@@ -1,6 +1,7 @@
 package io.harness.functional.trigger;
 
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -56,7 +57,7 @@ public class DeploymentTriggerFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = "srinivas@harness.io", intermittent = true)
+  @Owner(emails = SRINIVAS, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldCreateNewArtifactTriggerForWorkflow() {
     final Service service =

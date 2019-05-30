@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.ANUBHAW;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -23,6 +24,7 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -47,7 +49,6 @@ import java.util.Map;
 /**
  * Created by anubhaw on 6/7/16.
  */
-@Ignore // TODO: move to delegate
 public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   @Mock private Map<String, CommandUnitExecutorService> commandUnitExecutorServiceMap;
   @Mock private SshCommandUnitExecutorServiceImpl sshCommandUnitExecutorService;
@@ -77,7 +78,9 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
    * Should execute command for service instance.
    */
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldExecuteCommandForServiceInstance() {
     when(commandUnitExecutorServiceMap.get(DeploymentType.SSH.name())).thenReturn(sshCommandUnitExecutorService);
     when(sshCommandUnitExecutorService.execute(any(AbstractCommandUnit.class), eq(context))).thenReturn(SUCCESS);
@@ -89,7 +92,9 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
    * Should execute nested command for service instance.
    */
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldExecuteNestedCommandForServiceInstance() {
     Command nestedCommand = aCommand().withName("NESTED_CMD").addCommandUnits(command).build();
     when(commandUnitExecutorServiceMap.get(DeploymentType.SSH.name())).thenReturn(sshCommandUnitExecutorService);

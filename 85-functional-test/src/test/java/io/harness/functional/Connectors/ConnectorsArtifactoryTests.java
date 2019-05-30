@@ -1,5 +1,6 @@
 package io.harness.functional.Connectors;
 
+import static io.harness.rule.OwnerRule.SUNIL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -30,7 +31,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   private static String connectorId;
 
   @Test
-  @Owner(emails = "sunil@harness.io", resent = false)
+  @Owner(emails = SUNIL, resent = false)
   @Category(FunctionalTests.class)
   public void TC0_listAllConnectors() {
     JsonPath connectors = SettingsUtils.listCloudproviderConnector(bearerToken, getAccount().getUuid(), CATEGORY);
@@ -38,7 +39,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = "sunil@harness.io", resent = false)
+  @Owner(emails = SUNIL, resent = false)
   @Category(FunctionalTests.class)
   public void TC1_createNexusConnector() {
     String NEXUS_URL = "https://nexus2.harness.io";
@@ -70,7 +71,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = "sunil@harness.io", resent = false)
+  @Owner(emails = SUNIL, resent = false)
   @Category(FunctionalTests.class)
   public void TC2_deleteConnector() {
     SettingsUtils.delete(bearerToken, getAccount().getUuid(), connectorId);

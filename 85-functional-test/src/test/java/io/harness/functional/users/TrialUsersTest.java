@@ -1,5 +1,6 @@
 package io.harness.functional.users;
 
+import static io.harness.rule.OwnerRule.SWAMY;
 import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
@@ -58,7 +59,7 @@ public class TrialUsersTest extends AbstractFunctionalTest {
   }
 
   @Test()
-  @Owner(emails = "swamy@harness.io", resent = false)
+  @Owner(emails = SWAMY, resent = false)
   @Category(FunctionalTests.class)
   public void verifyTrialUserSignup() throws IOException, MessagingException {
     String domainName = "@harness.mailinator.com";

@@ -2,6 +2,7 @@ package software.wings.service.impl.artifact;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,6 +41,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery;
 import io.harness.queue.Queue;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -169,6 +171,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldThrowExceptionWhenArtifactToBeCreatedIsInvalid() {

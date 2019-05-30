@@ -1,10 +1,12 @@
 package software.wings.integration.network;
 
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import okhttp3.Authenticator;
 import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
@@ -90,6 +92,7 @@ public class ProxyTest {
    */
 
   @Test
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testWithProxyAuthSuccess_OkHttpClient() throws IOException {
@@ -183,6 +186,7 @@ public class ProxyTest {
   //  }
 
   @Test
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetResponseFromUrlProxyAuth() throws IOException {
@@ -200,6 +204,7 @@ public class ProxyTest {
   }
 
   @Test
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetResponseFromUrlProxyAuth_Fail() throws IOException {

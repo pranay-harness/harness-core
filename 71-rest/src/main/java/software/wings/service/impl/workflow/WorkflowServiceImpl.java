@@ -423,7 +423,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
               predicate = stencil -> stencil.matches(workflowPhaseDeploymentType);
             }
           } else if (infraMappingId != null) {
-            // TODO: This check can be removed once refacotor the code to have single class for AWS_NODE_SELECT,
+            // TODO: This check can be removed once refactor the code to have single class for AWS_NODE_SELECT,
             // DC_NODE_SELECT and ROLLING_SELECT_NODE
             InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
             if (infrastructureMapping != null) {

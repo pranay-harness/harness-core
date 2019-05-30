@@ -1,6 +1,9 @@
 package software.wings.integration.appdynamics;
 
+import static io.harness.rule.OwnerRule.RAGHU;
+
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -18,6 +21,7 @@ public class AppDynamicsToDoListLoadGenTest extends BaseIntegrationTest {
   //  private final String baseUrl = "https://appd.cfapps.io";
   //  private final String baseUrl = "http://localhost:8080";
   @Test
+  @Owner(emails = RAGHU)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void generateLoadTest() throws InterruptedException {

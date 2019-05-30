@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -313,7 +314,7 @@ public class CommandStateTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(emails = "rathnakara.malatesha@harness.io")
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void execute() {
@@ -440,7 +441,7 @@ public class CommandStateTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(emails = "rathnakara.malatesha@harness.io")
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
   public void executeWithArtifact() throws Exception {
     Artifact artifact =

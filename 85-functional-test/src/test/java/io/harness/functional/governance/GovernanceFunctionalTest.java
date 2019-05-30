@@ -3,6 +3,7 @@ package io.harness.functional.governance;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.EnvironmentGenerator.Environments.GENERIC_TEST;
+import static io.harness.rule.OwnerRule.RAMA;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
@@ -26,6 +27,7 @@ import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
@@ -70,6 +72,7 @@ public class GovernanceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = RAMA)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldBlockDeploymentsWhenFreezeIsEnabled() throws Exception {

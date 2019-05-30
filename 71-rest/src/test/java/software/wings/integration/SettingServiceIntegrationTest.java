@@ -1,5 +1,6 @@
 package software.wings.integration;
 
+import static io.harness.rule.OwnerRule.ANUBHAW;
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -16,6 +17,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.IntegrationTests;
 import io.harness.eraro.ResponseMessage;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -58,6 +60,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   // TODO: Jenkins test need to be looked into later. Test is passing locally, however failing in Jenkins K8s after PR
   // push.
   @Test
+  @Owner(emails = ANUBHAW)
   @Repeat(times = 5)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
@@ -87,6 +90,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldThrowExceptionForUnreachableJenkinsUrl() {
@@ -114,6 +118,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldSaveNexusConfig() {
@@ -140,6 +145,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldSaveBambooConfig() {

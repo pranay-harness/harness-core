@@ -1,5 +1,6 @@
 package software.wings.cloudprovider.aws;
 
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -41,6 +42,7 @@ import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.ServiceEvent;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.JsonUtils;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -159,8 +161,9 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore // TODO:: remove ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldProvisionTasks() {
     when(awsHelperService.describeServices(anyString(), any(AwsConfig.class), any(), any()))
         .thenReturn(new DescribeServicesResult().withServices(

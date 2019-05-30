@@ -1,5 +1,6 @@
 package io.harness.functional.secrets;
 
+import static io.harness.rule.OwnerRule.SWAMY;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -22,7 +23,7 @@ import java.util.List;
 @Slf4j
 public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
   @Test
-  @Owner(emails = "swamy@harness.io", resent = false)
+  @Owner(emails = SWAMY, resent = false)
   @Category(FunctionalTests.class)
   public void secretsTextCRUDTests() {
     logger.info("Local secrets text test starts");
@@ -66,7 +67,7 @@ public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
    * TO-DO: Work with Rama to have this resolved
    */
   @Test
-  @Owner(emails = "swamy@harness.io")
+  @Owner(emails = SWAMY)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void secretsTextCRUDTestsWithUsageRestrictions() {
@@ -108,7 +109,7 @@ public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = "swamy@harness.io", resent = false)
+  @Owner(emails = SWAMY, resent = false)
   @Category(FunctionalTests.class)
   public void secretsFileCRUDTests() {
     logger.info("Local secrets file test starts");

@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.rule.OwnerRule.RAGHU;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyObject;
@@ -55,7 +56,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = "raghu@harness.io", intermittent = true)
+  @Owner(emails = RAGHU, intermittent = true)
   @Category(UnitTests.class)
   public void testElkConfigNoPassword() {
     final ElkConfig elkConfig = new ElkConfig();
@@ -74,7 +75,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = "raghu@harness.io", intermittent = true)
+  @Owner(emails = RAGHU, intermittent = true)
   @Category(UnitTests.class)
   public void testElkConfigNoUserName() {
     final ElkConfig elkConfig = new ElkConfig();
@@ -110,6 +111,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = RAGHU)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testValidConfig() {

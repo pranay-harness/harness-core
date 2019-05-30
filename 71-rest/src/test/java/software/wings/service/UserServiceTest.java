@@ -4,6 +4,7 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -76,6 +77,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.event.model.EventType;
 import io.harness.exception.WingsException;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.validator.routines.UrlValidator;
@@ -778,6 +780,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Should invite existing user.
    */
   @Test
+  @Owner(emails = RAGHU)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldInviteExistingUser() {
@@ -807,6 +810,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Should Override 2FA on user
    */
   @Test
+  @Owner(emails = RAGHU)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldOverrideTwoFactorForUser() {
@@ -1001,6 +1005,7 @@ public class UserServiceTest extends WingsBaseTest {
    * @throws UnsupportedEncodingException the unsupported encoding exception
    */
   @Test
+  @Owner(emails = RAGHU)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldAddAccount() throws UnsupportedEncodingException {

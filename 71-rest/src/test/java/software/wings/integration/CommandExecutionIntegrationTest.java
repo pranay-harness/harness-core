@@ -2,6 +2,7 @@ package software.wings.integration;
 
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
@@ -28,6 +29,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.IntegrationTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.persistence.ReadPref;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -56,7 +58,6 @@ import java.nio.charset.StandardCharsets;
  * Created by anubhaw on 6/2/16.
  */
 @Integration
-@Ignore
 public class CommandExecutionIntegrationTest extends WingsBaseTest {
   private static final String HOST_NAME = "192.168.1.53";
   private static final String USER = "ssh_user";
@@ -143,7 +144,9 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
    * Should execute command.
    */
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(IntegrationTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldExecuteCommand() {
     CommandExecutionStatus commandExecutionStatus = serviceCommandExecutorService.execute(command, context);
     command.getCommandUnits().forEach(
@@ -155,7 +158,9 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
    * Should capture failed execution command unit.
    */
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(IntegrationTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCaptureFailedExecutionCommandUnit() {
     ((ExecCommandUnit) command.getCommandUnits().get(6)).setCommandString("INVALID_COMMAND");
     CommandExecutionStatus commandExecutionStatus = serviceCommandExecutorService.execute(command, context);

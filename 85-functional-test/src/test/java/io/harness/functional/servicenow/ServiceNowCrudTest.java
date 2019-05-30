@@ -1,6 +1,7 @@
 package io.harness.functional.servicenow;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.POOJA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
@@ -33,6 +34,7 @@ import io.harness.generator.ServiceGenerator;
 import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.SettingGenerator.Settings;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import org.awaitility.Awaitility;
 import org.junit.Before;
@@ -95,8 +97,9 @@ public class ServiceNowCrudTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = POOJA)
   @Category(FunctionalTests.class)
-  @Ignore
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateSnowTicket() throws Exception {
     Workflow snowFTWorkflow =
         aWorkflow()

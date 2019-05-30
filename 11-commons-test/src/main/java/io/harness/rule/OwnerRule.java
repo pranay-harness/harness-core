@@ -19,11 +19,33 @@ import java.util.List;
 
 @Slf4j
 public class OwnerRule extends RepeatRule {
-  private static List<String> active = asList("aaditi.joag@harness.io", "adwait.bhandare@harness.io",
-      "anshul@harness.io", "anubhaw@harness.io", "george@harness.io", "jatin@harness.io", "mark.lu@harness.io",
-      "raghu@harness.io", "rathnakara.malatesha@harness.io", "pooja.singhal@harness.io", "pranjal@harness.io",
-      "praveen.sugavanam@harness.io", "puneet.saraswat@harness.io", "srinivas@harness.io", "sriram@harness.io",
-      "sunil@harness.io", "swamy@harness.io", "vaibhav.si@harness.io", "vaibhav.tulsyan@harness.io", "rama@harness.io");
+  public static final String AADITI = "aaditi.joag@harness.io";
+  public static final String ADWAIT = "adwait.bhandare@harness.io";
+  public static final String ANSHUL = "anshul@harness.io";
+  public static final String ANUBHAW = "anubhaw@harness.io";
+  public static final String BRETT = "brett@harness.io";
+  public static final String GARVIT = "garvit.pahal@harness.io";
+  public static final String GEORGE = "george@harness.io";
+  public static final String JATIN = "jatin@harness.io";
+  public static final String MARK = "mark.lu@harness.io";
+  public static final String PARNIAN = "parnian@harness.io";
+  public static final String PRANJAL = "pranjal@harness.io";
+  public static final String PRAVEEN = "praveen.sugavanam@harness.io";
+  public static final String POOJA = "pooja@harness.io";
+  public static final String PUNEET = "puneet.saraswat@harness.io";
+  public static final String RAMA = "rama@harness.io";
+  public static final String RAGHU = "raghu@harness.io";
+  public static final String RUSHABH = "rushabh@harness.io";
+  public static final String SRINIVAS = "srinivas@harness.io";
+  public static final String SRIRAM = "sriram@harness.io";
+  public static final String SUNIL = "sunil@harness.io";
+  public static final String SWAMY = "swamy@harness.io";
+  public static final String VAIBHAV_SI = "vaibhav.si@harness.io";
+  public static final String VAIBHAV_TULSYAN = "vaibhav.tulsyan@harness.io";
+
+  private static List<String> active =
+      asList(AADITI, ADWAIT, ANSHUL, ANUBHAW, BRETT, GARVIT, GEORGE, JATIN, MARK, PARNIAN, PRANJAL, PRAVEEN, POOJA,
+          PUNEET, RAMA, RAGHU, RUSHABH, SRINIVAS, SRIRAM, SUNIL, SWAMY, VAIBHAV_SI, VAIBHAV_TULSYAN);
 
   @Retention(RetentionPolicy.RUNTIME)
   @Target({java.lang.annotation.ElementType.METHOD})

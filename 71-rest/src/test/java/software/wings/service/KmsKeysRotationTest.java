@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -18,6 +19,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -52,7 +54,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 /**
  * Created by rsingh on 7/20/18.
  */
-@Ignore
 @Integration
 @Slf4j
 public class KmsKeysRotationTest extends WingsBaseTest {
@@ -78,7 +79,9 @@ public class KmsKeysRotationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = RAGHU)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void rotateAwsKeysSameARN() throws Exception {
     Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(GLOBAL_ACCOUNT_ID, false);
     assertEquals(1, kmsConfigs.size());
@@ -108,7 +111,9 @@ public class KmsKeysRotationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = RAGHU)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void rotateAwsKeysAndArn() throws Exception {
     Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(GLOBAL_ACCOUNT_ID, false);
     assertEquals(1, kmsConfigs.size());

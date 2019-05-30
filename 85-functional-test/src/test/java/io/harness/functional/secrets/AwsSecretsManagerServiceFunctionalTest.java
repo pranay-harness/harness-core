@@ -1,5 +1,6 @@
 package io.harness.functional.secrets;
 
+import static io.harness.rule.OwnerRule.MARK;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
 
@@ -8,6 +9,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.framework.Setup;
@@ -39,6 +41,7 @@ public class AwsSecretsManagerServiceFunctionalTest extends AbstractFunctionalTe
   @Inject private AwsSecretsManagerService secretsManagerService;
 
   @Test
+  @Owner(emails = MARK)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testCRUDSecretsWithAwsSecretsManager() {

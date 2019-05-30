@@ -3,6 +3,7 @@ package software.wings.resources;
 import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.eq;
@@ -14,6 +15,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Ignore;
@@ -54,6 +56,7 @@ public class ExecutionResourceTest {
    * Test find by name.
    */
   @Test
+  @Owner(emails = RAGHU)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testListExecutions() {

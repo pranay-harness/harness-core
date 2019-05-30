@@ -2,6 +2,7 @@ package io.harness.functional.k8s;
 
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.PUNEET;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
@@ -77,13 +78,14 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test(timeout = TIMEOUT)
-  @Owner(emails = "puneet.saraswat@harness.io", intermittent = true)
+  @Owner(emails = PUNEET, intermittent = true)
   @Category(FunctionalTests.class)
   public void testK8sRollingWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.ROLLING);
   }
 
   @Test(timeout = TIMEOUT)
+  @Owner(emails = PUNEET)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testK8sCanaryWorkflow() {
@@ -91,6 +93,7 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test(timeout = TIMEOUT)
+  @Owner(emails = PUNEET)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testK8sBlueGreenWorkflow() {

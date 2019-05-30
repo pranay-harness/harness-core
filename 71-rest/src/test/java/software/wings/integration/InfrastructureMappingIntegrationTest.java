@@ -1,6 +1,7 @@
 package software.wings.integration;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.rule.OwnerRule.ANUBHAW;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -19,6 +20,7 @@ import com.google.inject.Inject;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.IntegrationTests;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.junit.Before;
@@ -176,6 +178,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldSelectAwsInfrastructureInstances() {
@@ -214,6 +217,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldProvisionAwsNodes() {

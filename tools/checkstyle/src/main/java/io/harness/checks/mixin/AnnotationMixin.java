@@ -33,9 +33,17 @@ public class AnnotationMixin {
     while (annotationChildNode != null) {
       if (annotationChildNode.getType() == TokenTypes.ANNOTATION_MEMBER_VALUE_PAIR) {
         annotationParameters.put(annotationChildNode.getFirstChild().getText(), annotationChildNode);
+      } else if (annotationChildNode.getType() == TokenTypes.EXPR) {
+        annotationParameters.put("", annotationChildNode);
       }
+
       annotationChildNode = annotationChildNode.getNextSibling();
     }
     return annotationParameters;
+  }
+
+  public static String obtainDefaultValue(DetailAST expression) {
+    final DetailAST literal = expression.getFirstChild();
+    return literal.getText();
   }
 }

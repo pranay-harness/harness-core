@@ -1,6 +1,8 @@
 package software.wings.service.impl.appdynamics;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.PARNIAN;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -100,7 +102,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = "raghu@harness.io", intermittent = true)
+  @Owner(emails = RAGHU, intermittent = true)
   @Category(UnitTests.class)
   public void testUnreachableAppdynamicsServer() throws IOException {
     Call<List<NewRelicApplication>> restCall = mock(Call.class);
@@ -116,7 +118,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
       fail("Validated invalid config");
     } catch (WingsException e) {
       assertEquals(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR, e.getCode());
-      logger.info("got execption", e);
+      logger.info("got exception", e);
       assertEquals("got exception: " + e + " params: " + e.getParams(),
           "Could not reach AppDynamics server. " + ExceptionUtils.getMessage(runtimeException),
           e.getParams().get("reason"));
@@ -124,7 +126,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = "raghu@harness.io", intermittent = true)
+  @Owner(emails = RAGHU, intermittent = true)
   @Category(UnitTests.class)
   public void testInvalidCredential() throws IOException {
     Call<List<NewRelicApplication>> restCall = mock(Call.class);
@@ -139,7 +141,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
       fail("Validated invalid config");
     } catch (WingsException e) {
       assertEquals(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR, e.getCode());
-      logger.info("got execption", e);
+      logger.info("got exception", e);
       assertEquals("got exception: " + e + " params: " + e.getParams(),
           "Could not login to AppDynamics server with the given credentials", e.getParams().get("reason"));
     }
@@ -201,6 +203,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = PARNIAN)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetTierDependencies() throws IOException {
