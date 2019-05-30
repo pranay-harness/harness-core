@@ -574,7 +574,7 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public void delete(String appId, String varId) {
-    this.delete(appId, varId, true, false);
+    delete(appId, varId, true, false);
   }
 
   /* (non-Javadoc)
@@ -658,13 +658,7 @@ public class SettingsServiceImpl implements SettingsService {
             Joiner.on(", ").join(infraMappingNames)));
       }
     } else {
-      List<ArtifactStream> artifactStreams =
-          artifactStreamService
-              .list(aPageRequest()
-                        .addFilter(ArtifactStream.APP_ID_KEY, EQ, connectorSetting.getAppId())
-                        .addFilter("settingId", EQ, connectorSetting.getUuid())
-                        .build())
-              .getResponse();
+      List<ArtifactStream> artifactStreams = artifactStreamService.listBySettingId(connectorSetting.getUuid());
       if (!artifactStreams.isEmpty()) {
         List<String> artifactStreamNames = artifactStreams.stream()
                                                .map(ArtifactStream::getSourceName)

@@ -35,6 +35,7 @@ import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.template.TemplateExpressionYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -58,6 +59,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
   @Inject InfrastructureMappingService infraMappingService;
   @Inject ArtifactStreamService artifactStreamService;
   @Inject private TemplateService templateService;
+  @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   private GraphNode toBean(ChangeContext<StepYaml> changeContext, List<ChangeContext> changeContextList)
       throws HarnessException {
@@ -219,15 +221,15 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
         return;
       case "artifactStreamId":
         String artifactStreamId = (String) objectValue;
-        ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+        ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
         notNullCheck("Artifact stream is null for the given id:" + artifactStreamId, artifactStream, USER);
         outputProperties.put("artifactStreamName", artifactStream.getName());
 
         if (inputProperties.get("serviceId") == null) {
-          String serviceIdWithArtifactStream = artifactStream.getServiceId();
-          Service serviceWithArtifactStream = serviceResourceService.get(appId, serviceIdWithArtifactStream);
+          Service serviceWithArtifactStream =
+              artifactStreamServiceBindingService.getService(appId, artifactStreamId, false);
           notNullCheck(
-              "Service is null for the given id:" + serviceIdWithArtifactStream, serviceWithArtifactStream, USER);
+              "Service is null for the given artifactStreamId:" + artifactStreamId, serviceWithArtifactStream, USER);
           outputProperties.put("serviceName", serviceWithArtifactStream.getName());
         }
         return;

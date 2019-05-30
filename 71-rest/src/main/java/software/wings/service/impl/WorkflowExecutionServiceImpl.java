@@ -173,6 +173,7 @@ import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.BarrierService;
 import software.wings.service.intfc.BarrierService.OrchestrationWorkflowInfo;
 import software.wings.service.intfc.EntityVersionService;
@@ -273,6 +274,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Inject private AlertService alertService;
   @Inject private WorkflowServiceHelper workflowServiceHelper;
+  @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   @Inject @RateLimitCheck private PreDeploymentChecker deployLimitChecker;
   @Inject @ServiceInstanceUsage private PreDeploymentChecker siUsageChecker;
@@ -722,7 +724,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       // TODO: This is being called multiple times during execution. We can optimize it by not fetching the artifacts
       // details again if fetched already
       if (executionArgs.getArtifactIdNames() != null) {
-        executionArgs.setArtifacts(artifactService.fetchArtifacts(appId, executionArgs.getArtifactIdNames().keySet()));
+        String accountId = appService.getAccountIdByAppId(appId);
+        executionArgs.setArtifacts(artifactService.listByIds(accountId, executionArgs.getArtifactIdNames().keySet()));
       }
     }
     return workflowExecution;
@@ -1406,12 +1409,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       List<Object> keywords, ExecutionArgs executionArgs) {
     if (isNotEmpty(executionArgs.getArtifacts())) {
       List<String> artifactIds = executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(toList());
-
-      PageRequest<Artifact> pageRequest = aPageRequest()
-                                              .addFilter("appId", EQ, workflowExecution.getAppId())
-                                              .addFilter("uuid", IN, artifactIds.toArray())
-                                              .build();
-      List<Artifact> artifacts = artifactService.list(pageRequest, false).getResponse();
+      List<Artifact> artifacts =
+          artifactService.listByIds(appService.getAccountIdByAppId(workflowExecution.getAppId()), artifactIds);
 
       if (artifacts == null || artifacts.size() != artifactIds.size()) {
         logger.error("Artifact argument and valid artifact retrieved size not matching");
@@ -1421,12 +1420,27 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       // Filter out the artifacts that does not belong to the workflow
       List<String> serviceIds =
           isEmpty(workflowExecution.getServiceIds()) ? new ArrayList<>() : workflowExecution.getServiceIds();
+      Set<String> artifactStreamIds = new HashSet<>();
+      serviceIds.forEach(serviceId -> {
+        Service service = serviceResourceService.get(serviceId);
+        if (service == null) {
+          return;
+        }
+        List<String> ids = service.getArtifactStreamIds();
+        if (isEmpty(ids)) {
+          return;
+        }
+
+        artifactStreamIds.addAll(ids);
+      });
+
       List<Artifact> filteredArtifacts = new ArrayList<>();
       for (Artifact artifact : artifacts) {
-        if (serviceIds.containsAll(artifact.getServiceIds())) {
+        if (artifactStreamIds.contains(artifact.getArtifactStreamId())) {
           filteredArtifacts.add(artifact);
         } else {
-          logger.warn("Artifact ServiceId  {} does not contain in serviceIds {}", artifact.getServiceIds(), serviceIds);
+          logger.warn(
+              "ArtifactStreamId {} is not available for serviceIds {}", artifact.getArtifactStreamId(), serviceIds);
         }
       }
 
@@ -1446,14 +1460,27 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       executionArgs.setArtifacts(artifacts);
       workflowExecution.setArtifacts(filteredArtifacts);
 
+      Set<String> serviceIdsSet = new HashSet<>();
       List<ServiceElement> services = new ArrayList<>();
-      filteredArtifacts.forEach(artifact -> artifact.getServiceIds().forEach(serviceId -> {
-        Service service = serviceResourceService.get(artifact.getAppId(), serviceId, false);
-        ServiceElement se = new ServiceElement();
-        MapperUtils.mapObject(service, se);
-        services.add(se);
-        keywords.add(se.getName());
-      }));
+      filteredArtifacts.forEach(artifact -> {
+        List<Service> relatedServices =
+            artifactStreamServiceBindingService.listServices(artifact.getArtifactStreamId());
+        if (isEmpty(relatedServices)) {
+          return;
+        }
+
+        for (Service relatedService : relatedServices) {
+          if (serviceIdsSet.contains(relatedService.getUuid())) {
+            continue;
+          }
+
+          serviceIdsSet.add(relatedService.getUuid());
+          ServiceElement se = new ServiceElement();
+          MapperUtils.mapObject(relatedService, se);
+          services.add(se);
+          keywords.add(se.getName());
+        }
+      });
 
       // Set the services in the context
       stdParams.setServices(services);
@@ -2455,16 +2482,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     allStateExecutionInstances.forEach(stateExecutionInstance -> {
       ArtifactCollectionExecutionData artifactCollectionExecutionData =
           (ArtifactCollectionExecutionData) stateExecutionInstance.fetchStateExecutionData();
-      artifacts.add(artifactService.get(appId, artifactCollectionExecutionData.getArtifactId()));
+      artifacts.add(artifactService.get(artifactCollectionExecutionData.getArtifactId()));
     });
     return artifacts;
   }
 
   @Override
-  public void refreshBuildExecutionSummary(
-      String appId, String workflowExecutionId, BuildExecutionSummary buildExecutionSummary) {
-    WorkflowExecution workflowExecution =
-        wingsPersistence.getWithAppId(WorkflowExecution.class, appId, workflowExecutionId, CRITICAL);
+  public void refreshBuildExecutionSummary(String workflowExecutionId, BuildExecutionSummary buildExecutionSummary) {
+    WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, workflowExecutionId, CRITICAL);
     if (workflowExecution == null) {
       return;
     }

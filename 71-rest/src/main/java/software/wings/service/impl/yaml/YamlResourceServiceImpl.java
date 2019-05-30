@@ -53,6 +53,7 @@ import software.wings.service.impl.yaml.handler.setting.SettingValueYamlHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
@@ -102,6 +103,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject private CVConfigurationService cvConfigurationService;
   @Inject private ApplicationManifestService applicationManifestService;
+  @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   /**
    * Find by app, service and service command ids.
@@ -194,51 +196,39 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    * @return the rest response
    */
   public RestResponse<YamlPayload> getArtifactTrigger(String appId, String artifactStreamId) {
-    if (!appId.equals(GLOBAL_APP_ID)) {
-      ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+    if (artifactStream == null) {
+      // handle missing artifactStream
+      throw new WingsException(ErrorCode.GENERAL_YAML_ERROR, USER)
+          .addParam("message", "The ArtifactStream artifactStreamId: '" + artifactStreamId + "' was not found!");
+    }
 
-      if (artifactStream == null) {
-        // handle missing artifactStream
-        throw new WingsException(ErrorCode.GENERAL_YAML_ERROR, USER)
-            .addParam("message",
-                "The ArtifactStream with appId: '" + appId + "' and artifactStreamId: '" + artifactStreamId
-                    + "' was not found!");
-      }
+    return getArtifactTrigger(appId, artifactStream);
+  }
 
-      ArtifactStream.Yaml artifactStreamYaml =
-          yamlArtifactStreamService.getArtifactStreamYamlObject(appId, artifactStreamId);
-
-      String serviceId = artifactStream.getServiceId();
-
-      String serviceName = "";
-
-      if (serviceId != null) {
-        Service service = serviceResourceService.get(appId, serviceId);
-
-        if (service != null) {
-          serviceName = service.getName();
-        } else {
+  private RestResponse<YamlPayload> getArtifactTrigger(String appId, ArtifactStream artifactStream) {
+    String artifactStreamId = artifactStream.getUuid();
+    ArtifactStream.Yaml artifactStreamYaml = yamlArtifactStreamService.getArtifactStreamYamlObject(artifactStreamId);
+    if (!GLOBAL_APP_ID.equals(appId)) {
+      // TODO: ASR: IMP: hack to make yaml push work as yaml changes require binding info but the binding info is
+      // deleted in parallel
+      Service service;
+      if (artifactStream.getService() != null) {
+        service = artifactStream.getService();
+      } else {
+        service = artifactStreamServiceBindingService.getService(appId, artifactStreamId, false);
+        if (service == null) {
           throw new WingsException(ErrorCode.GENERAL_YAML_ERROR, USER)
-              .addParam("message",
-                  "The Service with appId: '" + appId + "' and serviceId: '" + serviceId + "' was not found!");
+              .addParam("message", "The Service with artifactStreamId: '" + artifactStreamId + "' was not found!");
         }
       }
+
+      String serviceName = service.getName();
       String payLoadName = artifactStream.getSourceName() + "(" + serviceName + ")";
-
-      return YamlHelper.getYamlRestResponse(yamlGitSyncService, artifactStream.getUuid(),
-          appService.getAccountIdByAppId(appId), artifactStreamYaml, payLoadName + ".yaml");
+      return YamlHelper.getYamlRestResponse(yamlGitSyncService, artifactStream.getUuid(), artifactStream.getAccountId(),
+          artifactStreamYaml, payLoadName + ".yaml");
     } else {
-      ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
-
-      if (artifactStream == null) {
-        // handle missing artifactStream
-        throw new WingsException(ErrorCode.GENERAL_YAML_ERROR, USER)
-            .addParam("message",
-                "The ArtifactStream artifactStreamId: '" + artifactStreamId + "' was not found at connector level!");
-      }
-      ArtifactStream.Yaml artifactStreamYaml = yamlArtifactStreamService.getArtifactStreamYamlObject(artifactStreamId);
       String payLoadName = artifactStream.getSourceName();
-
       return YamlHelper.getYamlRestResponse(artifactStreamYaml, payLoadName + ".yaml");
     }
   }
@@ -632,7 +622,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   public <T> RestResponse<YamlPayload> obtainEntityYamlVersion(String accountId, T entity) {
     if (entity instanceof ArtifactStream) {
       ArtifactStream artifactStream = (ArtifactStream) entity;
-      return getArtifactTrigger(artifactStream.getAppId(), artifactStream.getUuid());
+      return getArtifactTrigger(artifactStream.fetchAppId(), artifactStream);
     } else if (entity instanceof ConfigFile) {
       return getConfigFileYaml(accountId, (ConfigFile) entity);
     } else if (entity instanceof SettingAttribute) {

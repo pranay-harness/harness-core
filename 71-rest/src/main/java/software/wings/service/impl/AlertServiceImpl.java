@@ -309,7 +309,7 @@ public class AlertServiceImpl implements AlertService {
       alerts = findExistingAlertsOfType(settingAttribute.getAccountId(), null, AlertType.ARTIFACT_COLLECTION_FAILED);
     } else {
       alerts =
-          findExistingAlertsOfType(appService.getAccountIdByAppId(appId), appId, AlertType.ARTIFACT_COLLECTION_FAILED);
+          findExistingAlertsOfType(appService.getAccountIdByAppId(appId), null, AlertType.ARTIFACT_COLLECTION_FAILED);
     }
 
     for (Alert alert : alerts) {

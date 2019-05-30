@@ -172,7 +172,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
 
     when(configuration.getPortal()).thenReturn(portalConfig);
     when(portalConfig.getUrl()).thenReturn("http://www.url.com");
-    when(artifactService.get(any(), any())).thenReturn(anArtifact().build());
+    when(artifactService.get(any())).thenReturn(anArtifact().build());
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
     when(evaluator.substitute(anyString(), anyMap(), any(VariableResolverTracker.class), anyString()))
         .thenAnswer(i -> i.getArguments()[0]);

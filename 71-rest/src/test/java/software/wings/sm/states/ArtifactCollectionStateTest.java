@@ -115,7 +115,7 @@ public class ArtifactCollectionStateTest {
         .thenReturn(Application.Builder.anApplication().appId(APP_ID).uuid(APP_ID).accountId(ACCOUNT_ID).build());
     when(appService.getApplicationWithDefaults(APP_ID))
         .thenReturn(Application.Builder.anApplication().appId(APP_ID).uuid(APP_ID).accountId(ACCOUNT_ID).build());
-    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
     when(artifactService.fetchLastCollectedApprovedArtifactForArtifactStream(jenkinsArtifactStream))
         .thenReturn(anArtifact().withAppId(APP_ID).withStatus(Status.APPROVED).build());
     when(delayEventHelper.delay(anyInt(), any())).thenReturn("anyGUID");
@@ -124,11 +124,11 @@ public class ArtifactCollectionStateTest {
   @Test
   @Category(UnitTests.class)
   public void shouldFailOnNoArtifactStream() {
-    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(null);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(null);
     ExecutionResponse executionResponse = artifactCollectionState.execute(executionContext);
     assertThat(executionResponse).isNotNull();
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
-    verify(artifactStreamService).get(APP_ID, ARTIFACT_STREAM_ID);
+    verify(artifactStreamService).get(ARTIFACT_STREAM_ID);
   }
 
   @Test
@@ -137,7 +137,7 @@ public class ArtifactCollectionStateTest {
     when(artifactService.fetchLastCollectedApprovedArtifactForArtifactStream(jenkinsArtifactStream)).thenReturn(null);
     ExecutionResponse executionResponse = artifactCollectionState.execute(executionContext);
     assertThat(executionResponse).isNotNull().hasFieldOrPropertyWithValue("async", true);
-    verify(artifactStreamService).get(APP_ID, ARTIFACT_STREAM_ID);
+    verify(artifactStreamService).get(ARTIFACT_STREAM_ID);
     verify(delayEventHelper).delay(anyInt(), any());
   }
 
@@ -147,7 +147,7 @@ public class ArtifactCollectionStateTest {
     artifactCollectionState.handleAsyncResponse(executionContext,
         ImmutableMap.of(
             ACTIVITY_ID, ArtifactCollectionExecutionData.builder().artifactStreamId(ARTIFACT_STREAM_ID).build()));
-    verify(workflowExecutionService).refreshBuildExecutionSummary(anyString(), anyString(), any());
+    verify(workflowExecutionService).refreshBuildExecutionSummary(anyString(), any());
   }
 
   @Test
@@ -159,7 +159,7 @@ public class ArtifactCollectionStateTest {
     artifactCollectionState.handleAsyncResponse(executionContext,
         ImmutableMap.of(
             ACTIVITY_ID, ArtifactCollectionExecutionData.builder().artifactStreamId(ARTIFACT_STREAM_ID).build()));
-    verify(workflowExecutionService).refreshBuildExecutionSummary(anyString(), anyString(), any());
+    verify(workflowExecutionService).refreshBuildExecutionSummary(anyString(), any());
   }
 
   @Test
@@ -172,7 +172,7 @@ public class ArtifactCollectionStateTest {
     artifactCollectionState.handleAsyncResponse(executionContext,
         ImmutableMap.of(
             ACTIVITY_ID, ArtifactCollectionExecutionData.builder().artifactStreamId(ARTIFACT_STREAM_ID).build()));
-    verify(workflowExecutionService).refreshBuildExecutionSummary(anyString(), anyString(), any());
+    verify(workflowExecutionService).refreshBuildExecutionSummary(anyString(), any());
   }
 
   @Test

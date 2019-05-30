@@ -1,9 +1,8 @@
 package software.wings.service.impl.artifactstream;
 
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.beans.SearchFilter.Operator.EQ;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -24,6 +23,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 
 import java.util.List;
@@ -44,6 +44,7 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
 
   @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private YamlDirectoryService yamlDirectoryService;
+  @Mock private ServiceResourceService serviceResourceService;
 
   @InjectMocks @Inject private ArtifactStreamService artifactStreamService;
 
@@ -73,9 +74,9 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
   public void shouldListAllArtifactStreams() {
     List<ArtifactStream> artifactStreams = Lists.newArrayList();
     artifactStreams.add(artifactStreamService.create(artifactStream));
-    assertThat(artifactStreamService.list(
-                   aPageRequest().addFilter(ArtifactStream.APP_ID_KEY, EQ, artifactStream.getAppId()).build()))
-        .hasSameElementsAs(artifactStreams);
+    when(serviceResourceService.findServicesByApp(APP_ID))
+        .thenReturn(asList(Service.builder().artifactStreamIds(asList(artifactStreams.get(0).getUuid())).build()));
+    assertThat(artifactStreamService.listByAppId(artifactStream.getAppId())).hasSameElementsAs(artifactStreams);
   }
 
   /**
@@ -85,9 +86,7 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldDeleteArtifactStream() {
     ArtifactStream dbArtifactStream = artifactStreamService.create(artifactStream);
-    artifactStreamService.delete(dbArtifactStream.getAppId(), dbArtifactStream.getUuid());
-    assertThat(artifactStreamService.list(
-                   aPageRequest().addFilter(ArtifactStream.APP_ID_KEY, EQ, dbArtifactStream.getAppId()).build()))
-        .hasSize(0);
+    artifactStreamService.deleteWithBinding(dbArtifactStream.getAppId(), dbArtifactStream.getUuid(), false, false);
+    assertThat(artifactStreamService.listByAppId(artifactStream.getAppId())).hasSize(0);
   }
 }

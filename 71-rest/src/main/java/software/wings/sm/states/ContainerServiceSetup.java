@@ -130,8 +130,8 @@ public abstract class ContainerServiceSetup extends State {
                     + " Please ensure that artifact provided as part of execution either Manual or through Trigger");
       }
 
-      ImageDetails imageDetails = artifactCollectionUtils.fetchContainerImageDetails(
-          artifact, context.getAppId(), context.getWorkflowExecutionId());
+      ImageDetails imageDetails =
+          artifactCollectionUtils.fetchContainerImageDetails(artifact, context.getWorkflowExecutionId());
 
       Application app = workflowStandardParams.getApp();
       Environment env = workflowStandardParams.getEnv();
@@ -281,8 +281,9 @@ public abstract class ContainerServiceSetup extends State {
     if (artifact == null) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Artifact is null");
     }
-    ImageDetails imageDetails = artifactCollectionUtils.fetchContainerImageDetails(
-        artifact, context.getAppId(), context.getWorkflowExecutionId());
+
+    ImageDetails imageDetails =
+        artifactCollectionUtils.fetchContainerImageDetails(artifact, context.getWorkflowExecutionId());
 
     ContainerServiceElement containerServiceElement =
         buildContainerServiceElement(context, executionResult, status, imageDetails);

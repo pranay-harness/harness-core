@@ -17,8 +17,10 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.config.ArtifactSourceable;
 import software.wings.utils.Utils;
@@ -62,6 +64,7 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
   @EntityName private String name;
   private boolean autoPopulate;
   @Indexed private String serviceId;
+  @Transient private Service service;
   @Deprecated private transient boolean autoDownload;
   @Deprecated private transient boolean autoApproveForProduction;
   private boolean metadataOnly;
@@ -90,6 +93,10 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
     this.serviceId = serviceId;
     this.metadataOnly = metadataOnly;
     this.accountId = accountId;
+  }
+
+  public String fetchAppId() {
+    return appId;
   }
 
   public String generateName() {

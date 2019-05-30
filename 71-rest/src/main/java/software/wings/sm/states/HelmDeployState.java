@@ -223,8 +223,7 @@ public class HelmDeployState extends State {
   }
 
   protected ImageDetails getImageDetails(ExecutionContext context, Application app, Artifact artifact) {
-    return artifactCollectionUtils.fetchContainerImageDetails(
-        artifact, app.getUuid(), context.getWorkflowExecutionId());
+    return artifactCollectionUtils.fetchContainerImageDetails(artifact, context.getWorkflowExecutionId());
   }
 
   protected void setNewAndPrevReleaseVersion(ExecutionContext context, Application app, String releaseName,

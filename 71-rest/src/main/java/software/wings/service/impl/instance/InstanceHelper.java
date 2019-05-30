@@ -135,7 +135,6 @@ public class InstanceHelper {
       }
 
       Artifact artifact = workflowStandardParams.getArtifactForService(phaseExecutionData.getServiceId());
-
       if (artifact == null) {
         logger.info("artifact is null for stateExecutionInstance:" + stateExecutionInstanceId);
       }

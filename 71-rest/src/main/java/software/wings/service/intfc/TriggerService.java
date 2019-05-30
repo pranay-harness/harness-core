@@ -134,11 +134,18 @@ public interface TriggerService extends OwnedByApplication, OwnedByPipeline, Own
   List<Trigger> getTriggersHasArtifactStreamAction(String appId, String artifactStreamId);
 
   /**
-   * Updates by App to resync the filed names with the updated values
+   * Updates by App to resync the filled names with the updated values
    *
    * @param appId
    */
   void updateByApp(String appId);
+
+  /**
+   * Updates by ArtifactStream to resync the filled names with the updated values
+   *
+   * @param artifactStreamId
+   */
+  void updateByArtifactStream(String artifactStreamId);
 
   /**
    * Gets the cron expression

@@ -36,21 +36,19 @@ public class ArtifactCollectionFailedAlert implements AlertData {
   @Override
   public boolean matches(AlertData alertData) {
     ArtifactCollectionFailedAlert otherAlert = (ArtifactCollectionFailedAlert) alertData;
-    return StringUtils.equals(otherAlert.getAppId(), appId)
-        && StringUtils.equals(otherAlert.getArtifactStreamId(), artifactStreamId);
+    return StringUtils.equals(otherAlert.getArtifactStreamId(), artifactStreamId);
   }
 
   @Override
   public String buildTitle() {
     StringBuilder title = new StringBuilder(128);
     title.append("Artifact collection ");
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
     if (artifactStream != null) {
       title.append("of source ").append(artifactStream.getName()).append(' ');
       if (isNotBlank(appId) && !appId.equals(GLOBAL_APP_ID)) {
-        String serviceId = artifactStream.getServiceId();
         if (isNotBlank(serviceId)) {
-          Service service = serviceResourceService.get(appId, artifactStream.getServiceId());
+          Service service = serviceResourceService.get(appId, serviceId);
           title.append("in service ").append(service.getName()).append(' ');
         }
         Application app = appService.get(appId);

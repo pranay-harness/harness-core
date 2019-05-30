@@ -214,8 +214,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
         .thenReturn(WorkflowExecution.builder().build());
     when(containerDeploymentHelper.getContainerServiceParams(any(), any(), any()))
         .thenReturn(ContainerServiceParams.builder().build());
-    when(artifactCollectionUtils.fetchContainerImageDetails(any(), anyString(), any()))
-        .thenReturn(ImageDetails.builder().build());
+    when(artifactCollectionUtils.fetchContainerImageDetails(any(), any())).thenReturn(ImageDetails.builder().build());
 
     when(delegateService.executeTask(any()))
         .thenReturn(HelmCommandExecutionResponse.builder()

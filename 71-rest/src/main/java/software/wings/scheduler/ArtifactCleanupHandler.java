@@ -9,7 +9,7 @@ import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.mongo.MongoPersistenceIterator.Handler;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.Application;
+import software.wings.beans.Account;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.service.impl.PermitServiceImpl;
 import software.wings.service.intfc.ArtifactCleanupService;
@@ -23,10 +23,10 @@ public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
   @Override
   public void handle(ArtifactStream artifactStream) {
     logger.info("Received the artifact cleanup for ArtifactStreamId {}", artifactStream.getUuid());
-    executeInternal(artifactStream.getAppId(), artifactStream);
+    executeInternal(artifactStream);
   }
 
-  private void executeInternal(String appId, ArtifactStream artifactStream) {
+  private void executeInternal(ArtifactStream artifactStream) {
     String artifactStreamId = artifactStream.getUuid();
     try {
       if (artifactStream.getFailedCronAttempts() > PermitServiceImpl.MAX_FAILED_ATTEMPTS) {
@@ -34,16 +34,15 @@ public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
             artifactStreamId, artifactStream.getArtifactStreamType());
         return;
       }
-      artifactCleanupServiceAsync.cleanupArtifactsAsync(appId, artifactStream);
+      artifactCleanupServiceAsync.cleanupArtifactsAsync(artifactStream);
     } catch (WingsException exception) {
-      logger.warn("Failed to cleanup artifacts for appId {}, artifact stream {}. Reason {}", appId, artifactStreamId,
-          exception.getMessage());
-      exception.addContext(Application.class, appId);
+      logger.warn(
+          "Failed to cleanup artifacts for artifact stream {}. Reason {}", artifactStreamId, exception.getMessage());
+      exception.addContext(Account.class, artifactStream.getAccountId());
       exception.addContext(ArtifactStream.class, artifactStreamId);
       ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception e) {
-      logger.warn("Failed to cleanup artifacts for appId {}, artifactStream {}. Reason {}", appId, artifactStreamId,
-          e.getMessage());
+      logger.warn("Failed to cleanup artifacts for artifactStream {}. Reason {}", artifactStreamId, e.getMessage());
     }
   }
 }

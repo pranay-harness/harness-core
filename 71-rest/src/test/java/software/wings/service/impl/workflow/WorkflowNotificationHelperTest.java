@@ -83,6 +83,10 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   private static final String EXPECTED_PIPELINE_URL =
       "https://env.harness.io/#/account/ACCOUNT_ID/app/APP_ID/pipeline-execution/PIPELINE_EXECUTION_ID/workflow-execution/WORKFLOW_EXECUTION_ID/details";
 
+  private static final String ARTIFACT_STREAM_ID_1 = "ARTIFACT_STREAM_ID_1";
+  private static final String ARTIFACT_STREAM_ID_2 = "ARTIFACT_STREAM_ID_2";
+  private static final String ARTIFACT_STREAM_ID_3 = "ARTIFACT_STREAM_ID_3";
+
   @Mock private WorkflowService workflowService;
   @Mock private NotificationService notificationService;
   @Mock private ServiceResourceService serviceResourceService;
@@ -106,17 +110,17 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
         .thenReturn(ImmutableList.of(anArtifact()
                                          .withArtifactSourceName("artifact-1")
                                          .withMetadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "build-1"))
-                                         .withServiceIds(ImmutableList.of("service-1"))
+                                         .withArtifactStreamId(ARTIFACT_STREAM_ID_1)
                                          .build(),
             anArtifact()
                 .withArtifactSourceName("artifact-2")
                 .withMetadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "build-2"))
-                .withServiceIds(ImmutableList.of("service-2"))
+                .withArtifactStreamId(ARTIFACT_STREAM_ID_2)
                 .build(),
             anArtifact()
                 .withArtifactSourceName("artifact-3")
                 .withMetadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "build-3"))
-                .withServiceIds(ImmutableList.of("service-3"))
+                .withArtifactStreamId(ARTIFACT_STREAM_ID_3)
                 .build()));
     when(executionContext.getEnv()).thenReturn(anEnvironment().uuid(ENV_ID).name(ENV_NAME).appId(APP_ID).build());
     when(executionContext.getWorkflowExecutionId()).thenReturn(WORKFLOW_EXECUTION_ID);
@@ -133,9 +137,23 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     portalConfig.setUrl(BASE_URL);
     when(configuration.getPortal()).thenReturn(portalConfig);
     when(serviceResourceService.get(APP_ID, "service-1", false))
-        .thenReturn(Service.builder().uuid("service-1").name("Service One").build());
+        .thenReturn(Service.builder()
+                        .uuid("service-1")
+                        .name("Service One")
+                        .artifactStreamIds(singletonList(ARTIFACT_STREAM_ID_1))
+                        .build());
     when(serviceResourceService.get(APP_ID, "service-2", false))
-        .thenReturn(Service.builder().uuid("service-2").name("Service Two").build());
+        .thenReturn(Service.builder()
+                        .uuid("service-2")
+                        .name("Service Two")
+                        .artifactStreamIds(singletonList(ARTIFACT_STREAM_ID_2))
+                        .build());
+    when(serviceResourceService.get(APP_ID, "service-3", false))
+        .thenReturn(Service.builder()
+                        .uuid("service-3")
+                        .name("Service Thress")
+                        .artifactStreamIds(singletonList(ARTIFACT_STREAM_ID_3))
+                        .build());
     when(wingsPersistence.createQuery(StateExecutionInstance.class)).thenReturn(stateExecutionInstanceQuery);
     when(stateExecutionInstanceQuery.filter(any(), any())).thenReturn(stateExecutionInstanceQuery);
     when(stateExecutionInstanceQuery.get()).thenReturn(aStateExecutionInstance().startTs(1234L).endTs(2345L).build());
@@ -318,7 +336,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
         .thenReturn(ImmutableList.of(anArtifact()
                                          .withArtifactSourceName("artifact-1")
                                          .withMetadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "build-1"))
-                                         .withServiceIds(ImmutableList.of("service-1"))
+                                         .withArtifactStreamId(ARTIFACT_STREAM_ID_1)
                                          .build()));
     NotificationRule notificationRule =
         setupNotificationRule(ExecutionScope.WORKFLOW, asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS));

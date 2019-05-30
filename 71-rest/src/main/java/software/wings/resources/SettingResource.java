@@ -37,6 +37,7 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.ValidationResult;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.common.BuildDetailsComparator;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
@@ -644,9 +645,9 @@ public class SettingResource {
   @Path("artifact-streams")
   @Timed
   @ExceptionMetered
-  public RestResponse<PageResponse<ArtifactStream>> list(
+  public RestResponse<PageResponse<ArtifactStream>> listArtifactStreams(
       @QueryParam("settingId") String settingId, @BeanParam PageRequest<ArtifactStream> pageRequest) {
-    pageRequest.addFilter("settingId", EQ, settingId);
+    pageRequest.addFilter(ArtifactStreamKeys.settingId, EQ, settingId);
     return new RestResponse<>(artifactStreamService.list(pageRequest));
   }
 
@@ -692,7 +693,7 @@ public class SettingResource {
   @Timed
   @ExceptionMetered
   public RestResponse delete(@PathParam("id") String id) {
-    return new RestResponse<>(artifactStreamService.delete(id));
+    return new RestResponse<>(artifactStreamService.delete(id, false));
   }
 
   /**
@@ -705,7 +706,7 @@ public class SettingResource {
   @Path("artifact-streams/artifacts")
   @Timed
   @ExceptionMetered
-  public RestResponse<PageResponse<Artifact>> list(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
+  public RestResponse<PageResponse<Artifact>> listArtifacts(
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<Artifact> pageRequest) {
     return new RestResponse<>(artifactService.listSortByBuildNo(pageRequest));
   }

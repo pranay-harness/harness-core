@@ -102,6 +102,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.yaml.service.YamlHelper;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -115,6 +116,8 @@ public class EntityHelper {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private YamlHelper yamlHelper;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+
   private static final String DEPLOYMENT_SPECIFICATION_YAML_PATH_FORMAT =
       "Setup/Application/%s/Services/%s/Deloyment Specifications/%s.yaml";
   private static final String COMMANDS_YAML_PATH_FORMAT = "Setup/Application/%s/Services/%s/Commands/%s.yaml";
@@ -207,10 +210,16 @@ public class EntityHelper {
       ArtifactStream artifactStream = (ArtifactStream) entity;
       entityType = EntityType.ARTIFACT_STREAM.name();
       entityName = artifactStream.getName();
-      appId = artifactStream.getAppId();
+      appId = artifactStream.fetchAppId();
       // TODO: ASR: maybe change this to use setting_id
-      affectedResourceId = artifactStream.getServiceId();
-      affectedResourceName = getServiceName(artifactStream.getServiceId(), appId);
+      Service service = artifactStreamServiceBindingService.getService(artifactStream.getUuid(), false);
+      if (service == null) {
+        affectedResourceId = "";
+        affectedResourceName = "";
+      } else {
+        affectedResourceId = service.getUuid();
+        affectedResourceName = service.getName();
+      }
       affectedResourceType = EntityType.SERVICE.name();
       affectedResourceOperation =
           getAffectedResourceOperation(EntityType.SERVICE, affectedResourceId, affectedResourceName);

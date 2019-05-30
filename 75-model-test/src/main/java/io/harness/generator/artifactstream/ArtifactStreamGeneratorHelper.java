@@ -23,6 +23,7 @@ public class ArtifactStreamGeneratorHelper {
 
   // TODO: ASR: update this method to use setting_id + name after refactoring
   public ArtifactStream exists(ArtifactStream artifactStream) {
+    // TODO: ASR: IMP: update this after refactor
     return wingsPersistence.createQuery(ArtifactStream.class)
         .filter(ArtifactStream.APP_ID_KEY, artifactStream.getAppId())
         .filter(ArtifactStreamKeys.serviceId, artifactStream.getServiceId())

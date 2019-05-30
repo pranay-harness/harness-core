@@ -13,8 +13,8 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.service.intfc.ownership.OwnedByArtifactStream;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -29,23 +29,24 @@ public interface ArtifactService extends OwnedByArtifactStream {
    * @return the page response
    */
   PageResponse<Artifact> listSortByBuildNo(PageRequest<Artifact> pageRequest);
-  /**
-   * List.
-   *
-   * @param pageRequest  the page request
-   * @param withServices the with services
-   * @return the page response
-   */
-  PageResponse<Artifact> list(PageRequest<Artifact> pageRequest, boolean withServices);
 
   /***
    * List artifact sort by build nos
+   * @param appId
+   * @param serviceId
    * @param pageRequest
-   * @param  appId
    * @return
    */
   PageResponse<Artifact> listSortByBuildNo(
       @NotEmpty String appId, String serviceId, @NotNull PageRequest<Artifact> pageRequest);
+
+  /***
+   * List artifact sort by build nos
+   * @param serviceId
+   * @param pageRequest
+   * @return
+   */
+  PageResponse<Artifact> listSortByBuildNo(String serviceId, @NotNull PageRequest<Artifact> pageRequest);
 
   /**
    * Creates the artifact and validates artifact type
@@ -67,38 +68,39 @@ public interface ArtifactService extends OwnedByArtifactStream {
    * Update status.
    *
    * @param artifactId the artifact id
-   * @param appId      the app id
+   * @param accountId  the account id
    * @param status     the status
    */
-  void updateStatus(String artifactId, String appId, Status status);
+  void updateStatus(String artifactId, String accountId, Status status);
 
   /**
    * Update status.
    *
    * @param artifactId the artifact id
-   * @param appId      the app id
+   * @param accountId  the account id
    * @param status     the status
    */
-  void updateStatus(String artifactId, String appId, Status status, String errorMessage);
+  void updateStatus(String artifactId, String accountId, Status status, String errorMessage);
 
   /***
    * Update status and content status
    * @param artifactId
-   * @param appId
+   * @param accountId
    * @param status
    * @param contentStatus
    */
-  void updateStatus(String artifactId, String appId, Status status, ContentStatus contentStatus);
+  void updateStatus(String artifactId, String accountId, Status status, ContentStatus contentStatus);
 
   /***
    * Update status
    * @param artifactId
-   * @param appId
+   * @param accountId
    * @param status
    * @param contentStatus
    * @param errorMessage
    */
-  void updateStatus(String artifactId, String appId, Status status, ContentStatus contentStatus, String errorMessage);
+  void updateStatus(
+      String artifactId, String accountId, Status status, ContentStatus contentStatus, String errorMessage);
 
   /**
    * Update artifact source name
@@ -110,38 +112,45 @@ public interface ArtifactService extends OwnedByArtifactStream {
    * Adds the artifact file.
    *
    * @param artifactId    the artifact id
-   * @param appId         the app id
+   * @param accountId     the account id
    * @param artifactFiles the artifact files
    */
-  void addArtifactFile(String artifactId, String appId, List<ArtifactFile> artifactFiles);
+  void addArtifactFile(String artifactId, String accountId, List<ArtifactFile> artifactFiles);
 
   /**
    * Download.
    *
-   * @param appId      the app id
+   * @param accountId  the account id
    * @param artifactId the artifact id
    * @return the file
    */
-  File download(String appId, String artifactId);
+  File download(String accountId, String artifactId);
 
   /**
-   * Gets the.
+   * Gets artifact.
    *
-   * @param appId      the app id
    * @param artifactId the artifact id
    * @return the artifact
    */
-  Artifact get(String appId, String artifactId);
+  Artifact get(String artifactId);
+
+  /**
+   * Gets artifact.
+   *
+   * @param accountId  the account id
+   * @param artifactId the artifact id
+   * @return the artifact
+   */
+  Artifact get(String accountId, String artifactId);
 
   /**
    * Get artifact.
    *
-   * @param appId        the app id
    * @param artifactId   the artifact id
-   * @param withServices the with services
+   * @param appId        the app id
    * @return the artifact
    */
-  Artifact get(String appId, String artifactId, boolean withServices);
+  Artifact getWithServices(String artifactId, String appId);
 
   /**
    * Soft delete.
@@ -155,10 +164,9 @@ public interface ArtifactService extends OwnedByArtifactStream {
   /**
    * Soft delete a list of artifacts.
    *
-   * @param appId     the app id
    * @param artifacts the artifacts
    */
-  void deleteArtifacts(String appId, List<Artifact> artifacts);
+  void deleteArtifacts(List<Artifact> artifacts);
 
   Artifact fetchLatestArtifactForArtifactStream(ArtifactStream artifactStream);
 
@@ -170,10 +178,10 @@ public interface ArtifactService extends OwnedByArtifactStream {
 
   /**
    * Starts Artifact collection and returns
-   * @param appId
+   * @param accountId
    * @param artifactId
    */
-  Artifact startArtifactCollection(String appId, String artifactId);
+  Artifact startArtifactCollection(String accountId, String artifactId);
 
   /**
    * Gets content status if artifact does not have content status
@@ -189,9 +197,13 @@ public interface ArtifactService extends OwnedByArtifactStream {
    */
   void deleteArtifacts(int retentionSize);
 
-  List<Artifact> fetchArtifacts(String appId, Set<String> artifactUuids);
-
   Query<Artifact> prepareArtifactWithMetadataQuery(ArtifactStream artifactStream);
 
   void deleteWhenArtifactSourceNameChanged(ArtifactStream artifactStream);
+
+  List<Artifact> listByIds(String accountId, Collection<String> artifactIds);
+
+  List<Artifact> listByAccountId(String accountId);
+
+  List<Artifact> listByAppId(String appId);
 }

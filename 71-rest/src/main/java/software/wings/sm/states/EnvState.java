@@ -38,6 +38,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElement;
@@ -79,8 +80,8 @@ public class EnvState extends State {
   @JsonIgnore @SchemaIgnore private Map<String, String> workflowVariables;
 
   @Transient @Inject private WorkflowService workflowService;
-
   @Transient @Inject private WorkflowExecutionService executionService;
+  @Transient @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   @JsonIgnore private boolean disable;
 
@@ -209,11 +210,12 @@ public class EnvState extends State {
       if (isNotEmpty(artifacts)) {
         List<ContextElement> artifactElements = new ArrayList<>();
         artifacts.forEach(artifact
-            -> artifactElements.add(aServiceArtifactElement()
-                                        .withUuid(artifact.getUuid())
-                                        .withName(artifact.getDisplayName())
-                                        .withServiceIds(artifact.getServiceIds())
-                                        .build()));
+            -> artifactElements.add(
+                aServiceArtifactElement()
+                    .withUuid(artifact.getUuid())
+                    .withName(artifact.getDisplayName())
+                    .withServiceIds(artifactStreamServiceBindingService.listServiceIds(artifact.getArtifactStreamId()))
+                    .build()));
         executionResponse.setContextElements(artifactElements);
       }
     }

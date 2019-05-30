@@ -863,6 +863,15 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
   private List<DeploymentHistory> getDeploymentHistory(String accountId, String appId, String serviceId) {
     List<DeploymentHistory> deploymentExecutionHistoryList = new ArrayList<>();
+    Service service = serviceResourceService.get(appId, serviceId);
+    if (service == null) {
+      return deploymentExecutionHistoryList;
+    }
+
+    List<String> artifactStreamIds = service.getArtifactStreamIds();
+    if (artifactStreamIds == null) {
+      artifactStreamIds = new ArrayList<>();
+    }
 
     PageRequestBuilder pageRequestBuilder = aPageRequest()
                                                 .addFilter("appId", EQ, appId)
@@ -947,14 +956,9 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
           continue;
         }
 
-        List<String> serviceIds = artifact.getServiceIds();
-        if (isEmpty(serviceIds)) {
-          continue;
-        }
-
         // The executionArgs contain all the artifacts involved in multiple stages of the pipeline.
         // We need to filter them down to only the ones that are mapped to the current service.
-        if (!serviceIds.contains(serviceId)) {
+        if (!artifactStreamIds.contains(artifact.getArtifactStreamId())) {
           continue;
         }
 

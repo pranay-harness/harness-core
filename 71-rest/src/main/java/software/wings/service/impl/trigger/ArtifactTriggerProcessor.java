@@ -6,29 +6,30 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import software.wings.beans.Service;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.trigger.ArtifactCondition;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 
 @Singleton
 public class ArtifactTriggerProcessor implements TriggerProcessor {
   @Inject private ArtifactStreamService artifactStreamService;
-  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   @Override
   public void validateTriggerCondition(DeploymentTrigger trigger) {
     // TODO: ASR: update when index added on setting_id + name
     ArtifactCondition artifactCondition = (ArtifactCondition) trigger.getCondition();
 
-    ArtifactStream artifactStream =
-        artifactStreamService.get(trigger.getAppId(), artifactCondition.getArtifactStreamId());
+    ArtifactStream artifactStream = artifactStreamService.get(artifactCondition.getArtifactStreamId());
     notNullCheck("Artifact Source is mandatory for New Artifact Condition Trigger", artifactStream, USER);
 
-    String serviceName = serviceResourceService.fetchServiceName(trigger.getAppId(), artifactStream.getServiceId());
+    Service service =
+        artifactStreamServiceBindingService.getService(trigger.getAppId(), artifactStream.getUuid(), false);
     notNullCheck("Service associated to the artifact source [" + artifactStream.getSourceName() + "] does not exist",
-        serviceName, USER);
-    artifactCondition.setArtifactSourceName(artifactStream.getSourceName() + " (" + serviceName + ")");
+        service, USER);
+    artifactCondition.setArtifactSourceName(artifactStream.getSourceName() + " (" + service.getName() + ")");
   }
 }

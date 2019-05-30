@@ -200,8 +200,9 @@ public class EcsDaemonServiceSetup extends State {
     if (artifact == null) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Artifact is null");
     }
-    ImageDetails imageDetails = artifactCollectionUtils.fetchContainerImageDetails(
-        artifact, context.getAppId(), context.getWorkflowExecutionId());
+
+    ImageDetails imageDetails =
+        artifactCollectionUtils.fetchContainerImageDetails(artifact, context.getWorkflowExecutionId());
 
     ContainerServiceElement containerServiceElement =
         buildContainerServiceElement(context, setupExecutionData, imageDetails);

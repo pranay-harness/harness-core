@@ -35,10 +35,10 @@ import software.wings.helpers.ext.gcs.GcsService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.BuildService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -79,8 +79,8 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private AppService appService;
   @Inject private GcsService gcsService;
   @Inject private CustomBuildSourceService customBuildSourceService;
-  @Inject private ArtifactCollectionUtils artifactCollectionUtils;
   @Inject private UsageRestrictionsService usageRestrictionsService;
+  @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   @Override
   public Set<JobDetails> getJobs(String appId, String settingId, String parentJobName) {
@@ -182,14 +182,9 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   }
 
   private List<BuildDetails> getBuildDetails(String appId, String artifactStreamId, String settingId, int limit) {
-    ArtifactStream artifactStream;
-    if (!appId.equals(GLOBAL_APP_ID)) {
-      artifactStream = getArtifactStream(appId, artifactStreamId);
-    } else {
-      artifactStream = getArtifactStream(artifactStreamId);
-    }
+    ArtifactStream artifactStream = getArtifactStream(artifactStreamId);
     if (CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
-      return customBuildSourceService.getBuilds(appId, artifactStreamId);
+      return customBuildSourceService.getBuilds(artifactStreamId);
     }
     SettingAttribute settingAttribute = settingsService.get(settingId);
     if (settingAttribute == null) {
@@ -201,8 +196,8 @@ public class BuildSourceServiceImpl implements BuildSourceService {
 
     String artifactStreamType = artifactStream.getArtifactStreamType();
     ArtifactStreamAttributes artifactStreamAttributes;
-    if (!appId.equals(GLOBAL_APP_ID)) {
-      Service service = artifactCollectionUtils.getService(appId, artifactStream.getUuid());
+    if (!GLOBAL_APP_ID.equals(appId)) {
+      Service service = artifactStreamServiceBindingService.getService(appId, artifactStream.getUuid(), true);
       artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
     } else {
       artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
@@ -248,14 +243,12 @@ public class BuildSourceServiceImpl implements BuildSourceService {
 
   @Override
   public BuildDetails getLastSuccessfulBuild(String appId, String artifactStreamId, String settingId) {
-    ArtifactStream artifactStream = getArtifactStream(appId, artifactStreamId);
-
+    ArtifactStream artifactStream = getArtifactStream(artifactStreamId);
     SettingAttribute settingAttribute = settingsService.get(settingId);
-
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
 
-    Service service = artifactCollectionUtils.getService(appId, artifactStream.getUuid());
+    Service service = artifactStreamServiceBindingService.getService(appId, artifactStream.getUuid(), true);
 
     ArtifactStreamAttributes artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
 
@@ -266,12 +259,6 @@ public class BuildSourceServiceImpl implements BuildSourceService {
       return getBuildService(settingAttribute, appId)
           .getLastSuccessfulBuild(appId, artifactStreamAttributes, settingValue, encryptedDataDetails);
     }
-  }
-
-  private ArtifactStream getArtifactStream(String appId, String artifactStreamId) {
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-    notNullCheck("Artifact Stream", artifactStream);
-    return artifactStream;
   }
 
   @Override
@@ -329,7 +316,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     if (buildDetails == null) {
       throw new InvalidRequestException("Build details can not null", USER);
     }
-    return artifactCollectionServiceAsync.collectArtifact(appId, artifactStreamId, buildDetails);
+    return artifactCollectionServiceAsync.collectArtifact(artifactStreamId, buildDetails);
   }
 
   private BuildService getBuildService(SettingAttribute settingAttribute, String appId, String artifactStreamType) {
@@ -405,11 +392,11 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     if (AMAZON_S3.name().equals(artifactStream.getArtifactStreamType())) {
       return getBuildService(settingAttribute, artifactStream.getArtifactStreamType())
           .getLastSuccessfulBuild(
-              artifactStream.getAppId(), artifactStreamAttributes, settingValue, encryptedDataDetails);
+              artifactStream.fetchAppId(), artifactStreamAttributes, settingValue, encryptedDataDetails);
     } else {
       return getBuildService(settingAttribute)
           .getLastSuccessfulBuild(
-              artifactStream.getAppId(), artifactStreamAttributes, settingValue, encryptedDataDetails);
+              artifactStream.fetchAppId(), artifactStreamAttributes, settingValue, encryptedDataDetails);
     }
   }
 
@@ -423,7 +410,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   public Artifact collectArtifact(String artifactStreamId, BuildDetails buildDetails) {
     ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
     notNullCheck("Artifact Stream does not exist ", artifactStream);
-    if (artifactStream.getAppId().equals(GLOBAL_APP_ID)) {
+    if (GLOBAL_APP_ID.equals(artifactStream.fetchAppId())) {
       usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(artifactStream.getAccountId(),
           settingsService.getUsageRestrictionsForSettingId(artifactStream.getSettingId()),
           settingsService.getUsageRestrictionsForSettingId(artifactStream.getSettingId()));

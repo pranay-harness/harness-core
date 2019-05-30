@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.threading.Puller.pullFor;
@@ -10,12 +9,13 @@ import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -36,6 +36,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 import static software.wings.sm.StateType.EMAIL;
 import static software.wings.sm.StateType.ENV_STATE;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
@@ -134,7 +135,6 @@ import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -173,7 +173,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   private Application app;
   private Environment env;
   private Artifact artifact;
-  private PageResponse<Artifact> artifactPageResponse;
 
   /*
    * Should trigger simple workflow.
@@ -197,13 +196,13 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         Application.class, anApplication().name(APP_NAME).accountId(account.getUuid()).build());
     env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().appId(app.getUuid()).build());
     artifact = anArtifact()
+                   .withAccountId(ACCOUNT_ID)
                    .withAppId(app.getAppId())
                    .withUuid(generateUuid())
                    .withDisplayName(ARTIFACT_NAME)
-                   .withServiceIds(new ArrayList<>())
                    .build();
-    artifactPageResponse = aPageResponse().withResponse(asList(artifact)).build();
-    when(artifactService.list(any(PageRequest.class), eq(false))).thenReturn(artifactPageResponse);
+    when(artifactService.listByAppId(anyString())).thenReturn(singletonList(artifact));
+    when(artifactService.listByIds(any(), any())).thenReturn(singletonList(artifact));
   }
 
   /**
@@ -387,7 +386,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     Pipeline pipeline = constructPipeline(service);
 
-    triggerPipeline(app.getUuid(), pipeline, service);
+    triggerPipeline(app.getUuid(), pipeline);
   }
 
   private Pipeline constructPipeline(Service service) {
@@ -483,14 +482,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     return pipeline;
   }
 
-  private WorkflowExecution triggerPipeline(String appId, Pipeline pipeline, Service service)
-      throws InterruptedException {
-    Artifact artifact = wingsPersistence.saveAndGet(Artifact.class,
-        anArtifact()
-            .withAppId(app.getUuid())
-            .withDisplayName(ARTIFACT_NAME)
-            .withServiceIds(asList(service.getUuid()))
-            .build());
+  private WorkflowExecution triggerPipeline(String appId, Pipeline pipeline) throws InterruptedException {
+    Artifact artifact = wingsPersistence.saveAndGet(
+        Artifact.class, anArtifact().withAppId(app.getUuid()).withDisplayName(ARTIFACT_NAME).build());
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setArtifacts(asList(artifact));
 
@@ -637,7 +631,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   public WorkflowExecution triggerWorkflow(Workflow workflow, Environment env) throws InterruptedException {
     String appId = workflow.getAppId();
     ExecutionArgs executionArgs = new ExecutionArgs();
-    executionArgs.setArtifacts(asList(Artifact.Builder.anArtifact().withAppId(APP_ID).withUuid(ARTIFACT_ID).build()));
+    executionArgs.setArtifacts(singletonList(
+        Artifact.Builder.anArtifact().withAccountId(ACCOUNT_ID).withAppId(APP_ID).withUuid(ARTIFACT_ID).build()));
 
     WorkflowExecutionUpdateFake callback = new WorkflowExecutionUpdateFake();
     WorkflowExecution execution = workflowExecutionService.triggerOrchestrationWorkflowExecution(
@@ -727,7 +722,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     Pipeline pipeline = constructPipeline(service);
     thrown.expect(WingsException.class);
-    triggerPipeline(app.getUuid(), pipeline, service);
+    triggerPipeline(app.getUuid(), pipeline);
 
     // Scenario 2, update the license to be valid and test again.
     licenseInfo = new LicenseInfo();
@@ -737,7 +732,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     account.setLicenseInfo(licenseInfo);
     licenseService.updateAccountLicense(account.getUuid(), licenseInfo);
 
-    WorkflowExecution workflowExecution = triggerPipeline(app.getUuid(), pipeline, service);
+    WorkflowExecution workflowExecution = triggerPipeline(app.getUuid(), pipeline);
     assertNotNull(workflowExecution);
   }
 
@@ -747,7 +742,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                     .id("n1")
                                     .name("wait")
                                     .type(StateType.WAIT.name())
-                                    .properties(ImmutableMap.<String, Object>builder().put("duration", 1l).build())
+                                    .properties(ImmutableMap.<String, Object>builder().put("duration", 1L).build())
                                     .origin(true)
                                     .build(),
                           GraphNode.builder()

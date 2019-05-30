@@ -136,8 +136,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   public static void addArtifactToContext(
       ArtifactStreamService artifactStreamService, String accountId, Map<String, Object> map, Artifact artifact) {
     if (artifact != null) {
-      artifact.setSource(artifactStreamService.fetchArtifactSourceProperties(
-          accountId, artifact.getAppId(), artifact.getArtifactStreamId()));
+      artifact.setSource(
+          artifactStreamService.fetchArtifactSourceProperties(accountId, artifact.getArtifactStreamId()));
       map.put(ARTIFACT, artifact);
       String artifactFileName = null;
       if (isNotEmpty(artifact.getArtifactFiles())) {
@@ -241,7 +241,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     }
     List<Artifact> list = new ArrayList<>();
     for (ContextElement contextElement : contextElementList) {
-      list.add(artifactService.get(workflowStandardParams.getAppId(), contextElement.getUuid()));
+      list.add(artifactService.get(contextElement.getUuid()));
     }
     return list;
   }
@@ -261,7 +261,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
             .findFirst();
 
     if (contextElementOptional.isPresent()) {
-      return artifactService.get(workflowStandardParams.getAppId(), contextElementOptional.get().getUuid());
+      return artifactService.get(contextElementOptional.get().getUuid());
     } else {
       return workflowStandardParams.getArtifactForService(serviceId);
     }

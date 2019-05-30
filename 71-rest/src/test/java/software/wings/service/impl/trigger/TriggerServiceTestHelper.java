@@ -3,7 +3,6 @@ package software.wings.service.impl.trigger;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
@@ -58,7 +57,6 @@ public class TriggerServiceTestHelper {
                                         .withAppId(APP_ID)
                                         .withUuid(ARTIFACT_ID)
                                         .withArtifactStreamId(ARTIFACT_STREAM_ID)
-                                        .withServiceIds(singletonList(SERVICE_ID))
                                         .withMetadata(ImmutableMap.of("buildNo", ARTIFACT_FILTER))
                                         .build();
 

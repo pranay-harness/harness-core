@@ -40,36 +40,38 @@ public class ArtifactCollectionCallback implements NotifyCallback {
   @Inject private SettingsService settingsService;
   @Inject private ArtifactStreamService artifactStreamService;
 
-  private String appId;
   private String artifactId;
   private boolean acs;
 
   public ArtifactCollectionCallback() {}
 
-  public ArtifactCollectionCallback(String appId, String artifactId) {
-    this.appId = appId;
+  public ArtifactCollectionCallback(String artifactId) {
     this.artifactId = artifactId;
   }
 
   @Override
   public void notify(Map<String, ResponseData> response) {
-    Artifact artifact = null;
+    Artifact artifact = artifactService.get(artifactId);
     ListNotifyResponseData responseData = (ListNotifyResponseData) response.values().iterator().next();
 
     if (isEmpty(responseData.getData())) { // Error in Downloading artifact file
       logger.warn(
-          "Artifact file collection failed for artifactId: [{}], appId: [{}]. Marking content status as NOT_DOWNLOADED to retry next artifac check",
-          artifactId, appId);
-      artifactService.updateStatus(artifactId, appId, APPROVED, FAILED, "Failed to download artifact file");
-    } else {
-      logger.info("Artifact collection completed - artifactId : {}", artifactId);
-      artifact = artifactService.get(appId, artifactId);
+          "Artifact file collection failed for artifactId: [{}]. Marking content status as NOT_DOWNLOADED to retry next artifac check",
+          artifactId);
       if (artifact == null) {
         logger.info("Artifact Id {} was deleted - nothing to do", artifactId);
         return;
       }
-      artifactService.addArtifactFile(artifact.getUuid(), artifact.getAppId(), responseData.getData());
-      artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), APPROVED, DOWNLOADED, "");
+      artifactService.updateStatus(
+          artifactId, artifact.getAccountId(), APPROVED, FAILED, "Failed to download artifact file");
+    } else {
+      logger.info("Artifact collection completed - artifactId : {}", artifactId);
+      if (artifact == null) {
+        logger.info("Artifact Id {} was deleted - nothing to do", artifactId);
+        return;
+      }
+      artifactService.addArtifactFile(artifact.getUuid(), artifact.getAccountId(), responseData.getData());
+      artifactService.updateStatus(artifactId, artifact.getAccountId(), APPROVED, DOWNLOADED, "");
       String accountId = null;
       ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
       if (artifactStream != null) {
@@ -79,7 +81,7 @@ public class ArtifactCollectionCallback implements NotifyCallback {
         }
       }
       notificationService.sendNotificationAsync(anApprovalNotification()
-                                                    .withAppId(artifact.getAppId())
+                                                    .withAppId(artifact.fetchAppId())
                                                     .withEntityId(artifact.getUuid())
                                                     .withEntityType(EntityType.ARTIFACT)
                                                     .withEntityName(artifact.getDisplayName())
@@ -87,33 +89,27 @@ public class ArtifactCollectionCallback implements NotifyCallback {
                                                     .withAccountId(accountId)
                                                     .build());
     }
-    if (artifact != null && !artifact.getAppId().equals(GLOBAL_APP_ID)) {
-      eventEmitter.send(
-          Channel.ARTIFACTS, anEvent().withType(Type.UPDATE).withUuid(artifactId).withAppId(appId).build());
+
+    // NOTE: artifact != null as this condition was checked above
+    if (!GLOBAL_APP_ID.equals(artifact.fetchAppId())) {
+      eventEmitter.send(Channel.ARTIFACTS,
+          anEvent().withType(Type.UPDATE).withUuid(artifactId).withAppId(artifact.fetchAppId()).build());
     }
   }
 
   @Override
   public void notifyError(Map<String, ResponseData> response) {
     logger.info("Error occurred while collecting content of artifact id {}", artifactId);
-    Artifact artifact = artifactService.get(appId, artifactId);
+    Artifact artifact = artifactService.get(artifactId);
     if (artifact == null) {
       logger.info("Artifact Id {} was deleted - nothing to do", artifactId);
       return;
     }
-    artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), ERROR, FAILED);
-    if (!artifact.getAppId().equals(GLOBAL_APP_ID)) {
+    artifactService.updateStatus(artifact.getUuid(), artifact.getAccountId(), ERROR, FAILED);
+    if (!GLOBAL_APP_ID.equals(artifact.fetchAppId())) {
       eventEmitter.send(Channel.ARTIFACTS,
-          anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());
+          anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.fetchAppId()).build());
     }
-  }
-
-  public String getAppId() {
-    return appId;
-  }
-
-  public void setAppId(String appId) {
-    this.appId = appId;
   }
 
   public String getArtifactId() {

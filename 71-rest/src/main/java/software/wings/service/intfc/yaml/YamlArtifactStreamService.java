@@ -14,8 +14,6 @@ import software.wings.yaml.YamlPayload;
 public interface YamlArtifactStreamService {
   RestResponse<YamlPayload> getArtifactStreamYaml(String appId, String artifactStreamId);
 
-  ArtifactStream.Yaml getArtifactStreamYamlObject(String appId, String artifactStreamId);
-
   ArtifactStream.Yaml getArtifactStreamYamlObject(String artifactStreamId);
 
   String getArtifactStreamYamlString(ArtifactStream artifactStream);

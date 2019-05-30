@@ -44,6 +44,7 @@ import software.wings.beans.ExecutionCredential;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PcfInfrastructureMapping;
+import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
 import software.wings.common.InstanceExpressionProcessor;
@@ -165,7 +166,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     Artifact artifact;
     if (serviceElement == null) {
       if (isNotEmpty(artifactIds)) {
-        artifact = artifactService.get(appId, artifactIds.get(0));
+        artifact = artifactService.get(artifactIds.get(0));
         ExecutionContextImpl.addArtifactToContext(artifactStreamService, getApp().getAccountId(), map, artifact);
       }
     } else {
@@ -543,7 +544,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     if (artifacts == null && isNotEmpty(artifactIds)) {
       List<Artifact> list = new ArrayList<>();
       for (String artifactId : artifactIds) {
-        Artifact artifact = artifactService.get(appId, artifactId);
+        Artifact artifact = artifactService.get(artifactId);
         if (artifact != null) {
           list.add(artifact);
         }
@@ -564,7 +565,21 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     if (isEmpty(artifacts)) {
       return null;
     }
-    return artifacts.stream().filter(artifact -> artifact.getServiceIds().contains(serviceId)).findFirst().orElse(null);
+
+    Service service = serviceResourceService.get(serviceId);
+    if (service == null) {
+      return null;
+    }
+
+    List<String> artifactStreamIds = service.getArtifactStreamIds();
+    if (isEmpty(artifactStreamIds)) {
+      return null;
+    }
+
+    return artifacts.stream()
+        .filter(artifact -> artifactStreamIds.contains(artifact.getArtifactStreamId()))
+        .findFirst()
+        .orElse(null);
   }
 
   @Override

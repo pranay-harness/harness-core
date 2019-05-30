@@ -74,13 +74,13 @@ public class ArtifactCheckState extends State {
     List<String> correlationIds = new ArrayList<>();
 
     artifacts.forEach(artifact -> {
-      // TODO : auto downloaded is not done well in artifact stream - temporarily using Constants
+      // TODO: auto downloaded is not done well in artifact stream - temporarily using Constants
       ContentStatus artifactContentStatus = artifactService.getArtifactContentStatus(artifact);
       if (DOWNLOADED == artifactContentStatus || METADATA_ONLY == artifactContentStatus) {
         return;
       }
       // Artifact needs to be downloaded now
-      artifactService.startArtifactCollection(context.getAppId(), artifact.getUuid());
+      artifactService.startArtifactCollection(artifact.getAccountId(), artifact.getUuid());
       String resumeId = delayEventHelper.delay(DELAY_TIME_IN_SEC, ImmutableMap.of("artifactId", artifact.getUuid()));
       correlationIds.add(resumeId);
       artifactNamesForDownload.add(artifact.getDisplayName());
@@ -118,7 +118,7 @@ public class ArtifactCheckState extends State {
         artifactId = delayEventNotifyData.getContext().get("artifactId");
       }
 
-      Artifact artifact = artifactService.get(context.getAppId(), artifactId);
+      Artifact artifact = artifactService.get(artifactId);
       if (artifact.getContentStatus() == DOWNLOADED) {
         return;
       }

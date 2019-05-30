@@ -269,7 +269,7 @@ public class AlertServiceTest extends WingsBaseTest {
                               .artifactStreamId(ARTIFACT_STREAM_ID)
                               .build();
 
-    alertService.openAlert(ACCOUNT_ID, APP_ID, ARTIFACT_COLLECTION_FAILED, alertData);
+    alertService.openAlert(ACCOUNT_ID, null, ARTIFACT_COLLECTION_FAILED, alertData);
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
 
     List<Alert> alerts =
@@ -285,10 +285,9 @@ public class AlertServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldPruneByArtifactStreamAtConnectorLevel() {
-    AlertData alertData =
-        ArtifactCollectionFailedAlert.builder().appId(GLOBAL_APP_ID).artifactStreamId(ARTIFACT_STREAM_ID).build();
+    AlertData alertData = ArtifactCollectionFailedAlert.builder().artifactStreamId(ARTIFACT_STREAM_ID).build();
 
-    alertService.openAlert(ACCOUNT_ID, GLOBAL_APP_ID, ARTIFACT_COLLECTION_FAILED, alertData);
+    alertService.openAlert(ACCOUNT_ID, null, ARTIFACT_COLLECTION_FAILED, alertData);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID))
         .thenReturn(DockerArtifactStream.builder().settingId(SETTING_ID).build());
     when(settingsService.get(SETTING_ID))
