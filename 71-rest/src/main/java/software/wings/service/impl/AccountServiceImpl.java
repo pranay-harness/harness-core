@@ -42,6 +42,7 @@ import io.harness.beans.PageResponse.PageResponseBuilder;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.eraro.ErrorCode;
+import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
@@ -76,6 +77,7 @@ import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.Service;
 import software.wings.beans.SystemCatalog;
+import software.wings.beans.TechStack;
 import software.wings.beans.User;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.sso.LdapSettings;
@@ -184,6 +186,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private SSOSettingServiceImpl ssoSettingService;
   @Inject private MainConfiguration mainConfiguration;
   @Inject private UserService userService;
+  @Inject private EventPublishHelper eventPublishHelper;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
@@ -400,6 +403,18 @@ public class AccountServiceImpl implements AccountService {
       }
       suggestedAccountName = accountName + rand.nextInt(1000);
     } while (true);
+  }
+
+  @Override
+  public boolean updateTechStacks(String accountId, Set<TechStack> techStacks) {
+    Account accountInDB = get(accountId);
+    notNullCheck("Invalid Account for the given Id: " + accountId, accountInDB, USER);
+
+    UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class);
+    updateOperations.set("techStacks", techStacks);
+    wingsPersistence.update(accountInDB, updateOperations);
+    dbCache.invalidate(Account.class, accountId);
+    return true;
   }
 
   @Override

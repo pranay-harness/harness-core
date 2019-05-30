@@ -96,7 +96,7 @@ public class User extends Base implements Principal {
   @JsonIgnore private String segmentIdentity;
   private String oauthProvider;
   @JsonIgnore private Set<String> reportedMarketoCampaigns = new HashSet<>();
-  @JsonIgnore private Set<String> reportedSegmentTracks = new HashSet<>();
+  private Set<String> reportedSegmentTracks = new HashSet<>();
 
   /**
    * Return partial user object without sensitive information.
@@ -467,12 +467,10 @@ public class User extends Base implements Principal {
     this.reportedMarketoCampaigns = reportedMarketoCampaigns;
   }
 
-  @JsonIgnore
   public Set<String> getReportedSegmentTracks() {
     return reportedSegmentTracks;
   }
 
-  @JsonIgnore
   public void setReportedSegmentTracks(Set<String> reportedSegmentTracks) {
     this.reportedSegmentTracks = reportedSegmentTracks;
   }

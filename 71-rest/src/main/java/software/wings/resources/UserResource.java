@@ -6,6 +6,10 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ReportTarget.REST_API;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -39,7 +43,6 @@ import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.beans.security.UserGroup;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserThreadLocal;
@@ -104,7 +107,7 @@ import javax.ws.rs.core.Response;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @Scope(ResourceType.USER)
-@AuthRule(permissionType = PermissionType.LOGGED_IN)
+@AuthRule(permissionType = LOGGED_IN)
 @Slf4j
 public class UserResource {
   private UserService userService;
@@ -158,7 +161,7 @@ public class UserResource {
   @GET
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.USER_PERMISSION_READ)
+  @AuthRule(permissionType = USER_PERMISSION_READ)
   public RestResponse<PageResponse<User>> list(@BeanParam PageRequest<User> pageRequest,
       @QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("details") @DefaultValue("true") boolean loadUserGroups) {
@@ -267,7 +270,7 @@ public class UserResource {
   @Path("user/{userId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
+  @AuthRule(permissionType = USER_PERMISSION_MANAGEMENT)
   public RestResponse<User> updateUserGroupsOfUser(
       @QueryParam("accountId") @NotEmpty String accountId, @PathParam("userId") String userId, User user) {
     return getPublicUser(userService.updateUserGroupsOfUser(userId, user.getUserGroups(), accountId, true));
@@ -304,10 +307,10 @@ public class UserResource {
    */
   @PUT
   @Path("reset-cache")
-  @Scope(value = ResourceType.USER, scope = PermissionType.LOGGED_IN)
+  @Scope(value = ResourceType.USER, scope = LOGGED_IN)
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse resetCache() {
     User authUser = UserThreadLocal.get();
     if (harnessUserGroupService.isHarnessSupportUser(authUser.getUuid())) {
@@ -335,7 +338,7 @@ public class UserResource {
   @Path("{userId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
+  @AuthRule(permissionType = USER_PERMISSION_MANAGEMENT)
   public RestResponse delete(@QueryParam("accountId") @NotEmpty String accountId, @PathParam("userId") String userId) {
     userService.delete(accountId, userId);
     return new RestResponse();
@@ -344,7 +347,7 @@ public class UserResource {
   @DELETE
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
+  @AuthRule(permissionType = USER_PERMISSION_MANAGEMENT)
   public RestResponse<Boolean> delete(
       @QueryParam("accountId") @NotEmpty String accountId, @NotEmpty List<String> usersToRetain) {
     if (CollectionUtils.isEmpty(usersToRetain)) {
@@ -378,7 +381,7 @@ public class UserResource {
   @Path("resend-invitation-email")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
+  @AuthRule(permissionType = USER_PERMISSION_MANAGEMENT)
   public RestResponse resendInvitationEmail(@QueryParam("accountId") @NotBlank String accountId,
       @Valid @NotNull ResendInvitationEmailRequest invitationEmailRequest) {
     return new RestResponse<>(
@@ -425,10 +428,10 @@ public class UserResource {
    */
   @GET
   @Path("user")
-  @Scope(value = ResourceType.USER, scope = PermissionType.LOGGED_IN)
+  @Scope(value = ResourceType.USER, scope = LOGGED_IN)
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<User> get() {
     return new RestResponse<>(UserThreadLocal.get().getPublicUser());
   }
@@ -457,7 +460,7 @@ public class UserResource {
    */
   @GET
   @Path("account-roles/{accountId}")
-  @Scope(value = ResourceType.USER, scope = PermissionType.LOGGED_IN)
+  @Scope(value = ResourceType.USER, scope = LOGGED_IN)
   @Timed
   @ExceptionMetered
   public RestResponse<AccountRole> getAccountRole(@PathParam("accountId") String accountId) {
@@ -467,7 +470,7 @@ public class UserResource {
 
   @GET
   @Path("user-permissions/{accountId}")
-  @Scope(value = ResourceType.USER, scope = PermissionType.LOGGED_IN)
+  @Scope(value = ResourceType.USER, scope = LOGGED_IN)
   @Timed
   @ExceptionMetered
   public RestResponse<UserPermissionInfo> getUserPermissionInfo(@PathParam("accountId") String accountId) {
@@ -483,7 +486,7 @@ public class UserResource {
   @GET
   @Path("feature-flags/{accountId}")
   @Scope(value = ResourceType.USER)
-  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   @Timed
   @ExceptionMetered
   public RestResponse<Collection<FeatureFlag>> getFeatureFlags(@PathParam("accountId") String accountId) {
@@ -498,7 +501,7 @@ public class UserResource {
    */
   @GET
   @Path("application-roles/{appId}")
-  @Scope(value = ResourceType.USER, scope = PermissionType.LOGGED_IN)
+  @Scope(value = ResourceType.USER, scope = LOGGED_IN)
   @Timed
   @ExceptionMetered
   public RestResponse<ApplicationRole> getApplicationRole(@PathParam("appId") String appId) {
@@ -526,7 +529,7 @@ public class UserResource {
    */
   @PUT
   @Path("set-default-account/{accountId}")
-  @Scope(value = ResourceType.USER, scope = PermissionType.LOGGED_IN)
+  @Scope(value = ResourceType.USER, scope = LOGGED_IN)
   @Timed
   @ExceptionMetered
   public RestResponse<Boolean> setDefaultAccountForCurrentUser(@PathParam("accountId") @NotBlank String accountId) {
@@ -655,7 +658,7 @@ public class UserResource {
   @Path("override-two-factor-auth/{accountId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<TwoFactorAdminOverrideSettings> setTwoFactorAuthAtAccountLevel(
       @PathParam("accountId") @NotEmpty String accountId, TwoFactorAdminOverrideSettings settings) {
     // Trying Override = true
@@ -681,7 +684,7 @@ public class UserResource {
   @Path("disable-two-factor-auth/{accountId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<Boolean> disableTwoFactorAuth(@PathParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(twoFactorAuthenticationManager.disableTwoFactorAuthentication(accountId));
   }
@@ -724,7 +727,7 @@ public class UserResource {
   @Path("two-factor-auth-info/{accountId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<Boolean> getTwoFactorAuthAdminEnforceInfo(@PathParam("accountId") @NotEmpty String accountId) {
     return new RestResponse(twoFactorAuthenticationManager.getTwoFactorAuthAdminEnforceInfo(accountId));
   }
@@ -733,7 +736,7 @@ public class UserResource {
   @Path("disable-two-factor-auth")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<User> disableTwoFactorAuth() {
     return new RestResponse(twoFactorAuthenticationManager.disableTwoFactorAuthentication(UserThreadLocal.get()));
   }
@@ -742,7 +745,7 @@ public class UserResource {
   @Path("enable-two-factor-auth")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<User> enableTwoFactorAuth(TwoFactorAuthenticationSettings settings) {
     return new RestResponse(
         twoFactorAuthenticationManager.enableTwoFactorAuthenticationSettings(UserThreadLocal.get(), settings));
@@ -773,10 +776,10 @@ public class UserResource {
    */
   @POST
   @Path("{userId}/logout")
-  @Scope(value = ResourceType.USER, scope = PermissionType.LOGGED_IN)
+  @Scope(value = ResourceType.USER, scope = LOGGED_IN)
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.LOGGED_IN, skipAuth = true)
+  @AuthRule(permissionType = LOGGED_IN, skipAuth = true)
   public RestResponse logout(@PathParam("userId") String userId) {
     User user = UserThreadLocal.get();
     userService.logout(user);
@@ -881,7 +884,7 @@ public class UserResource {
   @Path("invites")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
+  @AuthRule(permissionType = USER_PERMISSION_MANAGEMENT)
   public RestResponse<PageResponse<UserInvite>> listInvites(
       @QueryParam("accountId") @NotEmpty String accountId, @BeanParam PageRequest<UserInvite> pageRequest) {
     return getPublicUserInvites(userService.listInvites(pageRequest));
@@ -914,12 +917,22 @@ public class UserResource {
   @Path("invites")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
+  @AuthRule(permissionType = USER_PERMISSION_MANAGEMENT)
   public RestResponse<List<UserInvite>> inviteUsers(
       @QueryParam("accountId") @NotEmpty String accountId, @NotNull UserInvite userInvite) {
     userInvite.setAccountId(accountId);
     userInvite.setAppId(GLOBAL_APP_ID);
     return getPublicUserInvites(userService.inviteUsers(userInvite));
+  }
+
+  @POST
+  @Path("custom-event")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
+  public RestResponse<Boolean> postCustomEvent(
+      @QueryParam("accountId") @NotEmpty String accountId, @NotEmpty String event) {
+    return new RestResponse<>(userService.postCustomEvent(accountId, event));
   }
 
   @GET
@@ -1047,7 +1060,7 @@ public class UserResource {
   @Path("invites/{inviteId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
+  @AuthRule(permissionType = USER_PERMISSION_MANAGEMENT)
   public RestResponse<UserInvite> deleteInvite(
       @PathParam("inviteId") @NotEmpty String inviteId, @QueryParam("accountId") @NotEmpty String accountId) {
     return getPublicUserInvite(userService.deleteInvite(accountId, inviteId));
@@ -1070,7 +1083,7 @@ public class UserResource {
   @Path("reset-two-factor-auth/{userId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
+  @AuthRule(permissionType = USER_PERMISSION_MANAGEMENT)
   public RestResponse<Boolean> reset2fa(
       @PathParam("userId") @NotEmpty String userId, @QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(twoFactorAuthenticationManager.sendTwoFactorAuthenticationResetEmail(userId));
@@ -1080,7 +1093,7 @@ public class UserResource {
   @Path("lead-update")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<Boolean> updateMarketoForUser(
       @NotEmpty @QueryParam("email") String email, @NotEmpty @QueryParam("accountId") String accountId) {
     return new RestResponse<>(userService.updateLead(email, accountId));

@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.event.handler.impl.Constants.ACCOUNT_ID;
+import static io.harness.event.handler.impl.Constants.CUSTOM_EVENT_NAME;
 import static io.harness.event.handler.impl.Constants.EMAIL_ID;
 import static io.harness.event.handler.impl.Constants.USER_INVITE_ID;
 import static io.harness.event.handler.impl.Constants.USER_NAME;
@@ -17,7 +18,6 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
-import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
@@ -59,7 +59,6 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateExecutionInstance;
-import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 
@@ -513,7 +512,24 @@ public class EventPublishHelper {
       return null;
     }
 
-    if (isEventAlreadyReportedToUser(user, eventType)) {
+    if (isEventAlreadyReportedForUser(user, eventType)) {
+      return null;
+    }
+
+    return user.getEmail();
+  }
+
+  private String checkIfMarketoOrSegmentIsEnabledAndGetUserEmail(String customEvent) {
+    if (!checkIfMarketoOrSegmentIsEnabled()) {
+      return null;
+    }
+
+    User user = UserThreadLocal.get();
+    if (!shouldPublishEventForUser(user)) {
+      return null;
+    }
+
+    if (isCustomEventAlreadyReportedForUser(user, customEvent)) {
       return null;
     }
 
@@ -537,7 +553,7 @@ public class EventPublishHelper {
     return true;
   }
 
-  private boolean isEventAlreadyReportedToUser(User user, EventType eventType) {
+  private boolean isEventAlreadyReportedForUser(User user, EventType eventType) {
     // only report event if not reported already
     Set<String> reportedMarketoCampaigns = user.getReportedMarketoCampaigns();
     Set<String> reportedSegmentTracks = user.getReportedSegmentTracks();
@@ -547,6 +563,18 @@ public class EventPublishHelper {
     }
 
     return reportedMarketoCampaigns.contains(eventType.name()) && reportedSegmentTracks.contains(eventType.name());
+  }
+
+  // Custom events are only being sent to
+  private boolean isCustomEventAlreadyReportedForUser(User user, String event) {
+    // only report event if not reported already
+    Set<String> reportedSegmentTracks = user.getReportedSegmentTracks();
+
+    if (isEmpty(reportedSegmentTracks)) {
+      return false;
+    }
+
+    return reportedSegmentTracks.contains(event);
   }
 
   private boolean shouldPublishEventForAccount(String accountId) {
@@ -660,15 +688,15 @@ public class EventPublishHelper {
         return;
       }
 
-      if (!isEventAlreadyReportedToUser(user, EventType.FIRST_DEPLOYMENT_EXECUTED)) {
+      if (!isEventAlreadyReportedForUser(user, EventType.FIRST_DEPLOYMENT_EXECUTED)) {
         publishIfFirstDeployment(workflowExecutionId, appIds, accountId, userEmail);
       }
 
-      if (!isEventAlreadyReportedToUser(user, EventType.FIRST_ROLLED_BACK_DEPLOYMENT) && workflowRolledBack) {
+      if (!isEventAlreadyReportedForUser(user, EventType.FIRST_ROLLED_BACK_DEPLOYMENT) && workflowRolledBack) {
         publishEvent(EventType.FIRST_ROLLED_BACK_DEPLOYMENT, getProperties(accountId, userEmail));
       }
 
-      if (!isEventAlreadyReportedToUser(user, EventType.FIRST_VERIFIED_DEPLOYMENT) && workflowWithVerification) {
+      if (!isEventAlreadyReportedForUser(user, EventType.FIRST_VERIFIED_DEPLOYMENT) && workflowWithVerification) {
         publishEvent(EventType.FIRST_VERIFIED_DEPLOYMENT, getProperties(accountId, userEmail));
       }
     });
@@ -694,43 +722,6 @@ public class EventPublishHelper {
     }
   }
 
-  private void publishIfExecutionHasVerificationState(
-      String workflowExecutionId, List<String> appIds, String accountId, String userEmail) {
-    PageRequest<StateExecutionInstance> pageRequest = PageRequestBuilder.aPageRequest()
-                                                          .addFilter("appId", Operator.IN, appIds.toArray())
-                                                          .addFilter("executionUuid", Operator.EQ, workflowExecutionId)
-                                                          .addFilter("stateType", Operator.IN, analysisStates.toArray())
-                                                          .addFilter("status", Operator.EQ, "SUCCESS")
-                                                          .addFieldsIncluded("_id")
-                                                          .addOrder(StateExecutionInstanceKeys.createdAt, OrderType.ASC)
-                                                          .withLimit("1")
-                                                          .build();
-    PageResponse<StateExecutionInstance> pageResponse = stateExecutionService.list(pageRequest);
-    List<StateExecutionInstance> stateExecutionInstances = pageResponse.getResponse();
-
-    if (isNotEmpty(stateExecutionInstances)) {
-      publishEvent(EventType.FIRST_VERIFIED_DEPLOYMENT, getProperties(accountId, userEmail));
-    }
-  }
-
-  private void publishIfExecutionHasRollbackState(
-      String workflowExecutionId, List<String> appIds, String accountId, String userEmail) {
-    PageRequest<StateExecutionInstance> pageRequest = PageRequestBuilder.aPageRequest()
-                                                          .addFilter("appId", Operator.IN, appIds.toArray())
-                                                          .addFilter("executionUuid", Operator.EQ, workflowExecutionId)
-                                                          .addFilter("rollback", Operator.EQ, true)
-                                                          .addFieldsIncluded("_id")
-                                                          .addOrder(StateExecutionInstanceKeys.createdAt, OrderType.ASC)
-                                                          .withLimit("1")
-                                                          .build();
-    PageResponse<StateExecutionInstance> pageResponse = stateExecutionService.list(pageRequest);
-    List<StateExecutionInstance> stateExecutionInstances = pageResponse.getResponse();
-
-    if (isNotEmpty(stateExecutionInstances)) {
-      publishEvent(EventType.FIRST_ROLLED_BACK_DEPLOYMENT, getProperties(accountId, userEmail));
-    }
-  }
-
   private Map<String, String> getProperties(String accountId, String userEmail) {
     Map<String, String> properties = new HashMap<>();
     properties.put(ACCOUNT_ID, accountId);
@@ -745,5 +736,25 @@ public class EventPublishHelper {
     properties.put(USER_NAME, userName);
     properties.put(USER_INVITE_ID, userInviteId);
     return properties;
+  }
+
+  public void publishCustomEvent(String accountId, String customEvent) {
+    String userEmail = checkIfMarketoOrSegmentIsEnabledAndGetUserEmail(customEvent);
+
+    if (isEmpty(userEmail)) {
+      return;
+    }
+
+    executorService.submit(() -> {
+      if (!shouldPublishEventForAccount(accountId)) {
+        return;
+      }
+
+      Map<String, String> properties = new HashMap<>();
+      properties.put(ACCOUNT_ID, accountId);
+      properties.put(EMAIL_ID, userEmail);
+      properties.put(CUSTOM_EVENT_NAME, customEvent);
+      publishEvent(EventType.CUSTOM, properties);
+    });
   }
 }

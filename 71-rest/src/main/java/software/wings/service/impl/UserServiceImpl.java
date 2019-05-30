@@ -357,6 +357,12 @@ public class UserServiceImpl implements UserService {
     return sendEmail(to, JOIN_EXISTING_TEAM_TEMPLATE_NAME, params);
   }
 
+  @Override
+  public boolean postCustomEvent(String accountId, String event) {
+    eventPublishHelper.publishCustomEvent(accountId, event);
+    return true;
+  }
+
   /**
    * Trial/Freemium user invitation won't create account. The freemium account will be created only at time of
    * invitation completion.

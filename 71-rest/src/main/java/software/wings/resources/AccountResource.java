@@ -24,6 +24,7 @@ import software.wings.beans.AccountType;
 import software.wings.beans.FeatureViolation;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.Service;
+import software.wings.beans.TechStack;
 import software.wings.licensing.LicenseService;
 import software.wings.licensing.violations.FeatureViolationsService;
 import software.wings.licensing.violations.RestrictedFeature;
@@ -40,6 +41,7 @@ import software.wings.utils.AccountPermissionUtils;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
@@ -151,6 +153,15 @@ public class AccountResource {
       response = new RestResponse<>(licenseService.updateAccountLicense(accountId, licenseInfo));
     }
     return response;
+  }
+
+  @PUT
+  @Path("{accountId}/tech-stacks")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> updateTechStacks(
+      @PathParam("accountId") @NotEmpty String accountId, Set<TechStack> techStacks) {
+    return new RestResponse<>(accountService.updateTechStacks(accountId, techStacks));
   }
 
   @PUT
