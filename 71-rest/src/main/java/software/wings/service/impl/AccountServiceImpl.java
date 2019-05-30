@@ -115,7 +115,7 @@ import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.verification.CVConfigurationService;
-import software.wings.utils.CacheHelper;
+import software.wings.utils.CacheManager;
 import software.wings.verification.CVConfiguration;
 
 import java.io.IOException;
@@ -159,7 +159,7 @@ public class AccountServiceImpl implements AccountService {
   private static final String SAMPLE_DELEGATE_NAME = "harness-sample-k8s-delegate";
   private static final String SAMPLE_DELEGATE_STATUS_ENDPOINT_FORMAT_STRING = "http://%s/account-%s.txt";
   @Inject protected AuthService authService;
-  @Inject protected CacheHelper cacheHelper;
+  @Inject protected CacheManager cacheManager;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private RoleService roleService;
   // DO NOT DELETE THIS, PRUNE logic needs it

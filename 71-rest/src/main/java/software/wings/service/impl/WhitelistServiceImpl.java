@@ -30,7 +30,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WhitelistService;
 import software.wings.service.intfc.WhitelistServiceForCommunity;
-import software.wings.utils.CacheHelper;
+import software.wings.utils.CacheManager;
 import software.wings.utils.Validator;
 
 import java.util.Arrays;
@@ -48,7 +48,7 @@ public class WhitelistServiceImpl implements WhitelistService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private MainConfiguration mainConfiguration;
   @Inject private FeatureFlagService featureFlagService;
-  @Inject private CacheHelper cacheHelper;
+  @Inject private CacheManager cacheManager;
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private AccountService accountService;
 
@@ -115,7 +115,7 @@ public class WhitelistServiceImpl implements WhitelistService {
   }
 
   public List<Whitelist> getWhitelistConfig(String accountId) {
-    Cache<String, WhitelistConfig> cache = cacheHelper.getWhitelistConfigCache();
+    Cache<String, WhitelistConfig> cache = cacheManager.getWhitelistConfigCache();
     WhitelistConfig value;
 
     // Cache should never be null, but just in case
@@ -145,7 +145,7 @@ public class WhitelistServiceImpl implements WhitelistService {
   }
 
   private void evictWhitelistConfigCache(String accountId) {
-    Cache<String, WhitelistConfig> cache = cacheHelper.getWhitelistConfigCache();
+    Cache<String, WhitelistConfig> cache = cacheManager.getWhitelistConfigCache();
     cache.remove(accountId);
   }
 

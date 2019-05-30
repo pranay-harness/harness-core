@@ -92,7 +92,7 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WhitelistService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.utils.CacheHelper;
+import software.wings.utils.CacheManager;
 
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
@@ -121,7 +121,7 @@ public class AuthServiceImpl implements AuthService {
   private UsageRestrictionsService usageRestrictionsService;
   private WorkflowService workflowService;
   private EnvironmentService environmentService;
-  private CacheHelper cacheHelper;
+  private CacheManager cacheManager;
   private MainConfiguration configuration;
   private LearningEngineService learningEngineService;
   private FeatureFlagService featureFlagService;
@@ -137,7 +137,7 @@ public class AuthServiceImpl implements AuthService {
   @Inject
   public AuthServiceImpl(GenericDbCache dbCache, WingsPersistence wingsPersistence, UserService userService,
       UserGroupService userGroupService, UsageRestrictionsService usageRestrictionsService,
-      WorkflowService workflowService, EnvironmentService environmentService, CacheHelper cacheHelper,
+      WorkflowService workflowService, EnvironmentService environmentService, CacheManager cacheManager,
       MainConfiguration configuration, LearningEngineService learningEngineService, AuthHandler authHandler,
       FeatureFlagService featureFlagService, HarnessUserGroupService harnessUserGroupService,
       SecretManager secretManager, UsageMetricsEventPublisher usageMetricsEventPublisher,
@@ -149,7 +149,7 @@ public class AuthServiceImpl implements AuthService {
     this.usageRestrictionsService = usageRestrictionsService;
     this.workflowService = workflowService;
     this.environmentService = environmentService;
-    this.cacheHelper = cacheHelper;
+    this.cacheManager = cacheManager;
     this.configuration = configuration;
     this.learningEngineService = learningEngineService;
     this.authHandler = authHandler;
@@ -197,7 +197,7 @@ public class AuthServiceImpl implements AuthService {
   }
 
   private User getUserFromCacheOrDB(String userId) {
-    Cache<String, User> userCache = cacheHelper.getUserCache();
+    Cache<String, User> userCache = cacheManager.getUserCache();
     if (userCache == null) {
       logger.warn("userCache is null. Fetch from DB");
       return userService.get(userId);
@@ -482,7 +482,7 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public UserPermissionInfo getUserPermissionInfo(String accountId, User user) {
-    Cache<String, UserPermissionInfo> cache = cacheHelper.getUserPermissionInfoCache();
+    Cache<String, UserPermissionInfo> cache = cacheManager.getUserPermissionInfoCache();
     if (cache == null) {
       logger.error("UserInfoCache is null. This should not happen. Fall back to DB");
       return getUserPermissionInfoFromDB(accountId, user);
@@ -508,7 +508,7 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public UserRestrictionInfo getUserRestrictionInfo(
       String accountId, User user, UserPermissionInfo userPermissionInfo) {
-    Cache<String, UserRestrictionInfo> cache = cacheHelper.getUserRestrictionInfoCache();
+    Cache<String, UserRestrictionInfo> cache = cacheManager.getUserRestrictionInfoCache();
     if (cache == null) {
       logger.error("UserInfoCache is null. This should not happen. Fall back to DB");
       return getUserRestrictionInfoFromDB(accountId, user, userPermissionInfo);
@@ -602,15 +602,15 @@ public class AuthServiceImpl implements AuthService {
   public void evictUserPermissionAndRestrictionCacheForAccount(
       String accountId, boolean rebuildUserPermissionInfo, boolean rebuildUserRestrictionInfo) {
     evictAndRebuild(
-        accountId, rebuildUserPermissionInfo, cacheHelper.getUserPermissionInfoCache(), UserPermissionInfo.class);
+        accountId, rebuildUserPermissionInfo, cacheManager.getUserPermissionInfoCache(), UserPermissionInfo.class);
     evictAndRebuild(
-        accountId, rebuildUserRestrictionInfo, cacheHelper.getUserRestrictionInfoCache(), UserRestrictionInfo.class);
+        accountId, rebuildUserRestrictionInfo, cacheManager.getUserRestrictionInfoCache(), UserRestrictionInfo.class);
   }
 
   @Override
   public void evictUserPermissionCacheForAccount(String accountId, boolean rebuildUserPermissionInfo) {
     evictAndRebuild(
-        accountId, rebuildUserPermissionInfo, cacheHelper.getUserPermissionInfoCache(), UserPermissionInfo.class);
+        accountId, rebuildUserPermissionInfo, cacheManager.getUserPermissionInfoCache(), UserPermissionInfo.class);
   }
 
   private <T> void evictAndRebuild(String accountId, boolean rebuild, Cache<String, T> cache, Class<T> infoClass) {
@@ -631,7 +631,7 @@ public class AuthServiceImpl implements AuthService {
             return;
           }
 
-          User user = cacheHelper.getUserCache().get(userId);
+          User user = cacheManager.getUserCache().get(userId);
           if (user == null) {
             return;
           }
@@ -667,10 +667,10 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void evictUserPermissionAndRestrictionCacheForAccount(String accountId, List<String> memberIds) {
-    Cache<String, UserPermissionInfo> userPermissionInfoCache = cacheHelper.getUserPermissionInfoCache();
+    Cache<String, UserPermissionInfo> userPermissionInfoCache = cacheManager.getUserPermissionInfoCache();
     removeFromCache(userPermissionInfoCache, accountId, memberIds);
 
-    Cache<String, UserRestrictionInfo> userRestrictionscache = cacheHelper.getUserRestrictionInfoCache();
+    Cache<String, UserRestrictionInfo> userRestrictionscache = cacheManager.getUserRestrictionInfoCache();
     removeFromCache(userRestrictionscache, accountId, memberIds);
   }
 

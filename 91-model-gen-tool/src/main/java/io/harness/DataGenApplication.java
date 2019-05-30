@@ -1,7 +1,7 @@
 package io.harness;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.utils.CacheHelper.USER_CACHE;
+import static software.wings.utils.CacheManager.USER_CACHE;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -46,7 +46,7 @@ import software.wings.beans.User;
 import software.wings.common.Constants;
 import software.wings.licensing.LicenseService;
 import software.wings.security.ThreadLocalUserProvider;
-import software.wings.utils.CacheHelper;
+import software.wings.utils.CacheManager;
 
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
@@ -162,12 +162,12 @@ public class DataGenApplication extends Application<MainConfiguration> {
     });
 
     // Access all caches before coming out of maintenance
-    CacheHelper cacheHelper = injector.getInstance(CacheHelper.class);
+    CacheManager cacheManager = injector.getInstance(CacheManager.class);
 
-    cacheHelper.getUserCache();
-    cacheHelper.getUserPermissionInfoCache();
-    cacheHelper.getNewRelicApplicationCache();
-    cacheHelper.getWhitelistConfigCache();
+    cacheManager.getUserCache();
+    cacheManager.getUserPermissionInfoCache();
+    cacheManager.getNewRelicApplicationCache();
+    cacheManager.getWhitelistConfigCache();
 
     String deployMode = System.getenv(DeployMode.DEPLOY_MODE);
 
