@@ -12,7 +12,6 @@ import static io.harness.k8s.manifest.ManifestHelper.getWorkloads;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
 import static java.util.Arrays.asList;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.LogColor.Blue;
 import static software.wings.beans.Log.LogColor.Green;
 import static software.wings.beans.Log.LogColor.White;
@@ -147,10 +146,8 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
 
     wrapUp(k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(k8sBlueGreenDeployTaskParameters, WrapUp));
 
-    List<K8sPod> podList = k8sTaskHelper.getPodDetailsWithColor(kubernetesConfig,
-        isNotBlank(managedWorkload.getResourceId().getNamespace()) ? managedWorkload.getResourceId().getNamespace()
-                                                                   : kubernetesConfig.getNamespace(),
-        releaseName, stageColor);
+    List<K8sPod> podList = k8sTaskHelper.getPodDetailsWithColor(
+        kubernetesConfig, managedWorkload.getResourceId().getNamespace(), releaseName, stageColor);
 
     releaseHistory.setReleaseStatus(Status.Succeeded);
     kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
@@ -191,6 +188,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
           executionLogCallback);
 
       resources = k8sTaskHelper.readManifests(manifestFiles, executionLogCallback);
+      k8sTaskHelper.setNamespaceToKubernetesResourcesIfRequired(resources, kubernetesConfig.getNamespace());
     } catch (Exception e) {
       logger.error("Exception:", e);
       executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR);

@@ -7,7 +7,6 @@ import static io.harness.k8s.manifest.ManifestHelper.getWorkloads;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
 import static java.util.Arrays.asList;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
@@ -125,10 +124,8 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
       return getFailureResponse();
     }
 
-    List<K8sPod> podList = k8sTaskHelper.getPodDetailsWithTrack(kubernetesConfig,
-        isNotBlank(canaryWorkload.getResourceId().getNamespace()) ? canaryWorkload.getResourceId().getNamespace()
-                                                                  : kubernetesConfig.getNamespace(),
-        releaseName, "canary");
+    List<K8sPod> podList = k8sTaskHelper.getPodDetailsWithTrack(
+        kubernetesConfig, canaryWorkload.getResourceId().getNamespace(), releaseName, "canary");
 
     wrapUp(k8sDelegateTaskParams, getLogCallBack(k8sCanaryDeployTaskParameters, WrapUp));
 
@@ -187,6 +184,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
           executionLogCallback);
 
       resources = k8sTaskHelper.readManifests(manifestFiles, executionLogCallback);
+      k8sTaskHelper.setNamespaceToKubernetesResourcesIfRequired(resources, kubernetesConfig.getNamespace());
 
       updateDestinationRuleManifestFilesWithSubsets(executionLogCallback);
       updateVirtualServiceManifestFilesWithRoutes(executionLogCallback);
