@@ -215,16 +215,10 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
       testRecord = TimeSeriesMLAnalysisRecord.builder().build();
     }
 
-    // test behavior
-    List<TimeSeriesMLAnalysisRecord> historicalRecordsBadAppId = metricDataAnalysisService.getHistoricalAnalysis(
-        accountId, appId + "-bad", serviceId, cvConfigId, 1000000, null);
-
     List<TimeSeriesMLAnalysisRecord> historicalRecordsBadCvConfigId = metricDataAnalysisService.getHistoricalAnalysis(
         accountId, appId, serviceId, cvConfigId + "-bad", 1000000, null);
 
     // verify
-    assertNotNull(historicalRecordsBadAppId);
-    assertEquals("Historical list should be of size 0", 0, historicalRecordsBadAppId.size());
     assertNotNull(historicalRecordsBadCvConfigId);
     assertEquals("Historical list should be of size 0", 0, historicalRecordsBadCvConfigId.size());
   }

@@ -1062,13 +1062,11 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   public long getLastCVAnalysisMinute(String appId, String cvConfigId, LogMLAnalysisStatus status) {
     // TODO; Write migration to add analysis status to all analyses in the past one month.
     final LogMLAnalysisRecord mlAnalysisRecord =
-        wingsPersistence
-            .createQuery(LogMLAnalysisRecord.class, excludeAuthority)
-
+        wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
             .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
             .filter(LogMLAnalysisRecordKeys.analysisStatus, status)
+            .project(LogMLAnalysisRecordKeys.logCollectionMinute, true)
             .order(Sort.descending(LogMLAnalysisRecordKeys.logCollectionMinute))
-
             .get();
     return mlAnalysisRecord == null ? -1 : mlAnalysisRecord.getLogCollectionMinute();
   }

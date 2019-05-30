@@ -1,6 +1,7 @@
 package software.wings.verification;
 
 import static io.harness.beans.ExecutionStatus.ERROR;
+import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -73,8 +74,7 @@ public class VerificationStateAnalysisExecutionData extends StateExecutionData {
                                             .filter("appId", appId)
                                             .filter("stateExecutionId", stateExecutionInstanceId)
                                             .count(),
-        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-            .filter("appId", appId)
+        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
             .filter(NewRelicMetricAnalysisRecordKeys.stateExecutionId, stateExecutionInstanceId)
             .count());
     final CountsByStatuses breakdown = new CountsByStatuses();

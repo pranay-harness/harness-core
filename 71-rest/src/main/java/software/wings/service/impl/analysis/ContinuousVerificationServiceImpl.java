@@ -87,6 +87,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataKeys;
+import software.wings.service.impl.analysis.MetricAnalysisRecord.MetricAnalysisRecordKeys;
 import software.wings.service.impl.analysis.TimeSeriesRiskSummary.TimeSeriesRiskSummaryKeys;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
@@ -735,8 +736,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       String appId, long startTime, long endTime, CVConfiguration cvConfiguration) {
     long cronPollIntervalMs = TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES);
     Preconditions.checkState((endTime - startTime) >= cronPollIntervalMs);
-    List<TimeSeriesMLAnalysisRecord> records =
-        getAnalysisRecordsInTimeRange(appId, startTime, endTime, cvConfiguration);
+    List<TimeSeriesMLAnalysisRecord> records = getAnalysisRecordsInTimeRange(startTime, endTime, cvConfiguration);
     records = mergeRecordsOfDifferentTagsIfNecessary(records);
     long startMinute = TimeUnit.MILLISECONDS.toMinutes(startTime);
     long endMinute = TimeUnit.MILLISECONDS.toMinutes(endTime);
@@ -806,18 +806,17 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
   @NotNull
   private List<TimeSeriesMLAnalysisRecord> getAnalysisRecordsInTimeRange(
-      String appId, long startTime, long endTime, CVConfiguration cvConfiguration) {
+      long startTime, long endTime, CVConfiguration cvConfiguration) {
     final List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords =
-        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeCount)
-            .filter("appId", appId)
-            .filter("cvConfigId", cvConfiguration.getUuid())
-            .field("analysisMinute")
+        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
+            .filter(MetricAnalysisRecordKeys.cvConfigId, cvConfiguration.getUuid())
+            .field(MetricAnalysisRecordKeys.analysisMinute)
             .greaterThanOrEq(TimeUnit.MILLISECONDS.toMinutes(startTime) + CRON_POLL_INTERVAL_IN_MINUTES)
-            .field("analysisMinute")
+            .field(MetricAnalysisRecordKeys.analysisMinute)
             .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(endTime))
-            .order("analysisMinute")
-            .project("transactions", false)
-            .project("transactionsCompressedJson", false)
+            .order(MetricAnalysisRecordKeys.analysisMinute)
+            .project(MetricAnalysisRecordKeys.transactions, false)
+            .project(MetricAnalysisRecordKeys.transactionsCompressedJson, false)
             .asList();
     timeSeriesMLAnalysisRecords.forEach(
         timeSeriesMLAnalysisRecord -> timeSeriesMLAnalysisRecord.decompressTransactions());

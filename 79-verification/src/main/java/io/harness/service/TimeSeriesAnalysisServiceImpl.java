@@ -45,6 +45,7 @@ import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.analysis.ExperimentalMetricAnalysisRecord;
 import software.wings.service.impl.analysis.MetricAnalysisRecord;
+import software.wings.service.impl.analysis.MetricAnalysisRecord.MetricAnalysisRecordKeys;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLHostSummary;
 import software.wings.service.impl.analysis.TimeSeriesMLMetricScores;
@@ -65,6 +66,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricDataRecord.NewRelicMetricDataRecordKeys;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -546,10 +548,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       final String appId, final String stateExecutionId, final String workflowExecutionId) {
     List<NewRelicMetricAnalysisRecord> analysisRecords = new ArrayList<>();
     List<TimeSeriesMLAnalysisRecord> allAnalysisRecords =
-        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-            .filter("appId", appId)
-            .filter("stateExecutionId", stateExecutionId)
-            .filter("workflowExecutionId", workflowExecutionId)
+        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
+            .filter(MetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
             .order(Sort.descending(TimeSeriesMLAnalysisRecord.CREATED_AT_KEY))
             .asList();
 
@@ -903,10 +903,10 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Override
   public long getLastCVAnalysisMinute(String appId, String cvConfigId) {
     TimeSeriesMLAnalysisRecord newRelicMetricAnalysisRecord =
-        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-            .filter("appId", appId)
-            .filter("cvConfigId", cvConfigId)
-            .order("-analysisMinute")
+        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
+            .filter(MetricAnalysisRecordKeys.cvConfigId, cvConfigId)
+            .project(MetricAnalysisRecordKeys.analysisMinute, true)
+            .order(Sort.descending(MetricAnalysisRecordKeys.analysisMinute))
             .get();
     return newRelicMetricAnalysisRecord == null ? -1 : newRelicMetricAnalysisRecord.getAnalysisMinute();
   }
@@ -917,13 +917,13 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     PageRequest<NewRelicMetricDataRecord> pageRequest =
         aPageRequest()
             .withLimit(UNLIMITED)
-            .addFilter("cvConfigId", Operator.EQ, cvConfigId)
-            .addFilter("dataCollectionMinute", Operator.GE, analysisStartMinute)
-            .addFilter("dataCollectionMinute", Operator.LT_EQ, analysisEndMinute)
+            .addFilter(NewRelicMetricDataRecordKeys.cvConfigId, Operator.EQ, cvConfigId)
+            .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.GE, analysisStartMinute)
+            .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.LT_EQ, analysisEndMinute)
             .build();
 
     if (isNotEmpty(tag)) {
-      pageRequest.addFilter("tag", Operator.EQ, tag);
+      pageRequest.addFilter(NewRelicMetricDataRecordKeys.tag, Operator.EQ, tag);
     }
     addAppIdInRequestIfNecessary(pageRequest, appId);
 
@@ -937,13 +937,13 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Override
   public TimeSeriesMLAnalysisRecord getPreviousAnalysis(
       String appId, String cvConfigId, long dataCollectionMin, String tag) {
-    Query<TimeSeriesMLAnalysisRecord> analysisQuery = wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-                                                          .filter("appId", appId)
-                                                          .filter("cvConfigId", cvConfigId)
-                                                          .filter("analysisMinute", dataCollectionMin);
+    Query<TimeSeriesMLAnalysisRecord> analysisQuery =
+        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
+            .filter(MetricAnalysisRecordKeys.cvConfigId, cvConfigId)
+            .filter(MetricAnalysisRecordKeys.analysisMinute, dataCollectionMin);
 
     if (isNotEmpty(tag)) {
-      analysisQuery = analysisQuery.filter("tag", tag);
+      analysisQuery = analysisQuery.filter(MetricAnalysisRecordKeys.tag, tag);
     }
     final TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord = analysisQuery.get();
     if (timeSeriesMLAnalysisRecord != null) {
@@ -965,14 +965,14 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       return new ArrayList<>();
     }
 
-    Query<TimeSeriesMLAnalysisRecord> analysisQuery = wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-                                                          .filter("appId", appId)
-                                                          .filter("cvConfigId", cvConfigId)
-                                                          .field("analysisMinute")
-                                                          .in(historicalAnalysisTimes);
+    Query<TimeSeriesMLAnalysisRecord> analysisQuery =
+        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
+            .filter(MetricAnalysisRecordKeys.cvConfigId, cvConfigId)
+            .field(MetricAnalysisRecordKeys.analysisMinute)
+            .in(historicalAnalysisTimes);
 
     if (isNotEmpty(tag)) {
-      analysisQuery = analysisQuery.filter("tag", tag);
+      analysisQuery = analysisQuery.filter(MetricAnalysisRecordKeys.tag, tag);
     }
 
     final List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords = analysisQuery.asList();
@@ -988,8 +988,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       String appId, String cvConfigId, Map<String, List<String>> metrics, String tag) {
     Query<TimeSeriesAnomaliesRecord> timeSeriesAnomaliesRecordQuery =
         wingsPersistence.createQuery(TimeSeriesAnomaliesRecord.class)
-            .filter("appId", appId)
-            .filter("cvConfigId", cvConfigId);
+            .filter(MetricAnalysisRecordKeys.cvConfigId, cvConfigId);
     if (isNotEmpty(tag)) {
       timeSeriesAnomaliesRecordQuery = timeSeriesAnomaliesRecordQuery.filter("tag", tag);
     }
