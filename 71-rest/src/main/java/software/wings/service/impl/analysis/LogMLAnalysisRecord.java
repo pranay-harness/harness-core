@@ -53,9 +53,10 @@ import java.util.Map;
  */
 @Entity(value = "logAnalysisRecords", noClassnameStored = true)
 @Indexes({
-  @Index(fields = { @Field("cvConfigId")
-                    , @Field(value = "logCollectionMinute", type = IndexType.DESC) },
-      options = @IndexOptions(name = "serviceGuardIdx"))
+  @Index(fields =
+      { @Field("cvConfigId")
+        , @Field("analysisStatus"), @Field(value = "logCollectionMinute", type = IndexType.DESC) },
+      options = @IndexOptions(name = "cvConfigId_1_analysisStatus_1_logCollectionMinute_-1"))
   ,
       @Index(fields = {
         @Field("stateExecutionId"), @Field(value = "logCollectionMinute", type = IndexType.DESC)
