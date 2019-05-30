@@ -358,7 +358,6 @@ public class UserServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldIncludeEnvPathInTrialSignupEmailUrl() {
     when(configuration.isTrialRegistrationAllowed()).thenReturn(true);
-    when(configuration.getEnvPath()).thenReturn(FREEMIUM_ENV_PATH);
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
     when(configuration.getPortal().getAllowedDomainsList().isEmpty()).thenReturn(true);
 
