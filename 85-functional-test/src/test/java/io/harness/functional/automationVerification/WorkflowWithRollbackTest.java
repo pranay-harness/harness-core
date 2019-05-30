@@ -30,12 +30,12 @@ import io.harness.generator.ServiceGenerator;
 import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
-import io.harness.rule.OwnerRule.Owner;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.restutils.ArtifactRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import org.awaitility.Awaitility;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
@@ -103,8 +103,8 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = "pooja@harness.io", intermittent = true)
   @Category(FunctionalTests.class)
+  @Ignore
   public void testWFWithRollback() throws Exception {
     Workflow savedWorkflow = addWorkflow();
     assertThat(savedWorkflow).isNotNull();
