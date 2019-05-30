@@ -239,6 +239,14 @@ public class AccountResource {
     return new RestResponse<>(accountService.getFromCache(accountId));
   }
 
+  // Fetches account info from DB & not from local manager cache to avoid inconsistencies in UI when account is updated
+  @GET
+  @Path("{accountId}/latest")
+  @AuthRule(permissionType = LOGGED_IN)
+  public RestResponse<Account> getLatestAccount(@PathParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse<>(accountService.get(accountId));
+  }
+
   @GET
   @Path("{accountId}/license-violations")
   @AuthRule(permissionType = LOGGED_IN)
