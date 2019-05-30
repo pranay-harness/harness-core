@@ -1,14 +1,19 @@
 package software.wings.beans;
 
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
+import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_ASG_AMI;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidRequestException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.stencils.DefaultValue;
@@ -17,6 +22,7 @@ import software.wings.utils.Utils;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 
 /**
@@ -43,7 +49,61 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
   }
 
   @Override
-  public void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType) {}
+  public void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType) {
+    if (!AWS_ASG_AMI.equals(nodeFilteringType)) {
+      // Should never happen
+      throw new InvalidRequestException(format("Unidentified: [%s] node filtering type", nodeFilteringType.name()));
+    }
+
+    // Clear the existing values
+    setRegion(StringUtils.EMPTY);
+    setAutoScalingGroupName(StringUtils.EMPTY);
+    setClassicLoadBalancers(emptyList());
+    setTargetGroupArns(emptyList());
+    setStageClassicLoadBalancers(emptyList());
+    setStageTargetGroupArns(emptyList());
+
+    for (Entry<String, Object> entry : map.entrySet()) {
+      String key = entry.getKey();
+      Object value = entry.getValue();
+      switch (key) {
+        case "region": {
+          setRegion((String) value);
+          break;
+        }
+        case "baseAsg": {
+          setAutoScalingGroupName((String) value);
+          break;
+        }
+        case "classicLbs": {
+          setClassicLoadBalancers(getList(value));
+          break;
+        }
+        case "targetGroups": {
+          setTargetGroupArns(getList(value));
+          break;
+        }
+        case "stageClassicLbs": {
+          setStageClassicLoadBalancers(getList(value));
+          break;
+        }
+        case "stageTargetGroups": {
+          setStageTargetGroupArns(getList(value));
+          break;
+        }
+        default: {
+          throw new InvalidRequestException(
+              format("Unidentified: [%s] key in properties map for Ami Asg deployment", key));
+        }
+      }
+    }
+    if (EmptyPredicate.isEmpty(getRegion())) {
+      throw new InvalidRequestException("Region is required");
+    }
+    if (EmptyPredicate.isEmpty(getAutoScalingGroupName())) {
+      throw new InvalidRequestException("Base Asg is required");
+    }
+  }
 
   @SchemaIgnore
   @Override

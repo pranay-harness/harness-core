@@ -106,6 +106,9 @@ public class CloudFormationDeleteStackHandler extends CloudFormationCommandTaskH
         String errorMessage = String.format("# Timing out while deleting stack: %s", stackName);
         executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
         builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
+      } else {
+        executionLogCallback.saveExecutionLog(
+            "Completed deletion of stack", LogLevel.INFO, CommandExecutionStatus.SUCCESS);
       }
     } catch (Exception ex) {
       String errorMessage =
