@@ -606,11 +606,6 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                 .lessThanOrEq(analysisMinute),
         wingsPersistence.createUpdateOperations(LogDataRecord.class)
             .set(LogDataRecordKeys.clusterLevel, ClusterLevel.getFinal()));
-    wingsPersistence.delete(wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
-                                .filter(LogDataRecordKeys.cvConfigId, cvConfigId)
-                                .filter(LogDataRecordKeys.clusterLevel, L2)
-                                .field(LogDataRecordKeys.logCollectionMinute)
-                                .lessThanOrEq(analysisMinute));
     if (taskId.isPresent()) {
       learningEngineService.markCompleted(taskId.get());
     }

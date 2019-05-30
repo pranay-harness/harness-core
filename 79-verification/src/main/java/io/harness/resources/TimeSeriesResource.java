@@ -25,6 +25,7 @@ import software.wings.sm.StateType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -205,7 +206,7 @@ public class TimeSeriesResource {
   @Timed
   @LearningEngineAuth
   @ExceptionMetered
-  public RestResponse<List<TimeSeriesCumulativeSums>> getCumulativeSums(@QueryParam("accountId") String accountId,
+  public RestResponse<Set<TimeSeriesCumulativeSums>> getCumulativeSums(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String appId, @QueryParam("cvConfigId") String cvConfigId,
       @QueryParam("analysisMinStart") Integer startMinute, @QueryParam("analysisMinEnd") Integer endMinute,
       @QueryParam("tag") String tag) {

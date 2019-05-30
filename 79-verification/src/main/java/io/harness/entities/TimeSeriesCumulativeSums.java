@@ -14,6 +14,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -22,6 +23,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
+import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.Base;
 
 import java.io.IOException;
@@ -33,14 +35,22 @@ import java.util.Map;
  */
 
 @Entity(value = "timeSeriesCumulativeSums", noClassnameStored = true)
-@Indexes(@Index(fields = { @Field("appId")
-                           , @Field("cvConfigId"), @Field("analysisMinute"), @Field("tag") },
-    options = @IndexOptions(unique = true, name = "uniqueIdx")))
+@Indexes({
+  @Index(fields = { @Field("appId")
+                    , @Field("cvConfigId"), @Field("analysisMinute"), @Field("tag") },
+      options = @IndexOptions(unique = true, name = "uniqueIdx"))
+  ,
+
+      @Index(fields = {
+        @Field("cvConfigId"), @Field(value = "analysisMinute", type = IndexType.DESC), @Field("tag")
+      }, options = @IndexOptions(name = "service_gd_idx"))
+})
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@FieldNameConstants(innerTypeName = "TimeSeriesCumulativeSumsKeys")
+@EqualsAndHashCode(callSuper = false, exclude = {"transactionMetricSums", "compressedMetricSums"})
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TimeSeriesCumulativeSums extends Base {
   @NotEmpty @Indexed private String cvConfigId;

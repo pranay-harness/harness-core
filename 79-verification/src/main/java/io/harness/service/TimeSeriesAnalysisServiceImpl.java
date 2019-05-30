@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.Integer.max;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.HARNESS_HEARTBEAT_METRIC_NAME;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
@@ -13,6 +14,7 @@ import static software.wings.utils.Misc.replaceUnicodeWithDot;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
@@ -24,6 +26,7 @@ import io.harness.beans.SortOrder.OrderType;
 import io.harness.entities.TimeSeriesAnomaliesRecord;
 import io.harness.entities.TimeSeriesAnomaliesRecord.TimeSeriesAnomaliesRecordKeys;
 import io.harness.entities.TimeSeriesCumulativeSums;
+import io.harness.entities.TimeSeriesCumulativeSums.TimeSeriesCumulativeSumsKeys;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClient;
@@ -69,6 +72,7 @@ import software.wings.sm.StateType;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -293,7 +297,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         cumulativeSums.setTag(tag);
       }
       cumulativeSums.compressMetricSums();
-      wingsPersistence.save(cumulativeSums);
+      wingsPersistence.saveIgnoringDuplicateKeys(Arrays.asList(cumulativeSums));
     }
     wingsPersistence.save(mlAnalysisResponse);
     wingsPersistence.save(riskSummary);
@@ -1022,19 +1026,18 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
-  public List<TimeSeriesCumulativeSums> getCumulativeSumsForRange(
+  public Set<TimeSeriesCumulativeSums> getCumulativeSumsForRange(
       String appId, String cvConfigId, int startMinute, int endMinute, String tag) {
     if (isNotEmpty(appId) && isNotEmpty(cvConfigId) && startMinute <= endMinute) {
       Query<TimeSeriesCumulativeSums> timeSeriesCumulativeSumsQuery =
-          wingsPersistence.createQuery(TimeSeriesCumulativeSums.class)
-              .filter("appId", appId)
-              .filter("cvConfigId", cvConfigId)
-              .field("analysisMinute")
+          wingsPersistence.createQuery(TimeSeriesCumulativeSums.class, excludeAuthority)
+              .filter(TimeSeriesCumulativeSumsKeys.cvConfigId, cvConfigId)
+              .field(TimeSeriesCumulativeSumsKeys.analysisMinute)
               .greaterThanOrEq(startMinute)
-              .field("analysisMinute")
+              .field(TimeSeriesCumulativeSumsKeys.analysisMinute)
               .lessThanOrEq(endMinute);
       if (isNotEmpty(tag)) {
-        timeSeriesCumulativeSumsQuery = timeSeriesCumulativeSumsQuery.filter("tag", tag);
+        timeSeriesCumulativeSumsQuery = timeSeriesCumulativeSumsQuery.filter(TimeSeriesCumulativeSumsKeys.tag, tag);
       }
       List<TimeSeriesCumulativeSums> cumulativeSums = timeSeriesCumulativeSumsQuery.asList();
 
@@ -1042,7 +1045,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
           "Returning a list of size {} from getCumulativeSumsForRange for appId {}, cvConfigId {} and start {} and end {}",
           cumulativeSums.size(), appId, cvConfigId, startMinute, endMinute);
       cumulativeSums.forEach(metricSum -> metricSum.decompressMetricSums());
-      return cumulativeSums;
+      return Sets.newHashSet(cumulativeSums);
     } else {
       final String errorMsg = "AppId or CVConfigId is null in getCumulativeSumsForRange";
       logger.error(errorMsg);
