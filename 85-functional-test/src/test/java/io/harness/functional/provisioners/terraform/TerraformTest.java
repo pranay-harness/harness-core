@@ -1,6 +1,7 @@
 package io.harness.functional.provisioners.terraform;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
@@ -103,7 +104,7 @@ public class TerraformTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = "vaibhav.si@harness.io", intermittent = true)
+  @Owner(emails = VAIBHAV_SI, intermittent = true)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldRunTerraformWorkflow() {

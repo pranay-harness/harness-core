@@ -30,7 +30,7 @@ public class JenkinsIntegrationTest extends BaseIntegrationTest {
   //  }
   //
   //  @Test
-  //  @Ignore
+  //    @Ignore("TODO: please provide clear motivation why this test is ignored")
   //  public void testGetJobs() {
   //    JenkinsConfig jenkinsConfig = obtainJenkinsConfig();
   //

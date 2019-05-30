@@ -1,7 +1,9 @@
 package software.wings.cloudprovider.aws;
 
+import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ANUBHAW;
 import static java.util.Arrays.asList;
-import static org.junit.Assert.assertEquals;
+import static net.sf.ezmorph.test.ArrayAssertions.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -18,6 +20,7 @@ import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Reservation;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +44,6 @@ import java.util.List;
 /**
  * Created by anubhaw on 6/22/17.
  */
-@Ignore
 @Slf4j
 public class AwsCodeDeployServiceTest extends WingsBaseTest {
   @InjectMocks @Inject private AwsCodeDeployService awsCodeDeployService;
@@ -64,7 +66,9 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldListApplication() {
     awsCodeDeployService.listApplications(Regions.US_EAST_1.getName(), cloudProvider, Collections.emptyList())
         .forEach(application -> { logger.info(application.toString()); });
@@ -94,7 +98,9 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldListApplicationRevisions() {
     logger.info(awsCodeDeployService
                     .getApplicationRevisionList(Regions.US_EAST_1.getName(), "todolistwar", "todolistwarDG",
@@ -103,7 +109,9 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldListDeploymentInstances() {
     doReturn(AwsConfig.builder().build()).when(awsHelperService).validateAndGetAwsConfig(any(), any());
 

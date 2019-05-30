@@ -2,6 +2,7 @@ package software.wings.integration;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.RAGHU;
 
 import com.google.inject.Inject;
 
@@ -9,6 +10,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Ignore;
@@ -26,12 +28,12 @@ import java.util.Random;
  * This is meant to generate workflowExecutions for last 30 days
  */
 @Integration
-@Ignore
 @Slf4j
 public class ExecutionGenTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
+  @Owner(emails = RAGHU)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void generateData() {

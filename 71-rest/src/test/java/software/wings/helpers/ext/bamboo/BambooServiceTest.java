@@ -3,6 +3,7 @@ package software.wings.helpers.ext.bamboo;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static io.harness.rule.OwnerRule.ANUBHAW;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -12,6 +13,7 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -25,7 +27,6 @@ import java.util.List;
 /**
  * Created by anubhaw on 12/8/16.
  */
-@Ignore
 public class BambooServiceTest extends WingsBaseTest {
   @Rule public WireMockRule wireMockRule = new WireMockRule(9095);
 
@@ -38,11 +39,13 @@ public class BambooServiceTest extends WingsBaseTest {
                                           .build();
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetJobKeys() {}
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetPlanKeys() {
@@ -60,6 +63,7 @@ public class BambooServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetPlanKeysException() {
@@ -74,11 +78,13 @@ public class BambooServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetLastSuccessfulBuild() {}
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetBuildsForJob() {
@@ -98,6 +104,7 @@ public class BambooServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetBuildsForJobError() {
@@ -111,11 +118,13 @@ public class BambooServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetArtifactPath() {}
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldDownloadArtifact() {}

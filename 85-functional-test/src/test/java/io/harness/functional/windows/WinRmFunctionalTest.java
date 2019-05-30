@@ -2,6 +2,7 @@ package io.harness.functional.windows;
 
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.api.DeploymentType.WINRM;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
@@ -37,6 +38,7 @@ import io.harness.generator.Randomizer;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.ServiceGenerator.Services;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import io.restassured.http.ContentType;
@@ -89,6 +91,7 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldDeployIISAppWithPhysicalInfra() throws Exception {
@@ -133,6 +136,7 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldDeployIISAppWithAzureCloudProvider() throws Exception {

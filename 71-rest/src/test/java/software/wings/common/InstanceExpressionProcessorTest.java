@@ -1,6 +1,7 @@
 package software.wings.common;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -33,6 +34,7 @@ import io.harness.beans.SearchFilter;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -133,8 +135,9 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    * Should return instances.
    */
   @Test
+  @Owner(emails = RAGHU)
   @Category(UnitTests.class)
-  @Ignore // Ignoring as instance without any filter is disabled
+  @Ignore("Ignoring as instance without any filter is disabled")
   public void shouldReturnInstances() {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());
     String appId = app.getUuid();
@@ -438,6 +441,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    * Should fetch context element.
    */
   @Test
+  @Owner(emails = RAGHU)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldFetchInstanceElements() {

@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.JATIN;
 import static java.util.Arrays.asList;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -28,6 +29,7 @@ import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -74,6 +76,7 @@ public class PreDeploymentCheckerTest extends WingsBaseTest {
   @Mock private MainConfiguration mainConfiguration;
 
   @Test
+  @Owner(emails = JATIN)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void checkDeploymentRateLimit() {

@@ -1,5 +1,6 @@
 package io.harness.e2e.users;
 
+import static io.harness.rule.OwnerRule.SWAMY;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertNotNull;
 
@@ -18,7 +19,7 @@ import java.util.List;
 @Slf4j
 public class UserTests extends AbstractE2ETest {
   @Test()
-  @Owner(emails = "swamy@harness.io", resent = false)
+  @Owner(emails = SWAMY, resent = false)
   @Category(E2ETests.class)
   public void listUsers() {
     logger.info("Starting the list users test");

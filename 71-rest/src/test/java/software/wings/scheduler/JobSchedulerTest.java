@@ -1,8 +1,11 @@
 package software.wings.scheduler;
 
+import static io.harness.rule.OwnerRule.ANUBHAW;
+
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -23,7 +26,6 @@ import software.wings.WingsBaseTest;
 /**
  * Created by anubhaw on 10/21/16.
  */
-@Ignore
 @Slf4j
 public class JobSchedulerTest extends WingsBaseTest {
   @Inject private BackgroundJobScheduler jobScheduler;
@@ -53,6 +55,7 @@ public class JobSchedulerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateScheduler() throws SchedulerException, InterruptedException {
@@ -80,6 +83,7 @@ public class JobSchedulerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldResumeIncompleteJob() throws InterruptedException, SchedulerException {

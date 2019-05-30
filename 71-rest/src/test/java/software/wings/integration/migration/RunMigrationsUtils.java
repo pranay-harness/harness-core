@@ -1,9 +1,12 @@
 package software.wings.integration.migration;
 
+import static io.harness.rule.OwnerRule.BRETT;
+
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import io.harness.category.element.IntegrationTests;
+import io.harness.rule.OwnerRule.Owner;
 import migrations.BaseMigration;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -16,19 +19,22 @@ import software.wings.service.intfc.MigrationService;
  * @author brett on 1/24/18
  */
 @Integration
-@Ignore
 public class RunMigrationsUtils extends WingsBaseTest {
   @Inject private MigrationService migrationService;
   @Inject private Injector injector;
 
   @Test
+  @Owner(emails = BRETT)
   @Category(IntegrationTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void runMigrations() {
     migrationService.runMigrations();
   }
 
   @Test
+  @Owner(emails = BRETT)
   @Category(IntegrationTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void runSpecificMigration() {
     // Temporarily change this to any Migration class to execute it directly
     injector.getInstance(BaseMigration.class).migrate();

@@ -1,10 +1,13 @@
 package software.wings.service;
 
+import static io.harness.rule.OwnerRule.ANUBHAW;
+
 import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +24,6 @@ import software.wings.service.intfc.SettingsService;
 
 import java.io.InputStream;
 
-@Ignore
 @Slf4j
 public class BambooServiceBuildServiceTest extends WingsBaseTest {
   @Inject BambooService bambooService;
@@ -39,7 +41,9 @@ public class BambooServiceBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldFetchBambooSettings() {
     PageResponse<SettingAttribute> settingAttributes = settingsService.list(new PageRequest<>(), null, null);
     SettingAttribute settingAttribute = settingsService.get("YcsuxTFqR6uH093foR_K5w-bamboo");
@@ -47,29 +51,39 @@ public class BambooServiceBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetJobs() {
     logger.info(bambooService.getPlanKeys(bambooConfig, null).toString());
   }
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetArtifactPaths() {}
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetLastSuccessfulBuild() {
     logger.info(bambooService.getLastSuccessfulBuild(bambooConfig, null, "TOD-TOD-JOB1").toString());
   }
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetBuilds() {
     logger.info(bambooService.getBuilds(bambooConfig, null, "TOD-TOD-JOB1", 50).toString());
   }
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetBuildArtifacts() {
     Pair<String, InputStream> stringInputStreamPair =
         bambooService.downloadArtifact(bambooConfig, null, "TOD-TOD-JOB1", "11", "*");

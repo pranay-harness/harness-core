@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.RAGHU;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -9,6 +10,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -41,7 +43,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-@Ignore("Unit tests should not access external resources")
 public class BambooBuildSourceServiceTest extends WingsBaseTest {
   private String accountId;
   private String appId;
@@ -77,21 +78,27 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = RAGHU)
   @Category(UnitTests.class)
+  @Ignore("Unit tests should not access external resources")
   public void getJobs() {
     Set<JobDetails> jobs = buildSourceService.getJobs(appId, settingAttribute.getUuid(), null);
     assertFalse(jobs.isEmpty());
   }
 
   @Test
+  @Owner(emails = RAGHU)
   @Category(UnitTests.class)
+  @Ignore("Unit tests should not access external resources")
   public void getPlans() {
     Map<String, String> plans = buildSourceService.getPlans(appId, settingAttribute.getUuid(), streamType.name());
     assertFalse(plans.isEmpty());
   }
 
   @Test
+  @Owner(emails = RAGHU)
   @Category(UnitTests.class)
+  @Ignore("Unit tests should not access external resources")
   public void getPlansWithType() {
     Service service = Service.builder().appId(appId).artifactType(ArtifactType.WAR).name("Some service").build();
     wingsPersistence.save(service);
@@ -101,7 +108,9 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = RAGHU)
   @Category(UnitTests.class)
+  @Ignore("Unit tests should not access external resources")
   public void getArtifactPaths() {
     Set<String> artifactPaths =
         buildSourceService.getArtifactPaths(appId, "TOD-TOD", settingAttribute.getUuid(), null, streamType.name());
@@ -110,7 +119,9 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = RAGHU)
   @Category(UnitTests.class)
+  @Ignore("Unit tests should not access external resources")
   public void getBuilds() {
     Service service = Service.builder().appId(appId).artifactType(ArtifactType.WAR).name("Some service").build();
     wingsPersistence.save(service);
@@ -127,7 +138,9 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = RAGHU)
   @Category(UnitTests.class)
+  @Ignore("Unit tests should not access external resources")
   public void getLastSuccessfulBuild() {
     Service service = Service.builder().appId(appId).artifactType(ArtifactType.WAR).name("Some service").build();
     wingsPersistence.save(service);

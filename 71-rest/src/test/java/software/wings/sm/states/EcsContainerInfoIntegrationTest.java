@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.rule.OwnerRule.RAGHU;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -19,6 +20,7 @@ import com.amazonaws.regions.Regions;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.IntegrationTests;
 import io.harness.context.ContextElementType;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import lombok.extern.slf4j.Slf4j;
@@ -94,6 +96,7 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = RAGHU)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetLastExecutionNodesECS()

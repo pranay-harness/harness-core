@@ -1,6 +1,7 @@
 package io.harness.functional.alerts;
 
 import static graphql.Assert.assertTrue;
+import static io.harness.rule.OwnerRule.SWAMY;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
@@ -34,7 +35,7 @@ import java.util.Set;
 @Slf4j
 public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
   @Test
-  @Owner(emails = "swamy@harness.io", resent = false)
+  @Owner(emails = SWAMY, resent = false)
   @Category(FunctionalTests.class)
   public void alertsCRUD() {
     Set<String> userGroups = new HashSet<>();
@@ -62,7 +63,7 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = "swamy@harness.io", resent = false)
+  @Owner(emails = SWAMY, resent = false)
   @Category(FunctionalTests.class)
   public void updateAllAlertTypes() {
     Set<String> userGroups = new HashSet<>();
@@ -90,7 +91,7 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = "swamy@harness.io", resent = false)
+  @Owner(emails = SWAMY, resent = false)
   @Category(FunctionalTests.class)
   public void updateAlertConditions() {
     Set<String> userGroups = new HashSet<>();
@@ -115,7 +116,7 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = "swamy@harness.io", resent = false)
+  @Owner(emails = SWAMY, resent = false)
   @Category(FunctionalTests.class)
   public void updateAlertCategory() {
     Set<String> userGroups = new HashSet<>();

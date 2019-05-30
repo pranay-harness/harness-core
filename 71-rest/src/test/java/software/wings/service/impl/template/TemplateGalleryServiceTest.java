@@ -3,6 +3,7 @@ package software.wings.service.impl.template;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.delegate.task.shell.ScriptType.POWERSHELL;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -33,6 +34,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -69,8 +71,9 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = ConstraintViolationException.class)
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore // TODO: Enable when validations on accountName are in place(https://harness.atlassian.net/browse/CD-3700)
+  @Ignore("Enable when validations on accountName are in place(https://harness.atlassian.net/browse/CD-3700)")
   public void shouldNotSaveInvalidNameTemplateGallery() {
     TemplateGallery templateGallery = prepareTemplateGallery();
     templateGallery.setName(INVALID_NAME);
@@ -120,8 +123,9 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = ConstraintViolationException.class)
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore // TODO: Enable when validations on accountName are in place(https://harness.atlassian.net/browse/CD-3700)
+  @Ignore("Enable when validations on accountName are in place(https://harness.atlassian.net/browse/CD-3700)")
   public void shouldNotUpdateInvalidTemplateGallery() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
 

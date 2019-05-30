@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -24,6 +25,7 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -163,8 +165,9 @@ public class ArtifactCollectionStateTest {
   }
 
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore // for srinivas to modify; need to simulate real Jenkins
+  @Ignore("for srinivas to modify; need to simulate real Jenkins")
   public void shouldArtifactCollectionEvaluateBuildNoFromDescription() {
     artifactCollectionState.setBuildNo("${regex.replace('tag: ([\\w-]+)', '$1', ${Jenkins.description}}");
     when(artifactService.getArtifactByBuildNumber(jenkinsArtifactStream, "0fc", false))

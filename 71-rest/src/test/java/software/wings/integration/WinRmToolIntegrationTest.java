@@ -7,13 +7,11 @@ import io.cloudsoft.winrm4j.client.WinRmClient;
 import io.cloudsoft.winrm4j.client.WinRmClientContext;
 import io.cloudsoft.winrm4j.winrm.WinRmTool;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Ignore;
 import software.wings.rules.Integration;
 
 import java.io.StringWriter;
 
 @Integration
-@Ignore
 /*
 This test class is making calls to WinRM. The purpose is to do directed testing for WinRM APIs.
 This is not to be run as an automated test[hence the @Ignore].

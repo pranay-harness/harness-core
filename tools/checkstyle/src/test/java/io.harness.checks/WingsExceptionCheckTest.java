@@ -23,8 +23,9 @@ public class WingsExceptionCheckTest extends AbstractModuleTestSupport {
 
   @Test
   public void testWingsExceptionIssues() throws Exception {
-    final String[] expected = {"5:30: Do not instantiate WingsException directly - instead use InvalidRequestException",
-        "6:40: Do not instantiate WingsException directly - instead use InvalidRequestException"};
+    final String[] expected = {
+        "5:30: Do not instantiate WingsException directly - instead use InvalidRequestException.",
+        "6:40: Do not instantiate WingsException directly - instead use InvalidRequestException."};
 
     verify(config(), getPath("WingsExceptionCheckIssues.jv"), expected);
   }

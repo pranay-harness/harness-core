@@ -1,5 +1,6 @@
 package software.wings.integration;
 
+import static io.harness.rule.OwnerRule.BRETT;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -7,6 +8,7 @@ import static org.awaitility.Awaitility.await;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.network.Http;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.awaitility.Duration;
@@ -41,6 +43,7 @@ public class DelegateIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = BRETT)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldDownloadDelegateZipWithWatcher()
@@ -87,6 +90,7 @@ public class DelegateIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = BRETT)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldRunDelegate() throws IOException, JSONException, TimeoutException, InterruptedException {

@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.rule.OwnerRule.RAGHU;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -8,6 +9,7 @@ import com.google.inject.Inject;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.ReadPref;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -31,7 +33,6 @@ import java.util.List;
  * Created by rishi on 3/14/17.
  */
 @Integration
-@Ignore
 public class RoleRefreshUtils extends WingsBaseTest {
   @Inject UserService userService;
   @Inject RoleService roleService;
@@ -40,6 +41,7 @@ public class RoleRefreshUtils extends WingsBaseTest {
   @Inject AppService appService;
 
   @Test
+  @Owner(emails = RAGHU)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void recreateRoles() {

@@ -1,5 +1,6 @@
 package software.wings.service.impl.infra;
 
+import static io.harness.rule.OwnerRule.RUSHABH;
 import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
@@ -10,6 +11,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -48,8 +50,9 @@ public class InfraDownloadServiceTest {
   }
 
   @Test
+  @Owner(emails = RUSHABH)
   @Category(UnitTests.class)
-  @Ignore // TODO: fix and un-ignore the test
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testDelegateDownload() {
     /***
      * THESE ARE FAKE KEYS

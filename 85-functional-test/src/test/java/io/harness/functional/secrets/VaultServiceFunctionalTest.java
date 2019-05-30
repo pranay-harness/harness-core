@@ -1,5 +1,6 @@
 package io.harness.functional.secrets;
 
+import static io.harness.rule.OwnerRule.MARK;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
@@ -8,6 +9,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.framework.utils.SecretsUtils;
@@ -40,6 +42,7 @@ public class VaultServiceFunctionalTest extends AbstractFunctionalTest {
   @Inject private VaultServiceImpl vaultService;
 
   @Test
+  @Owner(emails = MARK)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void createVaultWithAppRoleAuth() throws IOException {

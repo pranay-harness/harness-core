@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.rule.OwnerRule.ANUBHAW;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -16,6 +17,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -54,6 +56,7 @@ public class HostResourceTest extends WingsBaseTest {
    * Should list hosts.
    */
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldListHosts() {

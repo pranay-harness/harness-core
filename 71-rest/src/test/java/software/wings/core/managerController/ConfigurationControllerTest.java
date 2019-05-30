@@ -1,5 +1,6 @@
 package software.wings.core.managerController;
 
+import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.threading.Morpheus.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -66,7 +67,7 @@ public class ConfigurationControllerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = "puneet.saraswat@harness.io", intermittent = true)
+  @Owner(emails = PUNEET, intermittent = true)
   @Category(UnitTests.class)
   public void primaryIsNotSet() {
     when(query.get()).thenReturn(aManagerConfiguration().withPrimaryVersion("2.0.0").build());

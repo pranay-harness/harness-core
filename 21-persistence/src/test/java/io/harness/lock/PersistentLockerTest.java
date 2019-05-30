@@ -1,5 +1,6 @@
 package io.harness.lock;
 
+import static io.harness.rule.OwnerRule.GEORGE;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -19,6 +20,7 @@ import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.MessageManager;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -144,8 +146,9 @@ public class PersistentLockerTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = GEORGE)
   @Category(UnitTests.class)
-  @Ignore // TODO: enable when we can have timeout logic
+  @Ignore("TODO: enable when we can have timeout logic")
   public void testAcquireTimeout() throws InterruptedException {
     Duration timeout = ofMillis(1);
 

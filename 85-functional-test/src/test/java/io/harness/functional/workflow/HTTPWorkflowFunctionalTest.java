@@ -3,6 +3,7 @@ package io.harness.functional.workflow;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.EnvironmentGenerator.Environments.GENERIC_TEST;
+import static io.harness.rule.OwnerRule.POOJA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
@@ -24,6 +25,7 @@ import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import org.awaitility.Awaitility;
 import org.junit.Before;
@@ -62,6 +64,7 @@ public class HTTPWorkflowFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = POOJA)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateHTTPStepInWorkflow() throws Exception {

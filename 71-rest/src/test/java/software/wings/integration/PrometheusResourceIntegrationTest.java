@@ -1,6 +1,7 @@
 package software.wings.integration;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.PRANJAL;
 import static javax.ws.rs.client.Entity.entity;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -13,6 +14,7 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.IntegrationTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RepeatRule.Repeat;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
@@ -37,7 +39,6 @@ import javax.ws.rs.core.Response;
 /**
  * Created by Pranjal on 09/05/2018
  */
-@Ignore
 public class PrometheusResourceIntegrationTest extends BaseIntegrationTest {
   private String settingId;
   private String appId;
@@ -66,8 +67,10 @@ public class PrometheusResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = PRANJAL)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Category(IntegrationTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetMetricsWithDataForNode() {
     PrometheusSetupTestNodeData setupTestNodeData = getPrometheusSetupTestNodedata();
     WebTarget target = client.target(API_BASE + "/"
@@ -85,8 +88,10 @@ public class PrometheusResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = PRANJAL)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Category(IntegrationTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetMetricsWithDataForNodeServiceLevel() {
     PrometheusSetupTestNodeData setupTestNodeData = getPrometheusSetupTestNodedata();
     setupTestNodeData.getTimeSeriesToAnalyze().iterator().next().setUrl(

@@ -1,6 +1,9 @@
 package software.wings.service;
 
+import static io.harness.rule.OwnerRule.ANUBHAW;
+
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -17,12 +20,13 @@ import java.util.concurrent.TimeoutException;
 /**
  * Created by anubhaw on 3/22/18.
  */
-@Ignore
 @Slf4j
 public class HelmClientTest {
   private HelmClient helmClient = new HelmClientImpl();
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldInstall() throws InterruptedException, IOException, TimeoutException, ExecutionException {
     //    HelmCommandResponse helmCommandResponse =
     //        helmClient.install(HelmInstallCommandRequest.builder()
@@ -39,7 +43,9 @@ public class HelmClientTest {
   }
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldUpdate() throws InterruptedException, IOException, TimeoutException, ExecutionException {
     //    HelmCommandResponse helmCommandResponse =
     //        helmClient.upgrade(HelmInstallCommandRequest.builder()
@@ -56,7 +62,9 @@ public class HelmClientTest {
   }
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldRollback() throws InterruptedException, IOException, TimeoutException {
     HelmCommandResponse helmCommandResponse =
         helmClient.rollback(HelmRollbackCommandRequest.builder().releaseName("rel1").prevReleaseVersion(1).build());

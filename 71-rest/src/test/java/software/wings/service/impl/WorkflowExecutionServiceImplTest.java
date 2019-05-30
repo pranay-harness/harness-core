@@ -4,6 +4,9 @@ import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.threading.Puller.pullFor;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
@@ -211,6 +214,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Owner(emails = GEORGE)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldTriggerComplexWorkflow() throws InterruptedException {
@@ -379,6 +383,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Owner(emails = RAMA)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void triggerPipeline() throws InterruptedException {
@@ -527,7 +532,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Owner(emails = "george@harness.io")
+  @Owner(emails = GEORGE)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldTriggerWorkflowWithRelease() throws InterruptedException {
@@ -594,6 +599,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Owner(emails = GEORGE)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldUpdateFailedCount() throws InterruptedException {
@@ -881,6 +887,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   // TODO - Fix this, it's failing in Jenkins - almost all the time
   @Test
+  @Owner(emails = GEORGE)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldPauseAllAndResumeAllState() throws InterruptedException {
@@ -1206,6 +1213,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Owner(emails = GEORGE)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldWaitOnError() throws InterruptedException {
@@ -1397,6 +1405,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Owner(emails = GEORGE)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldRetryOnError() throws InterruptedException {
@@ -1937,7 +1946,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = {"srinivas@harness.io"})
+  @Owner(emails = {SRINIVAS})
   @Category(UnitTests.class)
   public void shouldListWaitingOnDeployments() {
     String appId = app.getUuid();
@@ -1961,7 +1970,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = {"srinivas@harness.io"})
+  @Owner(emails = {SRINIVAS})
   @Category(UnitTests.class)
   public void shouldFetchWorkflowExecutionStartTs() throws Exception {
     String appId = app.getUuid();

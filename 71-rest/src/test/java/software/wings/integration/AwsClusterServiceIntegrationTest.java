@@ -1,5 +1,6 @@
 package software.wings.integration;
 
+import static io.harness.rule.OwnerRule.ANUBHAW;
 import static java.util.Arrays.asList;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
@@ -7,6 +8,7 @@ import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
 import io.harness.category.element.IntegrationTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.apache.commons.text.StrSubstitutor;
@@ -30,7 +32,6 @@ import java.util.Map;
 /**
  * Created by anubhaw on 12/29/16.
  */
-@Ignore
 public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
   @Inject private AwsClusterService awsClusterService;
   @Inject private EcsContainerService ecsContainerService;
@@ -71,7 +72,9 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(IntegrationTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateCluster() {
     Map<String, Object> params = new HashMap<>();
     params.put("CLUSTER_NAME", "demo");
@@ -89,18 +92,24 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(IntegrationTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldResizeCluster() {
     awsClusterService.resizeCluster(Regions.US_EAST_1.getName(), awsConnectorSetting, Collections.emptyList(),
         "demo_v1", "Account_v1", 0, 3, 10, null);
   }
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(IntegrationTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldDeleteCluster() {}
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(IntegrationTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldProvisionNode() {
     Map<String, Object> params1 = new HashMap<>();
     params1.put("CLUSTER_NAME", "demo");
@@ -123,7 +132,9 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = ANUBHAW)
   @Category(IntegrationTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateClusterFromCFTemplate() throws InterruptedException {
     ((EcsContainerServiceImpl) ecsContainerService).createCluster();
   }

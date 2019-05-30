@@ -1,5 +1,6 @@
 package software.wings.integration;
 
+import static io.harness.rule.OwnerRule.MARK;
 import static javax.ws.rs.client.Entity.entity;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -9,6 +10,7 @@ import static org.junit.Assert.assertNull;
 import io.harness.category.element.IntegrationTests;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
@@ -28,7 +30,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * @author marklu on 2019-01-23
  */
-@Ignore // TODO: Ignored as it is failing consistently
+
 public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
   private static final String TEST_APPLICATION = "Test Application";
   private static final String TEST_SERVICE = "Test Service";
@@ -63,7 +65,9 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = MARK)
   @Category(IntegrationTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testServiceLevelConfigFileCrud() {
     // 1. Create a new service level config file
     String relativePath = "configFile1";
@@ -98,7 +102,9 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = MARK)
   @Category(IntegrationTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testMultipleConfigFileUpdate_shouldNot_OverwriteEachOther() {
     // 1. Create 2 new service level config files
     String relativePath1 = "configFile1";
@@ -140,7 +146,9 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = MARK)
   @Category(IntegrationTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testEnvironmentLevelConfigFileOverrideCrud() {
     // 1. Create a new service level config file
     String relativePath = "configFile1";

@@ -1,6 +1,7 @@
 package io.harness.functional.pipelines;
 
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
+import static io.harness.rule.OwnerRule.SWAMY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -150,7 +151,7 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = "swamy@harness.io")
+  @Owner(emails = SWAMY)
   @Category(FunctionalTests.class)
   public void pipelineTest() throws Exception {
     pipelineName = "Pipeline Test - " + System.currentTimeMillis();

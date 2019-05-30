@@ -4,14 +4,15 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static net.sf.ezmorph.test.ArrayAssertions.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.util.Lists.newArrayList;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
@@ -176,6 +177,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.serializer.JsonUtils;
 import io.harness.waiter.NotifyEventListener;
@@ -2820,6 +2822,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
    * @throws Exception
    */
   @Test
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetHPAYamlStringWithCustomMetric() throws Exception {

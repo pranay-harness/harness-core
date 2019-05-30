@@ -2,6 +2,7 @@ package software.wings.service.impl.template.integration;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.threading.Morpheus.sleep;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,6 +23,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import migrations.all.SystemTemplateGalleryMigration;
 import migrations.seedata.GlobalAccountMigration;
 import org.junit.Ignore;
@@ -54,7 +56,6 @@ import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 @Integration
-@Ignore
 @SetupScheduler
 public class TemplateServiceIntegrationTest extends WingsBaseTest {
   @Inject private TemplateFolderService templateFolderService;
@@ -66,19 +67,25 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   @Inject private GlobalAccountMigration globalAccountMigration;
 
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldMigrateGallery() {
     migration.migrate();
   }
 
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldMigrateIISTemplateGallery() {
     globalAccountMigration.migrate();
   }
 
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldLoadTemplateFolders() {
     wingsPersistence.delete(
         wingsPersistence.createQuery(TemplateFolder.class).filter(ACCOUNT_ID_KEY, GLOBAL_ACCOUNT_ID));
@@ -86,13 +93,17 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldUpdate() throws IOException {
     globalAccountMigration.updateExistingInstallCommand();
   }
 
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetTemplateTree() {
     TemplateFolder templateFolder = templateFolderService.getTemplateTree(GLOBAL_ACCOUNT_ID, null, null);
     assertThat(templateFolder).isNotNull();
@@ -102,7 +113,9 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetTemplateTreeByKeyword() {
     TemplateFolder templateFolder =
         templateFolderService.getTemplateTree(WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID, "Install", null);
@@ -113,7 +126,9 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCopyHarnessTemplateFolders() {
     TemplateGallery templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     assertThat(templateGallery).isNotNull();
@@ -127,7 +142,9 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetAccountTemplateTree() {
     List<Account> accounts = accountService.list(aPageRequest().addFilter("appId", EQ, GLOBAL_APP_ID).build());
     accounts.forEach(account -> {
@@ -140,13 +157,17 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldLoadDefaultCommandTemplates() {
     templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
   }
 
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldLoadDefaultCommandTemplatesForAccount() {
     List<Account> accounts = accountService.list(aPageRequest().addFilter("appId", EQ, GLOBAL_APP_ID).build());
     accounts.forEach(account -> {
@@ -157,27 +178,35 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldLoadTomcatStandardInstallCommand() {
     templateService.loadYaml(SSH, TOMCAT_WAR_INSTALL_PATH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
   }
 
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldUpdateLinkedEntities() {
     Template template = templateService.get("EtnnNloDR5i3cZoQ1LUW0Q");
     templateService.update(template);
   }
 
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldUpdateLinkedServiceCommandEntities() {
     Template template = templateService.get("EtnnNloDR5i3cZoQ1LUW0Q");
     templateService.update(template);
   }
 
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldTestExpression() {
     String content = "${F5_URL}/abdcc/";
     Matcher matcher = ManagerExpressionEvaluator.wingsVariablePattern.matcher(content);
@@ -188,7 +217,9 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateHttpTemplate() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     HttpTemplate httpTemplate = HttpTemplate.builder()
@@ -221,7 +252,9 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldLoadDefaultsOnAccountCreation() {
     Account account = accountService.getByAccountName(TEMPLATE_ACCOUNT);
     if (account != null) {
@@ -258,7 +291,9 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldDeleteGalleryOnAccountDeletion() {
     String accountId;
     Account account = accountService.getByAccountName(TEMPLATE_ACCOUNT);

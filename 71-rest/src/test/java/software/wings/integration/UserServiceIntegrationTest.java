@@ -1,6 +1,7 @@
 package software.wings.integration;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.rule.OwnerRule.MARK;
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -400,7 +401,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = "mark.lu@harness.io", intermittent = true)
+  @Owner(emails = MARK, intermittent = true)
   @Category(IntegrationTests.class)
   public void testUserInviteSignupAndSignInSuccess() {
     final String name = "Mark Lu";

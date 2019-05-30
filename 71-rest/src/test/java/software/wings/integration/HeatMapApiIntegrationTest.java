@@ -1,6 +1,7 @@
 package software.wings.integration;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.VAIBHAV_TULSYAN;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -215,7 +216,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
 
   //  @Test @Category(IntegrationTests.class)
   // Test to be un-ignored as per https://harness.atlassian.net/browse/LE-1150
-  @Owner(emails = "vaibhav.tulsyan@harness.io", intermittent = true)
+  @Owner(emails = VAIBHAV_TULSYAN, intermittent = true)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testTimeSeries() {
     String url = API_BASE + "/cvdash" + VerificationConstants.TIMESERIES + "?accountId=" + accountId

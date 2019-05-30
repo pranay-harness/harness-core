@@ -8,6 +8,7 @@ import static io.harness.eraro.ErrorCode.SOCKET_CONNECTION_ERROR;
 import static io.harness.eraro.ErrorCode.SOCKET_CONNECTION_TIMEOUT;
 import static io.harness.eraro.ErrorCode.SSH_SESSION_TIMEOUT;
 import static io.harness.eraro.ErrorCode.UNKNOWN_HOST;
+import static io.harness.rule.OwnerRule.AADITI;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,6 +28,7 @@ import com.google.common.io.CharStreams;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RepeatRule.Repeat;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
@@ -195,6 +197,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * Should throw exception for session timeout.
    */
   @Test
+  @Owner(emails = AADITI)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldThrowExceptionForSessionTimeout() {
@@ -223,6 +226,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
+  @Owner(emails = AADITI)
   @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
@@ -252,6 +256,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * @throws IOException the io exception
    */
   @Test
+  @Owner(emails = AADITI)
   @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
@@ -281,6 +286,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * @throws IOException the io exception
    */
   @Test
+  @Owner(emails = AADITI)
   @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")

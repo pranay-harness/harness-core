@@ -1,5 +1,6 @@
 package io.harness.functional.e2e;
 
+import static io.harness.rule.OwnerRule.SUNIL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
@@ -84,7 +85,7 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
   private static String sshKeyId;
 
   @Test
-  @Owner(emails = "sunil@harness.io", resent = false)
+  @Owner(emails = SUNIL, resent = false)
   @Category(FunctionalTests.class)
   public void TC1_createApplication() {
     // Test data setup
@@ -98,7 +99,7 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = "sunil@harness.io", resent = false)
+  @Owner(emails = SUNIL, resent = false)
   @Category(FunctionalTests.class)
   public void TC2_createServiceAndCollectArtifact() {
     Service warService =
@@ -121,7 +122,7 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = "sunil@harness.io", resent = false)
+  @Owner(emails = SUNIL, resent = false)
   @Category(FunctionalTests.class)
   public void TC3_createEnvironment() {
     Environment myEnv = anEnvironment().name(ENV_MAME).environmentType(EnvironmentType.NON_PROD).build();
@@ -155,7 +156,7 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = "sunil@harness.io", resent = false)
+  @Owner(emails = SUNIL, resent = false)
   @Category(FunctionalTests.class)
   public void TC4_createWorkflow() throws Exception {
     Workflow workflowBuilder =
@@ -177,7 +178,7 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = "sunil@harness.io", intermittent = false)
+  @Owner(emails = SUNIL, intermittent = false)
   @Category(FunctionalTests.class)
   public void TC5_deployWorkflow() {
     String artifactStreamId = ArtifactStreamRestUtils.getArtifactStreamId(
@@ -199,7 +200,7 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = "sunil@harness.io")
+  @Owner(emails = SUNIL)
   @Category(FunctionalTests.class)
   public void TC6_checkExecutionStarted() {
     String status = ExecutionRestUtils.getWorkflowExecutionStatus(

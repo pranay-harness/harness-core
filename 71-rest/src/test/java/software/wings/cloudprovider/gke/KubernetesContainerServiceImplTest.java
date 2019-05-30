@@ -1,5 +1,6 @@
 package software.wings.cloudprovider.gke;
 
+import static io.harness.rule.OwnerRule.BRETT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
@@ -36,6 +37,7 @@ import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.RollableScalableResource;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -164,6 +166,7 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = BRETT)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldSetControllerPodCount() {

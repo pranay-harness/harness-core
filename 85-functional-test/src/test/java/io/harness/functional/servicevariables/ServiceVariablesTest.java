@@ -1,6 +1,7 @@
 package io.harness.functional.servicevariables;
 
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
+import static io.harness.rule.OwnerRule.SWAMY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -112,7 +113,7 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = "swamy@harness.io", resent = false, intermittent = true)
+  @Owner(emails = SWAMY, resent = false, intermittent = true)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void variablesTest() throws Exception {

@@ -5,6 +5,7 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -88,6 +89,7 @@ import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.persistence.HQuery;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.stream.BoundedInputStream;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -1464,6 +1466,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should get command stencils.
    */
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetCommandStencils() {
@@ -1520,6 +1523,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should get command stencils.
    */
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetScriptCommandStencilsOnly() {

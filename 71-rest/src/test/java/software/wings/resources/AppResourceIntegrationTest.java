@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.rule.OwnerRule.JATIN;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertEquals;
@@ -14,6 +15,7 @@ import io.harness.limits.ActionType;
 import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.impl.model.StaticLimit;
 import io.harness.persistence.ReadPref;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RepeatRule.Repeat;
 import lombok.val;
 import migrations.InitializeAppCounters;
@@ -69,6 +71,7 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = JATIN)
   @Repeat(times = 10, successes = 10)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
@@ -114,6 +117,7 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = JATIN)
   @Repeat(times = 10, successes = 10)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")

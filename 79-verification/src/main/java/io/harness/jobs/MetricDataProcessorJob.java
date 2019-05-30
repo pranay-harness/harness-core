@@ -14,7 +14,7 @@ import org.quartz.JobExecutionContext;
 @Slf4j
 @Deprecated
 public class MetricDataProcessorJob implements Job {
-  static final String METRIC_DATA_PROCESSOR_CRON_GROUP = "METRIC_DATA_PROCESSOR_CRON_GROUP";
+  public static final String METRIC_DATA_PROCESSOR_CRON_GROUP = "METRIC_DATA_PROCESSOR_CRON_GROUP";
 
   @Inject private ContinuousVerificationService continuousVerificationService;
 

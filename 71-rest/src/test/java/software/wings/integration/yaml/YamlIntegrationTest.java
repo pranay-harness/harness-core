@@ -1,6 +1,8 @@
 package software.wings.integration.yaml;
 
-import static org.junit.Assert.assertEquals;
+import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ANSHUL;
+import static net.sf.ezmorph.test.ArrayAssertions.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -8,6 +10,7 @@ import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -46,7 +49,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-@Ignore
 @Slf4j
 public class YamlIntegrationTest extends BaseIntegrationTest {
   private Application application;
@@ -92,7 +94,9 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGitSyncAppCreatedOnHarness() throws Exception {
     String appName = "App" + System.currentTimeMillis();
     String yamlPath =
@@ -109,7 +113,9 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGitSyncServiceCreatedOnHarness() throws Exception {
     if (application == null) {
       application =
@@ -183,7 +189,9 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = ANSHUL)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGitSyncCloudProviderCreatedOnHarness() throws Exception {
     if (application == null) {
       application = yamlIntegrationTestHelper.createApplication(
@@ -202,7 +210,9 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = ANSHUL)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGitSyncInfraProvisionerCreatedOnHarness() throws Exception {
     if (application == null) {
       application = yamlIntegrationTestHelper.createApplication(
@@ -222,7 +232,9 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = ANSHUL)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGitSyncEnvironmentCreatedOnHarness() throws Exception {
     if (application == null) {
       application = yamlIntegrationTestHelper.createApplication(
@@ -241,7 +253,9 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
 
   // Environment with Physical Service Infra
   @Test
+  @Owner(emails = ANSHUL)
   @Category(UnitTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGitSyncEnvironment1CreatedOnHarness() throws Exception {
     if (application == null) {
       application = yamlIntegrationTestHelper.createApplication(

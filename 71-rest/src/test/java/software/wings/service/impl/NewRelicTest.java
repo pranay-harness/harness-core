@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.RAGHU;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -10,6 +11,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -64,6 +66,7 @@ public class NewRelicTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = RAGHU)
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
@@ -74,6 +77,7 @@ public class NewRelicTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = RAGHU)
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
@@ -85,6 +89,7 @@ public class NewRelicTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = RAGHU)
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")

@@ -1,6 +1,7 @@
 package io.harness.checks;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import com.puppycrawl.tools.checkstyle.api.AbstractCheck;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
@@ -8,11 +9,14 @@ import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 import io.harness.checks.mixin.AnnotationMixin;
 import io.harness.checks.mixin.ModifierMixin;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class AnnotationOrderCheck extends AbstractCheck {
   private static final String ORDER_MSG_KEY = "code.readability.annotation.order";
   private static final String MODIFIER_MSG_KEY = "code.readability.annotation.modifier";
+  private static final String REQUIRED_MSG_KEY = "code.readability.annotation.required.missing";
   private static final String INCOMPATIBLE_MSG_KEY = "annotation.problem.incompatible";
 
   @Override
@@ -58,6 +62,10 @@ public class AnnotationOrderCheck extends AbstractCheck {
                   .build())
           .build();
 
+  Map<String, Set<String>> required = ImmutableMap.<String, Set<String>>builder()
+                                          .put("Ignore", ImmutableSet.<String>builder().add("Owner").build())
+                                          .build();
+
   @Override
   public int[] getAcceptableTokens() {
     return getDefaultTokens();
@@ -69,11 +77,13 @@ public class AnnotationOrderCheck extends AbstractCheck {
     final Integer order = annotationOrder.get(name);
 
     Map<String, String> incompatibleMap = incompatible.get(name);
+    Set<String> requiredSet = new HashSet<>(required.getOrDefault(name, new HashSet<>()));
 
     DetailAST prevAnnotation = annotation.getPreviousSibling();
     if (order != null) {
       while (prevAnnotation != null && prevAnnotation.getType() == TokenTypes.ANNOTATION) {
         final String prevName = AnnotationMixin.name(prevAnnotation);
+        requiredSet.remove(prevName);
 
         if (incompatibleMap != null) {
           String msg = incompatibleMap.get(prevName);
@@ -93,6 +103,10 @@ public class AnnotationOrderCheck extends AbstractCheck {
           log(annotation, ORDER_MSG_KEY, name, prevName);
         }
       }
+    }
+
+    if (!requiredSet.isEmpty()) {
+      log(annotation, REQUIRED_MSG_KEY, name, String.join(", ", requiredSet));
     }
 
     if (prevAnnotation != null && ModifierMixin.isModifier(prevAnnotation)) {

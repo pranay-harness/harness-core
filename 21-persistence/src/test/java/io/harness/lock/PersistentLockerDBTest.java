@@ -2,6 +2,7 @@ package io.harness.lock;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.lock.PersistentLocker.LOCKS_STORE;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.threading.Morpheus.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
@@ -20,6 +21,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RealMongo;
 import io.harness.threading.Concurrent;
 import lombok.extern.slf4j.Slf4j;
@@ -130,8 +132,9 @@ public class PersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = GEORGE)
   @Category(UnitTests.class)
-  @Ignore // The underlining code does not respect lock after timeout. Enable this test when this issue is fixed.
+  @Ignore("The underlining code does not respect lock after timeout. Enable this test when this issue is fixed.")
   public void testAcquireAfterTimeout() throws InterruptedException {
     class AnotherLock implements Runnable {
       public boolean locked;

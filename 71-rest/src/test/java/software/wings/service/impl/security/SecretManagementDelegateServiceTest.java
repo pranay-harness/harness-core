@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.rule.OwnerRule.MARK;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.util.concurrent.SimpleTimeLimiter;
@@ -7,6 +8,7 @@ import com.google.common.util.concurrent.TimeLimiter;
 
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.security.encryption.EncryptedRecord;
@@ -44,6 +46,7 @@ public class SecretManagementDelegateServiceTest {
   }
 
   @Test
+  @Owner(emails = MARK)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void test_EncryptDecryptKmsSecret_ShouldSucceed() {

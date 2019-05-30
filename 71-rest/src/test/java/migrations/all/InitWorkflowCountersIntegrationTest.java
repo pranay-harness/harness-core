@@ -1,5 +1,6 @@
 package migrations.all;
 
+import static io.harness.rule.OwnerRule.JATIN;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
@@ -36,7 +37,7 @@ public class InitWorkflowCountersIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = "jatin@harness.io", intermittent = true)
+  @Owner(emails = JATIN, intermittent = true)
   @Category(IntegrationTests.class)
   public void testMigrate() {
     long totalWorkflows = wingsPersistence.createQuery(Workflow.class).count();

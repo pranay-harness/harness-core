@@ -1,10 +1,12 @@
 package software.wings.integration.service;
 
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.service.intfc.FileService.FileBucket.AUDITS;
 
 import io.harness.beans.PageRequest;
 import io.harness.category.element.IntegrationTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -18,10 +20,11 @@ import java.io.ByteArrayInputStream;
  * Created by rishi on 5/19/16.
  */
 // this test fails intermittently
-@Ignore
 public class AuditServiceIntegrationTest extends AuditServiceTest {
   @Test
+  @Owner(emails = ADWAIT)
   @Category(IntegrationTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateRequestPayload() throws Exception {
     AuditHeader header = createAuditHeader();
     assertThat(header.getRequestTime()).isNull();
@@ -43,7 +46,9 @@ public class AuditServiceIntegrationTest extends AuditServiceTest {
    * @throws Exception the exception
    */
   @Test
+  @Owner(emails = ADWAIT)
   @Category(IntegrationTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldFinalize() throws Exception {
     AuditHeader header = createAuditHeader();
     assertThat(header).isNotNull();
@@ -59,7 +64,9 @@ public class AuditServiceIntegrationTest extends AuditServiceTest {
   }
 
   @Test
+  @Owner(emails = ADWAIT)
   @Category(IntegrationTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldDeleteAuditRecordsRequestFiles() throws Exception {
     AuditHeader header = createAuditHeader();
     assertThat(header.getRequestTime()).isNull();

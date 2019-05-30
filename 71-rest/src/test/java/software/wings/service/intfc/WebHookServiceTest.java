@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.beans.ExecutionStatus.RUNNING;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
@@ -138,6 +139,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldExecuteByEventTriggerInvalidJson() {
@@ -368,7 +370,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = "srinivas@harness.io", intermittent = true)
+  @Owner(emails = SRINIVAS, intermittent = true)
   @Category(UnitTests.class)
   public void shouldTriggerGitHubPRWithDifferentEvent() throws IOException {
     Trigger webhookTrigger = Trigger.builder()
@@ -399,7 +401,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = "srinivas@harness.io", intermittent = true)
+  @Owner(emails = SRINIVAS, intermittent = true)
   @Category(UnitTests.class)
   public void shouldTriggerGitHubPRWithDifferentAction() throws IOException {
     Trigger webhookTrigger = Trigger.builder()
@@ -431,7 +433,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = "srinivas@harness.io", intermittent = true)
+  @Owner(emails = SRINIVAS, intermittent = true)
   @Category(UnitTests.class)
   public void shouldTriggerGitHubPushRequest() throws IOException {
     Trigger webhookTrigger = Trigger.builder()

@@ -1,5 +1,6 @@
 package software.wings.events;
 
+import static io.harness.rule.OwnerRule.RAMA;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
@@ -16,6 +17,7 @@ import io.harness.event.listener.EventListener;
 import io.harness.event.model.Event;
 import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -64,9 +66,9 @@ public class MarketoHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = RAMA)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
-  //  @Repeat(times = 5, successes = 1)
   public void testCreateLeadAndTriggerCampaign() {
     UserThreadLocal.set(user);
     try {

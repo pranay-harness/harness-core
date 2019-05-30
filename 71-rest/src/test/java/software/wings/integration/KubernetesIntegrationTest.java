@@ -10,7 +10,6 @@ import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Ignore;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
@@ -24,7 +23,6 @@ import java.util.List;
 import java.util.Optional;
 
 @Integration
-@Ignore
 @Slf4j
 public class KubernetesIntegrationTest {
   private static final SettingAttribute COMPUTE_PROVIDER_SETTING =

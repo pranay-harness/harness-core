@@ -2,6 +2,9 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.VAIBHAV_TULSYAN;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -274,7 +277,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
   // Test to be un-ignored as per https://harness.atlassian.net/browse/LE-1150
   @Test
-  @Owner(emails = "vaibhav.tulsyan@harness.io", intermittent = true)
+  @Owner(emails = VAIBHAV_TULSYAN, intermittent = true)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testTimeSeries() {
@@ -462,7 +465,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = {"praveen.sugavanam@harness.io"}, intermittent = true)
+  @Owner(emails = {PRAVEEN}, intermittent = true)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testSortingFromDB() throws IOException {
@@ -479,7 +482,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = {"praveen.sugavanam@harness.io"}, intermittent = true)
+  @Owner(emails = {PRAVEEN}, intermittent = true)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testDeeplinkUrlAppDynamicsFromDB() throws IOException {
@@ -564,6 +567,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = RAGHU)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testSorting() throws IOException {
@@ -848,7 +852,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
   // Test to be un-ignored as per https://harness.atlassian.net/browse/LE-1150
   @Test
-  @Owner(emails = "vaibhav.tulsyan@harness.io", intermittent = true)
+  @Owner(emails = VAIBHAV_TULSYAN, intermittent = true)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testRiskArrayEndpointContainment() throws Exception {

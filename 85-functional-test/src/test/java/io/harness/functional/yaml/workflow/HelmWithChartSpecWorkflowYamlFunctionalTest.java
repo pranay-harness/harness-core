@@ -5,6 +5,7 @@ import static io.harness.functional.yaml.YamlFunctionalTestConstants.BASE_GIT_RE
 import static io.harness.functional.yaml.YamlFunctionalTestConstants.BASE_VERIFY_CLONE_PATH;
 import static io.harness.functional.yaml.YamlFunctionalTestConstants.YAML_WEBHOOK_PAYLOAD_GITHUB;
 import static io.harness.generator.AccountGenerator.ACCOUNT_ID;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
@@ -67,7 +68,7 @@ public class HelmWithChartSpecWorkflowYamlFunctionalTest extends AbstractFunctio
   }
 
   @Test
-  @Owner(emails = "anshul@harness.io", intermittent = true)
+  @Owner(emails = ANSHUL, intermittent = true)
   @Category(FunctionalTests.class)
   public void testHelmWorkflowWithChartSpec() {
     uploadYamlZipFile(ACCOUNT_ID, OLD_APP_NAME, SETUP_FOLDER_PATH + APPLICATIONS_FOLDER);

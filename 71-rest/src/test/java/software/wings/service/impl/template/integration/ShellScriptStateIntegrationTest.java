@@ -1,5 +1,6 @@
 package software.wings.service.impl.template.integration;
 
+import static io.harness.rule.OwnerRule.AADITI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -11,6 +12,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -28,13 +30,14 @@ import java.util.UUID;
 
 @Integration
 @SetupScheduler
-@Ignore
 public class ShellScriptStateIntegrationTest extends WingsBaseTest {
   @Inject private TemplateFolderService templateFolderService;
   @Inject private TemplateService templateService;
 
   @Test(expected = WingsException.class)
+  @Owner(emails = AADITI)
   @Category(IntegrationTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateUpdateDeleteShellScriptTemplate() {
     // Create template
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);

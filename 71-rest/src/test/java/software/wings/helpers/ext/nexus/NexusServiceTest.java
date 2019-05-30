@@ -3,6 +3,7 @@ package software.wings.helpers.ext.nexus;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
@@ -14,6 +15,7 @@ import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -196,6 +198,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetArtifactPathsByRepoStartsWithUrlError() {
@@ -211,6 +214,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetGroupIdPaths() {
     wireMockRule.stubFor(get(urlEqualTo("/nexus/service/local/repositories/releases/index_content/"))
@@ -485,6 +489,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = SRINIVAS)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldDownloadArtifact() {
