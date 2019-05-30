@@ -683,12 +683,6 @@ public class UserServiceImpl implements UserService {
 
   private String buildAbsoluteUrl(String fragment) throws URISyntaxException {
     String baseUrl = getBaseUrl();
-    String envPath = configuration.getEnvPath();
-    if (isNotEmpty(envPath)) {
-      String envPathQueryParam = fragment.contains("?") ? "&e=" + envPath.trim() : "?e=" + envPath.trim();
-      fragment += envPathQueryParam;
-    }
-
     URIBuilder uriBuilder = new URIBuilder(baseUrl);
     uriBuilder.setFragment(fragment);
     return uriBuilder.toString();
@@ -1012,8 +1006,7 @@ public class UserServiceImpl implements UserService {
     return model;
   }
 
-  private Map<String, String> getEmailVerificationTemplateModel(String email, String url, Map<String, String> params)
-      throws URISyntaxException {
+  private Map<String, String> getEmailVerificationTemplateModel(String email, String url, Map<String, String> params) {
     Map<String, String> model = new HashMap<>();
     model.put("name", email);
     // This uses the setPath. The method above uses setFragment() which adds a # to the url.
@@ -1049,12 +1042,8 @@ public class UserServiceImpl implements UserService {
   }
 
   private void sendVerificationEmail(UserInvite userInvite, String url, Map<String, String> params) {
-    try {
-      Map<String, String> templateModel = getEmailVerificationTemplateModel(userInvite.getEmail(), url, params);
-      sendEmail(userInvite, TRIAL_EMAIL_VERIFICATION_TEMPLATE_NAME, templateModel);
-    } catch (URISyntaxException e) {
-      logger.error("Verification email couldn't be sent ", e);
-    }
+    Map<String, String> templateModel = getEmailVerificationTemplateModel(userInvite.getEmail(), url, params);
+    sendEmail(userInvite, TRIAL_EMAIL_VERIFICATION_TEMPLATE_NAME, templateModel);
   }
 
   public void sendTrialSignupCompletedEmail(UserInvite userInvite) {
