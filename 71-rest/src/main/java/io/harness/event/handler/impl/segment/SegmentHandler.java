@@ -3,10 +3,12 @@ package io.harness.event.handler.impl.segment;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.event.handler.impl.Constants.ACCOUNT_ID;
+import static io.harness.event.handler.impl.Constants.CUSTOM_EVENT_NAME;
 import static io.harness.event.handler.impl.Constants.EMAIL_ID;
 import static io.harness.event.handler.impl.Constants.USER_NAME;
 import static io.harness.event.model.EventType.COMMUNITY_TO_PAID;
 import static io.harness.event.model.EventType.COMPLETE_USER_REGISTRATION;
+import static io.harness.event.model.EventType.CUSTOM;
 import static io.harness.event.model.EventType.FIRST_DELEGATE_REGISTERED;
 import static io.harness.event.model.EventType.FIRST_DEPLOYMENT_EXECUTED;
 import static io.harness.event.model.EventType.FIRST_ROLLED_BACK_DEPLOYMENT;
@@ -92,7 +94,7 @@ public class SegmentHandler implements EventHandler {
         Sets.newHashSet(USER_INVITED_FROM_EXISTING_ACCOUNT, COMPLETE_USER_REGISTRATION, FIRST_DELEGATE_REGISTERED,
             FIRST_WORKFLOW_CREATED, FIRST_DEPLOYMENT_EXECUTED, FIRST_VERIFIED_DEPLOYMENT, FIRST_ROLLED_BACK_DEPLOYMENT,
             SETUP_CV_24X7, SETUP_2FA, SETUP_SSO, SETUP_IP_WHITELISTING, SETUP_RBAC, TRIAL_TO_PAID, TRIAL_TO_COMMUNITY,
-            COMMUNITY_TO_PAID, NEW_TRIAL_SIGNUP, LICENSE_UPDATE, JOIN_ACCOUNT_REQUEST));
+            COMMUNITY_TO_PAID, NEW_TRIAL_SIGNUP, LICENSE_UPDATE, JOIN_ACCOUNT_REQUEST, CUSTOM));
   }
 
   public boolean isSegmentEnabled() {
@@ -171,8 +173,11 @@ public class SegmentHandler implements EventHandler {
         case COMPLETE_USER_REGISTRATION:
           registerIdentityAndReportTrackEvent(account, user, event);
           break;
+        case CUSTOM:
+          reportTrackEvent(account, properties.get(CUSTOM_EVENT_NAME), user);
+          break;
         default:
-          reportTrackEvent(account, eventType, user);
+          reportTrackEvent(account, eventType.name(), user);
           break;
       }
 
@@ -219,10 +224,10 @@ public class SegmentHandler implements EventHandler {
     // In case of sso based signup, we only send complete user registration.
     // But we have a special requirement for sending NEW_TRIAL_SIGNUP to segment for easier tracking.
     if (event.getEventType().equals(COMPLETE_USER_REGISTRATION) && isNotEmpty(user.getOauthProvider())) {
-      reportTrackEvent(account, EventType.NEW_TRIAL_SIGNUP, user);
+      reportTrackEvent(account, EventType.NEW_TRIAL_SIGNUP.name(), user);
     }
 
-    reportTrackEvent(account, event.getEventType(), user);
+    reportTrackEvent(account, event.getEventType().name(), user);
   }
 
   public String reportIdentity(Account account, User user, boolean wait) throws IOException, URISyntaxException {
@@ -230,7 +235,7 @@ public class SegmentHandler implements EventHandler {
     String identity = segmentHelper.createOrUpdateIdentity(apiKey, retrofit, user.getUuid(), user.getEmail(),
         user.getName(), account, userInviteUrl, user.getOauthProvider());
     if (!identity.equals(user.getSegmentIdentity())) {
-      updateUser(user, identity);
+      updateUserIdentity(user, identity);
     }
 
     if (wait) {
@@ -248,7 +253,7 @@ public class SegmentHandler implements EventHandler {
     return segmentHelper.createOrUpdateIdentity(apiKey, retrofit, null, email, userName, null, null, null);
   }
 
-  private User updateUser(User user, EventType eventType) {
+  private User updateUserEvents(User user, String event) {
     try (AcquiredLock lock =
              persistentLocker.waitToAcquireLock(user.getEmail(), Duration.ofMinutes(2), Duration.ofMinutes(4))) {
       User latestUser = userService.getUserFromCacheOrDB(user.getUuid());
@@ -256,13 +261,13 @@ public class SegmentHandler implements EventHandler {
       if (reportedSegmentTracks == null) {
         reportedSegmentTracks = new HashSet<>();
       }
-      reportedSegmentTracks.add(eventType.name());
+      reportedSegmentTracks.add(event);
       latestUser.setReportedSegmentTracks(reportedSegmentTracks);
       return userService.update(latestUser);
     }
   }
 
-  private User updateUser(User user, String segmentIdentity) {
+  private User updateUserIdentity(User user, String segmentIdentity) {
     if (isEmpty(segmentIdentity)) {
       return user;
     }
@@ -290,10 +295,10 @@ public class SegmentHandler implements EventHandler {
     return true;
   }
 
-  private void reportTrackEvent(Account account, EventType eventType, User user)
-      throws IOException, URISyntaxException {
+  private void reportTrackEvent(Account account, String event, User user) throws IOException, URISyntaxException {
     String userId = user.getUuid();
     String identity = user.getSegmentIdentity();
+    logger.info("Reporting track for event {} with lead {}", event, userId);
     if (isEmpty(identity) || !identity.equals(userId)) {
       identity = reportIdentity(account, user, true);
       if (isEmpty(identity)) {
@@ -305,9 +310,10 @@ public class SegmentHandler implements EventHandler {
       user = userService.getUserFromCacheOrDB(userId);
     }
 
-    boolean reported = segmentHelper.reportTrackEvent(apiKey, retrofit, identity, eventType.name());
+    boolean reported = segmentHelper.reportTrackEvent(apiKey, retrofit, identity, event);
     if (reported) {
-      updateUser(user, eventType);
+      updateUserEvents(user, event);
     }
+    logger.info("Reported track for event {} with lead {}", event, userId);
   }
 }

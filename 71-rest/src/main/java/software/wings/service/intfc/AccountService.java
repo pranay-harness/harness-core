@@ -11,6 +11,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Account;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.Service;
+import software.wings.beans.TechStack;
 import software.wings.beans.User;
 import software.wings.service.impl.analysis.CVEnabledService;
 
@@ -44,6 +45,8 @@ public interface AccountService {
   void updateTwoFactorEnforceInfo(String accountId, boolean enabled);
 
   String suggestAccountName(@NotNull String accountName);
+
+  boolean updateTechStacks(String accountId, Set<TechStack> techStacks);
 
   boolean exists(String accountName);
 

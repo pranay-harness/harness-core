@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 @FieldNameConstants(innerTypeName = "AccountKeys")
@@ -73,6 +74,8 @@ public class Account extends Base {
   private boolean localEncryptionEnabled;
 
   private DelegateConfiguration delegateConfiguration;
+
+  private Set<TechStack> techStacks;
 
   private transient Map<String, String> defaults = new HashMap<>();
   /**
@@ -244,6 +247,14 @@ public class Account extends Base {
   @JsonIgnore
   public void setEmailSentToSales(boolean emailSentToSales) {
     this.emailSentToSales = emailSentToSales;
+  }
+
+  public Set<TechStack> getTechStacks() {
+    return techStacks;
+  }
+
+  public void setTechStacks(Set<TechStack> techStacks) {
+    this.techStacks = techStacks;
   }
 
   @Override

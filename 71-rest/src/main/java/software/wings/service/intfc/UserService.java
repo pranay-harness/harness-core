@@ -474,4 +474,6 @@ public interface UserService extends OwnedByAccount {
    *
    */
   boolean accountJoinRequest(AccountJoinRequest accountJoinRequest);
+
+  boolean postCustomEvent(String accountId, String event);
 }
