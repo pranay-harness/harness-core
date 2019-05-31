@@ -143,7 +143,7 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
           }
           JsonNode issueObj = responseObj.get(0);
           if (issueObj != null) {
-            String issueId = issueObj.get("sys_id").asText();
+            String issueId = issueObj.get("sys_id").get("display_value").asText();
             parameters.setIssueId(issueId);
           } else {
             String errorMsg = "Error in fetching issue " + parameters.getIssueNumber() + " .Issue does not exist";
