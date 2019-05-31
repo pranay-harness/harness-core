@@ -45,9 +45,9 @@ public class NexusArtifactStream extends ArtifactStream {
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
       String name, boolean autoPopulate, String serviceId, boolean metadataOnly, String jobname, String groupId,
       String imageName, List<String> artifactPaths, String dockerPort, String dockerRegistryUrl, String repositoryType,
-      String accountId) {
+      String accountId, List<String> keywords) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, NEXUS.name(), sourceName,
-        settingId, name, autoPopulate, serviceId, metadataOnly, accountId);
+        settingId, name, autoPopulate, serviceId, metadataOnly, accountId, keywords);
     this.jobname = jobname;
     this.groupId = groupId;
     this.imageName = imageName;
