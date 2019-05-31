@@ -56,6 +56,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.FeatureName;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactKeys;
 import software.wings.beans.artifact.Artifact.ContentStatus;
@@ -72,6 +73,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.utils.ArtifactType;
@@ -114,6 +116,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Inject private ExecutorService executorService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private SettingsService settingsService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
@@ -175,6 +178,9 @@ public class ArtifactServiceImpl implements ArtifactService {
     artifact.setArtifactSourceName(artifactStream.getSourceName());
     setAccountId(artifact);
     setArtifactStatus(artifact, artifactStream);
+    if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, artifact.getAccountId())) {
+      artifact.setServiceIds(artifactStreamServiceBindingService.listServiceIds(artifactStream.getUuid()));
+    }
 
     String key = wingsPersistence.save(artifact);
     Artifact savedArtifact = wingsPersistence.get(Artifact.class, key);

@@ -135,6 +135,7 @@ import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
@@ -178,6 +179,7 @@ import software.wings.service.intfc.BarrierService;
 import software.wings.service.intfc.BarrierService.OrchestrationWorkflowInfo;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceInstanceService;
@@ -275,6 +277,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private AlertService alertService;
   @Inject private WorkflowServiceHelper workflowServiceHelper;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Inject @RateLimitCheck private PreDeploymentChecker deployLimitChecker;
   @Inject @ServiceInstanceUsage private PreDeploymentChecker siUsageChecker;
@@ -1451,6 +1454,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         artifact.setArtifactFiles(null);
         artifact.setCreatedBy(null);
         artifact.setLastUpdatedBy(null);
+        if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, artifact.getAccountId())) {
+          artifact.setServiceIds(artifactStreamServiceBindingService.listServiceIds(artifact.getArtifactStreamId()));
+        }
         keywords.add(artifact.getArtifactSourceName());
         keywords.add(artifact.getDescription());
         keywords.add(artifact.getRevision());
