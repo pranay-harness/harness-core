@@ -74,6 +74,7 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.StringValue;
 import software.wings.beans.ValidationResult;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
@@ -496,7 +497,7 @@ public class SettingsServiceImpl implements SettingsService {
     notNullCheck("Setting Attribute was deleted", existingSetting, USER);
     notNullCheck("SettingValue not associated", settingAttribute.getValue(), USER);
     equalCheck(existingSetting.getValue().getType(), settingAttribute.getValue().getType());
-
+    validateSettingAttribute(settingAttribute, existingSetting);
     usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
         settingAttribute.getAccountId(), existingSetting.getUsageRestrictions(), getUsageRestriction(settingAttribute));
 
@@ -551,6 +552,20 @@ public class SettingsServiceImpl implements SettingsService {
     cacheManager.getNewRelicApplicationCache().remove(updatedSettingAttribute.getUuid());
 
     return updatedSettingAttribute;
+  }
+
+  private void validateSettingAttribute(SettingAttribute settingAttribute, SettingAttribute existingSettingAttribute) {
+    if (settingAttribute != null && existingSettingAttribute != null) {
+      if (settingAttribute.getValue() != null && existingSettingAttribute.getValue() != null) {
+        if (existingSettingAttribute.getValue() instanceof NexusConfig) {
+          if (!((NexusConfig) settingAttribute.getValue())
+                   .getVersion()
+                   .equals(((NexusConfig) existingSettingAttribute.getValue()).getVersion())) {
+            throw new InvalidRequestException("Version cannot be updated", USER);
+          }
+        }
+      }
+    }
   }
 
   @Override
