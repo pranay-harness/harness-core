@@ -31,9 +31,10 @@ public class SftpArtifactStream extends ArtifactStream {
   @Builder
   public SftpArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
-      String name, boolean autoPopulate, String serviceId, List<String> artifactPaths, String accountId) {
+      String name, boolean autoPopulate, String serviceId, List<String> artifactPaths, String accountId,
+      List<String> keywords) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, SFTP.name(), sourceName,
-        settingId, name, autoPopulate, serviceId, true, accountId);
+        settingId, name, autoPopulate, serviceId, true, accountId, keywords);
     this.artifactPaths = artifactPaths;
   }
 

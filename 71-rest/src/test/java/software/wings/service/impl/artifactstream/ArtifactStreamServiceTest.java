@@ -167,7 +167,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedArtifactSteam.getArtifactStreamType()).isEqualTo(JENKINS.name());
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getArtifactStreamType()).isEqualTo(JENKINS.name());
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getJobName()).isEqualTo("todolistwar");
-
+    assertThat(savedArtifactSteam.getKeywords().size()).isEqualTo(2);
+    assertThat(savedArtifactSteam.getKeywords()).contains("todolistwar", "jenkins");
     JenkinsArtifactStream savedJenkinsArtifactStream = (JenkinsArtifactStream) savedArtifactSteam;
     assertThat(savedJenkinsArtifactStream.getJobname()).isEqualTo("todolistwar");
     assertThat(savedJenkinsArtifactStream.getArtifactPaths()).contains("target/todolist.war");
@@ -269,6 +270,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedArtifactStream).isInstanceOf(JenkinsArtifactStream.class);
     assertThat(updatedArtifactStream.fetchArtifactStreamAttributes().getArtifactStreamType()).isEqualTo(JENKINS.name());
     assertThat(updatedArtifactStream.fetchArtifactStreamAttributes().getJobName()).isEqualTo("todoliswar_changed");
+    assertThat(updatedArtifactStream.getKeywords().size()).isEqualTo(3);
+    assertThat(updatedArtifactStream.getKeywords()).contains("jekinsname_changed", "todoliswar_changed", "jenkins");
     JenkinsArtifactStream updatedJenkinsArtifactStream = savedArtifactSteam;
     assertThat(updatedJenkinsArtifactStream.getJobname()).isEqualTo("todoliswar_changed");
     assertThat(updatedJenkinsArtifactStream.getArtifactPaths()).contains("*WAR_Changed");

@@ -1,6 +1,9 @@
 package software.wings.beans.artifact;
 
+import static java.util.Arrays.asList;
+
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
@@ -19,6 +22,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
+import software.wings.beans.KeywordsAware;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
@@ -55,7 +59,8 @@ import java.util.List;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "ArtifactStreamKeys")
-public abstract class ArtifactStream extends Base implements ArtifactSourceable, PersistentIterable, NameAccess {
+public abstract class ArtifactStream
+    extends Base implements ArtifactSourceable, PersistentIterable, NameAccess, KeywordsAware {
   protected static final String dateFormat = "HHMMSS";
 
   private String artifactStreamType;
@@ -75,6 +80,7 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
   private String templateVersion;
   private List<Variable> templateVariables = new ArrayList<>();
   private String accountId;
+  @SchemaIgnore private List<String> keywords;
 
   public ArtifactStream(String artifactStreamType) {
     this.artifactStreamType = artifactStreamType;
@@ -83,7 +89,8 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
 
   public ArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
       long lastUpdatedAt, String entityYamlPath, String artifactStreamType, String sourceName, String settingId,
-      String name, boolean autoPopulate, String serviceId, boolean metadataOnly, String accountId) {
+      String name, boolean autoPopulate, String serviceId, boolean metadataOnly, String accountId,
+      List<String> keywords) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.artifactStreamType = artifactStreamType;
     this.sourceName = sourceName;
@@ -93,6 +100,7 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
     this.serviceId = serviceId;
     this.metadataOnly = metadataOnly;
     this.accountId = accountId;
+    this.keywords = keywords;
   }
 
   public String fetchAppId() {
@@ -124,6 +132,13 @@ public abstract class ArtifactStream extends Base implements ArtifactSourceable,
     }
 
     this.nextIteration = nextIteration;
+  }
+
+  @Override
+  public List<String> generateKeywords() {
+    List<String> keywords = KeywordsAware.super.generateKeywords();
+    keywords.addAll(asList(name, sourceName, artifactStreamType));
+    return keywords;
   }
 
   @Data
