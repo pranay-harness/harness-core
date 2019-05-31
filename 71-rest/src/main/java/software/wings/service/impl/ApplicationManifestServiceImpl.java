@@ -30,6 +30,7 @@ import io.harness.waiter.ErrorNotifyResponseData;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.mongodb.morphia.query.Query;
+import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.Event.Type;
 import software.wings.beans.GitFetchFilesTaskParams;
@@ -501,13 +502,23 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
   }
 
-  private void validateLocalAppManifest(ApplicationManifest applicationManifest) {
+  @VisibleForTesting
+  public void validateLocalAppManifest(ApplicationManifest applicationManifest) {
     if (applicationManifest.getGitFileConfig() != null) {
       throw new InvalidRequestException("gitFileConfig cannot be used for Local storeType.", USER);
     }
 
     if (applicationManifest.getHelmChartConfig() != null) {
       throw new InvalidRequestException("helmChartConfig cannot be used for Local storeType.", USER);
+    }
+
+    if (applicationManifest.getKind() != null && applicationManifest.getKind() == AppManifestKind.K8S_MANIFEST
+        && applicationManifest.getServiceId() != null) {
+      Service service = serviceResourceService.get(applicationManifest.getAppId(), applicationManifest.getServiceId());
+      if (service != null && service.getDeploymentType() != null
+          && service.getDeploymentType() == DeploymentType.HELM) {
+        throw new InvalidRequestException("Local app manifest is not supported for helm service", USER);
+      }
     }
   }
 
