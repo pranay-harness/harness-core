@@ -2,6 +2,7 @@ package io.harness.service;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -1242,5 +1243,35 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertEquals(logMLAnalysisRecord.getControl_clusters(), compressedLogMLAnalysisRecord.getControl_clusters());
     assertEquals(logMLAnalysisRecord.getUnknown_clusters(), compressedLogMLAnalysisRecord.getUnknown_clusters());
     assertEquals(logMLAnalysisRecord.getIgnore_clusters(), compressedLogMLAnalysisRecord.getIgnore_clusters());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetAnalysisForBaseline() throws IOException {
+    File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
+
+    final Gson gson = new Gson();
+    LogMLAnalysisRecord logMLAnalysisRecord;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
+      logMLAnalysisRecord = gson.fromJson(br, type);
+    }
+    LogsCVConfiguration logsCVConfiguration = new LogsCVConfiguration();
+    logsCVConfiguration.setUuid(logMLAnalysisRecord.getCvConfigId());
+    wingsPersistence.save(logsCVConfiguration);
+
+    int numOfRecords = 10;
+    for (int i = 0; i < numOfRecords; i++) {
+      logMLAnalysisRecord.setUuid(null);
+      logMLAnalysisRecord.setLogCollectionMinute(i + 1);
+      wingsPersistence.save(logMLAnalysisRecord);
+    }
+
+    assertEquals(
+        numOfRecords, wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList().size());
+
+    final LogMLAnalysisRecord logAnalysisRecord = analysisService.getLogAnalysisRecords(
+        logMLAnalysisRecord.getAppId(), logMLAnalysisRecord.getCvConfigId(), numOfRecords);
+    assertEquals(numOfRecords, logAnalysisRecord.getLogCollectionMinute());
   }
 }
