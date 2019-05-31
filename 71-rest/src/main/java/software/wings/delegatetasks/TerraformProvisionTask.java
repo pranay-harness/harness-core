@@ -145,7 +145,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
 
   private TerraformExecutionData run(TerraformProvisionParameters parameters) {
     GitConfig gitConfig = parameters.getSourceRepo();
-    saveExecutionLog(parameters, "Branch: " + gitConfig.getBranch() + "\nPath: " + parameters.getScriptPath(),
+    saveExecutionLog(parameters,
+        "Branch: " + gitConfig.getBranch() + "\nNormalized Path: " + parameters.getScriptPath(),
         CommandExecutionStatus.RUNNING);
     gitConfig.setGitRepoType(GitRepositoryType.TERRAFORM);
 

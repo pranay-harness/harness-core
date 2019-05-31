@@ -36,6 +36,7 @@ import io.harness.validation.Create;
 import io.harness.validation.Update;
 import io.harness.waiter.ErrorNotifyResponseData;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.Key;
@@ -143,6 +144,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       TerraformInfrastructureProvisioner terraformInfrastructureProvisioner =
           (TerraformInfrastructureProvisioner) infrastructureProvisioner;
       terraformInfrastructureProvisioner.setTemplatized(isTemplatizedProvisioner(terraformInfrastructureProvisioner));
+      terraformInfrastructureProvisioner.setNormalizedPath(
+          FilenameUtils.normalize(terraformInfrastructureProvisioner.getPath()));
     }
   }
 
@@ -597,7 +600,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   }
 
   private String normalizeScriptPath(String terraformDirectory) {
-    return terraformDirectory.equals(".") ? "" : terraformDirectory;
+    return FilenameUtils.normalize(terraformDirectory);
   }
 
   @Override

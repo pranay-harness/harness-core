@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.apache.commons.io.FilenameUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.List;
@@ -28,6 +29,7 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
    */
   @NotEmpty private String sourceRepoBranch;
   @NotNull private String path;
+  private String normalizedPath;
   private List<NameValuePair> backendConfigs;
   private boolean templatized;
   private List<String> workspaces;
@@ -52,6 +54,7 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
     setSourceRepoSettingId(sourceRepoSettingId);
     setSourceRepoBranch(sourceRepoBranch);
     setPath(path);
+    setNormalizedPath(FilenameUtils.normalize(path));
     this.backendConfigs = backendConfigs;
   }
 
@@ -66,6 +69,7 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
     private String sourceRepoSettingName;
     private String sourceRepoBranch;
     private String path;
+    private String normalizedPath;
     private List<NameValuePair.Yaml> backendConfigs;
 
     @Builder
@@ -77,6 +81,7 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
       this.sourceRepoSettingName = sourceRepoSettingName;
       this.sourceRepoBranch = sourceRepoBranch;
       this.path = path;
+      this.normalizedPath = FilenameUtils.normalize(path);
       this.backendConfigs = backendConfigs;
     }
   }

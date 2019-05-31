@@ -93,6 +93,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
 @Slf4j
 public abstract class TerraformProvisionState extends State {
   public static final String RUN_PLAN_ONLY_KEY = "runPlanOnly";
@@ -404,7 +405,10 @@ public abstract class TerraformProvisionState extends State {
     TerraformProvisionInheritPlanElement element = elementOptional.get();
 
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
-    String path = context.renderExpression(terraformProvisioner.getPath());
+    String path = context.renderExpression(terraformProvisioner.getNormalizedPath());
+    if (path == null) {
+      throw new InvalidRequestException("Invalid Terraform script path", USER);
+    }
 
     String workspace = context.renderExpression(element.getWorkspace());
     String entityId = generateEntityId(context, workspace);
@@ -500,7 +504,10 @@ public abstract class TerraformProvisionState extends State {
     if (isNotEmpty(branch)) {
       gitConfig.setBranch(branch);
     }
-    String path = context.renderExpression(terraformProvisioner.getPath());
+    String path = context.renderExpression(terraformProvisioner.getNormalizedPath());
+    if (path == null) {
+      throw new InvalidRequestException("Invalid Terraform script path", USER);
+    }
 
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     String workspace = context.renderExpression(this.workspace);
