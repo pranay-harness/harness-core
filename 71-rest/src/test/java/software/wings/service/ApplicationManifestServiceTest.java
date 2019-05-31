@@ -1,9 +1,11 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
@@ -28,11 +30,14 @@ import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.DeploymentType;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.Service;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.ApplicationManifestKeys;
 import software.wings.beans.appmanifest.ManifestFile;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ApplicationManifestServiceImpl;
 import software.wings.service.intfc.AppService;
@@ -901,5 +906,28 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     String content = "abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabc";
     ManifestFile manifestFile = ManifestFile.builder().fileContent(content).build();
     applicationManifestServiceImpl.doFileSizeValidation(manifestFile);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateLocalAppManifest() {
+    ApplicationManifest applicationManifest = ApplicationManifest.builder().storeType(StoreType.Local).build();
+    applicationManifestServiceImpl.validateLocalAppManifest(applicationManifest);
+
+    applicationManifest.setServiceId("testservice");
+    Service service = Service.builder().build();
+    when(serviceResourceService.get(any(), any())).thenReturn(service);
+    applicationManifestServiceImpl.validateLocalAppManifest(applicationManifest);
+
+    service.setDeploymentType(DeploymentType.KUBERNETES);
+    applicationManifestServiceImpl.validateLocalAppManifest(applicationManifest);
+
+    applicationManifest.setKind(AppManifestKind.VALUES);
+    applicationManifestServiceImpl.validateLocalAppManifest(applicationManifest);
+
+    service.setDeploymentType(DeploymentType.HELM);
+    applicationManifest.setKind(AppManifestKind.K8S_MANIFEST);
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> applicationManifestServiceImpl.validateLocalAppManifest(applicationManifest));
   }
 }
