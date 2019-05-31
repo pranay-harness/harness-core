@@ -28,7 +28,7 @@ public enum ErrorCode {
 
   USER_ALREADY_REGISTERED(CONFLICT),
 
-  USER_INVITATION_DOES_NOT_EXIST(UNAUTHORIZED, "User not invited to access account"),
+  USER_INVITATION_DOES_NOT_EXIST(UNAUTHORIZED, "User was not invited to access account or the invitation is obsolete"),
 
   USER_DOES_NOT_EXIST(UNAUTHORIZED),
 
