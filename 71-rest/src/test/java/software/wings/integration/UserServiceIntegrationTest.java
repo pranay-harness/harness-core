@@ -23,6 +23,7 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.IntegrationTests;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.rest.RestResponse;
@@ -423,6 +424,23 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     // Delete the user just created as a cleanup
     User user = userService.getUserByEmail(email);
     userService.delete(accountId, user.getUuid());
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public void testInvalidUserInviteShouldFail() {
+    String invalidInviteId = UUIDGenerator.generateUuid();
+    UserInvite userInvite = new UserInvite();
+    userInvite.setAccountId(accountId);
+    userInvite.setUuid(invalidInviteId);
+    userInvite.setName("Test Invitation");
+    WebTarget target = client.target(API_BASE + "/users/invites/" + invalidInviteId + "?accountId=" + accountId);
+    try {
+      target.request().put(entity(userInvite, APPLICATION_JSON), new GenericType<RestResponse<User>>() {});
+      fail("HTTP 401 not authorized exception is expected.");
+    } catch (NotAuthorizedException e) {
+      // HTTP 400 Bad Request exception is expected.
+    }
   }
 
   @Test
