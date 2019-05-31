@@ -1274,4 +1274,32 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
         logMLAnalysisRecord.getAppId(), logMLAnalysisRecord.getCvConfigId(), numOfRecords);
     assertEquals(numOfRecords, logAnalysisRecord.getLogCollectionMinute());
   }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testSaveDuplicate() throws IOException {
+    File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
+
+    final Gson gson = new Gson();
+    LogMLAnalysisRecord logMLAnalysisRecord;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
+      logMLAnalysisRecord = gson.fromJson(br, type);
+    }
+
+    LogsCVConfiguration logsCVConfiguration = new LogsCVConfiguration();
+    logsCVConfiguration.setUuid(logMLAnalysisRecord.getCvConfigId());
+    wingsPersistence.save(logsCVConfiguration);
+
+    assertEquals(0, wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList().size());
+    analysisService.save24X7LogAnalysisRecords(logMLAnalysisRecord.getAppId(), logMLAnalysisRecord.getCvConfigId(),
+        logMLAnalysisRecord.getLogCollectionMinute(), null, logMLAnalysisRecord, Optional.empty(), Optional.empty());
+
+    assertEquals(1, wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList().size());
+
+    analysisService.save24X7LogAnalysisRecords(logMLAnalysisRecord.getAppId(), logMLAnalysisRecord.getCvConfigId(),
+        logMLAnalysisRecord.getLogCollectionMinute(), null, logMLAnalysisRecord, Optional.empty(), Optional.empty());
+
+    assertEquals(1, wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList().size());
+  }
 }

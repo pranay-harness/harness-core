@@ -586,7 +586,6 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       mlAnalysisResponse.setStateType(analysisContext.getStateType());
     }
     Map<String, Map<String, SplunkAnalysisCluster>> unknownClusters = mlAnalysisResponse.getUnknown_clusters();
-    LogMLAnalysisRecord uncompressedAnalysis = mlAnalysisResponse;
     mlAnalysisResponse.compressLogAnalysisRecord();
     mlAnalysisResponse.setCvConfigId(cvConfigId);
     mlAnalysisResponse.setAppId(appId);
@@ -596,8 +595,17 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     } else {
       mlAnalysisResponse.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
     }
-    wingsPersistence.save(mlAnalysisResponse);
-    mlAnalysisResponse.setUnknown_clusters(unknownClusters);
+    if (wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+            .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
+            .filter(LogMLAnalysisRecordKeys.analysisStatus, mlAnalysisResponse.getAnalysisStatus())
+            .filter(LogMLAnalysisRecordKeys.logCollectionMinute, analysisMinute)
+            .project(LogMLAnalysisRecordKeys.protoSerializedAnalyisDetails, false)
+            .get()
+        == null) {
+      wingsPersistence.save(mlAnalysisResponse);
+      mlAnalysisResponse.setUnknown_clusters(unknownClusters);
+      continuousVerificationService.triggerLogAnalysisAlertIfNecessary(cvConfigId, mlAnalysisResponse, analysisMinute);
+    }
 
     wingsPersistence.update(wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
                                 .filter(LogDataRecordKeys.cvConfigId, cvConfigId)
@@ -609,7 +617,6 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     if (taskId.isPresent()) {
       learningEngineService.markCompleted(taskId.get());
     }
-    continuousVerificationService.triggerLogAnalysisAlertIfNecessary(cvConfigId, mlAnalysisResponse, analysisMinute);
     return true;
   }
 
