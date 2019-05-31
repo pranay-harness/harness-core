@@ -26,7 +26,6 @@ import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
@@ -94,11 +93,8 @@ public class AccountGenerator {
   @Inject private LimitConfigurationService limitConfigurationService;
 
   public static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
-  public static final String TEST_ACCOUNT_ID = "1234567890123456789012";
 
-  @Setter Account account;
-
-  public enum Accounts { GENERIC_TEST, HARNESS_TEST }
+  public enum Accounts { GENERIC_TEST, HARNESS_TEST, RBAC_TEST }
 
   public Account ensurePredefined(Randomizer.Seed seed, Owners owners, Accounts predefined) {
     switch (predefined) {
@@ -106,6 +102,8 @@ public class AccountGenerator {
         return ensureGenericTest();
       case HARNESS_TEST:
         return ensureHarnessTest();
+      case RBAC_TEST:
+        return ensureRbacTest();
       default:
         unhandled(predefined);
     }
@@ -118,37 +116,18 @@ public class AccountGenerator {
   }
 
   public Account ensureGenericTest() {
-    String accountId = ACCOUNT_ID;
-    Account accountObj = anAccount().withAccountName("Harness").withCompanyName("Harness").build();
-    this.account = exists(accountObj);
-
-    if (this.account == null) {
-      accountObj = Account.Builder.anAccount()
-                       .withUuid(accountId)
-                       .withAccountName("Harness")
-                       .withCompanyName("Harness")
-                       .withLicenseInfo(LicenseInfo.builder()
-                                            .accountType(AccountType.PAID)
-                                            .accountStatus(AccountStatus.ACTIVE)
-                                            .expiryTime(-1)
-                                            .build())
-                       .build();
-    }
-
-    this.setLicenseInfo(accountObj);
-
-    try {
-      this.account = accountService.save(accountObj);
-      this.setAccountKey("harness_account_secret", this.account);
-
-      this.account = accountService.get(accountId);
-      this.setLimitConfiguration(accountId);
-      ensureDefaultUsers(account);
-    } catch (WingsException we) {
-      // TODO: fix this Hack here.
-    }
-
-    return this.account;
+    Account account = ensureAccount(Account.Builder.anAccount()
+                                        .withUuid(ACCOUNT_ID)
+                                        .withAccountName("Harness")
+                                        .withCompanyName("Harness")
+                                        .withLicenseInfo(LicenseInfo.builder()
+                                                             .accountType(AccountType.PAID)
+                                                             .accountStatus(AccountStatus.ACTIVE)
+                                                             .expiryTime(-1)
+                                                             .build())
+                                        .build());
+    ensureDefaultUsers(account);
+    return account;
   }
 
   /*
@@ -157,22 +136,33 @@ public class AccountGenerator {
    * we are not reusing `ensureGenericTest`.
    */
   public Account ensureHarnessTest() {
-    Account account = this.getOrCreateAccount(TEST_ACCOUNT_ID, "Harness Test", "Harness");
+    Account account = ensureAccount(getOrCreateAccount("1234567890123456789012", "Harness Test", "Harness"));
+    account = ensureAccount(account);
+    ensureTestUser(account);
+    return account;
+  }
 
-    return ensureAccount(account);
+  public Account ensureRbacTest() {
+    Account account = ensureAccount(getOrCreateAccount("BAC4567890123456789012", "Rbac Test", "Harness"));
+    ensureTestUser(account);
+    return account;
   }
 
   // TODO: this needs serious refactoring
   public Account ensureAccount(Account account) {
+    Account current = exists(account);
+    if (current != null) {
+      return current;
+    }
+
     try {
-      this.setLicenseInfo(account);
+      updateLicenseInfo(account);
 
       account = accountService.save(account);
 
-      this.setAccountKey("harness_account_secret", account);
-      this.setLimitConfiguration(account.getUuid());
+      updateAccountKey("harness_account_secret", account);
+      updateLimitConfiguration(account.getUuid());
 
-      ensureTestUser(account);
     } catch (WingsException wEx) {
       logger.error(wEx.getMessage());
     }
@@ -202,7 +192,7 @@ public class AccountGenerator {
     return account;
   }
 
-  private void setLicenseInfo(Account account) {
+  private void updateLicenseInfo(Account account) {
     final Seed seed = new Seed(0);
     licenseGenerator.ensurePredefined(seed, Licenses.TRIAL);
 
@@ -213,7 +203,7 @@ public class AccountGenerator {
     account.setLicenseInfo(licenseInfo);
   }
 
-  private void setAccountKey(String secretName, Account account) {
+  private void updateAccountKey(String secretName, Account account) {
     // Update account key to make it work with delegate
     UpdateOperations<Account> accountUpdateOperations = wingsPersistence.createUpdateOperations(Account.class);
     accountUpdateOperations.set("accountKey", scmSecret.decryptToString(new SecretName(secretName)));
@@ -222,7 +212,7 @@ public class AccountGenerator {
         accountUpdateOperations);
   }
 
-  private void setLimitConfiguration(String accountId) {
+  private void updateLimitConfiguration(String accountId) {
     limitConfigurationService.configure(accountId, ActionType.CREATE_PIPELINE, new StaticLimit(1000));
     limitConfigurationService.configure(accountId, ActionType.CREATE_USER, new StaticLimit(1000));
     limitConfigurationService.configure(accountId, ActionType.CREATE_APPLICATION, new StaticLimit(1000));

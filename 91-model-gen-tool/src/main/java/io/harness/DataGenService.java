@@ -174,22 +174,15 @@ public class DataGenService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SampleDataProviderService sampleDataProviderService;
 
-  protected String accountId = "INVALID_ID";
-  protected String userToken = "INVALID_TOKEN";
-  protected final int TIMES_TO_REPEAT = 3;
-  protected final int SUCCESS_COUNT = 1;
-
-  private static final String SAMPLE_ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
-
-  /**
-   * Populate data.
-   *
-   * @throws IOException Signals that an I/O exception has occurred.
-   */
   public void populateData() throws IOException {
     dropDBAndEnsureIndexes();
     templateGalleryService.loadHarnessGallery();
     templateGalleryService.copyHarnessTemplates();
+
+    {
+      final Seed seed = new Seed(0);
+      accountGenerator.ensurePredefined(seed, ownerManager.create(), Accounts.RBAC_TEST);
+    }
 
     final Seed seed = new Seed(0);
 
