@@ -1529,7 +1529,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     } catch (UsageLimitExceededException e) {
       String errMsg =
           "Deployment rate limit reached. Some deployments may not be allowed. Please contact Harness support.";
-      logger.info(e.getMessage());
+      logger.info("Message: {}, accountId={}", e.getMessage(), accountId);
 
       // open alert for triggers
       if (executionArgs.getWorkflowType() == WorkflowType.ORCHESTRATION && null != trigger) {
