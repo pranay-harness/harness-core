@@ -39,10 +39,8 @@ public class ApplicationGenerator {
   }
 
   private Application ensureGenericTest(Randomizer.Seed seed, Owners owners) {
-    Account account = owners.obtainAccount();
-    if (account == null) {
-      account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
-    }
+    Account account =
+        owners.obtainAccount(() -> accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST));
     return ensureApplication(
         seed, owners, anApplication().accountId(account.getUuid()).name("Test Application").build());
   }
