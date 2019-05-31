@@ -297,6 +297,14 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
     this.region = region;
   }
 
+  public List<CloudWatchMetric> fetchEc2Metrics() {
+    return ec2Metrics;
+  }
+
+  public void setEc2Metrics(List<CloudWatchMetric> ec2Metrics) {
+    this.ec2Metrics = ec2Metrics;
+  }
+
   public Map<String, List<CloudWatchMetric>> fetchLoadBalancerMetrics() {
     return loadBalancerMetrics;
   }
@@ -323,5 +331,9 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
 
   public void setShouldDoECSClusterVerification(boolean shouldDoECSClusterVerification) {
     this.shouldDoECSClusterVerification = shouldDoECSClusterVerification;
+  }
+
+  public boolean isShouldDoECSClusterVerification() {
+    return shouldDoECSClusterVerification;
   }
 }
