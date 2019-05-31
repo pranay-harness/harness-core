@@ -714,7 +714,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                                   .field(LogMLAnalysisRecordKeys.logCollectionMinute)
                                                   .lessThanOrEq(analysisMinute)
                                                   .filter(LogMLAnalysisRecordKeys.deprecated, false)
-                                                  .order(LogMLAnalysisRecordKeys.logCollectionMinute)
+                                                  .order(Sort.descending(LogMLAnalysisRecordKeys.logCollectionMinute))
                                                   .get();
     if (logMLAnalysisRecord != null) {
       logMLAnalysisRecord.decompressLogAnalysisRecord();
