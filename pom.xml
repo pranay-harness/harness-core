@@ -15,6 +15,7 @@
         <module>20-persistence-test</module>
         <module>21-persistence</module>
         <module>31-orchestration</module>
+        <module>51-migrator</module>
         <module>64-events-framework</module>
         <module>71-rest</module>
         <module>79-verification</module>
