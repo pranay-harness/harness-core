@@ -1,5 +1,6 @@
 package io.harness.k8s.model;
 
+import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.manifest.ObjectYamlUtils.encodeDot;
@@ -34,6 +35,7 @@ import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.k8s.manifest.ObjectYamlUtils;
 import lombok.Builder;
@@ -47,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.UnaryOperator;
+import javax.validation.ConstraintViolationException;
 
 @Data
 @Builder
@@ -181,7 +184,15 @@ public class KubernetesResource {
   }
 
   public KubernetesResource transformName(UnaryOperator<Object> transformer) {
-    List<HasMetadata> output = k8sClient.load(IOUtils.toInputStream(this.spec, UTF_8)).get();
+    List<HasMetadata> output;
+    try {
+      output = k8sClient.load(IOUtils.toInputStream(this.spec, UTF_8)).get();
+    } catch (ConstraintViolationException ex) {
+      throw new InvalidRequestException("Constraint Violation in resource Name : " + getResourceId().getName()
+              + " Kind : " + getResourceId().getKind()
+              + "\n By convention, the names of Kubernetes resources should be up to maximum length of 253 characters and consist of lower case alphanumeric characters, -, and ., but certain resources have more specific restrictions.\n",
+          USER);
+    }
     String newName = (String) transformer.apply(output.get(0).getMetadata().getName());
     output.get(0).getMetadata().setName(newName);
     this.resourceId.setName(newName);
