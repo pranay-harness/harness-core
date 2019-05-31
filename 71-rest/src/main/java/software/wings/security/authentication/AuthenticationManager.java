@@ -288,18 +288,20 @@ public class AuthenticationManager {
   public User loginUsingHarnessPassword(final String basicToken) {
     String[] decryptedData = decryptBasicToken(basicToken);
     User user = defaultLoginInternal(decryptedData[0], decryptedData[1], false, AuthenticationMechanism.USER_PASSWORD);
-    if (!hasAccountAdminPermission(user)) {
+    if (user == null) {
+      throw new WingsException(USER_DOES_NOT_EXIST);
+    }
+
+    if (user.isDisabled()) {
+      throw new WingsException(USER_DISABLED, USER);
+    }
+
+    String accountId = authenticationUtils.getPrimaryAccount(user).getUuid();
+
+    if (!userService.isUserAccountAdmin(authService.getUserPermissionInfo(accountId, user), accountId)) {
       throw new WingsException(USER_NOT_AUTHORIZED, USER);
     }
     return user;
-  }
-
-  private boolean hasAccountAdminPermission(final User user) {
-    try {
-      return userService.isAccountAdmin(authenticationUtils.getPrimaryAccount(user).getUuid());
-    } catch (Exception ex) {
-      throw new WingsException(USER_NOT_AUTHORIZED, USER);
-    }
   }
 
   public User ssoRedirectLogin(String jwtSecret) {

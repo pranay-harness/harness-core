@@ -17,6 +17,7 @@ import software.wings.beans.UserInvite;
 import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.beans.security.UserGroup;
 import software.wings.security.SecretManager;
+import software.wings.security.UserPermissionInfo;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 import software.wings.security.authentication.oauth.OauthClient;
@@ -435,6 +436,8 @@ public interface UserService extends OwnedByAccount {
   boolean isAccountAdmin(String accountId);
 
   boolean isAccountAdmin(User user, String accountId);
+
+  boolean isUserAccountAdmin(@NotNull UserPermissionInfo userPermissionInfo, @NotNull String accountId);
 
   boolean isUserAssignedToAccount(User user, String accountId);
 

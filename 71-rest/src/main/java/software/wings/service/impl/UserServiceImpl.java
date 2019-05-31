@@ -2251,7 +2251,11 @@ public class UserServiceImpl implements UserService {
     }
 
     UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
+    return isUserAccountAdmin(userPermissionInfo, accountId);
+  }
 
+  @Override
+  public boolean isUserAccountAdmin(UserPermissionInfo userPermissionInfo, String accountId) {
     AccountPermissionSummary accountPermissionSummary = userPermissionInfo.getAccountPermissionSummary();
     if (accountPermissionSummary == null) {
       return false;
