@@ -55,7 +55,8 @@ public class Utils {
     String[] words = name.split(" ");
     int numberOfWords = words.length;
     if (numberOfWords == 1) {
-      return words[0];
+      // if the name doesn't contains any last name, send null instead of sending first name.
+      return null;
     } else {
       return words[numberOfWords - 1];
     }
