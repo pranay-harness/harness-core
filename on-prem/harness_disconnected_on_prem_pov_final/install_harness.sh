@@ -149,6 +149,7 @@ function setUpMongoDBFirstTime(){
     chmod 666 config/mongo/mongod.conf
     chmod 666 config/mongo/add_first_user.js
     chmod 666 config/mongo/add_learning_engine_secret.js
+    chmod 666 config/mongo/publish_version.js
 
     mkdir -p $runtime_dir/mongo/$mongodb_sys_log_dir
     mkdir -p $runtime_dir/mongo/$mongodb_data_dir
@@ -158,6 +159,7 @@ function setUpMongoDBFirstTime(){
     mkdir -p $runtime_dir/mongo/scripts
     mv config/mongo/add_first_user.js $runtime_dir/mongo/scripts
     mv config/mongo/add_learning_engine_secret.js $runtime_dir/mongo/scripts
+    mv config/mongo/publish_version.js $runtime_dir/mongo/scripts
 
     chown -R 999 $runtime_dir/mongo/*
     chmod 777 $runtime_dir/mongo/$mongodb_data_dir
@@ -367,6 +369,10 @@ function setupClientUtils(){
     done
 }
 
+function publishVersion(){
+    VERSION=1.0.$(getProperty "version.properties" "DELEGATE_VERSION")
+    docker exec mongoContainer bash -c "mongo  mongodb://$mongodbUserName:$mongodbPassword@$host1:$mongodb_port/$harness_db?authSource=admin --eval \"var version='$VERSION'\" /scripts/publish_version.js"
+}
 
 function loadDockerImages(){
     docker load --input images/proxy.tar
@@ -393,6 +399,7 @@ function startUp(){
     setUpLearningEngine
     setupDelegateJars
     setupClientUtils
+    publishVersion
 }
 
 function cleanupAfterStart(){
