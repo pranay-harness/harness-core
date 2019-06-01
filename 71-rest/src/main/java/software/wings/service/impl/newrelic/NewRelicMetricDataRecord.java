@@ -32,6 +32,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
+import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.Base;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
@@ -56,13 +57,13 @@ import java.util.Map;
       options = @IndexOptions(unique = true, name = "metricUniqueIdx"))
   ,
       @Index(fields = {
-        @Field("appId"), @Field("cvConfigId"), @Field("dataCollectionMinute")
-      }, options = @IndexOptions(name = "timeSeriesIdx"))
+        @Field(value = "dataCollectionMinute", type = IndexType.DESC), @Field("cvConfigId")
+      }, options = @IndexOptions(name = "serviceGuardIdx"))
 })
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
+@EqualsAndHashCode(callSuper = false, exclude = {"validUntil", "values", "deeplinkMetadata", "deeplinkUrl"})
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "NewRelicMetricDataRecordKeys")
 public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAware {

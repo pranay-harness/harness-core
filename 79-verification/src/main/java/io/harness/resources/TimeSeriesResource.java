@@ -153,13 +153,13 @@ public class TimeSeriesResource {
   @Timed
   @LearningEngineAuth
   @ExceptionMetered
-  public RestResponse<List<NewRelicMetricDataRecord>> getMetricRecords(@QueryParam("accountId") String accountId,
+  public RestResponse<Set<NewRelicMetricDataRecord>> getMetricRecords(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, @QueryParam("stateType") StateType stateType,
       @QueryParam("cvConfigId") String cvConfigId, @QueryParam("serviceId") String serviceId,
       @QueryParam("analysisStartMin") int analysisStartMin, @QueryParam("analysisEndMin") int analysisEndMin,
       @QueryParam("tag") String tag, TSRequest request) {
-    return new RestResponse<>(timeSeriesAnalysisService.getMetricRecords(
-        stateType, appId, serviceId, cvConfigId, analysisStartMin, analysisEndMin, tag));
+    return new RestResponse<>(
+        timeSeriesAnalysisService.getMetricRecords(cvConfigId, analysisStartMin, analysisEndMin, tag));
   }
 
   @Produces({"application/json", "application/v1+json"})
