@@ -8,6 +8,7 @@ import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.Integer.max;
+import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.HARNESS_HEARTBEAT_METRIC_NAME;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.utils.Misc.replaceUnicodeWithDot;
@@ -39,6 +40,7 @@ import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import software.wings.common.VerificationConstants;
+import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.TimeSeriesMetricDefinition;
@@ -80,11 +82,13 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -101,6 +105,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Inject private VerificationServiceConfiguration verificationServiceConfiguration;
   @Inject private UsageMetricsHelper usageMetricsHelper;
   @Inject private ContinuousVerificationService continuousVerificationService;
+  @Inject private DataCollectionExecutorService dataCollectionService;
 
   @Override
   public boolean saveMetricData(final String accountId, final String appId, final String stateExecutionId,
@@ -912,26 +917,40 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
-  public List<NewRelicMetricDataRecord> getMetricRecords(StateType stateType, String appId, String serviceId,
+  public Set<NewRelicMetricDataRecord> getMetricRecords(
       String cvConfigId, int analysisStartMinute, int analysisEndMinute, String tag) {
-    PageRequest<NewRelicMetricDataRecord> pageRequest =
-        aPageRequest()
-            .withLimit(UNLIMITED)
-            .addFilter(NewRelicMetricDataRecordKeys.cvConfigId, Operator.EQ, cvConfigId)
-            .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.GE, analysisStartMinute)
-            .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.LT_EQ, analysisEndMinute)
-            .build();
+    Set<NewRelicMetricDataRecord> rv = new HashSet<>();
+    List<Callable<Void>> callables = new ArrayList<>();
+    for (int startMin = analysisStartMinute; startMin <= analysisEndMinute;
+         startMin = startMin + CRON_POLL_INTERVAL_IN_MINUTES) {
+      final int endMin = startMin + CRON_POLL_INTERVAL_IN_MINUTES < analysisEndMinute
+          ? startMin + CRON_POLL_INTERVAL_IN_MINUTES
+          : analysisEndMinute;
+      final int dataStartMin = startMin;
+      callables.add(() -> {
+        PageRequest<NewRelicMetricDataRecord> pageRequest =
+            aPageRequest()
+                .withLimit(UNLIMITED)
+                .addFilter(NewRelicMetricDataRecordKeys.cvConfigId, Operator.EQ, cvConfigId)
+                .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.GE, dataStartMin)
+                .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.LT_EQ, endMin)
+                .build();
 
-    if (isNotEmpty(tag)) {
-      pageRequest.addFilter(NewRelicMetricDataRecordKeys.tag, Operator.EQ, tag);
+        if (isNotEmpty(tag)) {
+          pageRequest.addFilter(NewRelicMetricDataRecordKeys.tag, Operator.EQ, tag);
+        }
+
+        final PageResponse<NewRelicMetricDataRecord> results =
+            dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
+        results.stream()
+            .filter(dataRecord -> !dataRecord.getName().equals(HARNESS_HEARTBEAT_METRIC_NAME))
+            .forEach(dataRecord -> rv.add(dataRecord));
+        return null;
+      });
     }
-    addAppIdInRequestIfNecessary(pageRequest, appId);
 
-    final PageResponse<NewRelicMetricDataRecord> results =
-        dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
-    return results.stream()
-        .filter(dataRecord -> !dataRecord.getName().equals(HARNESS_HEARTBEAT_METRIC_NAME))
-        .collect(Collectors.toList());
+    dataCollectionService.executeParrallel(callables);
+    return rv;
   }
 
   @Override

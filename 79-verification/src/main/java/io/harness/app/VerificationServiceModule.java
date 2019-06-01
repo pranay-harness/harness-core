@@ -96,6 +96,14 @@ public class VerificationServiceModule extends AbstractModule {
                 .setPriority(Thread.NORM_PRIORITY)
                 .build()));
 
+    bind(ExecutorService.class)
+        .annotatedWith(Names.named("verificationDataCollector"))
+        .toInstance(ThreadPool.create(1, 20, 5, TimeUnit.SECONDS,
+            new ThreadFactoryBuilder()
+                .setNameFormat("Verification-Data-Collector-%d")
+                .setPriority(Thread.MIN_PRIORITY)
+                .build()));
+
     if (configuration.getDataStorageMode() == null) {
       configuration.setDataStorageMode(DataStorageMode.MONGO);
     }
