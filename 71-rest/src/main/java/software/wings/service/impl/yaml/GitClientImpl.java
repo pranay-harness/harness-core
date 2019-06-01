@@ -80,6 +80,7 @@ import org.eclipse.jgit.util.FS;
 import org.eclipse.jgit.util.HttpSupport;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.NoopExecutionCallback;
 import software.wings.beans.yaml.Change.ChangeType;
@@ -978,10 +979,7 @@ public class GitClientImpl implements GitClient {
 
   private TransportCommand getAuthConfiguredCommand(TransportCommand gitCommand, GitConfig gitConfig) {
     if (gitConfig.getRepoUrl().toLowerCase().startsWith("http")) {
-      gitCommand.setCredentialsProvider(getCredentialsProvider(gitConfig));
-      if (gitConfig.getAuthenticationScheme().equals(KERBEROS)) {
-        addApacheConnectionFactoryAndGenerateTGT(gitConfig);
-      }
+      configureHttpCredentialProvider(gitCommand, gitConfig);
     } else {
       gitCommand.setTransportConfigCallback(transport -> {
         SshTransport sshTransport = (SshTransport) transport;
@@ -989,6 +987,18 @@ public class GitClientImpl implements GitClient {
       });
     }
     return gitCommand;
+  }
+
+  private void configureHttpCredentialProvider(TransportCommand gitCommand, GitConfig gitConfig) {
+    String username = gitConfig.getUsername();
+    char[] password = gitConfig.getPassword();
+    if (gitConfig.getAuthenticationScheme().equals(KERBEROS)) {
+      addApacheConnectionFactoryAndGenerateTGT(gitConfig);
+      username = ((HostConnectionAttributes) gitConfig.getSshSettingAttribute().getValue())
+                     .getKerberosConfig()
+                     .getPrincipal(); // set principal as username
+    }
+    gitCommand.setCredentialsProvider(new UsernamePasswordCredentialsProviderWithSkipSslVerify(username, password));
   }
 
   private void addApacheConnectionFactoryAndGenerateTGT(GitConfig gitConfig) {
@@ -1030,9 +1040,5 @@ public class GitClientImpl implements GitClient {
       @Override
       protected void configure(Host hc, Session session) {}
     };
-  }
-
-  private UsernamePasswordCredentialsProviderWithSkipSslVerify getCredentialsProvider(GitConfig gitConfig) {
-    return new UsernamePasswordCredentialsProviderWithSkipSslVerify(gitConfig.getUsername(), gitConfig.getPassword());
   }
 }
