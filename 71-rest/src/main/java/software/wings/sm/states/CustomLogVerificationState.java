@@ -1,13 +1,13 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.common.collect.Lists;
 
 import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
@@ -18,7 +18,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import software.wings.api.PhaseElement;
 import software.wings.beans.APMVerificationConfig;
@@ -39,7 +38,7 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,13 +54,13 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
     super(name, StateType.LOG_VERIFICATION.getType());
   }
 
-  @Transient
-  @SchemaIgnore
-
   private List<LogCollectionInfo> logCollectionInfos;
 
   public void setLogCollectionInfos(List<LogCollectionInfo> collectionInfos) {
     this.logCollectionInfos = collectionInfos;
+    if (isNotEmpty(collectionInfos)) {
+      this.query = collectionInfos.get(0).getCollectionUrl();
+    }
   }
 
   public List<LogCollectionInfo> getLogCollectionInfos() {
@@ -117,6 +116,15 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
       return AnalysisTolerance.LOW;
     }
     return AnalysisTolerance.valueOf(tolerance);
+  }
+
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> invalidFields = new HashMap<>();
+    if (isEmpty(logCollectionInfos)) {
+      invalidFields.put("Log Collection Info", "Log collection info should not be empty");
+    }
+    return invalidFields;
   }
 
   @Override
@@ -213,25 +221,26 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
 
     // Set the host details (if exists) in the responseMapper
     if (!isEmpty(responseMapping.getHostJsonPath())) {
+      List hostJsonList = new ArrayList();
       String hostJson = responseMapping.getHostJsonPath();
+      hostJsonList.add(hostJson);
       List<String> hostRegex =
           isEmpty(responseMapping.getHostRegex()) ? null : Lists.newArrayList(responseMapping.getHostRegex());
       ResponseMapper hostResponseMapper =
-          ResponseMapper.builder().fieldName("host").regexs(hostRegex).jsonPath(Arrays.asList(hostJson)).build();
+          ResponseMapper.builder().fieldName("host").regexs(hostRegex).jsonPath(hostJsonList).build();
       responseMappers.put("host", hostResponseMapper);
     }
+    List timestampJsonList = new ArrayList(), logMsgList = new ArrayList();
+    timestampJsonList.add(responseMapping.getTimestampJsonPath());
     responseMappers.put("timestamp",
         ResponseMapper.builder()
             .fieldName("timestamp")
-            .jsonPath(Arrays.asList(responseMapping.getTimestampJsonPath()))
+            .jsonPath(timestampJsonList)
             .timestampFormat(responseMapping.getTimestampFormat())
             .build());
 
-    responseMappers.put("logMessage",
-        ResponseMapper.builder()
-            .fieldName("logMessage")
-            .jsonPath(Arrays.asList(responseMapping.getLogMessageJsonPath()))
-            .build());
+    logMsgList.add(responseMapping.getLogMessageJsonPath());
+    responseMappers.put("logMessage", ResponseMapper.builder().fieldName("logMessage").jsonPath(logMsgList).build());
     // TODO: Need to put in the timestamp format as well.
 
     return responseMappers;
