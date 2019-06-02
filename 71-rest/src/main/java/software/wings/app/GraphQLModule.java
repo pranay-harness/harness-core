@@ -28,6 +28,8 @@ import software.wings.graphql.datafetcher.application.batch.ApplicationBatchData
 import software.wings.graphql.datafetcher.artifact.ArtifactDataFetcher;
 import software.wings.graphql.datafetcher.cloudProvider.CloudProviderConnectionDataFetcher;
 import software.wings.graphql.datafetcher.cloudProvider.CloudProviderDataFetcher;
+import software.wings.graphql.datafetcher.connector.ConnectorConnectionDataFetcher;
+import software.wings.graphql.datafetcher.connector.ConnectorDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentConnectionDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentDataFetcher;
 import software.wings.graphql.datafetcher.execution.ExecutionConnectionDataFetcher;
@@ -136,6 +138,8 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(InstanceStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(TriggerDataFetcher.class);
     bindDataFetcherWithAnnotation(TriggerConnectionDataFetcher.class);
+    bindDataFetcherWithAnnotation(ConnectorConnectionDataFetcher.class);
+    bindDataFetcherWithAnnotation(ConnectorDataFetcher.class);
   }
 
   @NotNull

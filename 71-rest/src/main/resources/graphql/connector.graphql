@@ -1,0 +1,52 @@
+extend type Query {
+  # Get details about connector
+  connector(connectorId: String!): Connector @dataFetcher(name: connector)
+
+  # Will remove it once authentication is available
+  connectors(accountId: String!): ConnectorConnection @dataFetcher(name: connectorConnection)
+}
+
+interface Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+
+type ConnectorConnection {
+  pageInfo: PageInfo
+  nodes: [Connector]
+}
+
+type JiraConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+
+type SlackConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+
+type SmtpConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+
+type ServiceNowConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}

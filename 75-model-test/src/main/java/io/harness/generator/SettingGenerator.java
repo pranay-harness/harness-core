@@ -359,7 +359,7 @@ public class SettingGenerator {
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
-  private SettingAttribute ensureHarnessJira(Randomizer.Seed seed, Owners owners) {
+  public SettingAttribute ensureHarnessJira(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
 
     SettingAttribute settingAttribute =

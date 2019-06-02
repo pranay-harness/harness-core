@@ -20,6 +20,10 @@ import software.wings.graphql.schema.type.cloudProvider.QLGcpCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLKubernetesClusterCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLPcfCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLPhysicalDataCenterCloudProvider;
+import software.wings.graphql.schema.type.connector.QLJiraConnector;
+import software.wings.graphql.schema.type.connector.QLServiceNowConnector;
+import software.wings.graphql.schema.type.connector.QLSlackConnector;
+import software.wings.graphql.schema.type.connector.QLSmtpConnector;
 import software.wings.graphql.schema.type.instance.QLAutoScalingGroupInstance;
 import software.wings.graphql.schema.type.instance.QLCodeDeployInstance;
 import software.wings.graphql.schema.type.instance.QLEc2Instance;
@@ -38,6 +42,7 @@ public class TypeResolverManager {
   public static final class TypeResolverManagerUnifaces {
     public static final String Cause = "Cause";
     public static final String CloudProvider = "CloudProvider";
+    public static final String Connector = "Connector";
     public static final String Data = "Data";
     public static final String Execution = "Execution";
     public static final String Instance = "Instance";
@@ -69,6 +74,11 @@ public class TypeResolverManager {
     public static final String StackedTimeSeriesData = "StackedTimeSeriesData";
     public static final String TimeSeriesData = "TimeSeriesData";
     public static final String WorkflowExecution = "WorkflowExecution";
+
+    public static final String JiraConnector = "JiraConnector";
+    public static final String SlackConnector = "SlackConnector";
+    public static final String ServiceNowConnector = "ServiceNowConnector";
+    public static final String SmtpConnector = "SmtpConnector";
   }
 
   /**
@@ -95,6 +105,13 @@ public class TypeResolverManager {
                     .put(QLKubernetesClusterCloudProvider.class, TypeResolverManagerTypes.KubernetesCloudProvider)
                     .put(QLPcfCloudProvider.class, TypeResolverManagerTypes.PcfCloudProvider)
                     .build()))
+        .put(TypeResolverManagerUnifaces.Connector,
+            getResultTypeResolver(ImmutableMap.<Class, String>builder()
+                                      .put(QLJiraConnector.class, TypeResolverManagerTypes.JiraConnector)
+                                      .put(QLSlackConnector.class, TypeResolverManagerTypes.SlackConnector)
+                                      .put(QLSmtpConnector.class, TypeResolverManagerTypes.SmtpConnector)
+                                      .put(QLServiceNowConnector.class, TypeResolverManagerTypes.ServiceNowConnector)
+                                      .build()))
         .put(TypeResolverManagerUnifaces.Execution,
             getResultTypeResolver(ImmutableMap.<Class, String>builder()
                                       .put(QLPipelineExecution.class, TypeResolverManagerTypes.PipelineExecution)
