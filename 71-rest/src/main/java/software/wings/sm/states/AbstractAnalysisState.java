@@ -10,6 +10,7 @@ import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.api.HostElement.Builder.aHostElement;
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.FeatureName.CV_SUCCEED_FOR_ANOMALY;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
@@ -358,11 +359,16 @@ public abstract class AbstractAnalysisState extends State {
         if (isEmpty(hostnameTemplate)) {
           hosts.put(serviceHost, DEFAULT_GROUP_NAME);
         } else {
-          hosts.put(context.renderExpression(hostnameTemplate,
-                        StateExecutionContext.builder()
-                            .contextElements(Lists.newArrayList(
-                                aHostElement().withHostName(serviceHost).withIp(podNameToIp.get(serviceHost)).build()))
-                            .build()),
+          hosts.put(
+              context.renderExpression(hostnameTemplate,
+                  StateExecutionContext.builder()
+                      .contextElements(Lists.newArrayList(
+                          anInstanceElement()
+                              .withHostName(serviceHost)
+                              .withHost(
+                                  aHostElement().withHostName(serviceHost).withIp(podNameToIp.get(serviceHost)).build())
+                              .build()))
+                      .build()),
               DEFAULT_GROUP_NAME);
         }
       });
@@ -469,10 +475,23 @@ public abstract class AbstractAnalysisState extends State {
     getLogger().info("Container info list : " + containerInfos);
 
     for (software.wings.cloudprovider.ContainerInfo containerInfo : containerInfos) {
-      Map<String, Object> containerMap = new HashMap<>();
-      containerMap.put("host", containerInfo);
-      String evaluatedHost = isEmpty(hostnameTemplate) ? containerInfo.getContainerId()
-                                                       : evaluator.substitute(hostnameTemplate, containerMap);
+      String evaluatedHost = isEmpty(getHostnameTemplate())
+          ? containerInfo.getContainerId()
+          : context.renderExpression(getHostnameTemplate(),
+                StateExecutionContext.builder()
+                    .contextElements(
+                        Lists.newArrayList(anInstanceElement()
+                                               .withHostName(containerInfo.getHostName())
+                                               .withPodName(containerInfo.getPodName())
+                                               .withWorkloadName(containerInfo.getWorkloadName())
+                                               .withHost(aHostElement()
+                                                             .withHostName(containerInfo.getHostName())
+                                                             .withIp(containerInfo.getIp())
+                                                             .withEc2Instance(containerInfo.getEc2Instance())
+                                                             .build())
+                                               .withEcsContainerDetails(containerInfo.getEcsContainerDetails())
+                                               .build()))
+                    .build());
       map.put(evaluatedHost, DEFAULT_GROUP_NAME);
     }
     getLogger().info("map created : " + map);
