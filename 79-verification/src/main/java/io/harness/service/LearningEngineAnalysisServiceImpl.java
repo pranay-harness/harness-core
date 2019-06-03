@@ -60,7 +60,7 @@ import java.util.concurrent.TimeUnit;
 public class LearningEngineAnalysisServiceImpl implements LearningEngineService {
   private static final String SERVICE_VERSION_FILE = "/service_version.properties";
   private static final int BACKOFF_TIME_MINS = 5;
-  private static final int BACKOFF_LIMIT = 10;
+  public static final int BACKOFF_LIMIT = 10;
   private static int[] FIBONACCI_SERIES;
 
   @Inject private WingsPersistence wingsPersistence;
@@ -493,9 +493,10 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
         ? 1
         : getNextFibonacciNumber(previousTask.getService_guard_backoff_count());
     if (nextBackoffCount > BACKOFF_LIMIT) {
-      logger.info("For cvConfig {} analysisMinute {} the count has reached the total backoff time. No more retries.",
+      logger.info(
+          "For cvConfig {} analysisMinute {} the count has reached the total backoff time. Capping the next backoff count.",
           cvConfig, analysisMinute);
-      return -1;
+      nextBackoffCount = BACKOFF_LIMIT;
     }
     long nextSchedulableTime = previousTask.getLastUpdatedAt()
         + previousTask.getService_guard_backoff_count() * TimeUnit.MINUTES.toMillis(BACKOFF_TIME_MINS);

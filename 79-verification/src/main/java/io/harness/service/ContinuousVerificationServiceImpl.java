@@ -51,6 +51,7 @@ import io.harness.service.intfc.TimeSeriesAnalysisService;
 import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
+import software.wings.beans.FeatureName;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
@@ -797,6 +798,15 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Counted
   @Timed
   public void triggerFeedbackAnalysis(String accountId) {
+    boolean isFlagEnabled =
+        verificationManagerClientHelper
+            .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
+            .getResource();
+    if (!isFlagEnabled) {
+      logger.info(
+          "CV Feedbacks feature flag is not enabled for account {}, not going to create a feedback task", accountId);
+      return;
+    }
     // List all the CV configurations for a given account
     List<CVConfiguration> cvConfigurations = cvConfigurationService.listConfigurations(accountId);
 

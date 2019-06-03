@@ -3,6 +3,7 @@ package io.harness.service;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.service.LearningEngineAnalysisServiceImpl.BACKOFF_LIMIT;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -23,6 +24,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.metrics.HarnessMetricRegistry;
+import io.harness.persistence.ReadPref;
 import io.harness.rest.RestResponse;
 import io.harness.rule.RealMongo;
 import io.harness.serializer.JsonUtils;
@@ -36,6 +38,9 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import retrofit2.Call;
 import retrofit2.Response;
 import software.wings.api.PhaseElement.PhaseElementBuilder;
@@ -63,7 +68,9 @@ import software.wings.service.impl.analysis.LogMLClusterSummary;
 import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.LogRequest;
+import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster.MessageFrequency;
@@ -100,6 +107,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by rsingh on 9/27/17.
@@ -1301,5 +1309,68 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
         logMLAnalysisRecord.getLogCollectionMinute(), null, logMLAnalysisRecord, Optional.empty(), Optional.empty());
 
     assertEquals(1, wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList().size());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testServiceGuardBackoffCountNewTask() {
+    // Setup with sample failed task
+    int analysisMinute = 1234567;
+    // test behavior
+    int nextCount = learningEngineService.getNextServiceGuardBackoffCount(
+        stateExecutionId, "", analysisMinute, MLAnalysisType.LOG_ML);
+    assertEquals(1, nextCount);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testServiceGuardBackoffCount() {
+    // Setup with sample failed task
+    int analysisMinute = 1234567;
+    createLETaskForBackoffTest(analysisMinute, 1);
+
+    // test behavior
+    int nextCount = learningEngineService.getNextServiceGuardBackoffCount(
+        stateExecutionId, "", analysisMinute, MLAnalysisType.LOG_ML);
+    assertEquals(-1, nextCount);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testServiceGuardMaxBackoffCount() {
+    // Setup with sample failed task
+    int analysisMinute = 1234567;
+
+    createLETaskForBackoffTest(analysisMinute, 8);
+    Datastore datastore = wingsPersistence.getDatastore(LearningEngineAnalysisTask.class, ReadPref.NORMAL);
+
+    Query<LearningEngineAnalysisTask> taskQuery =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+            .filter(LearningEngineAnalysisTaskKeys.state_execution_id, stateExecutionId + "-retry-1234");
+    UpdateOperations<LearningEngineAnalysisTask> updateOperations =
+        wingsPersistence.createUpdateOperations(LearningEngineAnalysisTask.class)
+            .set(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY,
+                System.currentTimeMillis() - TimeUnit.HOURS.toMillis(4));
+    datastore.update(taskQuery, updateOperations);
+
+    // test behavior
+    int nextCount = learningEngineService.getNextServiceGuardBackoffCount(
+        stateExecutionId, "", analysisMinute, MLAnalysisType.LOG_ML);
+
+    // verify
+    assertEquals(BACKOFF_LIMIT, nextCount);
+  }
+
+  private void createLETaskForBackoffTest(int analysisMinute, int backoffCount) {
+    LearningEngineAnalysisTask failedTask = LearningEngineAnalysisTask.builder()
+                                                .state_execution_id(stateExecutionId + "-retry-1234")
+                                                .analysis_minute(analysisMinute)
+                                                .service_guard_backoff_count(backoffCount)
+                                                .ml_analysis_type(MLAnalysisType.LOG_ML)
+                                                .build();
+
+    failedTask.setUuid("failedUUID");
+
+    wingsPersistence.save(failedTask);
   }
 }
