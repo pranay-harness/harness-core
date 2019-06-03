@@ -55,6 +55,7 @@ import software.wings.alerts.AlertStatus;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.DatadogConfig;
+import software.wings.beans.FeatureName;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.alert.Alert;
@@ -1144,6 +1145,11 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     writeField(logAnalysisService, "managerClient", verificationManagerClient, true);
     writeField(continuousVerificationService, "logAnalysisService", logAnalysisService, true);
+
+    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
+        .thenReturn(managerFeatureFlagCall);
   }
 
   @Test
