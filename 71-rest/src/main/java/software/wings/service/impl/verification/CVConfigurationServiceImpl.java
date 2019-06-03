@@ -47,6 +47,7 @@ import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.PrometheusState;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
+import software.wings.verification.apm.APMCVServiceConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
@@ -551,6 +552,12 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         }
 
         resetBaselineIfNecessary(bugsnagCVConfiguration, (LogsCVConfiguration) savedConfiguration);
+        break;
+      case APM_VERIFICATION:
+        if (isNotEmpty(((APMCVServiceConfiguration) cvConfiguration).getMetricCollectionInfos())) {
+          updateOperations.set(
+              "metricCollectionInfos", ((APMCVServiceConfiguration) cvConfiguration).getMetricCollectionInfos());
+        }
         break;
       default:
         throw new IllegalStateException("Invalid state type: " + stateType);
