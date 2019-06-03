@@ -11,7 +11,6 @@ import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
 
 import com.google.common.collect.Lists;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.context.ContextElementType;
@@ -66,7 +65,6 @@ import javax.validation.constraints.NotNull;
  */
 @Data
 @Entity(value = "stateMachines", noClassnameStored = true)
-@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 @HarnessExportableEntity
 @FieldNameConstants(innerTypeName = "StateMachineKeys")
 @Slf4j

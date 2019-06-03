@@ -1,8 +1,8 @@
 package software.wings.audit;
 
 import com.fasterxml.jackson.annotation.JsonView;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
@@ -30,7 +30,7 @@ import java.util.List;
  * @author Rishi
  */
 @Entity(value = "audits", noClassnameStored = true)
-@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
+@EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "AuditHeaderKeys")
 @Indexes({
   @Index(fields =

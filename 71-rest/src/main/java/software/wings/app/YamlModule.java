@@ -182,6 +182,7 @@ import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.StateType;
+import software.wings.verification.APMCVConfigurationYamlHandler;
 import software.wings.verification.AppDynamicsCVConfigurationYamlHandler;
 import software.wings.verification.BugsnagCVConfigurationYamlHandler;
 import software.wings.verification.CVConfigurationYamlHandler;
@@ -323,6 +324,7 @@ public class YamlModule extends AbstractModule {
     cvConfigYamlHelperMapBinder.addBinding(StateType.PROMETHEUS.name()).to(PrometheusCVConfigurationYamlHandler.class);
     cvConfigYamlHelperMapBinder.addBinding(StateType.CLOUD_WATCH.name()).to(CloudWatchCVConfigurationYamlHandler.class);
     cvConfigYamlHelperMapBinder.addBinding(StateType.DATA_DOG_LOG.name()).to(LogsCVConfigurationYamlHandler.class);
+    cvConfigYamlHelperMapBinder.addBinding(StateType.APM_VERIFICATION.name()).to(APMCVConfigurationYamlHandler.class);
 
     MapBinder<String, CollaborationProviderYamlHandler> collaborationProviderYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CollaborationProviderYamlHandler.class);
