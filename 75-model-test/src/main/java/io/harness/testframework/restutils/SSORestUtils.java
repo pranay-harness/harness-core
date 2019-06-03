@@ -2,14 +2,19 @@ package io.harness.testframework.restutils;
 
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
+import com.google.gson.JsonObject;
+
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
 import io.restassured.mapper.ObjectMapperType;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.OauthSettings;
+import software.wings.helpers.ext.ldap.LdapResponse;
 
 import java.io.File;
+import java.util.Collection;
 import javax.ws.rs.core.GenericType;
 
 @Slf4j
@@ -83,6 +88,43 @@ public class SSORestUtils {
         .oauth2(bearerToken)
         .queryParam("accountId", accountId)
         .delete("/sso/delete-oauth-settings")
+        .getStatusCode();
+  }
+
+  public static Collection<LdapGroupResponse> searchLdapWithQuery(
+      String accountId, String bearerToken, String query, String ldapId) {
+    RestResponse<Collection<LdapGroupResponse>> searchResults =
+        Setup.portal()
+            .auth()
+            .oauth2(bearerToken)
+            .queryParam("accountId", accountId)
+            .queryParam("q", query)
+            .get("/sso/ldap/" + ldapId + "/search/group")
+            .as(new GenericType<RestResponse<Collection<LdapGroupResponse>>>() {}.getType());
+    return searchResults.getResource();
+  }
+
+  public static LdapResponse testAuthenticate(String accountId, String bearerToken, String emailId, String password) {
+    JsonObject jObj = new JsonObject();
+    jObj.addProperty("email", emailId);
+    jObj.addProperty("password", password);
+    RestResponse<LdapResponse> searchResults = Setup.portal()
+                                                   .auth()
+                                                   .oauth2(bearerToken)
+                                                   .queryParam("accountId", accountId)
+                                                   .body(jObj.toString())
+                                                   .post("/sso/ldap/settings/test/authentication")
+                                                   .as(new GenericType<RestResponse<LdapResponse>>() {}.getType());
+    return searchResults.getResource();
+  }
+
+  public static Integer assignAuthMechanism(String accountId, String bearerToken, String authMechanism) {
+    return Setup.portal()
+        .auth()
+        .oauth2(bearerToken)
+        .queryParam("accountId", accountId)
+        .queryParam("authMechanism", authMechanism)
+        .put("/sso/assign-auth-mechanism")
         .getStatusCode();
   }
 }
