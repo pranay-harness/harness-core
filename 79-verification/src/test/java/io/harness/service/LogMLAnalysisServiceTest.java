@@ -1317,6 +1317,9 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     // Setup with sample failed task
     int analysisMinute = 1234567;
     // test behavior
+    boolean isEligible =
+        learningEngineService.isEligibleToCreateTask(stateExecutionId, "", analysisMinute, MLAnalysisType.LOG_ML);
+    assertTrue(isEligible);
     int nextCount = learningEngineService.getNextServiceGuardBackoffCount(
         stateExecutionId, "", analysisMinute, MLAnalysisType.LOG_ML);
     assertEquals(1, nextCount);
@@ -1330,9 +1333,9 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     createLETaskForBackoffTest(analysisMinute, 1);
 
     // test behavior
-    int nextCount = learningEngineService.getNextServiceGuardBackoffCount(
-        stateExecutionId, "", analysisMinute, MLAnalysisType.LOG_ML);
-    assertEquals(-1, nextCount);
+    boolean isEligible =
+        learningEngineService.isEligibleToCreateTask(stateExecutionId, "", analysisMinute, MLAnalysisType.LOG_ML);
+    assertFalse(isEligible);
   }
 
   @Test
@@ -1354,6 +1357,9 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     datastore.update(taskQuery, updateOperations);
 
     // test behavior
+    boolean isEligibleForTask =
+        learningEngineService.isEligibleToCreateTask(stateExecutionId, "", analysisMinute, MLAnalysisType.LOG_ML);
+    assertTrue(isEligibleForTask);
     int nextCount = learningEngineService.getNextServiceGuardBackoffCount(
         stateExecutionId, "", analysisMinute, MLAnalysisType.LOG_ML);
 

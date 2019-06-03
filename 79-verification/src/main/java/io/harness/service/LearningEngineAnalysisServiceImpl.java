@@ -472,7 +472,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
    * @param analysisMinute
    * @param cvConfig
    * @param analysisType
-   * @return a positive backoff number if task is schedulable. Else returns -1 (not schedulable now)
+   * @return a positive backoff number based on previous backoff count
    */
   public int getNextServiceGuardBackoffCount(
       String stateExecutionId, String cvConfig, long analysisMinute, MLAnalysisType analysisType) {
@@ -498,14 +498,30 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
           cvConfig, analysisMinute);
       nextBackoffCount = BACKOFF_LIMIT;
     }
+    return nextBackoffCount;
+  }
+
+  public boolean isEligibleToCreateTask(
+      String stateExecutionId, String cvConfig, long analysisMinute, MLAnalysisType analysisType) {
+    Query<LearningEngineAnalysisTask> query =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+            .filter(LearningEngineAnalysisTaskKeys.analysis_minute, analysisMinute)
+            .field(LearningEngineAnalysisTaskKeys.state_execution_id)
+            .startsWith(stateExecutionId + "-retry-")
+            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, analysisType)
+            .order("-lastUpdatedAt");
+    LearningEngineAnalysisTask previousTask = query.get();
+    if (previousTask == null) {
+      return true;
+    }
     long nextSchedulableTime = previousTask.getLastUpdatedAt()
         + previousTask.getService_guard_backoff_count() * TimeUnit.MINUTES.toMillis(BACKOFF_TIME_MINS);
     if (Timestamp.currentMinuteBoundary() >= Timestamp.minuteBoundary(nextSchedulableTime)) {
-      return nextBackoffCount;
+      return true;
     } else {
       logger.info("For cvConfig {} analysisMinute {} the next schedule time is {}", cvConfig, analysisMinute,
           nextSchedulableTime);
-      return -1;
+      return false;
     }
   }
 
