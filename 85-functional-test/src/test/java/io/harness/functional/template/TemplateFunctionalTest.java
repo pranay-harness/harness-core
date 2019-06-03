@@ -5,14 +5,11 @@ import static io.harness.generator.AccountGenerator.readOnlyEmail;
 import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.TEMPLATE_FOLDER;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
-import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.VariableType.TEXT;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.FunctionalTests;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.functional.AbstractFunctionalTest;
@@ -25,13 +22,11 @@ import io.harness.generator.WorkflowGenerator;
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
 import io.restassured.http.ContentType;
-import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
-import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.template.Template;
@@ -39,7 +34,6 @@ import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.ShellScriptTemplate;
 
-import java.util.concurrent.TimeUnit;
 import javax.ws.rs.core.GenericType;
 
 public class TemplateFunctionalTest extends AbstractFunctionalTest {
@@ -81,38 +75,11 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
 
     buildWorkflow = workflowGenerator.ensurePredefined(seed, owners, WorkflowGenerator.Workflows.BUILD_SHELL_SCRIPT);
 
-    resetCache();
     assertThat(buildWorkflow).isNotNull();
 
-    ExecutionArgs executionArgs = new ExecutionArgs();
-    executionArgs.setOrchestrationId(buildWorkflow.getUuid());
-    executionArgs.setWorkflowType(buildWorkflow.getWorkflowType());
-    executionArgs.setExecutionCredential(aSSHExecutionCredential().withExecutionType(SSH).build());
-    RestResponse<WorkflowExecution> workflowExecutionRestResponse = Setup.portal()
-                                                                        .auth()
-                                                                        .oauth2(bearerToken)
-                                                                        .queryParam("appId", application.getUuid())
-                                                                        .body(executionArgs)
-                                                                        .contentType(ContentType.JSON)
-                                                                        .post("/executions")
-                                                                        .as(workflowExecutionType.getType());
-
-    WorkflowExecution workflowExecution = workflowExecutionRestResponse.getResource();
+    WorkflowExecution workflowExecution = runWorkflow(bearerToken, application.getUuid(), null,
+        buildWorkflow.getUuid()); // workflowExecutionRestResponse.getResource();
     assertThat(workflowExecution).isNotNull();
-
-    // Poll for success status
-    Awaitility.await()
-        .atMost(120, TimeUnit.SECONDS)
-        .pollInterval(5, TimeUnit.SECONDS)
-        .until(()
-                   -> Setup.portal()
-                          .auth()
-                          .oauth2(bearerToken)
-                          .queryParam("appId", application.getUuid())
-                          .get("/executions/" + workflowExecution.getUuid())
-                          .jsonPath()
-                          .<String>getJsonObject("resource.status")
-                          .equals(ExecutionStatus.SUCCESS.name()));
   }
 
   @Test
@@ -140,41 +107,20 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
 
     };
 
-    RestResponse<Template> savedTemplateResponse = Setup.portal()
-                                                       .auth()
-                                                       .oauth2(bearerToken)
-                                                       .queryParam("accountId", account.getUuid())
-                                                       .body(template)
-                                                       .contentType(ContentType.JSON)
-                                                       .post("/templates")
-                                                       .as(templateType.getType());
+    RestResponse<Template> savedTemplateResponse = saveTemplate(template, templateType, bearerToken);
 
     Template savedTemplate = savedTemplateResponse.getResource();
-    resetCache();
-    assertThat(savedTemplate).isNotNull();
-    assertThat(savedTemplate.getUuid()).isNotEmpty();
-    assertThat(savedTemplate.getName()).isEqualTo(SCRIPT_TEMPLATE_NAME);
-    assertThat(savedTemplate.getType()).isEqualTo(TemplateType.SHELL_SCRIPT.name());
-    assertThat(savedTemplate.getVersion()).isEqualTo(1L);
+
+    assertTemplate(savedTemplate, SCRIPT_TEMPLATE_NAME, 1L);
 
     // Get template and validate template object and variables
-    savedTemplateResponse = Setup.portal()
-                                .auth()
-                                .oauth2(bearerToken)
-                                .contentType(ContentType.JSON)
-                                .queryParam("accountId", account.getUuid())
-                                .pathParam("templateId", savedTemplate.getUuid())
-                                .get("/templates/{templateId}")
-                                .as(templateType.getType());
+    savedTemplateResponse = saveShellScriptTemplate(templateType, savedTemplate, bearerToken);
 
     savedTemplate = savedTemplateResponse.getResource();
-    assertThat(savedTemplate).isNotNull();
-    assertThat(savedTemplate.getUuid()).isNotEmpty();
-    assertThat(savedTemplate.getName()).isEqualTo(SCRIPT_TEMPLATE_NAME);
-    assertThat(savedTemplate.getType()).isEqualTo(TemplateType.SHELL_SCRIPT.name());
-    assertThat(savedTemplate.getVersion()).isEqualTo(1L);
+    assertTemplate(savedTemplate, SCRIPT_TEMPLATE_NAME, 1L);
     assertThat(savedTemplate.getTemplateObject()).isNotNull();
     shellScriptTemplate = (ShellScriptTemplate) savedTemplate.getTemplateObject();
+
     assertThat(shellScriptTemplate.getOutputVars()).isEqualTo("A,B");
     assertThat(shellScriptTemplate.getTimeoutMillis()).isEqualTo(600000);
     assertThat(shellScriptTemplate.getScriptString())
@@ -211,11 +157,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
                                 .put("/templates/{templateId}")
                                 .as(templateType.getType());
     savedTemplate = savedTemplateResponse.getResource();
-    assertThat(savedTemplate).isNotNull();
-    assertThat(savedTemplate.getUuid()).isNotEmpty();
-    assertThat(savedTemplate.getName()).isEqualTo(SCRIPT_TEMPLATE_NAME);
-    assertThat(savedTemplate.getType()).isEqualTo(TemplateType.SHELL_SCRIPT.name());
-    assertThat(savedTemplate.getVersion()).isEqualTo(2L);
+    assertTemplate(savedTemplate, SCRIPT_TEMPLATE_NAME, 2L);
 
     assertThat(savedTemplate.getTemplateObject()).isNotNull();
     shellScriptTemplate = (ShellScriptTemplate) savedTemplate.getTemplateObject();
@@ -240,6 +182,26 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
                                 .get("/templates/{templateId}")
                                 .as(templateType.getType());
     assertThat(savedTemplateResponse.getResource()).isNull();
+  }
+
+  private RestResponse<Template> saveShellScriptTemplate(
+      GenericType<RestResponse<Template>> templateType, Template savedTemplate, String bearerToken) {
+    return Setup.portal()
+        .auth()
+        .oauth2(bearerToken)
+        .contentType(ContentType.JSON)
+        .queryParam("accountId", account.getUuid())
+        .pathParam("templateId", savedTemplate.getUuid())
+        .get("/templates/{templateId}")
+        .as(templateType.getType());
+  }
+
+  private void assertTemplate(Template savedTemplate, String script_template_name, long l) {
+    assertThat(savedTemplate).isNotNull();
+    assertThat(savedTemplate.getUuid()).isNotEmpty();
+    assertThat(savedTemplate.getName()).isEqualTo(script_template_name);
+    assertThat(savedTemplate.getType()).isEqualTo(TemplateType.SHELL_SCRIPT.name());
+    assertThat(savedTemplate.getVersion()).isEqualTo(l);
   }
 
   @Test
@@ -270,40 +232,19 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
 
     };
 
-    RestResponse<Template> savedTemplateResponse = Setup.portal()
-                                                       .auth()
-                                                       .oauth2(bearerToken)
-                                                       .queryParam("accountId", account.getUuid())
-                                                       .body(template)
-                                                       .contentType(ContentType.JSON)
-                                                       .post("/templates")
-                                                       .as(templateType.getType());
+    RestResponse<Template> savedTemplateResponse = saveTemplate(template, templateType, bearerToken);
     assertThat(savedTemplateResponse.getResponseMessages()).isNotEmpty();
     assertThat(savedTemplateResponse.getResponseMessages().get(0).getCode().getStatus().getStatusCode()).isEqualTo(400);
 
     bearerToken = Setup.getAuthToken(adminUserEmail, "admin");
-    savedTemplateResponse = Setup.portal()
-                                .auth()
-                                .oauth2(bearerToken)
-                                .queryParam("accountId", account.getUuid())
-                                .body(template)
-                                .contentType(ContentType.JSON)
-                                .post("/templates")
-                                .as(templateType.getType());
+    savedTemplateResponse = saveTemplate(template, templateType, bearerToken);
 
     Template savedTemplate = savedTemplateResponse.getResource();
-    resetCache();
+
     assertThat(savedTemplate).isNotNull();
 
     // Get template and validate template object and variables
-    savedTemplateResponse = Setup.portal()
-                                .auth()
-                                .oauth2(bearerToken)
-                                .contentType(ContentType.JSON)
-                                .queryParam("accountId", account.getUuid())
-                                .pathParam("templateId", savedTemplate.getUuid())
-                                .get("/templates/{templateId}")
-                                .as(templateType.getType());
+    savedTemplateResponse = saveShellScriptTemplate(templateType, savedTemplate, bearerToken);
 
     savedTemplate = savedTemplateResponse.getResource();
     assertThat(savedTemplate).isNotNull();
@@ -380,14 +321,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
         .pathParam("templateId", template2.getUuid())
         .put("/templates/{templateId}")
         .as(templateType.getType());
-    RestResponse<Template> savedTemplateResponse = Setup.portal()
-                                                       .auth()
-                                                       .oauth2(bearerToken)
-                                                       .contentType(ContentType.JSON)
-                                                       .queryParam("accountId", account.getUuid())
-                                                       .pathParam("templateId", template2.getUuid())
-                                                       .get("/templates/{templateId}")
-                                                       .as(templateType.getType());
+    RestResponse<Template> savedTemplateResponse = saveShellScriptTemplate(templateType, template2, bearerToken);
     assertThat(savedTemplateResponse.getResource().getName()).isEqualTo(SCRIPT_NAME2);
     deleteTemplate(template1.getUuid());
     deleteTemplate(template2.getUuid());
@@ -416,39 +350,16 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
 
     };
 
-    RestResponse<Template> savedTemplateResponse = Setup.portal()
-                                                       .auth()
-                                                       .oauth2(bearerToken)
-                                                       .queryParam("accountId", account.getUuid())
-                                                       .body(template)
-                                                       .contentType(ContentType.JSON)
-                                                       .post("/templates")
-                                                       .as(templateType.getType());
+    RestResponse<Template> savedTemplateResponse = saveTemplate(template, templateType, bearerToken);
 
     Template savedTemplate = savedTemplateResponse.getResource();
-    resetCache();
-    assertThat(savedTemplate).isNotNull();
-    assertThat(savedTemplate.getUuid()).isNotEmpty();
-    assertThat(savedTemplate.getName()).isEqualTo(name);
-    assertThat(savedTemplate.getType()).isEqualTo(TemplateType.SHELL_SCRIPT.name());
-    assertThat(savedTemplate.getVersion()).isEqualTo(1L);
+    assertTemplate(savedTemplate, name, 1L);
 
     // Get template and validate template object and variables
-    savedTemplateResponse = Setup.portal()
-                                .auth()
-                                .oauth2(bearerToken)
-                                .contentType(ContentType.JSON)
-                                .queryParam("accountId", account.getUuid())
-                                .pathParam("templateId", savedTemplate.getUuid())
-                                .get("/templates/{templateId}")
-                                .as(templateType.getType());
+    savedTemplateResponse = saveShellScriptTemplate(templateType, savedTemplate, bearerToken);
 
     savedTemplate = savedTemplateResponse.getResource();
-    assertThat(savedTemplate).isNotNull();
-    assertThat(savedTemplate.getUuid()).isNotEmpty();
-    assertThat(savedTemplate.getName()).isEqualTo(name);
-    assertThat(savedTemplate.getType()).isEqualTo(TemplateType.SHELL_SCRIPT.name());
-    assertThat(savedTemplate.getVersion()).isEqualTo(1L);
+    assertTemplate(savedTemplate, name, 1L);
     assertThat(savedTemplate.getTemplateObject()).isNotNull();
     shellScriptTemplate = (ShellScriptTemplate) savedTemplate.getTemplateObject();
     assertThat(shellScriptTemplate.getOutputVars()).isEqualTo("A,B");
@@ -458,6 +369,18 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
             + "export A=\"aaa\"\n"
             + "export B=\"bbb\"");
     return savedTemplate;
+  }
+
+  private RestResponse<Template> saveTemplate(
+      Template template, GenericType<RestResponse<Template>> templateType, String bearerToken) {
+    return Setup.portal()
+        .auth()
+        .oauth2(bearerToken)
+        .queryParam("accountId", account.getUuid())
+        .body(template)
+        .contentType(ContentType.JSON)
+        .post("/templates")
+        .as(templateType.getType());
   }
 
   private void deleteTemplate(String templateId) {

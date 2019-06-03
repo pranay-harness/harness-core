@@ -109,7 +109,6 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Before
   public void setUp() {
     owners = ownerManager.create();
-    resetCache();
 
     application = applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST);
     assertThat(application).isNotNull();
@@ -131,8 +130,6 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
 
     artifact = ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
         bearerToken, application.getUuid(), artifactStream.getUuid());
-
-    resetCache();
   }
 
   @Test

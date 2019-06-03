@@ -71,7 +71,6 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
                                        .build())
             .build());
 
-    resetCache();
     return workflow;
   }
 
@@ -280,8 +279,6 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
                                                       .build()))
                     .build()))
             .build());
-
-    resetCache();
 
     // Test running the workflow
 

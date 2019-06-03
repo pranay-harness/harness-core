@@ -83,7 +83,6 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
   @Before
   public void setUp() {
     owners = ownerManager.create();
-    resetCache();
 
     application = applicationGenerator.ensurePredefined(seed, owners, Applications.FUNCTIONAL_TEST);
     assertThat(application).isNotNull();
@@ -100,8 +99,6 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
 
     artifactStream = artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.ARTIFACTORY_ECHO_WAR);
     assertThat(artifactStream).isNotNull();
-
-    resetCache();
   }
 
   @Test

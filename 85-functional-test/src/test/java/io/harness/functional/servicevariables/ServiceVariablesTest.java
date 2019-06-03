@@ -91,7 +91,6 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
   @Before
   public void setUp() {
     owners = ownerManager.create();
-    resetCache();
 
     application = applicationGenerator.ensurePredefined(seed, owners, Applications.FUNCTIONAL_TEST);
     assertThat(application).isNotNull();
@@ -108,15 +107,13 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
 
     artifactStream = artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.ARTIFACTORY_ECHO_WAR);
     assertThat(artifactStream).isNotNull();
-
-    resetCache();
   }
 
   @Test
-  @Owner(emails = SWAMY, resent = false, intermittent = true)
+  @Owner(emails = SWAMY, resent = false)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
-  public void variablesTest() throws Exception {
+  public void variablesTest() {
     logger.info("Starting the test");
     ServiceVariable normalServiceVariable = new ServiceVariable();
     normalServiceVariable.setAccountId(getAccount().getUuid());

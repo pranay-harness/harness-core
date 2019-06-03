@@ -32,7 +32,6 @@ import io.harness.testframework.restutils.ArtifactStreamRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import org.awaitility.Awaitility;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
@@ -87,7 +86,6 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
   @Test(timeout = TIMEOUT)
   @Owner(emails = PUNEET)
   @Category(FunctionalTests.class)
-  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testK8sCanaryWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.CANARY);
   }
@@ -95,7 +93,6 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
   @Test(timeout = TIMEOUT)
   @Owner(emails = PUNEET)
   @Category(FunctionalTests.class)
-  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testK8sBlueGreenWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.BLUE_GREEN);
   }
@@ -130,8 +127,6 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
 
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingGenerator.ensurePredefined(seed, owners, infrastructureMappingTestType);
-
-    resetCache();
 
     Workflow savedWorkflow = createK8sV2Workflow(application.getUuid(), savedEnvironment.getUuid(),
         savedService.getUuid(), infrastructureMapping.getUuid(), workflowName, workflowType);

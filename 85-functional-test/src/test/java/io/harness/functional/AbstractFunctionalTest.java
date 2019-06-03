@@ -1,14 +1,12 @@
 package io.harness.functional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.google.inject.Inject;
 
 import graphql.GraphQL;
 import io.harness.CategoryTest;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.WorkflowType;
 import io.harness.multiline.MultilineStringMixin;
-import io.harness.rest.RestResponse;
 import io.harness.rule.FunctionalTestRule;
 import io.harness.rule.LifecycleRule;
 import io.harness.testframework.framework.DelegateExecutor;
@@ -28,14 +26,14 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import software.wings.beans.Account;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.User;
+import software.wings.beans.ExecutionCredential.ExecutionType;
+import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.WorkflowExecution;
 import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
 import software.wings.service.intfc.WorkflowExecutionService;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
-import javax.ws.rs.core.GenericType;
 
 @Slf4j
 public abstract class AbstractFunctionalTest extends CategoryTest implements GraphQLTestMixin, MultilineStringMixin {
@@ -78,23 +76,24 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     logger.info("Basic setup completed");
   }
 
-  protected void resetCache() {
-    RestResponse<User> userRestResponse = Setup.portal()
-                                              .auth()
-                                              .oauth2(bearerToken)
-                                              .queryParam("accountId", account.getUuid())
-                                              .put("/users/reset-cache")
-                                              .as(new GenericType<RestResponse<User>>() {}.getType());
-    assertThat(userRestResponse).isNotNull();
-  }
-
   @AfterClass
   public static void cleanup() {
     FileUtils.deleteModifiedConfig(AbstractFunctionalTest.class);
     logger.info("All tests exit");
   }
 
-  public WorkflowExecution runWorkflow(String bearerToken, String appId, String envId, ExecutionArgs executionArgs) {
+  public WorkflowExecution runWorkflow(String bearerToken, String appId, String envId, String orchestrationId) {
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
+    executionArgs.setExecutionCredential(
+        SSHExecutionCredential.Builder.aSSHExecutionCredential().withExecutionType(ExecutionType.SSH).build());
+    executionArgs.setOrchestrationId(orchestrationId);
+
+    return getWorkflowExecution(bearerToken, appId, envId, executionArgs);
+  }
+
+  private WorkflowExecution getWorkflowExecution(
+      String bearerToken, String appId, String envId, ExecutionArgs executionArgs) {
     WorkflowExecution original = WorkflowRestUtils.startWorkflow(bearerToken, appId, envId, executionArgs);
 
     Awaitility.await().atMost(120, TimeUnit.SECONDS).pollInterval(1, TimeUnit.SECONDS).until(() -> {
@@ -104,6 +103,10 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     });
 
     return workflowExecutionService.getWorkflowExecution(appId, original.getUuid());
+  }
+
+  public WorkflowExecution runWorkflow(String bearerToken, String appId, String envId, ExecutionArgs executionArgs) {
+    return getWorkflowExecution(bearerToken, appId, envId, executionArgs);
   }
 
   public WorkflowExecution runPipeline(String bearerToken, String appId, String envId, ExecutionArgs executionArgs) {

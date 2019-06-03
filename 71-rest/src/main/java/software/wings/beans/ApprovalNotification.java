@@ -13,8 +13,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.NotificationAction.NotificationActionType;
@@ -30,7 +30,7 @@ import javax.validation.constraints.NotNull;
  * Created by anubhaw on 7/25/16.
  */
 @JsonTypeName("APPROVAL")
-@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
+@EqualsAndHashCode(callSuper = true)
 public class ApprovalNotification extends ActionableNotification {
   @NotEmpty private String entityName;
   @NotNull private ApprovalStage stage = PENDING;

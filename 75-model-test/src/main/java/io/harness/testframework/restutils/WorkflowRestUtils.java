@@ -1,13 +1,21 @@
 package io.harness.testframework.restutils;
 
+import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
+import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
+import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
+import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
+import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+
 import com.google.inject.Singleton;
 
+import io.harness.beans.WorkflowType;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.GraphNode;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
@@ -86,5 +94,16 @@ public class WorkflowRestUtils {
                                      .as(workflowType.getType());
 
     return savedResponse.getResource();
+  }
+  public static Workflow buildCanaryWorkflowPostDeploymentStep(String name, String envId, GraphNode graphNode) {
+    return aWorkflow()
+        .name(name)
+        .envId(envId)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
+                                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).addStep(graphNode).build())
+                                   .build())
+        .build();
   }
 }
