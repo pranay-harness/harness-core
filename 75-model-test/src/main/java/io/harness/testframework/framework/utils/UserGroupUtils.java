@@ -26,6 +26,11 @@ public class UserGroupUtils {
     return null;
   }
 
+  public static boolean hasUsersInUserGroup(Account account, String bearerToken, String groupName) {
+    UserGroup userGroup = getUserGroup(account, bearerToken, groupName);
+    return userGroup.getMemberIds() != null && userGroup.getMemberIds().size() > 0;
+  }
+
   public static UserGroup createUserGroup(Account account, String bearerToken, JsonObject jsonObject) {
     UserGroup userGroup = UserGroupRestUtils.createUserGroup(account, bearerToken, jsonObject);
     assertTrue(userGroup != null);

@@ -8,6 +8,7 @@ import io.harness.testframework.framework.Setup;
 import io.restassured.mapper.ObjectMapperType;
 import software.wings.beans.Account;
 import software.wings.beans.security.UserGroup;
+import software.wings.beans.sso.LdapGroupResponse;
 
 import java.util.List;
 import javax.ws.rs.core.GenericType;
@@ -43,6 +44,44 @@ public class UserGroupRestUtils {
                                              .body(userGroup.getNotificationSettings(), ObjectMapperType.GSON)
                                              .put("/userGroups/" + userGroup.getUuid() + "/notification-settings")
                                              .as(new GenericType<RestResponse<UserGroup>>() {}.getType());
+    return userGroups.getResource();
+  }
+
+  public static UserGroup linkLDAPSettings(Account account, String bearerToken, String userGroupId,
+      String ldapSettingId, LdapGroupResponse ldapGroupResponse) {
+    JsonObject jObj = new JsonObject();
+    jObj.addProperty("ldapGroupDN", ldapGroupResponse.getDn());
+    jObj.addProperty("ldapGroupName", ldapGroupResponse.getName());
+    RestResponse<UserGroup> userGroups = Setup.portal()
+                                             .auth()
+                                             .oauth2(bearerToken)
+                                             .queryParam("accountId", account.getUuid())
+                                             .body(jObj.toString())
+                                             .put("/userGroups/" + userGroupId + "/link/ldap/" + ldapSettingId)
+                                             .as(new GenericType<RestResponse<UserGroup>>() {}.getType());
+
+    return userGroups.getResource();
+  }
+
+  public static UserGroup unlinkLDAPSettings(Account account, String bearerToken, String userGroupId) {
+    RestResponse<UserGroup> userGroups = Setup.portal()
+                                             .auth()
+                                             .oauth2(bearerToken)
+                                             .queryParam("accountId", account.getUuid())
+                                             .queryParam("retailMembers", "undefined")
+                                             .put("/userGroups/" + userGroupId + "/unlink")
+                                             .as(new GenericType<RestResponse<UserGroup>>() {}.getType());
+
+    return userGroups.getResource();
+  }
+
+  public static Boolean deleteUserGroup(Account account, String bearerToken, String userGroupId) {
+    RestResponse<Boolean> userGroups = Setup.portal()
+                                           .auth()
+                                           .oauth2(bearerToken)
+                                           .queryParam("accountId", account.getUuid())
+                                           .delete("/userGroups/" + userGroupId)
+                                           .as(new GenericType<RestResponse<Boolean>>() {}.getType());
     return userGroups.getResource();
   }
 }

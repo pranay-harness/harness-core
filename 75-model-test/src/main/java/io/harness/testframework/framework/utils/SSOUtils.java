@@ -1,13 +1,22 @@
 package io.harness.testframework.framework.utils;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import com.google.gson.internal.LinkedTreeMap;
+
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.sso.LdapConnectionSettings;
+import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapGroupSettings;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapUserSettings;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 public class SSOUtils {
@@ -51,5 +60,25 @@ public class SSOUtils {
                                     .accountId(accountId)
                                     .build();
     return ldapSettings;
+  }
+
+  public static String getLdapId(Object SSOConfig) {
+    assertNotNull(SSOConfig);
+    LinkedTreeMap<String, Object> maps = (LinkedTreeMap) SSOConfig;
+    LinkedTreeMap<String, Object> ssoSettings = (LinkedTreeMap) ((ArrayList) maps.get("ssoSettings")).get(0);
+    String ldapId = ssoSettings.get("uuid").toString();
+    assertTrue(StringUtils.isNotBlank(ldapId));
+    return ldapId;
+  }
+
+  public static LdapGroupResponse chooseLDAPGroup(Collection<LdapGroupResponse> groupList, String groupName) {
+    Iterator<LdapGroupResponse> iterator = groupList.iterator();
+    while (iterator.hasNext()) {
+      LdapGroupResponse ldapGroupResponse = iterator.next();
+      if (ldapGroupResponse.getName().equals(groupName)) {
+        return ldapGroupResponse;
+      }
+    }
+    return null;
   }
 }

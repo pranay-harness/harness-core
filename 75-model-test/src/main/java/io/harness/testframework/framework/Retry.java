@@ -1,6 +1,7 @@
 package io.harness.testframework.framework;
 
 import io.harness.testframework.framework.matchers.ArtifactMatcher;
+import io.harness.testframework.framework.matchers.BooleanMatcher;
 import io.harness.testframework.framework.matchers.EmailMatcher;
 import io.harness.testframework.framework.matchers.MailinatorEmailMatcher;
 import io.harness.testframework.framework.matchers.Matcher;
@@ -57,6 +58,10 @@ public class Retry<T> {
             return actual;
           }
         } else if (matcher instanceof ArtifactMatcher) {
+          if (matcher.matches(expected, actual)) {
+            return actual;
+          }
+        } else if (matcher instanceof BooleanMatcher) {
           if (matcher.matches(expected, actual)) {
             return actual;
           }
