@@ -1959,7 +1959,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     Preconditions.checkNotNull(cvConfiguration, "No config found with id " + cvConfigId);
     Preconditions.checkNotNull(alertData, "Invalid alert data");
     alertData.setCvConfiguration(cvConfiguration);
-    alertData.setPortalUrl(mainConfiguration.getPortal().getUrl());
+    alertData.setPortalUrl(isNotEmpty(mainConfiguration.getApiUrl()) ? mainConfiguration.getApiUrl()
+                                                                     : mainConfiguration.getPortal().getUrl());
     alertData.setAccountId(appService.getAccountIdByAppId(cvConfiguration.getAppId()));
 
     logger.info("Opening alert with riskscore {} for {}", alertData.getRiskScore(), cvConfiguration);
