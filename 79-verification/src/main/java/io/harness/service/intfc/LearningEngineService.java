@@ -51,4 +51,6 @@ public interface LearningEngineService {
   boolean notifyFailure(String taskId, LearningEngineError learningEngineError);
   int getNextServiceGuardBackoffCount(
       String stateExecutionId, String cvConfig, long analysisMinute, MLAnalysisType analysisType);
+  boolean isEligibleToCreateTask(
+      String stateExecutionId, String cvConfig, long analysisMinute, MLAnalysisType analysisType);
 }

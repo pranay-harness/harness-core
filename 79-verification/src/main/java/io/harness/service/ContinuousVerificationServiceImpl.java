@@ -276,11 +276,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     // clear up any old failed task with the same ID and time.
     learningEngineService.checkAndUpdateFailedLETask(stateExecutionIdForLETask, (int) endMin);
 
-    int nextBackoffCount = learningEngineService.getNextServiceGuardBackoffCount(
-        stateExecutionIdForLETask, cvConfiguration.getUuid(), endMin, MLAnalysisType.TIME_SERIES);
-    if (nextBackoffCount < 0) {
+    if (!learningEngineService.isEligibleToCreateTask(
+            stateExecutionIdForLETask, cvConfiguration.getUuid(), endMin, MLAnalysisType.TIME_SERIES)) {
       return null;
     }
+    int nextBackoffCount = learningEngineService.getNextServiceGuardBackoffCount(
+        stateExecutionIdForLETask, cvConfiguration.getUuid(), endMin, MLAnalysisType.TIME_SERIES);
 
     LearningEngineAnalysisTask learningEngineAnalysisTask =
         LearningEngineAnalysisTask.builder()
@@ -592,9 +593,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
             String stateExecutionIdForLETask = "LOGS_CLUSTER_L1_" + cvConfiguration.getUuid() + "_" + logRecordMinute;
             learningEngineService.checkAndUpdateFailedLETask(stateExecutionIdForLETask, (int) logRecordMinute);
-            int nextBackoffCount = learningEngineService.getNextServiceGuardBackoffCount(
-                stateExecutionIdForLETask, cvConfiguration.getUuid(), logRecordMinute, MLAnalysisType.LOG_CLUSTER);
-            if (nextBackoffCount > 0) {
+
+            if (learningEngineService.isEligibleToCreateTask(stateExecutionIdForLETask, cvConfiguration.getUuid(),
+                    logRecordMinute, MLAnalysisType.LOG_CLUSTER)) {
+              int nextBackoffCount = learningEngineService.getNextServiceGuardBackoffCount(
+                  stateExecutionIdForLETask, cvConfiguration.getUuid(), logRecordMinute, MLAnalysisType.LOG_CLUSTER);
               LearningEngineAnalysisTask analysisTask =
                   LearningEngineAnalysisTask.builder()
                       .control_input_url(inputLogsUrl)
@@ -735,9 +738,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             String stateExecutionIdForLETask =
                 "LOGS_CLUSTER_L2_" + cvConfiguration.getUuid() + "_" + maxLogRecordL1Minute;
             learningEngineService.checkAndUpdateFailedLETask(stateExecutionIdForLETask, (int) maxLogRecordL1Minute);
-            int nextBackoffCount = learningEngineService.getNextServiceGuardBackoffCount(
-                stateExecutionIdForLETask, cvConfiguration.getUuid(), maxLogRecordL1Minute, MLAnalysisType.LOG_CLUSTER);
-            if (nextBackoffCount > 0) {
+
+            if (learningEngineService.isEligibleToCreateTask(stateExecutionIdForLETask, cvConfiguration.getUuid(),
+                    maxLogRecordL1Minute, MLAnalysisType.LOG_CLUSTER)) {
+              int nextBackoffCount = learningEngineService.getNextServiceGuardBackoffCount(stateExecutionIdForLETask,
+                  cvConfiguration.getUuid(), maxLogRecordL1Minute, MLAnalysisType.LOG_CLUSTER);
               LearningEngineAnalysisTask analysisTask =
                   LearningEngineAnalysisTask.builder()
                       .control_input_url(inputLogsUrl)
@@ -892,9 +897,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     feedbackTask.setUuid(taskId);
 
     learningEngineService.checkAndUpdateFailedLETask(stateExecutionIdForLETask, (int) logCollectionMinute);
-    int nextBackoffCount = learningEngineService.getNextServiceGuardBackoffCount(stateExecutionIdForLETask,
-        logsCVConfiguration.getUuid(), logCollectionMinute, MLAnalysisType.FEEDBACK_ANALYSIS);
-    if (nextBackoffCount > 0) {
+    if (learningEngineService.isEligibleToCreateTask(stateExecutionIdForLETask, logsCVConfiguration.getUuid(),
+            logCollectionMinute, MLAnalysisType.FEEDBACK_ANALYSIS)) {
+      int nextBackoffCount = learningEngineService.getNextServiceGuardBackoffCount(stateExecutionIdForLETask,
+          logsCVConfiguration.getUuid(), logCollectionMinute, MLAnalysisType.FEEDBACK_ANALYSIS);
+      feedbackTask.setService_guard_backoff_count(nextBackoffCount);
       return learningEngineService.addLearningEngineAnalysisTask(feedbackTask);
     }
     return false;
@@ -1021,9 +1028,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             String stateExecutionIdForLETask =
                 "LOG_24X7_ANALYSIS_" + logsCVConfiguration.getUuid() + "_" + analysisEndMin;
             learningEngineService.checkAndUpdateFailedLETask(stateExecutionIdForLETask, (int) analysisEndMin);
-            int nextBackoffCount = learningEngineService.getNextServiceGuardBackoffCount(
-                stateExecutionIdForLETask, cvConfiguration.getUuid(), analysisEndMin, MLAnalysisType.LOG_ML);
-            if (nextBackoffCount > 0) {
+
+            if (learningEngineService.isEligibleToCreateTask(
+                    stateExecutionIdForLETask, cvConfiguration.getUuid(), analysisEndMin, MLAnalysisType.LOG_ML)) {
+              int nextBackoffCount = learningEngineService.getNextServiceGuardBackoffCount(
+                  stateExecutionIdForLETask, cvConfiguration.getUuid(), analysisEndMin, MLAnalysisType.LOG_ML);
               LearningEngineAnalysisTask analysisTask =
                   LearningEngineAnalysisTask.builder()
                       .state_execution_id(stateExecutionIdForLETask)
