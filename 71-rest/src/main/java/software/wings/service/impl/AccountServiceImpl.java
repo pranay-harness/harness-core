@@ -515,11 +515,15 @@ public class AccountServiceImpl implements AccountService {
       throw new InvalidRequestException("Deleted AccountId: " + accountId);
     }
 
-    List<Account> accounts = wingsPersistence.createQuery(Account.class, excludeAuthority)
-                                 .field(Mapper.ID_KEY)
-                                 .in(asList(accountId, GLOBAL_ACCOUNT_ID))
-                                 .project("delegateConfiguration", true)
-                                 .asList();
+    List<Account> accounts = new ArrayList<>();
+    Iterator<Account> iterator = wingsPersistence.createQuery(Account.class, excludeAuthority)
+                                     .field(Mapper.ID_KEY)
+                                     .in(asList(accountId, GLOBAL_ACCOUNT_ID))
+                                     .project("delegateConfiguration", true)
+                                     .fetch();
+    while (iterator.hasNext()) {
+      accounts.add(iterator.next());
+    }
 
     Optional<Account> specificAccount =
         accounts.stream().filter(account -> StringUtils.equals(accountId, account.getUuid())).findFirst();
@@ -545,20 +549,30 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public List<Account> listAllAccounts() {
-    List<Account> accountList =
-        wingsPersistence.createQuery(Account.class, excludeAuthority).filter(APP_ID_KEY, GLOBAL_APP_ID).asList();
+    List<Account> accountList = new ArrayList<>();
+
+    Iterator<Account> iterator =
+        wingsPersistence.createQuery(Account.class, excludeAuthority).filter(APP_ID_KEY, GLOBAL_APP_ID).fetch();
+    while (iterator.hasNext()) {
+      accountList.add(iterator.next());
+    }
     decryptLicenseInfo(accountList);
     return accountList;
   }
 
   @Override
   public List<Account> listAllAccountWithDefaultsWithoutLicenseInfo() {
-    return wingsPersistence.createQuery(Account.class, excludeAuthority)
-        .project(ID_KEY, true)
-        .project(AccountKeys.accountName, true)
-        .project(AccountKeys.companyName, true)
-        .filter(APP_ID_KEY, GLOBAL_APP_ID)
-        .asList();
+    List<Account> accounts = new ArrayList<>();
+    Iterator<Account> iterator = wingsPersistence.createQuery(Account.class, excludeAuthority)
+                                     .project(ID_KEY, true)
+                                     .project(AccountKeys.accountName, true)
+                                     .project(AccountKeys.companyName, true)
+                                     .filter(APP_ID_KEY, GLOBAL_APP_ID)
+                                     .fetch();
+    while (iterator.hasNext()) {
+      accounts.add(iterator.next());
+    }
+    return accounts;
   }
 
   @Override
@@ -967,9 +981,13 @@ public class AccountServiceImpl implements AccountService {
       services.add(serviceId);
     }
 
-    List<CVConfiguration> cvConfigurationList =
-        wingsPersistence.createQuery(CVConfiguration.class).field("appId").in(userAppPermissions.keySet()).asList();
-    if (cvConfigurationList == null) {
+    List<CVConfiguration> cvConfigurationList = new ArrayList<>();
+    Iterator<CVConfiguration> iterator =
+        wingsPersistence.createQuery(CVConfiguration.class).field("appId").in(userAppPermissions.keySet()).fetch();
+    while (iterator.hasNext()) {
+      cvConfigurationList.add(iterator.next());
+    }
+    if (cvConfigurationList.isEmpty()) {
       return null;
     }
     Map<String, List<CVConfiguration>> serviceCvConfigMap = new HashMap<>();
