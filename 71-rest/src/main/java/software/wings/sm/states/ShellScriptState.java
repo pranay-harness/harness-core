@@ -4,6 +4,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.exception.WingsException.USER;
 import static java.util.Arrays.asList;
@@ -323,12 +324,19 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
     }
 
     List<String> allTags = newArrayList();
+    List<String> renderedTags = newArrayList();
     String cloudProviderTag = getTagFromCloudProvider(containerServiceParams);
     if (isNotEmpty(cloudProviderTag)) {
       allTags.add(cloudProviderTag);
     }
     if (isNotEmpty(tags)) {
       allTags.addAll(tags);
+    }
+    if (isNotEmpty(allTags)) {
+      for (String tag : allTags) {
+        renderedTags.add(context.renderExpression(tag));
+      }
+      renderedTags = trimStrings(renderedTags);
     }
 
     final ShellScriptParametersBuilder shellScriptParameters = ShellScriptParameters.builder()
@@ -375,7 +383,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
 
                                     .accountId(executionContext.getApp().getAccountId())
                                     .waitId(activityId)
-                                    .tags(allTags)
+                                    .tags(renderedTags)
                                     .appId(((ExecutionContextImpl) context).getApp().getAppId())
                                     .data(TaskData.builder()
                                               .taskType(TaskType.SCRIPT.name())
