@@ -89,8 +89,6 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
 
   WorkflowUtils wfUtils = new WorkflowUtils();
 
-  String artifactStreamId = null;
-
   @Before
   public void createAllEntities() {
     owners = ownerManager.create();
@@ -126,7 +124,7 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
             .envId(environment.getUuid())
             .orchestrationWorkflow(aCanaryOrchestrationWorkflow().withWorkflowPhases(ImmutableList.of(phase1)).build())
             .build();
-    resetCache();
+
     savedWorkflow =
         WorkflowRestUtils.createWorkflow(bearerToken, AccountGenerator.ACCOUNT_ID, application.getUuid(), workflow);
 
@@ -136,14 +134,6 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
 
     artifact = ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
         bearerToken, application.getUuid(), artifactStream.getUuid());
-
-    //    ExecutionArgs executionArgs = new ExecutionArgs();
-    //    executionArgs.setWorkflowType(savedWorkflow.getWorkflowType());
-    //    executionArgs.setExecutionCredential(
-    //        SSHExecutionCredential.Builder.aSSHExecutionCredential().executionType(ExecutionType.SSH).build());
-    //    executionArgs.setOrchestrationId(savedWorkflow.getUuid());
-    //    executionArgs.setArtifacts(Collections.singletonList(artifact));
-    //    executionArgs.setServiceId(service.getUuid());
 
     logger.info("Modifying Workflow Phase to add HTTP command in Verify Step of Phase 1");
 

@@ -1,7 +1,6 @@
 package io.harness.functional.trigger;
 
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
-import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -20,7 +19,6 @@ import io.harness.generator.WorkflowGenerator.Workflows;
 import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
 import io.harness.testframework.framework.Setup;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
@@ -57,7 +55,6 @@ public class DeploymentTriggerFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SRINIVAS, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldCreateNewArtifactTriggerForWorkflow() {
     final Service service =

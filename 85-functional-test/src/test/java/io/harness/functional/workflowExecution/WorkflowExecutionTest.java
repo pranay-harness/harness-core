@@ -23,9 +23,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.ExecutionArgs;
-import software.wings.beans.ExecutionCredential.ExecutionType;
-import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -47,20 +44,13 @@ public class WorkflowExecutionTest extends AbstractFunctionalTest {
                                        .build())
             .build());
 
-    resetCache();
     return workflow;
   }
 
   @NotNull
   public WorkflowExecution executeWorkflow(Workflow workflow, Application application, Environment environment) {
-    ExecutionArgs executionArgs = new ExecutionArgs();
-    executionArgs.setWorkflowType(workflow.getWorkflowType());
-    executionArgs.setExecutionCredential(
-        SSHExecutionCredential.Builder.aSSHExecutionCredential().withExecutionType(ExecutionType.SSH).build());
-    executionArgs.setOrchestrationId(workflow.getUuid());
-
     WorkflowExecution workflowExecution =
-        runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
+        runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), workflow.getUuid());
     assertThat(workflowExecution).isNotNull();
     return workflowExecution;
   }

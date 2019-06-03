@@ -31,24 +31,19 @@ import io.harness.rule.OwnerRule.Owner;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
-import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.ExecutionArgs;
-import software.wings.beans.ExecutionCredential.ExecutionType;
 import software.wings.beans.GraphNode;
-import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.states.HttpState;
 
-import java.util.concurrent.TimeUnit;
 import javax.ws.rs.core.GenericType;
 
 /**
@@ -98,14 +93,8 @@ public class GovernanceFunctionalTest extends AbstractFunctionalTest {
 
     // Test running the workflow
 
-    ExecutionArgs executionArgs = new ExecutionArgs();
-    executionArgs.setWorkflowType(savedWorkflow.getWorkflowType());
-    executionArgs.setExecutionCredential(
-        SSHExecutionCredential.Builder.aSSHExecutionCredential().withExecutionType(ExecutionType.SSH).build());
-    executionArgs.setOrchestrationId(savedWorkflow.getUuid());
-
     WorkflowExecution workflowExecution =
-        runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
+        runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), savedWorkflow.getUuid());
     assertThat(workflowExecution).isNotNull();
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
 
@@ -113,24 +102,14 @@ public class GovernanceFunctionalTest extends AbstractFunctionalTest {
 
     setDeploymentFreeze(application.getAccountId(), true);
 
-    workflowExecution =
-        WorkflowRestUtils.startWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
+    workflowExecution = runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), savedWorkflow.getUuid());
     assertThat(workflowExecution).isNull();
 
     setDeploymentFreeze(application.getAccountId(), false);
 
-    workflowExecution =
-        WorkflowRestUtils.startWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
+    workflowExecution = runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), savedWorkflow.getUuid());
     assertThat(workflowExecution).isNotNull();
-
-    String newExecutionUuid = workflowExecution.getUuid();
-    Awaitility.await()
-        .atMost(120, TimeUnit.SECONDS)
-        .pollInterval(5, TimeUnit.SECONDS)
-        .until(()
-                   -> workflowExecutionService.getWorkflowExecution(application.getUuid(), newExecutionUuid)
-                          .getStatus()
-                          .equals(ExecutionStatus.SUCCESS));
+    assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
   private GraphNode getHTTPNode() {

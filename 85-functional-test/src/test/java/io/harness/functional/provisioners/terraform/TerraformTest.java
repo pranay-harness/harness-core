@@ -35,7 +35,6 @@ import io.harness.testframework.restutils.InfraProvisionerRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import org.awaitility.Awaitility;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
@@ -104,9 +103,8 @@ public class TerraformTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = VAIBHAV_SI, intermittent = true)
+  @Owner(emails = VAIBHAV_SI)
   @Category(FunctionalTests.class)
-  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldRunTerraformWorkflow() {
     ExecutionArgs executionArgs = prepareExecutionArgs(workflow);
     WorkflowExecution workflowExecution =
