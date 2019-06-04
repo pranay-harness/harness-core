@@ -1,17 +1,15 @@
 package software.wings.beans;
 
-import io.harness.delegate.beans.DelegateMetaInfo;
-import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+import io.harness.delegate.beans.ResponseData;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Value;
 import software.wings.api.TerraformExecutionData;
 
 import java.util.List;
 
-@Data
+@Value
 @Builder
-public class TerraformInputVariablesTaskResponse implements DelegateTaskNotifyResponseData {
+public class TerraformInputVariablesTaskResponse implements ResponseData {
   private final List<NameValuePair> variablesList;
   private final TerraformExecutionData terraformExecutionData;
-  private DelegateMetaInfo delegateMetaInfo;
 }
