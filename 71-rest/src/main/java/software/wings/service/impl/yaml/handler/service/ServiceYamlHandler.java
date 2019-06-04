@@ -148,6 +148,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
 
     Service currentService = new Service();
     currentService.setAppId(appId);
+    currentService.setAccountId(accountId);
     currentService.setName(serviceName);
     currentService.setDescription(yaml.getDescription());
     currentService.setConfigMapYaml(yaml.getConfigMapYaml());
