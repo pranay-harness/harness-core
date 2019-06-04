@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -269,9 +270,10 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
               .timestampFieldFormat(timestampFieldFormat)
               .queryType(getQueryType())
               .startTime(logCollectionStartTimeStamp)
-              .startMinute(0)
+              .startMinute((int) (logCollectionStartTimeStamp / TimeUnit.MINUTES.toMillis(1)))
               .collectionTime(Integer.parseInt(getTimeDuration()))
               .hosts(hostBatch)
+              .initialDelayMinutes(DELAY_MINUTES)
               .encryptedDataDetails(
                   secretManager.getEncryptionDetails(elkConfig, context.getAppId(), context.getWorkflowExecutionId()))
               .build();
@@ -292,12 +294,8 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
       waitIds[i++] = waitId;
     }
 
-    waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
-                                    .appId(context.getAppId())
-                                    .executionData(executionData)
-                                    .isLogCollection(true)
-                                    .build(),
-        waitIds);
+    waitNotifyEngine.waitForAll(
+        DataCollectionCallback.builder().appId(context.getAppId()).executionData(executionData).build(), waitIds);
     List<String> delegateTaskIds = new ArrayList<>();
     for (DelegateTask task : delegateTasks) {
       delegateTaskIds.add(delegateService.queueTask(task));

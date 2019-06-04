@@ -34,9 +34,10 @@ public class LogzDataCollectionInfo extends LogDataCollectionInfo implements Exe
       String workflowId, String workflowExecutionId, String serviceId, String query, long startTime, long endTime,
       int startMinute, int collectionTime, String hostnameField, Set<String> hosts,
       List<EncryptedDataDetail> encryptedDataDetails, LogzConfig logzConfig, String messageField, String timestampField,
-      String timestampFieldFormat, ElkQueryType queryType) {
+      String timestampFieldFormat, ElkQueryType queryType, int initialDelayMinutes) {
     super(accountId, applicationId, stateExecutionId, cvConfigId, workflowId, workflowExecutionId, serviceId, query,
-        startTime, endTime, startMinute, collectionTime, hostnameField, hosts, StateType.LOGZ, encryptedDataDetails);
+        startTime, endTime, startMinute, collectionTime, hostnameField, hosts, StateType.LOGZ, encryptedDataDetails,
+        initialDelayMinutes);
     this.logzConfig = logzConfig;
     this.messageField = messageField;
     this.timestampField = timestampField;

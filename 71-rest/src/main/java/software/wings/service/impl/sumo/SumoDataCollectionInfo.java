@@ -20,7 +20,6 @@ import java.util.Set;
 @EqualsAndHashCode(callSuper = false)
 public class SumoDataCollectionInfo extends LogDataCollectionInfo implements ExecutionCapabilityDemander {
   private SumoConfig sumoConfig;
-  private int initialDelayMinutes;
 
   @Builder
 
@@ -29,9 +28,9 @@ public class SumoDataCollectionInfo extends LogDataCollectionInfo implements Exe
       int startMinute, int collectionTime, String hostnameField, Set<String> hosts,
       List<EncryptedDataDetail> encryptedDataDetails, SumoConfig sumoConfig, int initialDelayMinutes) {
     super(accountId, applicationId, stateExecutionId, cvConfigId, workflowId, workflowExecutionId, serviceId, query,
-        startTime, endTime, startMinute, collectionTime, hostnameField, hosts, StateType.SUMO, encryptedDataDetails);
+        startTime, endTime, startMinute, collectionTime, hostnameField, hosts, StateType.SUMO, encryptedDataDetails,
+        initialDelayMinutes);
     this.sumoConfig = sumoConfig;
-    this.initialDelayMinutes = initialDelayMinutes;
   }
 
   @Override

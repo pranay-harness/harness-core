@@ -35,9 +35,10 @@ public class ElkDataCollectionInfo extends LogDataCollectionInfo implements Exec
       String workflowId, String workflowExecutionId, String serviceId, String query, long startTime, long endTime,
       int startMinute, int collectionTime, String hostnameField, Set<String> hosts,
       List<EncryptedDataDetail> encryptedDataDetails, ElkConfig elkConfig, String indices, String messageField,
-      String timestampField, String timestampFieldFormat, ElkQueryType queryType) {
+      String timestampField, String timestampFieldFormat, ElkQueryType queryType, int initialDelayMinutes) {
     super(accountId, applicationId, stateExecutionId, cvConfigId, workflowId, workflowExecutionId, serviceId, query,
-        startTime, endTime, startMinute, collectionTime, hostnameField, hosts, StateType.ELK, encryptedDataDetails);
+        startTime, endTime, startMinute, collectionTime, hostnameField, hosts, StateType.ELK, encryptedDataDetails,
+        initialDelayMinutes);
     this.elkConfig = elkConfig;
     this.indices = indices;
     this.messageField = messageField;

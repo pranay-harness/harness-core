@@ -201,8 +201,7 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
             .infrastructureMappingId(infrastructureMappingId)
             .build();
     waitNotifyEngine.waitForAll(
-        DataCollectionCallback.builder().appId(context.getAppId()).executionData(data).isLogCollection(true).build(),
-        waitId);
+        DataCollectionCallback.builder().appId(context.getAppId()).executionData(data).build(), waitId);
     return delegateService.queueTask(delegateTask);
   }
 

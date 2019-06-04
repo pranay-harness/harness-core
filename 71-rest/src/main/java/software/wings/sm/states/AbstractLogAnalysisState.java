@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
+import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_CURRENT;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
@@ -26,6 +27,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.FeatureName;
+import software.wings.beans.SumoConfig;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
@@ -35,6 +37,7 @@ import software.wings.service.impl.analysis.DataCollectionInfo;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
+import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.ExecutionContext;
@@ -211,8 +214,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       // Or in case when feature flag CV_DATA_COLLECTION_JOB is enabled. Delegate task creation will be every minute
       if (getComparisonStrategy() == PREDICTIVE
           || (featureFlagService.isEnabled(FeatureName.CV_DATA_COLLECTION_JOB, executionContext.getAccountId())
-                     && (getStateType().equals(StateType.SUMO.name()))
-                 || getStateType().equals(StateType.DATA_DOG_LOG.name()))) {
+                 && (PER_MINUTE_CV_STATES.contains(getStateType())))) {
         getLogger().info(
             "Feature flag CV_DATA_COLLECTION_JOB is enabled will use data collection for triggering delegate task");
       } else {
@@ -394,11 +396,12 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
 
+    String accountId = this.appService.get(context.getAppId()).getAccountId();
     String hostNameField = getHostnameField(context);
 
     AnalysisContext analysisContext =
         AnalysisContext.builder()
-            .accountId(this.appService.get(context.getAppId()).getAccountId())
+            .accountId(accountId)
             .appId(context.getAppId())
             .workflowId(getWorkflowId(context))
             .workflowExecutionId(context.getWorkflowExecutionId())
@@ -422,8 +425,12 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .predictiveHistoryMinutes(Integer.parseInt(getPredictiveHistoryMinutes()))
             .build();
 
-    // Data collection info is created and put in Analysis context for persistence
-    if (getComparisonStrategy().equals(PREDICTIVE)) {
+    // Saving data collection info as part of context.
+    // This will be directly used as part of delegate task
+    // todo: Pranjal: Condition will be removed once enabled for all verifiers.
+    if (getComparisonStrategy() == PREDICTIVE
+        || (featureFlagService.isEnabled(FeatureName.CV_DATA_COLLECTION_JOB, accountId)
+               && (PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))))) {
       DataCollectionInfo dataCollectionInfo = createDataCollectionInfo(analysisContext);
       analysisContext.setDataCollectionInfo(dataCollectionInfo);
     }
@@ -434,6 +441,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     switch (StateType.valueOf(getStateType())) {
       case SUMO:
         return ((SumoLogicAnalysisState) this).getHostnameField().getHostNameField();
+      case ELK:
+        return context.renderExpression(((ElkAnalysisState) this).getHostnameField());
       case DATA_DOG_LOG:
         return this.getHostnameField(context);
       default:
@@ -452,16 +461,36 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .accountId(analysisContext.getAccountId())
             .applicationId(analysisContext.getAppId())
             .stateExecutionId(analysisContext.getStateExecutionId())
+            .workflowId(analysisContext.getWorkflowId())
+            .workflowExecutionId(analysisContext.getWorkflowExecutionId())
             .serviceId(analysisContext.getServiceId())
-            .query(elkAnalysisState.getQuery())
+            .query(elkAnalysisState.getRenderedQuery())
             .indices(elkAnalysisState.getIndices())
-            .hostnameField(elkAnalysisState.getHostnameField())
+            .hostnameField(analysisContext.getHostNameField())
             .messageField(elkAnalysisState.getMessageField())
             .timestampField(elkAnalysisState.getTimestampField())
             .timestampFieldFormat(elkAnalysisState.getTimestampFormat())
             .queryType(elkAnalysisState.getQueryType())
             .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
-            .encryptedDataDetails(secretManager.getEncryptionDetails(elkConfig, analysisContext.getAppId(), null))
+            .encryptedDataDetails(secretManager.getEncryptionDetails(
+                elkConfig, analysisContext.getAppId(), analysisContext.getWorkflowExecutionId()))
+            .build();
+      case SUMO:
+        SumoLogicAnalysisState sumoLogicAnalysisState = (SumoLogicAnalysisState) this;
+        SumoConfig sumoConfig = (SumoConfig) settingsService.get(getAnalysisServerConfigId()).getValue();
+        return SumoDataCollectionInfo.builder()
+            .sumoConfig(sumoConfig)
+            .accountId(analysisContext.getAccountId())
+            .applicationId(analysisContext.getAppId())
+            .stateExecutionId(analysisContext.getStateExecutionId())
+            .workflowId(analysisContext.getWorkflowId())
+            .workflowExecutionId(analysisContext.getWorkflowExecutionId())
+            .serviceId(analysisContext.getServiceId())
+            .query(sumoLogicAnalysisState.getRenderedQuery())
+            .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
+            .hostnameField(sumoLogicAnalysisState.getHostnameField().getHostNameField())
+            .encryptedDataDetails(secretManager.getEncryptionDetails(
+                sumoConfig, analysisContext.getAppId(), analysisContext.getWorkflowExecutionId()))
             .build();
       case DATA_DOG_LOG:
         DatadogLogState datadogLogState = (DatadogLogState) this;

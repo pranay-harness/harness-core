@@ -50,9 +50,8 @@ public class DataCollectionCallback implements NotifyCallback {
   @Inject private transient CVConfigurationService cvConfigurationService;
 
   private String appId;
-  private boolean isLogCollection;
+  private boolean isDataCollectionPerMinuteTask;
   private StateExecutionData executionData;
-  private boolean isSumoDataCollection;
   private String stateExecutionId;
   private StateType stateType;
   private String cvConfigId;
@@ -91,7 +90,7 @@ public class DataCollectionCallback implements NotifyCallback {
         VerificationDataAnalysisResponse.builder().stateExecutionData(analysisExecutionData).build();
     verificationDataAnalysisResponse.setExecutionStatus(ExecutionStatus.ERROR);
     waitNotifyEngine.notify(analysisExecutionData.getCorrelationId(), verificationDataAnalysisResponse);
-    if (isLogCollection) {
+    if (isDataCollectionPerMinuteTask) {
       deleteDataCollectionCron();
     }
   }
@@ -131,14 +130,12 @@ public class DataCollectionCallback implements NotifyCallback {
   }
 
   private void deleteDataCollectionCron() {
-    if (isSumoDataCollection) {
-      logger.info("Data collection failed with stateExecutionId {}, deleting data collection cron", stateExecutionId);
-      DBCollection collection =
-          wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "quartz_verification_jobs");
-      BasicDBObject object = new BasicDBObject();
-      object.put("keyName", stateExecutionId);
-      object.put("keyGroup", stateType.name().toUpperCase() + WORKFLOW_CV_COLLECTION_CRON_GROUP);
-      collection.findAndRemove(object);
-    }
+    logger.info("Data collection failed with stateExecutionId {}, deleting data collection cron", stateExecutionId);
+    DBCollection collection =
+        wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "quartz_verification_jobs");
+    BasicDBObject object = new BasicDBObject();
+    object.put("keyName", stateExecutionId);
+    object.put("keyGroup", stateType.name().toUpperCase() + WORKFLOW_CV_COLLECTION_CRON_GROUP);
+    collection.findAndRemove(object);
   }
 }

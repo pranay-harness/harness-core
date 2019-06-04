@@ -1,8 +1,5 @@
 package io.harness.jobs;
 
-import com.google.inject.Inject;
-
-import io.harness.service.intfc.ContinuousVerificationService;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -15,7 +12,6 @@ import org.quartz.JobExecutionContext;
 @Deprecated
 public class LogDataProcessorJob implements Job {
   public static final String LOG_DATA_PROCESSOR_CRON_GROUP = "LOG_DATA_PROCESSOR_CRON_GROUP";
-  @Inject private ContinuousVerificationService continuousVerificationService;
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {

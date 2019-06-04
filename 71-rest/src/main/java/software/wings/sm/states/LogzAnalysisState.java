@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -80,6 +81,7 @@ public class LogzAnalysisState extends ElkAnalysisState {
               .startTime(logCollectionStartTimeStamp)
               .startMinute(0)
               .collectionTime(Integer.parseInt(getTimeDuration()))
+              .initialDelayMinutes(DELAY_MINUTES)
               .hosts(hostBatch)
               .encryptedDataDetails(
                   secretManager.getEncryptionDetails(logzConfig, context.getAppId(), context.getWorkflowExecutionId()))
@@ -100,12 +102,8 @@ public class LogzAnalysisState extends ElkAnalysisState {
                             .build());
       waitIds[i++] = waitId;
     }
-    waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
-                                    .appId(context.getAppId())
-                                    .executionData(executionData)
-                                    .isLogCollection(true)
-                                    .build(),
-        waitIds);
+    waitNotifyEngine.waitForAll(
+        DataCollectionCallback.builder().appId(context.getAppId()).executionData(executionData).build(), waitIds);
     List<String> delegateTaskIds = new ArrayList<>();
     for (DelegateTask task : delegateTasks) {
       delegateTaskIds.add(delegateService.queueTask(task));
