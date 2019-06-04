@@ -38,8 +38,8 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
   }
 
   @Override
-  public SweepingOutput find(
-      String appId, String name, String pipelineExecutionId, String workflowExecutionId, String phaseExecutionId) {
+  public SweepingOutput find(String appId, String name, String pipelineExecutionId, String workflowExecutionId,
+      String phaseExecutionId, String stateExecutionId) {
     final Query<SweepingOutput> query = wingsPersistence.createQuery(SweepingOutput.class)
                                             .filter(SweepingOutputKeys.appId, appId)
                                             .filter(SweepingOutputKeys.name, name);
@@ -48,35 +48,44 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
         query.criteria(SweepingOutputKeys.workflowExecutionId).equal(workflowExecutionId);
     final CriteriaContainerImpl phaseCriteria =
         query.criteria(SweepingOutputKeys.phaseExecutionId).equal(phaseExecutionId);
+    final CriteriaContainerImpl stateCriteria =
+        query.criteria(SweepingOutputKeys.stateExecutionId).equal(stateExecutionId);
 
     if (pipelineExecutionId != null) {
       final CriteriaContainerImpl pipelineCriteria =
           query.criteria(SweepingOutputKeys.pipelineExecutionId).equal(pipelineExecutionId);
-      query.or(pipelineCriteria, workflowCriteria, phaseCriteria);
+      query.or(pipelineCriteria, workflowCriteria, phaseCriteria, stateCriteria);
     } else {
-      query.or(workflowCriteria, phaseCriteria);
+      query.or(workflowCriteria, phaseCriteria, stateCriteria);
     }
 
     return query.get();
   }
 
   public static SweepingOutputBuilder prepareSweepingOutputBuilder(String appId, String pipelineExecutionId,
-      String workflowExecutionId, String phaseExecutionId, SweepingOutput.Scope sweepingOutputScope) {
+      String workflowExecutionId, String phaseExecutionId, String stateExecutionId,
+      SweepingOutput.Scope sweepingOutputScope) {
     // Default scope is pipeline
 
     if (pipelineExecutionId == null || !Scope.PIPELINE.equals(sweepingOutputScope)) {
       pipelineExecutionId = "dummy-" + generateUuid();
     }
-    if (workflowExecutionId == null || Scope.PHASE.equals(sweepingOutputScope)) {
+    if (workflowExecutionId == null
+        || (!Scope.PIPELINE.equals(sweepingOutputScope) && !Scope.WORKFLOW.equals(sweepingOutputScope))) {
       workflowExecutionId = "dummy-" + generateUuid();
     }
-    if (phaseExecutionId == null) {
+    if (phaseExecutionId == null || Scope.STATE.equals(sweepingOutputScope)) {
       phaseExecutionId = "dummy-" + generateUuid();
     }
+    if (stateExecutionId == null) {
+      stateExecutionId = "dummy-" + generateUuid();
+    }
+
     return SweepingOutput.builder()
         .appId(appId)
         .pipelineExecutionId(pipelineExecutionId)
         .workflowExecutionId(workflowExecutionId)
-        .phaseExecutionId(phaseExecutionId);
+        .phaseExecutionId(phaseExecutionId)
+        .stateExecutionId(stateExecutionId);
   }
 }

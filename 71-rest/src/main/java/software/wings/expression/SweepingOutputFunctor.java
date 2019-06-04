@@ -14,12 +14,13 @@ public class SweepingOutputFunctor extends LateBindingMap {
   private String pipelineExecutionId;
   private String workflowExecutionId;
   private String phaseExecutionId;
+  private String stateExecutionId;
 
   private SweepingOutputService sweepingOutputService;
 
   public Object output(String name) {
-    SweepingOutput sweepingOutput =
-        sweepingOutputService.find(appId, name, pipelineExecutionId, workflowExecutionId, phaseExecutionId);
+    SweepingOutput sweepingOutput = sweepingOutputService.find(
+        appId, name, pipelineExecutionId, workflowExecutionId, phaseExecutionId, stateExecutionId);
     if (sweepingOutput == null) {
       throw new RuntimeException(format("Missing sweeping output %s", name));
     }

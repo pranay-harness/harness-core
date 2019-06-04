@@ -36,6 +36,8 @@ import javax.validation.constraints.NotNull;
         , @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.workflowExecutionId)
       }), @Index(options = @IndexOptions(name = "uniquePhaseExecution", unique = true), fields = {
         @Field(SweepingOutputKeys.appId), @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.phaseExecutionId)
+      }), @Index(options = @IndexOptions(name = "uniqueStateExecution", unique = true), fields = {
+        @Field(SweepingOutputKeys.appId), @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.stateExecutionId)
       })
 })
 @FieldNameConstants(innerTypeName = "SweepingOutputKeys")
@@ -45,11 +47,12 @@ public class SweepingOutput implements PersistentEntity, UuidAccess {
   private String pipelineExecutionId;
   private String workflowExecutionId;
   private String phaseExecutionId;
+  private String stateExecutionId;
 
   @NotNull @Trimmed private String name;
   @Getter private byte[] output;
 
-  public enum Scope { PIPELINE, WORKFLOW, PHASE }
+  public enum Scope { PIPELINE, WORKFLOW, PHASE, STATE }
 
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
