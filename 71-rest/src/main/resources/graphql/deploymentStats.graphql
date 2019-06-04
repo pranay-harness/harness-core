@@ -33,5 +33,5 @@ extend type Query {
     filters: [DeploymentFilter]
     groupBy: [DeploymentAggregation]
     groupByTime: TimeSeriesAggregation
-  ): Data @dataFetcher(name: executionStats)
+  ): Data @dataFetcher(name: deploymentStats)
 }
