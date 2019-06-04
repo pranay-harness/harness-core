@@ -217,7 +217,7 @@ public class ManifestHelper {
       }
       YamlReader reader = new YamlReader(valuesFileContent);
       Object o = reader.read();
-      if (o instanceof Map) {
+      if (o == null || o instanceof Map) {
         // noop
         return true;
       } else {
