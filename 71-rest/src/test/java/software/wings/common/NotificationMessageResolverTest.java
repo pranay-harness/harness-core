@@ -68,7 +68,8 @@ public class NotificationMessageResolverTest extends WingsBaseTest {
                         -> NotificationMessageResolver.getDecoratedNotificationMessage(
                             notificationMessageResolver.getWebTemplate(ENTITY_CREATE_NOTIFICATION.name()),
                             ImmutableMap.of("ENTITY_TYPE", "SERVICE")))
-        .withMessage("INVALID_ARGUMENT");
+        .withMessage(
+            "Incomplete placeholder replacement for templateText: A new SERVICE <b>${ENTITY_NAME}</b> is created.");
   }
 
   @Test
