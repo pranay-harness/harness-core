@@ -1,6 +1,5 @@
 package io.harness.k8s.manifest;
 
-import static io.harness.govern.Switch.noop;
 import static io.harness.k8s.manifest.ManifestHelper.MAX_VALUES_EXPRESSION_RECURSION_DEPTH;
 import static io.harness.k8s.manifest.ManifestHelper.getMapFromValuesFileContent;
 import static io.harness.k8s.manifest.ManifestHelper.getValuesExpressionKeysFromMap;
@@ -244,7 +243,7 @@ public class ManifestHelperTest {
           + "replicas ");
       fail("Invalid values content not caught.");
     } catch (WingsException e) {
-      noop();
+      assertThat(e.getMessage()).startsWith("Error parsing YAML.");
     }
   }
 }

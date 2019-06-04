@@ -7,5 +7,5 @@ import lombok.Value;
 @Builder
 public class QLAggregateFunction {
   String aggregateValue;
-  QLAggregationOperation aggregationOperation;
+  QLAggregateOperation aggregateOperation;
 }

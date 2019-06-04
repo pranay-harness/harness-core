@@ -1,11 +1,13 @@
 package software.wings.graphql.datafetcher;
 
-import static software.wings.graphql.datafetcher.AbstractDataFetcher.SELECTION_SET_FIELD_NAME;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import com.google.common.collect.Lists;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import graphql.GraphQLContext;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
@@ -13,26 +15,22 @@ import io.harness.logging.ExceptionLogger;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.modelmapper.ModelMapper;
-import org.modelmapper.config.Configuration;
-import org.modelmapper.convention.MatchingStrategies;
-import org.modelmapper.internal.objenesis.Objenesis;
-import org.modelmapper.internal.objenesis.ObjenesisStd;
-import software.wings.graphql.schema.type.QLContextedObject;
 import software.wings.graphql.schema.type.aggregation.QLData;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
 public abstract class AbstractStatsDataFetcher<A, F, G, T> implements DataFetcher {
   private static final String EXCEPTION_MSG_DELIMITER = ";; ";
+  private static final String AGGREGATE_FUNCTION = "aggregateFunction";
+  private static final String FILTERS = "filters";
+  private static final String GROUP_BY = "groupBy";
+  private static final String GROUP_BY_TIME = "groupByTime";
   private static final String GENERIC_EXCEPTION_MSG = "An error has occurred. Please contact the Harness support team.";
 
   protected abstract QLData fetch(A aggregateFunction, List<F> filters, List<G> groupBy, T groupByTime);
@@ -41,15 +39,17 @@ public abstract class AbstractStatsDataFetcher<A, F, G, T> implements DataFetche
   public final Object get(DataFetchingEnvironment dataFetchingEnvironment) {
     Object result;
     try {
-      //      final Map<String, Object> aggregatedMap = (Map) fetchObject(dataFetchingEnvironment, "aggregateFunction");
       Type[] typeArguments = ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments();
-      Class<A> aggregationClass = (Class<A>) typeArguments[0];
-      Class<T> timeGroupByClass = (Class<T>) typeArguments[3];
+      Class<A> aggregationFuncClass = (Class<A>) typeArguments[0];
+      Class<F> filterClass = (Class<F>) typeArguments[1];
+      Class<G> groupByClass = (Class<G>) typeArguments[2];
+      Class<T> groupByTimeClass = (Class<T>) typeArguments[3];
 
-      final A aggregateFunction = (A) fetchObject(aggregationClass, dataFetchingEnvironment);
-      final List<F> filters = (List<F>) fetchObject(dataFetchingEnvironment, "filters");
-      final List<G> groupBy = (List<G>) fetchObject(dataFetchingEnvironment, "groupBy");
-      final T groupByTime = (T) fetchObject(timeGroupByClass, dataFetchingEnvironment);
+      final A aggregateFunction = (A) fetchObject(dataFetchingEnvironment, AGGREGATE_FUNCTION, aggregationFuncClass);
+      final List<F> filters = (List<F>) fetchObject(dataFetchingEnvironment, FILTERS, filterClass);
+      final List<G> groupBy = (List<G>) fetchObject(dataFetchingEnvironment, GROUP_BY, groupByClass);
+      final T groupByTime = (T) fetchObject(dataFetchingEnvironment, GROUP_BY_TIME, groupByTimeClass);
+
       result = fetch(aggregateFunction, filters, groupBy, groupByTime);
 
     } catch (WingsException ex) {
@@ -58,32 +58,6 @@ public abstract class AbstractStatsDataFetcher<A, F, G, T> implements DataFetche
       throw new WingsException(GENERIC_EXCEPTION_MSG, WingsException.USER_SRE);
     }
     return result;
-  }
-
-  private static final Objenesis objenesis = new ObjenesisStd(true);
-  private Object fetchObject(Class clazz, DataFetchingEnvironment dataFetchingEnvironment) {
-    ModelMapper modelMapper = new ModelMapper();
-    modelMapper.getConfiguration()
-        .setMatchingStrategy(MatchingStrategies.STANDARD)
-        .setFieldMatchingEnabled(true)
-        .setFieldAccessLevel(Configuration.AccessLevel.PRIVATE);
-
-    Object parameters = objenesis.newInstance(clazz);
-    Map<String, Object> map = new HashMap<>(dataFetchingEnvironment.getArguments());
-    if (dataFetchingEnvironment.getSource() instanceof QLContextedObject) {
-      map.putAll(((QLContextedObject) dataFetchingEnvironment.getSource()).getContext());
-    }
-
-    modelMapper.map(map, parameters);
-    if (FieldUtils.getField(clazz, SELECTION_SET_FIELD_NAME, true) != null) {
-      try {
-        FieldUtils.writeField(parameters, SELECTION_SET_FIELD_NAME, dataFetchingEnvironment.getSelectionSet(), true);
-      } catch (IllegalAccessException exception) {
-        logger.error("This should not happen", exception);
-      }
-    }
-
-    return parameters;
   }
 
   private String getCombinedErrorMessages(WingsException ex) {
@@ -95,15 +69,31 @@ public abstract class AbstractStatsDataFetcher<A, F, G, T> implements DataFetche
   //    return null;
   //  }
 
-  private Object fetchObject(DataFetchingEnvironment dataFetchingEnvironment, String fieldName) {
-    return dataFetchingEnvironment.getArguments().get(fieldName);
+  private <O> Object fetchObject(DataFetchingEnvironment dataFetchingEnvironment, String fieldName, Class<O> klass) {
+    Object object = dataFetchingEnvironment.getArguments().get(fieldName);
+    if (object == null) {
+      return null;
+    }
+
+    if (object instanceof Collection) {
+      Collection returnCollection = Lists.newArrayList();
+      Collection collection = (Collection) object;
+      collection.forEach(item -> returnCollection.add(convertToObject(item, klass)));
+      return returnCollection;
+    }
+    return convertToObject(object, klass);
+  }
+
+  private <O> O convertToObject(Object fromValue, Class<O> klass) {
+    ObjectMapper mapper = new ObjectMapper();
+    return mapper.convertValue(fromValue, klass);
   }
 
   protected String getAccountId(DataFetchingEnvironment environment) {
     GraphQLContext context = environment.getContext();
     String accountId = context.get("accountId");
 
-    if (EmptyPredicate.isEmpty(accountId)) {
+    if (isEmpty(accountId)) {
       throw new WingsException("accountId is null in the environment");
     }
 
