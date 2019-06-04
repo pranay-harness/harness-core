@@ -245,12 +245,8 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
               .mlAnalysisType(PREDICTIVE)
               .build());
     }
-    waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
-                                    .appId(context.getAppId())
-                                    .executionData(executionData)
-                                    .isLogCollection(false)
-                                    .build(),
-        waitIds);
+    waitNotifyEngine.waitForAll(
+        DataCollectionCallback.builder().appId(context.getAppId()).executionData(executionData).build(), waitIds);
     InfrastructureMapping infrastructureMapping = getInfrastructureMapping(context);
     DeploymentType deploymentType =
         serviceResourceService.getDeploymentType(infrastructureMapping, null, infrastructureMapping.getServiceId());

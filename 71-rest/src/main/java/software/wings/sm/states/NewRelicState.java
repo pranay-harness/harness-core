@@ -217,7 +217,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
     waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
                                     .appId(context.getAppId())
                                     .executionData(executionData)
-                                    .isLogCollection(false)
+                                    .isDataCollectionPerMinuteTask(false)
                                     .build(),
         waitId);
     return delegateService.queueTask(delegateTask);

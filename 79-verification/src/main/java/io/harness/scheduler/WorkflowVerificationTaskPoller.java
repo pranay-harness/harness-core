@@ -5,6 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.common.VerificationConstants.CV_CONFIGURATION_VALID_LIMIT_IN_DAYS;
 import static software.wings.common.VerificationConstants.DEFAULT_DATA_COLLECTION_INTERVAL_IN_SECONDS;
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
+import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
 import static software.wings.common.VerificationConstants.WORKFLOW_CV_COLLECTION_CRON_GROUP;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
 
@@ -34,7 +35,6 @@ import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.sm.StateExecutionInstance;
-import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
@@ -103,7 +103,7 @@ public class WorkflowVerificationTaskPoller {
             .callManagerWithRetry(
                 verificationManagerClient.isFeatureEnabled(FeatureName.CV_DATA_COLLECTION_JOB, context.getAccountId()))
             .getResource()) {
-      if (context.getStateType().equals(StateType.SUMO) || context.getStateType().equals(StateType.DATA_DOG_LOG)) {
+      if (PER_MINUTE_CV_STATES.contains(context.getStateType())) {
         Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(DELAY_MINUTES));
         JobDetail job = JobBuilder.newJob(WorkflowDataCollectionJob.class)
                             .withIdentity(context.getStateExecutionId(),
@@ -189,7 +189,7 @@ public class WorkflowVerificationTaskPoller {
     ElkCVConfiguration elkCVConfiguration = new ElkCVConfiguration();
 
     elkCVConfiguration.setAppId(context.getAppId());
-    elkCVConfiguration.setHostnameField(context.getHostNameField());
+    elkCVConfiguration.setHostnameField(elkDataCollectionInfo.getHostnameField());
     elkCVConfiguration.setTimestampField(elkDataCollectionInfo.getTimestampField());
     elkCVConfiguration.setTimestampFormat(elkDataCollectionInfo.getTimestampFieldFormat());
     elkCVConfiguration.setIndex(elkDataCollectionInfo.getIndices());

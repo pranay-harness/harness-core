@@ -143,12 +143,8 @@ public class DynatraceState extends AbstractMetricAnalysisState {
             .envId(envId)
             .infrastructureMappingId(infrastructureMappingId)
             .build();
-    waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
-                                    .appId(context.getAppId())
-                                    .executionData(executionData)
-                                    .isLogCollection(false)
-                                    .build(),
-        waitId);
+    waitNotifyEngine.waitForAll(
+        DataCollectionCallback.builder().appId(context.getAppId()).executionData(executionData).build(), waitId);
     return delegateService.queueTask(delegateTask);
   }
 

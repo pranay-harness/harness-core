@@ -34,9 +34,10 @@ public class CustomLogDataCollectionInfo extends LogDataCollectionInfo {
       String accountId, String applicationId, String stateExecutionId, String cvConfidId, String workflowId,
       String workflowExecutionId, String serviceId, String query, long startTime, long endTime, int startMinute,
       int collectionTime, String hostnameField, Set<String> hosts, StateType stateType,
-      List<EncryptedDataDetail> encryptedDataDetails, String hostnameSeparator) {
+      List<EncryptedDataDetail> encryptedDataDetails, int initialDelayMinutes, String hostnameSeparator) {
     super(accountId, applicationId, stateExecutionId, cvConfidId, workflowId, workflowExecutionId, serviceId, query,
-        startTime, endTime, startMinute, collectionTime, hostnameField, hosts, stateType, encryptedDataDetails);
+        startTime, endTime, startMinute, collectionTime, hostnameField, hosts, stateType, encryptedDataDetails,
+        initialDelayMinutes);
     this.baseUrl = baseUrl;
     this.validationUrl = validationUrl;
     this.dataUrl = dataUrl;

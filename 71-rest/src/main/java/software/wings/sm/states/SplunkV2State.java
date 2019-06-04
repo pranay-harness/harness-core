@@ -159,12 +159,8 @@ public class SplunkV2State extends AbstractLogAnalysisState {
                             .build());
       waitIds[i++] = waitId;
     }
-    waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
-                                    .appId(context.getAppId())
-                                    .executionData(executionData)
-                                    .isLogCollection(true)
-                                    .build(),
-        waitIds);
+    waitNotifyEngine.waitForAll(
+        DataCollectionCallback.builder().appId(context.getAppId()).executionData(executionData).build(), waitIds);
     List<String> delegateTaskIds = new ArrayList<>();
     for (DelegateTask task : delegateTasks) {
       delegateTaskIds.add(delegateService.queueTask(task));

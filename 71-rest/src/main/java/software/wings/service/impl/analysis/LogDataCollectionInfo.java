@@ -25,12 +25,13 @@ public abstract class LogDataCollectionInfo extends DataCollectionInfo implement
   private String hostnameField;
   private Set<String> hosts;
   private StateType stateType;
+  private int initialDelayMinutes;
   List<EncryptedDataDetail> encryptedDataDetails;
 
   public LogDataCollectionInfo(String accountId, String applicationId, String stateExecutionId, String cvConfigId,
       String workflowId, String workflowExecutionId, String serviceId, String query, long startTime, long endTime,
       int startMinute, int collectionTime, String hostnameField, Set<String> hosts, StateType stateType,
-      List<EncryptedDataDetail> encryptedDataDetails) {
+      List<EncryptedDataDetail> encryptedDataDetails, int initialDelayMinutes) {
     super(accountId, applicationId, stateExecutionId, cvConfigId, workflowId, workflowExecutionId, serviceId);
     this.query = query;
     this.startTime = startTime;
@@ -41,5 +42,6 @@ public abstract class LogDataCollectionInfo extends DataCollectionInfo implement
     this.hosts = hosts;
     this.stateType = stateType;
     this.encryptedDataDetails = encryptedDataDetails;
+    this.initialDelayMinutes = initialDelayMinutes;
   }
 }

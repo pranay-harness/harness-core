@@ -19,6 +19,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.TaskType;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.analysis.LogDataCollectionInfo;
@@ -67,6 +68,11 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
   }
 
   @Override
+  protected int getInitialDelayMinutes() {
+    return dataCollectionInfo.getInitialDelayMinutes();
+  }
+
+  @Override
   protected boolean is24X7Task() {
     return getTaskType().equals(TaskType.ELK_COLLECT_24_7_LOG_DATA.name());
   }
@@ -99,143 +105,156 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
       this.dataCollectionInfo = dataCollectionInfo;
       this.logCollectionMinute = is24X7Task() ? (int) TimeUnit.MILLISECONDS.toMinutes(dataCollectionInfo.getEndTime())
                                               : dataCollectionInfo.getStartMinute();
-      this.collectionStartTime = is24X7Task() ? dataCollectionInfo.getStartTime()
-                                              : Timestamp.minuteBoundary(dataCollectionInfo.getStartTime())
-              + logCollectionMinute * TimeUnit.MINUTES.toMillis(1);
+
+      // Condition needed as ELK follows absolute minute model and LogZ follows relative minute
+      switch (getStateType()) {
+        case ELK:
+          this.collectionStartTime =
+              is24X7Task() ? dataCollectionInfo.getStartTime() : logCollectionMinute * TimeUnit.MINUTES.toMillis(1);
+          break;
+        case LOGZ:
+          this.collectionStartTime = is24X7Task() ? dataCollectionInfo.getStartTime()
+                                                  : Timestamp.minuteBoundary(dataCollectionInfo.getStartTime())
+                  + logCollectionMinute * TimeUnit.MINUTES.toMillis(1);
+          break;
+
+        default:
+          throw new WingsException("Invalid StateType : " + getStateType());
+      }
       this.taskResult = taskResult;
     }
 
     @Override
     @SuppressWarnings("PMD")
     public void run() {
-      try {
-        for (String hostName : dataCollectionInfo.getHosts()) {
-          int retry = 0;
-          while (!completed.get() && retry < RETRIES) {
+      int retry = 0;
+      while (!completed.get() && retry < RETRIES) {
+        try {
+          final List<LogElement> logElements = new ArrayList<>();
+          for (String hostName : dataCollectionInfo.getHosts()) {
+            addHeartbeat(hostName, dataCollectionInfo, logCollectionMinute, logElements);
+            ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
+
+            Object searchResponse;
+            String hostnameField;
+            String messageField;
+            String timestampField;
+            String timestampFieldFormat;
+            switch (dataCollectionInfo.getStateType()) {
+              case ELK:
+                final ElkDataCollectionInfo elkDataCollectionInfo = (ElkDataCollectionInfo) dataCollectionInfo;
+                final ElkLogFetchRequest elkFetchRequest =
+                    ElkLogFetchRequest.builder()
+                        .query(dataCollectionInfo.getQuery())
+                        .indices(elkDataCollectionInfo.getIndices())
+                        .hostnameField(elkDataCollectionInfo.getHostnameField())
+                        .messageField(elkDataCollectionInfo.getMessageField())
+                        .timestampField(elkDataCollectionInfo.getTimestampField())
+                        .hosts(
+                            hostName.equals(DUMMY_HOST_NAME) ? Collections.emptySet() : Collections.singleton(hostName))
+                        .startTime(collectionStartTime)
+                        .endTime(is24X7Task() ? dataCollectionInfo.getEndTime()
+                                              : collectionStartTime + TimeUnit.MINUTES.toMillis(1))
+                        .queryType(elkDataCollectionInfo.getQueryType())
+                        .build();
+                logger.info("running elk query: " + JsonUtils.asJson(elkFetchRequest.toElasticSearchJsonObject()));
+                searchResponse = elkDelegateService.search(elkDataCollectionInfo.getElkConfig(),
+                    elkDataCollectionInfo.getEncryptedDataDetails(), elkFetchRequest, apiCallLog,
+                    ElkDelegateServiceImpl.MAX_RECORDS);
+                hostnameField = elkDataCollectionInfo.getHostnameField();
+                messageField = elkDataCollectionInfo.getMessageField();
+                timestampField = elkDataCollectionInfo.getTimestampField();
+                timestampFieldFormat = elkDataCollectionInfo.getTimestampFieldFormat();
+                break;
+              case LOGZ:
+                final LogzDataCollectionInfo logzDataCollectionInfo = (LogzDataCollectionInfo) dataCollectionInfo;
+                final ElkLogFetchRequest logzFetchRequest =
+                    ElkLogFetchRequest.builder()
+                        .query(dataCollectionInfo.getQuery())
+                        .indices("")
+                        .hostnameField(logzDataCollectionInfo.getHostnameField())
+                        .messageField(logzDataCollectionInfo.getMessageField())
+                        .timestampField(logzDataCollectionInfo.getTimestampField())
+                        .hosts(
+                            hostName.equals(DUMMY_HOST_NAME) ? Collections.emptySet() : Collections.singleton(hostName))
+                        .startTime(collectionStartTime)
+                        .endTime(is24X7Task() ? dataCollectionInfo.getEndTime()
+                                              : collectionStartTime + TimeUnit.MINUTES.toMillis(1))
+                        .queryType(logzDataCollectionInfo.getQueryType())
+                        .build();
+
+                logger.info("running logz query: " + JsonUtils.asJson(logzFetchRequest.toElasticSearchJsonObject()));
+                searchResponse = logzDelegateService.search(logzDataCollectionInfo.getLogzConfig(),
+                    logzDataCollectionInfo.getEncryptedDataDetails(), logzFetchRequest, apiCallLog);
+                hostnameField = logzDataCollectionInfo.getHostnameField();
+                messageField = logzDataCollectionInfo.getMessageField();
+                timestampField = logzDataCollectionInfo.getTimestampField();
+                timestampFieldFormat = logzDataCollectionInfo.getTimestampFieldFormat();
+                break;
+              default:
+                throw new IllegalStateException("Invalid collection attempt." + dataCollectionInfo);
+            }
+
+            JSONObject responseObject = new JSONObject(JsonUtils.asJson(searchResponse));
+            JSONObject hits = responseObject.getJSONObject("hits");
+            if (hits == null) {
+              continue;
+            }
             try {
-              Object searchResponse;
-              String hostnameField;
-              String messageField;
-              String timestampField;
-              String timestampFieldFormat;
-              switch (dataCollectionInfo.getStateType()) {
-                case ELK:
-                  final ElkDataCollectionInfo elkDataCollectionInfo = (ElkDataCollectionInfo) dataCollectionInfo;
-                  final ElkLogFetchRequest elkFetchRequest =
-                      ElkLogFetchRequest.builder()
-                          .query(dataCollectionInfo.getQuery())
-                          .indices(elkDataCollectionInfo.getIndices())
-                          .hostnameField(elkDataCollectionInfo.getHostnameField())
-                          .messageField(elkDataCollectionInfo.getMessageField())
-                          .timestampField(elkDataCollectionInfo.getTimestampField())
-                          .hosts(hostName.equals(DUMMY_HOST_NAME) ? Collections.emptySet()
-                                                                  : Collections.singleton(hostName))
-                          .startTime(collectionStartTime)
-                          .endTime(is24X7Task() ? dataCollectionInfo.getEndTime()
-                                                : collectionStartTime + TimeUnit.MINUTES.toMillis(1))
-                          .queryType(elkDataCollectionInfo.getQueryType())
-                          .build();
-                  logger.info("running elk query: " + JsonUtils.asJson(elkFetchRequest.toElasticSearchJsonObject()));
-                  searchResponse = elkDelegateService.search(elkDataCollectionInfo.getElkConfig(),
-                      elkDataCollectionInfo.getEncryptedDataDetails(), elkFetchRequest,
-                      createApiCallLog(dataCollectionInfo.getStateExecutionId()), ElkDelegateServiceImpl.MAX_RECORDS);
-                  hostnameField = elkDataCollectionInfo.getHostnameField();
-                  messageField = elkDataCollectionInfo.getMessageField();
-                  timestampField = elkDataCollectionInfo.getTimestampField();
-                  timestampFieldFormat = elkDataCollectionInfo.getTimestampFieldFormat();
-                  break;
-                case LOGZ:
-                  final LogzDataCollectionInfo logzDataCollectionInfo = (LogzDataCollectionInfo) dataCollectionInfo;
-                  final ElkLogFetchRequest logzFetchRequest =
-                      ElkLogFetchRequest.builder()
-                          .query(dataCollectionInfo.getQuery())
-                          .indices("")
-                          .hostnameField(logzDataCollectionInfo.getHostnameField())
-                          .messageField(logzDataCollectionInfo.getMessageField())
-                          .timestampField(logzDataCollectionInfo.getTimestampField())
-                          .hosts(hostName.equals(DUMMY_HOST_NAME) ? Collections.emptySet()
-                                                                  : Collections.singleton(hostName))
-                          .startTime(collectionStartTime)
-                          .endTime(is24X7Task() ? dataCollectionInfo.getEndTime()
-                                                : collectionStartTime + TimeUnit.MINUTES.toMillis(1))
-                          .queryType(logzDataCollectionInfo.getQueryType())
-                          .build();
-
-                  logger.info("running logz query: " + JsonUtils.asJson(logzFetchRequest.toElasticSearchJsonObject()));
-                  searchResponse = logzDelegateService.search(logzDataCollectionInfo.getLogzConfig(),
-                      logzDataCollectionInfo.getEncryptedDataDetails(), logzFetchRequest,
-                      createApiCallLog(dataCollectionInfo.getStateExecutionId()));
-                  hostnameField = logzDataCollectionInfo.getHostnameField();
-                  messageField = logzDataCollectionInfo.getMessageField();
-                  timestampField = logzDataCollectionInfo.getTimestampField();
-                  timestampFieldFormat = logzDataCollectionInfo.getTimestampFieldFormat();
-                  break;
-                default:
-                  throw new IllegalStateException("Invalid collection attempt." + dataCollectionInfo);
-              }
-
-              JSONObject responseObject = new JSONObject(JsonUtils.asJson(searchResponse));
-              JSONObject hits = responseObject.getJSONObject("hits");
-              if (hits == null) {
-                continue;
-              }
-              List<LogElement> logElements;
-              try {
-                logElements = parseElkResponse(searchResponse, dataCollectionInfo.getQuery(), timestampField,
-                    timestampFieldFormat, hostnameField, hostName, messageField, logCollectionMinute, is24X7Task(),
-                    dataCollectionInfo.getStartTime(), dataCollectionInfo.getEndTime());
-              } catch (Exception pe) {
-                retry = RETRIES;
-                taskResult.setErrorMessage(ExceptionUtils.getMessage(pe));
-                throw pe;
-              }
-              /**
-               * Heart beat.
-               */
-              addHeartbeat(hostName, dataCollectionInfo, logCollectionMinute, logElements);
-              boolean response = logAnalysisStoreService.save(dataCollectionInfo.getStateType(),
-                  dataCollectionInfo.getAccountId(), dataCollectionInfo.getApplicationId(),
-                  dataCollectionInfo.getCvConfigId(), dataCollectionInfo.getStateExecutionId(),
-                  dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),
-                  dataCollectionInfo.getServiceId(), delegateTaskId, logElements);
-              if (!response) {
-                if (++retry == RETRIES) {
-                  taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-                  taskResult.setErrorMessage("Cannot save log records. Server returned error");
-                  completed.set(true);
-                  break;
-                }
-                continue;
-              }
-              logger.info("sent " + dataCollectionInfo.getStateType() + "search records to server. Num of events: "
-                  + logElements.size() + " application: " + dataCollectionInfo.getApplicationId()
-                  + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute
-                  + " host: " + hostName);
-              break;
-            } catch (Throwable ex) {
-              if (!(ex instanceof Exception) || ++retry >= RETRIES) {
-                logger.error("error fetching logs for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
-                    logCollectionMinute, ex);
+              List<LogElement> logRecords = parseElkResponse(searchResponse, dataCollectionInfo.getQuery(),
+                  timestampField, timestampFieldFormat, hostnameField, hostName, messageField, logCollectionMinute,
+                  is24X7Task(), dataCollectionInfo.getStartTime(), dataCollectionInfo.getEndTime());
+              logElements.addAll(logRecords);
+              logger.info("Added {} records to logElements", logRecords.size());
+            } catch (Exception pe) {
+              logger.info("Exception occured while parsing elk response");
+              if (++retry == RETRIES) {
                 taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
+                taskResult.setErrorMessage("ELK failed search job " + RETRIES + " times");
                 completed.set(true);
-                throw ex;
-              } else {
-                /*
-                 * Save the exception from the first attempt. This is usually
-                 * more meaningful to trouble shoot.
-                 */
-                if (retry == 1) {
-                  taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
-                }
-                logger.warn("error fetching elk/logz logs. retrying in " + RETRY_SLEEP + "s", ex);
-                sleep(RETRY_SLEEP);
+                break;
               }
+              sleep(RETRY_SLEEP);
+              continue;
             }
           }
+          logAnalysisStoreService.save(dataCollectionInfo.getStateType(), dataCollectionInfo.getAccountId(),
+              dataCollectionInfo.getApplicationId(), dataCollectionInfo.getCvConfigId(),
+              dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getWorkflowId(),
+              dataCollectionInfo.getWorkflowExecutionId(), dataCollectionInfo.getServiceId(), delegateTaskId,
+              logElements);
+          logger.info("sent " + dataCollectionInfo.getStateType() + "search records to server. Num of events: "
+              + logElements.size() + " application: " + dataCollectionInfo.getApplicationId()
+              + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute);
+          break;
+        } catch (Throwable ex) {
+          if (!(ex instanceof Exception) || ++retry >= RETRIES) {
+            logger.error("error fetching logs for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
+                logCollectionMinute, ex);
+            taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
+            completed.set(true);
+          } else {
+            /*
+             * Save the exception from the first attempt. This is usually
+             * more meaningful to trouble shoot.
+             */
+            if (retry == 1) {
+              taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
+            }
+            logger.warn("error fetching elk/logz logs. retrying in " + RETRY_SLEEP + "s", ex);
+            sleep(RETRY_SLEEP);
+          }
         }
+      }
+      if (taskResult.getStatus().equals(DataCollectionTaskStatus.FAILURE)) {
+        logger.info("Failed Data collection for ELK collection task so quitting the task with StateExecutionId {}",
+            dataCollectionInfo.getStateExecutionId());
+        completed.set(true);
+      } else {
         collectionStartTime += TimeUnit.MINUTES.toMillis(1);
         logCollectionMinute++;
-        if (logCollectionMinute >= dataCollectionInfo.getCollectionTime()) {
+        dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
+        if (dataCollectionInfo.getCollectionTime() <= 0) {
           // We are done with all data collection, so setting task status to success and quitting.
           logger.info(
               "Completed ELK collection task. So setting task status to success and quitting. StateExecutionId {}",
@@ -243,15 +262,6 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
           completed.set(true);
           taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
         }
-        // dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
-
-      } catch (Throwable e) {
-        completed.set(true);
-        if (taskResult.getStatus() != DataCollectionTaskStatus.FAILURE) {
-          taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-          taskResult.setErrorMessage("error fetching elk/logz logs for minute " + logCollectionMinute);
-        }
-        logger.error("error fetching elk/logz logs", e);
       }
 
       if (completed.get()) {

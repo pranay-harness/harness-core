@@ -17,13 +17,16 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.TaskType.ELK_COLLECT_LOG_DATA;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
+import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_BASE_URL;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.service.intfc.analysis.LogAnalysisResource.ANALYSIS_GET_24X7_ALL_LOGS_URL;
 import static software.wings.service.intfc.analysis.LogAnalysisResource.ANALYSIS_GET_24X7_LOG_URL;
 import static software.wings.service.intfc.analysis.LogAnalysisResource.ANALYSIS_STATE_SAVE_24X7_CLUSTERED_LOG_URL;
 import static software.wings.service.intfc.analysis.LogAnalysisResource.LOG_ANALYSIS;
+import static software.wings.sm.states.ElkAnalysisState.DEFAULT_TIME_FIELD;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -55,6 +58,7 @@ import software.wings.alerts.AlertStatus;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.DatadogConfig;
+import software.wings.beans.ElkConfig;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.TaskType;
@@ -69,6 +73,7 @@ import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.CVFeedbackRecord;
 import software.wings.service.impl.analysis.ContinuousVerificationServiceImpl;
 import software.wings.service.impl.analysis.CustomLogDataCollectionInfo;
+import software.wings.service.impl.analysis.DataCollectionInfo;
 import software.wings.service.impl.analysis.FeedbackAction;
 import software.wings.service.impl.analysis.FeedbackPriority;
 import software.wings.service.impl.analysis.LogDataRecord;
@@ -76,6 +81,8 @@ import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisStatus;
 import software.wings.service.impl.analysis.MLAnalysisType;
+import software.wings.service.impl.elk.ElkDataCollectionInfo;
+import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
@@ -134,6 +141,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Mock private AppService appService;
   private SumoConfig sumoConfig;
   private DatadogConfig datadogConfig;
+  private ElkConfig elkConfig;
 
   @Before
   public void setUp() throws Exception {
@@ -160,6 +168,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
                         .apiKey(generateUuid().toCharArray())
                         .applicationKey(generateUuid().toCharArray())
                         .build();
+    elkConfig = ElkConfig.builder().elkUrl(generateUuid()).build();
 
     LogsCVConfiguration logsCVConfiguration = new LogsCVConfiguration();
     logsCVConfiguration.setName(generateUuid());
@@ -541,8 +550,9 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
-    AnalysisContext context = createMockAnalysisContext(
-        TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()), StateType.SUMO, connectorId);
+
+    AnalysisContext context =
+        createSUMOAnalysisContext(TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()));
     wingsPersistence.save(context);
     continuousVerificationService.triggerWorkflowDataCollection(context);
     List<DelegateTask> delegateTasks =
@@ -566,7 +576,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
-    AnalysisContext context = createMockAnalysisContext(
+    AnalysisContext context = createAnalysisContext(null,
         TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()), StateType.DATA_DOG_LOG, datadogConnectorId);
     wingsPersistence.save(context);
     continuousVerificationService.triggerWorkflowDataCollection(context);
@@ -591,8 +601,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
-    AnalysisContext context = createMockAnalysisContext(
-        TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()), StateType.SUMO, connectorId);
+    AnalysisContext context = createAnalysisContext(
+        null, TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()), StateType.SUMO, connectorId);
     wingsPersistence.save(context);
     boolean isTriggered = continuousVerificationService.triggerWorkflowDataCollection(context);
     assertFalse(isTriggered);
@@ -604,7 +614,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
-    AnalysisContext context = createMockAnalysisContext(
+    AnalysisContext context = createAnalysisContext(null,
         TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()), StateType.DATA_DOG_LOG, datadogConnectorId);
     wingsPersistence.save(context);
     boolean isTriggered = continuousVerificationService.triggerWorkflowDataCollection(context);
@@ -618,7 +628,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
     long startTimeInterval = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
-    AnalysisContext context = createMockAnalysisContext(startTimeInterval, StateType.SUMO, connectorId);
+    AnalysisContext context = createAnalysisContext(null, startTimeInterval, StateType.SUMO, connectorId);
     wingsPersistence.save(context);
 
     LogDataRecord record = createLogDataRecord(startTimeInterval, StateType.SUMO);
@@ -635,7 +645,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
     long startTimeInterval = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
-    AnalysisContext context = createMockAnalysisContext(startTimeInterval, StateType.DATA_DOG_LOG, datadogConnectorId);
+    AnalysisContext context =
+        createAnalysisContext(null, startTimeInterval, StateType.DATA_DOG_LOG, datadogConnectorId);
     wingsPersistence.save(context);
 
     LogDataRecord record = createLogDataRecord(startTimeInterval, StateType.DATA_DOG_LOG);
@@ -652,7 +663,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
     long startTimeInterval = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
-    AnalysisContext context = createMockAnalysisContext(startTimeInterval, StateType.SUMO, connectorId);
+    AnalysisContext context = createAnalysisContext(null, startTimeInterval, StateType.SUMO, connectorId);
     context.setTimeDuration(2);
     wingsPersistence.save(context);
 
@@ -670,7 +681,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
     long startTimeInterval = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
-    AnalysisContext context = createMockAnalysisContext(startTimeInterval, StateType.DATA_DOG_LOG, datadogConnectorId);
+    AnalysisContext context =
+        createAnalysisContext(null, startTimeInterval, StateType.DATA_DOG_LOG, datadogConnectorId);
     context.setTimeDuration(2);
     wingsPersistence.save(context);
 
@@ -690,30 +702,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     record.setAppId(appId);
     record.setStateExecutionId(stateExecutionId);
     return record;
-  }
-
-  private AnalysisContext createMockAnalysisContext(long startTimeInterval, StateType stateType, String connectorId) {
-    return AnalysisContext.builder()
-        .accountId(accountId)
-        .appId(appId)
-        .workflowId(workflowId)
-        .query(query)
-        .workflowExecutionId(workflowExecutionId)
-        .stateExecutionId(stateExecutionId)
-        .serviceId(serviceId)
-        .controlNodes(Collections.singletonMap("host1", DEFAULT_GROUP_NAME))
-        .testNodes(Collections.singletonMap("host1", DEFAULT_GROUP_NAME))
-        .isSSL(true)
-        .analysisServerConfigId(connectorId)
-        .appPort(9090)
-        .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
-        .timeDuration(1)
-        .stateType(stateType)
-        .correlationId(UUID.randomUUID().toString())
-        .prevWorkflowExecutionId("-1")
-        .startDataCollectionMinute(startTimeInterval)
-        .hostNameField("pod_name")
-        .build();
   }
 
   @Test
@@ -1274,5 +1262,134 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
             .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, MLAnalysisType.FEEDBACK_ANALYSIS)
             .asList();
     assertEquals(0, learningEngineAnalysisTasks.size());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testELKLogsCollection() throws IOException {
+    Call<RestResponse<Boolean>> managerCall = mock(Call.class);
+    when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
+    when(settingsService.get(connectorId)).thenReturn(aSettingAttribute().withValue(elkConfig).build());
+
+    int startTime = 12345;
+    AnalysisContext analysisContext = createELKAnalysisContext(startTime);
+
+    wingsPersistence.save(analysisContext);
+
+    continuousVerificationService.triggerWorkflowDataCollection(analysisContext);
+
+    List<DelegateTask> delegateTasks =
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
+    assertEquals(1, delegateTasks.size());
+    assertEquals(delegateTasks.get(0).getData().getTaskType(), ELK_COLLECT_LOG_DATA.name());
+
+    ElkDataCollectionInfo elkDataCollectionInfo =
+        (ElkDataCollectionInfo) delegateTasks.get(0).getData().getParameters()[0];
+    assertEquals(elkDataCollectionInfo.getStartTime(), startTime);
+    assertTrue(elkDataCollectionInfo.getHosts().contains("host1"));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testELKLogsCollectionFailedCase() throws IOException {
+    Call<RestResponse<Boolean>> managerCall = mock(Call.class);
+    when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
+    when(settingsService.get(connectorId)).thenReturn(aSettingAttribute().withValue(elkConfig).build());
+    AnalysisContext analysisContext = createELKAnalysisContext(12345);
+    wingsPersistence.save(analysisContext);
+
+    LogDataRecord logDataRecord = new LogDataRecord();
+    logDataRecord.setAppId(appId);
+    logDataRecord.setClusterLevel(ClusterLevel.H0);
+    logDataRecord.setStateType(StateType.ELK);
+    logDataRecord.setWorkflowId(workflowId);
+    logDataRecord.setLogCollectionMinute(12355);
+    logDataRecord.setQuery(query);
+    logDataRecord.setAppId(appId);
+    logDataRecord.setStateExecutionId(stateExecutionId);
+    wingsPersistence.save(logDataRecord);
+
+    // No Data Collection task will be created
+    assertFalse(continuousVerificationService.triggerWorkflowDataCollection(analysisContext));
+
+    List<DelegateTask> delegateTasks =
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
+    assertEquals(0, delegateTasks.size());
+  }
+
+  private AnalysisContext createELKAnalysisContext(int startMinute) {
+    String indices = UUID.randomUUID().toString();
+    String messageField = UUID.randomUUID().toString();
+    String timestampFieldFormat = UUID.randomUUID().toString();
+    ElkDataCollectionInfo dataCollectionInfo =
+        ElkDataCollectionInfo.builder()
+            .elkConfig(elkConfig)
+            .indices(indices)
+            .messageField(messageField)
+            .timestampField(DEFAULT_TIME_FIELD)
+            .timestampFieldFormat(timestampFieldFormat)
+            .queryType(ElkQueryType.MATCH)
+            .accountId(accountId)
+            .applicationId(appId)
+            .stateExecutionId(stateExecutionId)
+            .workflowId(workflowId)
+            .workflowExecutionId(workflowExecutionId)
+            .serviceId(serviceId)
+            .query(query)
+            .startMinute(startMinute)
+            .collectionTime(15)
+            .hosts(Sets.newHashSet("test", "control"))
+            .encryptedDataDetails(secretManager.getEncryptionDetails(elkConfig, null, null))
+            .build();
+
+    return createAnalysisContext(dataCollectionInfo, startMinute, StateType.ELK, connectorId);
+  }
+
+  private AnalysisContext createSUMOAnalysisContext(long startTimeInterval) {
+    SumoDataCollectionInfo sumoDataCollectionInfo =
+        SumoDataCollectionInfo.builder()
+            .sumoConfig(sumoConfig)
+            .accountId(accountId)
+            .applicationId(appId)
+            .stateExecutionId(stateExecutionId)
+            .workflowId(workflowId)
+            .workflowExecutionId(workflowExecutionId)
+            .serviceId(serviceId)
+            .query(query)
+            .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
+            .hostnameField("{host.hostname}")
+            .encryptedDataDetails(secretManager.getEncryptionDetails(sumoConfig, appId, workflowExecutionId))
+            .build();
+
+    return createAnalysisContext(sumoDataCollectionInfo, startTimeInterval, StateType.SUMO, connectorId);
+  }
+
+  private AnalysisContext createAnalysisContext(
+      DataCollectionInfo dataCollectionInfo, long startMinute, StateType stateType, String connectorId) {
+    return AnalysisContext.builder()
+        .accountId(accountId)
+        .appId(appId)
+        .workflowId(workflowId)
+        .query(query)
+        .workflowExecutionId(workflowExecutionId)
+        .stateExecutionId(stateExecutionId)
+        .analysisServerConfigId(connectorId)
+        .serviceId(serviceId)
+        .controlNodes(Collections.singletonMap("host1", DEFAULT_GROUP_NAME))
+        .testNodes(Collections.singletonMap("host1", DEFAULT_GROUP_NAME))
+        .isSSL(true)
+        .analysisServerConfigId(connectorId)
+        .appPort(9090)
+        .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
+        .timeDuration(1)
+        .stateType(stateType)
+        .correlationId(UUID.randomUUID().toString())
+        .prevWorkflowExecutionId("-1")
+        .dataCollectionInfo(dataCollectionInfo)
+        .startDataCollectionMinute(startMinute)
+        .hostNameField("pod_name")
+        .build();
   }
 }
