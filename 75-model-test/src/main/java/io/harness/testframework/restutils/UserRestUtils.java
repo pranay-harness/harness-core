@@ -163,4 +163,14 @@ public class UserRestUtils {
 
     return trialInviteResponse.getResource();
   }
+
+  public static Integer deleteUser(String accountId, String bearerToken, String userId) {
+    return Setup.portal()
+        .auth()
+        .oauth2(bearerToken)
+        .queryParam("accountId", accountId)
+        .contentType(ContentType.JSON)
+        .delete("/users/" + userId)
+        .statusCode();
+  }
 }

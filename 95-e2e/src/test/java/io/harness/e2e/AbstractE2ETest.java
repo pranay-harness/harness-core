@@ -32,6 +32,8 @@ import java.io.IOException;
 public abstract class AbstractE2ETest extends CategoryTest implements GraphQLTestMixin, MultilineStringMixin {
   protected static String bearerToken;
   protected static String qaAccount1 = null;
+  protected static String trialBearerToken;
+  protected static String trialQAAccount = null;
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
   @Rule public LocalPortalTestRule rule = new LocalPortalTestRule(lifecycleRule.getClosingFactory());
   @Inject DataLoaderRegistryHelper dataLoaderRegistryHelper;
@@ -60,6 +62,8 @@ public abstract class AbstractE2ETest extends CategoryTest implements GraphQLTes
 
   @Getter static Account account;
 
+  @Getter static Account trialAccount;
+
   @Before
   public void testSetup() throws IOException {
     switch (TestUtils.getExecutionEnvironment()) {
@@ -70,6 +74,7 @@ public abstract class AbstractE2ETest extends CategoryTest implements GraphQLTes
       case FrameworkConstants.QA_ENV:
         logger.info("Setup and Tests running against QA environment");
         doQASetup();
+        doQATrialSetup();
         break;
       default:
         logger.error("Unknown setup detected to run the test");
@@ -89,9 +94,16 @@ public abstract class AbstractE2ETest extends CategoryTest implements GraphQLTes
     bearerToken = Setup.getAuthToken("admin@harness.io", "admin");
   }
 
-  private void doQASetup() {
+  protected void doQASetup() {
     qaAccount1 = TestUtils.getDecryptedValue("e2etest_qa_account1");
     bearerToken = Setup.getAuthToken("autouser1@harness.io", TestUtils.getDecryptedValue("e2etest_autouser_password"));
     account = AccountRestUtils.getAccount(qaAccount1, bearerToken);
+  }
+
+  protected void doQATrialSetup() {
+    trialQAAccount = TestUtils.getDecryptedValue("e2etest_qa_trial_account");
+    trialBearerToken = Setup.getAuthToken(
+        "harnesstrialaccount@mailinator.com", TestUtils.getDecryptedValue("e2etest_harness_trial_account_pwd"));
+    trialAccount = AccountRestUtils.getAccount(trialQAAccount, trialBearerToken);
   }
 }
