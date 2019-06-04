@@ -35,6 +35,21 @@ public class GitServiceImpl implements GitService {
   }
 
   @Override
+  public void downloadFiles(GitConfig gitConfig, String connectorId, String commitId, String branch,
+      List<String> filePaths, boolean useBranch, String destinationDirectory) {
+    gitClient.downloadFiles(gitConfig,
+        GitFetchFilesRequest.builder()
+            .commitId(commitId)
+            .branch(branch)
+            .filePaths(filePaths)
+            .gitConnectorId(connectorId)
+            .useBranch(useBranch)
+            .recursive(true)
+            .build(),
+        destinationDirectory);
+  }
+
+  @Override
   public GitFetchFilesResult fetchFilesBetweenCommits(
       GitConfig gitConfig, String newCommitId, String oldCommitId, String connectorId) {
     return gitClient.fetchFilesBetweenCommits(gitConfig,

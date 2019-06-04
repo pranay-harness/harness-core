@@ -79,4 +79,9 @@ public class GitClientUnsupported implements GitClient {
   public void resetWorkingDir(GitConfig gitConfig, String gitConnectorId) {
     throw new UnsupportedOperationException("Git operations not supported.");
   }
+
+  @Override
+  public void downloadFiles(GitConfig gitConfig, GitFetchFilesRequest gitRequest, String destinationDirectory) {
+    throw new UnsupportedOperationException("Git operations not supported.");
+  }
 }

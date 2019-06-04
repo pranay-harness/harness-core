@@ -97,4 +97,6 @@ public interface GitClient {
   void checkoutFilesByPathForHelmSourceRepo(GitConfig gitConfig, GitFetchFilesRequest gitRequest);
 
   void resetWorkingDir(GitConfig gitConfig, String gitConnectorId);
+
+  void downloadFiles(GitConfig gitConfig, GitFetchFilesRequest gitRequest, String destinationDirectory);
 }

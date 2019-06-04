@@ -19,4 +19,7 @@ public interface GitService {
       List<String> filePaths, boolean useBranch);
 
   void resetWorkingDir(GitConfig gitConfig, String gitConnectorId);
+
+  void downloadFiles(GitConfig gitConfig, String connectorId, String commitId, String branch, List<String> filePaths,
+      boolean useBranch, String destinationDirectory);
 }
