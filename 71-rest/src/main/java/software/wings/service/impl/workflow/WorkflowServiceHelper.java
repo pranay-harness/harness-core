@@ -1768,7 +1768,7 @@ public class WorkflowServiceHelper {
         }
       }
     }
-    return entityIds;
+    return entityIds.stream().distinct().collect(toList());
   }
 
   public List<InfrastructureMapping> getResolvedInfraMappings(

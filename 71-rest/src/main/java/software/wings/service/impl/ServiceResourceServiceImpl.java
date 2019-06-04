@@ -227,7 +227,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private ArtifactService artifactService;
   @Inject private ArtifactStreamService artifactStreamService;
   // DO NOT DELETE THIS, PRUNE logic needs it
-  @SuppressWarnings("unused") @Inject private InstanceService instanceService;
+  @Inject private InstanceService instanceService;
   @Inject private CommandService commandService;
   @Inject private ConfigService configService;
   @Inject private EntityVersionService entityVersionService;
@@ -1935,6 +1935,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public List<Service> fetchServicesByUuids(String appId, List<String> serviceUuids) {
     if (isNotEmpty(serviceUuids)) {
+      serviceUuids = serviceUuids.stream().distinct().collect(toList());
       List<Service> services = wingsPersistence.createQuery(Service.class)
                                    .project("appContainer", false)
                                    .filter(ServiceKeys.appId, appId)
