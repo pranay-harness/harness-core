@@ -36,6 +36,7 @@ import io.harness.exception.InvalidRequestException;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.mongodb.morphia.query.Query;
 import software.wings.api.ScriptStateExecutionData;
@@ -233,7 +234,6 @@ public abstract class TerraformProvisionState extends State {
 
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
     String workspace = terraformExecutionData.getWorkspace();
-
     Map<String, Object> others = Maps.newHashMap();
     if (!(this instanceof DestroyTerraformProvisionState)) {
       List<NameValuePair> variables = terraformExecutionData.getVariables();
@@ -407,7 +407,10 @@ public abstract class TerraformProvisionState extends State {
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
     String path = context.renderExpression(terraformProvisioner.getNormalizedPath());
     if (path == null) {
-      throw new InvalidRequestException("Invalid Terraform script path", USER);
+      path = context.renderExpression(FilenameUtils.normalize(terraformProvisioner.getPath()));
+      if (path == null) {
+        throw new InvalidRequestException("Invalid Terraform script path", USER);
+      }
     }
 
     String workspace = context.renderExpression(element.getWorkspace());
@@ -506,7 +509,10 @@ public abstract class TerraformProvisionState extends State {
     }
     String path = context.renderExpression(terraformProvisioner.getNormalizedPath());
     if (path == null) {
-      throw new InvalidRequestException("Invalid Terraform script path", USER);
+      path = context.renderExpression(FilenameUtils.normalize(terraformProvisioner.getPath()));
+      if (path == null) {
+        throw new InvalidRequestException("Invalid Terraform script path", USER);
+      }
     }
 
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
