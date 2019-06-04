@@ -12,7 +12,6 @@ import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
 import static java.lang.Math.min;
 import static java.util.Collections.emptySet;
-import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.TaskType.CUSTOM_LOG_COLLECTION_TASK;
 import static software.wings.beans.TaskType.ELK_COLLECT_LOG_DATA;
@@ -57,6 +56,7 @@ import org.json.JSONObject;
 import org.mongodb.morphia.query.Query;
 import software.wings.APMFetchConfig;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.api.DeploymentType;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
@@ -97,7 +97,7 @@ import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.apm.APMMetricInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo;
-import software.wings.service.impl.datadog.DataDogFetchConfig;
+import software.wings.service.impl.datadog.DataDogSetupTestNodeData;
 import software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
@@ -125,6 +125,7 @@ import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.BugsnagState;
 import software.wings.sm.states.DatadogLogState;
 import software.wings.sm.states.DatadogState;
+import software.wings.sm.states.DatadogState.Metric;
 import software.wings.sm.states.DynatraceState;
 import software.wings.sm.states.NewRelicState;
 import software.wings.verification.CVConfiguration;
@@ -1259,28 +1260,35 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       APMValidateCollectorConfig apmValidateCollectorConfig;
       switch (type) {
         case DATA_DOG:
-          DataDogFetchConfig config = (DataDogFetchConfig) fetchConfig;
+          DataDogSetupTestNodeData config = (DataDogSetupTestNodeData) fetchConfig;
           DatadogConfig datadogConfig = (DatadogConfig) settingAttribute.getValue();
           List<EncryptedDataDetail> encryptedDataDetails =
               secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
 
           apmValidateCollectorConfig = datadogConfig.createAPMValidateCollectorConfig();
           apmValidateCollectorConfig.setEncryptedDataDetails(encryptedDataDetails);
-          apmValidateCollectorConfig.getOptions().put("from", String.valueOf(config.getFromtime()));
+          apmValidateCollectorConfig.getOptions().put("from", String.valueOf(config.getFromTime()));
           apmValidateCollectorConfig.getOptions().put("to", String.valueOf(config.getToTime()));
 
-          Map<String, List<APMMetricInfo>> metricInfoByQuery =
-              metricEndpointsInfo(Optional.ofNullable(config.getDatadogServiceName()),
-                  config.getMetrics() != null ? Optional.of(Arrays.asList(config.getMetrics().split(",")))
-                                              : Optional.empty(),
-                  Optional.empty(), Optional.empty(), Optional.of(KUBERNETES));
+          Map<String, List<APMMetricInfo>> metricInfoByQuery;
+          if (!config.isServiceLevel()) {
+            metricInfoByQuery = metricEndpointsInfo(Optional.ofNullable(config.getDatadogServiceName()),
+                Optional.of(new ArrayList<>(Arrays.asList(config.getMetrics().split(",")))), Optional.empty(),
+                Optional.empty(),
+                isEmpty(config.getDeploymentType()) ? Optional.empty()
+                                                    : Optional.of(DeploymentType.valueOf(config.getDeploymentType())));
+          } else {
+            metricInfoByQuery = createDatadogMetricEndPointMap(config.getDockerMetrics(), config.getEcsMetrics(),
+                config.getDatadogServiceName(), config.getCustomMetricsMap());
+          }
+
           List<Object> loadResponse = new ArrayList<>();
 
           // loop for each metric
           for (Entry<String, List<APMMetricInfo>> entry : metricInfoByQuery.entrySet()) {
             String url = entry.getKey();
             if (url.contains("${host}")) {
-              url = url.replace("${host}", config.getHostName());
+              url = url.replace("${host}", config.getInstanceElement().getHostName());
             }
             apmValidateCollectorConfig.setUrl(url);
             VerificationNodeDataSetupResponse verificationNodeDataSetupResponse =
@@ -1616,27 +1624,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     Map<String, String> hostsMap = new HashMap<>();
     hostsMap.put("DUMMY_24_7_HOST", DEFAULT_GROUP_NAME);
 
-    Map<String, List<APMMetricInfo>> metricEndPoints = new HashMap<>();
-    if (isNotEmpty(config.getDockerMetrics())) {
-      for (Entry<String, String> entry : config.getDockerMetrics().entrySet()) {
-        String filter = entry.getKey();
-        List<String> dockerMetrics =
-            Arrays.asList(entry.getValue().split(",")).parallelStream().map(String ::trim).collect(Collectors.toList());
-        metricEndPoints.putAll(DatadogState.metricEndpointsInfo(
-            Optional.empty(), Optional.of(dockerMetrics), Optional.of(filter), Optional.empty(), Optional.empty()));
-      }
-    }
-    if (isNotEmpty(config.getEcsMetrics())) {
-      for (Entry<String, String> entry : config.getEcsMetrics().entrySet()) {
-        String filter = entry.getKey();
-        List<String> ecsMetrics =
-            Arrays.asList(entry.getValue().split(",")).parallelStream().map(String ::trim).collect(Collectors.toList());
-        metricEndPoints.putAll(DatadogState.metricEndpointsInfo(
-            Optional.empty(), Optional.of(ecsMetrics), Optional.of(filter), Optional.empty(), Optional.empty()));
-      }
-    }
-    metricEndPoints.putAll(DatadogState.metricEndpointsInfo(Optional.ofNullable(config.getDatadogServiceName()),
-        Optional.empty(), Optional.empty(), Optional.ofNullable(config.getCustomMetrics()), Optional.empty()));
+    Map<String, List<APMMetricInfo>> metricEndPoints = createDatadogMetricEndPointMap(
+        config.getDockerMetrics(), config.getEcsMetrics(), config.getDatadogServiceName(), config.getCustomMetrics());
 
     final APMDataCollectionInfo dataCollectionInfo =
         APMDataCollectionInfo.builder()
@@ -1659,6 +1648,37 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .build();
     return createDelegateTask(TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK, config.getAccountId(), config.getAppId(),
         waitId, new Object[] {dataCollectionInfo}, config.getEnvId());
+  }
+
+  public static Map<String, List<APMMetricInfo>> createDatadogMetricEndPointMap(Map<String, String> dockerMetricsMap,
+      Map<String, String> ecsMetricsMap, String datadogServiceName, Map<String, Set<Metric>> customMetricsMap) {
+    Map<String, List<APMMetricInfo>> metricEndPoints = new HashMap<>();
+    if (isNotEmpty(dockerMetricsMap)) {
+      for (Entry<String, String> entry : dockerMetricsMap.entrySet()) {
+        String filter = entry.getKey();
+        List<String> dockerMetrics = new ArrayList<>(Arrays.asList(entry.getValue().split(","))
+                                                         .parallelStream()
+                                                         .map(String ::trim)
+                                                         .collect(Collectors.toList()));
+        metricEndPoints.putAll(DatadogState.metricEndpointsInfo(
+            Optional.empty(), Optional.of(dockerMetrics), Optional.of(filter), Optional.empty(), Optional.empty()));
+      }
+    }
+    if (isNotEmpty(ecsMetricsMap)) {
+      for (Entry<String, String> entry : ecsMetricsMap.entrySet()) {
+        String filter = entry.getKey();
+        List<String> ecsMetrics = new ArrayList<>(Arrays.asList(entry.getValue().split(","))
+                                                      .parallelStream()
+                                                      .map(String ::trim)
+                                                      .collect(Collectors.toList()));
+        metricEndPoints.putAll(DatadogState.metricEndpointsInfo(
+            Optional.empty(), Optional.of(ecsMetrics), Optional.of(filter), Optional.empty(), Optional.empty()));
+      }
+    }
+    metricEndPoints.putAll(DatadogState.metricEndpointsInfo(Optional.ofNullable(datadogServiceName), Optional.empty(),
+        Optional.empty(), Optional.ofNullable(customMetricsMap), Optional.empty()));
+
+    return metricEndPoints;
   }
 
   private DelegateTask createCloudWatchDelegateTask(

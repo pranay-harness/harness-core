@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
@@ -27,13 +28,16 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserPermissionInfo;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationServiceImpl;
+import software.wings.service.impl.apm.APMMetricInfo;
 import software.wings.service.intfc.AuthService;
 import software.wings.sm.StateType;
+import software.wings.sm.states.DatadogState.Metric;
 import software.wings.verification.HeatMapResolution;
 
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -189,9 +193,44 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
             LinkedHashMap<String,
                 LinkedHashMap<String, LinkedHashMap<String, List<ContinuousVerificationExecutionMetaData>>>>>>
         execData = cvService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L, user);
-
     assertNotNull("Execution data is not null", execData);
     assertEquals("Execution data should be empty", 0, execData.size());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testDataDogMetricEndPointCreation() {
+    String expectedDockerCPUMetricURL =
+        "query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=docker.cpu.usage{cluster-name:harness-test}.rollup(avg,60)";
+    String expectedDockerMEMMetricURL =
+        "query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=docker.mem.rss{cluster-name:harness-test}.rollup(avg,60)/docker.mem.limit{cluster-name:harness-test}.rollup(avg,60)*100";
+    Map<String, String> dockerMetrics = new HashMap<>();
+    dockerMetrics.put("cluster-name:harness-test", "docker.cpu.usage,docker.mem.rss");
+
+    String expectedECSMetricURL =
+        "query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=ecs.fargate.cpu.user{cluster-name:sdktest}.rollup(avg,60)";
+    Map<String, String> ecsMetrics = new HashMap<>();
+    ecsMetrics.put("cluster-name:sdktest", "ecs.fargate.cpu.user");
+
+    String expectedCustomMetricURL =
+        "query?api_key=${apiKey}&application_key=${applicationKey}&from=${start_time_seconds}&to=${end_time_seconds}&query=ec2.cpu{service_name:harness}.rollup(avg,60)";
+    Map<String, Set<Metric>> customMetricsMap = new HashMap<>();
+    Set<Metric> metrics = new HashSet<>();
+    metrics.add(Metric.builder()
+                    .metricName("ec2.cpu")
+                    .displayName("ec2 cpu")
+                    .mlMetricType("VALUE")
+                    .datadogMetricType("Custom")
+                    .build());
+    customMetricsMap.put("service_name:harness", metrics);
+    Map<String, List<APMMetricInfo>> metricEndPoints =
+        cvService.createDatadogMetricEndPointMap(dockerMetrics, ecsMetrics, null, customMetricsMap);
+
+    assertEquals(metricEndPoints.size(), 4);
+    assertTrue(metricEndPoints.keySet().contains(expectedDockerCPUMetricURL));
+    assertTrue(metricEndPoints.keySet().contains(expectedDockerMEMMetricURL));
+    assertTrue(metricEndPoints.keySet().contains(expectedECSMetricURL));
+    assertTrue(metricEndPoints.keySet().contains(expectedCustomMetricURL));
   }
 
   @Test
