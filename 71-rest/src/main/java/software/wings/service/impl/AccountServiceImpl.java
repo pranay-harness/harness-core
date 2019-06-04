@@ -657,7 +657,7 @@ public class AccountServiceImpl implements AccountService {
     if (isBlank(mainConfiguration.getSampleTargetEnv())) {
       String err = "Sample target env not configured";
       logger.warn(err);
-      throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION, err);
+      throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", err);
     }
 
     String script =
@@ -696,7 +696,7 @@ public class AccountServiceImpl implements AccountService {
 
     String err = "Failed to provision";
     logger.warn(err);
-    throw new WingsException(ErrorCode.GENERAL_ERROR, err);
+    throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", err);
   }
 
   @Override
@@ -725,14 +725,14 @@ public class AccountServiceImpl implements AccountService {
     if (isBlank(mainConfiguration.getSampleTargetStatusHost())) {
       String err = "Sample target status host not configured";
       logger.warn(err);
-      throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION, err);
+      throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", err);
     }
 
     try {
       String url = String.format(SAMPLE_DELEGATE_STATUS_ENDPOINT_FORMAT_STRING,
           mainConfiguration.getSampleTargetStatusHost(), getAccountIdentifier(accountId));
       logger.info("Fetching delegate provisioning progress for account {} from {}", accountId, url);
-      String result = Http.getResponseStringFromUrl(url, 10, 10).trim();
+      String result = Http.getResponseStringFromUrl(url, 30, 10).trim();
       if (isNotEmpty(result)) {
         logger.info("Provisioning progress for account {}: {}", accountId, result);
         if (result.contains("<title>404 Not Found</title>")) {
@@ -748,11 +748,12 @@ public class AccountServiceImpl implements AccountService {
         }
         return steps;
       }
-      throw new WingsException(
-          ErrorCode.GENERAL_ERROR, String.format("Empty provisioning result for account %s", accountId));
+      throw new WingsException(ErrorCode.GENERAL_ERROR)
+          .addParam("message", String.format("Empty provisioning result for account %s", accountId));
     } catch (IOException e) {
-      throw new WingsException(ErrorCode.GENERAL_ERROR,
-          String.format("Exception in fetching delegate provisioning progress for account %s", accountId), e);
+      throw new WingsException(ErrorCode.GENERAL_ERROR, e)
+          .addParam("message",
+              String.format("Exception in fetching delegate provisioning progress for account %s", accountId));
     }
   }
 
