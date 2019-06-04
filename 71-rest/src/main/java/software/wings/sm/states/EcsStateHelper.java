@@ -159,7 +159,7 @@ public class EcsStateHelper {
             context.renderExpression(ecsSetupStateConfig.getServiceDiscoveryService1JSON()))
         .withServiceDiscoveryService2JSON(
             context.renderExpression(ecsSetupStateConfig.getServiceDiscoveryService2JSON()))
-        .withParentRecordHostedZoneId(ecsSetupStateConfig.getParentRecordHostedZoneId())
+        .withParentRecordHostedZoneId(context.renderExpression(ecsSetupStateConfig.getParentRecordHostedZoneId()))
         .withParentRecordName(context.renderExpression(ecsSetupStateConfig.getParentRecordName()))
         .withTaskFamily(taskFamily)
         .withUseLoadBalancer(ecsSetupStateConfig.isUseLoadBalancer())
