@@ -28,7 +28,7 @@ public class AccountExpirationChecker implements PreDeploymentChecker {
     boolean isAccountExpired = licenseService.isAccountExpired(accountId);
     if (isAccountExpired) {
       throw new WingsException(GENERAL_ERROR, USER)
-          .addParam("message", "License expired!!! Please contact Harness Support.");
+          .addParam("message", "Your license has expired! Please contact Harness Support.");
     }
   }
 }
