@@ -199,6 +199,22 @@ public class ExpressionEvaluatorTest extends CategoryTest {
 
     assertThat(expressionEvaluator.substitute("${regex.extract('has matching', 'no matching pattern')}", persons))
         .isEqualTo("");
+
+    assertThat(
+        expressionEvaluator.substitute(
+            "${regex.extract('.*?(?=/)', 'atlassian-aid_docker.aid-driving.eu/cloud/services/device-backend:m-201905311225-5569-715e235')}",
+            persons))
+        .isEqualTo("atlassian-aid_docker.aid-driving.eu");
+    assertThat(
+        expressionEvaluator.substitute(
+            "${regex.extract('(?<=/).*?(?=:)', 'atlassian-aid_docker.aid-driving.eu/cloud/services/device-backend:m-201905311225-5569-715e235')}",
+            persons))
+        .isEqualTo("cloud/services/device-backend");
+    assertThat(
+        expressionEvaluator.substitute(
+            "${regex.extract('(?<=:).*', 'atlassian-aid_docker.aid-driving.eu/cloud/services/device-backend:m-201905311225-5569-715e235')}",
+            persons))
+        .isEqualTo("m-201905311225-5569-715e235");
   }
 
   @Test
