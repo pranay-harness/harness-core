@@ -64,6 +64,7 @@ import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.config.ArtifactSourceable;
 import software.wings.beans.template.TemplateHelper;
+import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
@@ -424,19 +425,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   private void ensureArtifactStreamSafeToDelete(String appId, String artifactStreamId, String accountId) {
     if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-      List<software.wings.beans.trigger.Trigger> triggers =
-          triggerService.getTriggersHasArtifactStreamAction(appId, artifactStreamId);
-      if (isEmpty(triggers)) {
-        return;
-      }
-      List<String> triggerNames =
-          triggers.stream().map(software.wings.beans.trigger.Trigger::getName).collect(toList());
-      throw new InvalidRequestException(
-          format("Artifact Source associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)),
-          USER);
+      validateTriggerUsages(appId, artifactStreamId);
     } else {
-      // TODO: handle triggers
       if (appId.equals(GLOBAL_APP_ID)) {
+        validateTriggerUsages(appId, artifactStreamId);
         List<String> serviceNames = serviceResourceService.listServiceNamesByArtifactStreamId(artifactStreamId);
         if (isEmpty(serviceNames)) {
           return;
@@ -445,6 +437,18 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
             format("Artifact Stream linked to Services [%s]", Joiner.on(", ").join(serviceNames)), USER);
       }
     }
+  }
+
+  private void validateTriggerUsages(String appId, String artifactStreamId) {
+    List<Trigger> triggers = triggerService.getTriggersHasArtifactStreamAction(appId, artifactStreamId);
+    if (isEmpty(triggers)) {
+      return;
+    }
+
+    List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(toList());
+    throw new InvalidRequestException(
+        format("Artifact Stream associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)),
+        USER);
   }
 
   @Override
