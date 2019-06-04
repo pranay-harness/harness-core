@@ -36,6 +36,7 @@ public class HQuery<T> extends QueryImpl<T> {
   public static final Set<QueryChecks> excludeValidate = EnumSet.<QueryChecks>of(AUTHORITY, COUNT);
   public static final Set<QueryChecks> excludeAuthority = EnumSet.<QueryChecks>of(VALIDATE, COUNT);
   public static final Set<QueryChecks> excludeCount = EnumSet.<QueryChecks>of(AUTHORITY, VALIDATE);
+  public static final Set<QueryChecks> excludeAuthorityCount = EnumSet.<QueryChecks>of(QueryChecks.VALIDATE);
 
   private Set<QueryChecks> queryChecks = allChecks;
 
