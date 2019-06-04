@@ -19,7 +19,7 @@ enum DataFetcherEnum {
   triggerConnection
   workflow
   workflowConnection
-  executionStats
+  deploymentStats
   instanceStats
   connector
   connectorConnection

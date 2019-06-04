@@ -32,9 +32,9 @@ import software.wings.graphql.datafetcher.connector.ConnectorConnectionDataFetch
 import software.wings.graphql.datafetcher.connector.ConnectorDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentConnectionDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentDataFetcher;
+import software.wings.graphql.datafetcher.execution.DeploymentStatsDataFetcher;
 import software.wings.graphql.datafetcher.execution.ExecutionConnectionDataFetcher;
 import software.wings.graphql.datafetcher.execution.ExecutionDataFetcher;
-import software.wings.graphql.datafetcher.execution.ExecutionStatsDataFetcher;
 import software.wings.graphql.datafetcher.instance.InstanceConnectionDataFetcher;
 import software.wings.graphql.datafetcher.instance.InstanceCountDataFetcher;
 import software.wings.graphql.datafetcher.instance.InstanceStatsDataFetcher;
@@ -134,7 +134,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(CloudProviderDataFetcher.class);
     bindDataFetcherWithAnnotation(CloudProviderConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(ArtifactDataFetcher.class);
-    bindDataFetcherWithAnnotation(ExecutionStatsDataFetcher.class);
+    bindDataFetcherWithAnnotation(DeploymentStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(InstanceStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(TriggerDataFetcher.class);
     bindDataFetcherWithAnnotation(TriggerConnectionDataFetcher.class);

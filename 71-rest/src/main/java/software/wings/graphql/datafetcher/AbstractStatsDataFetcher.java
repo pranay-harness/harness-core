@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher;
 
+import static software.wings.graphql.datafetcher.AbstractDataFetcher.SELECTION_SET_FIELD_NAME;
+
 import graphql.GraphQLContext;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
@@ -11,9 +13,20 @@ import io.harness.logging.ExceptionLogger;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.config.Configuration;
+import org.modelmapper.convention.MatchingStrategies;
+import org.modelmapper.internal.objenesis.Objenesis;
+import org.modelmapper.internal.objenesis.ObjenesisStd;
+import software.wings.graphql.schema.type.QLContextedObject;
 import software.wings.graphql.schema.type.aggregation.QLData;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -28,10 +41,15 @@ public abstract class AbstractStatsDataFetcher<A, F, G, T> implements DataFetche
   public final Object get(DataFetchingEnvironment dataFetchingEnvironment) {
     Object result;
     try {
-      final A aggregateFunction = (A) fetchObject(dataFetchingEnvironment, "aggregateFunction");
+      //      final Map<String, Object> aggregatedMap = (Map) fetchObject(dataFetchingEnvironment, "aggregateFunction");
+      Type[] typeArguments = ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments();
+      Class<A> aggregationClass = (Class<A>) typeArguments[0];
+      Class<T> timeGroupByClass = (Class<T>) typeArguments[3];
+
+      final A aggregateFunction = (A) fetchObject(aggregationClass, dataFetchingEnvironment);
       final List<F> filters = (List<F>) fetchObject(dataFetchingEnvironment, "filters");
       final List<G> groupBy = (List<G>) fetchObject(dataFetchingEnvironment, "groupBy");
-      final T groupByTime = (T) fetchObject(dataFetchingEnvironment, "groupByTime");
+      final T groupByTime = (T) fetchObject(timeGroupByClass, dataFetchingEnvironment);
       result = fetch(aggregateFunction, filters, groupBy, groupByTime);
 
     } catch (WingsException ex) {
@@ -40,6 +58,32 @@ public abstract class AbstractStatsDataFetcher<A, F, G, T> implements DataFetche
       throw new WingsException(GENERIC_EXCEPTION_MSG, WingsException.USER_SRE);
     }
     return result;
+  }
+
+  private static final Objenesis objenesis = new ObjenesisStd(true);
+  private Object fetchObject(Class clazz, DataFetchingEnvironment dataFetchingEnvironment) {
+    ModelMapper modelMapper = new ModelMapper();
+    modelMapper.getConfiguration()
+        .setMatchingStrategy(MatchingStrategies.STANDARD)
+        .setFieldMatchingEnabled(true)
+        .setFieldAccessLevel(Configuration.AccessLevel.PRIVATE);
+
+    Object parameters = objenesis.newInstance(clazz);
+    Map<String, Object> map = new HashMap<>(dataFetchingEnvironment.getArguments());
+    if (dataFetchingEnvironment.getSource() instanceof QLContextedObject) {
+      map.putAll(((QLContextedObject) dataFetchingEnvironment.getSource()).getContext());
+    }
+
+    modelMapper.map(map, parameters);
+    if (FieldUtils.getField(clazz, SELECTION_SET_FIELD_NAME, true) != null) {
+      try {
+        FieldUtils.writeField(parameters, SELECTION_SET_FIELD_NAME, dataFetchingEnvironment.getSelectionSet(), true);
+      } catch (IllegalAccessException exception) {
+        logger.error("This should not happen", exception);
+      }
+    }
+
+    return parameters;
   }
 
   private String getCombinedErrorMessages(WingsException ex) {
