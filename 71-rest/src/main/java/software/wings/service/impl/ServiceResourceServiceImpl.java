@@ -642,7 +642,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       } else {
         updateOperations.unset("helmValueYaml");
       }
-      if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, service.getAccountId())) {
+      if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, savedService.getAccountId())) {
         List<String> artifactStreamIds = service.getArtifactStreamIds();
         if (artifactStreamIds == null) {
           artifactStreamIds = new ArrayList<>();
