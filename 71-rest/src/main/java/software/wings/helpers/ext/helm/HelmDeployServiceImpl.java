@@ -3,6 +3,7 @@ package software.wings.helpers.ext.helm;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.replace;
 import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS;
@@ -22,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.beans.GitFileConfig;
@@ -210,23 +212,20 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     if (!gitFileConfig.isUseBranch()) {
       gitConfig.setReference(gitFileConfig.getCommitId());
     }
-    encryptionService.decrypt(gitConfig, sourceRepoConfig.getEncryptedDataDetails());
-    GitFetchFilesResult gitFetchFilesResult = gitService.fetchFilesByPath(gitConfig, gitFileConfig.getConnectorId(),
-        gitFileConfig.getCommitId(), gitFileConfig.getBranch(), Collections.singletonList(gitFileConfig.getFilePath()),
-        gitFileConfig.isUseBranch());
 
-    writeFilesToWorkingDirectory(commandRequest, convertToFileData(gitFetchFilesResult.getFiles()));
-    commandRequest.setWorkingDir(
-        Paths.get(getWorkingDirectory(commandRequest), gitFileConfig.getFilePath()).toString());
-    commandRequest.getExecutionLogCallback().saveExecutionLog("Repo checked-out locally");
-  }
-
-  private List<FileData> convertToFileData(List<GitFile> gitFiles) {
-    List<FileData> files = new ArrayList<>();
-    for (GitFile file : gitFiles) {
-      files.add(FileData.builder().filePath(file.getFilePath()).fileContent(file.getFileContent()).build());
+    if (isBlank(gitFileConfig.getFilePath())) {
+      gitFileConfig.setFilePath(StringUtils.EMPTY);
     }
-    return files;
+
+    String workingDirectory = Paths.get(getWorkingDirectory(commandRequest), gitFileConfig.getFilePath()).toString();
+
+    encryptionService.decrypt(gitConfig, sourceRepoConfig.getEncryptedDataDetails());
+    gitService.downloadFiles(gitConfig, gitFileConfig.getConnectorId(), gitFileConfig.getCommitId(),
+        gitFileConfig.getBranch(), Collections.singletonList(gitFileConfig.getFilePath()), gitFileConfig.isUseBranch(),
+        workingDirectory);
+
+    commandRequest.setWorkingDir(workingDirectory);
+    commandRequest.getExecutionLogCallback().saveExecutionLog("Repo checked-out locally");
   }
 
   private void writeFilesToWorkingDirectory(HelmInstallCommandRequest commandRequest, List<FileData> files)

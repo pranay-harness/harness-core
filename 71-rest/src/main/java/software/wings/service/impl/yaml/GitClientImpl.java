@@ -32,6 +32,7 @@ import com.jcraft.jsch.Session;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.filesystem.FileIo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -602,6 +603,47 @@ public class GitClientImpl implements GitClient {
         checkoutBranchForPath(gitRequest.getBranch(), gitRequest.getFilePaths(), gitConfig, gitConnectorId);
       } else {
         checkoutGivenCommitForPath(gitRequest.getCommitId(), gitRequest.getFilePaths(), gitConfig, gitConnectorId);
+      }
+    }
+  }
+
+  @Override
+  public void downloadFiles(GitConfig gitConfig, GitFetchFilesRequest gitRequest, String destinationDirectory) {
+    if (gitConfig.getGitRepoType() == null) {
+      gitConfig.setGitRepoType(GitRepositoryType.YAML);
+    }
+
+    validateRequiredArgs(gitRequest);
+    String gitConnectorId = gitRequest.getGitConnectorId();
+
+    synchronized (gitClientHelper.getLockObject(gitConnectorId)) {
+      try {
+        checkoutFiles(gitConfig, gitRequest);
+        String repoPath = gitClientHelper.getRepoPathForFileDownload(gitConfig, gitRequest.getGitConnectorId());
+
+        FileIo.createDirectoryIfDoesNotExist(destinationDirectory);
+        FileIo.waitForDirectoryToBeAccessibleOutOfProcess(destinationDirectory, 10);
+
+        File destinationDir = new File(destinationDirectory);
+
+        for (String filePath : gitRequest.getFilePaths()) {
+          File sourceDir = new File(Paths.get(repoPath + "/" + filePath).toString());
+          FileUtils.copyDirectory(sourceDir, destinationDir);
+        }
+
+        resetWorkingDir(gitConfig, gitRequest.getGitConnectorId());
+      } catch (WingsException e) {
+        throw e;
+      } catch (Exception e) {
+        throw new WingsException(GENERAL_ERROR, e)
+            .addParam("message",
+                new StringBuilder()
+                    .append("Failed while fetching files ")
+                    .append(gitRequest.isUseBranch() ? "for Branch: " : "for CommitId: ")
+                    .append(gitRequest.isUseBranch() ? gitRequest.getBranch() : gitRequest.getCommitId())
+                    .append(", FilePaths: ")
+                    .append(gitRequest.getFilePaths())
+                    .toString());
       }
     }
   }
