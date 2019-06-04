@@ -414,6 +414,7 @@ public class AccountServiceImpl implements AccountService {
     updateOperations.set("techStacks", techStacks);
     wingsPersistence.update(accountInDB, updateOperations);
     dbCache.invalidate(Account.class, accountId);
+    eventPublishHelper.publishTechStackEvent(accountId, techStacks);
     return true;
   }
 

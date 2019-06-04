@@ -354,7 +354,9 @@ public class UserServiceImpl implements UserService {
     }
 
     params.put("msg", msg);
-    return sendEmail(to, JOIN_EXISTING_TEAM_TEMPLATE_NAME, params);
+    boolean emailSent = sendEmail(to, JOIN_EXISTING_TEAM_TEMPLATE_NAME, params);
+    eventPublishHelper.publishJoinAccountEvent(emailAddress, accountJoinRequest.getName());
+    return emailSent;
   }
 
   @Override
