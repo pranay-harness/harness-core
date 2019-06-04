@@ -58,7 +58,7 @@ import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
 @Slf4j
-public class DataGenApplication extends Application<MainConfiguration> {
+public class MigrationJobApplication extends Application<MainConfiguration> {
   public static final Set<Class> morphiaClasses = ImmutableSet.<Class>builder()
                                                       .addAll(ManagerMorphiaClasses.classes)
                                                       .addAll(ManagerMorphiaClasses.dependentClasses)
@@ -74,8 +74,8 @@ public class DataGenApplication extends Application<MainConfiguration> {
     }));
     logger.info("Starting DataGen Application");
     logger.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
-    DataGenApplication dataGenApplication = new DataGenApplication();
-    dataGenApplication.run(args);
+    MigrationJobApplication migrationJobApplication = new MigrationJobApplication();
+    migrationJobApplication.run(args);
   }
 
   @SuppressFBWarnings("DM_EXIT")
@@ -191,9 +191,9 @@ public class DataGenApplication extends Application<MainConfiguration> {
 
     logger.info("Populating the data");
 
-    DataGenService dataGenService = injector.getInstance(DataGenService.class);
+    MigrationJobService migrationJobService = injector.getInstance(MigrationJobService.class);
     try {
-      dataGenService.populateData();
+      migrationJobService.migrate();
       logger.info("Populating data is completed");
       System.exit(0);
     } catch (Exception e) {

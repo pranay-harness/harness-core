@@ -92,7 +92,6 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.collect.ArtifactCollectEventListener;
-import software.wings.common.Constants;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.ConstraintViolationExceptionMapper;
@@ -376,7 +375,7 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     if (DeployMode.isOnPrem(deployMode)) {
       LicenseService licenseService = injector.getInstance(LicenseService.class);
-      String encryptedLicenseInfoBase64String = System.getenv(Constants.LICENSE_INFO);
+      String encryptedLicenseInfoBase64String = System.getenv(LicenseService.LICENSE_INFO);
       logger.info("Encrypted license info read from environment {}", encryptedLicenseInfoBase64String);
       if (isEmpty(encryptedLicenseInfoBase64String)) {
         logger.error("No license info is provided");
