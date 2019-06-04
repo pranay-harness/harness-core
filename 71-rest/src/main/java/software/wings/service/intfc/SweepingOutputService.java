@@ -7,6 +7,6 @@ import javax.validation.Valid;
 public interface SweepingOutputService {
   SweepingOutput save(@Valid SweepingOutput sweepingOutput);
 
-  SweepingOutput find(
-      String appId, String name, String pipelineExecutionId, String workflowExecutionId, String phaseExecutionId);
+  SweepingOutput find(String appId, String name, String pipelineExecutionId, String workflowExecutionId,
+      String phaseExecutionId, String stateExecutionId);
 }

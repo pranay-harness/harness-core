@@ -48,6 +48,7 @@ import software.wings.expression.SecretFunctor;
 import software.wings.expression.ShellScriptFunctor;
 import software.wings.expression.SubstitutionFunctor;
 import software.wings.expression.SweepingOutputFunctor;
+import software.wings.service.impl.SweepingOutputServiceImpl;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -629,6 +630,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
             .pipelineExecutionId(sweepingOutput.getPipelineExecutionId())
             .workflowExecutionId(sweepingOutput.getWorkflowExecutionId())
             .phaseExecutionId(sweepingOutput.getPhaseExecutionId())
+            .stateExecutionId(sweepingOutput.getStateExecutionId())
             .build());
 
     contextMap.put("harnessShellUtils", SubstitutionFunctor.builder().build());
@@ -821,20 +823,10 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     String phaseExecutionId =
         phaseElement == null ? null : workflowExecutionId + phaseElement.getUuid() + phaseElement.getPhaseName();
 
-    if (pipelineExecutionId == null || !Scope.PIPELINE.equals(sweepingOutputScope)) {
-      pipelineExecutionId = "dummy-" + generateUuid();
-    }
-    if (workflowExecutionId == null || Scope.PHASE.equals(sweepingOutputScope)) {
-      workflowExecutionId = "dummy-" + generateUuid();
-    }
-    if (phaseExecutionId == null) {
-      phaseExecutionId = "dummy-" + generateUuid();
-    }
-    return SweepingOutput.builder()
-        .uuid(generateUuid())
-        .appId(getAppId())
-        .pipelineExecutionId(pipelineExecutionId)
-        .workflowExecutionId(workflowExecutionId)
-        .phaseExecutionId(phaseExecutionId);
+    String stateExecutionId = stateExecutionInstance.getUuid();
+
+    final SweepingOutputBuilder sweepingOutputBuilder = SweepingOutputServiceImpl.prepareSweepingOutputBuilder(
+        getAppId(), pipelineExecutionId, workflowExecutionId, phaseExecutionId, stateExecutionId, sweepingOutputScope);
+    return sweepingOutputBuilder.uuid(generateUuid());
   }
 }

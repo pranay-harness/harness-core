@@ -109,9 +109,9 @@ public class IndexManager {
 
     final long now = System.currentTimeMillis();
     final Date tooNew = new Date(now - Duration.ofDays(7).toMillis());
+    final List<DBObject> indexInfo = collection.getIndexInfo();
 
-    final Set<String> uniqueIndexes = collection.getIndexInfo()
-                                          .stream()
+    final Set<String> uniqueIndexes = indexInfo.stream()
                                           .filter(obj -> {
                                             final Object unique = obj.get("unique");
                                             return unique != null && unique.toString().equals("true");
@@ -187,6 +187,10 @@ public class IndexManager {
             } else {
               options.put("background", Boolean.TRUE);
             }
+            if (isNotEmpty(index.options().partialFilter())) {
+              options.put("partialFilterExpression", BasicDBObject.parse(index.options().partialFilter()));
+            }
+
             creators.put(indexName, () -> collection.createIndex(keys, options));
           }
         });

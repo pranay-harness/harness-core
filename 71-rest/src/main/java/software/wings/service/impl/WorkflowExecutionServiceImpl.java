@@ -1281,7 +1281,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                           .build();
     sweepingOutputService.save(SweepingOutputServiceImpl
                                    .prepareSweepingOutputBuilder(workflowExecution.getAppId(),
-                                       workflowExecution.getUuid(), null, null, Scope.PIPELINE)
+                                       workflowExecution.getUuid(), null, null, null, Scope.PIPELINE)
                                    .name("pipeline")
                                    .output(KryoUtils.asDeflatedBytes(pipelineElement))
                                    .build());

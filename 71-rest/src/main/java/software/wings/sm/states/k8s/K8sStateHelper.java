@@ -332,7 +332,7 @@ public class K8sStateHelper {
     SweepingOutput sweepingOutputInput = context.prepareSweepingOutputBuilder(Scope.WORKFLOW).name("k8s").build();
     SweepingOutput result = sweepingOutputService.find(sweepingOutputInput.getAppId(), sweepingOutputInput.getName(),
         sweepingOutputInput.getPipelineExecutionId(), sweepingOutputInput.getWorkflowExecutionId(),
-        sweepingOutputInput.getPhaseExecutionId());
+        sweepingOutputInput.getPhaseExecutionId(), sweepingOutputInput.getStateExecutionId());
     if (result == null) {
       return null;
     }

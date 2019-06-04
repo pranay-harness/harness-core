@@ -13,13 +13,14 @@ public class SweepingOutputValue implements LateBindingValue {
   private String pipelineExecutionId;
   private String workflowExecutionId;
   private String phaseExecutionId;
+  private String stateExecutionId;
 
   private SweepingOutputService sweepingOutputService;
 
   @Override
   public Object bind() {
-    SweepingOutput sweepingOutput =
-        sweepingOutputService.find(appId, name, pipelineExecutionId, workflowExecutionId, phaseExecutionId);
+    SweepingOutput sweepingOutput = sweepingOutputService.find(
+        appId, name, pipelineExecutionId, workflowExecutionId, phaseExecutionId, stateExecutionId);
     if (sweepingOutput == null) {
       return null;
     }
