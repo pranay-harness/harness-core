@@ -7,6 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.persistence.HQuery.excludeAuthorityCount;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -550,30 +551,20 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public List<Account> listAllAccounts() {
-    List<Account> accountList = new ArrayList<>();
-
-    Iterator<Account> iterator =
-        wingsPersistence.createQuery(Account.class, excludeAuthority).filter(APP_ID_KEY, GLOBAL_APP_ID).fetch();
-    while (iterator.hasNext()) {
-      accountList.add(iterator.next());
-    }
+    List<Account> accountList =
+        wingsPersistence.createQuery(Account.class, excludeAuthorityCount).filter(APP_ID_KEY, GLOBAL_APP_ID).asList();
     decryptLicenseInfo(accountList);
     return accountList;
   }
 
   @Override
   public List<Account> listAllAccountWithDefaultsWithoutLicenseInfo() {
-    List<Account> accounts = new ArrayList<>();
-    Iterator<Account> iterator = wingsPersistence.createQuery(Account.class, excludeAuthority)
-                                     .project(ID_KEY, true)
-                                     .project(AccountKeys.accountName, true)
-                                     .project(AccountKeys.companyName, true)
-                                     .filter(APP_ID_KEY, GLOBAL_APP_ID)
-                                     .fetch();
-    while (iterator.hasNext()) {
-      accounts.add(iterator.next());
-    }
-    return accounts;
+    return wingsPersistence.createQuery(Account.class, excludeAuthorityCount)
+        .project(ID_KEY, true)
+        .project(AccountKeys.accountName, true)
+        .project(AccountKeys.companyName, true)
+        .filter(APP_ID_KEY, GLOBAL_APP_ID)
+        .asList();
   }
 
   @Override
@@ -983,13 +974,12 @@ public class AccountServiceImpl implements AccountService {
       services.add(serviceId);
     }
 
-    List<CVConfiguration> cvConfigurationList = new ArrayList<>();
-    Iterator<CVConfiguration> iterator =
-        wingsPersistence.createQuery(CVConfiguration.class).field("appId").in(userAppPermissions.keySet()).fetch();
-    while (iterator.hasNext()) {
-      cvConfigurationList.add(iterator.next());
-    }
-    if (cvConfigurationList.isEmpty()) {
+    List<CVConfiguration> cvConfigurationList =
+        wingsPersistence.createQuery(CVConfiguration.class, excludeAuthorityCount)
+            .field("appId")
+            .in(userAppPermissions.keySet())
+            .asList();
+    if (cvConfigurationList == null) {
       return null;
     }
     Map<String, List<CVConfiguration>> serviceCvConfigMap = new HashMap<>();
