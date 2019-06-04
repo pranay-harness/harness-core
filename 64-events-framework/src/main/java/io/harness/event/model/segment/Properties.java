@@ -12,4 +12,6 @@ import lombok.Value;
 @AllArgsConstructor
 public class Properties {
   private String original_timestamp;
+  private String tech_name;
+  private String tech_category;
 }

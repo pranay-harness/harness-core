@@ -13,4 +13,6 @@ public interface Constants {
   String CUSTOM_EVENT_NAME = "CUSTOM_EVENT_NAME";
   String USER_NAME = "USER_NAME";
   String USER_INVITE_ID = "USER_INVITE_ID";
+  String TECH_NAME = "TECH_NAME";
+  String TECH_CATEGORY_NAME = "TECH_CATEGORY_NAME";
 }

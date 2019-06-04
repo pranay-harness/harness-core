@@ -5,6 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.event.handler.impl.Constants.ACCOUNT_ID;
 import static io.harness.event.handler.impl.Constants.CUSTOM_EVENT_NAME;
 import static io.harness.event.handler.impl.Constants.EMAIL_ID;
+import static io.harness.event.handler.impl.Constants.TECH_CATEGORY_NAME;
+import static io.harness.event.handler.impl.Constants.TECH_NAME;
 import static io.harness.event.handler.impl.Constants.USER_NAME;
 import static io.harness.event.model.EventType.COMMUNITY_TO_PAID;
 import static io.harness.event.model.EventType.COMPLETE_USER_REGISTRATION;
@@ -22,6 +24,7 @@ import static io.harness.event.model.EventType.SETUP_CV_24X7;
 import static io.harness.event.model.EventType.SETUP_IP_WHITELISTING;
 import static io.harness.event.model.EventType.SETUP_RBAC;
 import static io.harness.event.model.EventType.SETUP_SSO;
+import static io.harness.event.model.EventType.TECH_STACK;
 import static io.harness.event.model.EventType.TRIAL_TO_COMMUNITY;
 import static io.harness.event.model.EventType.TRIAL_TO_PAID;
 import static io.harness.event.model.EventType.USER_INVITED_FROM_EXISTING_ACCOUNT;
@@ -39,6 +42,7 @@ import io.harness.event.listener.EventListener;
 import io.harness.event.model.Event;
 import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
+import io.harness.event.model.segment.Properties;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
@@ -94,7 +98,7 @@ public class SegmentHandler implements EventHandler {
         Sets.newHashSet(USER_INVITED_FROM_EXISTING_ACCOUNT, COMPLETE_USER_REGISTRATION, FIRST_DELEGATE_REGISTERED,
             FIRST_WORKFLOW_CREATED, FIRST_DEPLOYMENT_EXECUTED, FIRST_VERIFIED_DEPLOYMENT, FIRST_ROLLED_BACK_DEPLOYMENT,
             SETUP_CV_24X7, SETUP_2FA, SETUP_SSO, SETUP_IP_WHITELISTING, SETUP_RBAC, TRIAL_TO_PAID, TRIAL_TO_COMMUNITY,
-            COMMUNITY_TO_PAID, NEW_TRIAL_SIGNUP, LICENSE_UPDATE, JOIN_ACCOUNT_REQUEST, CUSTOM));
+            COMMUNITY_TO_PAID, NEW_TRIAL_SIGNUP, LICENSE_UPDATE, JOIN_ACCOUNT_REQUEST, CUSTOM, TECH_STACK));
   }
 
   public boolean isSegmentEnabled() {
@@ -124,7 +128,7 @@ public class SegmentHandler implements EventHandler {
     }
 
     try {
-      if (NEW_TRIAL_SIGNUP.equals(eventType)) {
+      if (NEW_TRIAL_SIGNUP.equals(eventType) || JOIN_ACCOUNT_REQUEST.equals(eventType)) {
         String email = properties.get(EMAIL_ID);
         if (isEmpty(email)) {
           logger.error("User email is empty");
@@ -169,12 +173,27 @@ public class SegmentHandler implements EventHandler {
       }
 
       switch (eventType) {
-        case USER_INVITED_FROM_EXISTING_ACCOUNT:
         case COMPLETE_USER_REGISTRATION:
-          registerIdentityAndReportTrackEvent(account, user, event);
+          // In case of sso based signup, we only send complete user registration.
+          // But we have a special requirement for sending NEW_TRIAL_SIGNUP to segment for easier tracking.
+          if (isNotEmpty(user.getOauthProvider())) {
+            reportTrackEvent(account, EventType.NEW_TRIAL_SIGNUP.name(), user);
+          }
+          reportTrackEvent(account, eventType.name(), user);
           break;
         case CUSTOM:
           reportTrackEvent(account, properties.get(CUSTOM_EVENT_NAME), user);
+          break;
+        case TECH_STACK:
+          String techName = properties.get(TECH_NAME);
+          String techCategoryName = properties.get(TECH_CATEGORY_NAME);
+          io.harness.event.model.segment.Properties eventProperties =
+              Properties.builder()
+                  .tech_category(techCategoryName)
+                  .tech_name(techName)
+                  .original_timestamp(String.valueOf(System.currentTimeMillis()))
+                  .build();
+          reportTrackEvent(account, eventType.name(), user, eventProperties);
           break;
         default:
           reportTrackEvent(account, eventType.name(), user);
@@ -210,24 +229,6 @@ public class SegmentHandler implements EventHandler {
         logger.error("Error while updating license to all users in segment", e);
       }
     });
-  }
-
-  private void registerIdentityAndReportTrackEvent(Account account, User user, Event event)
-      throws IOException, URISyntaxException {
-    String segmentIdentity = user.getSegmentIdentity();
-    if (isEmpty(segmentIdentity)) {
-      reportIdentity(account, user, true);
-    }
-    // Getting the latest copy since we had a sleep of 10 seconds.
-    user = userService.getUserFromCacheOrDB(user.getUuid());
-
-    // In case of sso based signup, we only send complete user registration.
-    // But we have a special requirement for sending NEW_TRIAL_SIGNUP to segment for easier tracking.
-    if (event.getEventType().equals(COMPLETE_USER_REGISTRATION) && isNotEmpty(user.getOauthProvider())) {
-      reportTrackEvent(account, EventType.NEW_TRIAL_SIGNUP.name(), user);
-    }
-
-    reportTrackEvent(account, event.getEventType().name(), user);
   }
 
   public String reportIdentity(Account account, User user, boolean wait) throws IOException, URISyntaxException {
@@ -290,12 +291,19 @@ public class SegmentHandler implements EventHandler {
       logger.error("No identities reported for event {}", eventType);
       return false;
     }
-    segmentHelper.reportTrackEvent(apiKey, retrofit, identityList, eventType.name());
+
+    Properties properties = Properties.builder().original_timestamp(String.valueOf(System.currentTimeMillis())).build();
+    segmentHelper.reportTrackEvent(apiKey, retrofit, identityList, eventType.name(), properties);
     logger.info("Reported track for event {} with leads {}", eventType, identityList);
     return true;
   }
 
   private void reportTrackEvent(Account account, String event, User user) throws IOException, URISyntaxException {
+    reportTrackEvent(account, event, user, null);
+  }
+
+  private void reportTrackEvent(Account account, String event, User user, Properties properties)
+      throws IOException, URISyntaxException {
     String userId = user.getUuid();
     String identity = user.getSegmentIdentity();
     logger.info("Reporting track for event {} with lead {}", event, userId);
@@ -310,7 +318,11 @@ public class SegmentHandler implements EventHandler {
       user = userService.getUserFromCacheOrDB(userId);
     }
 
-    boolean reported = segmentHelper.reportTrackEvent(apiKey, retrofit, identity, event);
+    if (properties == null) {
+      properties = Properties.builder().original_timestamp(String.valueOf(System.currentTimeMillis())).build();
+    }
+
+    boolean reported = segmentHelper.reportTrackEvent(apiKey, retrofit, identity, event, properties);
     if (reported) {
       updateUserEvents(user, event);
     }

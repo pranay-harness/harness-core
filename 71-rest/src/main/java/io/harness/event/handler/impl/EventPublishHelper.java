@@ -6,6 +6,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.event.handler.impl.Constants.ACCOUNT_ID;
 import static io.harness.event.handler.impl.Constants.CUSTOM_EVENT_NAME;
 import static io.harness.event.handler.impl.Constants.EMAIL_ID;
+import static io.harness.event.handler.impl.Constants.TECH_CATEGORY_NAME;
+import static io.harness.event.handler.impl.Constants.TECH_NAME;
 import static io.harness.event.handler.impl.Constants.USER_INVITE_ID;
 import static io.harness.event.handler.impl.Constants.USER_NAME;
 import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
@@ -35,6 +37,7 @@ import software.wings.beans.AccountType;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.EntityType;
+import software.wings.beans.TechStack;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
@@ -494,12 +497,37 @@ public class EventPublishHelper {
     publishEvent(EventType.NEW_TRIAL_SIGNUP, getProperties(null, email, userName, inviteId));
   }
 
-  public void publishJoinAccountEvent(String email, String userName) {
+  public void publishJoinAccountEvent(String email, String name) {
     if (isEmpty(email)) {
       return;
     }
 
-    publishEvent(EventType.JOIN_ACCOUNT_REQUEST, getProperties(null, email, userName, null));
+    publishEvent(EventType.JOIN_ACCOUNT_REQUEST, getProperties(null, email, name, null));
+  }
+
+  public void publishTechStackEvent(String accountId, Set<TechStack> techStacks) {
+    if (isEmpty(accountId) || isEmpty(techStacks)) {
+      return;
+    }
+
+    String userEmail = checkIfMarketoOrSegmentIsEnabledAndGetUserEmail(EventType.TECH_STACK);
+
+    if (isEmpty(userEmail)) {
+      return;
+    }
+
+    executorService.submit(() -> {
+      if (!shouldPublishEventForAccount(accountId)) {
+        return;
+      }
+
+      Map<String, String> properties = getProperties(accountId, userEmail);
+      techStacks.forEach(techStack -> {
+        properties.put(TECH_NAME, techStack.getTechnology());
+        properties.put(TECH_CATEGORY_NAME, techStack.getCategory());
+        publishEvent(EventType.TECH_STACK, properties);
+      });
+    });
   }
 
   private String checkIfMarketoOrSegmentIsEnabledAndGetUserEmail(EventType eventType) {

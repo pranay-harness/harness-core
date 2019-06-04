@@ -81,12 +81,8 @@ public class SegmentHelper {
     return identity;
   }
 
-  public boolean reportTrackEvent(String apiKey, Retrofit retrofit, String identity, String event) {
-    return reportTrackEvent(apiKey, retrofit, identity, event, String.valueOf(System.currentTimeMillis()));
-  }
-
-  private boolean reportTrackEvent(String apiKey, Retrofit retrofit, String identity, String event, String timestamp) {
-    Properties properties = Properties.builder().original_timestamp(timestamp).build();
+  public boolean reportTrackEvent(
+      String apiKey, Retrofit retrofit, String identity, String event, Properties properties) {
     Trace trace = Trace.builder().event(event).userId(identity).properties(properties).build();
     try {
       retrofit2.Response<Response> response = retrofit.create(SegmentRestClient.class).track(apiKey, trace).execute();
@@ -103,8 +99,8 @@ public class SegmentHelper {
     }
   }
 
-  public void reportTrackEvent(String apiKey, Retrofit retrofit, List<String> userIds, String event) {
-    String timestamp = String.valueOf(System.currentTimeMillis());
-    userIds.forEach(userId -> reportTrackEvent(apiKey, retrofit, userId, event, timestamp));
+  public void reportTrackEvent(
+      String apiKey, Retrofit retrofit, List<String> userIds, String event, Properties properties) {
+    userIds.forEach(userId -> reportTrackEvent(apiKey, retrofit, userId, event, properties));
   }
 }

@@ -34,5 +34,6 @@ public enum EventType {
 
   DEPLOYMENT_VERIFIED,
   JOIN_ACCOUNT_REQUEST,
-  CUSTOM
+  CUSTOM,
+  TECH_STACK
 }
