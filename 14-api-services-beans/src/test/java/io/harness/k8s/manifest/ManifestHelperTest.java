@@ -4,10 +4,12 @@ import static io.harness.k8s.manifest.ManifestHelper.MAX_VALUES_EXPRESSION_RECUR
 import static io.harness.k8s.manifest.ManifestHelper.getMapFromValuesFileContent;
 import static io.harness.k8s.manifest.ManifestHelper.getValuesExpressionKeysFromMap;
 import static io.harness.k8s.manifest.ManifestHelper.processYaml;
+import static io.harness.k8s.manifest.ManifestHelper.validateValuesFileContents;
 import static io.harness.k8s.manifest.ObjectYamlUtils.toYaml;
 import static java.util.Arrays.asList;
 import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
@@ -211,5 +213,36 @@ public class ManifestHelperTest {
     }
 
     assert false;
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateValuesFileContentGoodCases() {
+    validateValuesFileContents("");
+    validateValuesFileContents("# empty file");
+    validateValuesFileContents("name: account-service\n"
+        + "replicas: 1");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateValuesFileContentNotAMap() {
+    try {
+      validateValuesFileContents("test");
+      fail("Invalid values content not caught.");
+    } catch (WingsException e) {
+      assertThat(e.getMessage()).isEqualTo("Object is not a map.");
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateValuesFileContentInvalidStructure() {
+    try {
+      validateValuesFileContents("name: account-service\n"
+          + "replicas ");
+      fail("Invalid values content not caught.");
+    } catch (WingsException e) {
+    }
   }
 }
