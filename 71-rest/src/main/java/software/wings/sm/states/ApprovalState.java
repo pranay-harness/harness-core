@@ -792,7 +792,7 @@ public class ApprovalState extends State {
       return;
     }
 
-    emailData.setSystem(true);
+    emailData.setAccountId(accountId);
     emailData.setCc(Collections.emptyList());
     emailData.setTo(userEmailAddress);
     emailNotificationService.sendAsync(emailData);

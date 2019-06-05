@@ -13,6 +13,7 @@ import static software.wings.common.NotificationMessageResolver.getDecoratedNoti
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Notification;
@@ -24,6 +25,8 @@ import software.wings.service.intfc.EmailNotificationService;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Singleton
 public class EmailDispatcher {
@@ -71,8 +74,16 @@ public class EmailDispatcher {
 
     String body = processEmailHtml(String.join("<br>", emailBodyList));
     String subject = emailSubjectList.get(emailSubjectList.size() - 1);
+    Optional<String> accountIdOptional = notifications.stream()
+                                             .filter(Objects::nonNull)
+                                             .map(n -> n.getAccountId())
+                                             .filter(a -> StringUtils.isNotBlank(a))
+                                             .findFirst();
 
-    EmailData emailData = EmailData.builder().to(validToAddresses).subject(subject).body(body).system(true).build();
+    EmailData emailData = EmailData.builder().to(validToAddresses).subject(subject).body(body).build();
+    if (accountIdOptional.isPresent()) {
+      emailData.setAccountId(accountIdOptional.get());
+    }
     emailData.setRetries(2);
     emailData.setCc(Collections.emptyList());
     log.info("Trying to send email to: {}", validToAddresses);

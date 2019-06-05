@@ -71,14 +71,23 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
                                                                .system(true)
                                                                .accountId(ACCOUNT_ID)
                                                                .build();
-  private static final EmailData systemEmailBodyData = EmailData.builder()
-                                                           .to(newArrayList("to"))
-                                                           .cc(newArrayList("cc"))
-                                                           .body("body")
-                                                           .subject("subject")
-                                                           .accountId(ACCOUNT_ID)
-                                                           .system(true)
-                                                           .build();
+
+  private static final EmailData testEmailTemplateData = EmailData.builder()
+                                                             .to(newArrayList("to"))
+                                                             .cc(newArrayList("cc"))
+                                                             .templateName("templateName")
+                                                             .templateModel("templateModel")
+                                                             .system(true)
+                                                             .build();
+
+  private static final EmailData customerEmailBodyData = EmailData.builder()
+                                                             .to(newArrayList("to"))
+                                                             .cc(newArrayList("cc"))
+                                                             .body("body")
+                                                             .subject("subject")
+                                                             .accountId(ACCOUNT_ID)
+                                                             .system(false)
+                                                             .build();
 
   private static final SmtpConfig smtpConfig = SmtpConfig.builder()
                                                    .host("testHost")
@@ -169,7 +178,6 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
     emailDataNotificationService.send(systemEmailTemplateData);
     verify(mailer).send(mainConfiguration.getSmtpConfig(), Collections.emptyList(), systemEmailTemplateData);
     verifyNoMoreInteractions(delegateService);
-    verifyNoMoreInteractions(settingsService);
     verify(alertService).closeAlertsOfType(ACCOUNT_ID, GLOBAL_APP_ID, AlertType.EMAIL_NOT_SENT_ALERT);
   }
 
@@ -180,11 +188,12 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
    */
   @Test
   @Category(UnitTests.class)
-  public void shouldSendSystemEmailWithBody() {
-    emailDataNotificationService.send(systemEmailBodyData);
-    verify(mailer).send(mainConfiguration.getSmtpConfig(), Collections.emptyList(), systemEmailBodyData);
-    verifyNoMoreInteractions(settingsService, delegateService);
-    verify(alertService).closeAlertsOfType(ACCOUNT_ID, GLOBAL_APP_ID, AlertType.EMAIL_NOT_SENT_ALERT);
+  public void shouldSendCustomerEmailWithBody() {
+    emailDataNotificationService.send(customerEmailBodyData);
+    verifyNoMoreInteractions(mailer);
+    verify(delegateService).queueTask(any(DelegateTask.class));
+    verify(settingsService).getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.SMTP.name());
+    verifyNoMoreInteractions(alertService);
   }
 
   /**
@@ -217,12 +226,12 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
     doThrow(new WingsException(ErrorCode.EMAIL_FAILED))
         .when(mailer)
         .send(any(SmtpConfig.class), any(List.class), any(EmailData.class));
-    emailDataNotificationService.send(systemEmailTemplateData);
-    String errorMessage = emailUtils.getErrorString(systemEmailTemplateData);
+    emailDataNotificationService.send(testEmailTemplateData);
+    String errorMessage = emailUtils.getErrorString(testEmailTemplateData);
     verify(alertService)
-        .openAlert(ACCOUNT_ID, GLOBAL_APP_ID, AlertType.EMAIL_NOT_SENT_ALERT,
+        .openAlert(testEmailTemplateData.getAccountId(), GLOBAL_APP_ID, AlertType.EMAIL_NOT_SENT_ALERT,
             EmailSendingFailedAlert.builder().emailAlertData(errorMessage).build());
-    verify(mailer).send(mainConfiguration.getSmtpConfig(), Collections.emptyList(), systemEmailTemplateData);
+    verify(mailer).send(mainConfiguration.getSmtpConfig(), Collections.emptyList(), testEmailTemplateData);
   }
 
   @Test
