@@ -102,6 +102,25 @@ public class NexusArtifactStream extends ArtifactStream {
   }
 
   @Override
+  public boolean artifactSourceChanged(ArtifactStream artifactStream) {
+    boolean changed = super.artifactSourceChanged(artifactStream);
+    if (this.repositoryType.equals(RepositoryType.docker.name())) {
+      return changed || registryUrlChanged(((NexusArtifactStream) artifactStream).dockerRegistryUrl);
+    }
+    return changed;
+  }
+
+  private boolean registryUrlChanged(String dockerRegistryUrl) {
+    if (isEmpty(this.dockerRegistryUrl) && isEmpty(dockerRegistryUrl)) {
+      return false;
+    } else if ((isEmpty(this.dockerRegistryUrl) && isNotEmpty(dockerRegistryUrl))
+        || (isNotEmpty(this.dockerRegistryUrl) && isEmpty(dockerRegistryUrl))) {
+      return true;
+    }
+    return !this.dockerRegistryUrl.equals(dockerRegistryUrl);
+  }
+
+  @Override
   public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
     return ArtifactStreamAttributes.builder()
         .artifactStreamType(getArtifactStreamType())

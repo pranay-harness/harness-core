@@ -119,6 +119,10 @@ public abstract class ArtifactStream
 
   public void validateRequiredFields() {}
 
+  public boolean artifactSourceChanged(ArtifactStream artifactStream) {
+    return !this.sourceName.equals(artifactStream.getSourceName());
+  }
+
   @Override
   public Long obtainNextIteration(String fieldName) {
     return ArtifactStreamKeys.nextCleanupIteration.equals(fieldName) ? nextCleanupIteration : nextIteration;
