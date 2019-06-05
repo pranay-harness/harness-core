@@ -3,6 +3,7 @@ package software.wings.service.impl.splunk;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.common.Constants.URL_STRING;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -15,6 +16,7 @@ import com.splunk.ResultsReaderJson;
 import com.splunk.SSLSecurityProtocol;
 import com.splunk.Service;
 import com.splunk.ServiceArgs;
+import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -139,9 +141,8 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
     }
   }
 
-  @Override
-  public Service initSplunkService(SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    encryptionService.decrypt(splunkConfig, encryptedDataDetails);
+  @VisibleForTesting
+  Service initSplunkServiceWithToken(SplunkConfig splunkConfig) {
     final ServiceArgs loginArgs = new ServiceArgs();
     loginArgs.setUsername(splunkConfig.getUsername());
     loginArgs.setPassword(String.valueOf(splunkConfig.getPassword()));
@@ -164,6 +165,46 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       return splunkService;
     } catch (Exception ex) {
       throw new WingsException("Unable to connect to server : " + ExceptionUtils.getMessage(ex));
+    }
+  }
+
+  @VisibleForTesting
+  Service initSplunkServiceWithBasicAuth(SplunkConfig splunkConfig) {
+    URI uri;
+    try {
+      uri = new URI(splunkConfig.getSplunkUrl().trim());
+      final URL url = new URL(splunkConfig.getSplunkUrl().trim());
+
+      Service splunkService = new Service(url.getHost(), url.getPort(), uri.getScheme());
+      String credentials = splunkConfig.getUsername() + ":" + splunkConfig.getPassword();
+      String basicAuthHeader = Base64.encode(credentials.getBytes());
+      splunkService.setToken("Basic " + basicAuthHeader);
+
+      if (uri.getScheme().equals("https")) {
+        HttpService.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
+      }
+
+      splunkService.setConnectTimeout(HTTP_TIMEOUT);
+      splunkService.setReadTimeout(HTTP_TIMEOUT);
+
+      splunkService.getApplications();
+
+      return splunkService;
+    } catch (Exception ex2) {
+      throw new WingsException("Unable to connect to server : " + ExceptionUtils.getMessage(ex2));
+    }
+  }
+
+  @Override
+  public Service initSplunkService(SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    encryptionService.decrypt(splunkConfig, encryptedDataDetails);
+
+    try {
+      return initSplunkServiceWithToken(splunkConfig);
+
+    } catch (Exception ex1) {
+      logger.error("Token based splunk connection failed. Trying basic auth", ex1);
+      return initSplunkServiceWithBasicAuth(splunkConfig);
     }
   }
 

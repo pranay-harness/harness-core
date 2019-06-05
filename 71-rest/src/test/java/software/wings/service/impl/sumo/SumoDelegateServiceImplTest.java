@@ -17,6 +17,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import software.wings.WingsBaseTest;
 import software.wings.beans.SumoConfig;
 import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.service.intfc.security.EncryptionService;
@@ -29,7 +30,7 @@ import java.util.Collections;
  */
 @RunWith(MockitoJUnitRunner.class)
 @Slf4j
-public class SumoDelegateServiceImplTest {
+public class SumoDelegateServiceImplTest extends WingsBaseTest {
   @Mock SumoConfig sumoConfig;
 
   @Mock SumoLogicClient sumoLogicClient;
