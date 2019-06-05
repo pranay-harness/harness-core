@@ -3,7 +3,8 @@ FROM jenkins/jnlp-slave
 USER root
 
 RUN apt-get update && \
-    apt-get install -y make
+    apt-get install -y make && \
+    apt-get install -y protobuf-compiler
 
 ENV DOCKER_VERSION latest
 
