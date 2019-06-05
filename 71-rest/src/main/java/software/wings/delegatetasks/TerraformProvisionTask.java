@@ -528,8 +528,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             parsedContents = hclParser.parse(new String(tfContent, Charsets.UTF_8));
           } catch (IOException | HCLParserException e) {
             logger.error("HCL Parser Exception for file [" + file.getAbsolutePath() + "], ", e);
-            throw new WingsException(
-                ErrorCode.GENERAL_ERROR, "Invalid Terraform File [" + file.getAbsolutePath() + "] : " + e.getMessage());
+            throw new WingsException(ErrorCode.GENERAL_ERROR, WingsException.USER)
+                .addParam("message", "Invalid Terraform File [" + file.getAbsolutePath() + "] : " + e.getMessage());
           }
 
           LinkedHashMap<String, Object> terraform = (LinkedHashMap) parsedContents.get("terraform");
