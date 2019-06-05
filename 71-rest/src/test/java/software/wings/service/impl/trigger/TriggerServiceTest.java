@@ -1195,6 +1195,34 @@ public class TriggerServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void shouldTriggerExecutionPostPipelineCompletionForAllMatchedOnes() {
+    Artifact artifact = prepareArtifact(ARTIFACT_ID);
+
+    pipelineCondTrigger.setArtifactSelections(
+        asList(ArtifactSelection.builder().type(PIPELINE_SOURCE).serviceId(SERVICE_ID).build(),
+            ArtifactSelection.builder().serviceId(SERVICE_ID).type(LAST_DEPLOYED).pipelineId(PIPELINE_ID).build()));
+
+    triggerService.save(pipelineCondTrigger);
+
+    triggerService.save(Trigger.builder()
+                            .workflowId(PIPELINE_ID)
+                            .uuid(UUIDGenerator.generateUuid())
+                            .appId(APP_ID)
+                            .name(TRIGGER_NAME)
+                            .condition(PipelineTriggerCondition.builder().pipelineId(PIPELINE_ID).build())
+                            .build());
+
+    pipelineCompletionMocks(singletonList(artifact));
+
+    when(workflowExecutionService.obtainLastGoodDeployedArtifacts(APP_ID, PIPELINE_ID)).thenReturn(asList(artifact));
+
+    triggerService.triggerExecutionPostPipelineCompletionAsync(APP_ID, PIPELINE_ID);
+    verify(workflowExecutionService, times(2))
+        .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void shouldNotTriggerExecutionPostPipelineCompletion() {
     pipelineCompletionMocks(singletonList(artifact));
 
