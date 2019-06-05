@@ -78,6 +78,23 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Category(IntegrationTests.class)
+  public void testGetTimeseriesRecordsForWorkflowWithoutServerConfigId() {
+    DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(true);
+
+    WebTarget target = client.target(API_BASE + "/"
+        + "datadog" + LogAnalysisResource.TEST_NODE_DATA + "?accountId=" + accountId + "&serverConfigId=" + null);
+    Response restResponse =
+        getRequestBuilderWithAuthHeader(target).post(entity(fetchConfig, MediaType.APPLICATION_JSON));
+    String responseString = restResponse.readEntity(String.class);
+    JSONObject jsonResponseObject = new JSONObject(responseString);
+
+    JSONObject response = jsonResponseObject.getJSONObject("resource");
+    assertEquals("Request failed", restResponse.getStatus(), HttpStatus.SC_OK);
+    assertTrue("provider is not reachable", Boolean.valueOf(response.get("providerReachable").toString()));
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
   public void testGetTimeseriesRecordsForWorkflow() {
     DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(true);
 
@@ -100,6 +117,23 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
 
     WebTarget target = client.target(API_BASE + "/"
         + "datadog" + LogAnalysisResource.TEST_NODE_DATA + "?accountId=" + accountId + "&serverConfigId=" + settingId);
+    Response restResponse =
+        getRequestBuilderWithAuthHeader(target).post(entity(fetchConfig, MediaType.APPLICATION_JSON));
+    String responseString = restResponse.readEntity(String.class);
+    JSONObject jsonResponseObject = new JSONObject(responseString);
+
+    JSONObject response = jsonResponseObject.getJSONObject("resource");
+    assertEquals("Request failed", restResponse.getStatus(), HttpStatus.SC_OK);
+    assertTrue("provider is not reachable", Boolean.valueOf(response.get("providerReachable").toString()));
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public void testGetTimeseriesRecordsForServiceGuardWithoutServerConfigId() {
+    DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(false);
+
+    WebTarget target = client.target(API_BASE + "/"
+        + "datadog" + LogAnalysisResource.TEST_NODE_DATA + "?accountId=" + accountId + "&serverConfigId=" + null);
     Response restResponse =
         getRequestBuilderWithAuthHeader(target).post(entity(fetchConfig, MediaType.APPLICATION_JSON));
     String responseString = restResponse.readEntity(String.class);

@@ -1253,14 +1253,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   public VerificationNodeDataSetupResponse getMetricsWithDataForNode(
       String accountId, String serverConfigId, Object fetchConfig, StateType type) {
     try {
-      if (isEmpty(serverConfigId) || fetchConfig == null) {
-        throw new WingsException("Invalid Parameters passed while trying to get test data for APM");
-      }
-      SettingAttribute settingAttribute = settingsService.get(serverConfigId);
       APMValidateCollectorConfig apmValidateCollectorConfig;
       switch (type) {
         case DATA_DOG:
           DataDogSetupTestNodeData config = (DataDogSetupTestNodeData) fetchConfig;
+          SettingAttribute settingAttribute = settingsService.get(config.getSettingId());
           DatadogConfig datadogConfig = (DatadogConfig) settingAttribute.getValue();
           List<EncryptedDataDetail> encryptedDataDetails =
               secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
@@ -1315,6 +1312,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               .build();
 
         case APM_VERIFICATION:
+          if (isEmpty(serverConfigId) || fetchConfig == null) {
+            throw new WingsException("Invalid Parameters passed while trying to get test data for APM");
+          }
+          settingAttribute = settingsService.get(serverConfigId);
           APMFetchConfig apmFetchConfig = (APMFetchConfig) fetchConfig;
           APMVerificationConfig apmVerificationConfig = (APMVerificationConfig) settingAttribute.getValue();
           apmValidateCollectorConfig =
