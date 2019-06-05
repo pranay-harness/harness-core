@@ -41,6 +41,7 @@ import software.wings.beans.ServiceInstanceSelectionParams;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.common.Constants;
+import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -301,13 +302,13 @@ public abstract class NodeSelectState extends State {
     Map<String, String> invalidFieldMessages = new HashMap<>();
     if (specificHosts) {
       if (isEmpty(hostNames)) {
-        invalidFieldMessages.put(Constants.SELECT_NODE_NAME, "Hostnames must be specified");
+        invalidFieldMessages.put(WorkflowServiceHelper.SELECT_NODE_NAME, "Hostnames must be specified");
       }
     } else {
       if (instanceCount <= 0) {
-        invalidFieldMessages.put(Constants.SELECT_NODE_NAME, "Count or percent must be specified");
+        invalidFieldMessages.put(WorkflowServiceHelper.SELECT_NODE_NAME, "Count or percent must be specified");
       } else if (instanceUnitType == PERCENTAGE && instanceCount > 100) {
-        invalidFieldMessages.put(Constants.SELECT_NODE_NAME, "Percent may not be greater than 100");
+        invalidFieldMessages.put(WorkflowServiceHelper.SELECT_NODE_NAME, "Percent may not be greater than 100");
       }
     }
     return invalidFieldMessages;

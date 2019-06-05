@@ -41,6 +41,7 @@ import static software.wings.api.DeploymentType.PCF;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.APP_ID_KEY;
+import static software.wings.beans.CanaryWorkflowExecutionAdvisor.ROLLBACK_PROVISIONERS;
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
@@ -52,7 +53,6 @@ import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.common.Constants.K8S_CANARY_PHASE_NAME;
 import static software.wings.common.Constants.K8S_PRIMARY_PHASE_NAME;
-import static software.wings.common.Constants.ROLLBACK_PROVISIONERS;
 import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_DEPLOY;
@@ -672,13 +672,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private void addK8sEmptyPhaseStep(WorkflowPhase workflowPhase) {
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
-    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.DEPLOY).build());
+    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.DEPLOY).build());
   }
 
   private void addK8sEmptyRollbackPhaseStep(WorkflowPhase rollbackPhase) {
     List<PhaseStep> rollbackPhaseSteps = rollbackPhase.getPhaseSteps();
-    rollbackPhaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.DEPLOY)
-                               .withPhaseStepNameForRollback(Constants.DEPLOY)
+    rollbackPhaseSteps.add(aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.DEPLOY)
+                               .withPhaseStepNameForRollback(WorkflowServiceHelper.DEPLOY)
                                .withRollback(true)
                                .build());
   }
@@ -687,7 +687,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
 
     Map<String, Object> defaultSetupProperties = new HashMap<>();
-    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.DEPLOY)
+    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.DEPLOY)
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(K8S_DEPLOYMENT_ROLLING.name())
@@ -698,26 +698,26 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.VERIFY).build());
 
-    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.WRAP_UP).build());
   }
 
   private void addK8sRollingRollbackWorkflowPhaseSteps(WorkflowPhase rollbackPhase) {
     List<PhaseStep> rollbackPhaseSteps = rollbackPhase.getPhaseSteps();
 
-    rollbackPhaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.DEPLOY)
+    rollbackPhaseSteps.add(aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.DEPLOY)
                                .addStep(GraphNode.builder()
                                             .id(generateUuid())
                                             .type(K8S_DEPLOYMENT_ROLLING_ROLLBACK.name())
                                             .name(Constants.K8S_DEPLOYMENT_ROLLING_ROLLBAK)
                                             .rollback(true)
                                             .build())
-                               .withPhaseStepNameForRollback(Constants.DEPLOY)
+                               .withPhaseStepNameForRollback(WorkflowServiceHelper.DEPLOY)
                                .withStatusForRollback(ExecutionStatus.SUCCESS)
                                .withRollback(true)
                                .build());
 
-    rollbackPhaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.WRAP_UP)
-                               .withPhaseStepNameForRollback(Constants.WRAP_UP)
+    rollbackPhaseSteps.add(aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.WRAP_UP)
+                               .withPhaseStepNameForRollback(WorkflowServiceHelper.WRAP_UP)
                                .withRollback(true)
                                .build());
   }
@@ -734,7 +734,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
 
     Map<String, Object> defaultSetupProperties = new HashMap<>();
-    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.DEPLOY)
+    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.DEPLOY)
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(K8S_BLUE_GREEN_DEPLOY.name())
@@ -748,16 +748,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Map<String, Object> defaultRouteUpdateProperties = new HashMap<>();
     defaultRouteUpdateProperties.put("service1", primaryServiceNameExpression);
     defaultRouteUpdateProperties.put("service2", stageServiceNameExpression);
-    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.ROUTE_UPDATE)
+    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.ROUTE_UPDATE)
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(KUBERNETES_SWAP_SERVICE_SELECTORS.name())
-                                    .name(Constants.KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE)
+                                    .name(WorkflowServiceHelper.KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE)
                                     .properties(defaultRouteUpdateProperties)
                                     .build())
                        .build());
 
-    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.WRAP_UP).build());
 
     workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(workflowPhase);
     ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases().add(workflowPhase);
@@ -765,14 +765,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     WorkflowPhase rollbackPhase = createRollbackPhase(workflowPhase);
     List<PhaseStep> rollbackPhaseSteps = rollbackPhase.getPhaseSteps();
 
-    rollbackPhaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.ROUTE_UPDATE)
-                               .withPhaseStepNameForRollback(Constants.ROUTE_UPDATE)
+    rollbackPhaseSteps.add(aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.ROUTE_UPDATE)
+                               .withPhaseStepNameForRollback(WorkflowServiceHelper.ROUTE_UPDATE)
                                .withStatusForRollback(ExecutionStatus.SUCCESS)
                                .withRollback(true)
                                .build());
 
-    rollbackPhaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.WRAP_UP)
-                               .withPhaseStepNameForRollback(Constants.WRAP_UP)
+    rollbackPhaseSteps.add(aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.WRAP_UP)
+                               .withPhaseStepNameForRollback(WorkflowServiceHelper.WRAP_UP)
                                .withRollback(true)
                                .build());
 
@@ -784,7 +784,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private WorkflowPhase createRollbackPhase(WorkflowPhase workflowPhase) {
     return aWorkflowPhase()
-        .name(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+        .name(WorkflowServiceHelper.ROLLBACK_PREFIX + workflowPhase.getName())
         .rollback(true)
         .serviceId(workflowPhase.getServiceId())
         .computeProviderId(workflowPhase.getComputeProviderId())
@@ -826,7 +826,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
 
-    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.DEPLOY)
+    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.DEPLOY)
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(K8S_CANARY_DEPLOY.name())
@@ -841,7 +841,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     defaultCanaryDeleteProperties.put("resources", "${k8s.canaryWorkload}");
     defaultCanaryDeleteProperties.put("instanceUnitType", "COUNT");
 
-    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.WRAP_UP)
+    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.WRAP_UP)
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(K8S_DELETE.name())
@@ -854,14 +854,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private void addK8sCanaryRollbackWorkflowPhaseSteps(WorkflowPhase rollbackPhase) {
     List<PhaseStep> rollbackPhaseSteps = rollbackPhase.getPhaseSteps();
 
-    rollbackPhaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.DEPLOY)
-                               .withPhaseStepNameForRollback(Constants.DEPLOY)
+    rollbackPhaseSteps.add(aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.DEPLOY)
+                               .withPhaseStepNameForRollback(WorkflowServiceHelper.DEPLOY)
                                .withStatusForRollback(ExecutionStatus.SUCCESS)
                                .withRollback(true)
                                .build());
 
-    rollbackPhaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.WRAP_UP)
-                               .withPhaseStepNameForRollback(Constants.WRAP_UP)
+    rollbackPhaseSteps.add(aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.WRAP_UP)
+                               .withPhaseStepNameForRollback(WorkflowServiceHelper.WRAP_UP)
                                .withRollback(true)
                                .build());
   }
@@ -1181,7 +1181,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private void generateNewWorkflowPhaseStepsForArtifactCollection(WorkflowPhase workflowPhase) {
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
 
-    phaseSteps.add(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build());
+    phaseSteps.add(aPhaseStep(PREPARE_STEPS, WorkflowServiceHelper.PREPARE_STEPS).build());
 
     phaseSteps.add(aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
                        .addStep(GraphNode.builder()
@@ -1190,7 +1190,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                     .name(Constants.ARTIFACT_COLLECTION)
                                     .build())
                        .build());
-    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(WRAP_UP, WorkflowServiceHelper.WRAP_UP).build());
   }
 
   /**

@@ -31,28 +31,27 @@ import static software.wings.beans.PhaseStepType.START_SERVICE;
 import static software.wings.beans.PhaseStepType.STOP_SERVICE;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.common.Constants.AMI_SETUP_COMMAND_NAME;
-import static software.wings.common.Constants.AWS_CODE_DEPLOY;
-import static software.wings.common.Constants.AWS_LAMBDA;
 import static software.wings.common.Constants.DE_PROVISION_CLOUD_FORMATION;
-import static software.wings.common.Constants.ECS_ROUTE53_DNS_WEIGHTS;
-import static software.wings.common.Constants.ECS_SWAP_TARGET_GROUPS;
-import static software.wings.common.Constants.ECS_SWAP_TARGET_GROUPS_ROLLBACK;
 import static software.wings.common.Constants.K8S_DEPLOYMENT_ROLLING_ROLLBAK;
-import static software.wings.common.Constants.KUBERNETES_SERVICE_SETUP;
-import static software.wings.common.Constants.PCF_UNMAP_ROUT;
 import static software.wings.common.Constants.PROVISION_CLOUD_FORMATION;
 import static software.wings.common.Constants.PROVISION_SHELL_SCRIPT;
-import static software.wings.common.Constants.ROLLBACK_AUTOSCALING_GROUP_ROUTE;
-import static software.wings.common.Constants.ROLLBACK_AWS_AMI_CLUSTER;
-import static software.wings.common.Constants.ROLLBACK_AWS_CODE_DEPLOY;
-import static software.wings.common.Constants.ROLLBACK_AWS_LAMBDA;
 import static software.wings.common.Constants.ROLLBACK_CLOUD_FORMATION;
-import static software.wings.common.Constants.ROLLBACK_ECS_ROUTE53_DNS_WEIGHTS;
 import static software.wings.common.Constants.ROLLBACK_ECS_SETUP;
-import static software.wings.common.Constants.ROLLBACK_KUBERNETES_SETUP;
 import static software.wings.common.Constants.ROLLBACK_TERRAFORM_NAME;
-import static software.wings.common.Constants.UPGRADE_AUTOSCALING_GROUP;
-import static software.wings.common.Constants.UPGRADE_AUTOSCALING_GROUP_ROUTE;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.AWS_CODE_DEPLOY;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.AWS_LAMBDA;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.ECS_ROUTE53_DNS_WEIGHTS;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.ECS_SWAP_TARGET_GROUPS;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.ECS_SWAP_TARGET_GROUPS_ROLLBACK;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.KUBERNETES_SERVICE_SETUP;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_AUTOSCALING_GROUP_ROUTE;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_AWS_AMI_CLUSTER;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_AWS_CODE_DEPLOY;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_AWS_LAMBDA;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_ECS_ROUTE53_DNS_WEIGHTS;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_KUBERNETES_SETUP;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.UPGRADE_AUTOSCALING_GROUP;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.UPGRADE_AUTOSCALING_GROUP_ROUTE;
 import static software.wings.sm.StateTypeScope.COMMON;
 import static software.wings.sm.StateTypeScope.NONE;
 import static software.wings.sm.StateTypeScope.ORCHESTRATION_STENCILS;
@@ -85,6 +84,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhaseStepType;
 import software.wings.common.Constants;
+import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.sm.states.APMVerificationState;
 import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.ApprovalState;
@@ -442,20 +442,21 @@ public enum StateType implements StateTypeDescriptor {
       Lists.newArrayList(InfrastructureMappingType.AWS_AMI), asList(AMI_DEPLOY_AUTOSCALING_GROUP),
       ORCHESTRATION_STENCILS),
 
-  ECS_SERVICE_SETUP(EcsServiceSetup.class, CLOUD, Constants.ECS_SERVICE_SETUP, Lists.newArrayList(AWS_ECS),
+  ECS_SERVICE_SETUP(EcsServiceSetup.class, CLOUD, WorkflowServiceHelper.ECS_SERVICE_SETUP, Lists.newArrayList(AWS_ECS),
       asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
   ECS_SERVICE_SETUP_ROLLBACK(EcsSetupRollback.class, CLOUD, ROLLBACK_ECS_SETUP, Lists.newArrayList(AWS_ECS),
       asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
-  ECS_DAEMON_SERVICE_SETUP(EcsDaemonServiceSetup.class, CLOUD, Constants.ECS_DAEMON_SERVICE_SETUP,
+  ECS_DAEMON_SERVICE_SETUP(EcsDaemonServiceSetup.class, CLOUD, WorkflowServiceHelper.ECS_DAEMON_SERVICE_SETUP,
       Lists.newArrayList(AWS_ECS), asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
-  ECS_BG_SERVICE_SETUP(EcsBlueGreenServiceSetup.class, CLOUD, Constants.ECS_BG_SERVICE_SETUP_ELB,
+  ECS_BG_SERVICE_SETUP(EcsBlueGreenServiceSetup.class, CLOUD, WorkflowServiceHelper.ECS_BG_SERVICE_SETUP_ELB,
       Lists.newArrayList(AWS_ECS), asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
-  ECS_BG_SERVICE_SETUP_ROUTE53(EcsBlueGreenServiceSetupRoute53DNS.class, CLOUD, Constants.ECS_BG_SERVICE_SETUP_ROUTE_53,
-      Lists.newArrayList(AWS_ECS), asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
+  ECS_BG_SERVICE_SETUP_ROUTE53(EcsBlueGreenServiceSetupRoute53DNS.class, CLOUD,
+      WorkflowServiceHelper.ECS_BG_SERVICE_SETUP_ROUTE_53, Lists.newArrayList(AWS_ECS), asList(CONTAINER_SETUP),
+      ORCHESTRATION_STENCILS),
 
   ECS_SERVICE_DEPLOY(EcsServiceDeploy.class, COMMANDS, "ECS Upgrade Containers", Lists.newArrayList(AWS_ECS),
       asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
@@ -508,30 +509,30 @@ public enum StateType implements StateTypeDescriptor {
       Lists.newArrayList(InfrastructureMappingType.GCP_KUBERNETES, InfrastructureMappingType.AZURE_KUBERNETES),
       asList(CLUSTER_SETUP), ORCHESTRATION_STENCILS),
 
-  HELM_DEPLOY(HelmDeployState.class, COMMANDS, Constants.HELM_DEPLOY,
+  HELM_DEPLOY(HelmDeployState.class, COMMANDS, WorkflowServiceHelper.HELM_DEPLOY,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.AZURE_KUBERNETES,
           InfrastructureMappingType.GCP_KUBERNETES),
       asList(PhaseStepType.HELM_DEPLOY), ORCHESTRATION_STENCILS),
-  HELM_ROLLBACK(HelmRollbackState.class, COMMANDS, Constants.HELM_ROLLBACK,
+  HELM_ROLLBACK(HelmRollbackState.class, COMMANDS, WorkflowServiceHelper.HELM_ROLLBACK,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.AZURE_KUBERNETES,
           InfrastructureMappingType.GCP_KUBERNETES),
       asList(PhaseStepType.HELM_DEPLOY), ORCHESTRATION_STENCILS),
 
-  PCF_SETUP(PcfSetupState.class, COMMANDS, Constants.PCF_SETUP, Lists.newArrayList(InfrastructureMappingType.PCF_PCF),
-      asList(PhaseStepType.PCF_SETUP), ORCHESTRATION_STENCILS),
+  PCF_SETUP(PcfSetupState.class, COMMANDS, WorkflowServiceHelper.PCF_SETUP,
+      Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_SETUP), ORCHESTRATION_STENCILS),
 
-  PCF_RESIZE(PcfDeployState.class, COMMANDS, Constants.PCF_RESIZE,
+  PCF_RESIZE(PcfDeployState.class, COMMANDS, WorkflowServiceHelper.PCF_RESIZE,
       Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
 
-  PCF_ROLLBACK(PcfRollbackState.class, COMMANDS, Constants.PCF_ROLLBACK,
+  PCF_ROLLBACK(PcfRollbackState.class, COMMANDS, WorkflowServiceHelper.PCF_ROLLBACK,
       Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
 
   PCF_MAP_ROUTE(MapRouteState.class, FLOW_CONTROLS, Constants.PCF_MAP_ROUTE,
       Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
 
-  PCF_UNMAP_ROUTE(UnmapRouteState.class, FLOW_CONTROLS, PCF_UNMAP_ROUT,
+  PCF_UNMAP_ROUTE(UnmapRouteState.class, FLOW_CONTROLS, Constants.PCF_UNMAP_ROUTE,
       Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
-  PCF_BG_MAP_ROUTE(PcfSwitchBlueGreenRoutes.class, FLOW_CONTROLS, Constants.PCF_BG_MAP_ROUTE,
+  PCF_BG_MAP_ROUTE(PcfSwitchBlueGreenRoutes.class, FLOW_CONTROLS, WorkflowServiceHelper.PCF_BG_MAP_ROUTE,
       Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
 
   TERRAFORM_PROVISION(ApplyTerraformProvisionState.class, PROVISIONERS, 0, "Terraform Provision",

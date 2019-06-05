@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.w3c.dom.Document;
-import software.wings.common.Constants;
 import software.wings.sm.ContextElement;
 import software.wings.sm.StateExecutionData;
 
@@ -110,7 +109,7 @@ public class HttpStateExecutionData extends StateExecutionData implements Respon
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
     return setHttpExecutionDetails(
-        executionDetails, StringUtils.abbreviate(httpResponseBody, Constants.SUMMARY_PAYLOAD_LIMIT));
+        executionDetails, StringUtils.abbreviate(httpResponseBody, StateExecutionData.SUMMARY_PAYLOAD_LIMIT));
   }
 
   @Override

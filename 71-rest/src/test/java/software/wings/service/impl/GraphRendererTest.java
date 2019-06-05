@@ -37,7 +37,7 @@ import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphNode;
-import software.wings.common.Constants;
+import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.sm.StateExecutionInstance;
 
 import java.util.List;
@@ -143,7 +143,7 @@ public class GraphRendererTest extends WingsBaseTest {
 
   private GraphNode getInfrastructureNode() {
     final StateExecutionInstance infrastructure = aStateExecutionInstance()
-                                                      .displayName(Constants.INFRASTRUCTURE_NODE_NAME)
+                                                      .displayName(WorkflowServiceHelper.INFRASTRUCTURE_NODE_NAME)
                                                       .uuid("infrastructure")
                                                       .stateType(PHASE_STEP.name())
                                                       .contextTransition(true)

@@ -20,8 +20,8 @@ import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
-import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.WorkflowService;
 
 import java.util.List;
@@ -91,9 +91,9 @@ public class AddVerifyToRollbackWorkflows implements Migration {
       }
 
       rollbackPhase.getPhaseSteps().add(index,
-          aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+          aPhaseStep(VERIFY_SERVICE, WorkflowServiceHelper.VERIFY_SERVICE)
               .withRollback(true)
-              .withPhaseStepNameForRollback(Constants.VERIFY_SERVICE)
+              .withPhaseStepNameForRollback(WorkflowServiceHelper.VERIFY_SERVICE)
               .withStatusForRollback(ExecutionStatus.SUCCESS)
               .build());
 

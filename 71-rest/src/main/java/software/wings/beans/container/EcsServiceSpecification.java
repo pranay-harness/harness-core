@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.DeploymentSpecification;
-import software.wings.common.Constants;
 
 import javax.validation.constraints.NotNull;
 
@@ -19,6 +18,7 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "EcsServiceSpecificationKeys")
 public class EcsServiceSpecification extends DeploymentSpecification {
+  public static final String ECS_REPLICA_SCHEDULING_STRATEGY = "REPLICA";
   @NotNull private String serviceId;
   private String serviceSpecJson;
   private String schedulingStrategy;
@@ -51,7 +51,7 @@ public class EcsServiceSpecification extends DeploymentSpecification {
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends DeploymentSpecification.Yaml {
     private String serviceSpecJson;
-    private String schedulingStrategy = Constants.ECS_REPLICA_SCHEDULING_STRATEGY;
+    private String schedulingStrategy = ECS_REPLICA_SCHEDULING_STRATEGY;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String serviceName, String manifestYaml, String serviceSpecJson,

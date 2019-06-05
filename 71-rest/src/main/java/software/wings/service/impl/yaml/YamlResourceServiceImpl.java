@@ -47,7 +47,6 @@ import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
-import software.wings.common.Constants;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.setting.SettingValueYamlHandler;
 import software.wings.service.intfc.AppService;
@@ -421,8 +420,9 @@ public class YamlResourceServiceImpl implements YamlResourceService {
         serviceResourceService.getEcsServiceSpecificationById(appId, ecsServiceSpecificationId);
     String yamlFileName = YamlConstants.ECS_SERVICE_SPEC_YAML_FILE_NAME;
 
-    BaseYaml yaml = yamlHandlerFactory.getYamlHandler(YamlType.DEPLOYMENT_SPECIFICATION, Constants.ECS_SERVICE_SPEC)
-                        .toYaml(ecsServiceSpecification, appId);
+    BaseYaml yaml =
+        yamlHandlerFactory.getYamlHandler(YamlType.DEPLOYMENT_SPECIFICATION, YamlHandlerFactory.ECS_SERVICE_SPEC)
+            .toYaml(ecsServiceSpecification, appId);
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, ecsServiceSpecification.getUuid(), accountId, yaml, yamlFileName + YAML_EXTENSION);
   }

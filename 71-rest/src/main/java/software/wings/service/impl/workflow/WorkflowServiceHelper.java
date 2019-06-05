@@ -33,35 +33,12 @@ import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.beans.PhaseStepType.DEPLOY_AWSCODEDEPLOY;
 import static software.wings.beans.PhaseStepType.DEPLOY_AWS_LAMBDA;
-import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
-import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.ECS_UPDATE_LISTENER_BG;
 import static software.wings.beans.PhaseStepType.ECS_UPDATE_ROUTE_53_DNS_WEIGHT;
-import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
 import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
-import static software.wings.beans.PhaseStepType.PCF_RESIZE;
-import static software.wings.beans.PhaseStepType.PCF_SETUP;
 import static software.wings.beans.PhaseStepType.PCF_SWICH_ROUTES;
-import static software.wings.beans.PhaseStepType.PREPARE_STEPS;
-import static software.wings.beans.PhaseStepType.ROUTE_UPDATE;
-import static software.wings.beans.PhaseStepType.STOP_SERVICE;
-import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
-import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
-import static software.wings.common.Constants.CHANGE_ROUTE53_DNS_WEIGHTS;
-import static software.wings.common.Constants.ECS_DAEMON_SCHEDULING_STRATEGY;
-import static software.wings.common.Constants.ECS_ROUTE53_DNS_WEIGHTS;
-import static software.wings.common.Constants.ECS_SWAP_TARGET_GROUPS;
-import static software.wings.common.Constants.ECS_SWAP_TARGET_GROUPS_ROLLBACK;
-import static software.wings.common.Constants.PRIMARY_SERVICE_NAME_EXPRESSION;
-import static software.wings.common.Constants.ROLLBACK_AUTOSCALING_GROUP_ROUTE;
-import static software.wings.common.Constants.ROLLBACK_ECS_ROUTE53_DNS_WEIGHTS;
-import static software.wings.common.Constants.ROLLBACK_SERVICE;
-import static software.wings.common.Constants.STAGE_SERVICE_NAME_EXPRESSION;
-import static software.wings.common.Constants.SWAP_AUTOSCALING_GROUP_ROUTE;
-import static software.wings.common.Constants.UPGRADE_AUTOSCALING_GROUP_ROUTE;
-import static software.wings.common.Constants.VERIFY_STAGING;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.sm.StateType.ARTIFACT_CHECK;
 import static software.wings.sm.StateType.AWS_AMI_ROLLBACK_SWITCH_ROUTES;
@@ -78,24 +55,18 @@ import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
 import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP;
 import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP_ROUTE53;
-import static software.wings.sm.StateType.ECS_DAEMON_SERVICE_SETUP;
 import static software.wings.sm.StateType.ECS_LISTENER_UPDATE;
 import static software.wings.sm.StateType.ECS_ROUTE53_DNS_WEIGHT_UPDATE;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.ECS_SERVICE_ROLLBACK;
-import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP_ROLLBACK;
 import static software.wings.sm.StateType.ELASTIC_LOAD_BALANCER;
 import static software.wings.sm.StateType.GCP_CLUSTER_SETUP;
-import static software.wings.sm.StateType.HELM_DEPLOY;
-import static software.wings.sm.StateType.HELM_ROLLBACK;
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY_ROLLBACK;
 import static software.wings.sm.StateType.KUBERNETES_SETUP;
 import static software.wings.sm.StateType.KUBERNETES_SETUP_ROLLBACK;
 import static software.wings.sm.StateType.KUBERNETES_SWAP_SERVICE_SELECTORS;
-import static software.wings.sm.StateType.PCF_BG_MAP_ROUTE;
-import static software.wings.sm.StateType.PCF_ROLLBACK;
 import static software.wings.sm.StateType.ROLLING_NODE_SELECT;
 import static software.wings.sm.states.ElasticLoadBalancerState.Operation.Disable;
 import static software.wings.sm.states.ElasticLoadBalancerState.Operation.Enable;
@@ -140,7 +111,6 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.EcsServiceSpecification;
-import software.wings.common.Constants;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -166,7 +136,63 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class WorkflowServiceHelper {
-  static final String RUNTIME = "RUNTIME";
+  public static final String RUNTIME = "RUNTIME";
+  public static final String DISABLE_SERVICE = "Disable Service";
+  public static final String ENABLE_SERVICE = "Enable Service";
+  public static final String DEPLOY_SERVICE = "Deploy Service";
+  public static final String ROLLBACK_SERVICE = "Rollback Service";
+  public static final String STOP_SERVICE = "Stop Service";
+  public static final String VERIFY_SERVICE = "Verify Service";
+  public static final String VERIFY_STAGING = "Verify Staging";
+  public static final String DEPLOY_CONTAINERS = "Deploy Containers";
+  public static final String SETUP_CONTAINER = "Set up Container";
+  public static final String SETUP_CLUSTER = "Setup Cluster";
+  public static final String ECS_SERVICE_SETUP = "ECS Service Setup";
+  public static final String ECS_DAEMON_SERVICE_SETUP = "ECS Daemon Service Setup";
+  public static final String ECS_BG_SERVICE_SETUP_ELB = "Setup Load Balancer";
+  public static final String ECS_BG_SERVICE_SETUP_ROUTE_53 = "Setup Route 53";
+  public static final String ECS_DAEMON_SCHEDULING_STRATEGY = "DAEMON";
+  public static final String CHANGE_ROUTE53_DNS_WEIGHTS = "Change Route 53 Weights";
+  public static final String ECS_ROUTE53_DNS_WEIGHTS = "Swap Route 53 DNS";
+  public static final String ECS_SWAP_TARGET_GROUPS = "Swap Target Groups";
+  public static final String ECS_SWAP_TARGET_GROUPS_ROLLBACK = "Rollback Swap Target Groups";
+  public static final String PRIMARY_SERVICE_NAME_EXPRESSION = "${PRIMARY_SERVICE_NAME}";
+  public static final String ROLLBACK_AUTOSCALING_GROUP_ROUTE = "Rollback AutoScaling Group Route";
+  public static final String ROLLBACK_ECS_ROUTE53_DNS_WEIGHTS = "Rollback Route 53 Weights";
+  public static final String STAGE_SERVICE_NAME_EXPRESSION = "${STAGE_SERVICE_NAME}";
+  public static final String SWAP_AUTOSCALING_GROUP_ROUTE = "Swap Routes";
+  public static final String UPGRADE_AUTOSCALING_GROUP_ROUTE = "Switch AutoScaling Group Route";
+  public static final String AWS_CODE_DEPLOY = "AWS CodeDeploy";
+  public static final String UPGRADE_AUTOSCALING_GROUP = "Upgrade AutoScaling Group";
+  public static final String WRAP_UP = "Wrap Up";
+  public static final String PREPARE_STEPS = "Prepare Steps";
+  public static final String UPGRADE_CONTAINERS = "Upgrade Containers";
+  public static final String AWS_LAMBDA = "AWS Lambda";
+  public static final String ROLLBACK_PREFIX = "Rollback ";
+  public static final String PCF_BG_MAP_ROUTE = "Update Route";
+  public static final String PCF_BG_SWAP_ROUTE = "Swap Routes";
+  public static final String DEPLOY = "Deploy";
+  public static final String PCF_ROLLBACK = "App Rollback";
+  public static final String HELM_ROLLBACK = "Helm Rollback";
+  public static final String ROLLBACK_AWS_AMI_CLUSTER = "Rollback AutoScaling Group";
+  public static final String PCF_RESIZE = "App Resize";
+  public static final String HELM_DEPLOY = "Helm Deploy";
+  public static final String KUBERNETES_SERVICE_SETUP = "Kubernetes Service Setup";
+  public static final String INFRA_TEMP_ROUTE_PCF = "infra.pcf.tempRoute";
+  public static final String SETUP = "Setup";
+  public static final String PCF_SETUP = "App Setup";
+  public static final String KUBERNETES_SERVICE_SETUP_BLUEGREEN = "Blue/Green Service Setup";
+  public static final String INFRA_ROUTE_PCF = "infra.pcf.route";
+  public static final String VERIFY_STAGE_SERVICE = "Verify Stage Service";
+  public static final String ROUTE_UPDATE = "Route Update";
+  public static final String KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE = "Swap Primary with Stage";
+  public static final String INFRASTRUCTURE_NODE_NAME = "Prepare Infra";
+  public static final String SELECT_NODE_NAME = "Select Nodes";
+  public static final String ROLLBACK_AWS_LAMBDA = "Rollback AWS Lambda";
+  public static final String ROLLBACK_CONTAINERS = "Rollback Containers";
+  public static final String ROLLBACK_AWS_CODE_DEPLOY = "Rollback AWS CodeDeploy";
+  public static final String ROLLBACK_KUBERNETES_SETUP = "Rollback Kubernetes Setup";
+
   private static final String SETUP_AUTOSCALING_GROUP = "Setup AutoScaling Group";
   private static final String MIN_REPLICAS = "\\$\\{MIN_REPLICAS}";
   private static final String MAX_REPLICAS = "\\$\\{MAX_REPLICAS}";
@@ -410,16 +436,17 @@ public class WorkflowServiceHelper {
                            .build());
       }
     }
-    phaseSteps.add(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.DEPLOY_SERVICE)
+    phaseSteps.add(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, DEPLOY_SERVICE)
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(AWS_AMI_SERVICE_DEPLOY.name())
-                                    .name(Constants.UPGRADE_AUTOSCALING_GROUP)
+                                    .name(UPGRADE_AUTOSCALING_GROUP)
                                     .build())
                        .build());
 
-    phaseSteps.add(
-        aPhaseStep(VERIFY_SERVICE, VERIFY_STAGING).addAllSteps(commandNodes(commandMap, CommandType.VERIFY)).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_STAGING)
+                       .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                       .build());
 
     Map<String, Object> defaultDataSwitchRoutes = newHashMap();
     defaultDataSwitchRoutes.put("downsizeOldAsg", true);
@@ -432,7 +459,7 @@ public class WorkflowServiceHelper {
                                     .build())
                        .build());
 
-    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
   }
 
   public void generateNewWorkflowPhaseStepsForAWSAmi(
@@ -459,19 +486,19 @@ public class WorkflowServiceHelper {
                            .build());
       }
     }
-    phaseSteps.add(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.DEPLOY_SERVICE)
+    phaseSteps.add(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, DEPLOY_SERVICE)
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(AWS_AMI_SERVICE_DEPLOY.name())
-                                    .name(Constants.UPGRADE_AUTOSCALING_GROUP)
+                                    .name(UPGRADE_AUTOSCALING_GROUP)
                                     .build())
                        .build());
 
-    phaseSteps.add(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
                        .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                        .build());
 
-    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
   }
 
   public void generateNewWorkflowPhaseStepsForAWSLambda(String appId, String envId, WorkflowPhase workflowPhase) {
@@ -480,19 +507,18 @@ public class WorkflowServiceHelper {
 
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
 
-    phaseSteps.add(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.PREPARE_STEPS, PREPARE_STEPS).build());
 
     phaseSteps.add(
-        aPhaseStep(DEPLOY_AWS_LAMBDA, Constants.DEPLOY_SERVICE)
-            .addStep(
-                GraphNode.builder().id(generateUuid()).type(AWS_LAMBDA_STATE.name()).name(Constants.AWS_LAMBDA).build())
+        aPhaseStep(DEPLOY_AWS_LAMBDA, DEPLOY_SERVICE)
+            .addStep(GraphNode.builder().id(generateUuid()).type(AWS_LAMBDA_STATE.name()).name(AWS_LAMBDA).build())
             .build());
 
-    phaseSteps.add(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
                        .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                        .build());
 
-    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
   }
 
   public void generateNewWorkflowPhaseStepsForAWSCodeDeploy(String appId, WorkflowPhase workflowPhase) {
@@ -501,11 +527,11 @@ public class WorkflowServiceHelper {
 
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
 
-    phaseSteps.add(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.PREPARE_STEPS, PREPARE_STEPS).build());
 
     Map<String, String> stateDefaults = getStateDefaults(appId, service.getUuid(), AWS_CODEDEPLOY_STATE);
     GraphNodeBuilder node =
-        GraphNode.builder().id(generateUuid()).type(AWS_CODEDEPLOY_STATE.name()).name(Constants.AWS_CODE_DEPLOY);
+        GraphNode.builder().id(generateUuid()).type(AWS_CODEDEPLOY_STATE.name()).name(AWS_CODE_DEPLOY);
 
     if (isNotEmpty(stateDefaults)) {
       Map<String, Object> properties = new HashMap<>();
@@ -520,13 +546,13 @@ public class WorkflowServiceHelper {
       }
       node.properties(properties);
     }
-    phaseSteps.add(aPhaseStep(DEPLOY_AWSCODEDEPLOY, Constants.DEPLOY_SERVICE).addStep(node.build()).build());
+    phaseSteps.add(aPhaseStep(DEPLOY_AWSCODEDEPLOY, DEPLOY_SERVICE).addStep(node.build()).build());
 
-    phaseSteps.add(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
                        .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                        .build());
 
-    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
   }
 
   public Map<String, String> getStateDefaults(String appId, String serviceId, StateType stateType) {
@@ -555,39 +581,39 @@ public class WorkflowServiceHelper {
     boolean isDaemonEcsWorkflow = isDaemonSchedulingStrategy(appId, workflowPhase, orchestrationWorkflowType);
     if (serviceSetupRequired) {
       if (isDaemonEcsWorkflow) {
-        phaseSteps.add(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+        phaseSteps.add(aPhaseStep(CONTAINER_SETUP, SETUP_CONTAINER)
                            .addStep(GraphNode.builder()
                                         .id(generateUuid())
-                                        .type(ECS_DAEMON_SERVICE_SETUP.name())
-                                        .name(Constants.ECS_DAEMON_SERVICE_SETUP)
+                                        .type(StateType.ECS_DAEMON_SERVICE_SETUP.name())
+                                        .name(ECS_DAEMON_SERVICE_SETUP)
                                         .build())
                            .build());
       } else {
-        phaseSteps.add(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+        phaseSteps.add(aPhaseStep(CONTAINER_SETUP, SETUP_CONTAINER)
                            .addStep(GraphNode.builder()
                                         .id(generateUuid())
-                                        .type(ECS_SERVICE_SETUP.name())
-                                        .name(Constants.ECS_SERVICE_SETUP)
+                                        .type(StateType.ECS_SERVICE_SETUP.name())
+                                        .name(ECS_SERVICE_SETUP)
                                         .build())
                            .build());
       }
     }
 
     if (!isDaemonEcsWorkflow) {
-      phaseSteps.add(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+      phaseSteps.add(aPhaseStep(CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                          .addStep(GraphNode.builder()
                                       .id(generateUuid())
                                       .type(ECS_SERVICE_DEPLOY.name())
-                                      .name(Constants.UPGRADE_CONTAINERS)
+                                      .name(UPGRADE_CONTAINERS)
                                       .build())
                          .build());
     }
 
-    phaseSteps.add(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
                        .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                        .build());
 
-    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
   }
 
   private Map<String, Object> getDefaultDeployPropertyMapForEcsBG() {
@@ -601,15 +627,15 @@ public class WorkflowServiceHelper {
 
   private void addDeployAndVerifyPhaseStepForEcsBG(
       List<PhaseStep> phaseSteps, Map<CommandType, List<Command>> commandMap) {
-    phaseSteps.add(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+    phaseSteps.add(aPhaseStep(CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(ECS_SERVICE_DEPLOY.name())
-                                    .name(Constants.UPGRADE_CONTAINERS)
+                                    .name(UPGRADE_CONTAINERS)
                                     .properties(getDefaultDeployPropertyMapForEcsBG())
                                     .build())
                        .build());
-    phaseSteps.add(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
                        .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                        .build());
   }
@@ -623,11 +649,11 @@ public class WorkflowServiceHelper {
     if (serviceSetupRequired) {
       Map<String, Object> setupProperties = newHashMap();
       setupProperties.put("resizeStrategy", "RESIZE_NEW_FIRST");
-      phaseSteps.add(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+      phaseSteps.add(aPhaseStep(CONTAINER_SETUP, SETUP_CONTAINER)
                          .addStep(GraphNode.builder()
                                       .id(generateUuid())
                                       .type(ECS_BG_SERVICE_SETUP_ROUTE53.name())
-                                      .name(Constants.ECS_BG_SERVICE_SETUP_ROUTE_53)
+                                      .name(ECS_BG_SERVICE_SETUP_ROUTE_53)
                                       .properties(setupProperties)
                                       .build())
                          .build());
@@ -649,7 +675,7 @@ public class WorkflowServiceHelper {
                                     .build())
                        .build());
 
-    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
   }
 
   public void generateNewWorkflowPhaseStepsForECSBlueGreen(
@@ -664,11 +690,11 @@ public class WorkflowServiceHelper {
       defaultSetupProperties.put("resizeStrategy", "RESIZE_NEW_FIRST");
       defaultSetupProperties.put("useLoadBalancer", true);
 
-      phaseSteps.add(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+      phaseSteps.add(aPhaseStep(CONTAINER_SETUP, SETUP_CONTAINER)
                          .addStep(GraphNode.builder()
                                       .id(generateUuid())
                                       .type(ECS_BG_SERVICE_SETUP.name())
-                                      .name(Constants.ECS_BG_SERVICE_SETUP_ELB)
+                                      .name(ECS_BG_SERVICE_SETUP_ELB)
                                       .properties(defaultSetupProperties)
                                       .build())
                          .build());
@@ -687,7 +713,7 @@ public class WorkflowServiceHelper {
                                     .build())
                        .build());
 
-    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
   }
 
   boolean isDaemonSchedulingStrategy(
@@ -717,7 +743,7 @@ public class WorkflowServiceHelper {
 
   private WorkflowPhaseBuilder rollbackWorkflow(WorkflowPhase workflowPhase) {
     return aWorkflowPhase()
-        .name(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+        .name(ROLLBACK_PREFIX + workflowPhase.getName())
         .deploymentType(workflowPhase.getDeploymentType())
         .rollback(true)
         .phaseNameForRollback(workflowPhase.getName())
@@ -738,38 +764,38 @@ public class WorkflowServiceHelper {
     defaultRouteUpdateProperties.put("service2", STAGE_SERVICE_NAME_EXPRESSION);
 
     return rollbackWorkflow(workflowPhase)
-        .phaseSteps(asList(aPhaseStep(PCF_SWICH_ROUTES, Constants.PCF_BG_MAP_ROUTE)
+        .phaseSteps(asList(aPhaseStep(PCF_SWICH_ROUTES, PCF_BG_MAP_ROUTE)
                                .addStep(GraphNode.builder()
                                             .id(generateUuid())
-                                            .type(PCF_BG_MAP_ROUTE.name())
-                                            .name(Constants.PCF_BG_SWAP_ROUTE)
+                                            .type(StateType.PCF_BG_MAP_ROUTE.name())
+                                            .name(PCF_BG_SWAP_ROUTE)
                                             .properties(defaultRouteUpdateProperties)
                                             .rollback(true)
                                             .build())
-                               .withPhaseStepNameForRollback(Constants.PCF_BG_MAP_ROUTE)
+                               .withPhaseStepNameForRollback(PCF_BG_MAP_ROUTE)
                                .withStatusForRollback(SUCCESS)
                                .withRollback(true)
                                .build(),
 
             // When we rolling back the verification steps
             // the same criteria to run if deployment is needed should be used
-            aPhaseStep(PhaseStepType.PCF_RESIZE, Constants.DEPLOY)
+            aPhaseStep(PhaseStepType.PCF_RESIZE, DEPLOY)
                 .addStep(GraphNode.builder()
                              .id(generateUuid())
-                             .type(PCF_ROLLBACK.name())
-                             .name(Constants.PCF_ROLLBACK)
+                             .type(StateType.PCF_ROLLBACK.name())
+                             .name(PCF_ROLLBACK)
                              .rollback(true)
                              .build())
-                .withPhaseStepNameForRollback(Constants.DEPLOY)
+                .withPhaseStepNameForRollback(DEPLOY)
                 .withStatusForRollback(SUCCESS)
                 .withRollback(true)
                 .build(),
-            aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                .withPhaseStepNameForRollback(Constants.PCF_RESIZE)
+            aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
+                .withPhaseStepNameForRollback(PCF_RESIZE)
                 .withStatusForRollback(SUCCESS)
                 .withRollback(true)
                 .build(),
-            aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build()))
+            aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).withRollback(true).build()))
         .build();
   }
 
@@ -789,13 +815,13 @@ public class WorkflowServiceHelper {
       Map<String, Object> defaultSetupProperties = new HashMap<>();
       defaultSetupProperties.put("blueGreen", true);
       defaultSetupProperties.put("resizeStrategy", "RESIZE_NEW_FIRST");
-      defaultSetupProperties.put("route", "${" + Constants.INFRA_TEMP_ROUTE_PCF + "}");
+      defaultSetupProperties.put("route", "${" + INFRA_TEMP_ROUTE_PCF + "}");
 
-      phaseSteps.add(aPhaseStep(PCF_SETUP, Constants.SETUP)
+      phaseSteps.add(aPhaseStep(PhaseStepType.PCF_SETUP, SETUP)
                          .addStep(GraphNode.builder()
                                       .id(generateUuid())
-                                      .type(PCF_SETUP.name())
-                                      .name(Constants.PCF_SETUP)
+                                      .type(StateType.PCF_SETUP.name())
+                                      .name(PCF_SETUP)
                                       .properties(defaultSetupProperties)
                                       .build())
                          .build());
@@ -808,33 +834,34 @@ public class WorkflowServiceHelper {
     defaultUpgradeStageContainerProperties.put("downsizeInstanceUnitType", "PERCENTAGE");
     defaultUpgradeStageContainerProperties.put("downsizeInstanceCount", 100);
 
-    phaseSteps.add(aPhaseStep(PCF_RESIZE, Constants.DEPLOY)
+    phaseSteps.add(aPhaseStep(PhaseStepType.PCF_RESIZE, DEPLOY)
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
-                                    .type(PCF_RESIZE.name())
-                                    .name(Constants.PCF_RESIZE)
+                                    .type(StateType.PCF_RESIZE.name())
+                                    .name(PCF_RESIZE)
                                     .properties(defaultUpgradeStageContainerProperties)
                                     .build())
                        .build());
 
     // Verify
-    phaseSteps.add(
-        aPhaseStep(VERIFY_SERVICE, VERIFY_STAGING).addAllSteps(commandNodes(commandMap, CommandType.VERIFY)).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_STAGING)
+                       .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                       .build());
 
     // Swap Routes
     Map<String, Object> defaultRouteUpdateProperties = new HashMap<>();
     defaultRouteUpdateProperties.put("downsizeOldApps", false);
-    phaseSteps.add(aPhaseStep(PCF_SWICH_ROUTES, Constants.PCF_BG_MAP_ROUTE)
+    phaseSteps.add(aPhaseStep(PCF_SWICH_ROUTES, PCF_BG_MAP_ROUTE)
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
-                                    .type(PCF_BG_MAP_ROUTE.name())
-                                    .name(Constants.PCF_BG_SWAP_ROUTE)
+                                    .type(StateType.PCF_BG_MAP_ROUTE.name())
+                                    .name(PCF_BG_SWAP_ROUTE)
                                     .properties(defaultRouteUpdateProperties)
                                     .build())
                        .build());
 
     // Wrap up
-    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
   }
 
   public void generateNewWorkflowPhaseStepsForPCF(String appId, String envId, WorkflowPhase workflowPhase,
@@ -848,28 +875,28 @@ public class WorkflowServiceHelper {
       Map<String, Object> defaultProperties = new HashMap<>();
       defaultProperties.put("blueGreen", false);
       defaultProperties.put("resizeStrategy", "DOWNSIZE_OLD_FIRST");
-      defaultProperties.put("route", "${" + Constants.INFRA_ROUTE_PCF + "}");
+      defaultProperties.put("route", "${" + INFRA_ROUTE_PCF + "}");
 
-      phaseSteps.add(aPhaseStep(PCF_SETUP, Constants.SETUP)
+      phaseSteps.add(aPhaseStep(PhaseStepType.PCF_SETUP, SETUP)
                          .addStep(GraphNode.builder()
                                       .id(generateUuid())
-                                      .type(PCF_SETUP.name())
-                                      .name(Constants.PCF_SETUP)
+                                      .type(StateType.PCF_SETUP.name())
+                                      .name(PCF_SETUP)
                                       .properties(defaultProperties)
                                       .build())
                          .build());
     }
 
     phaseSteps.add(
-        aPhaseStep(PCF_RESIZE, Constants.DEPLOY)
-            .addStep(GraphNode.builder().id(generateUuid()).type(PCF_RESIZE.name()).name(Constants.PCF_RESIZE).build())
+        aPhaseStep(PhaseStepType.PCF_RESIZE, DEPLOY)
+            .addStep(GraphNode.builder().id(generateUuid()).type(StateType.PCF_RESIZE.name()).name(PCF_RESIZE).build())
             .build());
 
-    phaseSteps.add(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
                        .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                        .build());
 
-    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
   }
 
   public void generateNewWorkflowPhaseStepsForHelm(
@@ -880,14 +907,14 @@ public class WorkflowServiceHelper {
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
 
     phaseSteps.add(
-        aPhaseStep(PhaseStepType.HELM_DEPLOY, Constants.DEPLOY_CONTAINERS)
+        aPhaseStep(PhaseStepType.HELM_DEPLOY, DEPLOY_CONTAINERS)
             .addStep(
-                GraphNode.builder().id(generateUuid()).type(HELM_DEPLOY.name()).name(Constants.HELM_DEPLOY).build())
+                GraphNode.builder().id(generateUuid()).type(StateType.HELM_DEPLOY.name()).name(HELM_DEPLOY).build())
             .build());
-    phaseSteps.add(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
                        .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                        .build());
-    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
   }
 
   public void generateNewWorkflowPhaseStepsForKubernetes(String appId, WorkflowPhase workflowPhase,
@@ -901,7 +928,7 @@ public class WorkflowServiceHelper {
       InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
       if (infraMapping instanceof GcpKubernetesInfrastructureMapping
           && RUNTIME.equals(((GcpKubernetesInfrastructureMapping) infraMapping).getClusterName())) {
-        phaseSteps.add(aPhaseStep(CLUSTER_SETUP, Constants.SETUP_CLUSTER)
+        phaseSteps.add(aPhaseStep(CLUSTER_SETUP, SETUP_CLUSTER)
                            .addStep(GraphNode.builder()
                                         .id(generateUuid())
                                         .type(GCP_CLUSTER_SETUP.name())
@@ -913,11 +940,11 @@ public class WorkflowServiceHelper {
       Map<String, Object> defaultSetupProperties = new HashMap<>();
       defaultSetupProperties.put("replicationControllerName", "${app.name}-${service.name}-${env.name}");
       defaultSetupProperties.put("resizeStrategy", "RESIZE_NEW_FIRST");
-      phaseSteps.add(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+      phaseSteps.add(aPhaseStep(CONTAINER_SETUP, SETUP_CONTAINER)
                          .addStep(GraphNode.builder()
                                       .id(generateUuid())
                                       .type(KUBERNETES_SETUP.name())
-                                      .name(Constants.KUBERNETES_SERVICE_SETUP)
+                                      .name(KUBERNETES_SERVICE_SETUP)
                                       .properties(defaultSetupProperties)
                                       .build())
                          .build());
@@ -929,19 +956,19 @@ public class WorkflowServiceHelper {
         // Setting instance count always 100 percent
         properties.put("instanceCount", "100");
       }
-      phaseSteps.add(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+      phaseSteps.add(aPhaseStep(CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                          .addStep(GraphNode.builder()
                                       .id(generateUuid())
                                       .type(KUBERNETES_DEPLOY.name())
-                                      .name(Constants.UPGRADE_CONTAINERS)
+                                      .name(UPGRADE_CONTAINERS)
                                       .properties(properties)
                                       .build())
                          .build());
     }
-    phaseSteps.add(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
                        .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                        .build());
-    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
   }
 
   public void generateNewWorkflowPhaseStepsForKubernetesBlueGreen(
@@ -972,11 +999,11 @@ public class WorkflowServiceHelper {
       defaultSetupProperties.put("blueGreenConfig", defaultBlueGreenConfig);
       defaultSetupProperties.put("resizeStrategy", "RESIZE_NEW_FIRST");
 
-      phaseSteps.add(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+      phaseSteps.add(aPhaseStep(CONTAINER_SETUP, SETUP_CONTAINER)
                          .addStep(GraphNode.builder()
                                       .id(generateUuid())
                                       .type(KUBERNETES_SETUP.name())
-                                      .name(Constants.KUBERNETES_SERVICE_SETUP_BLUEGREEN)
+                                      .name(KUBERNETES_SERVICE_SETUP_BLUEGREEN)
                                       .properties(defaultSetupProperties)
                                       .build())
                          .build());
@@ -988,32 +1015,32 @@ public class WorkflowServiceHelper {
     defaultUpgradeStageContainerProperties.put("downsizeInstanceUnitType", "PERCENTAGE");
     defaultUpgradeStageContainerProperties.put("downsizeInstanceCount", 100);
 
-    phaseSteps.add(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+    phaseSteps.add(aPhaseStep(CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(KUBERNETES_DEPLOY.name())
-                                    .name(Constants.UPGRADE_CONTAINERS)
+                                    .name(UPGRADE_CONTAINERS)
                                     .properties(defaultUpgradeStageContainerProperties)
                                     .build())
                        .build());
 
-    phaseSteps.add(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_STAGE_SERVICE)
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_STAGE_SERVICE)
                        .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                        .build());
 
     Map<String, Object> defaultRouteUpdateProperties = new HashMap<>();
     defaultRouteUpdateProperties.put("service1", PRIMARY_SERVICE_NAME_EXPRESSION);
     defaultRouteUpdateProperties.put("service2", STAGE_SERVICE_NAME_EXPRESSION);
-    phaseSteps.add(aPhaseStep(ROUTE_UPDATE, Constants.ROUTE_UPDATE)
+    phaseSteps.add(aPhaseStep(PhaseStepType.ROUTE_UPDATE, ROUTE_UPDATE)
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(KUBERNETES_SWAP_SERVICE_SELECTORS.name())
-                                    .name(Constants.KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE)
+                                    .name(KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE)
                                     .properties(defaultRouteUpdateProperties)
                                     .build())
                        .build());
 
-    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
   }
 
   public void generateNewWorkflowPhaseStepsForSSH(
@@ -1039,12 +1066,11 @@ public class WorkflowServiceHelper {
 
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
 
-    final PhaseStepBuilder infrastructurePhaseStepBuilder =
-        aPhaseStep(INFRASTRUCTURE_NODE, Constants.INFRASTRUCTURE_NODE_NAME);
+    final PhaseStepBuilder infrastructurePhaseStepBuilder = aPhaseStep(INFRASTRUCTURE_NODE, INFRASTRUCTURE_NODE_NAME);
 
     infrastructurePhaseStepBuilder.addStep(GraphNode.builder()
                                                .type(stateType.name())
-                                               .name(Constants.SELECT_NODE_NAME)
+                                               .name(SELECT_NODE_NAME)
                                                .properties(ImmutableMap.<String, Object>builder()
                                                                .put("specificHosts", false)
                                                                .put("instanceCount", 1)
@@ -1070,19 +1096,19 @@ public class WorkflowServiceHelper {
                                  .build());
     }
 
-    phaseSteps.add(aPhaseStep(DISABLE_SERVICE, Constants.DISABLE_SERVICE).addAllSteps(disableServiceSteps).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.DISABLE_SERVICE, DISABLE_SERVICE).addAllSteps(disableServiceSteps).build());
 
-    phaseSteps.add(aPhaseStep(DEPLOY_SERVICE, Constants.DEPLOY_SERVICE)
+    phaseSteps.add(aPhaseStep(PhaseStepType.DEPLOY_SERVICE, DEPLOY_SERVICE)
                        .addAllSteps(commandNodes(commandMap, CommandType.INSTALL))
                        .build());
 
-    phaseSteps.add(aPhaseStep(ENABLE_SERVICE, Constants.ENABLE_SERVICE).addAllSteps(enableServiceSteps).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.ENABLE_SERVICE, ENABLE_SERVICE).addAllSteps(enableServiceSteps).build());
 
-    phaseSteps.add(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
                        .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                        .build());
 
-    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
   }
 
   private boolean attachElbSteps(InfrastructureMapping infrastructureMapping) {
@@ -1094,49 +1120,49 @@ public class WorkflowServiceHelper {
 
   public WorkflowPhase generateRollbackWorkflowPhaseForPCF(WorkflowPhase workflowPhase) {
     return rollbackWorkflow(workflowPhase)
-        .phaseSteps(asList(aPhaseStep(PhaseStepType.PCF_RESIZE, Constants.DEPLOY)
+        .phaseSteps(asList(aPhaseStep(PhaseStepType.PCF_RESIZE, DEPLOY)
                                .addStep(GraphNode.builder()
                                             .id(generateUuid())
-                                            .type(PCF_ROLLBACK.name())
-                                            .name(Constants.PCF_ROLLBACK)
+                                            .type(StateType.PCF_ROLLBACK.name())
+                                            .name(PCF_ROLLBACK)
                                             .rollback(true)
                                             .build())
-                               .withPhaseStepNameForRollback(Constants.DEPLOY)
+                               .withPhaseStepNameForRollback(DEPLOY)
                                .withStatusForRollback(SUCCESS)
                                .withRollback(true)
                                .build(),
             // When we rolling back the verification steps
             // the same criteria to run if deployment is needed should be used
-            aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+            aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
+                .withPhaseStepNameForRollback(DEPLOY_CONTAINERS)
                 .withStatusForRollback(SUCCESS)
                 .withRollback(true)
                 .build(),
-            aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build()))
+            aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).withRollback(true).build()))
         .build();
   }
 
   public WorkflowPhase generateRollbackWorkflowPhaseForHelm(WorkflowPhase workflowPhase) {
     return rollbackWorkflow(workflowPhase)
-        .phaseSteps(asList(aPhaseStep(PhaseStepType.HELM_DEPLOY, Constants.DEPLOY_CONTAINERS)
+        .phaseSteps(asList(aPhaseStep(PhaseStepType.HELM_DEPLOY, DEPLOY_CONTAINERS)
                                .addStep(GraphNode.builder()
                                             .id(generateUuid())
-                                            .type(HELM_ROLLBACK.name())
-                                            .name(Constants.HELM_ROLLBACK)
+                                            .type(StateType.HELM_ROLLBACK.name())
+                                            .name(HELM_ROLLBACK)
                                             .rollback(true)
                                             .build())
-                               .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+                               .withPhaseStepNameForRollback(DEPLOY_CONTAINERS)
                                .withStatusForRollback(SUCCESS)
                                .withRollback(true)
                                .build(),
             // When we rolling back the verification steps the same criterie to run if deployment is needed should be
             // used
-            aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+            aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
+                .withPhaseStepNameForRollback(DEPLOY_CONTAINERS)
                 .withStatusForRollback(SUCCESS)
                 .withRollback(true)
                 .build(),
-            aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build()))
+            aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).withRollback(true).build()))
         .build();
   }
 
@@ -1146,20 +1172,20 @@ public class WorkflowServiceHelper {
                                .addStep(GraphNode.builder()
                                             .id(generateUuid())
                                             .type(AWS_AMI_SERVICE_ROLLBACK.name())
-                                            .name(Constants.ROLLBACK_AWS_AMI_CLUSTER)
+                                            .name(ROLLBACK_AWS_AMI_CLUSTER)
                                             .rollback(true)
                                             .build())
-                               .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                               .withPhaseStepNameForRollback(DEPLOY_SERVICE)
                                .withStatusForRollback(SUCCESS)
                                .withRollback(true)
                                .build(),
-            aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+            aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
                 .withRollback(true)
-                .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                .withPhaseStepNameForRollback(DEPLOY_SERVICE)
                 .withStatusForRollback(SUCCESS)
                 .withRollback(true)
                 .build(),
-            aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build()))
+            aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).withRollback(true).build()))
         .build();
   }
 
@@ -1172,40 +1198,40 @@ public class WorkflowServiceHelper {
                                             .name(ROLLBACK_AUTOSCALING_GROUP_ROUTE)
                                             .rollback(true)
                                             .build())
-                               .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                               .withPhaseStepNameForRollback(DEPLOY_SERVICE)
                                .withStatusForRollback(SUCCESS)
                                .withRollback(true)
                                .build(),
-            aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+            aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
                 .withRollback(true)
-                .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                .withPhaseStepNameForRollback(DEPLOY_SERVICE)
                 .withStatusForRollback(SUCCESS)
                 .withRollback(true)
                 .build(),
-            aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build()))
+            aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).withRollback(true).build()))
         .build();
   }
 
   public WorkflowPhase generateRollbackWorkflowPhaseForAwsLambda(WorkflowPhase workflowPhase) {
     return rollbackWorkflow(workflowPhase)
-        .phaseSteps(asList(aPhaseStep(DEPLOY_AWS_LAMBDA, Constants.DEPLOY_SERVICE)
+        .phaseSteps(asList(aPhaseStep(DEPLOY_AWS_LAMBDA, DEPLOY_SERVICE)
                                .addStep(GraphNode.builder()
                                             .id(generateUuid())
                                             .type(AWS_LAMBDA_ROLLBACK.name())
-                                            .name(Constants.ROLLBACK_AWS_LAMBDA)
+                                            .name(ROLLBACK_AWS_LAMBDA)
                                             .rollback(true)
                                             .build())
-                               .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                               .withPhaseStepNameForRollback(DEPLOY_SERVICE)
                                .withStatusForRollback(SUCCESS)
                                .withRollback(true)
                                .build(),
             // Verificanion is not exactly rollbacking operation. It should be executed if deployment is needed
-            aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+            aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
+                .withPhaseStepNameForRollback(DEPLOY_SERVICE)
                 .withStatusForRollback(SUCCESS)
                 .withRollback(true)
                 .build(),
-            aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build()))
+            aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).withRollback(true).build()))
         .build();
   }
 
@@ -1214,38 +1240,38 @@ public class WorkflowServiceHelper {
     List<PhaseStep> phaseSteps = new ArrayList<>();
     if (isDaemonSchedulingStrategy(appId, workflowPhase, orchestrationWorkflowType)) {
       // For Daemon ECS workflow, need to add Setup rollback state
-      phaseSteps.add(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+      phaseSteps.add(aPhaseStep(CONTAINER_SETUP, SETUP_CONTAINER)
                          .addStep(GraphNode.builder()
                                       .id(generateUuid())
                                       .type(ECS_SERVICE_SETUP_ROLLBACK.name())
-                                      .name(Constants.ROLLBACK_CONTAINERS)
+                                      .name(ROLLBACK_CONTAINERS)
                                       .rollback(true)
                                       .build())
-                         .withPhaseStepNameForRollback(Constants.SETUP_CONTAINER)
+                         .withPhaseStepNameForRollback(SETUP_CONTAINER)
                          .withStatusForRollback(SUCCESS)
                          .withRollback(true)
                          .build());
     } else {
-      phaseSteps.add(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+      phaseSteps.add(aPhaseStep(CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                          .addStep(GraphNode.builder()
                                       .id(generateUuid())
                                       .type(ECS_SERVICE_ROLLBACK.name())
-                                      .name(Constants.ROLLBACK_CONTAINERS)
+                                      .name(ROLLBACK_CONTAINERS)
                                       .rollback(true)
                                       .build())
-                         .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+                         .withPhaseStepNameForRollback(DEPLOY_CONTAINERS)
                          .withStatusForRollback(SUCCESS)
                          .withRollback(true)
                          .build());
     }
 
     // Verification
-    phaseSteps.add(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                       .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
+                       .withPhaseStepNameForRollback(DEPLOY_CONTAINERS)
                        .withStatusForRollback(SUCCESS)
                        .withRollback(true)
                        .build());
-    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).withRollback(true).build());
 
     return rollbackWorkflow(workflowPhase).phaseSteps(phaseSteps).build();
   }
@@ -1260,16 +1286,16 @@ public class WorkflowServiceHelper {
                                             .name(ROLLBACK_ECS_ROUTE53_DNS_WEIGHTS)
                                             .rollback(true)
                                             .build())
-                               .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+                               .withPhaseStepNameForRollback(DEPLOY_CONTAINERS)
                                .withStatusForRollback(SUCCESS)
                                .withRollback(true)
                                .build(),
-            aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                .withPhaseStepNameForRollback(Constants.VERIFY_SERVICE)
+            aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
+                .withPhaseStepNameForRollback(VERIFY_SERVICE)
                 .withStatusForRollback(SUCCESS)
                 .withRollback(true)
                 .build(),
-            aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build()))
+            aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).withRollback(true).build()))
         .build();
   }
 
@@ -1283,53 +1309,53 @@ public class WorkflowServiceHelper {
                                             .name(ECS_SWAP_TARGET_GROUPS_ROLLBACK)
                                             .rollback(true)
                                             .build())
-                               .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+                               .withPhaseStepNameForRollback(DEPLOY_CONTAINERS)
                                .withStatusForRollback(SUCCESS)
                                .withRollback(true)
                                .build(),
 
-            aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+            aPhaseStep(CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                 .addStep(GraphNode.builder()
                              .id(generateUuid())
                              .type(ECS_SERVICE_ROLLBACK.name())
-                             .name(Constants.ROLLBACK_CONTAINERS)
+                             .name(ROLLBACK_CONTAINERS)
                              .rollback(true)
                              .build())
-                .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+                .withPhaseStepNameForRollback(DEPLOY_CONTAINERS)
                 .withStatusForRollback(SUCCESS)
                 .withRollback(true)
                 .build(),
             // Verification
-            aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+            aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
+                .withPhaseStepNameForRollback(DEPLOY_CONTAINERS)
                 .withStatusForRollback(SUCCESS)
                 .withRollback(true)
                 .build(),
-            aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build()))
+            aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).withRollback(true).build()))
         .build();
   }
 
   public WorkflowPhase generateRollbackWorkflowPhaseForAwsCodeDeploy(WorkflowPhase workflowPhase) {
     return rollbackWorkflow(workflowPhase)
-        .phaseSteps(asList(aPhaseStep(DEPLOY_AWSCODEDEPLOY, Constants.DEPLOY_SERVICE)
+        .phaseSteps(asList(aPhaseStep(DEPLOY_AWSCODEDEPLOY, DEPLOY_SERVICE)
                                .addStep(GraphNode.builder()
                                             .id(generateUuid())
                                             .type(AWS_CODEDEPLOY_ROLLBACK.name())
-                                            .name(Constants.ROLLBACK_AWS_CODE_DEPLOY)
+                                            .name(ROLLBACK_AWS_CODE_DEPLOY)
                                             .rollback(true)
                                             .build())
-                               .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                               .withPhaseStepNameForRollback(DEPLOY_SERVICE)
                                .withStatusForRollback(SUCCESS)
                                .withRollback(true)
                                .build(),
             // When we rolling back the verification steps the same criterie to run if deployment is needed should be
             // used
-            aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+            aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
+                .withPhaseStepNameForRollback(DEPLOY_SERVICE)
                 .withStatusForRollback(SUCCESS)
                 .withRollback(true)
                 .build(),
-            aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build()))
+            aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).withRollback(true).build()))
         .build();
   }
 
@@ -1359,39 +1385,39 @@ public class WorkflowServiceHelper {
     }
 
     return rollbackWorkflow(workflowPhase)
-        .phaseSteps(asList(aPhaseStep(DISABLE_SERVICE, Constants.DISABLE_SERVICE)
+        .phaseSteps(asList(aPhaseStep(PhaseStepType.DISABLE_SERVICE, DISABLE_SERVICE)
                                .addAllSteps(disableServiceSteps)
-                               .withPhaseStepNameForRollback(Constants.ENABLE_SERVICE)
+                               .withPhaseStepNameForRollback(ENABLE_SERVICE)
                                .withStatusForRollback(SUCCESS)
                                .withRollback(true)
                                .build(),
-            aPhaseStep(STOP_SERVICE, Constants.STOP_SERVICE)
+            aPhaseStep(PhaseStepType.STOP_SERVICE, STOP_SERVICE)
                 .addAllSteps(commandNodes(commandMap, CommandType.STOP, true))
-                .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                .withPhaseStepNameForRollback(DEPLOY_SERVICE)
                 .withStatusForRollback(SUCCESS)
                 .withRollback(true)
                 .build(),
-            aPhaseStep(DEPLOY_SERVICE, Constants.DEPLOY_SERVICE)
+            aPhaseStep(PhaseStepType.DEPLOY_SERVICE, DEPLOY_SERVICE)
                 .addAllSteps(commandNodes(commandMap, CommandType.INSTALL, true))
-                .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                .withPhaseStepNameForRollback(DEPLOY_SERVICE)
                 .withStatusForRollback(SUCCESS)
                 .withRollback(true)
                 .build(),
-            aPhaseStep(ENABLE_SERVICE, Constants.ENABLE_SERVICE)
+            aPhaseStep(PhaseStepType.ENABLE_SERVICE, ENABLE_SERVICE)
                 .addAllSteps(enableServiceSteps)
-                .withPhaseStepNameForRollback(Constants.DISABLE_SERVICE)
+                .withPhaseStepNameForRollback(DISABLE_SERVICE)
                 .withStatusForRollback(SUCCESS)
                 .withRollback(true)
                 .build(),
             // When we rolling back the verification steps
             // the same criteria to run if deployment is needed should be used
-            aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+            aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
                 .addAllSteps(commandNodes(commandMap, CommandType.VERIFY, true))
-                .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                .withPhaseStepNameForRollback(DEPLOY_SERVICE)
                 .withStatusForRollback(SUCCESS)
                 .withRollback(true)
                 .build(),
-            aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build()))
+            aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).withRollback(true).build()))
         .build();
   }
 
@@ -1403,38 +1429,38 @@ public class WorkflowServiceHelper {
 
     List<PhaseStep> phaseSteps = new ArrayList<>();
 
-    phaseSteps.add(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+    phaseSteps.add(aPhaseStep(CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(KUBERNETES_DEPLOY_ROLLBACK.name())
-                                    .name(Constants.ROLLBACK_CONTAINERS)
+                                    .name(ROLLBACK_CONTAINERS)
                                     .rollback(true)
                                     .build())
-                       .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+                       .withPhaseStepNameForRollback(DEPLOY_CONTAINERS)
                        .withStatusForRollback(SUCCESS)
                        .withRollback(true)
                        .build());
     if (serviceSetupRequired) {
-      phaseSteps.add(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+      phaseSteps.add(aPhaseStep(CONTAINER_SETUP, SETUP_CONTAINER)
                          .addStep(GraphNode.builder()
                                       .id(generateUuid())
                                       .type(KUBERNETES_SETUP_ROLLBACK.name())
-                                      .name(Constants.ROLLBACK_KUBERNETES_SETUP)
+                                      .name(ROLLBACK_KUBERNETES_SETUP)
                                       .rollback(true)
                                       .build())
-                         .withPhaseStepNameForRollback(Constants.SETUP_CONTAINER)
+                         .withPhaseStepNameForRollback(SETUP_CONTAINER)
                          .withStatusForRollback(SUCCESS)
                          .withRollback(true)
                          .build());
     }
 
     // When we rolling back the verification steps the same criterie to run if deployment is needed should be used
-    phaseSteps.add(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                       .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
+                       .withPhaseStepNameForRollback(DEPLOY_CONTAINERS)
                        .withStatusForRollback(SUCCESS)
                        .withRollback(true)
                        .build());
-    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).withRollback(true).build());
 
     return rollbackWorkflow(workflowPhase).phaseSteps(phaseSteps).build();
   }
@@ -1451,36 +1477,36 @@ public class WorkflowServiceHelper {
 
     List<PhaseStep> phaseSteps = new ArrayList<>();
 
-    phaseSteps.add(aPhaseStep(ROUTE_UPDATE, Constants.ROUTE_UPDATE)
-                       .withPhaseStepNameForRollback(Constants.ROUTE_UPDATE)
+    phaseSteps.add(aPhaseStep(PhaseStepType.ROUTE_UPDATE, ROUTE_UPDATE)
+                       .withPhaseStepNameForRollback(ROUTE_UPDATE)
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(KUBERNETES_SWAP_SERVICE_SELECTORS.name())
-                                    .name(Constants.KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE)
+                                    .name(KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE)
                                     .properties(defaultRouteUpdateProperties)
                                     .build())
                        .withRollback(true)
                        .build());
-    phaseSteps.add(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
-                       .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+    phaseSteps.add(aPhaseStep(CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
+                       .withPhaseStepNameForRollback(DEPLOY_CONTAINERS)
                        .withStatusForRollback(SUCCESS)
                        .withRollback(true)
                        .build());
     if (serviceSetupRequired) {
-      phaseSteps.add(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
-                         .withPhaseStepNameForRollback(Constants.SETUP_CONTAINER)
+      phaseSteps.add(aPhaseStep(CONTAINER_SETUP, SETUP_CONTAINER)
+                         .withPhaseStepNameForRollback(SETUP_CONTAINER)
                          .withStatusForRollback(SUCCESS)
                          .withRollback(true)
                          .build());
     }
 
     // When we rolling back the verification steps the same criterie to run if deployment is needed should be used
-    phaseSteps.add(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                       .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
+                       .withPhaseStepNameForRollback(DEPLOY_CONTAINERS)
                        .withStatusForRollback(SUCCESS)
                        .withRollback(true)
                        .build());
-    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).withRollback(true).build());
     return rollbackWorkflow(workflowPhase).phaseSteps(phaseSteps).build();
   }
 
@@ -1488,25 +1514,25 @@ public class WorkflowServiceHelper {
     return rollbackWorkflow(workflowPhase)
         .daemonSet(workflowPhase.isDaemonSet())
         .statefulSet(workflowPhase.isStatefulSet())
-        .phaseSteps(asList(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+        .phaseSteps(asList(aPhaseStep(CONTAINER_SETUP, SETUP_CONTAINER)
                                .addStep(GraphNode.builder()
                                             .id(generateUuid())
                                             .type(KUBERNETES_SETUP_ROLLBACK.name())
-                                            .name(Constants.ROLLBACK_KUBERNETES_SETUP)
+                                            .name(ROLLBACK_KUBERNETES_SETUP)
                                             .rollback(true)
                                             .build())
-                               .withPhaseStepNameForRollback(Constants.SETUP_CONTAINER)
+                               .withPhaseStepNameForRollback(SETUP_CONTAINER)
                                .withStatusForRollback(SUCCESS)
                                .withRollback(true)
                                .build(),
             // When we rolling back the verification steps the same criterie to run if deployment is needed should be
             // used
-            aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                .withPhaseStepNameForRollback(Constants.SETUP_CONTAINER)
+            aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
+                .withPhaseStepNameForRollback(SETUP_CONTAINER)
                 .withStatusForRollback(SUCCESS)
                 .withRollback(true)
                 .build(),
-            aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build()))
+            aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).withRollback(true).build()))
         .build();
   }
 

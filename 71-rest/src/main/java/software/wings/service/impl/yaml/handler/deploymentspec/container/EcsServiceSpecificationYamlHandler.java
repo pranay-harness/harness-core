@@ -8,7 +8,6 @@ import software.wings.beans.Service;
 import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.EcsServiceSpecification.Yaml;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.common.Constants;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.deploymentspec.DeploymentSpecificationYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
@@ -29,7 +28,7 @@ public class EcsServiceSpecificationYamlHandler
     Service service = serviceResourceService.get(appId, bean.getServiceId());
     return Yaml.builder()
         .harnessApiVersion(getHarnessApiVersion())
-        .type(Constants.ECS_SERVICE_SPEC)
+        .type(YamlHandlerFactory.ECS_SERVICE_SPEC)
         .serviceName(service.getName())
         .serviceSpecJson(bean.getServiceSpecJson())
         .build();

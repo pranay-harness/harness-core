@@ -22,8 +22,8 @@ import static software.wings.beans.command.DownloadArtifactCommandUnit.Builder.a
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.common.Constants.AMI_SETUP_COMMAND_NAME;
 import static software.wings.common.Constants.ASG_COMMAND_NAME;
-import static software.wings.common.Constants.PCF_RESIZE;
-import static software.wings.common.Constants.PCF_SETUP;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.PCF_RESIZE;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.PCF_SETUP;
 import static software.wings.utils.PowerShellScriptsLoader.psScriptMap;
 
 import com.google.common.collect.ImmutableMap;
