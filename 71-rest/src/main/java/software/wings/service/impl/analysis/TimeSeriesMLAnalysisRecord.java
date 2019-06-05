@@ -25,7 +25,7 @@ import org.mongodb.morphia.utils.IndexType;
       options = @IndexOptions(unique = true, name = "MetricAnalysisUniqueIdx"))
   ,
       @Index(fields = {
-        @Field("appId"), @Field("cvConfigId"), @Field(value = "analysisMinute", type = IndexType.DESC)
+        @Field("cvConfigId"), @Field(value = "analysisMinute", type = IndexType.DESC)
       }, options = @IndexOptions(name = "service_guard_idx")), @Index(fields = {
         @Field(value = "analysisMinute", type = IndexType.DESC), @Field("cvConfigId")
       }, options = @IndexOptions(name = "serviceGuardIdx"))
