@@ -109,5 +109,5 @@ if [[ -v "HELM_DESIRED_VERSION" ]]
 then
     sed -i "s|_helmVersion_|${HELM_DESIRED_VERSION}|" /opt/harness-delegate/start.sh
 else
-    sed -i "s|_helmVersion_|latest|" /opt/harness-delegate/start.sh
+    sed -i "s|_helmVersion_||" /opt/harness-delegate/start.sh
 fi
