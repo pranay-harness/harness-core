@@ -11,7 +11,6 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
-import static software.wings.common.Constants.DEFAULT_USER_GROUP_DESCRIPTION;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -82,6 +81,8 @@ import javax.validation.executable.ValidateOnExecution;
 @Slf4j
 public class UserGroupServiceImpl implements UserGroupService {
   private static final Logger log = LoggerFactory.getLogger(UserGroupServiceImpl.class);
+
+  public static final String DEFAULT_USER_GROUP_DESCRIPTION = "Default account admin user group";
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;

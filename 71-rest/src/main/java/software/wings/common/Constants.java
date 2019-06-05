@@ -333,19 +333,6 @@ public interface Constants {
   String DEFAULT_AWS_HOST_NAME_CONVENTION = "${host.ec2Instance.privateDnsName.split('\\.')[0]}";
 
   /**
-   * The constant DEFAULT_PROD_SUPPORT_USER_GROUP_DESCRIPTION.
-   */
-  String DEFAULT_PROD_SUPPORT_USER_GROUP_DESCRIPTION =
-      "Production Support members have access to override configuration, "
-      + "setup infrastructure and setup/execute deployment workflows within PROD environments";
-  /**
-   * The constant DEFAULT_NON_PROD_SUPPORT_USER_GROUP_DESCRIPTION.
-   */
-  String DEFAULT_NON_PROD_SUPPORT_USER_GROUP_DESCRIPTION =
-      "Non-production Support members have access to override configuration, "
-      + "setup infrastructure and setup/execute deployment workflows within NON_PROD environments";
-
-  /**
    * The cloudwatch metric url.
    */
   String HARNESS_KUBE_CONFIG_PATH = "HARNESS_KUBE_CONFIG_PATH";
@@ -398,8 +385,6 @@ public interface Constants {
    */
   String ACCOUNT_ID_KEY = "accountId";
   String APP_ID_KEY = "appId";
-
-  String DEFAULT_USER_GROUP_DESCRIPTION = "Default account admin user group";
 
   /**
    * Script as Approval
