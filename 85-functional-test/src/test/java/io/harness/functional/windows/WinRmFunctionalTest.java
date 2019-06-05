@@ -15,7 +15,7 @@ import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
-import static software.wings.common.Constants.SELECT_NODE_NAME;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.SELECT_NODE_NAME;
 import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
 
@@ -60,8 +60,8 @@ import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
-import software.wings.common.Constants;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
+import software.wings.service.impl.workflow.WorkflowServiceHelper;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -230,7 +230,7 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
       selectNodeProperties.put("excludeSelectedHostsFromFuturePhases", false);
     }
 
-    phaseSteps.add(aPhaseStep(INFRASTRUCTURE_NODE, Constants.INFRASTRUCTURE_NODE_NAME)
+    phaseSteps.add(aPhaseStep(INFRASTRUCTURE_NODE, WorkflowServiceHelper.INFRASTRUCTURE_NODE_NAME)
                        .withPhaseStepType(PhaseStepType.INFRASTRUCTURE_NODE)
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
@@ -239,13 +239,13 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
                                     .properties(selectNodeProperties)
                                     .build())
                        .build());
-    phaseSteps.add(aPhaseStep(DISABLE_SERVICE, Constants.DISABLE_SERVICE)
+    phaseSteps.add(aPhaseStep(DISABLE_SERVICE, WorkflowServiceHelper.DISABLE_SERVICE)
                        .withPhaseStepType(PhaseStepType.DISABLE_SERVICE)
                        .build());
 
     Map<String, Object> installCommandProperties = new HashMap<>();
     installCommandProperties.put("commandName", commandName);
-    phaseSteps.add(aPhaseStep(DEPLOY_SERVICE, Constants.DEPLOY_SERVICE)
+    phaseSteps.add(aPhaseStep(DEPLOY_SERVICE, WorkflowServiceHelper.DEPLOY_SERVICE)
                        .withPhaseStepType(PhaseStepType.DEPLOY_SERVICE)
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
@@ -254,11 +254,13 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
                                     .properties(installCommandProperties)
                                     .build())
                        .build());
-    phaseSteps.add(
-        aPhaseStep(ENABLE_SERVICE, Constants.ENABLE_SERVICE).withPhaseStepType(PhaseStepType.ENABLE_SERVICE).build());
-    phaseSteps.add(
-        aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE).withPhaseStepType(PhaseStepType.VERIFY_SERVICE).build());
-    phaseSteps.add(aPhaseStep(WRAP_UP, Constants.WRAP_UP).withPhaseStepType(PhaseStepType.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(ENABLE_SERVICE, WorkflowServiceHelper.ENABLE_SERVICE)
+                       .withPhaseStepType(PhaseStepType.ENABLE_SERVICE)
+                       .build());
+    phaseSteps.add(aPhaseStep(VERIFY_SERVICE, WorkflowServiceHelper.VERIFY_SERVICE)
+                       .withPhaseStepType(PhaseStepType.VERIFY_SERVICE)
+                       .build());
+    phaseSteps.add(aPhaseStep(WRAP_UP, WorkflowServiceHelper.WRAP_UP).withPhaseStepType(PhaseStepType.WRAP_UP).build());
 
     Workflow iisAppWorkflow =
         aWorkflow()

@@ -10,7 +10,7 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
 import static software.wings.common.Constants.PHASE_NAME_PREFIX;
-import static software.wings.common.Constants.ROLLBACK_PREFIX;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_PREFIX;
 import static software.wings.sm.ExecutionEventAdvice.ExecutionEventAdviceBuilder.anExecutionEventAdvice;
 import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;
 import static software.wings.sm.ExecutionInterruptType.ROLLBACK;
@@ -60,6 +60,7 @@ import java.util.Optional;
  */
 @Slf4j
 public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
+  public static final String ROLLBACK_PROVISIONERS = "Rollback Provisioners";
   private static final String ROLLING_PHASE_PREFIX = "Rolling Phase ";
 
   @Inject @Transient private transient WorkflowExecutionService workflowExecutionService;
@@ -489,12 +490,11 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
 
   private ExecutionEventAdvice getRollbackProvisionerAdviceIfNeeded(PhaseStep preDeploymentSteps) {
     if (preDeploymentSteps != null && preDeploymentSteps.getSteps() != null
-        && preDeploymentSteps.getSteps().stream().anyMatch(step -> {
-             return step.getType().equals(StateType.CLOUD_FORMATION_CREATE_STACK.name())
-                 || step.getType().equals(StateType.TERRAFORM_PROVISION.getType());
-           })) {
+        && preDeploymentSteps.getSteps().stream().anyMatch(step
+               -> step.getType().equals(StateType.CLOUD_FORMATION_CREATE_STACK.name())
+                   || step.getType().equals(StateType.TERRAFORM_PROVISION.getType()))) {
       return anExecutionEventAdvice()
-          .withNextStateName(Constants.ROLLBACK_PROVISIONERS)
+          .withNextStateName(ROLLBACK_PROVISIONERS)
           .withExecutionInterruptType(ROLLBACK)
           .build();
     }

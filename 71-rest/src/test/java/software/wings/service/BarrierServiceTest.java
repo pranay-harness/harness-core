@@ -10,7 +10,7 @@ import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
-import static software.wings.common.Constants.DEPLOY_CONTAINERS;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.DEPLOY_CONTAINERS;
 import static software.wings.sm.StateType.BARRIER;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;

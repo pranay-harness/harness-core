@@ -30,6 +30,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExpressionProcessor;
 import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
@@ -458,7 +459,7 @@ public class RepeatState extends State {
               .displayName("Repeating Over")
               .value(abbreviate(
                   Joiner.on(", ").join(repeatElements.stream().map(ContextElement::getName).collect(toList())),
-                  Constants.SUMMARY_PAYLOAD_LIMIT))
+                  StateExecutionData.SUMMARY_PAYLOAD_LIMIT))
               .build());
       putNotNull(executionDetails, "executionStrategy",
           ExecutionDataValue.builder().displayName("Execution Strategy").value(executionStrategy).build());

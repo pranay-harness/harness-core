@@ -26,10 +26,10 @@ import static software.wings.beans.EntityType.SUMOLOGIC_CONFIGID;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.common.Constants.PHASE_NAME_PREFIX;
-import static software.wings.common.Constants.ROLLBACK_PREFIX;
 import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
 import static software.wings.common.Constants.WORKFLOW_VALIDATION_MESSAGE;
 import static software.wings.common.Constants.phaseNamePattern;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_PREFIX;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;

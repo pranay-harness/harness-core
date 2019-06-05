@@ -36,11 +36,11 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
-import static software.wings.common.Constants.DEPLOY_CONTAINERS;
 import static software.wings.common.Constants.PHASE_NAME_PREFIX;
-import static software.wings.common.Constants.UPGRADE_CONTAINERS;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.DEPLOY_CONTAINERS;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.RUNTIME;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.UPGRADE_CONTAINERS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
@@ -87,7 +87,6 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.stats.CloneMetadata;
-import software.wings.common.Constants;
 import software.wings.sm.StateType;
 
 import java.util.HashMap;
@@ -189,8 +188,9 @@ public class WorkflowServiceTestHelper {
                         .infraMappingId(INFRA_MAPPING_ID)
                         .serviceId(SERVICE_ID)
                         .deploymentType(SSH)
-                        .phaseSteps(asList(
-                            aPhaseStep(VERIFY_SERVICE, Constants.ENABLE_SERVICE).addStep(constructHttpStep()).build()))
+                        .phaseSteps(asList(aPhaseStep(VERIFY_SERVICE, WorkflowServiceHelper.ENABLE_SERVICE)
+                                               .addStep(constructHttpStep())
+                                               .build()))
                         .build())
                 .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
                 .build())
@@ -614,7 +614,8 @@ public class WorkflowServiceTestHelper {
                         .infraMappingId(INFRA_MAPPING_ID)
                         .serviceId(SERVICE_ID)
                         .deploymentType(SSH)
-                        .phaseSteps(asList(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE).addStep(step).build()))
+                        .phaseSteps(asList(
+                            aPhaseStep(VERIFY_SERVICE, WorkflowServiceHelper.VERIFY_SERVICE).addStep(step).build()))
                         .build())
                 .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).addStep(step).build())
                 .build())

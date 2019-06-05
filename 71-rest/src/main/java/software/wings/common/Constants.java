@@ -14,107 +14,18 @@ public interface Constants {
    * The constant PHASE_PARAM.
    */
   String PHASE_PARAM = "PHASE_PARAM";
-  /**
-   * The constant SUMMARY_PAYLOAD_LIMIT.
-   */
-  int SUMMARY_PAYLOAD_LIMIT = 1024;
-
-  /**
-   * The constant PRE_DEPLOYMENT.
-   */
-  String ROLLBACK_PROVISIONERS = "Rollback Provisioners";
-  /**
-   * The constant DISABLE_SERVICE.
-   */
-  String DISABLE_SERVICE = "Disable Service";
-  /**
-   * The constant ENABLE_SERVICE.
-   */
-  String ENABLE_SERVICE = "Enable Service";
-  /**
-   * The constant DEPLOY_SERVICE.
-   */
-  String DEPLOY_SERVICE = "Deploy Service";
-
-  /**
-   * The constant ROLLBACK_SERVICE.
-   */
-  String ROLLBACK_SERVICE = "Rollback Service";
-
-  /**
-   * The constant STOP_SERVICE.
-   */
-  String STOP_SERVICE = "Stop Service";
-  /**
-   * The constant VERIFY_SERVICE.
-   */
-  String VERIFY_SERVICE = "Verify Service";
-
-  String VERIFY_STAGING = "Verify Staging";
-  /**
-   * The constant DEPLOY_CONTAINERS.
-   */
-  String DEPLOY_CONTAINERS = "Deploy Containers";
-  /**
-   * The constant SETUP_CONTAINER.
-   */
-  String SETUP_CONTAINER = "Set up Container";
-  /**
-   * The constant SETUP_CLUSTER.
-   */
-  String SETUP_CLUSTER = "Setup Cluster";
-  /**
-   * The constant ECS_SERVICE_SETUP.
-   */
-  String ECS_SERVICE_SETUP = "ECS Service Setup";
-
-  String ECS_DAEMON_SERVICE_SETUP = "ECS Daemon Service Setup";
-
-  String ECS_BG_SERVICE_SETUP_ELB = "Setup Load Balancer";
-
-  String ECS_BG_SERVICE_SETUP_ROUTE_53 = "Setup Route 53";
-
-  String ECS_DAEMON_SCHEDULING_STRATEGY = "DAEMON";
-
-  String ECS_REPLICA_SCHEDULING_STRATEGY = "REPLICA";
-
-  String ECS_SERVICE_SPEC = "ECS_SERVICE_SPEC";
 
   String BASIC = "BASIC";
 
   String ROLLBACK_ECS_SETUP = "Rollback ECS Setup";
 
-  String SETUP = "Setup";
-
-  String DEPLOY = "Deploy";
-
   String VERIFY = "Verify";
-
-  String PCF_SETUP = "App Setup";
-
-  String PCF_RESIZE = "App Resize";
 
   String ROLLBACK = "Rollback";
 
-  String PCF_ROLLBACK = "App Rollback";
-
   String PCF_MAP_ROUTE = "Map Route";
 
-  String ECS_SWAP_TARGET_GROUPS = "Swap Target Groups";
-
-  String ECS_ROUTE53_DNS_WEIGHTS = "Swap Route 53 DNS";
-
-  String CHANGE_ROUTE53_DNS_WEIGHTS = "Change Route 53 Weights";
-
-  String ROLLBACK_ECS_ROUTE53_DNS_WEIGHTS = "Rollback Route 53 Weights";
-
-  String ECS_SWAP_TARGET_GROUPS_ROLLBACK = "Rollback Swap Target Groups";
-
-  String PCF_BG_MAP_ROUTE = "Update Route";
-
-  String PCF_BG_SWAP_ROUTE = "Swap Routes";
-
-  String PCF_UNMAP_ROUT = "Unmap Route";
+  String PCF_UNMAP_ROUTE = "Unmap Route";
 
   String K8S_DEPLOYMENT_ROLLING = "Rollout Deployment";
   String K8S_DEPLOYMENT_ROLLING_ROLLBAK = "Rollback Deployment";
@@ -126,39 +37,6 @@ public interface Constants {
 
   String K8S_PRIMARY_PHASE_NAME = "Primary";
   String K8S_CANARY_PHASE_NAME = "Canary";
-
-  /**
-   * The constant KUBERNETES_SERVICE_SETUP.
-   */
-  String KUBERNETES_SERVICE_SETUP = "Kubernetes Service Setup";
-  /**
-   * The constant ROLLBACK_KUBERNETES_SETUP.
-   */
-  String ROLLBACK_KUBERNETES_SETUP = "Rollback Kubernetes Setup";
-  /**
-   * The constant PREPARE_STEPS.
-   */
-  String PREPARE_STEPS = "Prepare Steps";
-
-  /**
-   * The constant UPGRADE_AUTOSCALING_GROUP.
-   */
-  String UPGRADE_AUTOSCALING_GROUP = "Upgrade AutoScaling Group";
-
-  String UPGRADE_AUTOSCALING_GROUP_ROUTE = "Switch AutoScaling Group Route";
-
-  String SWAP_AUTOSCALING_GROUP_ROUTE = "Swap Routes";
-
-  String ROLLBACK_AUTOSCALING_GROUP_ROUTE = "Rollback AutoScaling Group Route";
-  /**
-   * The constant AWS_CODE_DEPLOY.
-   */
-  String AWS_CODE_DEPLOY = "AWS CodeDeploy";
-
-  /**
-   * The constant AWS_LAMBDA.
-   */
-  String AWS_LAMBDA = "AWS Lambda";
 
   /**
    * The constant COLLECT_ARTIFACT.
@@ -181,36 +59,6 @@ public interface Constants {
   String AMI_SETUP_COMMAND_NAME = "AMI Service Setup";
 
   /**
-   * The constant ROLLBACK_AWS_LAMBDA.
-   */
-  String ROLLBACK_AWS_LAMBDA = "Rollback AWS Lambda";
-  /**
-   * The constant ROLLBACK_AWS_AMI_CLUSTER.
-   */
-  String ROLLBACK_AWS_AMI_CLUSTER = "Rollback AutoScaling Group";
-  /**
-   * The constant UPGRADE_CONTAINERS.
-   */
-  String UPGRADE_CONTAINERS = "Upgrade Containers";
-
-  /**
-   * The constant HELM_DEPLOY.
-   */
-  String HELM_DEPLOY = "Helm Deploy";
-
-  /**
-   * The constant HELM_ROLLBACK.
-   */
-  String HELM_ROLLBACK = "Helm Rollback";
-  /**
-   * The constant ROLLBACK_AWS_CODE_DEPLOY.
-   */
-  String ROLLBACK_AWS_CODE_DEPLOY = "Rollback AWS CodeDeploy";
-  /**
-   * The constant ROLLBACK_CONTAINERS.
-   */
-  String ROLLBACK_CONTAINERS = "Rollback Containers";
-  /**
    * The constant KUBERNETES_STEADY_STATE_CHECK.
    */
   String KUBERNETES_STEADY_STATE_CHECK = "Steady State Check";
@@ -229,10 +77,6 @@ public interface Constants {
    */
   String SUB_WORKFLOW = "SUB_WORKFLOW";
   /**
-   * The constant ROLLBACK_PREFIX.
-   */
-  String ROLLBACK_PREFIX = "Rollback ";
-  /**
    * The constant PHASE_NAME_PREFIX.
    */
   String PHASE_NAME_PREFIX = "Phase ";
@@ -243,26 +87,11 @@ public interface Constants {
   Pattern phaseNamePattern = Pattern.compile("Phase [0-9]+");
 
   /**
-   * The constant WRAP_UP.
-   */
-  String WRAP_UP = "Wrap Up";
-
-  /**
-   * The constant INFRASTRUCTURE_NODE_NAME.
-   */
-  String INFRASTRUCTURE_NODE_NAME = "Prepare Infra";
-
-  /**
    * The constant PROVISION_NODE_NAME.
    */
   @Deprecated String PROVISION_NODE_NAME = "Provision Nodes";
 
   String ROLLBACK_TERRAFORM_NAME = "Terraform Rollback";
-
-  /**
-   * The constant SELECT_NODE_NAME.
-   */
-  String SELECT_NODE_NAME = "Select Nodes";
 
   /**
    * The constant STEP_VALIDATION_MESSAGE.
@@ -523,8 +352,6 @@ public interface Constants {
 
   String INFRA_ROUTE = "infra.route";
   String INFRA_TEMP_ROUTE = "infra.tempRoute";
-  String INFRA_ROUTE_PCF = "infra.pcf.route";
-  String INFRA_TEMP_ROUTE_PCF = "infra.pcf.tempRoute";
 
   String PCF_APP_NAME = "pcfAppName";
   String PCF_OLD_APP_NAME = "pcfOldAppName";
@@ -532,10 +359,6 @@ public interface Constants {
 
   String WINDOWS_HOME_DIR = "%USERPROFILE%";
 
-  String KUBERNETES_SERVICE_SETUP_BLUEGREEN = "Blue/Green Service Setup";
-  String ROUTE_UPDATE = "Route Update";
-  String KUBERNETES_SWAP_SERVICES_PRIMARY_STAGE = "Swap Primary with Stage";
-  String VERIFY_STAGE_SERVICE = "Verify Stage Service";
   String ROUTE_UPDATE_ROLLBACK_REQUEST_PARAM = "ROUTE_UPDATE_ROLLBACK_REQUEST_PARAM";
 
   int YAML_MAX_PARALLEL_COUNT = 20;
@@ -555,8 +378,6 @@ public interface Constants {
 
   String URL_STRING = "Url";
 
-  String PRIMARY_SERVICE_NAME_EXPRESSION = "${PRIMARY_SERVICE_NAME}";
-  String STAGE_SERVICE_NAME_EXPRESSION = "${STAGE_SERVICE_NAME}";
   String DEPLOYMENT_TRIGGERED_BY = "deploymentTriggeredBy";
   long ARTIFACT_FILE_SIZE_LIMIT = 4L * 1024L * 1024L * 1024L; // 4GB
 

@@ -19,6 +19,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatusData;
 import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 
@@ -222,7 +223,7 @@ public class ForkState extends State {
       putNotNull(executionDetails, "forkStateNames",
           ExecutionDataValue.builder()
               .displayName("Forking to")
-              .value(abbreviate(Joiner.on(", ").join(forkStateNames), Constants.SUMMARY_PAYLOAD_LIMIT))
+              .value(abbreviate(Joiner.on(", ").join(forkStateNames), StateExecutionData.SUMMARY_PAYLOAD_LIMIT))
               .build());
       return executionDetails;
     }

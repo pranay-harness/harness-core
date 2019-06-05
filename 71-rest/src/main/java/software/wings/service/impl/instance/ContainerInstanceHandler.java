@@ -58,13 +58,13 @@ import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.K8sDeploymentKey;
-import software.wings.common.Constants;
 import software.wings.service.impl.ContainerMetadata;
 import software.wings.service.impl.ContainerMetadataType;
 import software.wings.service.impl.instance.sync.ContainerSync;
 import software.wings.service.impl.instance.sync.request.ContainerFilter;
 import software.wings.service.impl.instance.sync.request.ContainerSyncRequest;
 import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
+import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StateExecutionData;
@@ -712,14 +712,15 @@ public class ContainerInstanceHandler extends InstanceHandler {
   public Set<ContainerMetadata> getContainerServiceNames(
       ExecutionContext context, String serviceId, String infraMappingId) {
     Set<ContainerMetadata> containerMetadataSet = Sets.newHashSet();
-    List<StateExecutionInstance> executionDataList = workflowExecutionService.getStateExecutionData(context.getAppId(),
-        context.getWorkflowExecutionId(), serviceId, infraMappingId, StateType.PHASE_STEP, Constants.DEPLOY_CONTAINERS);
+    List<StateExecutionInstance> executionDataList =
+        workflowExecutionService.getStateExecutionData(context.getAppId(), context.getWorkflowExecutionId(), serviceId,
+            infraMappingId, StateType.PHASE_STEP, WorkflowServiceHelper.DEPLOY_CONTAINERS);
     executionDataList.forEach(stateExecutionData -> {
       List<StateExecutionData> deployPhaseStepList =
           stateExecutionData.getStateExecutionMap()
               .entrySet()
               .stream()
-              .filter(entry -> entry.getKey().equals(Constants.DEPLOY_CONTAINERS))
+              .filter(entry -> entry.getKey().equals(WorkflowServiceHelper.DEPLOY_CONTAINERS))
               .map(Entry::getValue)
               .collect(toList());
       deployPhaseStepList.forEach(phaseStep -> {

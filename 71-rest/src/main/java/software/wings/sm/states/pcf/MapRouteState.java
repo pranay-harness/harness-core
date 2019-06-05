@@ -30,6 +30,7 @@ import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
@@ -63,7 +64,9 @@ public class MapRouteState extends State {
 
   @DefaultValue("${" + Constants.PCF_APP_NAME + "}") @Attributes(title = "PCF App Name") private String pcfAppName;
 
-  @DefaultValue("${" + Constants.INFRA_ROUTE_PCF + "}") @Attributes(title = "Map Route") private String route;
+  @DefaultValue("${" + WorkflowServiceHelper.INFRA_ROUTE_PCF + "}")
+  @Attributes(title = "Map Route")
+  private String route;
 
   public String getPcfAppName() {
     return pcfAppName;
@@ -158,7 +161,7 @@ public class MapRouteState extends State {
     // determine which routes to map
     boolean isOriginalRoute = false;
     String infraRouteConst = "${" + Constants.INFRA_ROUTE + "}";
-    String infraRouteConstLegacy = "${" + Constants.INFRA_ROUTE_PCF + "}";
+    String infraRouteConstLegacy = "${" + WorkflowServiceHelper.INFRA_ROUTE_PCF + "}";
     if (route == null || infraRouteConst.equalsIgnoreCase(route.trim())
         || infraRouteConstLegacy.equalsIgnoreCase(route.trim())) {
       isOriginalRoute = true;

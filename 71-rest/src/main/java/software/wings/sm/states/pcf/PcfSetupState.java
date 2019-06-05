@@ -54,6 +54,7 @@ import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.ServiceHelper;
 import software.wings.service.impl.ActivityHelperService;
+import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -256,7 +257,7 @@ public class PcfSetupState extends State {
     // if user selected tempRoutes
     boolean isOriginalRoute = false;
     String infraRouteConstLegacy = "${" + Constants.INFRA_ROUTE + "}";
-    String infraRouteConst = "${" + Constants.INFRA_ROUTE_PCF + "}";
+    String infraRouteConst = "${" + WorkflowServiceHelper.INFRA_ROUTE_PCF + "}";
     if (route == null || infraRouteConstLegacy.equalsIgnoreCase(route.trim())
         || infraRouteConst.equalsIgnoreCase(route.trim())) {
       isOriginalRoute = true;

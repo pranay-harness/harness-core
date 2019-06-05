@@ -5,7 +5,6 @@ import static org.apache.commons.lang3.StringUtils.abbreviate;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.common.Constants;
 import software.wings.sm.StateExecutionData;
 
 import java.util.Map;
@@ -42,7 +41,7 @@ public class SplunkStateExecutionData extends StateExecutionData {
     putNotNull(executionDetails, "response",
         ExecutionDataValue.builder()
             .displayName("Response")
-            .value(abbreviate(response, Constants.SUMMARY_PAYLOAD_LIMIT))
+            .value(abbreviate(response, StateExecutionData.SUMMARY_PAYLOAD_LIMIT))
             .build());
     putNotNull(executionDetails, "assertionStatement",
         ExecutionDataValue.builder().displayName("Assertion").value(assertionStatement).build());

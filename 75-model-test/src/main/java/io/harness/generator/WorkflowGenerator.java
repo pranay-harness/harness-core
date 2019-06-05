@@ -23,8 +23,8 @@ import static software.wings.beans.RollingOrchestrationWorkflow.RollingOrchestra
 import static software.wings.beans.TaskType.JENKINS;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
-import static software.wings.common.Constants.INFRASTRUCTURE_NODE_NAME;
-import static software.wings.common.Constants.SELECT_NODE_NAME;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.INFRASTRUCTURE_NODE_NAME;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.SELECT_NODE_NAME;
 import static software.wings.sm.StateType.HTTP;
 import static software.wings.sm.StateType.RESOURCE_CONSTRAINT;
 import static software.wings.sm.StateType.TERRAFORM_DESTROY;
@@ -65,6 +65,7 @@ import software.wings.beans.template.Template;
 import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
@@ -307,7 +308,7 @@ public class WorkflowGenerator {
                                                  .build())
                     .addWorkflowPhase(
                         aWorkflowPhase()
-                            .phaseSteps(asList(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build(),
+                            .phaseSteps(asList(aPhaseStep(PREPARE_STEPS, WorkflowServiceHelper.PREPARE_STEPS).build(),
                                 aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
                                     .addStep(
                                         GraphNode.builder()
@@ -349,7 +350,7 @@ public class WorkflowGenerator {
                                                     .build())
                                             .build())
                                     .build(),
-                                aPhaseStep(WRAP_UP, Constants.WRAP_UP)
+                                aPhaseStep(WRAP_UP, WorkflowServiceHelper.WRAP_UP)
                                     .addStep(getHTTPNode("pipeline"))
                                     .addStep(getHTTPNode("workflow"))
                                     .addStep(getHTTPNode("phase"))
@@ -391,21 +392,22 @@ public class WorkflowGenerator {
                 aBuildOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
                     .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
-                    .addWorkflowPhase(aWorkflowPhase()
-                                          .phaseSteps(asList(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build(),
-                                              aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
-                                                  .addStep(GraphNode.builder()
-                                                               .id(generateUuid())
-                                                               .type(StateType.SHELL_SCRIPT.name())
-                                                               .name(shellScriptTemplate.getName())
-                                                               .properties(properties)
-                                                               .templateVariables(shellScriptTemplate.getVariables())
-                                                               .templateUuid(shellScriptTemplate.getUuid())
-                                                               .templateVersion("latest")
-                                                               .build())
-                                                  .build(),
-                                              aPhaseStep(WRAP_UP, Constants.WRAP_UP).build()))
-                                          .build())
+                    .addWorkflowPhase(
+                        aWorkflowPhase()
+                            .phaseSteps(asList(aPhaseStep(PREPARE_STEPS, WorkflowServiceHelper.PREPARE_STEPS).build(),
+                                aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
+                                    .addStep(GraphNode.builder()
+                                                 .id(generateUuid())
+                                                 .type(StateType.SHELL_SCRIPT.name())
+                                                 .name(shellScriptTemplate.getName())
+                                                 .properties(properties)
+                                                 .templateVariables(shellScriptTemplate.getVariables())
+                                                 .templateUuid(shellScriptTemplate.getUuid())
+                                                 .templateVersion("latest")
+                                                 .build())
+                                    .build(),
+                                aPhaseStep(WRAP_UP, WorkflowServiceHelper.WRAP_UP).build()))
+                            .build())
                     .build())
             .build());
   }

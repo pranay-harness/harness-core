@@ -20,6 +20,8 @@ import java.util.stream.Collectors;
  * @author Rishi
  */
 public class StateExecutionData {
+  public static final int SUMMARY_PAYLOAD_LIMIT = 1024;
+
   private String stateName;
   private String stateType;
   private Long startTs;

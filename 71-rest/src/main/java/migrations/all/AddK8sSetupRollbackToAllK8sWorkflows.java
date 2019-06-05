@@ -22,8 +22,8 @@ import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
-import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
 
@@ -70,14 +70,14 @@ public class AddK8sSetupRollbackToAllK8sWorkflows implements Migration {
                       if (rollbackPhase.getPhaseSteps().size() == 2) {
                         workflowModified = true;
                         rollbackPhase.getPhaseSteps().add(1,
-                            aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+                            aPhaseStep(CONTAINER_SETUP, WorkflowServiceHelper.SETUP_CONTAINER)
                                 .addStep(GraphNode.builder()
                                              .id(generateUuid())
                                              .type(KUBERNETES_SETUP_ROLLBACK.name())
-                                             .name(Constants.ROLLBACK_CONTAINERS)
+                                             .name(WorkflowServiceHelper.ROLLBACK_CONTAINERS)
                                              .rollback(true)
                                              .build())
-                                .withPhaseStepNameForRollback(Constants.SETUP_CONTAINER)
+                                .withPhaseStepNameForRollback(WorkflowServiceHelper.SETUP_CONTAINER)
                                 .withStatusForRollback(ExecutionStatus.SUCCESS)
                                 .withRollback(true)
                                 .build());

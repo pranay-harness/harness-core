@@ -1,7 +1,5 @@
 package software.wings.service.impl.yaml.handler;
 
-import static software.wings.common.Constants.ECS_SERVICE_SPEC;
-
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -92,6 +90,7 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class YamlHandlerFactory {
+  public static final String ECS_SERVICE_SPEC = "ECS_SERVICE_SPEC";
   private static final Set<String> nonLeafEntities = new HashSet(obtainNonLeafEntities());
   private static final Set<String> nonLeafEntitiesWithFeatureFlag = new HashSet(obtainNonLeafEntitiesWithFeatureFlag());
   private static final Set<String> entitiesWithActualFiles = new HashSet(obtainUseRealFileEntities());

@@ -23,7 +23,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.GraphNode;
 import software.wings.beans.Workflow;
 import software.wings.beans.template.Template;
-import software.wings.common.Constants;
+import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
@@ -52,7 +52,8 @@ public class TemplateBaseTest extends WingsBaseTest {
                         .infraMappingId(INFRA_MAPPING_ID)
                         .serviceId(SERVICE_ID)
                         .deploymentType(SSH)
-                        .phaseSteps(asList(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE).addStep(step).build()))
+                        .phaseSteps(asList(
+                            aPhaseStep(VERIFY_SERVICE, WorkflowServiceHelper.VERIFY_SERVICE).addStep(step).build()))
                         .build())
                 .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).addStep(step).build())
                 .build())
