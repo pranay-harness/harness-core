@@ -123,6 +123,7 @@ import software.wings.verification.CVConfiguration;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -741,6 +742,10 @@ public class AccountServiceImpl implements AccountService {
       }
       throw new WingsException(ErrorCode.GENERAL_ERROR)
           .addParam("message", String.format("Empty provisioning result for account %s", accountId));
+    } catch (SocketTimeoutException e) {
+      // Timed out for some reason. Return empty list to indicate unknown progress. UI can ignore and try again.
+      logger.info("Timed out getting progress. Returning empty list.");
+      return new ArrayList<>();
     } catch (IOException e) {
       throw new WingsException(ErrorCode.GENERAL_ERROR, e)
           .addParam("message",
