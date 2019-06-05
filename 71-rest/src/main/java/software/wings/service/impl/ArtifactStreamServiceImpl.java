@@ -403,7 +403,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       case SFTP:
       case JENKINS:
       case BAMBOO:
-        return !oldArtifactStream.getSourceName().equals(updatedArtifactStream.getSourceName());
+        return oldArtifactStream.artifactSourceChanged(updatedArtifactStream);
 
       default:
         throw new InvalidRequestException(

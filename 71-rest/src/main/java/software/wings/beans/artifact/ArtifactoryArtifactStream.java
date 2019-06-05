@@ -1,6 +1,7 @@
 package software.wings.beans.artifact;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -93,6 +94,25 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
       return RepositoryType.docker.name();
     }
     return repositoryType;
+  }
+
+  @Override
+  public boolean artifactSourceChanged(ArtifactStream artifactStream) {
+    boolean changed = super.artifactSourceChanged(artifactStream);
+    if (this.repositoryType.equals(RepositoryType.docker.name())) {
+      return changed || repositoryServerChanged(((ArtifactoryArtifactStream) artifactStream).dockerRepositoryServer);
+    }
+    return changed;
+  }
+
+  private boolean repositoryServerChanged(String dockerRepositoryServer) {
+    if (isEmpty(this.dockerRepositoryServer) && isEmpty(dockerRepositoryServer)) {
+      return false;
+    } else if ((isEmpty(this.dockerRepositoryServer) && isNotEmpty(dockerRepositoryServer))
+        || (isNotEmpty(this.dockerRepositoryServer) && isEmpty(dockerRepositoryServer))) {
+      return true;
+    }
+    return !this.dockerRepositoryServer.equals(dockerRepositoryServer);
   }
 
   @Override
