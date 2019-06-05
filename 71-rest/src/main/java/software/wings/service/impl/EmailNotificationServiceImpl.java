@@ -62,18 +62,39 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
    */
   @Override
   public boolean send(EmailData emailData) {
-    SmtpConfig config = emailData.isSystem() ? mainConfiguration.getSmtpConfig()
-                                             : emailHelperUtils.getSmtpConfig(emailData.getAccountId());
+    SmtpConfig defaultSMTPConfig;
+    SmtpConfig fallBackSMTPConfig;
 
-    if (!emailHelperUtils.isSmtpConfigValid(config)) {
-      config = mainConfiguration.getSmtpConfig();
+    if (emailData.isSystem()) {
+      defaultSMTPConfig = mainConfiguration.getSmtpConfig();
+      fallBackSMTPConfig = emailHelperUtils.getSmtpConfig(emailData.getAccountId());
+    } else {
+      defaultSMTPConfig = emailHelperUtils.getSmtpConfig(emailData.getAccountId());
+      fallBackSMTPConfig = mainConfiguration.getSmtpConfig();
     }
 
-    if (!emailHelperUtils.isSmtpConfigValid(config)) {
+    boolean isDefaultSMTPConfigValid = emailHelperUtils.isSmtpConfigValid(defaultSMTPConfig);
+    boolean isFallBackSMTPConfigValid = emailHelperUtils.isSmtpConfigValid(fallBackSMTPConfig);
+
+    boolean mailSentSuccessFully = false;
+    if (!isDefaultSMTPConfigValid && !isFallBackSMTPConfigValid) {
       sendEmailNotSentAlert(emailData);
-      return false;
+    } else if (isDefaultSMTPConfigValid) {
+      mailSentSuccessFully = true;
+      if (!sendMail(defaultSMTPConfig, emailData)) {
+        if (!isFallBackSMTPConfigValid || !sendMail(fallBackSMTPConfig, emailData)) {
+          sendEmailNotSentAlert(emailData);
+          mailSentSuccessFully = false;
+        }
+      }
+    } else if (isFallBackSMTPConfigValid) {
+      mailSentSuccessFully = sendMail(fallBackSMTPConfig, emailData);
     }
 
+    return mailSentSuccessFully;
+  }
+
+  private boolean sendMail(SmtpConfig config, EmailData emailData) {
     List<EncryptedDataDetail> encryptionDetails = config.equals(mainConfiguration.getSmtpConfig())
         ? Collections.emptyList()
         : secretManager.getEncryptionDetails(config, emailData.getAppId(), emailData.getWorkflowExecutionId());
@@ -86,7 +107,6 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
       } catch (WingsException e) {
         String errorString = emailUtils.getErrorString(emailData);
         logger.warn(errorString, e);
-        sendEmailNotSentAlert(emailData);
         return false;
       }
     } else {
@@ -127,7 +147,6 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
     } catch (Exception e) {
       String errorString = emailUtils.getErrorString(emailData);
       logger.warn(errorString, e);
-      sendEmailNotSentAlert(emailData);
       return false;
     }
   }

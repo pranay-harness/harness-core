@@ -29,6 +29,7 @@ import software.wings.yaml.setting.CollaborationProviderYaml;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 public class SmtpConfig extends SettingValue implements EncryptableSetting {
+  private static final String HOST_PLACEHOLDER_STRING = "host_placeholder";
   @Attributes(title = "Host", required = true) @NotEmpty private String host;
   @Attributes(title = "Port", required = true) private int port;
   @DefaultValue("wings") @Attributes(title = "From Address") private String fromAddress;
@@ -61,7 +62,7 @@ public class SmtpConfig extends SettingValue implements EncryptableSetting {
   }
 
   public boolean valid() {
-    return isNotEmpty(host);
+    return isNotEmpty(host) && !HOST_PLACEHOLDER_STRING.equals(host);
   }
 
   @Data

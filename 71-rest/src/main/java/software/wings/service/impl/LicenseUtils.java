@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
-import software.wings.common.Constants;
 
 import java.nio.charset.Charset;
 import java.util.Calendar;
@@ -15,6 +14,13 @@ import java.util.Calendar;
  * @author rktummala on 09/10/2018
  */
 public class LicenseUtils {
+  /**
+   * Trial expires end of day - 14 days from the date of creation.
+   */
+  private static final int TRIAL_PERIOD = 14;
+
+  private static final int PAID_PERIOD_IN_YEARS = 1;
+
   public static String convertToString(LicenseInfo licenseInfo) {
     StringBuilder builder = new StringBuilder();
 
@@ -122,7 +128,7 @@ public class LicenseUtils {
 
   public static long getDefaultTrialExpiryTime() {
     Calendar calendar = Calendar.getInstance();
-    calendar.add(Calendar.DATE, Constants.TRIAL_PERIOD);
+    calendar.add(Calendar.DATE, TRIAL_PERIOD);
     calendar.set(Calendar.HOUR, 11);
     calendar.set(Calendar.MINUTE, 59);
     calendar.set(Calendar.SECOND, 59);
@@ -133,7 +139,7 @@ public class LicenseUtils {
 
   public static long getDefaultPaidExpiryTime() {
     Calendar calendar = Calendar.getInstance();
-    calendar.add(Calendar.YEAR, Constants.PAID_PERIOD_IN_YEARS);
+    calendar.add(Calendar.YEAR, PAID_PERIOD_IN_YEARS);
     calendar.set(Calendar.HOUR, 11);
     calendar.set(Calendar.MINUTE, 59);
     calendar.set(Calendar.SECOND, 59);

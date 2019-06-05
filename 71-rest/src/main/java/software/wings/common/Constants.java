@@ -560,16 +560,6 @@ public interface Constants {
   String DEPLOYMENT_TRIGGERED_BY = "deploymentTriggeredBy";
   long ARTIFACT_FILE_SIZE_LIMIT = 4L * 1024L * 1024L * 1024L; // 4GB
 
-  /**
-   * Trial expires end of day - 14 days from the date of creation.
-   */
-  int TRIAL_PERIOD = 14;
-  /**
-   *
-   */
-  int PAID_PERIOD_IN_YEARS = 1;
-  String LICENSE_INFO = "LICENSE_INFO";
-
   long ML_RECORDS_TTL_MONTHS = 6;
 
   String HARNESS_IO_KEY_ = "Harness.io";
