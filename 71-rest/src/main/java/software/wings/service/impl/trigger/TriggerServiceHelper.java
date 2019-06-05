@@ -190,9 +190,7 @@ public class TriggerServiceHelper {
   }
 
   public List<Trigger> getTriggersMatchesWorkflow(String appId, String sourcePipelineId) {
-    return getMatchedSourcePipelineTriggers(appId, sourcePipelineId)
-        .filter(distinctByKey(Trigger::getWorkflowId))
-        .collect(toList());
+    return getMatchedSourcePipelineTriggers(appId, sourcePipelineId).collect(toList());
   }
 
   private Stream<Trigger> getMatchedSourcePipelineTriggers(String appId, String sourcePipelineId) {
