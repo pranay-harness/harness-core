@@ -1,7 +1,6 @@
 <#include "common.sh.ftl">
 
-if [ -z "$1" ]
-then
+if [ -z "$1" ]; then
   echo "This script is not meant to be executed directly. The watcher uses it to manage delegate processes."
   exit 0
 fi
@@ -32,14 +31,11 @@ else
   fi
 fi
 
-if [ -e proxy.config ]
-then
+if [ -e proxy.config ]; then
   source proxy.config
-  if [[ $PROXY_HOST != "" ]]
-  then
+  if [[ $PROXY_HOST != "" ]]; then
     echo "Using proxy $PROXY_SCHEME://$PROXY_HOST:$PROXY_PORT"
-    if [[ $PROXY_USER != "" ]]
-    then
+    if [[ $PROXY_USER != "" ]]; then
       if [[ "$PROXY_PASSWORD_ENC" != "" ]]; then
         PROXY_PASSWORD=$(echo $PROXY_PASSWORD_ENC | openssl enc -d -a -des-ecb -K ${hexkey})
       fi
@@ -53,18 +49,15 @@ then
     PROXY_SYS_PROPS=$PROXY_SYS_PROPS" -DproxyScheme=$PROXY_SCHEME -Dhttp.proxyHost=$PROXY_HOST -Dhttp.proxyPort=$PROXY_PORT -Dhttps.proxyHost=$PROXY_HOST -Dhttps.proxyPort=$PROXY_PORT"
   fi
 
-  if [[ $NO_PROXY != "" ]]
-  then
+  if [[ $NO_PROXY != "" ]]; then
     echo "No proxy for domain suffixes $NO_PROXY"
     export no_proxy=$NO_PROXY
     SYSTEM_PROPERTY_NO_PROXY=`echo $NO_PROXY | sed "s/\,/|*/g"`
     PROXY_SYS_PROPS=$PROXY_SYS_PROPS" -Dhttp.nonProxyHosts=*$SYSTEM_PROPERTY_NO_PROXY"
   fi
-
 fi
 
-if [ ! -d $JRE_DIR -o ! -e $JRE_BINARY ]
-then
+if [ ! -d $JRE_DIR -o ! -e $JRE_BINARY ]; then
   echo "Downloading JRE packages..."
   JVM_TAR_FILENAME=$(basename "$JVM_URL")
   curl $PROXY_CURL -#kLO $JVM_URL
@@ -83,14 +76,12 @@ if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
   REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
   REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f1)
 
-  if [ ! -e delegate.jar ]
-  then
+  if [ ! -e delegate.jar ]; then
     echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
     curl $PROXY_CURL -#k $REMOTE_DELEGATE_URL -o delegate.jar
   else
     CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
-    if [[ $REMOTE_DELEGATE_VERSION != $CURRENT_VERSION ]]
-    then
+    if [[ $REMOTE_DELEGATE_VERSION != $CURRENT_VERSION ]]; then
       echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
       mkdir -p backup.$CURRENT_VERSION
       cp delegate.jar backup.$CURRENT_VERSION
@@ -110,8 +101,7 @@ fi
 if ! `grep verificationServiceUrl config-delegate.yml > /dev/null`; then
   echo "verificationServiceUrl: ${managerHostAndPort}/verification/" >> config-delegate.yml
 fi
-if ! `grep watcherCheckLocation config-delegate.yml > /dev/null`
-then
+if ! `grep watcherCheckLocation config-delegate.yml > /dev/null`; then
   echo "watcherCheckLocation: ${watcherStorageUrl}/${watcherCheckLocation}" >> config-delegate.yml
 fi
 if ! `grep heartbeatIntervalMs config-delegate.yml > /dev/null`; then
@@ -151,8 +141,7 @@ else
 fi
 
 sleep 3
-if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`
-then
+if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`; then
   echo "Delegate started"
 else
   echo "Failed to start Delegate."
