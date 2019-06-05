@@ -21,6 +21,7 @@ import migrations.all.MarkSendMailFlagAsTrueInUserGroup;
 import migrations.all.MigrateLogDataRecordsToGoogle;
 import migrations.all.RemoveSupportEmailFromSalesContacts;
 import migrations.all.SendInviteUrlForAllUserInvites;
+import migrations.all.SetDummyTechStackForOldAccounts;
 import migrations.all.SetEmailToIndividualMemberFlag;
 import migrations.all.SetLastLoginTimeToAllUsers;
 import migrations.all.TerraformIsTemplatizedMigration;
@@ -67,6 +68,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(29, InitWorkflowCounters.class))
         .add(Pair.of(30, InitPipelineCounters.class))
         .add(Pair.of(31, InitServiceCounters.class))
+        .add(Pair.of(32, SetDummyTechStackForOldAccounts.class))
         .build();
   }
 }

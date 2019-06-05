@@ -9,8 +9,6 @@ import static java.util.Arrays.asList;
 import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
 import static software.wings.beans.security.UserGroup.DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME;
 import static software.wings.beans.security.UserGroup.DEFAULT_PROD_SUPPORT_USER_GROUP_NAME;
-import static software.wings.common.Constants.DEFAULT_NON_PROD_SUPPORT_USER_GROUP_DESCRIPTION;
-import static software.wings.common.Constants.DEFAULT_PROD_SUPPORT_USER_GROUP_DESCRIPTION;
 import static software.wings.security.EnvFilter.FilterType.NON_PROD;
 import static software.wings.security.EnvFilter.FilterType.PROD;
 import static software.wings.security.GenericEntityFilter.FilterType.SELECTED;
@@ -62,7 +60,6 @@ import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.UserGroup.UserGroupBuilder;
-import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.security.AccountPermissionSummary;
@@ -83,6 +80,7 @@ import software.wings.security.UserPermissionInfo.UserPermissionInfoBuilder;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.WorkflowFilter;
+import software.wings.service.impl.UserGroupServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
@@ -111,6 +109,19 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class AuthHandler {
+  /**
+   * The constant DEFAULT_PROD_SUPPORT_USER_GROUP_DESCRIPTION.
+   */
+  private static final String DEFAULT_PROD_SUPPORT_USER_GROUP_DESCRIPTION =
+      "Production Support members have access to override configuration, "
+      + "setup infrastructure and setup/execute deployment workflows within PROD environments";
+  /**
+   * The constant DEFAULT_NON_PROD_SUPPORT_USER_GROUP_DESCRIPTION.
+   */
+  private static final String DEFAULT_NON_PROD_SUPPORT_USER_GROUP_DESCRIPTION =
+      "Non-production Support members have access to override configuration, "
+      + "setup infrastructure and setup/execute deployment workflows within NON_PROD environments";
+
   @Inject private PipelineService pipelineService;
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;
@@ -1281,7 +1292,7 @@ public class AuthHandler {
                                             .accountPermissions(accountPermissions)
                                             .appPermissions(appPermissions)
                                             .notificationSettings(notificationSettings)
-                                            .description(Constants.DEFAULT_USER_GROUP_DESCRIPTION);
+                                            .description(UserGroupServiceImpl.DEFAULT_USER_GROUP_DESCRIPTION);
 
     if (user != null) {
       userGroupBuilder.memberIds(asList(user.getUuid()));
