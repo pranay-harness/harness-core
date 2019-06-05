@@ -232,6 +232,14 @@ public abstract class TerraformProvisionState extends State {
     TerraformExecutionData terraformExecutionData = (TerraformExecutionData) responseEntry.getValue();
     terraformExecutionData.setActivityId(activityId);
 
+    if (terraformExecutionData.getExecutionStatus() == ExecutionStatus.FAILED) {
+      return anExecutionResponse()
+          .withStateExecutionData(terraformExecutionData)
+          .withExecutionStatus(terraformExecutionData.getExecutionStatus())
+          .withErrorMessage(terraformExecutionData.getErrorMessage())
+          .build();
+    }
+
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
     String workspace = terraformExecutionData.getWorkspace();
     Map<String, Object> others = Maps.newHashMap();
