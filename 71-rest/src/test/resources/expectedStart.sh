@@ -108,7 +108,7 @@ if [[ -e proxy.config ]]; then
   fi
 fi
 
-ACCOUNT_STATUS=$(curl $PROXY_CURL -#k https://localhost:9090/api/account/ACCOUNT_ID/status | cut -d ":" -f 3 | cut -d "," -f 1 | cut -d "\"" -f 2)
+ACCOUNT_STATUS=$(curl $PROXY_CURL -#ks https://localhost:9090/api/account/ACCOUNT_ID/status | cut -d ":" -f 3 | cut -d "," -f 1 | cut -d "\"" -f 2)
 if [[ $ACCOUNT_STATUS == "DELETED" ]]; then
   rm README.txt delegate.sh proxy.config start.sh stop.sh
   touch __deleted__
@@ -132,7 +132,7 @@ fi
 
 echo "Checking Watcher latest version..."
 WATCHER_STORAGE_URL=http://localhost:8888
-REMOTE_WATCHER_LATEST=$(curl $PROXY_CURL -#k $WATCHER_STORAGE_URL/watcherci.txt)
+REMOTE_WATCHER_LATEST=$(curl $PROXY_CURL -#ks $WATCHER_STORAGE_URL/watcherci.txt)
 REMOTE_WATCHER_URL=$WATCHER_STORAGE_URL/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
 REMOTE_WATCHER_VERSION=$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f1)
 
@@ -154,7 +154,7 @@ export DEPLOY_MODE=KUBERNETES
 if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
   echo "Checking Delegate latest version..."
   DELEGATE_STORAGE_URL=http://localhost:8888
-  REMOTE_DELEGATE_LATEST=$(curl $PROXY_CURL -#k $DELEGATE_STORAGE_URL/delegateci.txt)
+  REMOTE_DELEGATE_LATEST=$(curl $PROXY_CURL -#ks $DELEGATE_STORAGE_URL/delegateci.txt)
   REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
   REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f1)
 

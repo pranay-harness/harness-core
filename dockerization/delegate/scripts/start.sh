@@ -32,7 +32,6 @@ if [[ $PROXY_HOST != "" ]]; then
     export PROXY_CURL="-x "$PROXY_SCHEME"://"$PROXY_USER:$PROXY_PASSWORD@$PROXY_HOST:$PROXY_PORT
     PROXY_SYS_PROPS="-Dhttp.proxyUser=$PROXY_USER -Dhttp.proxyPassword=$PROXY_PASSWORD -Dhttps.proxyUser=$PROXY_USER -Dhttps.proxyPassword=$PROXY_PASSWORD "
   else
-    echo "no proxy auth mentioned"
     export PROXY_CURL="-x "$PROXY_SCHEME"://"$PROXY_HOST:$PROXY_PORT
     export http_proxy=$PROXY_HOST:$PROXY_PORT
     export https_proxy=$PROXY_HOST:$PROXY_PORT
@@ -49,7 +48,7 @@ fi
 
 echo $PROXY_SYS_PROPS
 
-ACCOUNT_STATUS=$(curl $PROXY_CURL -#k _managerHostAndPort_/api/account/_accountId_/status | cut -d ":" -f 3 | cut -d "," -f 1 | cut -d "\"" -f 2)
+ACCOUNT_STATUS=$(curl $PROXY_CURL -#ks _managerHostAndPort_/api/account/_accountId_/status | cut -d ":" -f 3 | cut -d "," -f 1 | cut -d "\"" -f 2)
 if [[ $ACCOUNT_STATUS == "DELETED" ]]; then
   rm *
   touch __deleted__
@@ -81,7 +80,7 @@ fi
 
 echo "Checking Watcher latest version..."
 WATCHER_STORAGE_URL=_watcherStorageUrl_
-REMOTE_WATCHER_LATEST=$(curl $PROXY_CURL -#k $WATCHER_STORAGE_URL/_watcherCheckLocation_)
+REMOTE_WATCHER_LATEST=$(curl $PROXY_CURL -#ks $WATCHER_STORAGE_URL/_watcherCheckLocation_)
 REMOTE_WATCHER_URL=$WATCHER_STORAGE_URL/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
 REMOTE_WATCHER_VERSION=$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f1)
 
@@ -103,7 +102,7 @@ export DEPLOY_MODE=_deployMode_
 if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
   echo "Checking Delegate latest version..."
   DELEGATE_STORAGE_URL=_delegateStorageUrl_
-  REMOTE_DELEGATE_LATEST=$(curl $PROXY_CURL -#k $DELEGATE_STORAGE_URL/_delegateCheckLocation_)
+  REMOTE_DELEGATE_LATEST=$(curl $PROXY_CURL -#ks $DELEGATE_STORAGE_URL/_delegateCheckLocation_)
   REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
   REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f1)
 
