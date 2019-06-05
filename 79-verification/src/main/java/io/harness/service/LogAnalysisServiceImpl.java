@@ -3,7 +3,6 @@ package io.harness.service;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
-import static io.harness.beans.SearchFilter.Operator.LT_EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -27,7 +26,6 @@ import com.mongodb.DuplicateKeyException;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
-import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
@@ -437,37 +435,29 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     Preconditions.checkState(!L0.equals(clusterLevel) || (L0.equals(clusterLevel) && isNotEmpty(logRequest.getNodes())),
         "for L0 -> L1 clustering nodes can not be empty, level: " + clusterLevel + " logRequest: " + logRequest);
     Set<LogDataRecord> logDataRecords = new HashSet<>();
-    int previousOffset = 0;
-    PageRequest<LogDataRecord> pageRequest = aPageRequest()
-                                                 .withOffset(String.valueOf(previousOffset))
-                                                 .withLimit("1000")
-                                                 .addFilter(LogDataRecordKeys.cvConfigId, Operator.EQ, cvConfigId)
-                                                 .addFilter(LogDataRecordKeys.clusterLevel, Operator.EQ, clusterLevel)
-                                                 .build();
+    final Query<LogDataRecord> recordQuery = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
+                                                 .filter(LogDataRecordKeys.cvConfigId, cvConfigId)
+                                                 .filter(LogDataRecordKeys.clusterLevel, clusterLevel);
 
     if (logCollectionMinute > 0) {
-      pageRequest.addFilter(LogDataRecordKeys.logCollectionMinute, Operator.EQ, logCollectionMinute);
+      recordQuery.filter(LogDataRecordKeys.logCollectionMinute, logCollectionMinute);
     } else {
-      pageRequest.addFilter(LogDataRecordKeys.logCollectionMinute, Operator.GE, startMinute);
-      pageRequest.addFilter(LogDataRecordKeys.logCollectionMinute, LT_EQ, endMinute);
+      recordQuery.field(LogDataRecordKeys.logCollectionMinute)
+          .greaterThanOrEq(startMinute)
+          .field(LogDataRecordKeys.logCollectionMinute)
+          .lessThanOrEq(endMinute);
     }
 
     if (isNotEmpty(logRequest.getNodes())) {
-      pageRequest.addFilter(LogDataRecordKeys.host, Operator.IN, logRequest.getNodes().toArray());
+      recordQuery.field(LogDataRecordKeys.host).in(logRequest.getNodes());
     }
 
-    PageResponse<LogDataRecord> response = logRequest.isExperimental()
-        ? dataStoreService.list(LogDataRecord.class, pageRequest)
-        : wingsPersistence.query(LogDataRecord.class, pageRequest, excludeAuthority);
-    while (!response.isEmpty()) {
-      logDataRecords.addAll(response.getResponse());
-
-      previousOffset += response.size();
-      pageRequest.setOffset(String.valueOf(previousOffset));
-      response = logRequest.isExperimental()
-          ? dataStoreService.list(LogDataRecord.class, pageRequest)
-          : wingsPersistence.query(LogDataRecord.class, pageRequest, excludeAuthority);
+    try (HIterator<LogDataRecord> iterator = new HIterator<>(recordQuery.fetch())) {
+      while (iterator.hasNext()) {
+        logDataRecords.add(iterator.next());
+      }
     }
+
     return logDataRecords;
   }
 
