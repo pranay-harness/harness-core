@@ -39,7 +39,8 @@ public enum FeatureName {
   AUDIT_TRAIL_UI,
   ARTIFACT_STREAM_REFACTOR,
   TRIGGER_YAML,
-  CV_FEEDBACKS;
+  CV_FEEDBACKS,
+  CUSTOM_DASHBOARD;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;

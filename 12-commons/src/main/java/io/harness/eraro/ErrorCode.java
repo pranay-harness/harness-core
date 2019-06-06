@@ -337,7 +337,9 @@ public enum ErrorCode {
 
   PAGERDUTY_ERROR,
 
-  HEALTH_ERROR;
+  HEALTH_ERROR,
+
+  INVALID_DASHBOARD_UPDATE_REQUEST("Invalid Dashboard update request");
 
   private Status status = BAD_REQUEST;
   private String description;
