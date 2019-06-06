@@ -1,13 +1,17 @@
 package io.harness.waiter;
 
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateMetaInfo;
+import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.persistence.PersistentEntity;
+import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ListNotifyResponseData implements ResponseData {
+@Data
+public class ListNotifyResponseData implements DelegateTaskNotifyResponseData {
   private List<PersistentEntity> data = new ArrayList<>();
+  private DelegateMetaInfo delegateMetaInfo;
 
   public ListNotifyResponseData() {}
 
