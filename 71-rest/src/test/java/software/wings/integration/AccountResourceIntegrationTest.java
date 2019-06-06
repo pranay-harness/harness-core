@@ -4,6 +4,7 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -50,14 +51,22 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Category(IntegrationTests.class)
   public void testAccountMigration() {
-    startAccountMigration(accountId);
+    disableAccount(accountId, true);
 
     String accountStatus = getAccountStatus(accountId);
-    assertEquals(AccountStatus.MIGRATING, accountStatus);
+    assertEquals(AccountStatus.INACTIVE, accountStatus);
+    List<User> users = userService.getUsersOfAccount(accountId);
+    for (User user : users) {
+      assertTrue(user.isDisabled());
+    }
 
-    completeAccountMigration(accountId);
+    disableAccount(accountId, false);
     accountStatus = getAccountStatus(accountId);
-    assertEquals(AccountStatus.MIGRATED, accountStatus);
+    assertEquals(AccountStatus.ACTIVE, accountStatus);
+    users = userService.getUsersOfAccount(accountId);
+    for (User user : users) {
+      assertFalse(user.isDisabled());
+    }
   }
 
   @Test
@@ -103,8 +112,9 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
     return accountStatus;
   }
 
-  private void startAccountMigration(String accountId) {
-    WebTarget target = client.target(API_BASE + "/account/" + accountId + "/start-migration");
+  private void disableAccount(String accountId, boolean disable) {
+    String operation = disable ? "disable" : "enable";
+    WebTarget target = client.target(API_BASE + "/account/" + operation + "?accountId=" + accountId);
     RestResponse<Boolean> restResponse =
         getRequestBuilderWithAuthHeader(target).post(null, new GenericType<RestResponse<Boolean>>() {});
     assertEquals(0, restResponse.getResponseMessages().size());
@@ -114,23 +124,6 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
 
     GovernanceConfig governanceConfig = governanceConfigService.get(accountId);
     assertNotNull(governanceConfig);
-    assertTrue(governanceConfig.isDeploymentFreeze());
-  }
-
-  private void completeAccountMigration(String accountId) {
-    WebTarget target = client.target(API_BASE + "/account/" + accountId + "/complete-migration");
-    RestResponse<Boolean> restResponse =
-        getRequestBuilderWithAuthHeader(target).post(null, new GenericType<RestResponse<Boolean>>() {});
-    assertEquals(0, restResponse.getResponseMessages().size());
-    Boolean statusUpdated = restResponse.getResource();
-    assertNotNull(statusUpdated);
-    assertTrue(statusUpdated);
-
-    Account account = wingsPersistence.get(Account.class, accountId);
-    assertNotNull(account);
-    List<User> users = userService.getUsersOfAccount(accountId);
-    for (User user : users) {
-      assertTrue(user.isDisabled());
-    }
+    assertEquals(!disable, governanceConfig.isDeploymentFreeze());
   }
 }

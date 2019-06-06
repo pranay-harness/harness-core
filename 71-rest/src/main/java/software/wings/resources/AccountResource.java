@@ -76,27 +76,25 @@ public class AccountResource {
   }
 
   @POST
-  @Path("{accountId}/start-migration")
+  @Path("disable")
   @Timed
   @ExceptionMetered
-  public RestResponse<Boolean> startMigration(@PathParam("accountId") String accountId) {
-    RestResponse<Boolean> response =
-        accountPermissionUtils.checkIfHarnessUser("User not allowed to start account migration");
+  public RestResponse<Boolean> disableAccount(@QueryParam("accountId") String accountId) {
+    RestResponse<Boolean> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to disable account");
     if (response == null) {
-      response = new RestResponse<>(accountService.startAccountMigration(accountId));
+      response = new RestResponse<>(accountService.disableAccount(accountId));
     }
     return response;
   }
 
   @POST
-  @Path("{accountId}/complete-migration")
+  @Path("enable")
   @Timed
   @ExceptionMetered
-  public RestResponse<Boolean> completeMigration(@PathParam("accountId") String accountId) {
-    RestResponse<Boolean> response =
-        accountPermissionUtils.checkIfHarnessUser("User not allowed to complete account migration");
+  public RestResponse<Boolean> enableAccount(@QueryParam("accountId") String accountId) {
+    RestResponse<Boolean> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to enable account");
     if (response == null) {
-      response = new RestResponse<>(accountService.completeAccountMigration(accountId));
+      response = new RestResponse<>(accountService.enableAccount(accountId));
     }
     return response;
   }

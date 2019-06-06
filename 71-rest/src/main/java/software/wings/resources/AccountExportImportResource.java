@@ -32,10 +32,12 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Account;
+import software.wings.beans.AccountStatus;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.GitCommit;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.LicenseInfo;
 import software.wings.beans.Schema;
 import software.wings.beans.User;
 import software.wings.beans.sso.LdapSettings;
@@ -49,6 +51,7 @@ import software.wings.dl.exportimport.ImportMode;
 import software.wings.dl.exportimport.ImportStatusReport;
 import software.wings.dl.exportimport.ImportStatusReport.ImportStatus;
 import software.wings.dl.exportimport.WingsMongoExportImport;
+import software.wings.licensing.LicenseService;
 import software.wings.scheduler.AlertCheckJob;
 import software.wings.scheduler.InstanceStatsCollectorJob;
 import software.wings.scheduler.InstanceSyncJob;
@@ -58,6 +61,7 @@ import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserService;
@@ -120,6 +124,8 @@ public class AccountExportImportResource {
   private Morphia morphia;
   private WingsMongoExportImport mongoExportImport;
   private PersistentScheduler scheduler;
+  private AccountService accountService;
+  private LicenseService licenseService;
   private AppService appService;
   private UserService userService;
   private UsageRestrictionsService usageRestrictionsService;
@@ -143,13 +149,15 @@ public class AccountExportImportResource {
 
   @Inject
   public AccountExportImportResource(WingsMongoPersistence wingsPersistence, Morphia morphia,
-      WingsMongoExportImport mongoExportImport, AppService appService,
-      UsageRestrictionsService usageRestrictionsService, UserService userService,
+      WingsMongoExportImport mongoExportImport, AccountService accountService, LicenseService licenseService,
+      AppService appService, UsageRestrictionsService usageRestrictionsService, UserService userService,
       AccountPermissionUtils accountPermissionUtils, @Named("BackgroundJobScheduler") PersistentScheduler scheduler) {
     this.wingsPersistence = wingsPersistence;
     this.morphia = morphia;
     this.mongoExportImport = mongoExportImport;
     this.scheduler = scheduler;
+    this.accountService = accountService;
+    this.licenseService = licenseService;
     this.appService = appService;
     this.userService = userService;
     this.usageRestrictionsService = usageRestrictionsService;
@@ -386,7 +394,12 @@ public class AccountExportImportResource {
       checkSchemaVersionCompatibility(zipEntryDataMap);
     }
 
-    // 2. Import account data first.
+    // 2.1 Preserve the account license expiration, license unit etc. information.
+    Account account = accountService.get(accountId);
+    // LicenseInfo should not be null for migrated Freemium accounts
+    LicenseInfo licenseInfo = account.getLicenseInfo();
+
+    // 2.2 Import account data first.
     String accountCollectionName = getCollectionName(Account.class);
     JsonArray accounts = getJsonArray(zipEntryDataMap, accountCollectionName);
     if (accounts != null) {
@@ -460,6 +473,12 @@ public class AccountExportImportResource {
       if (importStatus != null) {
         importStatuses.add(importStatus);
       }
+    }
+
+    if (licenseInfo != null) {
+      licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
+      licenseService.updateAccountLicense(accountId, licenseInfo);
+      logger.info("Updated license of account {} to: {}", accountId, licenseInfo);
     }
 
     // 7. Reinstantiate Quartz jobs (recreate through APIs) in the new cluster
