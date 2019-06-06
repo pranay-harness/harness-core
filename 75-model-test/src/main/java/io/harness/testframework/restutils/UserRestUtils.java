@@ -90,6 +90,28 @@ public class UserRestUtils {
     return completed.getResource();
   }
 
+  public static User completePaidUserSignupAndSignin(
+      String bearerToken, String accountId, String companyName, UserInvite invite) {
+    Registration registration = new Registration();
+    registration.setAgreement(true);
+    registration.setEmail(invite.getEmail());
+    registration.setName(invite.getName());
+    registration.setPassword(UserConstants.DEFAULT_PASSWORD);
+    registration.setUuid(invite.getUuid());
+
+    RestResponse<User> completed = Setup.portal()
+                                       .auth()
+                                       .oauth2(bearerToken)
+                                       .queryParam("company", companyName)
+                                       .queryParam("accountId", accountId)
+                                       .body(registration, ObjectMapperType.GSON)
+                                       .contentType(ContentType.JSON)
+                                       .put("/users/invites/" + invite.getUuid() + "/signin")
+                                       .as(new GenericType<RestResponse<User>>() {}.getType());
+
+    return completed.getResource();
+  }
+
   public static UserInvite completeTrialUserSignup(
       String bearerToken, String accountName, String companyName, UserInvite invite) {
     Registration registration = new Registration();
