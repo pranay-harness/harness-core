@@ -23,6 +23,7 @@ public class WorkflowDataCollectionJob implements Job {
     try {
       String params = jobExecutionContext.getMergedJobDataMap().getString("jobParams");
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
+      logger.info("Executing Workflow data collection job with params : {} and context : {}", params, context);
       boolean jobTriggered = continuousVerificationService.triggerWorkflowDataCollection(context);
       if (!jobTriggered) {
         deleteJob(jobExecutionContext);

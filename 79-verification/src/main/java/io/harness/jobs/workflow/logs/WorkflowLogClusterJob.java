@@ -51,6 +51,7 @@ public class WorkflowLogClusterJob implements Job {
     try {
       String params = jobExecutionContext.getMergedJobDataMap().getString("jobParams");
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
+      logger.info("Executing workflow Log Cluster job with context : {} and params : {}", context, params);
       new WorkflowLogClusterJob
           .LogClusterTask(analysisService, managerClientHelper, jobExecutionContext, context, learningEngineService,
               managerClient, dataStoreService)

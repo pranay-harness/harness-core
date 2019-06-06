@@ -71,12 +71,13 @@ public class WorkflowVerificationTaskPoller {
       do {
         try {
           verificationAnalysisTask = learningEngineService.getNextVerificationAnalysisTask(ServiceApiVersion.V1);
+          logger.info("pulled analysis task {}", verificationAnalysisTask);
           schedulePredictiveDataCollectionCronJob(verificationAnalysisTask);
           if (verificationAnalysisTask != null
               && !PREDICTIVE.equals(verificationAnalysisTask.getComparisonStrategy())) {
             // for both Log and Metric
+            logger.info("Scheduling Data collection cron");
             scheduleDataCollectionCronJob(verificationAnalysisTask);
-            logger.info("pulled analysis task {}", verificationAnalysisTask);
             switch (verificationAnalysisTask.getAnalysisType()) {
               case TIME_SERIES:
                 scheduleTimeSeriesAnalysisCronJob(verificationAnalysisTask);
@@ -103,7 +104,10 @@ public class WorkflowVerificationTaskPoller {
             .callManagerWithRetry(
                 verificationManagerClient.isFeatureEnabled(FeatureName.CV_DATA_COLLECTION_JOB, context.getAccountId()))
             .getResource()) {
+      logger.info("Feature flag CV_DATA_COLLECTION_JOB is enabled for accountId : {} and stateExecutionId : {}",
+          context.getAccountId(), context.getStateExecutionId());
       if (PER_MINUTE_CV_STATES.contains(context.getStateType())) {
+        logger.info("Current stateType is present in PER_MINUTE_CV_STATES, creating job for context : {}", context);
         Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(DELAY_MINUTES));
         JobDetail job = JobBuilder.newJob(WorkflowDataCollectionJob.class)
                             .withIdentity(context.getStateExecutionId(),
@@ -137,6 +141,7 @@ public class WorkflowVerificationTaskPoller {
       if (isNotEmpty(cvConfigUuid)) {
         return;
       }
+      logger.info("Creating CV Configuration for PREDICTIVE Analysis with context : {}", context);
       cvConfigUuid = generateUuid();
       CVConfiguration cvConfiguration;
       switch (context.getStateType()) {

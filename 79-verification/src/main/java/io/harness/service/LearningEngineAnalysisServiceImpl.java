@@ -277,6 +277,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     }
     wingsPersistence.updateField(LearningEngineAnalysisTask.class, taskId,
         LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.SUCCESS);
+    logger.info("Job has been marked as SUCCESS for taskId : {}", taskId);
   }
 
   @Override
@@ -353,6 +354,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     if (analysisContext != null) {
       analysisContext.setControlNodes(getNodesReplaceUniCode(analysisContext.getControlNodes()));
       analysisContext.setTestNodes(getNodesReplaceUniCode(analysisContext.getTestNodes()));
+      logger.info("Fetched analysis Context : {}", analysisContext);
     }
     return analysisContext;
   }
@@ -371,6 +373,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   public void markJobScheduled(AnalysisContext verificationAnalysisTask) {
     wingsPersistence.updateField(
         AnalysisContext.class, verificationAnalysisTask.getUuid(), "executionStatus", ExecutionStatus.SUCCESS);
+    logger.info("Marking job as SUCCESS for stateExecutionId : {}", verificationAnalysisTask.getStateExecutionId());
   }
 
   @Override
