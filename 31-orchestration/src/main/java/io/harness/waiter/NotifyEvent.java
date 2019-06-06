@@ -2,7 +2,6 @@ package io.harness.waiter;
 
 import com.google.common.base.MoreObjects;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.queue.Queuable;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -76,15 +75,13 @@ public class NotifyEvent extends Queuable {
       return this;
     }
 
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder resetTimestamp(Date resetTimestamp) {
-      this.resetTimestamp = resetTimestamp;
+      this.resetTimestamp = (Date) resetTimestamp.clone();
       return this;
     }
 
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder earliestGet(Date earliestGet) {
-      this.earliestGet = earliestGet;
+      this.earliestGet = (Date) earliestGet.clone();
       return this;
     }
 
@@ -93,9 +90,8 @@ public class NotifyEvent extends Queuable {
       return this;
     }
 
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder created(Date created) {
-      this.created = created;
+      this.created = (Date) created.clone();
       return this;
     }
 
