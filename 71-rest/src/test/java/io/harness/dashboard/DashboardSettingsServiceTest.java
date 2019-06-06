@@ -5,6 +5,7 @@ import static junit.framework.TestCase.fail;
 import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
@@ -105,8 +106,8 @@ public class DashboardSettingsServiceTest extends WingsBaseTest {
       DashboardSettings settings = dashboardSettingsService.createDashboardSettings(accountId, dashboardSettings);
     }
 
-    PageResponse<DashboardSettings> pageResponse =
-        dashboardSettingsService.getDashboardSettingSummary(accountId, 0, 20);
+    PageResponse<DashboardSettings> pageResponse = dashboardSettingsService.getDashboardSettingSummary(
+        accountId, PageRequestBuilder.aPageRequest().withOffset("0").withLimit("20").build());
 
     Assertions.assertThat(pageResponse.getTotal()).isEqualTo(10);
 

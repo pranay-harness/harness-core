@@ -1,5 +1,6 @@
 package io.harness.dashboard;
 
+import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 
 import javax.validation.constraints.NotNull;
@@ -13,5 +14,6 @@ public interface DashboardSettingsService {
 
   boolean deleteDashboardSettings(@NotNull String accountId, @NotNull String id);
 
-  PageResponse<DashboardSettings> getDashboardSettingSummary(@NotNull String accountId, int offset, int limit);
+  PageResponse<DashboardSettings> getDashboardSettingSummary(
+      @NotNull String accountId, @NotNull PageRequest pageRequest);
 }
