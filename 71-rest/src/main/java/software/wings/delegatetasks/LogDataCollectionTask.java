@@ -196,7 +196,9 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
             (key, value)
                 -> requestFields.add(
                     ThirdPartyApiCallField.builder().name(key).value(value.toString()).type(FieldType.TEXT).build()));
-        apiCallLog.setRequest(requestFields);
+        if (isNotEmpty(requestFields)) {
+          apiCallLog.setRequest(requestFields);
+        }
         Response<Object> response;
         try {
           response = request.execute();

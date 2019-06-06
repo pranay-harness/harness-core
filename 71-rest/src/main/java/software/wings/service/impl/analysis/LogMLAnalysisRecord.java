@@ -60,7 +60,9 @@ import java.util.Map;
   ,
       @Index(fields = {
         @Field("stateExecutionId"), @Field(value = "logCollectionMinute", type = IndexType.DESC)
-      }, options = @IndexOptions(name = "stateIdx"))
+      }, options = @IndexOptions(name = "stateIdx")), @Index(fields = {
+        @Field("cvConfigId"), @Field(value = "logCollectionMinute", type = IndexType.DESC)
+      }, options = @IndexOptions(name = "cvConfig_logCollectionMin_idx"))
 })
 @Data
 @NoArgsConstructor
