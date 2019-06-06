@@ -101,13 +101,13 @@ public interface AccountService {
    * Start account migration from one cluster to another. Once this step completed, the logged in user can only read,
    * but not update the account configurations.
    */
-  boolean startAccountMigration(String accountId);
+  boolean enableAccount(String accountId);
 
   /**
    * Once the account migration completed. All existing delegates belonging to this account will be redirected to the
    * new cluster that the account has been migrated into.
    */
-  boolean completeAccountMigration(String accountId);
+  boolean disableAccount(String accountId);
 
   boolean isCommunityAccount(String accountId);
 

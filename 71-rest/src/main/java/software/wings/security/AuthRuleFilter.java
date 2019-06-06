@@ -69,8 +69,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       "users/account", "users/two-factor-auth", "users/disable-two-factor-auth", "users/enable-two-factor-auth",
       "users/refresh-token", "account/new", "harness-api-keys", "users/set-default-account", "graphql"};
   private static final String[] NO_FILTERING_URIS_SUFFIXES = new String[] {"/logout"};
-  private static final String[] EXEMPTED_URI_PREFIXES =
-      new String[] {"limits/configure", "account/license", "account/export", "account/import", "account/delete/"};
+  private static final String[] EXEMPTED_URI_PREFIXES = new String[] {"limits/configure", "account/license",
+      "account/export", "account/import", "account/delete/", "account/disable", "account/enable"};
   private static final String[] EXEMPTED_URI_SUFFIXES = new String[] {"sales-contacts"};
 
   @Context private ResourceInfo resourceInfo;

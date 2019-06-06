@@ -218,9 +218,7 @@ public class AccountServiceImpl implements AccountService {
     } else {
       createDefaultAccountEntities(account);
       // Schedule default account level jobs.
-      AlertCheckJob.add(jobScheduler, account.getUuid());
-      InstanceStatsCollectorJob.add(jobScheduler, account.getUuid());
-      LimitVicinityCheckerJob.add(jobScheduler, account.getUuid());
+      scheduleAccountLevelJobs(account.getUuid());
     }
 
     logger.info("Successfully created account '{}' with id '{}'.", account.getAccountName(), account.getUuid());
@@ -366,9 +364,7 @@ public class AccountServiceImpl implements AccountService {
     boolean deleted = wingsPersistence.delete(Account.class, accountId);
     if (deleted) {
       dbCache.invalidate(Account.class, accountId);
-      InstanceStatsCollectorJob.delete(jobScheduler, accountId);
-      AlertCheckJob.delete(jobScheduler, accountId);
-      LimitVicinityCheckerJob.delete(jobScheduler, accountId);
+      deleteQuartzJobs(accountId);
       executorService.submit(() -> {
         List<OwnedByAccount> services = descendingServices(OwnedByAccount.class);
         services.forEach(service -> service.deleteByAccountId(accountId));
@@ -606,24 +602,26 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
-  public boolean startAccountMigration(String accountId) {
-    return setAccountStatus(accountId, AccountStatus.MIGRATING);
+  public boolean disableAccount(String accountId) {
+    // Also need to prevent all existing users in the migration account from logging in after completion of migration.
+    setUserStatusInAccount(accountId, false);
+    return setAccountStatus(accountId, AccountStatus.INACTIVE);
   }
 
   @Override
-  public boolean completeAccountMigration(String accountId) {
+  public boolean enableAccount(String accountId) {
     // Also need to prevent all existing users in the migration account from logging in after completion of migration.
-    disableAllUsersInAccount(accountId);
-    return setAccountStatus(accountId, AccountStatus.MIGRATED);
+    setUserStatusInAccount(accountId, true);
+    return setAccountStatus(accountId, AccountStatus.ACTIVE);
   }
 
-  private void disableAllUsersInAccount(String accountId) {
+  private void setUserStatusInAccount(String accountId, boolean enable) {
     Query<User> query =
         wingsPersistence.createQuery(User.class, excludeAuthority).field("accounts").contains(accountId);
     try (HIterator<User> records = new HIterator<>(query.fetch())) {
       while (records.hasNext()) {
         User user = records.next();
-        user.setDisabled(true);
+        user.setDisabled(!enable);
         wingsPersistence.save(user);
         userService.evictUserFromCache(user.getUuid());
         logger.info("User {} has been disabled.", user.getEmail());
@@ -677,7 +675,7 @@ public class AccountServiceImpl implements AccountService {
       if (exitCode == 0) {
         return "SUCCESS";
       }
-      logger.error("Curl script to generate delegate returned non-zero exit code: ", exitCode);
+      logger.error("Curl script to generate delegate returned non-zero exit code: {}", exitCode);
     } catch (IOException e) {
       logger.error("Error executing generate delegate curl command", e);
     } catch (InterruptedException e) {
@@ -775,26 +773,59 @@ public class AccountServiceImpl implements AccountService {
     newLicenseInfo.setAccountStatus(accountStatus);
     licenseService.updateAccountLicense(accountId, newLicenseInfo);
 
-    if (AccountStatus.MIGRATING.equals(accountStatus) || AccountStatus.MIGRATED.equals(accountStatus)) {
-      // 1. To freeze the deployments once the account is set to status MIGRATING
-      freezeDeployments(accountId);
-      // 2. Stop all quartz jobs associated with this account
+    if (AccountStatus.INACTIVE.equals(accountStatus)) {
+      setDeploymentFreeze(accountId, true);
       deleteQuartzJobs(accountId);
+    } else if (AccountStatus.ACTIVE.equals(accountStatus)) {
+      setDeploymentFreeze(accountId, false);
+      scheduleQuartzJobs(accountId);
     }
 
     return true;
   }
 
-  private void freezeDeployments(String accountId) {
+  private void setDeploymentFreeze(String accountId, boolean freeze) {
     GovernanceConfig governanceConfig = governanceConfigService.get(accountId);
     if (governanceConfig == null) {
-      governanceConfig = GovernanceConfig.builder().accountId(accountId).deploymentFreeze(true).build();
+      governanceConfig = GovernanceConfig.builder().accountId(accountId).deploymentFreeze(freeze).build();
       wingsPersistence.save(governanceConfig);
     } else {
-      governanceConfig.setDeploymentFreeze(true);
+      governanceConfig.setDeploymentFreeze(freeze);
       governanceConfigService.update(accountId, governanceConfig);
     }
-    logger.info("Freezed deployment for account {}", accountId);
+    logger.info("Set deployment freeze for account {} to: {}", accountId, freeze);
+  }
+
+  private void scheduleAccountLevelJobs(String accountId) {
+    // Schedule default account level jobs.
+    AlertCheckJob.add(jobScheduler, accountId);
+    InstanceStatsCollectorJob.add(jobScheduler, accountId);
+    LimitVicinityCheckerJob.add(jobScheduler, accountId);
+  }
+
+  private void scheduleQuartzJobs(String accountId) {
+    scheduleAccountLevelJobs(accountId);
+
+    List<String> appIds = appService.getAppIdsByAccountId(accountId);
+
+    // 2. ScheduledTriggerJob
+    List<Trigger> triggers = getAllScheduledTriggersForAccount(appIds);
+    for (Trigger trigger : triggers) {
+      // Scheduled triggers is using the cron expression as trigger. No need to add special delay.
+      ScheduledTriggerJob.add(jobScheduler, accountId, trigger.getAppId(), trigger.getUuid(), trigger);
+    }
+
+    // 3. InstanceSyncJob:
+    for (String appId : appIds) {
+      InstanceSyncJob.add(jobScheduler, accountId, appId);
+    }
+
+    // 4. LdapGroupSyncJob
+    List<LdapSettings> ldapSettings = getAllLdapSettingsForAccount(accountId);
+    for (LdapSettings ldapSetting : ldapSettings) {
+      LdapGroupSyncJob.add(jobScheduler, accountId, ldapSetting.getUuid());
+    }
+    logger.info("Started all background quartz jobs for account {}", accountId);
   }
 
   private void deleteQuartzJobs(String accountId) {
