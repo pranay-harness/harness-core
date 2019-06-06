@@ -28,7 +28,8 @@ public class WebhookParameters {
   public static final String DESTINATION_COMMIT_HASH = "${pullrequest.toRef.commit.hash}";
 
   // Bit Bucket Push Request suggestions
-  public static final String BIT_BUCKET_BRANCH_REF = "${push.changes[0].'new'.name}";
+  public static final String BIT_BUCKET_PUSH_BRANCH_REF = "${push.changes[0].'new'.name}";
+  public static final String BIT_BUCKET_PULL_BRANCH_REF = "${pullrequest.source.branch.name}";
   public static final String BIT_BUCKET_COMMIT_ID = "${push.changes[0].'new'.target.hash}";
 
   // Git Hub Pull request suggestions
@@ -39,7 +40,8 @@ public class WebhookParameters {
 
   // Git Hub Push event suggestions
   public static final String GH_PUSH_REF = "${ref}";
-  public static final String GH_PUSH_REF_BRANCH = "${ref.split('/')[2]}";
+  public static final String GH_PUSH_REF_BRANCH = "${ref.split('refs/heads/')[1]}";
+  public static final String GH_PULL_REF_BRANCH = "${pull_request.head.ref}";
   public static final String GH_PUSH_COMMIT_ID = "${commits[0].id}";
   public static final String GH_PUSH_HEAD_COMMIT_ID = "${head_commit.id}";
   public static final String GH_PUSH_REPOSITORY_NAME = "${repository.name}";
@@ -47,7 +49,8 @@ public class WebhookParameters {
 
   // Git Lab Push Event Suggestions
   public static final String GIT_LAB_PUSH_REF = "${ref}";
-  public static final String GIT_LAB_PUSH_REF_BRANCH = "${ref.split('/')[2]}";
+  public static final String GIT_LAB_PUSH_REF_BRANCH = "${ref.split('refs/heads/')[1]}";
+  public static final String GIT_LAB_PULL_REF_BRANCH = "${object_attributes.source_branch}";
   public static final String GIT_LAB_PUSH_COMMIT_ID = "${checkout_sha}";
   public static final String GIT_LAB_PUSH_REPOSITORY_NAME = "${repository.name}";
   public static final String GIT_LAB_PUSH_REPOSITORY_ID = "${repository.id}";
