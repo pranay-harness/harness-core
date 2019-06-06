@@ -313,7 +313,7 @@ Alternatively, use Fish shell: `brew install fish` then set iterms command to `/
 
 4. `rest/src/test/java/software/wings/service/impl/RoleRefreshUtil.java` to create the default users and roles.
 
-5. Run DelegateApplication: [Run > Run... > DelegateApplication]
+5. Run DelegateApplication: [Run > Run... > DelegateApplication]  
 
 The admin username and password are in BaseIntegrationTest.java.
 
