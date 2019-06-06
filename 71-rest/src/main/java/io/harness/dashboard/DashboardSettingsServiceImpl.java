@@ -1,11 +1,14 @@
 package io.harness.dashboard;
 
+import static io.harness.beans.PageRequest.DEFAULT_PAGE_SIZE;
+import static io.harness.beans.PageRequest.DEFAULT_UNLIMITED;
+import static io.harness.beans.PageRequest.PageRequestBuilder;
 import static io.harness.exception.WingsException.USER;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.beans.PageRequest.PageRequestBuilder;
+import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
@@ -20,7 +23,6 @@ import javax.validation.constraints.NotNull;
 @Singleton
 public class DashboardSettingsServiceImpl implements DashboardSettingsService {
   @Inject private WingsPersistence persistence;
-  int maxQueryLimit = 100;
   @Override
   public DashboardSettings get(@NotNull String accountId, @NotNull String id) {
     DashboardSettings dashboardSettings = persistence.get(DashboardSettings.class, id);
@@ -62,16 +64,25 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
   }
 
   @Override
-  public PageResponse<DashboardSettings> getDashboardSettingSummary(@NotNull String accountId, int offset, int limit) {
-    offset = Integer.max(offset, 0);
-    limit = Integer.min(limit, maxQueryLimit);
+  public PageResponse<DashboardSettings> getDashboardSettingSummary(
+      @NotNull String accountId, @NotNull PageRequest pageRequest) {
+    pageRequest = sanitizePageRequest(pageRequest);
+    pageRequest.addFilter(DashboardSettings.keys.accountId, Operator.EQ, accountId);
+    pageRequest.addFieldsExcluded(DashboardSettings.keys.data);
+    return persistence.query(DashboardSettings.class, pageRequest);
+  }
 
-    return persistence.query(DashboardSettings.class,
-        PageRequestBuilder.aPageRequest()
-            .withLimit(Integer.toString(limit))
-            .withOffset(Integer.toString(offset))
-            .addFilter(DashboardSettings.keys.accountId, Operator.EQ, accountId)
-            .addFieldsExcluded(DashboardSettings.keys.data)
-            .build());
+  private PageRequest sanitizePageRequest(PageRequest pageRequest) {
+    if (pageRequest == null) {
+      pageRequest =
+          PageRequestBuilder.aPageRequest().withLimit(Integer.toString(DEFAULT_PAGE_SIZE)).withOffset("0").build();
+    }
+    pageRequest.setOffset(pageRequest.getLimit() != null
+            ? Integer.toString(Integer.max(Integer.parseInt(pageRequest.getOffset()), 0))
+            : "0");
+    pageRequest.setLimit(pageRequest.getLimit() != null
+            ? Integer.toString(Integer.min(Integer.parseInt(pageRequest.getLimit()), DEFAULT_UNLIMITED))
+            : Integer.toString(DEFAULT_PAGE_SIZE));
+    return pageRequest;
   }
 }

@@ -218,7 +218,9 @@ public class PermissionAttribute {
 
     PREFERENCE(ACCOUNT),
 
-    TEMPLATE(ACCOUNT);
+    TEMPLATE(ACCOUNT),
+
+    CUSTOM_DASHBOARD(ACCOUNT);
 
     private ImmutableMap<Action, PermissionType> actionPermissionScopeMap;
 
