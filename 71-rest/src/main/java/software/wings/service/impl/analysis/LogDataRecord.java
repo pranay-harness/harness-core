@@ -61,8 +61,9 @@ import java.util.List;
         @Field("cvConfigId"), @Field(value = "logCollectionMinute", type = IndexType.ASC), @Field("clusterLevel")
       }, options = @IndexOptions(name = "cvRawRecordIdx")), @Index(fields = {
         @Field("cvConfigId")
-        , @Field("clusterLevel"), @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("host")
-      }, options = @IndexOptions(name = "cvBumpIdx"))
+        , @Field("clusterLevel"), @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("host"),
+            @Field(value = "createdAt", type = IndexType.DESC)
+      }, options = @IndexOptions(name = "cv_bump_idx"))
 })
 @Data
 @Builder

@@ -65,6 +65,7 @@ public class WorkflowVerificationTaskPoller {
   @Inject private VerificationManagerClient verificationManagerClient;
   @Inject private VerificationManagerClientHelper verificationManagerClientHelper;
 
+  @SuppressWarnings("PMD")
   public void scheduleTaskPoll() {
     taskPollService.scheduleAtFixedRate(() -> {
       AnalysisContext verificationAnalysisTask = null;
@@ -92,7 +93,7 @@ public class WorkflowVerificationTaskPoller {
 
             learningEngineService.markJobScheduled(verificationAnalysisTask);
           }
-        } catch (Exception e) {
+        } catch (Throwable e) {
           logger.error("error scheduling verification crons", e);
         }
       } while (verificationAnalysisTask != null);
