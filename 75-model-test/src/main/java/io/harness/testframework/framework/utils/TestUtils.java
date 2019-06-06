@@ -86,6 +86,9 @@ public class TestUtils {
     try {
       connection = new URL(url).openConnection();
       connection.getInputStream();
+      if (connection != null && connection.getURL().toString().contains("reset-password")) {
+        referredUrl = connection.getURL().toString();
+      }
     } catch (IOException ie) {
       if (connection != null && connection.getURL().toString().contains("reset-password")) {
         referredUrl = connection.getURL().toString();
