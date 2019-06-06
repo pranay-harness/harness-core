@@ -3,10 +3,13 @@ package software.wings.service.impl.trigger;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
-import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_BRANCH_REF;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_COMMIT_ID;
+import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_PULL_BRANCH_REF;
+import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_PUSH_BRANCH_REF;
+import static software.wings.beans.trigger.WebhookParameters.GH_PULL_REF_BRANCH;
 import static software.wings.beans.trigger.WebhookParameters.GH_PUSH_HEAD_COMMIT_ID;
 import static software.wings.beans.trigger.WebhookParameters.GH_PUSH_REF_BRANCH;
+import static software.wings.beans.trigger.WebhookParameters.GIT_LAB_PULL_REF_BRANCH;
 import static software.wings.beans.trigger.WebhookParameters.GIT_LAB_PUSH_COMMIT_ID;
 import static software.wings.beans.trigger.WebhookParameters.GIT_LAB_PUSH_REF_BRANCH;
 
@@ -65,6 +68,8 @@ public class WebhookEventUtils {
           switch (gitHubEventType) {
             case PUSH:
               return expressionEvaluator.substitute(GH_PUSH_REF_BRANCH, payload);
+            case PULL_REQUEST:
+              return expressionEvaluator.substitute(GH_PULL_REF_BRANCH, payload);
             default:
               return null;
           }
@@ -77,6 +82,8 @@ public class WebhookEventUtils {
           switch (gitLabEventType) {
             case PUSH:
               return expressionEvaluator.substitute(GIT_LAB_PUSH_REF_BRANCH, payload);
+            case PULL_REQUEST:
+              return expressionEvaluator.substitute(GIT_LAB_PULL_REF_BRANCH, payload);
             default:
               return null;
           }
@@ -88,7 +95,18 @@ public class WebhookEventUtils {
           }
           switch (bitBucketEventType) {
             case PUSH:
-              return expressionEvaluator.substitute(BIT_BUCKET_BRANCH_REF, payload);
+              return expressionEvaluator.substitute(BIT_BUCKET_PUSH_BRANCH_REF, payload);
+            case PULL_REQUEST_CREATED:
+            case PULL_REQUEST_UPDATED:
+            case PULL_REQUEST_APPROVED:
+            case PULL_REQUEST_APPROVAL_REMOVED:
+            case PULL_REQUEST_MERGED:
+            case PULL_REQUEST_DECLINED:
+            case PULL_REQUEST_COMMENT_CREATED:
+            case PULL_REQUEST_COMMENT_UPDATED:
+            case PULL_REQUEST_COMMENT_DELETED:
+              return expressionEvaluator.substitute(BIT_BUCKET_PULL_BRANCH_REF, payload);
+
             default:
               return null;
           }

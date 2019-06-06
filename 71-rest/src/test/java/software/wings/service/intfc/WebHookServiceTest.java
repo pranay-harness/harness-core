@@ -94,7 +94,24 @@ public class WebHookServiceTest extends WingsBaseTest {
                                        .build())
                         .build();
 
+  Trigger triggerWithBranchNameRegex =
+      Trigger.builder()
+          .workflowId(PIPELINE_ID)
+          .uuid(TRIGGER_ID)
+          .appId(APP_ID)
+          .name(TRIGGER_NAME)
+          .webHookToken(token)
+          .condition(WebHookTriggerCondition.builder()
+                         .webhookSource(WebhookSource.BITBUCKET)
+                         .parameters(of("PullRequestId", "${pullrequest.id}"))
+                         .webHookToken(WebHookToken.builder().webHookToken(token).build())
+                         .branchName("harshBranch(.*)")
+                         .build())
+          .build();
+
   WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
+  WebHookTriggerCondition webHookTriggerConditionWithBranch =
+      (WebHookTriggerCondition) triggerWithBranchNameRegex.getCondition();
 
   @Before
   public void setUp() {
@@ -241,6 +258,27 @@ public class WebHookServiceTest extends WingsBaseTest {
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("pullrequest:approved").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
+    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(), anyMap(), any());
+
+    WebHookResponse response = (WebHookResponse) webHookService.executeByEvent(token, payLoad, httpHeaders).getEntity();
+    assertThat(response).isNotNull();
+    assertThat(response.getStatus()).isEqualTo(RUNNING.name());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldTestJsonBitBucketPullWithBranchName() throws IOException {
+    webHookTriggerConditionWithBranch.setEventTypes(Arrays.asList(WebhookEventType.PULL_REQUEST));
+    webHookTriggerConditionWithBranch.setBitBucketEvents(Arrays.asList(BitBucketEventType.PULL_REQUEST_CREATED));
+
+    when(triggerService.getTriggerByWebhookToken(token)).thenReturn(triggerWithBranchNameRegex);
+
+    ClassLoader classLoader = getClass().getClassLoader();
+    File file = new File(
+        classLoader.getResource("software/wings/service/impl/webhook/bitbucket_pull_request_created.json").getFile());
+    String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
+
+    doReturn("pullrequest:created").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
     doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(), anyMap(), any());
 
     WebHookResponse response = (WebHookResponse) webHookService.executeByEvent(token, payLoad, httpHeaders).getEntity();

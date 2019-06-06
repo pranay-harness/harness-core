@@ -10,8 +10,6 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
-import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -67,22 +65,6 @@ public class WebhookTriggerProcessor {
         .in(EnumSet.<TriggerExecution.Status>of(Status.RUNNING, Status.SUCCESS))
         .order("-createdAt")
         .get();
-  }
-
-  public boolean validateBranchName(Trigger trigger, TriggerExecution triggerExecution) {
-    logger.info("Validating branch name for the trigger {}", trigger.getUuid());
-    WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
-    WebhookEventDetails webhookEventDetails = triggerExecution.getWebhookEventDetails();
-    if (webHookTriggerCondition.getBranchName() == null
-        || webHookTriggerCondition.getBranchName().equals(webhookEventDetails.getBranchName())) {
-      logger.info("Validating branch name completed for the trigger {}", trigger.getUuid());
-      return true;
-    }
-    String msg =
-        String.format("WebHook event branch name [%s] does not match with the trigger condition branch name [%s]",
-            webhookEventDetails.getBranchName(), webHookTriggerCondition.getBranchName());
-    logger.info(msg);
-    throw new InvalidRequestException(msg, WingsException.USER);
   }
 
   public boolean checkFileContentOptionSelected(Trigger trigger) {
