@@ -296,7 +296,7 @@ public class UserGroupResource {
   public RestResponse<PageResponse<UserGroup>> listForApprovals(@QueryParam("accountId") @NotEmpty String accountId) {
     PageRequest<UserGroup> pageRequest = PageRequestBuilder.aPageRequest()
                                              .addFilter("accountId", Operator.EQ, accountId)
-                                             .addFieldsIncluded("_id", "name")
+                                             .addFieldsIncluded("_id", "name", "notificationSettings")
                                              .build();
     PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, false);
     return getPublicUserGroups(pageResponse);
