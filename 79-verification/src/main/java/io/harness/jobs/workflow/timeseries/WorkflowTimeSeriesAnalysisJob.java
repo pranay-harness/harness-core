@@ -81,6 +81,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Job {
       String delegateTaskId = jobExecutionContext.getMergedJobDataMap().getString("delegateTaskId");
 
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
+      logger.info("Executing Workflow timeseries Analysis job for context : {}", context);
       new WorkflowTimeSeriesAnalysisJob
           .MetricAnalysisGenerator(
               timeSeriesAnalysisService, learningEngineService, managerClientHelper, context, jobExecutionContext)
