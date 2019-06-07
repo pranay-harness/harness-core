@@ -60,6 +60,14 @@ fi
 echo "Enter a comma separated list of suffixes for which proxy is not required. Do not use leading wildcards. (.company.com,specifichost) (optional):"
 read no_proxy
 
+echo "Bypass proxy settings to reach Harness manager? (y/N):"
+read -n1 bypass
+if [[ bypass == "y" || bypass == "Y" ]]; then
+  proxy_manager=false
+else
+  proxy_manager=true
+fi
+
 echo
 echo PROXY_HOST=$host > proxy.config
 echo PROXY_PORT=$port >> proxy.config
@@ -67,6 +75,7 @@ echo PROXY_SCHEME=$scheme >> proxy.config
 echo PROXY_USER=$user >> proxy.config
 echo PROXY_PASSWORD_ENC=$password_enc >> proxy.config
 echo NO_PROXY=$no_proxy >> proxy.config
+echo PROXY_MANAGER=$proxy_manager >> proxy.config
 
 echo
 echo "Proxy configured - proxy.config generated:"
