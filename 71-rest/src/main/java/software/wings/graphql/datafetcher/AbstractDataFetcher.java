@@ -188,7 +188,7 @@ public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
     }
   }
 
-  protected String getAccountId(DataFetchingEnvironment environment) {
+  public static String getAccountId(DataFetchingEnvironment environment) {
     GraphQLContext context = environment.getContext();
     String accountId = context.get("accountId");
 

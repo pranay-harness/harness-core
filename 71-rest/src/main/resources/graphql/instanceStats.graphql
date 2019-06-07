@@ -1,25 +1,18 @@
 enum InstanceFilterType {
-  Name
   CreatedAt
   Application
   Service
   Environment
-  Cloud
-  Provider
-  Instance
-  Type
+  CloudProvider
+  InstanceType
 }
 
 enum InstanceAggregation {
-  Name
-  CreatedAt
   Application
   Service
   Environment
-  Cloud
-  Provider
-  Instance
-  Type
+  CloudProvider
+  InstanceType
 }
 
 input InstanceFilter {

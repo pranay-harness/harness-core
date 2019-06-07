@@ -6,7 +6,8 @@ enum DeploymentFilterType {
   CloudProvider
   Status
   Note
-  CreatedAt
+  StartTime
+  EndTime
 }
 
 enum DeploymentAggregation {
@@ -17,7 +18,6 @@ enum DeploymentAggregation {
   CloudProvider
   Status
   Note
-  CreatedAt
 }
 
 input DeploymentFilter {
@@ -29,7 +29,6 @@ extend type Query {
   # Get deployment stats.
   deploymentStats(
     aggregateFunction: AggregateFunction
-    timeRange: TimeRange
     filters: [DeploymentFilter]
     groupBy: [DeploymentAggregation]
     groupByTime: TimeSeriesAggregation

@@ -33,7 +33,8 @@ public abstract class AbstractStatsDataFetcher<A, F, G, T> implements DataFetche
   private static final String GROUP_BY_TIME = "groupByTime";
   private static final String GENERIC_EXCEPTION_MSG = "An error has occurred. Please contact the Harness support team.";
 
-  protected abstract QLData fetch(A aggregateFunction, List<F> filters, List<G> groupBy, T groupByTime);
+  protected abstract QLData fetch(
+      String accountId, A aggregateFunction, List<F> filters, List<G> groupBy, T groupByTime);
 
   @Override
   public final Object get(DataFetchingEnvironment dataFetchingEnvironment) {
@@ -50,7 +51,8 @@ public abstract class AbstractStatsDataFetcher<A, F, G, T> implements DataFetche
       final List<G> groupBy = (List<G>) fetchObject(dataFetchingEnvironment, GROUP_BY, groupByClass);
       final T groupByTime = (T) fetchObject(dataFetchingEnvironment, GROUP_BY_TIME, groupByTimeClass);
 
-      result = fetch(aggregateFunction, filters, groupBy, groupByTime);
+      result = fetch(
+          AbstractDataFetcher.getAccountId(dataFetchingEnvironment), aggregateFunction, filters, groupBy, groupByTime);
 
     } catch (WingsException ex) {
       throw new WingsException(getCombinedErrorMessages(ex), ex, ex.getReportTargets());
