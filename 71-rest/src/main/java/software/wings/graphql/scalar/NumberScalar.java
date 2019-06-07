@@ -15,16 +15,11 @@ public class NumberScalar {
           .name("Number")
           .description(
               "This represents either an int or a long or a double. Will be tried to map to one of these in the same order")
-          .coercing(new Coercing<Number, String>() {
+          .coercing(new Coercing<Number, Number>() {
             @Override
-            public String serialize(Object dataFetcherResult) throws CoercingSerializeException {
-              Number number;
-              if (dataFetcherResult instanceof Integer) {
-                return Integer.toString((Integer) dataFetcherResult);
-              } else if (dataFetcherResult instanceof Long) {
-                return Long.toString((Long) dataFetcherResult);
-              } else if (dataFetcherResult instanceof Double) {
-                return Double.toString((Double) dataFetcherResult);
+            public Number serialize(Object dataFetcherResult) throws CoercingSerializeException {
+              if (dataFetcherResult instanceof Number) {
+                return (Number) dataFetcherResult;
               }
               throw new CoercingSerializeException("Cannot convert the data " + dataFetcherResult + " to a number");
             }
