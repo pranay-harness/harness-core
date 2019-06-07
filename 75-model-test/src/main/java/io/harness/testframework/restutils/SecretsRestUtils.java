@@ -84,7 +84,6 @@ public class SecretsRestUtils {
       logger.info("Entering add Secret with restrictions");
       JsonElement jsonElement = SecretsUtils.getUsageRestDataAsJson(secretText);
       logger.info(jsonElement.toString());
-      bearerToken = Setup.getAuthToken("admin@harness.io", "admin");
       secretsResponse = Setup.portal()
                             .auth()
                             .oauth2(bearerToken)

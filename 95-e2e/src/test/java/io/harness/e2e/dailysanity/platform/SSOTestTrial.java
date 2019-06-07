@@ -108,7 +108,7 @@ public class SSOTestTrial extends AbstractE2ETest {
 
     assertTrue(
         SSORestUtils.assignAuthMechanism(getTrialAccount().getUuid(), trialBearerToken, "LDAP") == HttpStatus.SC_OK);
-    String authToken = Setup.getAuthToken(LDAP_LOGIN_ID, ldapLoginPassword);
+    String authToken = Setup.getAuthTokenForAccount(trialQAAccount, LDAP_LOGIN_ID, ldapLoginPassword);
     assertTrue(StringUtils.isNotBlank(authToken));
     logger.info("Logging out in as LDAP user");
     Setup.signOut(user.getUuid(), authToken);
