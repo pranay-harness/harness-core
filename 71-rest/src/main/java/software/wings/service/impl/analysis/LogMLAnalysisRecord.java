@@ -72,6 +72,7 @@ import java.util.Map;
 public class LogMLAnalysisRecord extends Base {
   @NotEmpty private String stateExecutionId;
   private String cvConfigId;
+  @Indexed private String workflowExecutionId;
 
   @NotEmpty private StateType stateType;
 
@@ -110,9 +111,10 @@ public class LogMLAnalysisRecord extends Base {
   @Builder
   private LogMLAnalysisRecord(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String stateExecutionId, String cvConfigId,
-      StateType stateType, int logCollectionMinute, boolean isBaseLineCreated, String baseLineExecutionId, String query,
-      String analysisSummaryMessage, double score, List<List<SplunkAnalysisCluster>> unknown_events,
-      Map<String, List<SplunkAnalysisCluster>> test_events, Map<String, List<SplunkAnalysisCluster>> control_events,
+      String workflowExecutionId, StateType stateType, int logCollectionMinute, boolean isBaseLineCreated,
+      String baseLineExecutionId, String query, String analysisSummaryMessage, double score,
+      List<List<SplunkAnalysisCluster>> unknown_events, Map<String, List<SplunkAnalysisCluster>> test_events,
+      Map<String, List<SplunkAnalysisCluster>> control_events,
       Map<String, Map<String, SplunkAnalysisCluster>> control_clusters,
       Map<String, Map<String, SplunkAnalysisCluster>> unknown_clusters,
       Map<String, Map<String, SplunkAnalysisCluster>> test_clusters,
@@ -121,6 +123,7 @@ public class LogMLAnalysisRecord extends Base {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.stateExecutionId = stateExecutionId;
     this.cvConfigId = cvConfigId;
+    this.workflowExecutionId = workflowExecutionId;
     this.stateType = stateType;
     this.logCollectionMinute = logCollectionMinute;
     this.isBaseLineCreated = isBaseLineCreated;

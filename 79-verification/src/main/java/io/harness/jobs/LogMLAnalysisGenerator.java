@@ -112,8 +112,8 @@ public class LogMLAnalysisGenerator implements Runnable {
       String logAnalysisSaveUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
           + LogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL + "?accountId=" + accountId
           + "&applicationId=" + applicationId + "&stateExecutionId=" + context.getStateExecutionId()
-          + "&logCollectionMinute=" + logAnalysisMinute + "&isBaselineCreated=" + isBaselineCreated + "&taskId=" + uuid
-          + "&stateType=" + context.getStateType();
+          + "&workflowExecutionId=" + context.getWorkflowExecutionId() + "&logCollectionMinute=" + logAnalysisMinute
+          + "&isBaselineCreated=" + isBaselineCreated + "&taskId=" + uuid + "&stateType=" + context.getStateType();
 
       if (!isEmpty(context.getPrevWorkflowExecutionId())) {
         logAnalysisSaveUrl += "&baseLineExecutionId=" + context.getPrevWorkflowExecutionId();
@@ -135,8 +135,8 @@ public class LogMLAnalysisGenerator implements Runnable {
         final String experimentalLogAnalysisSaveUrl = "/verification/learning-exp"
             + LogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL + "?accountId=" + accountId
             + "&applicationId=" + applicationId + "&stateExecutionId=" + context.getStateExecutionId()
-            + "&logCollectionMinute=" + logAnalysisMinute + "&isBaselineCreated=" + isBaselineCreated
-            + "&taskId=" + uuid + "&stateType=" + context.getStateType();
+            + "&workflowExecutionId=" + context.getWorkflowExecutionId() + "&logCollectionMinute=" + logAnalysisMinute
+            + "&isBaselineCreated=" + isBaselineCreated + "&taskId=" + uuid + "&stateType=" + context.getStateType();
 
         List<MLExperiments> experiments = learningEngineService.getExperiments(MLAnalysisType.LOG_ML);
 

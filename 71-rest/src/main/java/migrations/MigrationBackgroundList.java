@@ -17,6 +17,7 @@ import migrations.all.ExplodeLogMLFeedbackRecordsMigration;
 import migrations.all.InitPipelineCounters;
 import migrations.all.InitServiceCounters;
 import migrations.all.InitWorkflowCounters;
+import migrations.all.LogAnalysisAddExecutionIdMigration;
 import migrations.all.MarkSendMailFlagAsTrueInUserGroup;
 import migrations.all.MigrateLogDataRecordsToGoogle;
 import migrations.all.RemoveSupportEmailFromSalesContacts;
@@ -69,6 +70,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(30, InitPipelineCounters.class))
         .add(Pair.of(31, InitServiceCounters.class))
         .add(Pair.of(32, SetDummyTechStackForOldAccounts.class))
+        .add(Pair.of(33, LogAnalysisAddExecutionIdMigration.class))
         .build();
   }
 }
