@@ -45,6 +45,21 @@ public class Setup {
     return user.getToken();
   }
 
+  public static String getAuthTokenForAccount(String accountId, String email, String password) {
+    String basicAuthValue =
+        "Basic " + encodeBase64String(String.format("%s:%s", email, password).getBytes(StandardCharsets.UTF_8));
+    GenericType<RestResponse<User>> genericType = new GenericType<RestResponse<User>>() {};
+    RestResponse<User> userRestResponse = Setup.portal()
+                                              .header("Authorization", basicAuthValue)
+                                              .queryParam("accountId", accountId)
+                                              .get("/users/login")
+                                              .as(genericType.getType());
+    assertNotNull(userRestResponse);
+    User user = userRestResponse.getResource();
+    assertNotNull(user);
+    return user.getToken();
+  }
+
   public static int signOut(String userId, String bearerToken) {
     return Setup.portal()
         .header("Authorization", "Bearer " + bearerToken)
