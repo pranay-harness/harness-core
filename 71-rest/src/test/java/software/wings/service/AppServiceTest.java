@@ -33,6 +33,7 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.limits.LimitCheckerFactory;
 import org.junit.Before;
@@ -172,6 +173,21 @@ public class AppServiceTest extends WingsBaseTest {
 
     verify(settingsService).createDefaultApplicationSettings(APP_ID, "ACCOUNT_ID", false);
     verify(notificationService).sendNotificationAsync(any(Notification.class));
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void shouldNotSaveApplicationWithEmptySpaces() {
+    Application app = anApplication().name("    ").accountId(ACCOUNT_ID).description("Description1").build();
+    Application savedApp =
+        anApplication().uuid(APP_ID).accountId("ACCOUNT_ID").name("  ").description("Description1").build();
+    when(wingsPersistence.saveAndGet(eq(Application.class), any(Application.class))).thenReturn(savedApp);
+    when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(savedApp);
+    when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.APP_DYNAMICS.name()))
+        .thenReturn(Lists.newArrayList(aSettingAttribute().withUuid("id").build()));
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
+    appService.save(app);
   }
 
   /**
