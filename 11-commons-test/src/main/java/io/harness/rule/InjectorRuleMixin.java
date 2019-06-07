@@ -16,15 +16,18 @@ import java.util.List;
 public interface InjectorRuleMixin {
   List<Module> modules(List<Annotation> annotations) throws Exception;
 
-  default void initialize(Injector injector) {}
+  default void initialize(Injector injector, List<Module> modules) {}
 
   default Statement applyInjector(Statement statement, FrameworkMethod frameworkMethod, Object target) {
     return new Statement() {
       @Override
       public void evaluate() throws Throwable {
         final List<Annotation> annotations = asList(frameworkMethod.getAnnotations());
-        Injector injector = Guice.createInjector(modules(annotations));
-        initialize(injector);
+        final List<Module> modules = modules(annotations);
+
+        Injector injector = Guice.createInjector(modules);
+        initialize(injector, modules);
+
         injector.injectMembers(target);
         try {
           statement.evaluate();

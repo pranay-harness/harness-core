@@ -7,6 +7,7 @@ import com.google.inject.Module;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import io.harness.OrchestrationModule;
 import io.harness.factory.ClosingFactory;
+import io.harness.govern.ServersModule;
 import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoPersistence;
@@ -14,12 +15,10 @@ import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
-import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
-import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEventListener;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
@@ -28,6 +27,7 @@ import org.junit.runners.model.Statement;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
 
+import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
@@ -88,19 +88,17 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
   }
 
   @Override
-  public void initialize(Injector injector) {
+  public void initialize(Injector injector, List<Module> modules) {
+    for (Module module : modules) {
+      if (module instanceof ServersModule) {
+        for (Closeable server : ((ServersModule) module).servers(injector)) {
+          closingFactory.addServer(server);
+        }
+      }
+    }
+
     final QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(NotifyEventListener.class), 1);
-
-    closingFactory.addServer(() -> {
-      try {
-        queueListenerController.stop();
-      } catch (Exception exception) {
-        logger.error("", exception);
-      }
-    });
-    closingFactory.addServer(() -> injector.getInstance(TimerScheduledExecutorService.class).shutdown());
-    closingFactory.addServer(() -> injector.getInstance(NotifierScheduledExecutorService.class).shutdown());
   }
 
   @Override
