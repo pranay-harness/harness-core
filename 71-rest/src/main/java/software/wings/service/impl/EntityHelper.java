@@ -733,6 +733,9 @@ public class EntityHelper {
       } else if (entity instanceof Service) {
         Service service = (Service) entity;
         finalYaml = format("%s/%s", yamlPrefix, INDEX_YAML);
+      } else if (entity instanceof Trigger) {
+        Trigger trigger = (Trigger) entity;
+        finalYaml = format("%s/%s%s", yamlPrefix, trigger.getName(), YAML_EXTENSION);
       } else if (entity instanceof ConfigFile) {
         ConfigFile configFile = (ConfigFile) entity;
         finalYaml = format("%s/%s%s", yamlPrefix, configFile.getFileName(), YAML_EXTENSION);

@@ -22,12 +22,13 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
+import software.wings.beans.EntityType;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.trigger.ArtifactSelection.ArtifactSelectionKeys;
 import software.wings.beans.trigger.ArtifactTriggerCondition.ArtifactTriggerConditionKeys;
 import software.wings.beans.trigger.Trigger.TriggerKeys;
 import software.wings.beans.trigger.TriggerCondition.TriggerConditionKeys;
-import software.wings.yaml.BaseYaml;
+import software.wings.yaml.BaseEntityYaml;
 import software.wings.yaml.trigger.TriggerConditionYaml;
 
 import java.util.ArrayList;
@@ -139,7 +140,7 @@ public class Trigger extends Base implements NameAccess {
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseYaml {
+  public static final class Yaml extends BaseEntityYaml {
     private String description;
     @NotEmpty List<TriggerConditionYaml> triggerCondition = new ArrayList<>();
     private String executionType;
@@ -148,8 +149,11 @@ public class Trigger extends Base implements NameAccess {
     private List<TriggerVariable> workflowVariables = new ArrayList<>();
 
     @lombok.Builder
-    public Yaml(String description, String executionType, String executionName, List<TriggerVariable> workflowVariables,
-        List<TriggerConditionYaml> triggerCondition, List<ArtifactSelection.Yaml> artifactSelections) {
+    public Yaml(String harnessApiVersion, String description, String executionType, String executionName,
+        List<TriggerVariable> workflowVariables, List<TriggerConditionYaml> triggerCondition,
+        List<ArtifactSelection.Yaml> artifactSelections) {
+      super(EntityType.TRIGGER.name(), harnessApiVersion);
+      this.setHarnessApiVersion(harnessApiVersion);
       this.description = description;
       this.executionType = executionType;
       this.executionName = executionName;

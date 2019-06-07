@@ -36,7 +36,6 @@ import software.wings.beans.Workflow;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
-import software.wings.beans.trigger.Trigger;
 import software.wings.exception.YamlProcessingException;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -229,8 +228,8 @@ public class YamlResource {
   @Path("/triggers/{triggerId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Trigger> updateTrigger(
-      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, YamlPayload yamlPayload) {
+  public RestResponse<Base> updateTrigger(@QueryParam("appId") String appId, @QueryParam("accountId") String accountId,
+      YamlPayload yamlPayload, @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
     return yamlService.update(yamlPayload, accountId);
   }
 

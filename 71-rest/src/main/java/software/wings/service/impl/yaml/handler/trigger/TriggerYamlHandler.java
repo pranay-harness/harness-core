@@ -19,6 +19,7 @@ import io.harness.data.structure.EmptyPredicate;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Variable;
@@ -44,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -60,7 +62,23 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
   @Inject EnvironmentService environmentService;
   @Inject private WorkflowYAMLHelper workflowYAMLHelper;
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) {}
+  public void delete(ChangeContext<Yaml> changeContext) {
+    String accountId = changeContext.getChange().getAccountId();
+    String yamlFilePath = changeContext.getChange().getFilePath();
+    Optional<Application> optionalApplication = yamlHelper.getApplicationIfPresent(accountId, yamlFilePath);
+    if (!optionalApplication.isPresent()) {
+      return;
+    }
+
+    String appId = yamlHelper.getAppId(accountId, yamlFilePath);
+
+    Trigger trigger = yamlHelper.getTrigger(appId, yamlFilePath);
+    if (trigger == null) {
+      return;
+    }
+
+    triggerService.delete(optionalApplication.get().getUuid(), trigger.getUuid());
+  }
 
   @Override
   public Yaml toYaml(Trigger bean, String appId) {
@@ -97,6 +115,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
         .executionName(executionName)
         .workflowVariables(convertToTriggerYamlVariables(appId, bean.getWorkflowVariables(), workflow))
         .artifactSelections(artifactSelectionList)
+        .harnessApiVersion(getHarnessApiVersion())
         .build();
   }
 

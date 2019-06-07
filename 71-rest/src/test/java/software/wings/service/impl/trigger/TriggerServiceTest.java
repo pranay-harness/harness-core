@@ -130,6 +130,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.yaml.YamlPushService;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -156,6 +157,7 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private HarnessTagService harnessTagService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Mock private YamlPushService yamlPushService;
 
   @Inject @InjectMocks private TriggerService triggerService;
 

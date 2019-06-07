@@ -45,6 +45,7 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
+import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
@@ -176,6 +177,10 @@ public class AuditYamlHelperForFailedChanges {
 
     if (matchWithRegex(YamlType.WORKFLOW.getPathExpression(), yamlFilePath)) {
       return handleWorkflowChange(auditRequestData).build();
+    }
+
+    if (matchWithRegex(YamlType.TRIGGER.getPathExpression(), yamlFilePath)) {
+      return handleTriggerChange(auditRequestData).build();
     }
 
     if (matchWithRegex(YamlType.PIPELINE.getPathExpression(), yamlFilePath)) {
@@ -325,6 +330,27 @@ public class AuditYamlHelperForFailedChanges {
     }
 
     entityHelper.loadMetaDataForEntity(workflow, auditRequestData.getBuilder(), auditRequestData.getType());
+    return auditRequestData.getBuilder();
+  }
+
+  private EntityAuditRecordBuilder handleTriggerChange(GitAuditDataWrapper auditRequestData) {
+    String yamlFilePath = auditRequestData.getYamlFilePath();
+
+    Trigger trigger = null;
+    try {
+      trigger = yamlHelper.getTrigger(auditRequestData.getAppId(), yamlFilePath);
+    } catch (Exception e) {
+      logger.warn(getWarningMessage(yamlFilePath, auditRequestData.getAccountId(), EntityType.TRIGGER.name()));
+    }
+
+    if (trigger == null) {
+      String name =
+          yamlHelper.extractEntityNameFromYamlPath(YamlType.TRIGGER.getPathExpression(), yamlFilePath, PATH_DELIMITER);
+
+      trigger = Trigger.builder().appId(auditRequestData.getAppId()).name(name).build();
+    }
+
+    entityHelper.loadMetaDataForEntity(trigger, auditRequestData.getBuilder(), auditRequestData.getType());
     return auditRequestData.getBuilder();
   }
 
