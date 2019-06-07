@@ -1,5 +1,7 @@
 package io.harness.event.harnessmetrics;
 
+import com.google.common.collect.ImmutableList;
+
 import io.harness.event.model.Event;
 import io.harness.event.model.EventConstants;
 import io.harness.event.model.EventType;
@@ -7,14 +9,16 @@ import io.harness.metrics.HarnessMetricRegistry;
 import io.prometheus.client.Collector.Type;
 import io.prometheus.client.Histogram;
 
+import java.util.List;
+
 public class DeploymentDurationEvent implements HarnessMetricsEvent {
-  private static final String[] deploymentDurationLabelNames =
-      new String[] {EventConstants.ACCOUNT_ID, EventConstants.ACCOUNT_NAME, EventConstants.WORKFLOW_ID,
-          EventConstants.WORKFLOW_NAME, EventConstants.APPLICATION_ID, EventConstants.APPLICATION_NAME};
+  private static final List<String> deploymentDurationLabelNames =
+      ImmutableList.of(EventConstants.ACCOUNT_ID, EventConstants.ACCOUNT_NAME, EventConstants.WORKFLOW_ID,
+          EventConstants.WORKFLOW_NAME, EventConstants.APPLICATION_ID, EventConstants.APPLICATION_NAME);
 
   @Override
   public String[] getLabelNames() {
-    return deploymentDurationLabelNames.clone();
+    return deploymentDurationLabelNames.toArray(new String[] {});
   }
 
   @Override

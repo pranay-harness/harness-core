@@ -12,7 +12,6 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -62,7 +61,6 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
     super(SettingVariableTypes.KUBERNETES_CLUSTER.name());
   }
 
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public KubernetesClusterConfig(boolean useKubernetesDelegate, String delegateName, String masterUrl, String username,
       char[] password, char[] caCert, char[] clientCert, char[] clientKey, char[] clientKeyPassphrase,
       char[] serviceAccountToken, String clientKeyAlgo, boolean skipValidation, String encryptedPassword,
@@ -73,12 +71,12 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
     this.delegateName = delegateName;
     this.masterUrl = masterUrl;
     this.username = username;
-    this.password = password;
-    this.caCert = caCert;
-    this.clientCert = clientCert;
-    this.clientKey = clientKey;
-    this.clientKeyPassphrase = clientKeyPassphrase;
-    this.serviceAccountToken = serviceAccountToken;
+    this.password = password == null ? null : password.clone();
+    this.caCert = caCert == null ? null : caCert.clone();
+    this.clientCert = clientCert == null ? null : clientCert.clone();
+    this.clientKey = clientKey == null ? null : clientKey.clone();
+    this.clientKeyPassphrase = clientKeyPassphrase == null ? null : clientKeyPassphrase.clone();
+    this.serviceAccountToken = serviceAccountToken == null ? null : serviceAccountToken.clone();
     this.clientKeyAlgo = clientKeyAlgo;
     this.skipValidation = skipValidation;
     this.encryptedPassword = encryptedPassword;

@@ -7,7 +7,6 @@ import static java.util.stream.Collectors.toList;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import lombok.Getter;
@@ -665,9 +664,8 @@ public class User extends Base implements Principal {
       return this;
     }
 
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withPassword(char[] password) {
-      this.password = password;
+      this.password = password == null ? null : password.clone();
       return this;
     }
 

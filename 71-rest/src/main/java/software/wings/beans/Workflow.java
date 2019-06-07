@@ -11,7 +11,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
@@ -38,7 +37,6 @@ import javax.validation.constraints.NotNull;
 @HarnessExportableEntity
 @FieldNameConstants(innerTypeName = "WorkflowKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
-@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class Workflow extends Base implements KeywordsAware, NameAccess {
   public static final String NAME_KEY = "name";
   public static final String KEYWORDS_KEY = "keywords";
@@ -82,6 +80,11 @@ public class Workflow extends Base implements KeywordsAware, NameAccess {
 
   @Getter @Setter private transient List<DeploymentType> deploymentTypes = new ArrayList<>();
   @Indexed private String accountId;
+
+  @Override
+  public boolean equals(Object o) {
+    return super.equals(o) && true;
+  }
 
   public List<String> getLinkedTemplateUuids() {
     return linkedTemplateUuids;

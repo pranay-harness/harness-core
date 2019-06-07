@@ -5,7 +5,6 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.mongodb.morphia.annotations.Transient;
@@ -63,7 +62,6 @@ public class SimpleEncryption implements EncryptionInterface {
     this(BaseEncoding.base64().encode(Hashing.sha256().hashString(keySource, CHARSET).asBytes()).toCharArray(), salt);
   }
 
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public SimpleEncryption(char[] key, byte[] salt) {
     if (key.length > AES_256_KEY_LENGTH) {
       key = Arrays.copyOf(key, AES_256_KEY_LENGTH);
@@ -71,8 +69,8 @@ public class SimpleEncryption implements EncryptionInterface {
     if (key.length != AES_256_KEY_LENGTH) {
       throw new WingsException("Key must be " + AES_256_KEY_LENGTH + " characters. Key is " + key.length);
     }
-    this.key = key;
-    this.salt = salt;
+    this.key = key.clone();
+    this.salt = salt == null ? null : salt.clone();
     this.secretKey = generateSecretKey(key, salt);
   }
 

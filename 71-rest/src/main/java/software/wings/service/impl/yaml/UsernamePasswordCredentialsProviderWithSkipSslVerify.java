@@ -1,6 +1,5 @@
 package software.wings.service.impl.yaml;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.eclipse.jgit.errors.UnsupportedCredentialItem;
 import org.eclipse.jgit.transport.CredentialItem;
 import org.eclipse.jgit.transport.CredentialsProvider;
@@ -14,10 +13,9 @@ public class UsernamePasswordCredentialsProviderWithSkipSslVerify extends Creden
     this(username, password.toCharArray());
   }
 
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public UsernamePasswordCredentialsProviderWithSkipSslVerify(String username, char[] password) {
     this.username = username;
-    this.password = password;
+    this.password = password == null ? null : password.clone();
   }
 
   @Override
@@ -43,9 +41,7 @@ public class UsernamePasswordCredentialsProviderWithSkipSslVerify extends Creden
       } else if (i instanceof CredentialItem.YesNoType) {
         continue;
       }
-      if (i instanceof CredentialItem.InformationalMessage) {
-        continue;
-      } else {
+      if (!(i instanceof CredentialItem.InformationalMessage)) {
         return false;
       }
     }

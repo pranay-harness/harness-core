@@ -2,7 +2,6 @@ package software.wings.beans;
 
 import static software.wings.beans.Permission.Builder.aPermission;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -48,9 +47,8 @@ public enum RoleType {
     return displayName;
   }
 
-  @SuppressFBWarnings("EI_EXPOSE_REP")
   public Permission[] getPermissions() {
-    return permissions;
+    return permissions == null ? null : permissions.clone();
   }
 
   public String getDescription() {

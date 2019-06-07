@@ -3,7 +3,6 @@ package software.wings.collect;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.queue.Queuable;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
@@ -127,9 +126,8 @@ public class CollectEvent extends Queuable {
      * @param resetTimestamp the reset timestamp
      * @return the builder
      */
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withResetTimestamp(Date resetTimestamp) {
-      this.resetTimestamp = resetTimestamp;
+      this.resetTimestamp = resetTimestamp == null ? null : (Date) resetTimestamp.clone();
       return this;
     }
 
@@ -139,9 +137,8 @@ public class CollectEvent extends Queuable {
      * @param earliestGet the earliest get
      * @return the builder
      */
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withEarliestGet(Date earliestGet) {
-      this.earliestGet = earliestGet;
+      this.earliestGet = earliestGet == null ? null : (Date) earliestGet.clone();
       return this;
     }
 
@@ -162,9 +159,8 @@ public class CollectEvent extends Queuable {
      * @param created the created
      * @return the builder
      */
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withCreated(Date created) {
-      this.created = created;
+      this.created = created == null ? null : (Date) created.clone();
       return this;
     }
 

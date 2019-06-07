@@ -1,20 +1,24 @@
 package io.harness.event.harnessmetrics;
 
+import com.google.common.collect.ImmutableList;
+
 import io.harness.event.model.Event;
 import io.harness.event.model.EventConstants;
 import io.harness.event.model.EventType;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.prometheus.client.Collector.Type;
 
+import java.util.List;
+
 public class DeploymentMetadataEvent implements HarnessMetricsEvent {
-  private static final String[] deploymentMetadataLabels =
-      new String[] {EventConstants.ACCOUNT_ID, EventConstants.ACCOUNT_NAME, EventConstants.WORKFLOW_EXECUTION_STATUS,
+  private static final List<String> deploymentMetadataLabels =
+      ImmutableList.of(EventConstants.ACCOUNT_ID, EventConstants.ACCOUNT_NAME, EventConstants.WORKFLOW_EXECUTION_STATUS,
           EventConstants.WORKFLOW_TYPE, EventConstants.WORKFLOW_ID, EventConstants.WORKFLOW_NAME,
-          EventConstants.APPLICATION_ID, EventConstants.APPLICATION_NAME};
+          EventConstants.APPLICATION_ID, EventConstants.APPLICATION_NAME);
 
   @Override
   public String[] getLabelNames() {
-    return deploymentMetadataLabels.clone();
+    return deploymentMetadataLabels.toArray(new String[] {});
   }
 
   @Override

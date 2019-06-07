@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.encryption.Encrypted;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -157,9 +156,8 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
       return this;
     }
 
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withKey(char[] key) {
-      this.key = key;
+      this.key = key == null ? null : key.clone();
       return this;
     }
 
@@ -193,9 +191,8 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
       return this;
     }
 
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withPassphrase(char[] passphrase) {
-      this.passphrase = passphrase;
+      this.passphrase = passphrase == null ? null : passphrase.clone();
       return this;
     }
 
@@ -204,9 +201,8 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
       return this;
     }
 
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withSshPassword(char[] sshPassword) {
-      this.sshPassword = sshPassword;
+      this.sshPassword = sshPassword == null ? null : sshPassword.clone();
       return this;
     }
 

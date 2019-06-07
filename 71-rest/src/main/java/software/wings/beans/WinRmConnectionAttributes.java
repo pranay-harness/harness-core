@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -42,14 +41,13 @@ public class WinRmConnectionAttributes extends SettingValue implements Encryptab
     super(SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES.name());
   }
 
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public WinRmConnectionAttributes(AuthenticationScheme authenticationScheme, String domain, String username,
       char[] password, boolean useSSL, int port, boolean skipCertChecks, String accountId, String encryptedPassword) {
     super(SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES.name());
     this.authenticationScheme = authenticationScheme;
     this.domain = domain;
     this.username = username;
-    this.password = password;
+    this.password = password == null ? null : password.clone();
     this.useSSL = useSSL;
     this.port = port;
     this.skipCertChecks = skipCertChecks;

@@ -1,21 +1,25 @@
 package io.harness.event.harnessmetrics;
 
+import com.google.common.collect.ImmutableList;
+
 import io.harness.event.model.Event;
 import io.harness.event.model.EventConstants;
 import io.harness.event.model.EventType;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.prometheus.client.Collector.Type;
 
+import java.util.List;
+
 /**
  * Created by Pranjal on 05/15/2019
  */
 public class LicenseDataMetric implements HarnessMetricsEvent {
-  private static final String[] staticLicenseMetricLabels =
-      new String[] {EventConstants.ACCOUNT_ID, EventConstants.ACCOUNT_NAME, EventConstants.COMPANY_NAME,
-          EventConstants.ACCOUNT_TYPE, EventConstants.ACCOUNT_STATUS, EventConstants.ACCOUNT_CREATED_AT};
+  private static final List<String> staticLicenseMetricLabels =
+      ImmutableList.of(EventConstants.ACCOUNT_ID, EventConstants.ACCOUNT_NAME, EventConstants.COMPANY_NAME,
+          EventConstants.ACCOUNT_TYPE, EventConstants.ACCOUNT_STATUS, EventConstants.ACCOUNT_CREATED_AT);
 
   public String[] getLabelNames() {
-    return staticLicenseMetricLabels.clone();
+    return staticLicenseMetricLabels.toArray(new String[] {});
   }
 
   public Type getType() {

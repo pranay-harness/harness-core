@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -41,12 +40,11 @@ public class AzureConfig extends SettingValue implements EncryptableSetting {
     super(SettingVariableTypes.AZURE.name());
   }
 
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public AzureConfig(String clientId, String tenantId, char[] key, String accountId, String encryptedKey) {
     this();
     this.clientId = clientId;
     this.tenantId = tenantId;
-    this.key = key;
+    this.key = key == null ? null : key.clone();
     this.accountId = accountId;
     this.encryptedKey = encryptedKey;
   }

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -35,14 +34,13 @@ public class SmbConfig extends SettingValue implements EncryptableSetting {
     super(SettingVariableTypes.SMB.name());
   }
 
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public SmbConfig(
       String smbUrl, String domain, String username, char[] password, String accountId, String encryptedPassword) {
     this();
     this.smbUrl = smbUrl;
     this.domain = domain;
     this.username = username;
-    this.password = password;
+    this.password = password == null ? null : password.clone();
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
   }

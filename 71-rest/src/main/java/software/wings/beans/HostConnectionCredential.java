@@ -1,7 +1,5 @@
 package software.wings.beans;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 /**
  * Created by anubhaw on 5/31/16.
  */
@@ -34,9 +32,8 @@ public class HostConnectionCredential {
    *
    * @return the ssh password
    */
-  @SuppressFBWarnings("EI_EXPOSE_REP")
   public char[] getSshPassword() {
-    return sshPassword;
+    return sshPassword == null ? null : sshPassword.clone();
   }
 
   /**
@@ -44,9 +41,8 @@ public class HostConnectionCredential {
    *
    * @param sshPassword the ssh password
    */
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public void setSshPassword(char[] sshPassword) {
-    this.sshPassword = sshPassword;
+    this.sshPassword = sshPassword == null ? null : sshPassword.clone();
   }
 
   /**
@@ -72,9 +68,8 @@ public class HostConnectionCredential {
    *
    * @return the app user password
    */
-  @SuppressFBWarnings("EI_EXPOSE_REP")
   public char[] getAppUserPassword() {
-    return appUserPassword;
+    return appUserPassword == null ? null : appUserPassword.clone();
   }
 
   /**
@@ -82,9 +77,8 @@ public class HostConnectionCredential {
    *
    * @param appUserPassword the app user password
    */
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public void setAppUserPassword(char[] appUserPassword) {
-    this.appUserPassword = appUserPassword;
+    this.appUserPassword = appUserPassword == null ? null : appUserPassword.clone();
   }
 
   /**
@@ -124,9 +118,8 @@ public class HostConnectionCredential {
      * @param sshPassword the ssh password
      * @return the host connection credential builder
      */
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public HostConnectionCredentialBuilder withSshPassword(char[] sshPassword) {
-      this.sshPassword = sshPassword;
+      this.sshPassword = sshPassword == null ? null : sshPassword.clone();
       return this;
     }
 
@@ -147,9 +140,8 @@ public class HostConnectionCredential {
      * @param appUserPassword the app user password
      * @return the host connection credential builder
      */
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public HostConnectionCredentialBuilder withAppUserPassword(char[] appUserPassword) {
-      this.appUserPassword = appUserPassword;
+      this.appUserPassword = appUserPassword == null ? null : appUserPassword.clone();
       return this;
     }
 

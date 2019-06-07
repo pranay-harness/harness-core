@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
@@ -44,11 +43,11 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Execu
     super(GCP.name());
   }
 
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public GcpConfig(
       char[] serviceAccountKeyFileContent, String accountId, String encryptedServiceAccountKeyFileContent) {
     this();
-    this.serviceAccountKeyFileContent = serviceAccountKeyFileContent;
+    this.serviceAccountKeyFileContent =
+        serviceAccountKeyFileContent == null ? null : serviceAccountKeyFileContent.clone();
     this.accountId = accountId;
     this.encryptedServiceAccountKeyFileContent = encryptedServiceAccountKeyFileContent;
   }

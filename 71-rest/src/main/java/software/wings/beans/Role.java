@@ -201,9 +201,9 @@ public class Role extends Base {
     if (roleType == RoleType.ACCOUNT_ADMIN || roleType == RoleType.APPLICATION_ADMIN
         || roleType == RoleType.PROD_SUPPORT || roleType == RoleType.NON_PROD_SUPPORT) {
       setDescription(roleType.getDescription());
-      if (roleType.getPermissions() != null) {
-        permissions = asList(roleType.getPermissions());
-
+      Permission[] permissionsArray = roleType.getPermissions();
+      if (permissionsArray != null) {
+        permissions = asList(permissionsArray);
         permissions.forEach(permission -> {
           permission.setAccountId(getAccountId());
           permission.setAppId(getAppId());

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
@@ -46,11 +45,10 @@ public class DynaTraceConfig extends SettingValue implements EncryptableSetting,
     super(StateType.DYNA_TRACE.name());
   }
 
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public DynaTraceConfig(String dynaTraceUrl, char[] apiToken, String accountId, String encryptedApiToken) {
     this();
     this.dynaTraceUrl = dynaTraceUrl;
-    this.apiToken = apiToken;
+    this.apiToken = apiToken == null ? null : apiToken.clone();
     this.accountId = accountId;
     this.encryptedApiToken = encryptedApiToken;
   }

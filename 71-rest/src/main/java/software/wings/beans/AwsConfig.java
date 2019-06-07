@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
@@ -49,12 +48,11 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Execu
     super(SettingVariableTypes.AWS.name());
   }
 
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public AwsConfig(String accessKey, char[] secretKey, String accountId, String encryptedSecretKey,
       boolean useEc2IamCredentials, String tag) {
     this();
     this.accessKey = accessKey;
-    this.secretKey = secretKey;
+    this.secretKey = secretKey == null ? null : secretKey.clone();
     this.accountId = accountId;
     this.encryptedSecretKey = encryptedSecretKey;
     this.useEc2IamCredentials = useEc2IamCredentials;

@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -47,7 +46,6 @@ public class SmtpConfig extends SettingValue implements EncryptableSetting {
     super(SettingVariableTypes.SMTP.name());
   }
 
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public SmtpConfig(String host, int port, String fromAddress, boolean useSSL, String username, char[] password,
       String accountId, String encryptedPassword) {
     this();
@@ -56,7 +54,7 @@ public class SmtpConfig extends SettingValue implements EncryptableSetting {
     this.fromAddress = fromAddress;
     this.useSSL = useSSL;
     this.username = username;
-    this.password = password;
+    this.password = password == null ? null : password.clone();
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
   }

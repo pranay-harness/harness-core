@@ -1,17 +1,21 @@
 package io.harness.event.harnessmetrics;
 
+import com.google.common.collect.ImmutableList;
+
 import io.harness.event.model.Event;
 import io.harness.event.model.EventConstants;
 import io.harness.event.model.EventType;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.prometheus.client.Collector.Type;
 
+import java.util.List;
+
 public class SetupDataMetric implements HarnessMetricsEvent {
-  private static final String[] staticMetricLabels =
-      new String[] {EventConstants.ACCOUNT_ID, EventConstants.ACCOUNT_NAME, EventConstants.SETUP_DATA_TYPE};
+  private static final List<String> staticMetricLabels =
+      ImmutableList.of(EventConstants.ACCOUNT_ID, EventConstants.ACCOUNT_NAME, EventConstants.SETUP_DATA_TYPE);
 
   public String[] getLabelNames() {
-    return staticMetricLabels.clone();
+    return staticMetricLabels.toArray(new String[] {});
   }
 
   public Type getType() {
