@@ -1,5 +1,7 @@
 package io.harness.mongo;
 
+import static io.harness.beans.SearchFilter.Operator.AND;
+import static io.harness.beans.SearchFilter.Operator.ELEMENT_MATCH;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.EXISTS;
 import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
@@ -23,6 +25,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.mongo.SampleEntity.SampleEntityKeys;
+import io.harness.persistence.HQuery;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.mapping.MappedClass;
@@ -32,6 +35,7 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -99,48 +103,7 @@ public class PageController {
       req.populateFilters(req.getUriInfo().getQueryParameters(), mappedClass, mapper);
     }
 
-    if (req.getFilters() != null) {
-      for (SearchFilter filter : req.getFilters()) {
-        if (filter == null || filter.getOp() == null) {
-          continue;
-        }
-
-        switch (filter.getOp()) {
-          case OR:
-          case AND:
-            List<Criteria> criteria = new ArrayList<>();
-            for (Object opFilter : filter.getFieldValues()) {
-              if (!(opFilter instanceof SearchFilter)) {
-                logger.error("OR/AND operator can only be used with SearchFilter values");
-                throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE);
-              }
-              SearchFilter opSearchFilter = (SearchFilter) opFilter;
-              criteria.add(applyOperator(query.criteria(opSearchFilter.getFieldName()), opSearchFilter));
-            }
-
-            if (filter.getOp() == OR) {
-              query.or(criteria.toArray(new Criteria[0]));
-            } else {
-              query.and(criteria.toArray(new Criteria[0]));
-            }
-            break;
-          case ELEMENT_MATCH: {
-            assertOne(filter.getFieldValues());
-
-            final PageRequest request = (PageRequest) filter.getFieldValues()[0];
-            Query elementMatchQuery = datastore.createQuery(cls).disableValidation();
-            elementMatchQuery = applyPageRequest(datastore, elementMatchQuery, request, cls, mapper);
-
-            query.field(filter.getFieldName()).elemMatch(elementMatchQuery);
-            break;
-          }
-          default:
-            FieldEnd<? extends Query<T>> fieldEnd = query.field(filter.getFieldName());
-            query = applyOperator(fieldEnd, filter);
-            break;
-        }
-      }
-    }
+    query = applySearchFilters(datastore, query, req.getFilters(), cls, mapper);
 
     if (req.getOrders() != null) {
       // Add default sorting if none present
@@ -166,6 +129,62 @@ public class PageController {
       query.retrievedFields(false, fieldsExcluded.toArray(new String[0]));
     }
 
+    return query;
+  }
+
+  private static <T> Query<T> applySearchFilters(
+      Datastore datastore, Query<T> query, List<SearchFilter> filters, Class<T> cls, Mapper mapper) {
+    if (filters == null || filters.size() == 0) {
+      return query;
+    }
+    for (SearchFilter filter : filters) {
+      if (filter == null || filter.getOp() == null) {
+        continue;
+      }
+
+      switch (filter.getOp()) {
+        case OR:
+        case AND:
+          List<Criteria> criteria = new ArrayList<>();
+          for (Object opFilter : filter.getFieldValues()) {
+            if (!(opFilter instanceof SearchFilter)) {
+              logger.error("OR/AND operator can only be used with SearchFilter values");
+              throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE);
+            }
+            SearchFilter opSearchFilter = (SearchFilter) opFilter;
+            if (opSearchFilter.getOp() == OR || opSearchFilter.getOp() == AND
+                || opSearchFilter.getOp() == ELEMENT_MATCH) {
+              Query<T> tQuery = applySearchFilters(datastore, datastore.createQuery(cls).disableValidation(),
+                  Arrays.asList(opSearchFilter), cls, mapper);
+              criteria.addAll(((HQuery) tQuery).getChildren());
+            } else {
+              criteria.add(applyOperator(query.criteria(opSearchFilter.getFieldName()), opSearchFilter));
+            }
+          }
+
+          if (filter.getOp() == OR) {
+            query.or(criteria.toArray(new Criteria[0]));
+          } else {
+            query.and(criteria.toArray(new Criteria[0]));
+          }
+          break;
+        case ELEMENT_MATCH: {
+          assertOne(filter.getFieldValues());
+
+          final PageRequest request = (PageRequest) filter.getFieldValues()[0];
+          Query elementMatchQuery = datastore.createQuery(cls).disableValidation();
+          elementMatchQuery = applyPageRequest(datastore, elementMatchQuery, request, cls, mapper);
+
+          query.field(filter.getFieldName()).elemMatch(elementMatchQuery);
+          break;
+        }
+        default:
+          FieldEnd<? extends Query<T>> fieldEnd = query.field(filter.getFieldName());
+          query = applyOperator(fieldEnd, filter);
+          break;
+      }
+      query = query;
+    }
     return query;
   }
 
