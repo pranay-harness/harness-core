@@ -41,7 +41,6 @@ public class SshSessionFactory {
    */
   public static Session getSSHSessionWithJumpbox(SshSessionConfig config, LogCallback logCallback)
       throws JSchException {
-    Session session = null;
     Session jumpboxSession = getSSHSession(config.getBastionHostConfig());
     int forwardingPort = jumpboxSession.setPortForwardingL(0, config.getHost(), config.getPort());
     logger.info("portforwarding port " + forwardingPort);
@@ -54,9 +53,7 @@ public class SshSessionFactory {
                                      .withHost("127.0.0.1")
                                      .withPort(forwardingPort)
                                      .build();
-    session = getSSHSession(newConfig);
-
-    return session;
+    return getSSHSession(newConfig);
   }
 
   /**
