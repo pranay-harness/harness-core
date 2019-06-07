@@ -96,6 +96,21 @@ public enum MetricType {
           .thresholdType(ThresholdType.ALERT_WHEN_LOWER)
           .comparisonType(ThresholdComparisonType.DELTA)
           .ml(0.3)
+          .build())),
+
+  /**
+   * Metric that represents any observed value with lower being bad
+   *
+   */
+  VALUE_LOWER(Lists.newArrayList(Threshold.builder()
+                                     .thresholdType(ThresholdType.ALERT_WHEN_LOWER)
+                                     .comparisonType(ThresholdComparisonType.RATIO)
+                                     .ml(0.01)
+                                     .build(),
+      Threshold.builder()
+          .thresholdType(ThresholdType.ALERT_WHEN_LOWER)
+          .comparisonType(ThresholdComparisonType.DELTA)
+          .ml(0.01)
           .build()));
 
   private List<Threshold> thresholds;
