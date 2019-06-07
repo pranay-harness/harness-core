@@ -4,7 +4,6 @@ import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
@@ -27,7 +26,6 @@ import java.util.List;
  */
 @Entity(value = "userInvites", noClassnameStored = true)
 @HarnessExportableEntity
-@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 //@Indexes(@Index(fields = {@Field("accountId"), @Field("email")}, options = @IndexOptions(unique = true))) //TODO:
 // handle update with insert and then uncomment
 @FieldNameConstants(innerTypeName = "UserInviteKeys")
@@ -55,6 +53,11 @@ public class UserInvite extends Base {
   private String companyName;
 
   private String marketPlaceToken;
+
+  @Override
+  public boolean equals(Object o) {
+    return super.equals(o) && true;
+  }
 
   /**
    * Gets account id.

@@ -76,12 +76,12 @@ public class NotifyEvent extends Queuable {
     }
 
     public Builder resetTimestamp(Date resetTimestamp) {
-      this.resetTimestamp = (Date) resetTimestamp.clone();
+      this.resetTimestamp = resetTimestamp == null ? null : (Date) resetTimestamp.clone();
       return this;
     }
 
     public Builder earliestGet(Date earliestGet) {
-      this.earliestGet = (Date) earliestGet.clone();
+      this.earliestGet = earliestGet == null ? null : (Date) earliestGet.clone();
       return this;
     }
 
@@ -91,7 +91,7 @@ public class NotifyEvent extends Queuable {
     }
 
     public Builder created(Date created) {
-      this.created = (Date) created.clone();
+      this.created = created == null ? null : (Date) created.clone();
       return this;
     }
 

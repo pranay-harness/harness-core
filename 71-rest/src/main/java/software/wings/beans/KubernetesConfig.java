@@ -1,7 +1,6 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -46,7 +45,6 @@ public class KubernetesConfig extends SettingValue implements EncryptableSetting
     super(SettingVariableTypes.KUBERNETES.name());
   }
 
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public KubernetesConfig(String masterUrl, String username, char[] password, char[] caCert, char[] clientCert,
       char[] clientKey, char[] clientKeyPassphrase, char[] serviceAccountToken, String clientKeyAlgo, String namespace,
       String accountId, String encryptedPassword, String encryptedCaCert, String encryptedClientCert,
@@ -54,12 +52,12 @@ public class KubernetesConfig extends SettingValue implements EncryptableSetting
     this();
     this.masterUrl = masterUrl;
     this.username = username;
-    this.password = password;
-    this.caCert = caCert;
-    this.clientCert = clientCert;
-    this.clientKey = clientKey;
-    this.clientKeyPassphrase = clientKeyPassphrase;
-    this.serviceAccountToken = serviceAccountToken;
+    this.password = password == null ? null : password.clone();
+    this.caCert = caCert == null ? null : caCert.clone();
+    this.clientCert = clientCert == null ? null : clientCert.clone();
+    this.clientKey = clientKey == null ? null : clientKey.clone();
+    this.clientKeyPassphrase = clientKeyPassphrase == null ? null : clientKeyPassphrase.clone();
+    this.serviceAccountToken = serviceAccountToken == null ? null : serviceAccountToken.clone();
     this.clientKeyAlgo = clientKeyAlgo;
     this.namespace = namespace;
     this.accountId = accountId;

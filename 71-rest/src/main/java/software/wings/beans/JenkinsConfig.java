@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
@@ -58,14 +57,13 @@ public class JenkinsConfig
     authMechanism = USERNAME_PASSWORD_FIELD;
   }
 
-  @SuppressFBWarnings({"EI_EXPOSE_REP2"})
   @Builder
   public JenkinsConfig(String jenkinsUrl, String username, char[] password, String accountId, String encryptedPassword,
       char[] token, String encryptedToken, String authMechanism) {
     super(SettingVariableTypes.JENKINS.name());
     this.jenkinsUrl = jenkinsUrl;
     this.username = username;
-    this.password = password;
+    this.password = password == null ? null : password.clone();
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
     this.authMechanism = authMechanism;

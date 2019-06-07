@@ -54,8 +54,8 @@ public class SumoConfig extends SettingValue implements EncryptableSetting, Exec
       String encryptedAccessKey) {
     this();
     this.sumoUrl = sumoUrl;
-    this.accessId = accessId.clone();
-    this.accessKey = accessKey.clone();
+    this.accessId = accessId == null ? null : accessId.clone();
+    this.accessKey = accessKey == null ? null : accessKey.clone();
     this.accountId = accountId;
     this.encryptedAccessId = encryptedAccessId;
     this.encryptedAccessKey = encryptedAccessKey;

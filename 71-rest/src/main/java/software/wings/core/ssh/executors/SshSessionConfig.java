@@ -2,7 +2,6 @@ package software.wings.core.ssh.executors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.encryption.Encrypted;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -168,9 +167,8 @@ public class SshSessionConfig implements EncryptableSetting, ScriptExecutionCont
       return this;
     }
 
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withPassword(char[] password) {
-      this.password = password;
+      this.password = password == null ? null : password.clone();
       return this;
     }
 
@@ -179,15 +177,13 @@ public class SshSessionConfig implements EncryptableSetting, ScriptExecutionCont
       return this;
     }
 
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withKey(char[] key) {
-      this.key = key;
+      this.key = key == null ? null : key.clone();
       return this;
     }
 
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withKeyPassphrase(char[] keyPassphrase) {
-      this.keyPassphrase = keyPassphrase;
+      this.keyPassphrase = keyPassphrase == null ? null : keyPassphrase.clone();
       return this;
     }
 
@@ -196,9 +192,8 @@ public class SshSessionConfig implements EncryptableSetting, ScriptExecutionCont
       return this;
     }
 
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withSudoAppPassword(char[] sudoAppPassword) {
-      this.sudoAppPassword = sudoAppPassword;
+      this.sudoAppPassword = sudoAppPassword == null ? null : sudoAppPassword.clone();
       return this;
     }
 
@@ -232,9 +227,8 @@ public class SshSessionConfig implements EncryptableSetting, ScriptExecutionCont
       return this;
     }
 
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withSshPassword(char[] sshPassword) {
-      this.sshPassword = sshPassword;
+      this.sshPassword = sshPassword == null ? null : sshPassword.clone();
       return this;
     }
 

@@ -166,7 +166,7 @@ public class EcsSetupParams extends ContainerSetupParams {
     }
 
     public EcsSetupParamsBuilder withSubnetIds(String[] subnetIds) {
-      this.subnetIds = subnetIds.clone();
+      this.subnetIds = subnetIds == null ? null : subnetIds.clone();
       return this;
     }
 
@@ -176,7 +176,7 @@ public class EcsSetupParams extends ContainerSetupParams {
     }
 
     public EcsSetupParamsBuilder withSecurityGroupIds(String[] securityGroupIds) {
-      this.securityGroupIds = securityGroupIds.clone();
+      this.securityGroupIds = securityGroupIds == null ? null : securityGroupIds.clone();
       return this;
     }
 

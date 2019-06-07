@@ -83,11 +83,11 @@ public class WingsException extends RuntimeException {
 
   public WingsException(String message, EnumSet<ReportTarget> reportTargets) {
     this(UNKNOWN_ERROR, message);
-    this.reportTargets = reportTargets.clone();
+    this.reportTargets = reportTargets == null ? null : reportTargets.clone();
   }
   public WingsException(String message, Throwable cause, EnumSet<ReportTarget> reportTargets) {
     this(UNKNOWN_ERROR, message, cause);
-    this.reportTargets = reportTargets.clone();
+    this.reportTargets = reportTargets == null ? null : reportTargets.clone();
   }
 
   public WingsException(String message, Throwable cause) {
@@ -112,7 +112,7 @@ public class WingsException extends RuntimeException {
 
   public WingsException(ErrorCode errorCode, String message, EnumSet<ReportTarget> reportTargets, Throwable cause) {
     this(errorCode, message, cause);
-    this.reportTargets = reportTargets.clone();
+    this.reportTargets = reportTargets == null ? null : reportTargets.clone();
   }
 
   public WingsException(ErrorCode errorCode) {
@@ -121,7 +121,7 @@ public class WingsException extends RuntimeException {
 
   public WingsException(ErrorCode errorCode, EnumSet<ReportTarget> reportTargets) {
     this(errorCode, (Throwable) null);
-    this.reportTargets = reportTargets.clone();
+    this.reportTargets = reportTargets == null ? null : reportTargets.clone();
   }
 
   public WingsException(ErrorCode errorCode, Throwable cause) {

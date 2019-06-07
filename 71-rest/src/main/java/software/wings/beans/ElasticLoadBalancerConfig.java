@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -55,14 +54,13 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
     super(SettingVariableTypes.ELB.name());
   }
 
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public ElasticLoadBalancerConfig(Regions region, String loadBalancerName, String accessKey, char[] secretKey,
       String accountId, String encryptedSecretKey, boolean useEc2IamCredentials) {
     this();
     this.region = region;
     this.loadBalancerName = loadBalancerName;
     this.accessKey = accessKey;
-    this.secretKey = secretKey;
+    this.secretKey = secretKey == null ? null : secretKey.clone();
     this.accountId = accountId;
     this.encryptedSecretKey = encryptedSecretKey;
     this.useEc2IamCredentials = useEc2IamCredentials;

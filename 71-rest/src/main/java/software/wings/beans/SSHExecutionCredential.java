@@ -7,7 +7,6 @@ package software.wings.beans;
 import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -77,9 +76,8 @@ public class SSHExecutionCredential extends ExecutionCredential {
      * @param sshPassword the ssh password
      * @return the builder
      */
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withSshPassword(char[] sshPassword) {
-      this.sshPassword = sshPassword;
+      this.sshPassword = sshPassword == null ? null : sshPassword.clone();
       return this;
     }
 
@@ -100,9 +98,8 @@ public class SSHExecutionCredential extends ExecutionCredential {
      * @param appAccountPassword the app account password
      * @return the builder
      */
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withAppAccountPassword(char[] appAccountPassword) {
-      this.appAccountPassword = appAccountPassword;
+      this.appAccountPassword = appAccountPassword == null ? null : appAccountPassword.clone();
       return this;
     }
 
@@ -112,9 +109,8 @@ public class SSHExecutionCredential extends ExecutionCredential {
      * @param keyPassphrase the key passphrase
      * @return the builder
      */
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Builder withKeyPassphrase(char[] keyPassphrase) {
-      this.keyPassphrase = keyPassphrase;
+      this.keyPassphrase = keyPassphrase == null ? null : keyPassphrase.clone();
       return this;
     }
 

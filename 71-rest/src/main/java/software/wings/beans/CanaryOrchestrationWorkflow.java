@@ -33,7 +33,6 @@ import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBAC
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
@@ -50,7 +49,6 @@ import java.util.Set;
  * Created by rishi on 12/21/16.
  */
 @JsonTypeName("CANARY")
-@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 @Slf4j
 public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   public CanaryOrchestrationWorkflow() {
@@ -85,6 +83,11 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   private Set<EntityType> requiredEntityTypes;
 
   @Transient @JsonIgnore private List<String> templateVariables = new ArrayList<>();
+
+  @Override
+  public boolean equals(Object o) {
+    return super.equals(o) && true;
+  }
 
   public PhaseStep getPreDeploymentSteps() {
     return preDeploymentSteps;

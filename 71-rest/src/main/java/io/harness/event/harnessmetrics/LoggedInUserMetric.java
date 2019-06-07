@@ -1,20 +1,23 @@
 package io.harness.event.harnessmetrics;
 
+import com.google.common.collect.ImmutableList;
+
 import io.harness.event.model.Event;
 import io.harness.event.model.EventConstants;
 import io.harness.event.model.EventType;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.prometheus.client.Collector.Type;
 
+import java.util.List;
 import java.util.Map;
 
 public class LoggedInUserMetric implements HarnessMetricsEvent {
-  private static final String[] loggedInUserMetricLabels =
-      new String[] {EventConstants.ACCOUNT_ID, EventConstants.ACCOUNT_NAME};
+  private static final List<String> loggedInUserMetricLabels =
+      ImmutableList.of(EventConstants.ACCOUNT_ID, EventConstants.ACCOUNT_NAME);
 
   @Override
   public String[] getLabelNames() {
-    return loggedInUserMetricLabels.clone();
+    return loggedInUserMetricLabels.toArray(new String[] {});
   }
 
   @Override

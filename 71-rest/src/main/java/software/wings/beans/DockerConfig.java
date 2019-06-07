@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
@@ -57,13 +56,12 @@ public class DockerConfig
     return isNotEmpty(username);
   }
 
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public DockerConfig(
       String dockerRegistryUrl, String username, char[] password, String accountId, String encryptedPassword) {
     super(SettingVariableTypes.DOCKER.name());
     setDockerRegistryUrl(dockerRegistryUrl);
     this.username = username;
-    this.password = password;
+    this.password = password == null ? null : password.clone();
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
   }

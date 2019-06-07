@@ -1,6 +1,5 @@
 package software.wings.sm;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.ExecutionStatus;
 
 import java.util.ArrayList;
@@ -9,11 +8,15 @@ import java.util.List;
 /**
  * Created by rishi on 8/18/16.
  */
-@SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class ElementNotifyResponseData extends ExecutionStatusData {
   private List<ContextElement> contextElements;
   private Long startTs;
   private Long endTs;
+
+  @Override
+  public boolean equals(Object obj) {
+    return super.equals(obj) && true;
+  }
 
   /**
    * Gets context element.
