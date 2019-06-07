@@ -7,14 +7,16 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.observer.Subject;
 import io.harness.persistence.UuidAware;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.beans.Event.Type;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.service.impl.yaml.service.YamlHelper;
-import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.entitycrud.EntityCrudOperationObserver;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.Validator;
 
@@ -30,8 +32,8 @@ public class YamlPushServiceImpl implements YamlPushService {
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
   @Inject private ExecutorService executorService;
   @Inject private YamlHelper yamlHelper;
-  @Inject private AuditService auditService;
   @Inject private FeatureFlagService featureFlagService;
+  @Getter private Subject<EntityCrudOperationObserver> entityCrudSubject = new Subject<>();
 
   @Override
   public <T> void pushYamlChangeSet(
@@ -75,7 +77,8 @@ public class YamlPushServiceImpl implements YamlPushService {
 
   private <T> void performAuditForEntityChange(String accountId, T oldEntity, T newEntity, Type type) {
     try {
-      auditService.registerAuditActions(accountId, oldEntity, newEntity, type);
+      entityCrudSubject.fireInform(
+          EntityCrudOperationObxxxxxxxx:handleEntityCrudOperation, accountId, oldEntity, newEntity, type);
     } catch (Exception e) {
       logErrorMsgForAudit(oldEntity, newEntity, type, e);
     }

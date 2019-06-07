@@ -127,6 +127,7 @@ import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.AuthenticationFilter;
 import software.wings.security.ThreadLocalUserProvider;
+import software.wings.service.impl.AuditServiceImpl;
 import software.wings.service.impl.DelayEventListener;
 import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.ExecutionEventListener;
@@ -135,12 +136,15 @@ import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.instance.DeploymentEventListener;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
+import software.wings.service.impl.yaml.YamlPushServiceImpl;
+import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.StateMachineExecutor;
 import software.wings.utils.CacheManager;
 import software.wings.yaml.gitSync.GitChangeSetRunnable;
@@ -514,6 +518,11 @@ public class WingsApplication extends Application<MainConfiguration> {
     settingsService.getManipulationSubject().register(workflowService);
     stateMachineExecutor.getStatusUpdateSubject().register(workflowExecutionService);
     stateInspectionService.getSubject().register(stateMachineExecutor);
+
+    // Register Audit observer
+    YamlPushServiceImpl yamlPushService = (YamlPushServiceImpl) injector.getInstance(Key.get(YamlPushService.class));
+    AuditServiceImpl auditService = (AuditServiceImpl) injector.getInstance(Key.get(AuditService.class));
+    yamlPushService.getEntityCrudSubject().register(auditService);
   }
 
   public static void registerIterators(Injector injector) {

@@ -314,6 +314,10 @@ public class AuditServiceImpl implements AuditService {
     logger.info("Deleted audit records older than {} days", days);
   }
 
+  public <T> void handleEntityCrudOperation(String accountId, T oldEntity, T newEntity, Type type) {
+    registerAuditActions(accountId, oldEntity, newEntity, type);
+  }
+
   @Override
   public <T> void registerAuditActions(String accountId, T oldEntity, T newEntity, Type type) {
     try {

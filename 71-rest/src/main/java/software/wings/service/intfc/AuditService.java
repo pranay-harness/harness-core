@@ -7,6 +7,7 @@ import software.wings.audit.AuditHeader.RequestType;
 import software.wings.audit.AuditHeaderYamlResponse;
 import software.wings.beans.Event.Type;
 import software.wings.beans.User;
+import software.wings.service.intfc.entitycrud.EntityCrudOperationObserver;
 
 import java.io.InputStream;
 
@@ -15,7 +16,7 @@ import java.io.InputStream;
  *
  * @author Rishi
  */
-public interface AuditService {
+public interface AuditService extends EntityCrudOperationObserver {
   /**
    * Creates the.
    *
