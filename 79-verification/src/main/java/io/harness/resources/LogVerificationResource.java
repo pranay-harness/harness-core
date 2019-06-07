@@ -132,8 +132,9 @@ public class LogVerificationResource {
       @QueryParam("logCollectionMinute") Integer logCollectionMinute,
       @QueryParam("isBaselineCreated") boolean isBaselineCreated, @QueryParam("taskId") String taskId,
       @QueryParam("baseLineExecutionId") String baseLineExecutionId, @QueryParam("stateType") StateType stateType,
-      LogMLAnalysisRecord mlAnalysisResponse) {
+      @QueryParam("workflowExecutionId") String workflowExecutionId, LogMLAnalysisRecord mlAnalysisResponse) {
     mlAnalysisResponse.setStateExecutionId(stateExecutionId);
+    mlAnalysisResponse.setWorkflowExecutionId(workflowExecutionId);
     mlAnalysisResponse.setLogCollectionMinute(logCollectionMinute);
     mlAnalysisResponse.setBaseLineCreated(isBaselineCreated);
     mlAnalysisResponse.setBaseLineExecutionId(baseLineExecutionId);
