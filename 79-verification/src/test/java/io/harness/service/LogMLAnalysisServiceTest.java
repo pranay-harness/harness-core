@@ -1,5 +1,6 @@
 package io.harness.service;
 
+import static io.harness.data.encoding.EncodingUtils.compressString;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -1255,6 +1256,135 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void testCompressionLogMlAnalysisRecordOnDemand() throws IOException {
+    File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
+
+    final Gson gson = new Gson();
+    LogMLAnalysisRecord logMLAnalysisRecord;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
+      logMLAnalysisRecord = gson.fromJson(br, type);
+    }
+
+    assertNotNull(logMLAnalysisRecord);
+    assertFalse(logMLAnalysisRecord.getUnknown_events().isEmpty());
+    assertFalse(logMLAnalysisRecord.getTest_events().isEmpty());
+    assertFalse(logMLAnalysisRecord.getControl_events().isEmpty());
+    assertFalse(logMLAnalysisRecord.getControl_clusters().isEmpty());
+    assertFalse(logMLAnalysisRecord.getUnknown_clusters().isEmpty());
+    assertFalse(logMLAnalysisRecord.getTest_clusters().isEmpty());
+    assertFalse(logMLAnalysisRecord.getIgnore_clusters().isEmpty());
+    assertNull(logMLAnalysisRecord.getAnalysisDetailsCompressedJson());
+    assertNull(logMLAnalysisRecord.getProtoSerializedAnalyisDetails());
+
+    // save using json compression
+    LogMLAnalysisRecord logAnalysisDetails = LogMLAnalysisRecord.builder()
+                                                 .unknown_events(logMLAnalysisRecord.getUnknown_events())
+                                                 .test_events(logMLAnalysisRecord.getTest_events())
+                                                 .control_events(logMLAnalysisRecord.getControl_events())
+                                                 .control_clusters(logMLAnalysisRecord.getControl_clusters())
+                                                 .unknown_clusters(logMLAnalysisRecord.getUnknown_clusters())
+                                                 .test_clusters(logMLAnalysisRecord.getTest_clusters())
+                                                 .ignore_clusters(logMLAnalysisRecord.getIgnore_clusters())
+                                                 .build();
+
+    logMLAnalysisRecord.setAnalysisDetailsCompressedJson(compressString(JsonUtils.asJson(logAnalysisDetails)));
+    logMLAnalysisRecord.setUnknown_events(null);
+    logMLAnalysisRecord.setTest_events(null);
+    logMLAnalysisRecord.setControl_events(null);
+    logMLAnalysisRecord.setControl_clusters(null);
+    logMLAnalysisRecord.setUnknown_clusters(null);
+    logMLAnalysisRecord.setTest_clusters(null);
+    logMLAnalysisRecord.setIgnore_clusters(null);
+    wingsPersistence.save(logMLAnalysisRecord);
+
+    LogMLAnalysisRecord savedMlAnalysisRecord =
+        wingsPersistence.get(LogMLAnalysisRecord.class, logMLAnalysisRecord.getUuid());
+    assertNull(savedMlAnalysisRecord.getUnknown_events());
+    assertNull(savedMlAnalysisRecord.getTest_events());
+    assertNull(savedMlAnalysisRecord.getControl_events());
+    assertNull(savedMlAnalysisRecord.getControl_clusters());
+    assertNull(savedMlAnalysisRecord.getUnknown_clusters());
+    assertNull(savedMlAnalysisRecord.getTest_clusters());
+    assertNull(savedMlAnalysisRecord.getIgnore_clusters());
+    assertNull(savedMlAnalysisRecord.getProtoSerializedAnalyisDetails());
+    assertNotNull(savedMlAnalysisRecord.getAnalysisDetailsCompressedJson());
+
+    analysisService.getLogAnalysisRecords(
+        logMLAnalysisRecord.getCvConfigId(), logMLAnalysisRecord.getLogCollectionMinute(), false);
+    savedMlAnalysisRecord = wingsPersistence.get(LogMLAnalysisRecord.class, logMLAnalysisRecord.getUuid());
+    assertNull(savedMlAnalysisRecord.getUnknown_events());
+    assertNull(savedMlAnalysisRecord.getTest_events());
+    assertNull(savedMlAnalysisRecord.getControl_events());
+    assertNull(savedMlAnalysisRecord.getControl_clusters());
+    assertNull(savedMlAnalysisRecord.getUnknown_clusters());
+    assertNull(savedMlAnalysisRecord.getTest_clusters());
+    assertNull(savedMlAnalysisRecord.getIgnore_clusters());
+    assertNull(savedMlAnalysisRecord.getAnalysisDetailsCompressedJson());
+    assertNotNull(savedMlAnalysisRecord.getProtoSerializedAnalyisDetails());
+
+    LogMLAnalysisRecord logMLAnalysisRecordToCompare;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
+      logMLAnalysisRecordToCompare = gson.fromJson(br, type);
+    }
+    assertNotNull(logMLAnalysisRecordToCompare);
+    assertNotNull(logMLAnalysisRecordToCompare.getUnknown_events());
+    assertNotNull(logMLAnalysisRecordToCompare.getTest_events());
+    assertNotNull(logMLAnalysisRecordToCompare.getControl_events());
+    assertNotNull(logMLAnalysisRecordToCompare.getControl_clusters());
+    assertNotNull(logMLAnalysisRecordToCompare.getTest_clusters());
+    assertNotNull(logMLAnalysisRecordToCompare.getUnknown_clusters());
+    assertNotNull(logMLAnalysisRecordToCompare.getIgnore_clusters());
+    assertNull(logMLAnalysisRecordToCompare.getAnalysisDetailsCompressedJson());
+    assertNull(logMLAnalysisRecordToCompare.getProtoSerializedAnalyisDetails());
+
+    logMLAnalysisRecord = analysisService.getLogAnalysisRecords(
+        logMLAnalysisRecord.getCvConfigId(), logMLAnalysisRecord.getLogCollectionMinute(), true);
+    assertNull(logMLAnalysisRecord.getUnknown_events());
+    assertNull(logMLAnalysisRecord.getTest_events());
+    assertNull(logMLAnalysisRecord.getControl_events());
+    assertNull(logMLAnalysisRecord.getControl_clusters());
+    assertNull(logMLAnalysisRecord.getUnknown_clusters());
+    assertNull(logMLAnalysisRecord.getTest_clusters());
+    assertNull(logMLAnalysisRecord.getIgnore_clusters());
+    assertNull(logMLAnalysisRecord.getAnalysisDetailsCompressedJson());
+    assertNotNull(logMLAnalysisRecord.getProtoSerializedAnalyisDetails());
+
+    logMLAnalysisRecord.decompressLogAnalysisRecord();
+    assertEquals(logMLAnalysisRecord.getAnalysisStatus(), logMLAnalysisRecordToCompare.getAnalysisStatus());
+    assertEquals(logMLAnalysisRecord.getUnknown_events(), logMLAnalysisRecordToCompare.getUnknown_events());
+    assertEquals(logMLAnalysisRecord.getTest_events(), logMLAnalysisRecordToCompare.getTest_events());
+    assertEquals(logMLAnalysisRecord.getControl_events(), logMLAnalysisRecordToCompare.getControl_events());
+    assertEquals(logMLAnalysisRecord.getTest_clusters(), logMLAnalysisRecordToCompare.getTest_clusters());
+    assertEquals(logMLAnalysisRecord.getControl_clusters(), logMLAnalysisRecordToCompare.getControl_clusters());
+    assertEquals(logMLAnalysisRecord.getUnknown_clusters(), logMLAnalysisRecordToCompare.getUnknown_clusters());
+    assertEquals(logMLAnalysisRecord.getIgnore_clusters(), logMLAnalysisRecordToCompare.getIgnore_clusters());
+
+    logMLAnalysisRecord = analysisService.getLogAnalysisRecords(
+        logMLAnalysisRecord.getCvConfigId(), logMLAnalysisRecord.getLogCollectionMinute(), false);
+    assertNotNull(logMLAnalysisRecord.getUnknown_events());
+    assertNotNull(logMLAnalysisRecord.getTest_events());
+    assertNotNull(logMLAnalysisRecord.getControl_events());
+    assertNotNull(logMLAnalysisRecord.getControl_clusters());
+    assertNotNull(logMLAnalysisRecord.getUnknown_clusters());
+    assertNotNull(logMLAnalysisRecord.getTest_clusters());
+    assertNotNull(logMLAnalysisRecord.getIgnore_clusters());
+    assertNull(logMLAnalysisRecord.getAnalysisDetailsCompressedJson());
+    assertNull(logMLAnalysisRecord.getProtoSerializedAnalyisDetails());
+
+    assertEquals(logMLAnalysisRecord.getAnalysisStatus(), logMLAnalysisRecordToCompare.getAnalysisStatus());
+    assertEquals(logMLAnalysisRecord.getUnknown_events(), logMLAnalysisRecordToCompare.getUnknown_events());
+    assertEquals(logMLAnalysisRecord.getTest_events(), logMLAnalysisRecordToCompare.getTest_events());
+    assertEquals(logMLAnalysisRecord.getControl_events(), logMLAnalysisRecordToCompare.getControl_events());
+    assertEquals(logMLAnalysisRecord.getTest_clusters(), logMLAnalysisRecordToCompare.getTest_clusters());
+    assertEquals(logMLAnalysisRecord.getControl_clusters(), logMLAnalysisRecordToCompare.getControl_clusters());
+    assertEquals(logMLAnalysisRecord.getUnknown_clusters(), logMLAnalysisRecordToCompare.getUnknown_clusters());
+    assertEquals(logMLAnalysisRecord.getIgnore_clusters(), logMLAnalysisRecordToCompare.getIgnore_clusters());
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void testGetAnalysisForBaseline() throws IOException {
     File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
 
@@ -1278,8 +1408,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertEquals(
         numOfRecords, wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList().size());
 
-    final LogMLAnalysisRecord logAnalysisRecord = analysisService.getLogAnalysisRecords(
-        logMLAnalysisRecord.getAppId(), logMLAnalysisRecord.getCvConfigId(), numOfRecords);
+    final LogMLAnalysisRecord logAnalysisRecord =
+        analysisService.getLogAnalysisRecords(logMLAnalysisRecord.getCvConfigId(), numOfRecords, false);
     assertEquals(numOfRecords, logAnalysisRecord.getLogCollectionMinute());
   }
 

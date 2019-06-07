@@ -61,8 +61,8 @@ import java.util.Map;
       @Index(fields = {
         @Field("stateExecutionId"), @Field(value = "logCollectionMinute", type = IndexType.DESC)
       }, options = @IndexOptions(name = "stateIdx")), @Index(fields = {
-        @Field("cvConfigId"), @Field(value = "logCollectionMinute", type = IndexType.DESC)
-      }, options = @IndexOptions(name = "cvConfig_logCollectionMin_idx"))
+        @Field("cvConfigId"), @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("deprecated")
+      }, options = @IndexOptions(name = "cvConfigLogCollectionMinIdx"))
 })
 @Data
 @NoArgsConstructor

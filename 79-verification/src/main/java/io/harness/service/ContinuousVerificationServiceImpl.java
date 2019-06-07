@@ -1021,7 +1021,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             final String logAnalysisGetUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
                 + LogAnalysisResource.ANALYSIS_GET_24X7_ANALYSIS_RECORDS_URL
                 + "?appId=" + logsCVConfiguration.getAppId() + "&cvConfigId=" + logsCVConfiguration.getUuid()
-                + "&analysisMinute=" + ((LogsCVConfiguration) cvConfiguration).getBaselineEndMinute();
+                + "&analysisMinute=" + ((LogsCVConfiguration) cvConfiguration).getBaselineEndMinute() + "&compressed="
+                + verificationManagerClientHelper
+                      .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(
+                          FeatureName.SEND_LOG_ANALYSIS_COMPRESSED, accountId))
+                      .getResource();
             String failureUrl = "/verification/" + LearningEngineService.RESOURCE_URL
                 + VerificationConstants.NOTIFY_LEARNING_FAILURE + "?taskId=" + taskId;
 
