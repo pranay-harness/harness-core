@@ -34,16 +34,20 @@ import java.util.List;
 @FieldNameConstants(innerTypeName = "AuditHeaderKeys")
 @Indexes({
   @Index(fields =
-      { @Field(AuditHeaderKeys.appIdEntityRecord)
-        , @Field(value = AuditHeaderKeys.createdAt, type = IndexType.DESC) },
-      options = @IndexOptions(name = "entityRecordAppIndex"))
+      {
+        @Field(AuditHeaderKeys.accountId)
+        , @Field(AuditHeaderKeys.appIdEntityRecord), @Field(AuditHeaderKeys.affectedResourceType),
+            @Field(AuditHeaderKeys.affectedResourceOp),
+            @Field(value = AuditHeaderKeys.createdAt, type = IndexType.DESC),
+      },
+      options = @IndexOptions(name = "entityRecordIndex_1"))
   ,
       @Index(fields = {
-        @Field(AuditHeaderKeys.appIdEntityRecord)
-        , @Field(AuditHeaderKeys.affectedResourceOp), @Field(AuditHeaderKeys.affectedResourceType),
-            @Field(AuditHeaderKeys.affectedResourceId),
+        @Field(AuditHeaderKeys.accountId)
+        , @Field(AuditHeaderKeys.appIdEntityRecord), @Field(AuditHeaderKeys.affectedResourceId),
+            @Field(AuditHeaderKeys.affectedResourceOp),
             @Field(value = AuditHeaderKeys.createdAt, type = IndexType.DESC),
-      }, options = @IndexOptions(name = "entityRecordAffectedResourceIndex"))
+      }, options = @IndexOptions(name = "entityRecordIndex_2"))
 })
 
 public class AuditHeader extends Base {
