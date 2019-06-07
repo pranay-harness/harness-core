@@ -2,6 +2,7 @@ package software.wings.yaml.trigger;
 
 import com.google.inject.Singleton;
 
+import io.harness.data.structure.EmptyPredicate;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -111,8 +112,9 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
   }
 
   private List<String> getYAMLActions(WebHookTriggerCondition webHookTriggerCondition) {
-    if (webHookTriggerCondition != null && webHookTriggerCondition.getWebhookSource().equals(WebhookSource.GITHUB)) {
-      if (webHookTriggerCondition.getActions() != null) {
+    if (webHookTriggerCondition != null && webHookTriggerCondition.getWebhookSource() != null
+        && webHookTriggerCondition.getWebhookSource().equals(WebhookSource.GITHUB)) {
+      if (EmptyPredicate.isNotEmpty(webHookTriggerCondition.getActions())) {
         return webHookTriggerCondition.getActions()
             .stream()
             .map(prAction -> { return prAction.getValue(); })
@@ -120,9 +122,9 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
       } else {
         return null;
       }
-    } else if (webHookTriggerCondition != null
+    } else if (webHookTriggerCondition != null && webHookTriggerCondition.getWebhookSource() != null
         && webHookTriggerCondition.getWebhookSource().equals(WebhookSource.BITBUCKET)) {
-      if (webHookTriggerCondition.getBitBucketEvents() != null) {
+      if (EmptyPredicate.isNotEmpty(webHookTriggerCondition.getBitBucketEvents())) {
         return webHookTriggerCondition.getBitBucketEvents()
             .stream()
             .map(bitBucketEvent -> { return bitBucketEvent.getValue(); })

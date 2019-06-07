@@ -2,6 +2,7 @@ package software.wings.yaml.trigger;
 
 import com.google.inject.Singleton;
 
+import io.harness.data.structure.EmptyPredicate;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -41,12 +42,19 @@ public class ArtifactTriggerConditionHandler extends TriggerConditionYamlHandler
     ArtifactTriggerConditionYaml artifactTriggerConditionYaml = (ArtifactTriggerConditionYaml) yaml;
     String serviceName = artifactTriggerConditionYaml.getServiceName();
     String artifactStreamName = artifactTriggerConditionYaml.getArtifactStreamName();
-    ArtifactStream artifactStream = yamlHelper.getArtifactStreamWithName(appId, serviceName, artifactStreamName);
+    ArtifactStream artifactStream = null;
+    String artiFactStreamId = null;
+    String artifactSourceName = null;
+    if (EmptyPredicate.isNotEmpty(serviceName) && EmptyPredicate.isNotEmpty(artifactStreamName)) {
+      artifactStream = yamlHelper.getArtifactStreamWithName(appId, serviceName, artifactStreamName);
+      artiFactStreamId = artifactStream.getUuid();
+      artifactSourceName = artifactStream.generateSourceName();
+    }
 
     return ArtifactTriggerCondition.builder()
         .artifactFilter(artifactTriggerConditionYaml.getArtifactFilter())
-        .artifactStreamId(artifactStream.getUuid())
-        .artifactSourceName(artifactStream.generateSourceName())
+        .artifactStreamId(artiFactStreamId)
+        .artifactSourceName(artifactSourceName)
         .regex(artifactTriggerConditionYaml.isRegex())
         .build();
   }
