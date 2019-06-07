@@ -238,21 +238,21 @@ public class FileIo {
 
   private static void addFiles(List<FileData> fileList, Path path, String basePath) {
     String filePath = getRelativePath(path, basePath);
-    String fileContent = getFileContent(path);
+    byte[] fileBytes = getFileBytes(path);
 
-    fileList.add(FileData.builder().filePath(filePath).fileContent(fileContent).build());
+    fileList.add(FileData.builder().filePath(filePath).fileBytes(fileBytes).build());
   }
 
-  private static String getFileContent(Path path) {
-    StringBuilder contentBuilder = new StringBuilder();
+  private static byte[] getFileBytes(Path path) {
+    byte[] fileBytes;
 
-    try (Stream<String> stream = Files.lines(path, StandardCharsets.UTF_8)) {
-      stream.forEach(s -> contentBuilder.append(s).append("\n"));
-
-      return contentBuilder.toString();
-    } catch (IOException ex) {
+    try {
+      fileBytes = Files.readAllBytes(path);
+    } catch (Exception ex) {
       throw new RuntimeException(ex);
     }
+
+    return fileBytes;
   }
 
   private static String getRelativePath(Path path, String basePath) {

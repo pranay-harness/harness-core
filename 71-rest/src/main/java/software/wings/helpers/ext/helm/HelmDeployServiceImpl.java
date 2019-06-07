@@ -13,7 +13,6 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.beans.FileData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -62,7 +61,6 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -194,13 +192,15 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
   private void fetchChartRepo(HelmInstallCommandRequest commandRequest) throws Exception {
     HelmChartConfigParams helmChartConfigParams = commandRequest.getRepoConfig().getHelmChartConfigParams();
-    List<FileData> files = helmTaskHelper.fetchChartFiles(helmChartConfigParams, null);
-    writeFilesToWorkingDirectory(commandRequest, files);
-    commandRequest.setWorkingDir(getWorkingDirectory(commandRequest));
+    String workingDirectory = Paths.get(getWorkingDirectory(commandRequest)).toString();
+
+    helmTaskHelper.downloadChartFiles(helmChartConfigParams, workingDirectory);
+    commandRequest.setWorkingDir(Paths.get(workingDirectory, helmChartConfigParams.getChartName()).toString());
+
     commandRequest.getExecutionLogCallback().saveExecutionLog("Helm Chart Repo checked-out locally");
   }
 
-  private void fetchSourceRepo(HelmInstallCommandRequest commandRequest) throws IOException {
+  private void fetchSourceRepo(HelmInstallCommandRequest commandRequest) {
     K8sDelegateManifestConfig sourceRepoConfig = commandRequest.getRepoConfig();
     if (sourceRepoConfig == null) {
       return;
@@ -226,23 +226,6 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
     commandRequest.setWorkingDir(workingDirectory);
     commandRequest.getExecutionLogCallback().saveExecutionLog("Repo checked-out locally");
-  }
-
-  private void writeFilesToWorkingDirectory(HelmInstallCommandRequest commandRequest, List<FileData> files)
-      throws IOException {
-    String workingDirectory = getWorkingDirectory(commandRequest);
-    FileIo.createDirectoryIfDoesNotExist(workingDirectory);
-    FileIo.waitForDirectoryToBeAccessibleOutOfProcess(workingDirectory, 10);
-    for (FileData file : files) {
-      Path filePath = Paths.get(workingDirectory, file.getFilePath());
-      Path parentPath = filePath.getParent();
-      if (parentPath == null) {
-        throw new WingsException("Parent path not found for file: " + file.getFilePath());
-      }
-      FileIo.createDirectoryIfDoesNotExist(parentPath.toString());
-      FileIo.waitForDirectoryToBeAccessibleOutOfProcess(workingDirectory, 10);
-      FileIo.writeUtf8StringToFile(filePath.toString(), file.getFileContent());
-    }
   }
 
   private LogCallback markDoneAndStartNew(

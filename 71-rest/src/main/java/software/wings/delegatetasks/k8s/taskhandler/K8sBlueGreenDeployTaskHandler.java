@@ -25,6 +25,7 @@ import static software.wings.beans.command.K8sDummyCommandUnit.Init;
 import static software.wings.beans.command.K8sDummyCommandUnit.Prepare;
 import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
 import static software.wings.beans.command.K8sDummyCommandUnit.WrapUp;
+import static software.wings.delegatetasks.k8s.K8sTask.MANIFEST_FILES_DIR;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -63,6 +64,7 @@ import software.wings.helpers.ext.k8s.response.K8sBlueGreenDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -85,6 +87,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
   private String primaryColor;
   private String stageColor;
   private String releaseName;
+  private String manifestFilesDirectory;
 
   public K8sTaskExecutionResponse executeTaskInternal(
       K8sTaskParameters k8sTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams) throws Exception {
@@ -97,16 +100,16 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
         (K8sBlueGreenDeployTaskParameters) k8sTaskParameters;
 
     releaseName = k8sBlueGreenDeployTaskParameters.getReleaseName();
+    manifestFilesDirectory = Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString();
 
-    List<ManifestFile> manifestFiles =
-        k8sTaskHelper.fetchManifestFiles(k8sBlueGreenDeployTaskParameters.getK8sDelegateManifestConfig(),
-            k8sTaskHelper.getExecutionLogCallback(k8sBlueGreenDeployTaskParameters, FetchFiles));
-    if (manifestFiles == null) {
+    boolean success = k8sTaskHelper.fetchManifestFilesAndWriteToDirectory(
+        k8sBlueGreenDeployTaskParameters.getK8sDelegateManifestConfig(), manifestFilesDirectory,
+        k8sTaskHelper.getExecutionLogCallback(k8sBlueGreenDeployTaskParameters, FetchFiles));
+    if (!success) {
       return getFailureResponse();
     }
-    k8sBlueGreenDeployTaskParameters.getK8sDelegateManifestConfig().setManifestFiles(manifestFiles);
 
-    boolean success = init(k8sBlueGreenDeployTaskParameters, k8sDelegateTaskParams,
+    success = init(k8sBlueGreenDeployTaskParameters, k8sDelegateTaskParams,
         k8sTaskHelper.getExecutionLogCallback(k8sBlueGreenDeployTaskParameters, Init));
     if (!success) {
       return getFailureResponse();
@@ -178,12 +181,10 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
                                                                : ReleaseHistory.createFromData(releaseHistoryData);
 
     try {
-      List<ManifestFile> manifestFilesForDeploy = k8sTaskHelper.filterSkippedManifestFiles(
-          k8sBlueGreenDeployTaskParameters.getK8sDelegateManifestConfig().getManifestFiles());
-      k8sBlueGreenDeployTaskParameters.getK8sDelegateManifestConfig().setManifestFiles(manifestFilesForDeploy);
+      k8sTaskHelper.deleteSkippedManifestFiles(manifestFilesDirectory, executionLogCallback);
 
       List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplate(k8sDelegateTaskParams,
-          k8sBlueGreenDeployTaskParameters.getK8sDelegateManifestConfig(),
+          k8sBlueGreenDeployTaskParameters.getK8sDelegateManifestConfig(), manifestFilesDirectory,
           k8sBlueGreenDeployTaskParameters.getValuesYamlList(), releaseName, kubernetesConfig.getNamespace(),
           executionLogCallback);
 

@@ -779,6 +779,12 @@ public class HelmDeployState extends State {
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
+    Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
+    HelmDeployStateExecutionData stateExecutionData = (HelmDeployStateExecutionData) context.getStateExecutionData();
+    if (stateExecutionData != null) {
+      valuesFiles.putAll(stateExecutionData.getValuesFiles());
+    }
+
     return ExecutionResponse.Builder.anExecutionResponse()
         .withAsync(true)
         .withCorrelationIds(Arrays.asList(waitId))
@@ -787,6 +793,7 @@ public class HelmDeployState extends State {
                                     .commandName(HELM_COMMAND_NAME)
                                     .currentTaskType(TaskType.GIT_COMMAND)
                                     .appManifestMap(appManifestMap)
+                                    .valuesFiles(valuesFiles)
                                     .build())
         .withDelegateTaskId(delegateTaskId)
         .build();

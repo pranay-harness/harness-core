@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
+import static io.harness.filesystem.FileIo.getFilesUnderPath;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.k8s.kubectl.Utils.parseLatestRevisionNumberFromRolloutHistory;
@@ -24,6 +25,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.LogColor.Gray;
 import static software.wings.beans.Log.LogColor.White;
+import static software.wings.beans.Log.LogColor.Yellow;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogWeight.Bold;
@@ -114,6 +116,8 @@ import software.wings.service.intfc.security.EncryptionService;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -123,6 +127,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Singleton
 @Slf4j
@@ -574,30 +579,39 @@ public class K8sTaskHelper {
     return valuesFilesOptionsBuilder.toString();
   }
 
-  private List<ManifestFile> renderTemplateForHelm(K8sDelegateTaskParams k8sDelegateTaskParams,
-      List<ManifestFile> manifestFiles, List<String> valuesFiles, String releaseName, String namespace,
-      ExecutionLogCallback executionLogCallback) throws Exception {
-    String directoryPath = Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), "helm-chart").toString();
-    createDirectoryIfDoesNotExist(directoryPath);
+  private boolean writeManifestFilesToDirectory(
+      List<ManifestFile> manifestFiles, String manifestFilesDirectory, ExecutionLogCallback executionLogCallback) {
+    String directoryPath = Paths.get(manifestFilesDirectory).toString();
 
-    String valuesFileOptions = writeValuesToFile(directoryPath, valuesFiles);
-    logger.info("Values file options: " + valuesFileOptions);
+    try {
+      for (int i = 0; i < manifestFiles.size(); i++) {
+        ManifestFile manifestFile = manifestFiles.get(i);
+        if (StringUtils.equals(values_filename, manifestFile.getFileName())) {
+          continue;
+        }
 
-    for (int i = 0; i < manifestFiles.size(); i++) {
-      ManifestFile manifestFile = manifestFiles.get(i);
-      if (StringUtils.equals(values_filename, manifestFile.getFileName())) {
-        continue;
+        Path filePath = Paths.get(directoryPath, manifestFile.getFileName());
+        Path parent = filePath.getParent();
+        if (parent == null) {
+          throw new WingsException("Failed to create file at path " + filePath.toString());
+        }
+
+        createDirectoryIfDoesNotExist(parent.toString());
+        FileIo.writeUtf8StringToFile(filePath.toString(), manifestFile.getFileContent());
       }
 
-      Path filePath = Paths.get(directoryPath, manifestFile.getFileName());
-      Path parent = filePath.getParent();
-      if (parent == null) {
-        throw new WingsException("Failed to create file at path " + filePath.toString());
-      }
-
-      createDirectoryIfDoesNotExist(parent.toString());
-      FileIo.writeUtf8StringToFile(filePath.toString(), manifestFile.getFileContent());
+      return true;
+    } catch (Exception ex) {
+      executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(ex), ERROR, CommandExecutionStatus.FAILURE);
+      return false;
     }
+  }
+
+  private List<ManifestFile> renderTemplateForHelm(K8sDelegateTaskParams k8sDelegateTaskParams,
+      String manifestFilesDirectory, List<String> valuesFiles, String releaseName, String namespace,
+      ExecutionLogCallback executionLogCallback) throws Exception {
+    String valuesFileOptions = writeValuesToFile(manifestFilesDirectory, valuesFiles);
+    logger.info("Values file options: " + valuesFileOptions);
 
     executionLogCallback.saveExecutionLog(color("Rendering chart using Helm", White, Bold));
 
@@ -606,9 +620,9 @@ public class K8sTaskHelper {
       ProcessExecutor processExecutor =
           new ProcessExecutor()
               .timeout(10, TimeUnit.SECONDS)
-              .directory(new File(directoryPath))
+              .directory(new File(manifestFilesDirectory))
               .commandSplit(encloseWithQuotesIfNeeded(k8sDelegateTaskParams.getHelmPath()) + " template "
-                  + directoryPath + " --name " + releaseName + " --namespace " + namespace + valuesFileOptions)
+                  + manifestFilesDirectory + " --name " + releaseName + " --namespace " + namespace + valuesFileOptions)
               .readOutput(true)
               .redirectError(logErrorStream);
 
@@ -623,9 +637,37 @@ public class K8sTaskHelper {
     return result;
   }
 
+  private List<ManifestFile> readManifestFilesFromDirectory(String manifestFilesDirectory) {
+    List<FileData> fileDataList;
+    Path directory = Paths.get(manifestFilesDirectory);
+
+    try {
+      fileDataList = getFilesUnderPath(directory.toString());
+    } catch (Exception ex) {
+      logger.error(ExceptionUtils.getMessage(ex));
+      throw new WingsException("Failed to get files. Error: " + ExceptionUtils.getMessage(ex));
+    }
+
+    List<ManifestFile> manifestFiles = new ArrayList<>();
+    for (FileData fileData : fileDataList) {
+      if (isValidManifestFile(fileData.getFilePath())) {
+        manifestFiles.add(ManifestFile.builder()
+                              .fileName(fileData.getFilePath())
+                              .fileContent(new String(fileData.getFileBytes(), StandardCharsets.UTF_8))
+                              .build());
+      } else {
+        logger.info("Found file with invalid extension" + fileData.getFilePath());
+      }
+    }
+
+    return manifestFiles;
+  }
+
   private List<ManifestFile> renderTemplateForGoTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
-      List<ManifestFile> manifestFiles, List<String> valuesFiles, ExecutionLogCallback executionLogCallback)
+      String manifestFilesDirectory, List<String> valuesFiles, ExecutionLogCallback executionLogCallback)
       throws Exception {
+    List<ManifestFile> manifestFiles = readManifestFilesFromDirectory(manifestFilesDirectory);
+
     if (isEmpty(valuesFiles)) {
       executionLogCallback.saveExecutionLog("No values.yaml file found. Skipping template rendering.");
       return manifestFiles;
@@ -676,20 +718,26 @@ public class K8sTaskHelper {
   }
 
   public List<ManifestFile> renderTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
-      K8sDelegateManifestConfig k8sDelegateManifestConfig, List<String> valuesFiles, String releaseName,
-      String namespace, ExecutionLogCallback executionLogCallback) throws Exception {
+      K8sDelegateManifestConfig k8sDelegateManifestConfig, String manifestFilesDirectory, List<String> valuesFiles,
+      String releaseName, String namespace, ExecutionLogCallback executionLogCallback) throws Exception {
     StoreType storeType = k8sDelegateManifestConfig.getManifestStoreTypes();
 
     switch (storeType) {
       case Local:
       case Remote:
         return renderTemplateForGoTemplate(
-            k8sDelegateTaskParams, k8sDelegateManifestConfig.getManifestFiles(), valuesFiles, executionLogCallback);
+            k8sDelegateTaskParams, manifestFilesDirectory, valuesFiles, executionLogCallback);
 
       case HelmSourceRepo:
+        return renderTemplateForHelm(
+            k8sDelegateTaskParams, manifestFilesDirectory, valuesFiles, releaseName, namespace, executionLogCallback);
+
       case HelmChartRepo:
-        return renderTemplateForHelm(k8sDelegateTaskParams, k8sDelegateManifestConfig.getManifestFiles(), valuesFiles,
-            releaseName, namespace, executionLogCallback);
+        manifestFilesDirectory =
+            Paths.get(manifestFilesDirectory, k8sDelegateManifestConfig.getHelmChartConfigParams().getChartName())
+                .toString();
+        return renderTemplateForHelm(
+            k8sDelegateTaskParams, manifestFilesDirectory, valuesFiles, releaseName, namespace, executionLogCallback);
 
       default:
         unhandled(storeType);
@@ -781,11 +829,17 @@ public class K8sTaskHelper {
     return sb.toString();
   }
 
-  private String getManifestFileNamesInLogFormat(List<ManifestFile> manifestFiles) {
+  private String getManifestFileNamesInLogFormat(String manifestFilesDirectory) throws Exception {
     StringBuilder sb = new StringBuilder(1024);
-    for (ManifestFile manifestFile : manifestFiles) {
-      sb.append(color(format("- %s", manifestFile.getFileName()), Gray)).append(System.lineSeparator());
+
+    Path basePath = Paths.get(manifestFilesDirectory);
+    try (Stream<Path> paths = Files.walk(basePath)) {
+      paths.filter(Files::isRegularFile)
+          .forEach(each
+              -> sb.append(color(format("- %s", getRelativePath(each.toString(), basePath.toString())), Gray))
+                     .append(System.lineSeparator()));
     }
+
     return sb.toString();
   }
 
@@ -802,8 +856,8 @@ public class K8sTaskHelper {
         + (isBlank(gitFileConfig.getFilePath()) ? "." : gitFileConfig.getFilePath()));
   }
 
-  private List<ManifestFile> fetchManifestFilesFromGit(
-      K8sDelegateManifestConfig delegateManifestConfig, ExecutionLogCallback executionLogCallback) {
+  private boolean downloadManifestFilesFromGit(K8sDelegateManifestConfig delegateManifestConfig,
+      String manifestFilesDirectory, ExecutionLogCallback executionLogCallback) {
     if (isBlank(delegateManifestConfig.getGitFileConfig().getFilePath())) {
       delegateManifestConfig.getGitFileConfig().setFilePath(StringUtils.EMPTY);
     }
@@ -815,42 +869,41 @@ public class K8sTaskHelper {
 
       encryptionService.decrypt(gitConfig, delegateManifestConfig.getEncryptedDataDetails());
 
-      GitFetchFilesResult gitFetchFilesResult = gitService.fetchFilesByPath(delegateManifestConfig.getGitConfig(),
-          gitFileConfig.getConnectorId(), gitFileConfig.getCommitId(), gitFileConfig.getBranch(),
-          asList(gitFileConfig.getFilePath()), gitFileConfig.isUseBranch());
-
-      List<ManifestFile> manifestFilesFromGit =
-          manifestFilesFromGitFetchFilesResult(gitFetchFilesResult, gitFileConfig.getFilePath());
+      gitService.downloadFiles(delegateManifestConfig.getGitConfig(), gitFileConfig.getConnectorId(),
+          gitFileConfig.getCommitId(), gitFileConfig.getBranch(), asList(gitFileConfig.getFilePath()),
+          gitFileConfig.isUseBranch(), manifestFilesDirectory);
 
       executionLogCallback.saveExecutionLog(color("Successfully fetched following files:", White, Bold));
-      executionLogCallback.saveExecutionLog(getManifestFileNamesInLogFormat(manifestFilesFromGit));
+      executionLogCallback.saveExecutionLog(getManifestFileNamesInLogFormat(manifestFilesDirectory));
       executionLogCallback.saveExecutionLog("Done.", INFO, CommandExecutionStatus.SUCCESS);
-      return manifestFilesFromGit;
+
+      return true;
     } catch (Exception e) {
       executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
-      return null;
+      return false;
     }
   }
 
-  public List<ManifestFile> fetchManifestFiles(
-      K8sDelegateManifestConfig delegateManifestConfig, ExecutionLogCallback executionLogCallback) {
+  public boolean fetchManifestFilesAndWriteToDirectory(K8sDelegateManifestConfig delegateManifestConfig,
+      String manifestFilesDirectory, ExecutionLogCallback executionLogCallback) {
     StoreType storeType = delegateManifestConfig.getManifestStoreTypes();
     switch (storeType) {
       case Local:
-        return delegateManifestConfig.getManifestFiles();
+        return writeManifestFilesToDirectory(
+            delegateManifestConfig.getManifestFiles(), manifestFilesDirectory, executionLogCallback);
 
       case Remote:
       case HelmSourceRepo:
-        return fetchManifestFilesFromGit(delegateManifestConfig, executionLogCallback);
+        return downloadManifestFilesFromGit(delegateManifestConfig, manifestFilesDirectory, executionLogCallback);
 
       case HelmChartRepo:
-        return fetchManifestFilesFromChartRepo(delegateManifestConfig, executionLogCallback);
+        return downloadFilesFromChartRepo(delegateManifestConfig, manifestFilesDirectory, executionLogCallback);
 
       default:
         unhandled(storeType);
     }
 
-    return null;
+    return false;
   }
 
   private static String getRelativePath(String filePath, String prefixPath) {
@@ -1012,30 +1065,24 @@ public class K8sTaskHelper {
     return null;
   }
 
-  private List<ManifestFile> fetchManifestFilesFromChartRepo(
-      K8sDelegateManifestConfig delegateManifestConfig, ExecutionLogCallback executionLogCallback) {
+  private boolean downloadFilesFromChartRepo(K8sDelegateManifestConfig delegateManifestConfig,
+      String destinationDirectory, ExecutionLogCallback executionLogCallback) {
     HelmChartConfigParams helmChartConfigParams = delegateManifestConfig.getHelmChartConfigParams();
 
     try {
       executionLogCallback.saveExecutionLog(color(format("%nFetching files from helm chart repo"), White, Bold));
       helmTaskHelper.printHelmChartInfoInExecutionLogs(helmChartConfigParams, executionLogCallback);
 
-      List<FileData> files = helmTaskHelper.fetchChartFiles(helmChartConfigParams, null);
-
-      List<ManifestFile> manifestFiles = new ArrayList<>();
-      for (FileData fileData : files) {
-        manifestFiles.add(
-            ManifestFile.builder().fileName(fileData.getFilePath()).fileContent(fileData.getFileContent()).build());
-      }
+      helmTaskHelper.downloadChartFiles(helmChartConfigParams, destinationDirectory);
 
       executionLogCallback.saveExecutionLog(color("Successfully fetched following files:", White, Bold));
-      executionLogCallback.saveExecutionLog(getManifestFileNamesInLogFormat(manifestFiles));
+      executionLogCallback.saveExecutionLog(getManifestFileNamesInLogFormat(destinationDirectory));
       executionLogCallback.saveExecutionLog("Done.", INFO, CommandExecutionStatus.SUCCESS);
 
-      return manifestFiles;
+      return true;
     } catch (Exception e) {
       executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
-      return null;
+      return false;
     }
   }
 
@@ -1232,11 +1279,43 @@ public class K8sTaskHelper {
     return virtualService;
   }
 
-  public List<ManifestFile> filterSkippedManifestFiles(List<ManifestFile> manifestFiles) {
-    return manifestFiles.stream()
-        .filter(manifestFile -> isNotBlank(manifestFile.getFileContent()))
-        .filter(manifestFile
-            -> !manifestFile.getFileContent().split("\\r?\\n")[0].contains(SKIP_FILE_FOR_DEPLOY_PLACEHOLDER_TEXT))
-        .collect(Collectors.toList());
+  public void deleteSkippedManifestFiles(String manifestFilesDirectory, ExecutionLogCallback executionLogCallback)
+      throws Exception {
+    List<FileData> files;
+    Path directory = Paths.get(manifestFilesDirectory);
+
+    try {
+      files = getFilesUnderPath(directory.toString());
+    } catch (Exception ex) {
+      logger.info(ExceptionUtils.getMessage(ex));
+      throw new WingsException("Failed to get files. Error: " + ExceptionUtils.getMessage(ex));
+    }
+
+    List<String> skippedFilesList = new ArrayList<>();
+
+    for (FileData fileData : files) {
+      try {
+        String fileContent = new String(fileData.getFileBytes(), StandardCharsets.UTF_8);
+
+        if (isNotBlank(fileContent)
+            && fileContent.split("\\r?\\n")[0].contains(SKIP_FILE_FOR_DEPLOY_PLACEHOLDER_TEXT)) {
+          skippedFilesList.add(fileData.getFilePath());
+        }
+      } catch (Exception ex) {
+        logger.info("Could not convert to string for file" + fileData.getFilePath(), ex);
+      }
+    }
+
+    if (isNotEmpty(skippedFilesList)) {
+      executionLogCallback.saveExecutionLog("Following manifest files are skipped for applying");
+      for (String file : skippedFilesList) {
+        executionLogCallback.saveExecutionLog(color(file, Yellow, Bold));
+
+        String filePath = Paths.get(manifestFilesDirectory, file).toString();
+        FileIo.deleteFileIfExists(filePath);
+      }
+
+      executionLogCallback.saveExecutionLog("\n");
+    }
   }
 }

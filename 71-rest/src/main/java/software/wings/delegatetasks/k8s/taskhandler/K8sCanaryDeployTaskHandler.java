@@ -18,6 +18,7 @@ import static software.wings.beans.command.K8sDummyCommandUnit.Init;
 import static software.wings.beans.command.K8sDummyCommandUnit.Prepare;
 import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
 import static software.wings.beans.command.K8sDummyCommandUnit.WrapUp;
+import static software.wings.delegatetasks.k8s.K8sTask.MANIFEST_FILES_DIR;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -54,6 +55,7 @@ import software.wings.helpers.ext.k8s.response.K8sCanaryDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -74,6 +76,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
   private Integer targetInstances;
   private KubernetesResourceId previousManagedWorkload;
   private String releaseName;
+  private String manifestFilesDirectory;
 
   public K8sTaskExecutionResponse executeTaskInternal(
       K8sTaskParameters k8sTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams) throws Exception {
@@ -85,16 +88,16 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
     K8sCanaryDeployTaskParameters k8sCanaryDeployTaskParameters = (K8sCanaryDeployTaskParameters) k8sTaskParameters;
 
     releaseName = k8sCanaryDeployTaskParameters.getReleaseName();
+    manifestFilesDirectory = Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString();
 
-    List<ManifestFile> manifestFiles =
-        k8sTaskHelper.fetchManifestFiles(k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig(),
-            getLogCallBack(k8sCanaryDeployTaskParameters, FetchFiles));
-    if (manifestFiles == null) {
+    boolean success = k8sTaskHelper.fetchManifestFilesAndWriteToDirectory(
+        k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig(), manifestFilesDirectory,
+        getLogCallBack(k8sCanaryDeployTaskParameters, FetchFiles));
+    if (!success) {
       return getFailureResponse();
     }
-    k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig().setManifestFiles(manifestFiles);
 
-    boolean success =
+    success =
         init(k8sCanaryDeployTaskParameters, k8sDelegateTaskParams, getLogCallBack(k8sCanaryDeployTaskParameters, Init));
     if (!success) {
       return getFailureResponse();
@@ -174,12 +177,10 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
                                                                : ReleaseHistory.createFromData(releaseHistoryData);
 
     try {
-      List<ManifestFile> manifestFilesForDeploy = k8sTaskHelper.filterSkippedManifestFiles(
-          k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig().getManifestFiles());
-      k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig().setManifestFiles(manifestFilesForDeploy);
+      k8sTaskHelper.deleteSkippedManifestFiles(manifestFilesDirectory, executionLogCallback);
 
       List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplate(k8sDelegateTaskParams,
-          k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig(),
+          k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig(), manifestFilesDirectory,
           k8sCanaryDeployTaskParameters.getValuesYamlList(), releaseName, kubernetesConfig.getNamespace(),
           executionLogCallback);
 

@@ -1,10 +1,8 @@
 package software.wings.delegatetasks.helm;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
@@ -16,7 +14,6 @@ import static software.wings.beans.command.K8sDummyCommandUnit.FetchFiles;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
-import io.harness.beans.FileData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
@@ -30,14 +27,11 @@ import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @Slf4j
 public class HelmValuesFetchTask extends AbstractDelegateRunnableTask {
-  private static final String VALUES_YAML = "values.yaml";
-
   @Inject private HelmTaskHelper helmTaskHelper;
   @Inject private DelegateLogService delegateLogService;
 
@@ -59,14 +53,11 @@ public class HelmValuesFetchTask extends AbstractDelegateRunnableTask {
       HelmChartConfigParams helmChartConfigParams = taskParams.getHelmChartConfigTaskParams();
       helmTaskHelper.printHelmChartInfoInExecutionLogs(helmChartConfigParams, executionLogCallback);
 
-      List<FileData> files = helmTaskHelper.fetchChartFiles(helmChartConfigParams, asList(VALUES_YAML));
-
-      String valuesFileContent = null;
-      if (isEmpty(files)) {
-        executionLogCallback.saveExecutionLog("No values.yaml found", WARN);
+      String valuesFileContent = helmTaskHelper.getValuesYamlFromChart(helmChartConfigParams);
+      if (null == valuesFileContent) {
+        executionLogCallback.saveExecutionLog("No values.yaml found", WARN, SUCCESS);
       } else {
         executionLogCallback.saveExecutionLog("\nSuccessfully fetched values.yaml", INFO, SUCCESS);
-        valuesFileContent = files.get(0).getFileContent();
       }
 
       return HelmValuesFetchTaskResponse.builder()
