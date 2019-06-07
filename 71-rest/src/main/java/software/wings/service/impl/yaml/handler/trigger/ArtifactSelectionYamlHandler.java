@@ -58,8 +58,14 @@ public class ArtifactSelectionYamlHandler extends BaseYamlHandler<Yaml, Artifact
         yamlHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     String serviceName = yaml.getServiceName();
     String artifactStreamName = yaml.getArtifactStreamName();
-    ArtifactStream artifactStream = yamlHelper.getArtifactStreamWithName(appId, serviceName, artifactStreamName);
-    String serviceId = serviceResourceService.getServiceByName(appId, serviceName).getUuid();
+    ArtifactStream artifactStream = null;
+    if (EmptyPredicate.isNotEmpty(artifactStreamName) && EmptyPredicate.isNotEmpty(serviceName)) {
+      artifactStream = yamlHelper.getArtifactStreamWithName(appId, serviceName, artifactStreamName);
+    }
+    String serviceId = null;
+    if (EmptyPredicate.isNotEmpty(serviceName)) {
+      serviceId = serviceResourceService.getServiceByName(appId, serviceName).getUuid();
+    }
 
     ArtifactSelection artifactSelection = ArtifactSelection.builder()
                                               .artifactFilter(yaml.getArtifactFilter())
@@ -69,7 +75,7 @@ public class ArtifactSelectionYamlHandler extends BaseYamlHandler<Yaml, Artifact
                                               .serviceName(serviceName)
                                               .build();
 
-    if (yaml.getWorkflowName() != null) {
+    if (EmptyPredicate.isNotEmpty(yaml.getWorkflowName())) {
       Workflow workflow = yamlHelper.getWorkflowFromName(appId, yaml.getWorkflowName());
       artifactSelection.setWorkflowName(workflow.getName());
       artifactSelection.setWorkflowId(workflow.getUuid());
