@@ -18,6 +18,7 @@ import io.harness.configuration.ConfigurationType;
 import io.harness.e2e.AbstractE2ETest;
 import io.harness.event.EventsModule;
 import io.harness.factory.ClosingFactory;
+import io.harness.govern.ServersModule;
 import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoConfig;
@@ -55,6 +56,7 @@ import software.wings.graphql.provider.QueryLanguageProvider;
 import software.wings.security.ThreadLocalUserProvider;
 import software.wings.service.impl.EventEmitter;
 
+import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
@@ -157,7 +159,15 @@ public class LocalPortalTestRule implements MethodRule, MongoRuleMixin, Injector
   }
 
   @Override
-  public void initialize(Injector injector) {
+  public void initialize(Injector injector, List<Module> modules) {
+    for (Module module : modules) {
+      if (module instanceof ServersModule) {
+        for (Closeable server : ((ServersModule) module).servers(injector)) {
+          closingFactory.addServer(server);
+        }
+      }
+    }
+
     final QueryLanguageProvider<GraphQL> instance =
         injector.getInstance(Key.get(new TypeLiteral<QueryLanguageProvider<GraphQL>>() {}));
     graphQL = instance.getQL();

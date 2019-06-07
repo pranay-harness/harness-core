@@ -24,6 +24,7 @@ import io.harness.event.EventsModule;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.exception.WingsException;
 import io.harness.factory.ClosingFactory;
+import io.harness.govern.ServersModule;
 import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoConfig;
@@ -31,7 +32,6 @@ import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
-import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.rule.BypassRuleMixin;
 import io.harness.rule.DistributedLockRuleMixin;
 import io.harness.rule.MongoRuleMixin;
@@ -68,6 +68,7 @@ import software.wings.integration.BaseIntegrationTest;
 import software.wings.security.ThreadLocalUserProvider;
 import software.wings.service.impl.EventEmitter;
 
+import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
@@ -217,6 +218,14 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
     registerScheduledJobs(injector);
     registerProviders();
     registerObservers();
+
+    for (Module module : modules) {
+      if (module instanceof ServersModule) {
+        for (Closeable server : ((ServersModule) module).servers(injector)) {
+          closingFactory.addServer(server);
+        }
+      }
+    }
   }
 
   protected void registerProviders() {
@@ -338,14 +347,6 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
       log().info("Stopping queue listener controller...");
       injector.getInstance(QueueListenerController.class).stop();
       log().info("Stopped queue listener controller...");
-    } catch (Exception ex) {
-      logger.error("", ex);
-    }
-
-    try {
-      log().info("Stopping timer...");
-      ((Managed) injector.getInstance(TimerScheduledExecutorService.class)).stop();
-      log().info("Stopped timer...");
     } catch (Exception ex) {
       logger.error("", ex);
     }

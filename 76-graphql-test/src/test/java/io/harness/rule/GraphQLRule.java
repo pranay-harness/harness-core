@@ -15,6 +15,7 @@ import graphql.GraphQL;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.factory.ClosingFactory;
+import io.harness.govern.ServersModule;
 import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoConfig;
@@ -48,6 +49,7 @@ import software.wings.app.YamlModule;
 import software.wings.graphql.provider.QueryLanguageProvider;
 import software.wings.security.ThreadLocalUserProvider;
 
+import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,7 +68,14 @@ public class GraphQLRule
   }
 
   @Override
-  public void initialize(Injector injector) {
+  public void initialize(Injector injector, List<Module> modules) {
+    for (Module module : modules) {
+      if (module instanceof ServersModule) {
+        for (Closeable server : ((ServersModule) module).servers(injector)) {
+          closingFactory.addServer(server);
+        }
+      }
+    }
     final QueryLanguageProvider<GraphQL> instance =
         injector.getInstance(Key.get(new TypeLiteral<QueryLanguageProvider<GraphQL>>() {}));
     graphQL = instance.getQL();
