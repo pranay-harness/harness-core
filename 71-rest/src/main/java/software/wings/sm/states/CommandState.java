@@ -341,9 +341,7 @@ public class CommandState extends State {
           Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString()));
       Map<String, String> safeDisplayServiceVariables = context.getSafeDisplayServiceVariables();
 
-      if (serviceVariables != null) {
-        serviceVariables.replaceAll((name, value) -> context.renderExpression(value));
-      }
+      serviceVariables.replaceAll((name, value) -> context.renderExpression(value));
 
       if (safeDisplayServiceVariables != null) {
         safeDisplayServiceVariables.replaceAll((name, value) -> context.renderExpression(value));
@@ -372,7 +370,9 @@ public class CommandState extends State {
               .withServiceTemplateId(serviceTemplateId)
               .withAppContainer(service.getAppContainer())
               .withAccountId(accountId)
-              .withTimeout(getTimeoutMillis());
+              .withTimeout(getTimeoutMillis())
+              .withShortValidationTimeout(
+                  featureFlagService.isEnabled(FeatureName.SSH_SHORT_VALIDATION_TIMEOUT, accountId));
 
       getHostConnectionDetails(context, host, commandExecutionContextBuilder);
 

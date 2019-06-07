@@ -2,6 +2,7 @@ package software.wings.delegatetasks.validation;
 
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.network.Http.connectableHttpUrl;
+import static java.time.Duration.ofSeconds;
 import static java.util.Collections.singletonList;
 import static software.wings.common.Constants.ALWAYS_TRUE_CRITERIA;
 import static software.wings.common.Constants.WINDOWS_HOME_DIR;
@@ -92,8 +93,13 @@ public class CommandValidation extends AbstractDelegateValidateTask {
     }
     DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder().criteria(getCriteria(context));
     try {
-      SshSessionConfig host_connection_test = createSshSessionConfig("HOST_CONNECTION_TEST", context);
-      getSSHSession(host_connection_test).disconnect();
+      SshSessionConfig hostConnectionTest = createSshSessionConfig("HOST_CONNECTION_TEST", context);
+      int timeout =
+          context.isShortValidationTimeout() ? (int) ofSeconds(5L).toMillis() : (int) ofSeconds(15L).toMillis();
+      hostConnectionTest.setSocketConnectTimeout(timeout);
+      hostConnectionTest.setSshConnectionTimeout(timeout);
+      hostConnectionTest.setSshSessionTimeout(timeout);
+      getSSHSession(hostConnectionTest).disconnect();
       resultBuilder.validated(true);
     } catch (Exception e) {
       logger.error("Failed to validate host:" + context.getHost(), e);

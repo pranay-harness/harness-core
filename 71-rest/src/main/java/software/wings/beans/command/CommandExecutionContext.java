@@ -64,6 +64,7 @@ public class CommandExecutionContext {
   private List<EncryptedDataDetail> artifactServerEncryptedDataDetails;
   private boolean inlineSshCommand;
   private boolean executeOnDelegate;
+  private boolean shortValidationTimeout;
 
   public CommandExecutionContext() {}
 
@@ -108,6 +109,7 @@ public class CommandExecutionContext {
     this.artifactServerEncryptedDataDetails = other.artifactServerEncryptedDataDetails;
     this.inlineSshCommand = other.inlineSshCommand;
     this.executeOnDelegate = other.executeOnDelegate;
+    this.shortValidationTimeout = other.shortValidationTimeout;
   }
 
   /**
@@ -195,6 +197,7 @@ public class CommandExecutionContext {
     private List<EncryptedDataDetail> artifactServerEncryptedDataDetails;
     private boolean inlineSshCommand;
     private boolean executeOnDelegate;
+    private boolean shortValidationTimeout;
 
     private Builder() {}
 
@@ -384,6 +387,11 @@ public class CommandExecutionContext {
       return this;
     }
 
+    public Builder withShortValidationTimeout(boolean shortValidationTimeout) {
+      this.shortValidationTimeout = shortValidationTimeout;
+      return this;
+    }
+
     public Builder but() {
       return aCommandExecutionContext()
           .withAccountId(accountId)
@@ -421,7 +429,8 @@ public class CommandExecutionContext {
           .withDeploymentType(deploymentType)
           .withArtifactServerEncryptedDataDetails(artifactServerEncryptedDataDetails)
           .withInlineSshCommand(inlineSshCommand)
-          .withExecuteOnDelegate(executeOnDelegate);
+          .withExecuteOnDelegate(executeOnDelegate)
+          .withShortValidationTimeout(shortValidationTimeout);
     }
 
     public CommandExecutionContext build() {
@@ -462,6 +471,7 @@ public class CommandExecutionContext {
       commandExecutionContext.setArtifactServerEncryptedDataDetails(artifactServerEncryptedDataDetails);
       commandExecutionContext.setInlineSshCommand(inlineSshCommand);
       commandExecutionContext.setExecuteOnDelegate(executeOnDelegate);
+      commandExecutionContext.setShortValidationTimeout(shortValidationTimeout);
       return commandExecutionContext;
     }
   }
