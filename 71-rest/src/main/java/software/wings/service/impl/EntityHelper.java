@@ -341,6 +341,8 @@ public class EntityHelper {
         // For String value, appId != __GLOBAL_APP_ID__
         // We need this appId for Yaml handling
         appId = settingAttribute.getAppId();
+      } else {
+        appId = Application.GLOBAL_APP_ID;
       }
       affectedResourceId = settingAttribute.getUuid();
       affectedResourceName = settingAttribute.getName();
