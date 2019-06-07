@@ -110,6 +110,7 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.trigger.TriggerExecutionService;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
@@ -143,6 +144,7 @@ public class TriggerServiceImpl implements TriggerService {
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private HarnessTagService harnessTagService;
+  @Inject private YamlPushService yamlPushService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   @Value
@@ -173,13 +175,14 @@ public class TriggerServiceImpl implements TriggerService {
     validateInput(trigger, null);
     Trigger savedTrigger =
         duplicateCheck(() -> wingsPersistence.saveAndGet(Trigger.class, trigger), "name", trigger.getName());
+    String accountId = appService.getAccountIdByAppId(savedTrigger.getAppId());
     if (trigger.getCondition().getConditionType().equals(SCHEDULED)) {
-      String accountId = appService.getAccountIdByAppId(savedTrigger.getAppId());
       ScheduledTriggerJob.add(jobScheduler, accountId, savedTrigger.getAppId(), savedTrigger.getUuid(), trigger);
     }
 
-    // TODO: AUDIT: Once this entity is yamlized, this can be removed
-    auditServiceHelper.reportForAuditingUsingAppId(trigger.getAppId(), null, trigger, Type.CREATE);
+    if (featureFlagService.isEnabled(FeatureName.TRIGGER_YAML, accountId)) {
+      yamlPushService.pushYamlChangeSet(accountId, null, savedTrigger, Type.CREATE, trigger.isSyncFromGit(), false);
+    }
     return savedTrigger;
   }
 
@@ -195,9 +198,13 @@ public class TriggerServiceImpl implements TriggerService {
         duplicateCheck(() -> wingsPersistence.saveAndGet(Trigger.class, trigger), "name", trigger.getName());
     addOrUpdateCronForScheduledJob(trigger, existingTrigger);
 
-    // TODO: AUDIT: Once this entity is yamlized, this can be removed
-    auditServiceHelper.reportForAuditingUsingAppId(
-        updatedTrigger.getAppId(), existingTrigger, updatedTrigger, Type.UPDATE);
+    String accountId = appService.getAccountIdByAppId(existingTrigger.getAppId());
+    boolean isRename = !existingTrigger.getName().equals(trigger.getName());
+    if (featureFlagService.isEnabled(FeatureName.TRIGGER_YAML, accountId)) {
+      yamlPushService.pushYamlChangeSet(
+          accountId, existingTrigger, updatedTrigger, Type.UPDATE, trigger.isSyncFromGit(), isRename);
+    }
+
     return updatedTrigger;
   }
 
@@ -206,14 +213,13 @@ public class TriggerServiceImpl implements TriggerService {
     Trigger trigger = get(appId, triggerId);
     boolean answer = triggerServiceHelper.delete(triggerId);
 
+    String accountId = appService.getAccountIdByAppId(appId);
     if (answer) {
-      String accountId = appService.getAccountIdByAppId(appId);
       harnessTagService.pruneTagLinks(accountId, triggerId);
-
-      // TODO: AUDIT: Once this entity is yamlized, this can be removed
-      auditServiceHelper.reportDeleteForAuditing(trigger.getAppId(), trigger);
     }
-
+    if (featureFlagService.isEnabled(FeatureName.TRIGGER_YAML, accountId) && (trigger != null)) {
+      yamlPushService.pushYamlChangeSet(accountId, trigger, null, Type.DELETE, trigger.isSyncFromGit(), false);
+    }
     return answer;
   }
 
