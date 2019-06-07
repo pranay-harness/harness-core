@@ -14,8 +14,10 @@ import software.wings.sm.StateExecutionData;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Data
 @Builder
@@ -33,7 +35,8 @@ public class K8sStateExecutionData extends StateExecutionData implements Respons
   private TaskType currentTaskType;
   @Builder.Default private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
   private String loadBalancer;
-  Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
+  private Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
+  private Set<String> namespaces = new HashSet<>();
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
@@ -74,6 +77,7 @@ public class K8sStateExecutionData extends StateExecutionData implements Respons
         .releaseName(releaseName)
         .releaseNumber(releaseNumber)
         .targetInstances(targetInstances)
+        .namespaces(namespaces)
         .build();
   }
 }

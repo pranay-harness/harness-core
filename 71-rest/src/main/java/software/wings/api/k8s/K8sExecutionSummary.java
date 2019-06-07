@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.sm.StepExecutionSummary;
 
+import java.util.Set;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder
@@ -15,4 +17,5 @@ public class K8sExecutionSummary extends StepExecutionSummary {
   private String releaseName;
   private Integer releaseNumber;
   private Integer targetInstances;
+  private Set<String> namespaces;
 }

@@ -332,12 +332,25 @@ public class ContainerInstanceHandler extends InstanceHandler {
     } else if (newDeploymentSummaries.stream().iterator().next().getDeploymentInfo() instanceof K8sDeploymentInfo) {
       newDeploymentSummaries.forEach(deploymentSummary -> {
         K8sDeploymentInfo deploymentInfo = (K8sDeploymentInfo) deploymentSummary.getDeploymentInfo();
-        deploymentSummaryMap.put(ContainerMetadata.builder()
-                                     .type(ContainerMetadataType.K8S)
-                                     .releaseName(deploymentInfo.getReleaseName())
-                                     .namespace(deploymentInfo.getNamespace())
-                                     .build(),
-            deploymentSummary);
+
+        String releaseName = deploymentInfo.getReleaseName();
+        Set<String> namespaces = new HashSet<>();
+        if (isNotBlank(deploymentInfo.getNamespace())) {
+          namespaces.add(deploymentInfo.getNamespace());
+        }
+
+        if (isNotEmpty(deploymentInfo.getNamespaces())) {
+          namespaces.addAll(deploymentInfo.getNamespaces());
+        }
+
+        for (String namespace : namespaces) {
+          deploymentSummaryMap.put(ContainerMetadata.builder()
+                                       .type(ContainerMetadataType.K8S)
+                                       .releaseName(releaseName)
+                                       .namespace(namespace)
+                                       .build(),
+              deploymentSummary);
+        }
       });
     } else {
       newDeploymentSummaries.forEach(deploymentSummary -> {
@@ -413,12 +426,25 @@ public class ContainerInstanceHandler extends InstanceHandler {
     } else if (deploymentSummaries.iterator().next().getDeploymentInfo() instanceof K8sDeploymentInfo) {
       deploymentSummaries.forEach(deploymentSummary -> {
         K8sDeploymentInfo deploymentInfo = (K8sDeploymentInfo) deploymentSummary.getDeploymentInfo();
-        containerSvcNameInstanceMap.put(ContainerMetadata.builder()
-                                            .type(ContainerMetadataType.K8S)
-                                            .releaseName(deploymentInfo.getReleaseName())
-                                            .namespace(deploymentInfo.getNamespace())
-                                            .build(),
-            null);
+
+        String releaseName = deploymentInfo.getReleaseName();
+        Set<String> namespaces = new HashSet<>();
+        if (isNotBlank(deploymentInfo.getNamespace())) {
+          namespaces.add(deploymentInfo.getNamespace());
+        }
+
+        if (isNotEmpty(deploymentInfo.getNamespaces())) {
+          namespaces.addAll(deploymentInfo.getNamespaces());
+        }
+
+        for (String namespace : namespaces) {
+          containerSvcNameInstanceMap.put(ContainerMetadata.builder()
+                                              .type(ContainerMetadataType.K8S)
+                                              .releaseName(releaseName)
+                                              .namespace(namespace)
+                                              .build(),
+              null);
+        }
       });
     }
 
@@ -578,6 +604,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
         .namespace(k8sExecutionSummary.getNamespace())
         .releaseName(k8sExecutionSummary.getReleaseName())
         .releaseNumber(k8sExecutionSummary.getReleaseNumber())
+        .namespaces(k8sExecutionSummary.getNamespaces())
         .build();
   }
 

@@ -104,9 +104,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -714,5 +716,13 @@ public class K8sStateHelper {
                                     .build())
         .withDelegateTaskId(delegateTaskId)
         .build();
+  }
+
+  public Set<String> getNamespacesFromK8sPodList(List<K8sPod> k8sPodList) {
+    if (isEmpty(k8sPodList)) {
+      return new HashSet<>();
+    }
+
+    return k8sPodList.stream().map(K8sPod::getNamespace).collect(Collectors.toSet());
   }
 }
