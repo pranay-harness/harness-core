@@ -705,7 +705,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   }
 
   @Override
-  public LogMLAnalysisRecord getLogAnalysisRecords(String appId, String cvConfigId, int analysisMinute) {
+  public LogMLAnalysisRecord getLogAnalysisRecords(String cvConfigId, int analysisMinute, boolean isCompressed) {
     LogMLAnalysisRecord logMLAnalysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
                                                   .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
                                                   .field(LogMLAnalysisRecordKeys.logCollectionMinute)
@@ -714,7 +714,17 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                                   .order(Sort.descending(LogMLAnalysisRecordKeys.logCollectionMinute))
                                                   .get();
     if (logMLAnalysisRecord != null) {
-      logMLAnalysisRecord.decompressLogAnalysisRecord();
+      // everything that has been json compressed should eventually move to protobuf compressed
+      if (logMLAnalysisRecord.getAnalysisDetailsCompressedJson() != null) {
+        logMLAnalysisRecord.decompressLogAnalysisRecord();
+        logMLAnalysisRecord.compressLogAnalysisRecord();
+        logMLAnalysisRecord.setAnalysisDetailsCompressedJson(null);
+        wingsPersistence.save(logMLAnalysisRecord);
+      }
+
+      if (!isCompressed) {
+        logMLAnalysisRecord.decompressLogAnalysisRecord();
+      }
     }
     return logMLAnalysisRecord;
   }

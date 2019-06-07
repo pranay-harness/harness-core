@@ -178,8 +178,9 @@ public class LogVerificationResource {
   @ExceptionMetered
   @LearningEngineAuth
   public RestResponse<LogMLAnalysisRecord> getLogMLAnalysisRecords(@QueryParam("appId") String appId,
-      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("analysisMinute") int analysisMinute) {
-    return new RestResponse<>(analysisService.getLogAnalysisRecords(appId, cvConfigId, analysisMinute));
+      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("analysisMinute") int analysisMinute,
+      @QueryParam("compressed") boolean isCompressed) {
+    return new RestResponse<>(analysisService.getLogAnalysisRecords(cvConfigId, analysisMinute, isCompressed));
   }
 
   @GET
@@ -189,8 +190,9 @@ public class LogVerificationResource {
   @ExceptionMetered
   @LearningEngineAuth
   public RestResponse<LogMLAnalysisRecord> getLogAnalysisRecords(@QueryParam("appId") String appId,
-      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("analysisMinute") int analysisMinute) {
-    return new RestResponse<>(analysisService.getLogAnalysisRecords(appId, cvConfigId, analysisMinute));
+      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("analysisMinute") int analysisMinute,
+      @QueryParam("compressed") boolean isCompressed) {
+    return new RestResponse<>(analysisService.getLogAnalysisRecords(cvConfigId, analysisMinute, isCompressed));
   }
 
   @DELETE

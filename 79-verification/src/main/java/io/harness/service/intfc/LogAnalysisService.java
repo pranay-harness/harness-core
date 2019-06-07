@@ -50,7 +50,7 @@ public interface LogAnalysisService {
   LogMLAnalysisRecord getLogAnalysisRecords(
       String appId, String stateExecutionId, String query, StateType stateType, int logCollectionMinute);
 
-  LogMLAnalysisRecord getLogAnalysisRecords(String appId, String cvConfigId, int analysisMinute);
+  LogMLAnalysisRecord getLogAnalysisRecords(String cvConfigId, int analysisMinute, boolean isCompressed);
 
   List<LogMLExpAnalysisInfo> getExpAnalysisInfoList();
 
