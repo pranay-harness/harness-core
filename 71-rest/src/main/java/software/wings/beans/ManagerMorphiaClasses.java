@@ -145,7 +145,7 @@ public class ManagerMorphiaClasses {
       AzureKubernetesInfrastructureMapping.class, TriggerExecution.class, GitCommit.class, SmbArtifactStream.class,
       AwsLambdaInfraStructureMapping.class, Schema.class, VaultConfig.class, User.class, AnalysisContext.class,
       ApiKeyEntry.class, PipelineExecution.class, HarnessUserGroup.class, FailureNotification.class, Service.class,
-      Whitelist.class, DeploymentPreference.class, EntityVersion.class, BaseFile.class,
+      Whitelist.class, DeploymentPreference.class, AuditPreference.class, EntityVersion.class, BaseFile.class,
       CloudFormationInfrastructureProvisioner.class, BarrierInstance.class, ResourceConstraint.class,
       DirectKubernetesInfrastructureMapping.class, Alert.class, EcrArtifactStream.class, ServiceSecretKey.class,
       ArtifactStream.class, ActionableNotification.class, AppContainer.class, EcsContainerTask.class,

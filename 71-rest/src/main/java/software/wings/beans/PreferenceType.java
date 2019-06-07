@@ -9,7 +9,9 @@ public enum PreferenceType {
   /**
    * Deployment Preference Type.
    */
-  DEPLOYMENT_PREFERENCE("Deployment Preference");
+  DEPLOYMENT_PREFERENCE("Deployment Preference"),
+
+  AUDIT_PREFERENCE("AUDIT_PREFERENCE");
 
   String displayName;
   PreferenceType(String displayName) {

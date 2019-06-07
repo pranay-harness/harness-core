@@ -13,7 +13,9 @@ import org.mongodb.morphia.annotations.Entity;
 @Data
 @AllArgsConstructor
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "preferenceType")
-@JsonSubTypes({ @Type(value = DeploymentPreference.class, name = "DEPLOYMENT_PREFERENCE") })
+@JsonSubTypes({ @Type(value = DeploymentPreference.class, name = "DEPLOYMENT_PREFERENCE")
+                , })
+@Type(value = AuditPreference.class, name = "AUDIT_PREFERENCE")
 @Entity(value = "preferences")
 @HarnessExportableEntity
 @EqualsAndHashCode(callSuper = false)

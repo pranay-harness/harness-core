@@ -1,0 +1,33 @@
+package software.wings.beans;
+
+import static software.wings.beans.PreferenceType.AUDIT_PREFERENCE;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+import java.util.List;
+
+/**
+ * Audit Preference model
+ */
+
+@Data
+@JsonTypeName("AUDIT_PREFERENCE")
+@EqualsAndHashCode(callSuper = true)
+public class AuditPreference extends Preference {
+  String startTime;
+  String endTime;
+  String duration;
+  // userIds who initiated action captured by audit records
+  List<String> createdByUserIds;
+  List<String> operationTypes;
+  boolean includeAccountLevelResources;
+  boolean includeAppLevelResources;
+  AccountAuditFilter accountAuditFilter;
+  ApplicationAuditFilter applicationAuditFilter;
+
+  public AuditPreference() {
+    super(AUDIT_PREFERENCE.name());
+  }
+}
