@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
@@ -127,8 +128,11 @@ public class AppServiceImpl implements AppService {
 
   private void validateAppName(Application app) {
     if (app != null) {
-      if (!EntityNameValidator.isValid(app.getName())) {
-        throw new InvalidRequestException("App Name can only have characters -, _, a-z, A-Z, 0-9 and space");
+      if (isEmpty(app.getName().trim())) {
+        throw new InvalidRequestException("App Name can not be empty", USER);
+      }
+      if (!EntityNameValidator.isValid(app.getName().trim())) {
+        throw new InvalidRequestException("App Name can only have characters -, _, a-z, A-Z, 0-9 and space", USER);
       }
     }
   }
