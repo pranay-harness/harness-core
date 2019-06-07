@@ -20,6 +20,7 @@ import static software.wings.beans.command.K8sDummyCommandUnit.Init;
 import static software.wings.beans.command.K8sDummyCommandUnit.Prepare;
 import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
 import static software.wings.beans.command.K8sDummyCommandUnit.WrapUp;
+import static software.wings.delegatetasks.k8s.K8sTask.MANIFEST_FILES_DIR;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -55,6 +56,7 @@ import software.wings.helpers.ext.k8s.response.K8sRollingDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -76,6 +78,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
   KubernetesResource managedWorkload;
   List<KubernetesResource> resources;
   private String releaseName;
+  private String manifestFilesDirectory;
 
   public K8sTaskExecutionResponse executeTaskInternal(
       K8sTaskParameters k8sTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams) throws Exception {
@@ -87,16 +90,16 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     K8sRollingDeployTaskParameters k8sRollingDeployTaskParameters = (K8sRollingDeployTaskParameters) k8sTaskParameters;
 
     releaseName = k8sRollingDeployTaskParameters.getReleaseName();
+    manifestFilesDirectory = Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString();
 
-    List<ManifestFile> manifestFiles =
-        k8sTaskHelper.fetchManifestFiles(k8sRollingDeployTaskParameters.getK8sDelegateManifestConfig(),
-            k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, FetchFiles));
-    if (manifestFiles == null) {
+    boolean success = k8sTaskHelper.fetchManifestFilesAndWriteToDirectory(
+        k8sRollingDeployTaskParameters.getK8sDelegateManifestConfig(), manifestFilesDirectory,
+        k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, FetchFiles));
+    if (!success) {
       return getFailureResponse();
     }
-    k8sRollingDeployTaskParameters.getK8sDelegateManifestConfig().setManifestFiles(manifestFiles);
 
-    boolean success = init(k8sRollingDeployTaskParameters, k8sDelegateTaskParams,
+    success = init(k8sRollingDeployTaskParameters, k8sDelegateTaskParams,
         k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, Init));
     if (!success) {
       return getFailureResponse();
@@ -196,13 +199,11 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       releaseHistory = (StringUtils.isEmpty(releaseHistoryData)) ? ReleaseHistory.createNew()
                                                                  : ReleaseHistory.createFromData(releaseHistoryData);
 
-      List<ManifestFile> manifestFilesForDeploy =
-          k8sTaskHelper.filterSkippedManifestFiles(request.getK8sDelegateManifestConfig().getManifestFiles());
-      request.getK8sDelegateManifestConfig().setManifestFiles(manifestFilesForDeploy);
+      k8sTaskHelper.deleteSkippedManifestFiles(manifestFilesDirectory, executionLogCallback);
 
-      List<ManifestFile> manifestFiles =
-          k8sTaskHelper.renderTemplate(k8sDelegateTaskParams, request.getK8sDelegateManifestConfig(),
-              request.getValuesYamlList(), releaseName, kubernetesConfig.getNamespace(), executionLogCallback);
+      List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplate(k8sDelegateTaskParams,
+          request.getK8sDelegateManifestConfig(), manifestFilesDirectory, request.getValuesYamlList(), releaseName,
+          kubernetesConfig.getNamespace(), executionLogCallback);
 
       resources = k8sTaskHelper.readManifests(manifestFiles, executionLogCallback);
       k8sTaskHelper.setNamespaceToKubernetesResourcesIfRequired(resources, kubernetesConfig.getNamespace());

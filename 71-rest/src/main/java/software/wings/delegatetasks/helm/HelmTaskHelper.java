@@ -38,6 +38,8 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -51,6 +53,7 @@ import java.util.concurrent.TimeUnit;
 public class HelmTaskHelper {
   private static final String WORKING_DIR_BASE = "./repository/helm-values/";
   private static final String RESOURCE_DIR_BASE = "./repository/helm/resources/";
+  private static final String VALUES_YAML = "values.yaml";
 
   private static final String HELM_REPO_ADD_COMMAND_FOR_CHART_MUSEUM = "${HELM_PATH} repo add ${REPO_NAME} ${REPO_URL}";
   private static final String HELM_REPO_ADD_COMMAND_FOR_HTTP =
@@ -65,38 +68,48 @@ public class HelmTaskHelper {
   @Inject private EncryptionService encryptionService;
   @Inject private ChartMuseumClient chartMuseumClient;
 
-  public List<FileData> fetchChartFiles(HelmChartConfigParams helmChartConfigParams, List<String> filesToBeFetched)
+  private void fetchChartFiles(HelmChartConfigParams helmChartConfigParams, String destinationDirectory)
       throws Exception {
-    String workingDirectory = null;
+    HelmRepoConfig helmRepoConfig = helmChartConfigParams.getHelmRepoConfig();
+
+    if (helmRepoConfig == null) {
+      fetchChartFromRepoUrl(helmChartConfigParams, destinationDirectory);
+    } else {
+      encryptionService.decrypt(helmRepoConfig, helmChartConfigParams.getEncryptedDataDetails());
+
+      SettingValue connectorConfig = helmChartConfigParams.getConnectorConfig();
+      if (connectorConfig != null) {
+        encryptionService.decrypt(
+            (EncryptableSetting) connectorConfig, helmChartConfigParams.getConnectorEncryptedDataDetails());
+      }
+
+      if (helmRepoConfig instanceof AmazonS3HelmRepoConfig || helmRepoConfig instanceof GCSHelmRepoConfig) {
+        fetchChartUsingChartMuseumServer(helmChartConfigParams, connectorConfig, destinationDirectory);
+      } else if (helmRepoConfig instanceof HttpHelmRepoConfig) {
+        fetchChartFromHttpServer(helmChartConfigParams, destinationDirectory);
+      }
+    }
+  }
+
+  public void downloadChartFiles(HelmChartConfigParams helmChartConfigParams, String destinationDirectory)
+      throws Exception {
+    String workingDirectory = createDirectory(Paths.get(destinationDirectory).toString());
+
+    fetchChartFiles(helmChartConfigParams, workingDirectory);
+  }
+
+  public String getValuesYamlFromChart(HelmChartConfigParams helmChartConfigParams) throws Exception {
+    String workingDirectory = createNewDirectoryAtPath(Paths.get(WORKING_DIR_BASE).toString());
 
     try {
-      workingDirectory = createDirectory(WORKING_DIR_BASE);
+      fetchChartFiles(helmChartConfigParams, workingDirectory);
 
-      HelmRepoConfig helmRepoConfig = helmChartConfigParams.getHelmRepoConfig();
-      if (helmRepoConfig == null) {
-        fetchChartFromRepoUrl(helmChartConfigParams, workingDirectory);
-      } else {
-        encryptionService.decrypt(helmRepoConfig, helmChartConfigParams.getEncryptedDataDetails());
-
-        SettingValue connectorConfig = helmChartConfigParams.getConnectorConfig();
-        if (connectorConfig != null) {
-          encryptionService.decrypt(
-              (EncryptableSetting) connectorConfig, helmChartConfigParams.getConnectorEncryptedDataDetails());
-        }
-
-        if (helmRepoConfig instanceof AmazonS3HelmRepoConfig || helmRepoConfig instanceof GCSHelmRepoConfig) {
-          fetchChartUsingChartMuseumServer(helmChartConfigParams, connectorConfig, workingDirectory);
-        } else if (helmRepoConfig instanceof HttpHelmRepoConfig) {
-          fetchChartFromHttpServer(helmChartConfigParams, workingDirectory);
-        }
-      }
-
-      List<FileData> files = getFiles(workingDirectory, helmChartConfigParams.getChartName());
-      if (isEmpty(filesToBeFetched)) {
-        return files;
-      }
-
-      return getFilteredFiles(files, filesToBeFetched);
+      return new String(
+          Files.readAllBytes(Paths.get(workingDirectory, helmChartConfigParams.getChartName(), VALUES_YAML)),
+          StandardCharsets.UTF_8);
+    } catch (Exception ex) {
+      logger.info("values.yaml file not found", ex);
+      return null;
     } finally {
       cleanup(workingDirectory);
     }
@@ -108,7 +121,7 @@ public class HelmTaskHelper {
     String resourceDirectory = null;
 
     try {
-      resourceDirectory = createDirectory(RESOURCE_DIR_BASE);
+      resourceDirectory = createNewDirectoryAtPath(RESOURCE_DIR_BASE);
       chartMuseumServer = chartMuseumClient.startChartMuseumServer(
           helmChartConfigParams.getHelmRepoConfig(), connectorConfig, resourceDirectory);
 
@@ -194,11 +207,20 @@ public class HelmTaskHelper {
     return processExecutor.execute();
   }
 
-  public String createDirectory(String directoryBase) throws Exception {
+  public String createNewDirectoryAtPath(String directoryBase) throws Exception {
     String workingDirectory = Paths.get(directoryBase, convertBase64UuidToCanonicalForm(generateUuid()))
                                   .normalize()
                                   .toAbsolutePath()
                                   .toString();
+
+    createDirectoryIfDoesNotExist(workingDirectory);
+    waitForDirectoryToBeAccessibleOutOfProcess(workingDirectory, 10);
+
+    return workingDirectory;
+  }
+
+  public String createDirectory(String directoryBase) throws Exception {
+    String workingDirectory = Paths.get(directoryBase).normalize().toAbsolutePath().toString();
 
     createDirectoryIfDoesNotExist(workingDirectory);
     waitForDirectoryToBeAccessibleOutOfProcess(workingDirectory, 10);
@@ -337,7 +359,7 @@ public class HelmTaskHelper {
     ChartMuseumServer chartMuseumServer = null;
     String resourceDirectory = null;
     try {
-      resourceDirectory = createDirectory(RESOURCE_DIR_BASE);
+      resourceDirectory = createNewDirectoryAtPath(RESOURCE_DIR_BASE);
       chartMuseumServer = chartMuseumClient.startChartMuseumServer(helmRepoConfig, connectorConfig, resourceDirectory);
 
       addChartMuseumRepo(repoName, repoDisplayName, chartMuseumServer.getPort(), null);

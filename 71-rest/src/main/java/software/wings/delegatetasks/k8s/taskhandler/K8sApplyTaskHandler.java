@@ -17,6 +17,7 @@ import static software.wings.beans.command.K8sDummyCommandUnit.Init;
 import static software.wings.beans.command.K8sDummyCommandUnit.Prepare;
 import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
 import static software.wings.beans.command.K8sDummyCommandUnit.WrapUp;
+import static software.wings.delegatetasks.k8s.K8sTask.MANIFEST_FILES_DIR;
 
 import com.google.inject.Inject;
 
@@ -41,6 +42,7 @@ import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sApplyResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -57,6 +59,7 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
   private List<KubernetesResource> resources;
   private List<KubernetesResource> workloads;
   private KubernetesConfig kubernetesConfig;
+  private String manifestFilesDirectory;
 
   public K8sTaskExecutionResponse executeTaskInternal(
       K8sTaskParameters k8sTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams) throws Exception {
@@ -66,19 +69,18 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
 
     K8sApplyTaskParameters k8sApplyTaskParameters = (K8sApplyTaskParameters) k8sTaskParameters;
     releaseName = k8sApplyTaskParameters.getReleaseName();
+    manifestFilesDirectory = Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString();
 
     K8sApplyResponse k8sApplyResponse = K8sApplyResponse.builder().build();
 
-    List<ManifestFile> manifestFiles =
-        k8sTaskHelper.fetchManifestFiles(k8sApplyTaskParameters.getK8sDelegateManifestConfig(),
-            k8sTaskHelper.getExecutionLogCallback(k8sApplyTaskParameters, FetchFiles));
-    if (manifestFiles == null) {
+    boolean success =
+        k8sTaskHelper.fetchManifestFilesAndWriteToDirectory(k8sApplyTaskParameters.getK8sDelegateManifestConfig(),
+            manifestFilesDirectory, k8sTaskHelper.getExecutionLogCallback(k8sApplyTaskParameters, FetchFiles));
+    if (!success) {
       return getFailureResponse();
     }
 
-    k8sApplyTaskParameters.getK8sDelegateManifestConfig().setManifestFiles(manifestFiles);
-
-    boolean success = init(k8sApplyTaskParameters, k8sDelegateTaskParams,
+    success = init(k8sApplyTaskParameters, k8sDelegateTaskParams,
         k8sTaskHelper.getExecutionLogCallback(k8sApplyTaskParameters, Init));
     if (!success) {
       return getFailureResponse();
@@ -132,9 +134,10 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
     client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
 
     try {
-      List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplate(k8sDelegateTaskParams,
-          k8sApplyTaskParameters.getK8sDelegateManifestConfig(), k8sApplyTaskParameters.getValuesYamlList(),
-          releaseName, kubernetesConfig.getNamespace(), executionLogCallback);
+      List<ManifestFile> manifestFiles =
+          k8sTaskHelper.renderTemplate(k8sDelegateTaskParams, k8sApplyTaskParameters.getK8sDelegateManifestConfig(),
+              manifestFilesDirectory, k8sApplyTaskParameters.getValuesYamlList(), releaseName,
+              kubernetesConfig.getNamespace(), executionLogCallback);
 
       // Remove files not specified in filePaths
       Set<String> filePathsSet = Arrays.stream(k8sApplyTaskParameters.getFilePaths().split(","))

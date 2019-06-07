@@ -7,5 +7,5 @@ import lombok.Value;
 @Builder
 public class FileData {
   private String filePath;
-  private String fileContent;
+  private byte[] fileBytes;
 }
