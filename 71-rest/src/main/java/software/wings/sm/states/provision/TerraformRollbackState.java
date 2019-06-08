@@ -6,6 +6,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STATE;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
@@ -179,5 +180,23 @@ public class TerraformRollbackState extends TerraformProvisionState {
     }
 
     return anExecutionResponse().withExecutionStatus(terraformExecutionData.getExecutionStatus()).build();
+  }
+
+  @Override
+  @SchemaIgnore
+  public String getWorkspace() {
+    return super.getWorkspace();
+  }
+
+  @Override
+  @SchemaIgnore
+  public String getProvisionerId() {
+    return super.getProvisionerId();
+  }
+
+  @Override
+  @SchemaIgnore
+  public Integer getTimeoutMillis() {
+    return super.getTimeoutMillis();
   }
 }

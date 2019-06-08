@@ -25,6 +25,7 @@ import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
 import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
+import static software.wings.beans.PhaseStepType.PROVISION_INFRASTRUCTURE;
 import static software.wings.beans.PhaseStepType.ROUTE_UPDATE;
 import static software.wings.beans.PhaseStepType.SELECT_NODE;
 import static software.wings.beans.PhaseStepType.START_SERVICE;
@@ -536,13 +537,11 @@ public enum StateType implements StateTypeDescriptor {
       Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
 
   TERRAFORM_PROVISION(ApplyTerraformProvisionState.class, PROVISIONERS, 0, "Terraform Provision",
-      asList(InfrastructureMappingType.AWS_SSH), asList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
+      asList(InfrastructureMappingType.AWS_SSH), asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE),
+      ORCHESTRATION_STENCILS),
 
   SHELL_SCRIPT_PROVISION(ShellScriptProvisionState.class, PROVISIONERS, 2, PROVISION_SHELL_SCRIPT,
       asList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
-
-  //  TERRAFORM_ADJUST(AdjustTerraformProvisionState.class, PROVISIONERS, asList(InfrastructureMappingType.AWS_SSH),
-  //      asList(INFRASTRUCTURE_NODE), ORCHESTRATION_STENCILS),
 
   TERRAFORM_DESTROY(DestroyTerraformProvisionState.class, PROVISIONERS, 0, "Terraform Destroy",
       asList(InfrastructureMappingType.AWS_SSH), asList(POST_DEPLOYMENT), ORCHESTRATION_STENCILS),

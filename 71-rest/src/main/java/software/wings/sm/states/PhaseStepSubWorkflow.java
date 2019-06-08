@@ -47,11 +47,15 @@ import software.wings.api.RouteUpdateRollbackElement;
 import software.wings.api.ScriptStateExecutionSummary;
 import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.api.ServiceInstanceIdsParam;
+import software.wings.api.TerraformOutputInfoElement;
+import software.wings.api.cloudformation.CloudFormationOutputInfoElement;
+import software.wings.api.cloudformation.CloudFormationRollbackInfoElement;
 import software.wings.api.k8s.K8sContextElement;
 import software.wings.api.k8s.K8sExecutionSummary;
 import software.wings.api.pcf.PcfDeployExecutionSummary;
 import software.wings.api.pcf.PcfRouteSwapExecutionSummary;
 import software.wings.api.pcf.PcfSetupContextElement;
+import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.beans.Activity;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.PhaseStepType;
@@ -112,7 +116,8 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     if (!isRollback()) {
       validatePreRequisites(contextIntf, phaseElement);
       response = super.execute(contextIntf);
-    } else if (phaseStepType == PhaseStepType.ROLLBACK_PROVISIONERS) {
+    } else if (phaseStepType == PhaseStepType.ROLLBACK_PROVISIONERS
+        || phaseStepType == PhaseStepType.ROLLBACK_PROVISION_INFRASTRUCTURE) {
       response = (SpawningExecutionResponse) super.execute(contextIntf);
     } else {
       List<ContextElement> rollbackRequiredParams = getRollbackRequiredParam(phaseStepType, phaseElement, contextIntf);
@@ -514,60 +519,86 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       return;
     }
 
+    boolean addNotifyElement = false;
+    List<ContextElement> contextElements = Lists.newArrayList();
     if (deploymentType.equals(DeploymentType.AWS_LAMBDA.name()) && phaseStepType == PhaseStepType.DEPLOY_AWS_LAMBDA) {
       AwsLambdaContextElement awsLambdaContextElement = (AwsLambdaContextElement) notifiedElement(
           elementNotifyResponseData, AwsLambdaContextElement.class, "Missing AwsLambdaContextElement");
-      executionResponse.setContextElements(Lists.newArrayList(awsLambdaContextElement));
+      contextElements.add(awsLambdaContextElement);
     } else if ((deploymentType.equals(DeploymentType.SSH.name()) || deploymentType.equals(DeploymentType.WINRM.name()))
         && phaseStepType == PhaseStepType.INFRASTRUCTURE_NODE) {
       ServiceInstanceIdsParam serviceInstanceIdsParam = (ServiceInstanceIdsParam) notifiedElement(
           elementNotifyResponseData, ServiceInstanceIdsParam.class, "Missing ServiceInstanceIdsParam");
-      executionResponse.setContextElements(Lists.newArrayList(serviceInstanceIdsParam));
+      contextElements.add(serviceInstanceIdsParam);
     } else if (phaseStepType == PhaseStepType.CLUSTER_SETUP) {
       ClusterElement clusterElement =
           (ClusterElement) notifiedElement(elementNotifyResponseData, ClusterElement.class, "Missing ClusterElement");
-      executionResponse.setContextElements(singletonList(clusterElement));
-      executionResponse.setNotifyElements(singletonList(clusterElement));
+      contextElements.add(clusterElement);
+      addNotifyElement = true;
     } else if (phaseStepType == PhaseStepType.CONTAINER_SETUP) {
       ContainerServiceElement containerServiceElement = (ContainerServiceElement) notifiedElement(
           elementNotifyResponseData, ContainerServiceElement.class, "Missing ContainerServiceElement");
-      executionResponse.setContextElements(singletonList(containerServiceElement));
-      executionResponse.setNotifyElements(singletonList(containerServiceElement));
+      contextElements.add(containerServiceElement);
+      addNotifyElement = true;
     } else if (phaseStepType == PhaseStepType.CONTAINER_DEPLOY) {
       InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
           elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceListParam Element");
-      executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
+      contextElements.add(instanceElementListParam);
     } else if (phaseStepType == PhaseStepType.DEPLOY_AWSCODEDEPLOY) {
       InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
           elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceListParam Element");
-      executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
+      contextElements.add(instanceElementListParam);
     } else if (phaseStepType == PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP) {
       AmiServiceSetupElement amiServiceElement = (AmiServiceSetupElement) notifiedElement(
           elementNotifyResponseData, AmiServiceSetupElement.class, "Missing AmiServiceElement Element");
-      executionResponse.setContextElements(Lists.newArrayList(amiServiceElement));
-      executionResponse.setNotifyElements(Lists.newArrayList(amiServiceElement));
+      contextElements.add(amiServiceElement);
+      addNotifyElement = true;
     } else if (phaseStepType == PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP) {
       InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
           elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceElementListParam Element");
-      executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
+      contextElements.add(instanceElementListParam);
     } else if (phaseStepType == PhaseStepType.HELM_DEPLOY) {
       InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
           elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceElementListParam Element");
-      executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
+      contextElements.add(instanceElementListParam);
     } else if (phaseStepType == PhaseStepType.PCF_SETUP) {
       PcfSetupContextElement pcfSetupContextElement = (PcfSetupContextElement) notifiedElement(
           elementNotifyResponseData, PcfSetupContextElement.class, "Missing PcfSetupContextElement");
-      executionResponse.setContextElements(Lists.newArrayList(pcfSetupContextElement));
-      executionResponse.setNotifyElements(Lists.newArrayList(pcfSetupContextElement));
+      contextElements.add(pcfSetupContextElement);
+      addNotifyElement = true;
     } else if (phaseStepType == PhaseStepType.PCF_RESIZE) {
       InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
           elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceElementListParam Element");
-      executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
+      contextElements.add(instanceElementListParam);
     } else if (phaseStepType == PhaseStepType.K8S_PHASE_STEP) {
       InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
           elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceListParam Element");
-      executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
+      contextElements.add(instanceElementListParam);
+    } else if (phaseStepType == PhaseStepType.PROVISION_INFRASTRUCTURE) {
+      addProvisionerElements(elementNotifyResponseData, contextElements);
+      addNotifyElement = true;
     }
+
+    if (isNotEmpty(contextElements)) {
+      executionResponse.setContextElements(contextElements);
+      if (addNotifyElement) {
+        executionResponse.setNotifyElements(contextElements);
+      }
+    }
+  }
+
+  private void addProvisionerElements(
+      ElementNotifyResponseData elementNotifyResponseData, List<ContextElement> contextElements) {
+    List<ContextElement> elements = elementNotifyResponseData.getContextElements();
+    if (isEmpty(elements)) {
+      return;
+    }
+    contextElements.addAll(elements.stream().filter(this ::isProvisionerElement).collect(toList()));
+  }
+
+  private boolean isProvisionerElement(ContextElement element) {
+    return element instanceof TerraformProvisionInheritPlanElement || element instanceof TerraformOutputInfoElement
+        || element instanceof CloudFormationRollbackInfoElement || element instanceof CloudFormationOutputInfoElement;
   }
 
   private ContextElement notifiedElement(
@@ -576,11 +607,11 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     if (isEmpty(elements)) {
       return null;
     }
-    if (!(cls.isInstance(elements.get(0)))) {
+    Optional<ContextElement> elementOptional = elements.stream().filter(cls::isInstance).findFirst();
+    if (!elementOptional.isPresent()) {
       throw new InvalidRequestException(message);
     }
-
-    return elements.get(0);
+    return elementOptional.get();
   }
 
   public boolean isStepsInParallel() {
