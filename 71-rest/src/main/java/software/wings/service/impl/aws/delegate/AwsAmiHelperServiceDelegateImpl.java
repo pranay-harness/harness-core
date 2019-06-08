@@ -28,7 +28,6 @@ import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
 import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationRequest;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.amazonaws.services.autoscaling.model.Tag;
-import com.amazonaws.services.autoscaling.model.TagDescription;
 import com.amazonaws.services.ec2.model.Instance;
 import io.fabric8.utils.Lists;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -47,6 +46,7 @@ import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse.AwsAmiServiceSetupResponseBuilder;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesResponse;
+import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.intfc.aws.delegate.AwsAmiHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsAsgHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
@@ -65,7 +65,6 @@ import java.util.concurrent.ExecutorService;
 public class AwsAmiHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsAmiHelperServiceDelegate {
   private static final String AUTOSCALING_GROUP_RESOURCE_TYPE = "auto-scaling-group";
-  @VisibleForTesting static final String HARNESS_AUTOSCALING_GROUP_TAG = "HARNESS_REVISION";
   @VisibleForTesting static final String NAME_TAG = "Name";
   private static final int MAX_OLD_ASG_VERSION_TO_KEEP = 3;
   @Inject private ExecutorService executorService;
@@ -337,9 +336,13 @@ public class AwsAmiHelperServiceDelegateImpl
       awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails,
           region, newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback,
           autoScalingSteadyStateTimeout);
-      if (newAsgFinalDesiredCount == maxInstances) {
-        awsAsgHelperServiceDelegate.setMinInstancesForAsg(
-            awsConfig, encryptionDetails, region, newAutoScalingGroupName, minInstances, executionLogCallback);
+      if (newAsgFinalDesiredCount >= minInstances) {
+        AutoScalingGroup newAutoScalingGroup = awsAsgHelperServiceDelegate.getAutoScalingGroup(
+            awsConfig, encryptionDetails, region, newAutoScalingGroupName);
+        if (newAutoScalingGroup != null && minInstances != newAutoScalingGroup.getMinSize()) {
+          awsAsgHelperServiceDelegate.setMinInstancesForAsg(
+              awsConfig, encryptionDetails, region, newAutoScalingGroupName, minInstances, executionLogCallback);
+        }
       }
       if (!rollback) {
         if (isNotEmpty(targetGroupsArns)) {
@@ -464,7 +467,17 @@ public class AwsAmiHelperServiceDelegateImpl
       Integer harnessRevision = getNewHarnessVersion(harnessManagedAutoScalingGroups);
       String region = request.getRegion();
       String newAutoScalingGroupName = AsgConvention.getAsgName(request.getNewAsgNamePrefix(), harnessRevision);
-      Integer maxInstances = request.getMaxInstances();
+      Integer maxInstances;
+      if (request.isUseCurrentRunningCount()) {
+        AwsAsgGetRunningCountData currentlyRunningInstanceCount =
+            awsAsgHelperServiceDelegate.getCurrentlyRunningInstanceCount(
+                awsConfig, encryptionDetails, region, request.getInfraMappingId());
+        logCallback.saveExecutionLog(format("Using currently running max: [%d] from Asg: [%s]",
+            currentlyRunningInstanceCount.getAsgMax(), currentlyRunningInstanceCount.getAsgName()));
+        maxInstances = currentlyRunningInstanceCount.getAsgMax();
+      } else {
+        maxInstances = request.getMaxInstances();
+      }
 
       LaunchConfiguration oldLaunchConfiguration = awsAsgHelperServiceDelegate.getLaunchConfiguration(
           awsConfig, encryptionDetails, region, newAutoScalingGroupName);
@@ -491,6 +504,7 @@ public class AwsAmiHelperServiceDelegateImpl
                                                       .lastDeployedAsgName(lastDeployedAsgName)
                                                       .newAsgName(newAutoScalingGroupName)
                                                       .harnessRevision(harnessRevision)
+                                                      .maxInstances(maxInstances)
                                                       .blueGreen(request.isBlueGreen());
       populatePreDeploymentData(harnessManagedAutoScalingGroups, builder);
 
@@ -733,11 +747,6 @@ public class AwsAmiHelperServiceDelegateImpl
                 tagDescription -> isHarnessManagedTag(infraMappingId, tagDescription)))
         .sorted(Comparator.comparing(AutoScalingGroup::getCreatedTime).reversed())
         .collect(toList());
-  }
-
-  private boolean isHarnessManagedTag(String infraMappingId, TagDescription tagDescription) {
-    return tagDescription.getKey().equals(HARNESS_AUTOSCALING_GROUP_TAG)
-        && tagDescription.getValue().startsWith(infraMappingId);
   }
 
   @VisibleForTesting

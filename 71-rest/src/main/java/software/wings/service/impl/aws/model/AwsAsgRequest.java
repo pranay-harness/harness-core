@@ -12,7 +12,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class AwsAsgRequest extends AwsRequest implements TaskParameters {
-  public enum AwsAsgRequestType { LIST_ALL_ASG_NAMES, LIST_ASG_INSTANCES, LIST_DESIRED_CAPACITIES }
+  public enum AwsAsgRequestType { LIST_ALL_ASG_NAMES, LIST_ASG_INSTANCES, LIST_DESIRED_CAPACITIES, GET_RUNNING_COUNT }
 
   @NotNull private AwsAsgRequestType requestType;
   @NotNull private String region;

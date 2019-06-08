@@ -18,6 +18,9 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.TaskType;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
+import software.wings.service.impl.aws.model.AwsAsgGetRunningCountRequest;
+import software.wings.service.impl.aws.model.AwsAsgGetRunningCountResponse;
 import software.wings.service.impl.aws.model.AwsAsgListAllNamesRequest;
 import software.wings.service.impl.aws.model.AwsAsgListAllNamesResponse;
 import software.wings.service.impl.aws.model.AwsAsgListDesiredCapacitiesRequest;
@@ -78,6 +81,20 @@ public class AwsAsgHelperServiceManagerImpl implements AwsAsgHelperServiceManage
             .build(),
         appId);
     return ((AwsAsgListDesiredCapacitiesResponse) response).getCapacities();
+  }
+
+  @Override
+  public AwsAsgGetRunningCountData getCurrentlyRunningInstanceCount(AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, String region, String infraMappingId, String appId) {
+    AwsResponse response = executeTask(awsConfig.getAccountId(),
+        AwsAsgGetRunningCountRequest.builder()
+            .awsConfig(awsConfig)
+            .encryptionDetails(encryptionDetails)
+            .region(region)
+            .infraMappingId(infraMappingId)
+            .build(),
+        appId);
+    return ((AwsAsgGetRunningCountResponse) response).getData();
   }
 
   private AwsResponse executeTask(String accountId, AwsAsgRequest request, String appId) {

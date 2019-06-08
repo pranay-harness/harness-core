@@ -1,6 +1,7 @@
 package software.wings.service.impl.aws.delegate;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INIT_TIMEOUT;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
@@ -11,6 +12,8 @@ import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Log.LogLevel.ERROR;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MAX_INSTANCES;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_NAME;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -54,13 +57,16 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.LogCallback;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.intfc.aws.delegate.AwsAsgHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -610,5 +616,34 @@ public class AwsAsgHelperServiceDelegateImpl
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
     }
+  }
+
+  @Override
+  public AwsAsgGetRunningCountData getCurrentlyRunningInstanceCount(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String infraMappingId) {
+    try {
+      String asgName = DEFAULT_AMI_ASG_NAME;
+      int asgMax = DEFAULT_AMI_ASG_MAX_INSTANCES;
+      List<AutoScalingGroup> groups = listAllAsgs(awsConfig, encryptionDetails, region);
+      if (isNotEmpty(groups)) {
+        Optional<AutoScalingGroup> first =
+            groups.stream()
+                .filter(group
+                    -> group.getTags().stream().anyMatch(
+                        tagDescription -> isHarnessManagedTag(infraMappingId, tagDescription)))
+                .filter(group -> group.getDesiredCapacity() > 0)
+                .max(Comparator.comparing(AutoScalingGroup::getCreatedTime));
+        if (first.isPresent()) {
+          asgName = first.get().getAutoScalingGroupName();
+          asgMax = first.get().getMaxSize();
+        }
+      }
+      return AwsAsgGetRunningCountData.builder().asgMax(asgMax).asgName(asgName).build();
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
+    return null;
   }
 }

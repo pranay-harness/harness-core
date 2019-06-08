@@ -24,6 +24,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -131,6 +132,16 @@ public class InfrastructureMappingResource {
   public RestResponse<Integer> getRunningCountForPcfApp(@QueryParam("appId") String appId,
       @QueryParam("appNameExpr") String appNameExpr, @PathParam("infraMappingId") String infraMappingId) {
     return new RestResponse<>(infrastructureMappingService.getPcfRunningInstances(appId, infraMappingId, appNameExpr));
+  }
+
+  @GET
+  @Path("{infraMappingId}/ami/runningcount")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<AwsAsgGetRunningCountData> getRunningCountForAmi(
+      @QueryParam("appId") String appId, @PathParam("infraMappingId") String infraMappingId) {
+    return new RestResponse<>(infrastructureMappingService.getAmiCurrentlyRunningInstanceCount(infraMappingId, appId));
   }
 
   @PUT

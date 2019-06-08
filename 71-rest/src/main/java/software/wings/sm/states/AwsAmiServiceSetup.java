@@ -8,6 +8,9 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
+import static software.wings.service.impl.aws.model.AwsConstants.AMI_SETUP_COMMAND_NAME;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MAX_INSTANCES;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_TIMEOUT_MIN;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.utils.Misc.normalizeExpression;
 import static software.wings.utils.Validator.notNullCheck;
@@ -27,7 +30,6 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AwsAmiSetupExecutionData;
@@ -71,35 +73,27 @@ import software.wings.utils.Misc;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
-/**
- * Created by anubhaw on 12/19/17.
- */
+
 @Slf4j
 public class AwsAmiServiceSetup extends State {
   private String autoScalingGroupName;
   private int autoScalingSteadyStateTimeout;
+  private boolean useCurrentRunningCount;
   private int maxInstances;
   private int minInstances;
   private ResizeStrategy resizeStrategy;
   private boolean blueGreen;
 
-  @Inject @Transient protected transient SettingsService settingsService;
-  @Inject @Transient protected transient ServiceResourceService serviceResourceService;
-  @Inject @Transient protected transient InfrastructureMappingService infrastructureMappingService;
-  @Inject @Transient protected transient SecretManager secretManager;
-  @Inject @Transient protected transient ActivityService activityService;
-  @Inject @Transient protected transient ExecutorService executorService;
-  @Inject @Transient protected transient LogService logService;
-  @Inject @Transient private transient DelegateService delegateService;
+  @Inject private transient SettingsService settingsService;
+  @Inject private transient ServiceResourceService serviceResourceService;
+  @Inject private transient InfrastructureMappingService infrastructureMappingService;
+  @Inject private transient SecretManager secretManager;
+  @Inject private transient ActivityService activityService;
+  @Inject private transient LogService logService;
+  @Inject private transient DelegateService delegateService;
 
-  private String commandName = Constants.AMI_SETUP_COMMAND_NAME;
-  /**
-   * Instantiates a new state.
-   *
-   * @param name the name
-   */
+  private String commandName = AMI_SETUP_COMMAND_NAME;
+
   public AwsAmiServiceSetup(String name) {
     super(name, StateType.AWS_AMI_SERVICE_SETUP.name());
   }
@@ -115,6 +109,22 @@ public class AwsAmiServiceSetup extends State {
     }
   }
 
+  private int getNumMaxInstancesForNewAsg() {
+    if (maxInstances == 0) {
+      return DEFAULT_AMI_ASG_MAX_INSTANCES;
+    } else {
+      return maxInstances;
+    }
+  }
+
+  private int getTimeOut() {
+    if (autoScalingSteadyStateTimeout == 0) {
+      return DEFAULT_AMI_ASG_TIMEOUT_MIN;
+    } else {
+      return autoScalingSteadyStateTimeout;
+    }
+  }
+
   private ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
     String activityId = response.keySet().iterator().next();
     AwsAmiServiceSetupResponse amiServiceSetupResponse =
@@ -127,19 +137,15 @@ public class AwsAmiServiceSetup extends State {
     awsAmiExecutionData.setNewVersion(amiServiceSetupResponse.getHarnessRevision());
     awsAmiExecutionData.setDelegateMetaInfo(amiServiceSetupResponse.getDelegateMetaInfo());
 
-    maxInstances = getMaxInstances() == 0 ? 10 : getMaxInstances();
-    autoScalingSteadyStateTimeout =
-        getAutoScalingSteadyStateTimeout() == 0 ? (int) TimeUnit.MINUTES.toMinutes(10) : autoScalingSteadyStateTimeout;
-
     AmiServiceSetupElement amiServiceElement =
         AmiServiceSetupElement.builder()
             .newAutoScalingGroupName(amiServiceSetupResponse.getNewAsgName())
             .oldAutoScalingGroupName(amiServiceSetupResponse.getLastDeployedAsgName())
-            .maxInstances(maxInstances)
+            .maxInstances(amiServiceSetupResponse.getMaxInstances())
             .minInstances(minInstances)
             .blueGreen(amiServiceSetupResponse.isBlueGreen())
             .resizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
-            .autoScalingSteadyStateTimeout(autoScalingSteadyStateTimeout)
+            .autoScalingSteadyStateTimeout(getTimeOut())
             .commandName(commandName)
             .oldAsgNames(amiServiceSetupResponse.getOldAsgNames())
             .preDeploymentData(amiServiceSetupResponse.getPreDeploymentData())
@@ -268,23 +274,14 @@ public class AwsAmiServiceSetup extends State {
       String asgNamePrefix = isNotEmpty(autoScalingGroupName)
           ? normalizeExpression(context.renderExpression(autoScalingGroupName))
           : AsgConvention.getAsgNamePrefix(app.getName(), service.getName(), env.getName());
+
       requestBuilder.newAsgNamePrefix(asgNamePrefix);
-
-      /**
-       * Defaulting to 10 max instances in case we get maxInstances as 0
-       */
-      maxInstances = getMaxInstances() == 0 ? 10 : getMaxInstances();
-      /**
-       * Defaulting to 10 minutes timeout in case we get autoScalingSteadyStateTimeout as 0
-       */
-      autoScalingSteadyStateTimeout = getAutoScalingSteadyStateTimeout() == 0 ? (int) TimeUnit.MINUTES.toMinutes(10)
-                                                                              : autoScalingSteadyStateTimeout;
-      requestBuilder.maxInstances(maxInstances);
-      requestBuilder.autoScalingSteadyStateTimeout(autoScalingSteadyStateTimeout);
-
+      requestBuilder.maxInstances(getNumMaxInstancesForNewAsg());
+      requestBuilder.autoScalingSteadyStateTimeout(getTimeOut());
+      requestBuilder.useCurrentRunningCount(useCurrentRunningCount);
       awsAmiExecutionData = AwsAmiSetupExecutionData.builder()
                                 .activityId(activity.getUuid())
-                                .maxInstances(maxInstances)
+                                .maxInstances(getNumMaxInstancesForNewAsg())
                                 .resizeStrategy(resizeStrategy)
                                 .build();
 
@@ -325,56 +322,26 @@ public class AwsAmiServiceSetup extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
-  /**
-   * Gets resize strategy.
-   *
-   * @return the resize strategy
-   */
   public ResizeStrategy getResizeStrategy() {
     return resizeStrategy;
   }
 
-  /**
-   * Sets resize strategy.
-   *
-   * @param resizeStrategy the resize strategy
-   */
   public void setResizeStrategy(ResizeStrategy resizeStrategy) {
     this.resizeStrategy = resizeStrategy;
   }
 
-  /**
-   * Gets ecs service name.
-   *
-   * @return the ecs service name
-   */
   public String getAutoScalingGroupName() {
     return autoScalingGroupName;
   }
 
-  /**
-   * Sets ecs service name.
-   *
-   * @param autoScalingGroupName the ecs service name
-   */
   public void setAutoScalingGroupName(String autoScalingGroupName) {
     this.autoScalingGroupName = autoScalingGroupName;
   }
 
-  /**
-   * Gets auto scaling steady state timeout.
-   *
-   * @return the auto scaling steady state timeout
-   */
   public int getAutoScalingSteadyStateTimeout() {
     return autoScalingSteadyStateTimeout;
   }
 
-  /**
-   * Sets auto scaling steady state timeout.
-   *
-   * @param autoScalingSteadyStateTimeout the auto scaling steady state timeout
-   */
   public void setAutoScalingSteadyStateTimeout(int autoScalingSteadyStateTimeout) {
     this.autoScalingSteadyStateTimeout = autoScalingSteadyStateTimeout;
   }
@@ -409,5 +376,13 @@ public class AwsAmiServiceSetup extends State {
 
   public void setBlueGreen(boolean blueGreen) {
     this.blueGreen = blueGreen;
+  }
+
+  public boolean isUseCurrentRunningCount() {
+    return useCurrentRunningCount;
+  }
+
+  public void setUseCurrentRunningCount(boolean useCurrentRunningCount) {
+    this.useCurrentRunningCount = useCurrentRunningCount;
   }
 }
