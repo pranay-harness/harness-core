@@ -60,6 +60,7 @@ import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -90,6 +91,7 @@ public class AuditServiceImpl implements AuditService {
   @Inject private YamlResourceService yamlResourceService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
+  @Inject private ResourceLookupService resourceLookupService;
 
   private WingsPersistence wingsPersistence;
 
@@ -347,15 +349,18 @@ public class AuditServiceImpl implements AuditService {
       switch (type) {
         case CREATE: {
           saveEntityYamlForAudit(newEntity, record, accountId);
+          resourceLookupService.saveResourceLookupRecordIfNeeded(record, accountId);
           break;
         }
         case UPDATE: {
           loadLatestYamlDetailsForEntity(record, accountId);
           saveEntityYamlForAudit(newEntity, record, accountId);
+          resourceLookupService.updateResourceLookupRecordIfNeeded(record, accountId, newEntity, oldEntity);
           break;
         }
         case DELETE: {
           loadLatestYamlDetailsForEntity(record, accountId);
+          resourceLookupService.deleteResourceLookupRecordIfNeeded(record, accountId);
           break;
         }
         default: {
