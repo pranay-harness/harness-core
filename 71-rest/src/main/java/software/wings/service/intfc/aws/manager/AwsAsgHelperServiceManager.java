@@ -3,6 +3,7 @@ package software.wings.service.intfc.aws.manager;
 import com.amazonaws.services.ec2.model.Instance;
 import software.wings.beans.AwsConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 
 import java.util.List;
 import java.util.Map;
@@ -14,4 +15,6 @@ public interface AwsAsgHelperServiceManager {
       String region, String autoScalingGroupName, String appId);
   Map<String, Integer> getDesiredCapacitiesOfAsgs(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<String> asgs, String appId);
+  AwsAsgGetRunningCountData getCurrentlyRunningInstanceCount(AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, String region, String infraMappingId, String appId);
 }

@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import com.amazonaws.AmazonClientException;
@@ -13,6 +14,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.EC2ContainerCredentialsProviderWrapper;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.autoscaling.model.AmazonAutoScalingException;
+import com.amazonaws.services.autoscaling.model.TagDescription;
 import com.amazonaws.services.cloudformation.model.AmazonCloudFormationException;
 import com.amazonaws.services.codedeploy.model.AmazonCodeDeployException;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
@@ -29,6 +31,7 @@ import software.wings.service.intfc.security.EncryptionService;
 
 @Slf4j
 class AwsHelperServiceDelegateBase {
+  @VisibleForTesting static final String HARNESS_AUTOSCALING_GROUP_TAG = "HARNESS_REVISION";
   @Inject protected EncryptionService encryptionService;
 
   protected void attachCredentials(
@@ -95,5 +98,10 @@ class AwsHelperServiceDelegateBase {
       logger.error("Unhandled aws exception");
       throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonServiceException.getMessage());
     }
+  }
+
+  protected boolean isHarnessManagedTag(String infraMappingId, TagDescription tagDescription) {
+    return tagDescription.getKey().equals(HARNESS_AUTOSCALING_GROUP_TAG)
+        && tagDescription.getValue().startsWith(infraMappingId);
   }
 }

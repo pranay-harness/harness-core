@@ -107,6 +107,7 @@ import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
@@ -121,6 +122,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsCodeDeployHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsEcsHelperServiceManager;
@@ -187,6 +189,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private AwsEc2HelperServiceManager awsEc2HelperServiceManager;
   @Inject private AwsCodeDeployHelperServiceManager awsCodeDeployHelperServiceManager;
   @Inject private AwsRoute53HelperServiceManager awsRoute53HelperServiceManager;
+  @Inject private AwsAsgHelperServiceManager awsAsgHelperServiceManager;
   @Inject private YamlPushService yamlPushService;
   @Inject private AzureHelperService azureHelperService;
   @Inject private TriggerService triggerService;
@@ -1847,6 +1850,19 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       logger.warn(ExceptionUtils.getMessage(e), e);
       return "0";
     }
+  }
+
+  @Override
+  public AwsAsgGetRunningCountData getAmiCurrentlyRunningInstanceCount(String infraMappingId, String appId) {
+    AwsAmiInfrastructureMapping infrastructureMapping = (AwsAmiInfrastructureMapping) get(appId, infraMappingId);
+    notNullCheck("Service Infrastructure", infrastructureMapping);
+    SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    notNullCheck("Compute Provider", computeProviderSetting);
+    String region = infrastructureMapping.getRegion();
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(awsConfig, appId, null);
+    return awsAsgHelperServiceManager.getCurrentlyRunningInstanceCount(
+        awsConfig, encryptionDetails, region, infraMappingId, appId);
   }
 
   public Integer getPcfRunningInstances(String appId, String infraMappingId, String appNameExpression) {

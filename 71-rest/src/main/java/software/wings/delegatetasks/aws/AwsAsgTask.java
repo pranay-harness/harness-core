@@ -13,6 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
+import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
+import software.wings.service.impl.aws.model.AwsAsgGetRunningCountRequest;
+import software.wings.service.impl.aws.model.AwsAsgGetRunningCountResponse;
 import software.wings.service.impl.aws.model.AwsAsgListAllNamesResponse;
 import software.wings.service.impl.aws.model.AwsAsgListDesiredCapacitiesRequest;
 import software.wings.service.impl.aws.model.AwsAsgListDesiredCapacitiesResponse;
@@ -67,6 +70,13 @@ public class AwsAsgTask extends AbstractDelegateRunnableTask {
               awsAsgHelperServiceDelegate.getDesiredCapacitiesOfAsgs(request.getAwsConfig(),
                   request.getEncryptionDetails(), request.getRegion(), awsAsgListDesiredCapacitiesRequest.getAsgs());
           return AwsAsgListDesiredCapacitiesResponse.builder().capacities(capacities).executionStatus(SUCCESS).build();
+        }
+        case GET_RUNNING_COUNT: {
+          AwsAsgGetRunningCountRequest asgGetRunningCountRequest = (AwsAsgGetRunningCountRequest) parameters;
+          AwsAsgGetRunningCountData data = awsAsgHelperServiceDelegate.getCurrentlyRunningInstanceCount(
+              asgGetRunningCountRequest.getAwsConfig(), asgGetRunningCountRequest.getEncryptionDetails(),
+              asgGetRunningCountRequest.getRegion(), asgGetRunningCountRequest.getInfraMappingId());
+          return AwsAsgGetRunningCountResponse.builder().data(data).executionStatus(SUCCESS).build();
         }
         default: {
           throw new InvalidRequestException("Invalid request type [" + requestType + "]", WingsException.USER);

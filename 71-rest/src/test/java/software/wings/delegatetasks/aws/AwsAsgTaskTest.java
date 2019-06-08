@@ -17,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.TaskType;
+import software.wings.service.impl.aws.model.AwsAsgGetRunningCountRequest;
 import software.wings.service.impl.aws.model.AwsAsgListAllNamesRequest;
 import software.wings.service.impl.aws.model.AwsAsgListDesiredCapacitiesRequest;
 import software.wings.service.impl.aws.model.AwsAsgListInstancesRequest;
@@ -48,5 +49,9 @@ public class AwsAsgTaskTest extends WingsBaseTest {
     request = AwsAsgListDesiredCapacitiesRequest.builder().build();
     task.run(request);
     verify(mockAwsAsgHelperServiceDelegate).getDesiredCapacitiesOfAsgs(any(), anyList(), anyString(), anyList());
+    request = AwsAsgGetRunningCountRequest.builder().build();
+    task.run(request);
+    verify(mockAwsAsgHelperServiceDelegate)
+        .getCurrentlyRunningInstanceCount(any(), anyList(), anyString(), anyString());
   }
 }

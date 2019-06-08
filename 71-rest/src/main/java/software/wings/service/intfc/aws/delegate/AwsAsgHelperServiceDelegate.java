@@ -11,6 +11,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.LogCallback;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 
 import java.util.List;
 import java.util.Map;
@@ -53,4 +54,6 @@ public interface AwsAsgHelperServiceDelegate {
       String asgName, List<String> targetGroupARNs, ExecutionLogCallback logCallback);
   void deRegisterAsgWithClassicLBs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String asgName, List<String> classicLBs, ExecutionLogCallback logCallback);
+  AwsAsgGetRunningCountData getCurrentlyRunningInstanceCount(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String infraMappingId);
 }

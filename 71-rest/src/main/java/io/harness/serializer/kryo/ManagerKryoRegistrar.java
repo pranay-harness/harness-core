@@ -441,6 +441,9 @@ import software.wings.service.impl.aws.model.AwsAmiServiceSetupRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesResponse;
+import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
+import software.wings.service.impl.aws.model.AwsAsgGetRunningCountRequest;
+import software.wings.service.impl.aws.model.AwsAsgGetRunningCountResponse;
 import software.wings.service.impl.aws.model.AwsAsgListAllNamesRequest;
 import software.wings.service.impl.aws.model.AwsAsgListAllNamesResponse;
 import software.wings.service.impl.aws.model.AwsAsgListDesiredCapacitiesRequest;
@@ -1255,5 +1258,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(Tag.class, 7185);
     kryo.register(K8sApplyTaskParameters.class, 7186);
     kryo.register(K8sApplyResponse.class, 7187);
+    kryo.register(AwsAsgGetRunningCountRequest.class, 7188);
+    kryo.register(AwsAsgGetRunningCountResponse.class, 7189);
+    kryo.register(AwsAsgGetRunningCountData.class, 7190);
   }
 }

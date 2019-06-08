@@ -27,13 +27,14 @@ public class AwsAmiServiceSetupRequest extends AwsAmiRequest {
   private String artifactRevision;
   private String userData;
   private boolean blueGreen;
+  private boolean useCurrentRunningCount;
 
   @Builder
   public AwsAmiServiceSetupRequest(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String infraMappingAsgName, String infraMappingId, List<String> infraMappingClassisLbs,
       List<String> infraMappingTargetGroupArns, String newAsgNamePrefix, Integer maxInstances,
       Integer autoScalingSteadyStateTimeout, String artifactRevision, String userData, String accountId, String appId,
-      String activityId, String commandName, boolean blueGreen) {
+      String activityId, String commandName, boolean blueGreen, boolean useCurrentRunningCount) {
     super(awsConfig, encryptionDetails, EXECUTE_AMI_SERVICE_SETUP, region);
     this.accountId = accountId;
     this.appId = appId;
@@ -49,5 +50,6 @@ public class AwsAmiServiceSetupRequest extends AwsAmiRequest {
     this.artifactRevision = artifactRevision;
     this.userData = userData;
     this.blueGreen = blueGreen;
+    this.useCurrentRunningCount = useCurrentRunningCount;
   }
 }

@@ -19,4 +19,5 @@ public class AwsAmiServiceSetupResponse implements AwsResponse {
   private List<String> oldAsgNames;
   private AwsAmiPreDeploymentData preDeploymentData;
   private boolean blueGreen;
+  private int maxInstances;
 }

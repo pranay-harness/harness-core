@@ -15,6 +15,8 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelegateImpl.HARNESS_AUTOSCALING_GROUP_TAG;
+import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 
 import com.google.common.util.concurrent.TimeLimiter;
 
@@ -28,6 +30,7 @@ import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsResult;
 import com.amazonaws.services.autoscaling.model.DescribeLaunchConfigurationsResult;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.amazonaws.services.autoscaling.model.SetDesiredCapacityResult;
+import com.amazonaws.services.autoscaling.model.TagDescription;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.InstanceState;
 import io.harness.category.element.UnitTests;
@@ -40,10 +43,12 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.LogCallback;
+import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -350,5 +355,32 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
     awsAsgHelperServiceDelegate.deRegisterAsgWithClassicLBs(
         AwsConfig.builder().build(), emptyList(), "us-east-1", "Asg", singletonList("classicLBs"), mockCallback);
     verify(mockClient).detachLoadBalancers(any());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetCurrentlyRunningInstanceCount() {
+    doReturn(asList(new AutoScalingGroup()
+                        .withAutoScalingGroupName("Name_1")
+                        .withCreatedTime(new Date(10))
+                        .withMaxSize(2)
+                        .withDesiredCapacity(1)
+                        .withTags(new TagDescription()
+                                      .withKey(HARNESS_AUTOSCALING_GROUP_TAG)
+                                      .withValue(format("%s__1", INFRA_MAPPING_ID))),
+                 new AutoScalingGroup()
+                     .withAutoScalingGroupName("Name_2")
+                     .withCreatedTime(new Date(20))
+                     .withMaxSize(3)
+                     .withDesiredCapacity(1)
+                     .withTags(new TagDescription()
+                                   .withKey(HARNESS_AUTOSCALING_GROUP_TAG)
+                                   .withValue(format("%s__2", INFRA_MAPPING_ID)))))
+        .when(awsAsgHelperServiceDelegate)
+        .listAllAsgs(any(), anyList(), anyString());
+    AwsAsgGetRunningCountData data = awsAsgHelperServiceDelegate.getCurrentlyRunningInstanceCount(
+        AwsConfig.builder().build(), emptyList(), "us-east-1", INFRA_MAPPING_ID);
+    assertThat(data.getAsgName()).isEqualTo("Name_2");
+    assertThat(data.getAsgMax()).isEqualTo(3);
   }
 }
