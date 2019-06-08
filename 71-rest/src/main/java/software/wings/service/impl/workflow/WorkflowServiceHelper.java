@@ -194,6 +194,7 @@ public class WorkflowServiceHelper {
   public static final String ROLLBACK_KUBERNETES_SETUP = "Rollback Kubernetes Setup";
 
   private static final String SETUP_AUTOSCALING_GROUP = "Setup AutoScaling Group";
+  private static final String PROVISION_INFRASTRUCTURE = "Provision Infrastructure";
   private static final String MIN_REPLICAS = "\\$\\{MIN_REPLICAS}";
   private static final String MAX_REPLICAS = "\\$\\{MAX_REPLICAS}";
   private static final String UTILIZATION = "\\$\\{UTILIZATION}";
@@ -413,11 +414,15 @@ public class WorkflowServiceHelper {
   }
 
   public void generateNewWorkflowPhaseStepsForAWSAmiBlueGreen(
-      String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
+      String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired, boolean isDynamicInfrastructure) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
+
+    if (isDynamicInfrastructure) {
+      phaseSteps.add(aPhaseStep(PhaseStepType.PROVISION_INFRASTRUCTURE, PROVISION_INFRASTRUCTURE).build());
+    }
 
     if (serviceSetupRequired) {
       InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
@@ -462,12 +467,16 @@ public class WorkflowServiceHelper {
     phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
   }
 
-  public void generateNewWorkflowPhaseStepsForAWSAmi(
-      String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
+  public void generateNewWorkflowPhaseStepsForAWSAmi(String appId, WorkflowPhase workflowPhase,
+      boolean serviceSetupRequired, boolean isDynamicInfrastructure,
+      OrchestrationWorkflowType orchestrationWorkflowType) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
-
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
+
+    if (isDynamicInfrastructure && BASIC.equals(orchestrationWorkflowType)) {
+      phaseSteps.add(aPhaseStep(PhaseStepType.PROVISION_INFRASTRUCTURE, PROVISION_INFRASTRUCTURE).build());
+    }
 
     if (serviceSetupRequired) {
       InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());

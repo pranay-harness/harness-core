@@ -6,6 +6,7 @@ import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 
 import com.google.common.collect.Lists;
 
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.context.ContextElementType;
 import software.wings.api.AmiServiceDeployElement;
 import software.wings.api.AmiServiceSetupElement;
@@ -16,6 +17,7 @@ import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.InstanceUnitType;
 import software.wings.beans.SettingAttribute;
 import software.wings.common.Constants;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -90,5 +92,23 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
       ExecutionContext context, AmiServiceSetupElement serviceSetupElement,
       ManagerExecutionLogCallback executionLogCallback) {
     return emptyList();
+  }
+
+  @Override
+  @SchemaIgnore
+  public String getCommandName() {
+    return super.getCommandName();
+  }
+
+  @Override
+  @SchemaIgnore
+  public int getInstanceCount() {
+    return super.getInstanceCount();
+  }
+
+  @Override
+  @SchemaIgnore
+  public InstanceUnitType getInstanceUnitType() {
+    return super.getInstanceUnitType();
   }
 }

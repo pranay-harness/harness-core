@@ -242,6 +242,8 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Slf4j
 public class WorkflowServiceImpl implements WorkflowService, DataProvider {
+  private static final String ROLLBACK_PROVISION_INFRASTRUCTURE = "Rollback Provision Infrastructure";
+
   private static final List<String> kubernetesArtifactNeededStateTypes =
       Arrays.asList(KUBERNETES_SETUP.name(), KUBERNETES_DEPLOY.name());
 
@@ -1377,7 +1379,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return false;
   }
 
-  private PhaseStep generateRollbackProvisioners(PhaseStep preDeploymentSteps) {
+  private PhaseStep generateRollbackProvisioners(
+      PhaseStep preDeploymentSteps, PhaseStepType phaseStepType, String phaseStepName) {
     List<GraphNode> provisionerSteps = preDeploymentSteps.getSteps()
                                            .stream()
                                            .filter(step -> {
@@ -1390,7 +1393,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
     List<GraphNode> rollbackProvisionerNodes = Lists.newArrayList();
     Map<String, String> provisionerIdWorkspaceMap = new HashMap<>();
-    PhaseStep rollbackProvisionerStep = new PhaseStep(PhaseStepType.ROLLBACK_PROVISIONERS, ROLLBACK_PROVISIONERS);
+    PhaseStep rollbackProvisionerStep = new PhaseStep(phaseStepType, phaseStepName);
     rollbackProvisionerStep.setUuid(generateUuid());
     provisionerSteps.forEach(step -> {
       StateType stateType = getCorrespondingRollbackState(step);
@@ -1430,7 +1433,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowServiceTemplateHelper.updateLinkedPhaseStepTemplate(
         phaseStep, orchestrationWorkflow.getPreDeploymentSteps());
     orchestrationWorkflow.setPreDeploymentSteps(phaseStep);
-    orchestrationWorkflow.setRollbackProvisioners(generateRollbackProvisioners(phaseStep));
+    orchestrationWorkflow.setRollbackProvisioners(
+        generateRollbackProvisioners(phaseStep, PhaseStepType.ROLLBACK_PROVISIONERS, ROLLBACK_PROVISIONERS));
 
     orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
@@ -1645,6 +1649,33 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
   }
 
+  private void preAppendRollbackProvisionInfrastructure(
+      WorkflowPhase workflowPhase, WorkflowPhase rollbackWorkflowPhase) {
+    if (workflowPhase == null || rollbackWorkflowPhase == null) {
+      return;
+    }
+    List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
+    if (isEmpty(phaseSteps)) {
+      return;
+    }
+    if (!(PhaseStepType.PROVISION_INFRASTRUCTURE.equals(phaseSteps.get(0).getPhaseStepType()))) {
+      return;
+    }
+    PhaseStep rollbackProvisionInfrastructure = generateRollbackProvisioners(
+        phaseSteps.get(0), PhaseStepType.ROLLBACK_PROVISION_INFRASTRUCTURE, ROLLBACK_PROVISION_INFRASTRUCTURE);
+    List<PhaseStep> rollbackPhaseSteps = Lists.newArrayList();
+    if (rollbackProvisionInfrastructure != null) {
+      rollbackPhaseSteps.add(rollbackProvisionInfrastructure);
+    }
+    rollbackPhaseSteps.addAll(
+        rollbackWorkflowPhase.getPhaseSteps()
+            .stream()
+            .filter(phaseStep -> !phaseStep.getPhaseStepType().equals(PhaseStepType.ROLLBACK_PROVISION_INFRASTRUCTURE))
+            .collect(toList()));
+    rollbackWorkflowPhase.getPhaseSteps().clear();
+    rollbackWorkflowPhase.getPhaseSteps().addAll(rollbackPhaseSteps);
+  }
+
   @Override
   @ValidationGroups(Update.class)
   public WorkflowPhase updateWorkflowPhase(
@@ -1707,6 +1738,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         if (infrastructureMapping != null) {
           setCloudProviderForPhase(infrastructureMapping, rollbackWorkflowPhase);
         }
+        preAppendRollbackProvisionInfrastructure(workflowPhase, rollbackWorkflowPhase);
         orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
       }
     }
@@ -2282,9 +2314,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         -> arg != null && (((String) arg).contains("${artifact.") || ((String) arg).contains("${ARTIFACT_FILE_NAME}")));
   }
 
+  private boolean isDynamicInfrastructure(String appId, String infrastructureMappingId) {
+    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infrastructureMappingId);
+    if (infrastructureMapping == null) {
+      return false;
+    }
+    return isNotEmpty(infrastructureMapping.getProvisionerId());
+  }
+
   private void generateNewWorkflowPhaseSteps(String appId, String envId, WorkflowPhase workflowPhase,
       boolean serviceRepeat, OrchestrationWorkflowType orchestrationWorkflowType, WorkflowCreationFlags creationFlags) {
     DeploymentType deploymentType = workflowPhase.getDeploymentType();
+    boolean isDynamicInfrastructure = isDynamicInfrastructure(appId, workflowPhase.getInfraMappingId());
     if (deploymentType == ECS) {
       if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
         if (creationFlags != null && creationFlags.isEcsBgDnsType()) {
@@ -2312,9 +2353,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       workflowServiceHelper.generateNewWorkflowPhaseStepsForAWSLambda(appId, envId, workflowPhase);
     } else if (deploymentType == AMI) {
       if (BLUE_GREEN.equals(orchestrationWorkflowType)) {
-        workflowServiceHelper.generateNewWorkflowPhaseStepsForAWSAmiBlueGreen(appId, workflowPhase, !serviceRepeat);
+        workflowServiceHelper.generateNewWorkflowPhaseStepsForAWSAmiBlueGreen(
+            appId, workflowPhase, !serviceRepeat, isDynamicInfrastructure);
       } else {
-        workflowServiceHelper.generateNewWorkflowPhaseStepsForAWSAmi(appId, workflowPhase, !serviceRepeat);
+        workflowServiceHelper.generateNewWorkflowPhaseStepsForAWSAmi(
+            appId, workflowPhase, !serviceRepeat, isDynamicInfrastructure, orchestrationWorkflowType);
       }
     } else if (deploymentType == PCF) {
       if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {

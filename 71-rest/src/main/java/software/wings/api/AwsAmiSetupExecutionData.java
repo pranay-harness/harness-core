@@ -1,7 +1,5 @@
 package software.wings.api;
 
-import com.google.common.collect.Maps;
-
 import io.harness.delegate.beans.ResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -43,7 +41,7 @@ public class AwsAmiSetupExecutionData extends StateExecutionData implements Resp
   }
 
   private Map<String, ExecutionDataValue> getInternalExecutionDetails() {
-    Map<String, ExecutionDataValue> executionDetails = Maps.newHashMap();
+    Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     putNotNull(executionDetails, "newAutoScalingGroupName",
         ExecutionDataValue.builder().displayName("New ASG Name").value(newAutoScalingGroupName).build());
     putNotNull(executionDetails, "maxInstances",

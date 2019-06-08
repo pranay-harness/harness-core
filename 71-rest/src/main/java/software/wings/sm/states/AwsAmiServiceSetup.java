@@ -125,6 +125,7 @@ public class AwsAmiServiceSetup extends State {
     awsAmiExecutionData.setNewAutoScalingGroupName(amiServiceSetupResponse.getNewAsgName());
     awsAmiExecutionData.setOldAutoScalingGroupName(amiServiceSetupResponse.getLastDeployedAsgName());
     awsAmiExecutionData.setNewVersion(amiServiceSetupResponse.getHarnessRevision());
+    awsAmiExecutionData.setDelegateMetaInfo(amiServiceSetupResponse.getDelegateMetaInfo());
 
     maxInstances = getMaxInstances() == 0 ? 10 : getMaxInstances();
     autoScalingSteadyStateTimeout =
