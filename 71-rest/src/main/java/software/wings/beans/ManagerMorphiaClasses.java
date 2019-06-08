@@ -186,7 +186,7 @@ public class ManagerMorphiaClasses {
       Personalization.class, EntityYamlRecord.class, ProvisionerWithOnlyAuditNeededData.class,
       ArtifactStreamWithOnlyAuditNeededData.class, InfraMappingWithOnlyAuditNeededData.class,
       NotificationRulesStatus.class, AwsSecretsManagerConfig.class, ApprovalPollingJobEntity.class, HarnessTag.class,
-      HarnessTagLink.class, CVFeedbackRecord.class);
+      HarnessTagLink.class, CVFeedbackRecord.class, ResourceLookup.class);
 
   public static final Set<Class> dependentClasses =
       ImmutableSet.<Class>of(EncryptionConfig.class, EncryptedRecord.class, ExecutionCapabilityDemander.class);

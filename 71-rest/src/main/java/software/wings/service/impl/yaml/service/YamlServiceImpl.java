@@ -232,7 +232,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         errorMsg = "Internal error";
       }
 
-      throw new WingsException(ErrorCode.GENERAL_YAML_ERROR, USER)
+      throw new WingsException(ErrorCode.GENERAL_YAML_ERROR, "Update failed. Reason: " + errorMsg, USER)
           .addParam("message", "Update failed. Reason: " + errorMsg);
     }
   }

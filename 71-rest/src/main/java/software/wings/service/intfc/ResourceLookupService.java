@@ -1,0 +1,40 @@
+package software.wings.service.intfc;
+
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
+import software.wings.audit.EntityAuditRecord;
+import software.wings.beans.ResourceLookup;
+
+import java.util.List;
+
+public interface ResourceLookupService {
+  /**
+   * Creates the.
+   *
+   * @param header the header
+   * @return the audit header
+   */
+  ResourceLookup create(ResourceLookup header);
+
+  /**
+   * List.
+   *
+   * @param req the req
+   * @return the page response
+   */
+  PageResponse<ResourceLookup> list(PageRequest<ResourceLookup> req);
+
+  void updateResourceName(ResourceLookup resourceLookup);
+
+  void delete(ResourceLookup resourceLookup);
+
+  List<String> listApplicationLevelResourceTypes();
+
+  List<String> listAccountLevelResourceTypes();
+
+  void deleteResourceLookupRecordIfNeeded(EntityAuditRecord record, String accountId);
+
+  <T> void updateResourceLookupRecordIfNeeded(EntityAuditRecord record, String accountId, T newEntity, T oldEntity);
+
+  void saveResourceLookupRecordIfNeeded(EntityAuditRecord record, String accountId);
+}
