@@ -77,6 +77,9 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
   }
 
   private String getBeanWebhookSourceForYAML(WebhookSource webhookSource) {
+    if (webhookSource == null) {
+      return null;
+    }
     if (webhookSource.equals(WebhookSource.GITHUB) || webhookSource.equals(WebhookSource.GITLAB)
         || webhookSource.equals(WebhookSource.BITBUCKET)) {
       return webhookSource.name();
@@ -108,7 +111,11 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
   }
 
   private List<String> getYAMLEventTypes(List<WebhookEventType> eventTypes) {
-    return eventTypes.stream().map(eventType -> { return eventType.getValue(); }).collect(Collectors.toList());
+    if (EmptyPredicate.isNotEmpty(eventTypes)) {
+      return eventTypes.stream().map(eventType -> { return eventType.getValue(); }).collect(Collectors.toList());
+    } else {
+      return null;
+    }
   }
 
   private List<String> getYAMLActions(WebHookTriggerCondition webHookTriggerCondition) {
