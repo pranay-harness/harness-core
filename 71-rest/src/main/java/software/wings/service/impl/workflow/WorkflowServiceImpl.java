@@ -2852,19 +2852,21 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         recent = personalization.getSteps().getRecent();
       }
     }
-    return calculateCategorySteps(
-        favorites, recent, StateType.values(), StencilCategory.values(), workflow, phaseId, sectionId, position);
+    return calculateCategorySteps(favorites, recent, StateType.values(), StencilCategory.values(), workflow, phaseId,
+        sectionId, position, infrastructureMappingService);
   }
 
   public static WorkflowCategorySteps calculateCategorySteps(Set<String> favorites, LinkedList<String> recent,
-      StateType[] stateTypes, StencilCategory[] stencilCategoryies, Workflow workflow, String phaseId, String sectionId,
-      int position) {
+      StateType[] stateTypes, StencilCategory[] stencilCategories, Workflow workflow, String phaseId, String sectionId,
+      int position, InfrastructureMappingService infrastructureMappingService) {
     Map<String, WorkflowStepMeta> steps = new HashMap<>();
     for (StateType step : stateTypes) {
+      Boolean available =
+          checkIfStepAvailable(workflow, phaseId, step, workflow.getAppId(), infrastructureMappingService);
       final WorkflowStepMeta stepMeta = WorkflowStepMeta.builder()
                                             .name(step.getName())
                                             .favorite(isNotEmpty(favorites) && favorites.contains(step.getType()))
-                                            .available(true)
+                                            .available(available)
                                             .build();
       steps.put(step.getType(), stepMeta);
     }
@@ -2893,7 +2895,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           WorkflowCategoryStepsMeta.builder().id("MY_FAVORITES").name("My Favorites").stepIds(stepIds).build());
     }
 
-    for (StencilCategory category : stencilCategoryies) {
+    for (StencilCategory category : stencilCategories) {
       if (category.isHidden()) {
         continue;
       }
@@ -2911,6 +2913,47 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     return WorkflowCategorySteps.builder().steps(steps).categories(categories).build();
+  }
+
+  private static Boolean checkIfStepAvailable(Workflow workflow, String phaseId, StateType stateType, String appId,
+      InfrastructureMappingService infrastructureMappingService) {
+    boolean buildWorkflow = false;
+    if (workflow != null) {
+      OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+      WorkflowPhase workflowPhase = null;
+      if (orchestrationWorkflow != null) {
+        buildWorkflow = BUILD.equals(orchestrationWorkflow.getOrchestrationWorkflowType());
+      }
+      if (isNotBlank(phaseId)) {
+        if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
+          workflowPhase = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhaseIdMap().get(phaseId);
+        }
+        if (workflowPhase == null) {
+          throw new InvalidRequestException(
+              "Workflow Phase not associated with Workflow [" + workflow.getName() + "]", USER);
+        }
+        String infraMappingId = workflowPhase.getInfraMappingId();
+        if (workflowPhase.checkInfraTemplatized()) {
+          DeploymentType workflowPhaseDeploymentType = workflowPhase.getDeploymentType();
+          if (workflowPhaseDeploymentType != null) {
+            return stateType.matches(workflowPhaseDeploymentType);
+          }
+        } else if (infraMappingId != null) {
+          InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
+          if (infrastructureMapping != null) {
+            return stateType.matches(infrastructureMapping);
+          }
+        }
+      }
+      if (stateType.getStencilCategory().equals(StencilCategory.COMMANDS)
+          || stateType.getStencilCategory().equals(StencilCategory.CLOUD)) {
+        return false;
+      }
+    }
+    if (!buildWorkflow) {
+      return !stateType.getStencilCategory().equals(StencilCategory.COLLECTIONS);
+    }
+    return true;
   }
 
   @Override

@@ -3431,13 +3431,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
     final WorkflowCategoryStepsMeta categoryFavorites =
         emptyCategoryFavorites.toBuilder().stepIds(asList(HTTP.getType())).build();
 
-    WorkflowCategorySteps workflowCategorySteps =
-        WorkflowServiceImpl.calculateCategorySteps(null, null, stateTypes, stencilCategory, workflow, null, null, 0);
+    WorkflowCategorySteps workflowCategorySteps = WorkflowServiceImpl.calculateCategorySteps(
+        null, null, stateTypes, stencilCategory, workflow, null, null, 0, infrastructureMappingService);
     assertThat(workflowCategorySteps.getCategories()).containsExactly(emptyCategoryFavorites, categoryOthers);
 
     Set<String> favorite = ImmutableSet.of(HTTP.name());
     workflowCategorySteps = WorkflowServiceImpl.calculateCategorySteps(
-        favorite, null, stateTypes, stencilCategory, workflow, null, null, 0);
+        favorite, null, stateTypes, stencilCategory, workflow, null, null, 0, infrastructureMappingService);
     assertThat(workflowCategorySteps.getCategories()).containsExactly(categoryFavorites, categoryOthers);
 
     LinkedList<String> recent = new LinkedList();
@@ -3449,13 +3449,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
                                                          .stepIds(asList(SHELL_SCRIPT.getType()))
                                                          .build();
 
-    workflowCategorySteps =
-        WorkflowServiceImpl.calculateCategorySteps(null, recent, stateTypes, stencilCategory, workflow, null, null, 0);
+    workflowCategorySteps = WorkflowServiceImpl.calculateCategorySteps(
+        null, recent, stateTypes, stencilCategory, workflow, null, null, 0, infrastructureMappingService);
     assertThat(workflowCategorySteps.getCategories())
         .containsExactly(categoryRecent, emptyCategoryFavorites, categoryOthers);
 
     workflowCategorySteps = WorkflowServiceImpl.calculateCategorySteps(
-        favorite, recent, stateTypes, stencilCategory, workflow, null, null, 0);
+        favorite, recent, stateTypes, stencilCategory, workflow, null, null, 0, infrastructureMappingService);
     assertThat(workflowCategorySteps.getCategories())
         .containsExactly(categoryRecent, categoryFavorites, categoryOthers);
   }
@@ -3475,13 +3475,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
                 WorkflowStepMeta.builder().name(SHELL_SCRIPT.getName()).favorite(false).available(true).build())
             .build();
 
-    WorkflowCategorySteps workflowCategorySteps =
-        WorkflowServiceImpl.calculateCategorySteps(null, null, stateTypes, stencilCategory, workflow, null, null, 0);
+    WorkflowCategorySteps workflowCategorySteps = WorkflowServiceImpl.calculateCategorySteps(
+        null, null, stateTypes, stencilCategory, workflow, null, null, 0, infrastructureMappingService);
     assertThat(workflowCategorySteps.getSteps()).isEqualTo(stepMetaMap);
 
     Set<String> favorite = ImmutableSet.of(HTTP.name());
     workflowCategorySteps = WorkflowServiceImpl.calculateCategorySteps(
-        favorite, null, stateTypes, stencilCategory, workflow, null, null, 0);
+        favorite, null, stateTypes, stencilCategory, workflow, null, null, 0, infrastructureMappingService);
 
     stepMetaMap =
         ImmutableMap.<String, WorkflowStepMeta>builder()
