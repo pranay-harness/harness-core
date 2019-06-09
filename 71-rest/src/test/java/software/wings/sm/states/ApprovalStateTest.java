@@ -6,7 +6,6 @@ import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -48,14 +47,12 @@ import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.WorkflowElement;
-import software.wings.beans.Notification;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.common.NotificationMessageResolver;
-import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.NotificationService;
@@ -187,7 +184,9 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(context.getStateExecutionData()).isNotNull();
     assertThat(context.getStateExecutionData().getErrorMsg()).contains("Pipeline was not approved within 36m");
 
-    verifyNotificationArguments(APPROVAL_EXPIRED_NOTIFICATION);
+    Mockito.verify(workflowNotificationHelper, Mockito.times(1))
+        .sendApprovalNotification(
+            Mockito.eq(ACCOUNT_ID), Mockito.eq(APPROVAL_EXPIRED_NOTIFICATION), Mockito.anyMap(), Mockito.any());
   }
 
   @Test
@@ -208,7 +207,9 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(context.getStateExecutionData()).isNotNull();
     assertThat(context.getStateExecutionData().getErrorMsg()).contains("Workflow was not approved within 36m");
 
-    verifyNotificationArguments(APPROVAL_EXPIRED_NOTIFICATION);
+    Mockito.verify(workflowNotificationHelper, Mockito.times(1))
+        .sendApprovalNotification(
+            Mockito.eq(ACCOUNT_ID), Mockito.eq(APPROVAL_EXPIRED_NOTIFICATION), Mockito.anyMap(), Mockito.any());
   }
 
   @Test
@@ -229,7 +230,9 @@ public class ApprovalStateTest extends WingsBaseTest {
     approvalState.handleAbortEvent(context);
     assertThat(context.getStateExecutionData()).isNotNull();
     assertThat(context.getStateExecutionData().getErrorMsg()).contains("Pipeline was aborted");
-    verifyNotificationArguments(APPROVAL_STATE_CHANGE_NOTIFICATION);
+    Mockito.verify(workflowNotificationHelper, Mockito.times(1))
+        .sendApprovalNotification(
+            Mockito.eq(ACCOUNT_ID), Mockito.eq(APPROVAL_STATE_CHANGE_NOTIFICATION), Mockito.anyMap(), Mockito.any());
   }
 
   @Test
@@ -250,7 +253,9 @@ public class ApprovalStateTest extends WingsBaseTest {
     approvalState.handleAbortEvent(context);
     assertThat(context.getStateExecutionData()).isNotNull();
     assertThat(context.getStateExecutionData().getErrorMsg()).contains("Workflow was aborted");
-    verifyNotificationArguments(APPROVAL_STATE_CHANGE_NOTIFICATION);
+    Mockito.verify(workflowNotificationHelper, Mockito.times(1))
+        .sendApprovalNotification(
+            Mockito.eq(ACCOUNT_ID), Mockito.eq(APPROVAL_STATE_CHANGE_NOTIFICATION), Mockito.anyMap(), Mockito.any());
   }
 
   @Test
@@ -333,22 +338,5 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(approvalNeededAlert.getWorkflowType()).isEqualTo(WorkflowType.ORCHESTRATION);
     assertThat(approvalNeededAlert.getWorkflowExecutionId()).isEqualTo(PIPELINE_WORKFLOW_EXECUTION_ID);
     assertThat(approvalNeededAlert.getPipelineExecutionId()).isEqualTo(PIPELINE_EXECUTION_ID);
-  }
-
-  private void verifyNotificationArguments(NotificationMessageType notificationMessageType) {
-    verify(notificationService).sendNotificationAsync(any(Notification.class), singletonList(any()));
-
-    ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);
-    verify(notificationService)
-        .sendNotificationAsync(notificationArgumentCaptor.capture(), notificationRuleArgumentCaptor.capture());
-
-    Notification notification = notificationArgumentCaptor.getAllValues().get(0);
-    assertThat(notification.getNotificationTemplateId()).isEqualTo(notificationMessageType.name());
-    assertThat(notification.getAccountId()).isEqualTo(ACCOUNT_ID);
-
-    NotificationRule notificationRule = notificationRuleArgumentCaptor.getValue().get(0);
-    assertThat(notificationRule.getNotificationGroups().get(0).getName()).isEqualTo(USER_NAME);
-    assertThat(notificationRule.getNotificationGroups().get(0).getUuid()).isEqualTo(NOTIFICATION_GROUP_ID);
-    assertThat(notificationRule.getNotificationGroups().get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
   }
 }

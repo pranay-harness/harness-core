@@ -17,10 +17,8 @@ import static io.harness.event.model.EventConstants.ENVIRONMENT_NAME;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_EXPIRED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_NEEDED_NOTIFICATION;
@@ -56,8 +54,6 @@ import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.NotificationGroup;
-import software.wings.beans.NotificationRule;
-import software.wings.beans.NotificationRule.NotificationRuleBuilder;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.ApprovalNeededAlert;
@@ -507,8 +503,12 @@ public class ApprovalState extends State {
     if (approvalNotifyResponse.getApprovedBy() != null) {
       placeholderValues = getPlaceholderValues(
           context, approvalNotifyResponse.getApprovedBy().getName(), approvalNotifyResponse.getStatus());
+    } else {
+      placeholderValues = getPlaceholderValues(context, "", approvalNotifyResponse.getStatus());
     }
-    sendApprovalNotification(app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues);
+
+    workflowNotificationHelper.sendApprovalNotification(
+        app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues, context);
     if (approvalStateType == null) {
       return handleAsyncUserGroup(userGroups, placeholderValues, context, executionData, approvalNotifyResponse);
     }
@@ -646,7 +646,8 @@ public class ApprovalState extends State {
       }
       notificationMessageType = APPROVAL_EXPIRED_NOTIFICATION;
       placeholderValues = getPlaceholderValues(context, errorMsg);
-      sendApprovalNotification(app.getAccountId(), notificationMessageType, placeholderValues);
+      workflowNotificationHelper.sendApprovalNotification(
+          app.getAccountId(), notificationMessageType, placeholderValues, context);
     } else {
       if (approvalType != null && approvalType.equalsIgnoreCase("PIPELINE")) {
         errorMsg = "Pipeline was aborted";
@@ -660,7 +661,8 @@ public class ApprovalState extends State {
       User user = UserThreadLocal.get();
       String userName = (user != null && user.getName() != null) ? user.getName() : "System";
       placeholderValues = getPlaceholderValues(context, userName, ABORTED);
-      sendApprovalNotification(app.getAccountId(), notificationMessageType, placeholderValues);
+      workflowNotificationHelper.sendApprovalNotification(
+          app.getAccountId(), notificationMessageType, placeholderValues, context);
     }
 
     context.getStateExecutionData().setErrorMsg(errorMsg);
@@ -714,26 +716,6 @@ public class ApprovalState extends State {
       return DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS;
     }
     return super.getTimeoutMillis();
-  }
-
-  /**
-   * @deprecated
-   * Use {@link WorkflowNotificationHelper#sendApprovalNotification} instead
-   */
-  @Deprecated
-  void sendApprovalNotification(
-      String accountId, NotificationMessageType notificationMessageType, Map<String, String> placeHolderValues) {
-    List<NotificationGroup> notificationGroups = notificationSetupService.listDefaultNotificationGroup(accountId);
-    NotificationRule notificationRule =
-        NotificationRuleBuilder.aNotificationRule().withNotificationGroups(notificationGroups).build();
-
-    notificationService.sendNotificationAsync(anInformationNotification()
-                                                  .withAppId(GLOBAL_APP_ID)
-                                                  .withAccountId(accountId)
-                                                  .withNotificationTemplateId(notificationMessageType.name())
-                                                  .withNotificationTemplateVariables(placeHolderValues)
-                                                  .build(),
-        Collections.singletonList(notificationRule));
   }
 
   private static String getStatusMessage(ExecutionStatus status) {
