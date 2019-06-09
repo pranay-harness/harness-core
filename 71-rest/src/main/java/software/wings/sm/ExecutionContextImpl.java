@@ -268,6 +268,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     }
   }
 
+  @Override
   public Application getApp() {
     WorkflowStandardParams stdParam = getContextElement(ContextElementType.STANDARD);
     if (stdParam != null) {

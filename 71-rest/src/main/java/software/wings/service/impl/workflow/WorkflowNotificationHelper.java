@@ -195,7 +195,7 @@ public class WorkflowNotificationHelper {
   }
 
   public void sendApprovalNotification(String accountId, NotificationMessageType notificationMessageType,
-      Map<String, String> placeHolderValues, ExecutionContextImpl context) {
+      Map<String, String> placeHolderValues, ExecutionContext context) {
     List<NotificationRule> rules = new LinkedList<>();
 
     Objects.requireNonNull(context, "Context can't be null. accountId=" + accountId);
@@ -220,7 +220,7 @@ public class WorkflowNotificationHelper {
         break;
 
       default:
-        throw new IllegalArgumentException("Uknown workflow type: " + context.getWorkflowType());
+        throw new IllegalArgumentException("Unknown workflow type: " + context.getWorkflowType());
     }
 
     InformationNotification notification = anInformationNotification()
@@ -234,7 +234,7 @@ public class WorkflowNotificationHelper {
   }
 
   List<NotificationRule> obtainNotificationApplicableToScope(
-      ExecutionContextImpl context, ExecutionScope executionScope, ExecutionStatus status) {
+      ExecutionContext context, ExecutionScope executionScope, ExecutionStatus status) {
     if (ExecutionStatus.isNegativeStatus(status)) {
       status = FAILED;
     } else if (status == RESUMED) {
@@ -260,7 +260,7 @@ public class WorkflowNotificationHelper {
     return filteredNotificationRules;
   }
 
-  public NotificationRule renderExpressions(ExecutionContextImpl context, NotificationRule notificationRule) {
+  public NotificationRule renderExpressions(ExecutionContext context, NotificationRule notificationRule) {
     if (notificationRule.isNotificationGroupAsExpression()) {
       renderNotificationGroups(context, notificationRule);
     }
@@ -272,7 +272,7 @@ public class WorkflowNotificationHelper {
     return notificationRule;
   }
 
-  private void renderNotificationGroups(ExecutionContextImpl context, NotificationRule notificationRule) {
+  private void renderNotificationGroups(ExecutionContext context, NotificationRule notificationRule) {
     if (!notificationRule.isNotificationGroupAsExpression()) {
       return;
     }
@@ -291,7 +291,7 @@ public class WorkflowNotificationHelper {
     notificationRule.setNotificationGroups(renderedNotificationGroups);
   }
 
-  private void renderUserGroups(ExecutionContextImpl context, NotificationRule notificationRule) {
+  private void renderUserGroups(ExecutionContext context, NotificationRule notificationRule) {
     if (!notificationRule.isUserGroupAsExpression()) {
       return;
     }
