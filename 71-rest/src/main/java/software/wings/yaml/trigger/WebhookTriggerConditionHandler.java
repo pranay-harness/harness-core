@@ -63,6 +63,9 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
   }
 
   private WebhookSource getBeanWebhookSource(String webhookSource) {
+    if (EmptyPredicate.isEmpty(webhookSource)) {
+      return null;
+    }
     if (webhookSource.equals("GITLAB")) {
       return WebhookSource.GITLAB;
     } else if (webhookSource.equals("GITHUB")) {
@@ -91,11 +94,14 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
   }
 
   private List<WebhookEventType> getBeansEventTypes(List<String> eventTypes) {
+    if (EmptyPredicate.isEmpty(eventTypes)) {
+      return null;
+    }
     return eventTypes.stream().map(eventType -> WebhookEventType.find(eventType)).collect(Collectors.toList());
   }
 
   private List<PrAction> getPRActionTypes(List<String> actions, String webhookSource) {
-    if (webhookSource.equals("GitLab")) {
+    if (webhookSource.equals("GitLab") && EmptyPredicate.isNotEmpty(actions)) {
       return actions.stream().map(action -> PrAction.find(action)).collect(Collectors.toList());
     } else {
       return null;
@@ -103,7 +109,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
   }
 
   private List<BitBucketEventType> getBitBucketEventType(List<String> actions, String webhookSource) {
-    if (webhookSource.equals("Bitbucket")) {
+    if (webhookSource.equals("Bitbucket") && EmptyPredicate.isNotEmpty(actions)) {
       return actions.stream().map(action -> BitBucketEventType.find(action)).collect(Collectors.toList());
     } else {
       return null;
