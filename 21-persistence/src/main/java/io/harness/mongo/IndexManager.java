@@ -28,6 +28,7 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.mapping.MappedClass;
 import org.mongodb.morphia.mapping.MappedField;
 
 import java.time.Duration;
@@ -42,7 +43,7 @@ import java.util.Set;
 
 @Slf4j
 public class IndexManager {
-  private interface IndexCreator { void create(); }
+  public interface IndexCreator { void create(); }
 
   @Value
   @AllArgsConstructor
@@ -109,8 +110,8 @@ public class IndexManager {
 
     final long now = System.currentTimeMillis();
     final Date tooNew = new Date(now - Duration.ofDays(7).toMillis());
-    final List<DBObject> indexInfo = collection.getIndexInfo();
 
+    final List<DBObject> indexInfo = collection.getIndexInfo();
     final Set<String> uniqueIndexes = indexInfo.stream()
                                           .filter(obj -> {
                                             final Object unique = obj.get("unique");
@@ -161,67 +162,7 @@ public class IndexManager {
       }
       processedCollections.add(collection.getName());
 
-      Map<String, IndexCreator> creators = new HashMap<>();
-
-      // Read Entity level "Indexes" annotation
-      List<Indexes> indexesAnnotations = mc.getAnnotations(Indexes.class);
-      if (indexesAnnotations != null) {
-        indexesAnnotations.stream().flatMap(indexes -> Arrays.stream(indexes.value())).forEach(index -> {
-          reportDeprecatedUnique(index);
-
-          BasicDBObject keys = new BasicDBObject();
-          for (Field field : index.fields()) {
-            keys.append(field.value(), field.type().toIndexValue());
-          }
-
-          final String indexName = index.options().name();
-          if (isEmpty(indexName)) {
-            logger.error("Do not use default index name for collection: {}\n"
-                    + "WARNING: this index will not be created",
-                collection.getName());
-          } else {
-            DBObject options = new BasicDBObject();
-            options.put("name", indexName);
-            if (index.options().unique()) {
-              options.put("unique", Boolean.TRUE);
-            } else {
-              options.put("background", Boolean.TRUE);
-            }
-            if (isNotEmpty(index.options().partialFilter())) {
-              options.put("partialFilterExpression", BasicDBObject.parse(index.options().partialFilter()));
-            }
-
-            creators.put(indexName, () -> collection.createIndex(keys, options));
-          }
-        });
-      }
-
-      // Read field level "Indexed" annotation
-      for (final MappedField mf : mc.getPersistenceFields()) {
-        if (mf.hasAnnotation(Indexed.class)) {
-          final Indexed indexed = mf.getAnnotation(Indexed.class);
-          reportDeprecatedUnique(indexed);
-
-          int direction = 1;
-          final String name = isNotEmpty(indexed.options().name()) ? indexed.options().name() : mf.getNameToStore();
-
-          final String indexName = name + "_" + direction;
-          BasicDBObject dbObject = new BasicDBObject(name, direction);
-
-          DBObject options = new BasicDBObject();
-          options.put("name", indexName);
-          if (indexed.options().unique()) {
-            options.put("unique", Boolean.TRUE);
-          } else {
-            options.put("background", Boolean.TRUE);
-          }
-          if (indexed.options().expireAfterSeconds() != -1) {
-            options.put("expireAfterSeconds", indexed.options().expireAfterSeconds());
-          }
-
-          creators.put(indexName, () -> collection.createIndex(dbObject, options));
-        }
-      }
+      Map<String, IndexCreator> creators = indexCreators(mc, collection);
 
       final List<String> obsoleteIndexes = collection.getIndexInfo()
                                                .stream()
@@ -303,6 +244,68 @@ public class IndexManager {
               + "Please create migration to delete them or add them to the whitelist.",
           Joiner.on(", ").join(obsoleteCollections));
     }
+  }
+
+  public static Map<String, IndexCreator> indexCreators(MappedClass mc, DBCollection collection) {
+    Map<String, IndexCreator> creators = new HashMap<>();
+
+    // Read Entity level "Indexes" annotation
+    List<Indexes> indexesAnnotations = mc.getAnnotations(Indexes.class);
+    if (indexesAnnotations != null) {
+      indexesAnnotations.stream().flatMap(indexes -> Arrays.stream(indexes.value())).forEach(index -> {
+        reportDeprecatedUnique(index);
+
+        BasicDBObject keys = new BasicDBObject();
+        for (Field field : index.fields()) {
+          keys.append(field.value(), field.type().toIndexValue());
+        }
+
+        final String indexName = index.options().name();
+        if (isEmpty(indexName)) {
+          logger.error("Do not use default index name for collection: {}\n"
+                  + "WARNING: this index will not be created",
+              collection.getName());
+        } else {
+          DBObject options = new BasicDBObject();
+          options.put("name", indexName);
+          if (index.options().unique()) {
+            options.put("unique", Boolean.TRUE);
+          } else {
+            options.put("background", Boolean.TRUE);
+          }
+          creators.put(indexName, () -> collection.createIndex(keys, options));
+        }
+      });
+    }
+
+    // Read field level "Indexed" annotation
+    for (final MappedField mf : mc.getPersistenceFields()) {
+      if (mf.hasAnnotation(Indexed.class)) {
+        final Indexed indexed = mf.getAnnotation(Indexed.class);
+        reportDeprecatedUnique(indexed);
+
+        int direction = 1;
+        final String name = isNotEmpty(indexed.options().name()) ? indexed.options().name() : mf.getNameToStore();
+
+        final String indexName = name + "_" + direction;
+        BasicDBObject dbObject = new BasicDBObject(name, direction);
+
+        DBObject options = new BasicDBObject();
+        options.put("name", indexName);
+        if (indexed.options().unique()) {
+          options.put("unique", Boolean.TRUE);
+        } else {
+          options.put("background", Boolean.TRUE);
+        }
+        if (indexed.options().expireAfterSeconds() != -1) {
+          options.put("expireAfterSeconds", indexed.options().expireAfterSeconds());
+        }
+
+        creators.put(indexName, () -> collection.createIndex(dbObject, options));
+      }
+    }
+
+    return creators;
   }
 
   @SuppressWarnings("deprecation")

@@ -182,6 +182,22 @@ public interface HPersistence extends HealthMonitor {
   <T extends PersistentEntity> void saveIgnoringDuplicateKeys(List<T> entityList);
 
   /**
+   * Insert.
+   *
+   * @param entity   the entity
+   * @return the key of the entity
+   */
+  <T extends PersistentEntity> String insert(T entity);
+
+  /**
+   * Insert.
+   *
+   * @param entity   the entity
+   * @return the key of the entity
+   */
+  <T extends PersistentEntity> String insertIgnoringDuplicateKeys(T entity);
+
+  /**
    * Get returns the entity with id.
    *
    * @param cls the class of the entity
