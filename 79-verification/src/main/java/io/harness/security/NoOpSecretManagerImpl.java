@@ -143,6 +143,11 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
+  public EncryptedData getSecretByName(String accountId, String name) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public String saveSecret(
       String accountId, String name, String value, String path, UsageRestrictions usageRestrictions) {
     throw new UnsupportedOperationException();

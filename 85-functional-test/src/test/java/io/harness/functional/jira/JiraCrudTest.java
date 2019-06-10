@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
+import io.harness.functional.WorkflowUtils;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.EnvironmentGenerator;
@@ -41,6 +42,7 @@ public class JiraCrudTest extends AbstractFunctionalTest {
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private SettingGenerator settingGenerator;
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private WorkflowUtils workflowUtils;
 
   private Application application;
 
@@ -60,8 +62,8 @@ public class JiraCrudTest extends AbstractFunctionalTest {
   public void shouldCreateJiraStepinWorkflow() throws Exception {
     Environment environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     assertThat(environment).isNotNull();
-    Workflow jiraWorkflow = WorkflowRestUtils.buildCanaryWorkflowPostDeploymentStep(
-        "Create JIRA", environment.getUuid(), getJiraCreateNode());
+    Workflow jiraWorkflow =
+        workflowUtils.buildCanaryWorkflowPostDeploymentStep("Create JIRA", environment.getUuid(), getJiraCreateNode());
 
     // REST API.
     Workflow savedWorkflow =

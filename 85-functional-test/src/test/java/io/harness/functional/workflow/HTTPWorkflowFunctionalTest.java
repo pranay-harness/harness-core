@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
+import io.harness.functional.WorkflowUtils;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.EnvironmentGenerator;
@@ -35,6 +36,7 @@ public class HTTPWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private WorkflowUtils workflowUtils;
 
   Application application;
 
@@ -55,7 +57,7 @@ public class HTTPWorkflowFunctionalTest extends AbstractFunctionalTest {
     Environment environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     assertThat(environment).isNotNull();
     Workflow workflow =
-        WorkflowRestUtils.buildCanaryWorkflowPostDeploymentStep("HTTP Workflow", environment.getUuid(), getHTTPNode());
+        workflowUtils.buildCanaryWorkflowPostDeploymentStep("HTTP Workflow", environment.getUuid(), getHTTPNode());
     // Test  creating a workflow
     Workflow savedWorkflow =
         WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), workflow);

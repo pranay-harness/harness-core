@@ -11,11 +11,11 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
-import io.harness.exception.WingsException;
 import io.harness.functional.AbstractFunctionalTest;
+import io.harness.functional.WorkflowUtils;
+import io.harness.functional.provisioners.utils.InfraProvisionerUtils;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.EnvironmentGenerator;
@@ -33,7 +33,6 @@ import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.restutils.InfraProvisionerRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -55,7 +54,6 @@ import software.wings.sm.StateType;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class TerraformTest extends AbstractFunctionalTest {
   private static final String secretKeyName = "aws_playground_secret_key";
@@ -70,6 +68,7 @@ public class TerraformTest extends AbstractFunctionalTest {
   @Inject private SecretGenerator secretGenerator;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ScmSecret scmSecret;
+  @Inject private WorkflowUtils workflowUtils;
 
   private Application application;
   private Service service;
@@ -111,21 +110,7 @@ public class TerraformTest extends AbstractFunctionalTest {
     ExecutionArgs executionArgs = prepareExecutionArgs(workflow);
     WorkflowExecution workflowExecution =
         WorkflowRestUtils.startWorkflow(bearerToken, application.getAppId(), environment.getUuid(), executionArgs);
-    checkForWorkflowSuccess(workflowExecution);
-  }
-
-  private void checkForWorkflowSuccess(WorkflowExecution workflowExecution) {
-    Awaitility.await().atMost(TEST_TIMEOUT_IN_MINUTES, TimeUnit.MINUTES).pollInterval(5, TimeUnit.SECONDS).until(() -> {
-      ExecutionStatus status =
-          workflowExecutionService.getWorkflowExecution(application.getUuid(), workflowExecution.getUuid()).getStatus();
-      return status == ExecutionStatus.SUCCESS || status == ExecutionStatus.FAILED;
-    });
-    WorkflowExecution finalWorkflowExecution =
-        workflowExecutionService.getWorkflowExecution(application.getUuid(), workflowExecution.getUuid());
-    if (finalWorkflowExecution.getStatus() != ExecutionStatus.SUCCESS) {
-      throw new WingsException(
-          "workflow execution did not succeed. Final status: " + finalWorkflowExecution.getStatus());
-    }
+    workflowUtils.checkForWorkflowSuccess(workflowExecution);
   }
 
   private ExecutionArgs prepareExecutionArgs(Workflow workflow) {
@@ -163,11 +148,10 @@ public class TerraformTest extends AbstractFunctionalTest {
         .properties(ImmutableMap.<String, Object>builder().put("provisionerId", provisionerId).build())
         .build();
   }
-
   private GraphNode buildTerraformProvisionStep(String provisionerId) throws Exception {
     InfrastructureProvisioner provisioner =
         InfraProvisionerRestUtils.getProvisioner(application.getUuid(), bearerToken, provisionerId);
-    provisioner = setValuesToProvisioner(provisioner);
+    provisioner = InfraProvisionerUtils.setValuesToProvisioner(provisioner, scmSecret, secretKeyValue);
     return GraphNode.builder()
         .id(generateUuid())
         .type(StateType.TERRAFORM_PROVISION.getType())
@@ -177,26 +161,6 @@ public class TerraformTest extends AbstractFunctionalTest {
                         .put("variables", provisioner.getVariables())
                         .build())
         .build();
-  }
-
-  private InfrastructureProvisioner setValuesToProvisioner(InfrastructureProvisioner provisioner) throws Exception {
-    for (NameValuePair variable : provisioner.getVariables()) {
-      String value;
-      switch (variable.getName()) {
-        case "access_key":
-          value = String.valueOf(
-              scmSecret.decryptToString(SecretName.builder().value("aws_playground_access_key").build()));
-          break;
-        case "secret_key":
-          value = secretKeyValue;
-          break;
-        default:
-          throw new Exception("Unknown variable: " + variable.getName() + " in provisioner");
-      }
-      variable.setValue(value);
-    }
-
-    return provisioner;
   }
 
   private TerraformInfrastructureProvisioner buildProvisionerObject() {
