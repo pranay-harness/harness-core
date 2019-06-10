@@ -11,6 +11,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.audit.ResourceType;
 import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
@@ -58,5 +59,10 @@ public class EcrConfig extends SettingValue implements EncryptableSetting {
     this.region = region;
     this.accountId = accountId;
     this.encryptedSecretKey = encryptedSecretKey;
+  }
+
+  @Override
+  public String fetchResourceCategory() {
+    return ResourceType.ARTIFACT_SERVER.name();
   }
 }

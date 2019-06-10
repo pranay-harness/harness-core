@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.mail;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.audit.ResourceType.COLLABORATION_PROVIDER;
 import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -61,6 +62,11 @@ public class SmtpConfig extends SettingValue implements EncryptableSetting {
 
   public boolean valid() {
     return isNotEmpty(host) && !HOST_PLACEHOLDER_STRING.equals(host);
+  }
+
+  @Override
+  public String fetchResourceCategory() {
+    return COLLABORATION_PROVIDER.name();
   }
 
   @Data

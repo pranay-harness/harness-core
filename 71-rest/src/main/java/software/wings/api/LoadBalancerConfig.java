@@ -1,5 +1,7 @@
 package software.wings.api;
 
+import static software.wings.audit.ResourceType.LOAD_BALANCER;
+
 import software.wings.settings.SettingValue;
 
 /**
@@ -13,5 +15,10 @@ public abstract class LoadBalancerConfig extends SettingValue {
    */
   public LoadBalancerConfig(String type) {
     super(type);
+  }
+
+  @Override
+  public String fetchResourceCategory() {
+    return LOAD_BALANCER.name();
   }
 }

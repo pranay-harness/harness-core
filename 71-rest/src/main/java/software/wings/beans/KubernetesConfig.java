@@ -8,6 +8,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.audit.ResourceType;
 import software.wings.settings.SettingValue;
 
 /**
@@ -67,5 +68,10 @@ public class KubernetesConfig extends SettingValue implements EncryptableSetting
     this.encryptedClientKey = encryptedClientKey;
     this.encryptedClientKeyPassphrase = encryptedClientKeyPassphrase;
     this.encryptedServiceAccountToken = encryptedServiceAccountToken;
+  }
+
+  @Override
+  public String fetchResourceCategory() {
+    return ResourceType.CLOUD_PROVIDER.name();
   }
 }

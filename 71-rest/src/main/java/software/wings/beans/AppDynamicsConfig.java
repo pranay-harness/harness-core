@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
@@ -66,6 +67,11 @@ public class AppDynamicsConfig extends SettingValue implements EncryptableSettin
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     return Arrays.asList(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(controllerUrl));
+  }
+
+  @Override
+  public String fetchResourceCategory() {
+    return ResourceType.VERIFICATION_PROVIDER.name();
   }
 
   @Data

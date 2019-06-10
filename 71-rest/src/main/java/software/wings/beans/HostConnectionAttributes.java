@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static software.wings.audit.ResourceType.CONNECTION_ATTRIBUTES;
 import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.SSH_KEY;
 import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 
@@ -48,6 +49,12 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassphrase;
 
   @Attributes(title = "Auth Scheme") private AuthenticationScheme authenticationScheme = SSH_KEY;
+
+  @Override
+  public String fetchResourceCategory() {
+    return CONNECTION_ATTRIBUTES.name();
+  }
+
   public enum AuthenticationScheme { SSH_KEY, KERBEROS, HTTP_PASSWORD }
   @Attributes private KerberosConfig kerberosConfig;
   @Attributes(title = "Kerberos Password") @Encrypted private char[] kerberosPassword;

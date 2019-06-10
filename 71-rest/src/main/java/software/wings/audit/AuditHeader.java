@@ -289,182 +289,82 @@ public class AuditHeader extends Base {
     this.localIpAddress = localIpAddress;
   }
 
-  /**
-   * Gets local host name.
-   *
-   * @return the local host name
-   */
   public String getLocalHostName() {
     return localHostName;
   }
 
-  /**
-   * Sets local host name.
-   *
-   * @param localHostName the local host name
-   */
   public void setLocalHostName(String localHostName) {
     this.localHostName = localHostName;
   }
 
-  /**
-   * Gets application.
-   *
-   * @return the application
-   */
   public Application getApplication() {
     return application;
   }
 
-  /**
-   * Sets application.
-   *
-   * @param application the application
-   */
   public void setApplication(Application application) {
     this.application = application;
   }
 
-  /**
-   * Gets component.
-   *
-   * @return the component
-   */
   public Service getComponent() {
     return component;
   }
 
-  /**
-   * Sets component.
-   *
-   * @param component the component
-   */
   public void setComponent(Service component) {
     this.component = component;
   }
 
-  /**
-   * Gets environment.
-   *
-   * @return the environment
-   */
   public Environment getEnvironment() {
     return environment;
   }
 
-  /**
-   * Sets environment.
-   *
-   * @param environment the environment
-   */
   public void setEnvironment(Environment environment) {
     this.environment = environment;
   }
 
-  /**
-   * Gets request time.
-   *
-   * @return the request time
-   */
   public Long getRequestTime() {
     return requestTime;
   }
 
-  /**
-   * Sets request time.
-   *
-   * @param requestTime the request time
-   */
   public void setRequestTime(Long requestTime) {
     this.requestTime = requestTime;
   }
 
-  /**
-   * Gets response time.
-   *
-   * @return the response time
-   */
   public Long getResponseTime() {
     return responseTime;
   }
 
-  /**
-   * Sets response time.
-   *
-   * @param responseTime the response time
-   */
   public void setResponseTime(Long responseTime) {
     this.responseTime = responseTime;
   }
 
-  /**
-   * Gets url.
-   *
-   * @return the url
-   */
   public String getUrl() {
     return url;
   }
 
-  /**
-   * Sets url.
-   *
-   * @param url the url
-   */
   public void setUrl(String url) {
     this.url = url;
   }
 
-  /**
-   * Gets header string.
-   *
-   * @return the header string
-   */
   public String getHeaderString() {
     return headerString;
   }
 
-  /**
-   * Sets header string.
-   *
-   * @param headerString the header string
-   */
   public void setHeaderString(String headerString) {
     this.headerString = headerString;
   }
 
-  /**
-   * Gets request payload uuid.
-   *
-   * @return the request payload uuid
-   */
   public String getRequestPayloadUuid() {
     return requestPayloadUuid;
   }
 
-  /**
-   * Sets request payload uuid.
-   *
-   * @param requestPayloadUuid the request payload uuid
-   */
   public void setRequestPayloadUuid(String requestPayloadUuid) {
     this.requestPayloadUuid = requestPayloadUuid;
   }
 
-  /**
-   * Gets response payload uuid.
-   *
-   * @return the response payload uuid
-   */
   public String getResponsePayloadUuid() {
     return responsePayloadUuid;
   }
 
-  /**
-   * Sets response payload uuid.
-   *
-   * @param responsePayloadUuid the response payload uuid
-   */
   public void setResponsePayloadUuid(String responsePayloadUuid) {
     this.responsePayloadUuid = responsePayloadUuid;
   }
@@ -815,69 +715,33 @@ public class AuditHeader extends Base {
       return this;
     }
 
-    /**
-     * With uuid.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
-    public Builder withUuid(String uuid) {
-      this.uuid = uuid;
-      return this;
-    }
-
-    /**
-     * With app id.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
-    public Builder withAppId(String appId) {
-      this.appId = appId;
-      return this;
-    }
-
-    /**
-     * With created by.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
-    public Builder withCreatedBy(EmbeddedUser createdBy) {
-      this.createdBy = createdBy;
-      return this;
-    }
-
-    /**
-     * With created at.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
-    public Builder withCreatedAt(long createdAt) {
-      this.createdAt = createdAt;
-      return this;
-    }
-
-    /**
-     * With last updated by.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
     public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    /**
-     * With last updated at.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
+      return this;
+    }
+
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    public Builder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
+    public Builder withCreatedBy(EmbeddedUser createdBy) {
+      this.createdBy = createdBy;
+      return this;
+    }
+
+    public Builder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
       return this;
     }
 

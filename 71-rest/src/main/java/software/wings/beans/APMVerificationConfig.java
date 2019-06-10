@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.audit.ResourceType;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -141,6 +142,11 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
     } catch (Exception ex) {
       throw new WingsException("Unable to validate connector ", ex);
     }
+  }
+
+  @Override
+  public String fetchResourceCategory() {
+    return ResourceType.VERIFICATION_PROVIDER.name();
   }
 
   @Data

@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static software.wings.audit.ResourceType.COLLABORATION_PROVIDER;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -54,6 +56,12 @@ public class SlackConfig extends SettingValue implements SlackNotificationConfig
   public void setOutgoingWebhookUrl(String outgoingWebhookUrl) {
     this.outgoingWebhookUrl = outgoingWebhookUrl;
   }
+
+  @Override
+  public String fetchResourceCategory() {
+    return COLLABORATION_PROVIDER.name();
+  }
+
   /**
    * The type Builder.
    */

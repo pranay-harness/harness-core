@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.ElkValidationType;
@@ -95,6 +96,11 @@ public class ElkConfig extends SettingValue implements EncryptableSetting, Execu
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(elkUrl));
+  }
+
+  @Override
+  public String fetchResourceCategory() {
+    return ResourceType.VERIFICATION_PROVIDER.name();
   }
 
   @Data

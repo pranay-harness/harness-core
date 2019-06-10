@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static software.wings.audit.ResourceType.SOURCE_REPO_PROVIDER;
 import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -50,6 +51,11 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
 
   @Trimmed private String authorName;
   @Trimmed @Email private String authorEmailId;
+
+  @Override
+  public String fetchResourceCategory() {
+    return SOURCE_REPO_PROVIDER.name();
+  }
 
   public enum GitRepositoryType { YAML, TERRAFORM, TRIGGER, HELM }
 

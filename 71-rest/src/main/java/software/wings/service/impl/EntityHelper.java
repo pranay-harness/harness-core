@@ -31,61 +31,28 @@ import io.harness.persistence.UuidAccess;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.audit.EntityAuditRecord.EntityAuditRecordBuilder;
-import software.wings.beans.APMVerificationConfig;
-import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
-import software.wings.beans.AwsConfig;
-import software.wings.beans.AzureConfig;
-import software.wings.beans.BambooConfig;
-import software.wings.beans.BastionConnectionAttributes;
-import software.wings.beans.BugsnagConfig;
 import software.wings.beans.ConfigFile;
-import software.wings.beans.DatadogConfig;
-import software.wings.beans.DockerConfig;
-import software.wings.beans.DynaTraceConfig;
-import software.wings.beans.ElasticLoadBalancerConfig;
-import software.wings.beans.ElkConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
-import software.wings.beans.GcpConfig;
-import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
-import software.wings.beans.JenkinsConfig;
-import software.wings.beans.JiraConfig;
-import software.wings.beans.KubernetesClusterConfig;
-import software.wings.beans.KubernetesConfig;
 import software.wings.beans.LambdaSpecification;
-import software.wings.beans.NewRelicConfig;
-import software.wings.beans.PcfConfig;
-import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.Pipeline;
-import software.wings.beans.PrometheusConfig;
 import software.wings.beans.Role;
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
-import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SftpConfig;
-import software.wings.beans.SlackConfig;
-import software.wings.beans.SmbConfig;
-import software.wings.beans.SplunkConfig;
-import software.wings.beans.StringValue;
-import software.wings.beans.SumoConfig;
-import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.Workflow;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
-import software.wings.beans.config.ArtifactoryConfig;
-import software.wings.beans.config.LogzConfig;
-import software.wings.beans.config.NexusConfig;
 import software.wings.beans.container.EcsContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.HelmChartSpecification;
@@ -93,13 +60,10 @@ import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.security.UserGroup;
-import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
-import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
-import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -151,6 +115,10 @@ public class EntityHelper {
       UserGroup userGroup = (UserGroup) entity;
       entityType = EntityType.USER_GROUP.name();
       entityName = userGroup.getName();
+      affectedResourceId = userGroup.getUuid();
+      affectedResourceName = userGroup.getName();
+      affectedResourceType = entityType;
+      affectedResourceOperation = type.name();
     } else if (entity instanceof Pipeline) {
       Pipeline pipeline = (Pipeline) entity;
       entityType = EntityType.PIPELINE.name();
@@ -346,7 +314,7 @@ public class EntityHelper {
       }
       affectedResourceId = settingAttribute.getUuid();
       affectedResourceName = settingAttribute.getName();
-      affectedResourceType = settingAttribute.getCategory() != null ? settingAttribute.getCategory().name() : EMPTY;
+      affectedResourceType = getAffectedResourceTypeForSettingValue(value);
       affectedResourceOperation = type.name();
     } else if (entity instanceof ServiceCommand) {
       ServiceCommand serviceCommand = (ServiceCommand) entity;
@@ -485,7 +453,7 @@ public class EntityHelper {
       entityName = format("Name of class: [%s]", entity.getClass().getSimpleName());
     }
 
-    if (isNotEmpty(appId)) {
+    if (isNotEmpty(appId) && !Application.GLOBAL_APP_ID.equals(appId)) {
       appName = getApplicationName(appId);
     }
 
@@ -499,6 +467,14 @@ public class EntityHelper {
         .affectedResourceName(affectedResourceName)
         .affectedResourceType(affectedResourceType)
         .affectedResourceOperation(affectedResourceOperation);
+  }
+
+  private String getAffectedResourceTypeForSettingValue(SettingValue value) {
+    if (value == null) {
+      return "Setting_Attribute";
+    }
+
+    return value.fetchResourceCategory();
   }
 
   private String getAffectedResourceOperation(
@@ -574,85 +550,11 @@ public class EntityHelper {
 
   private String getEntityTypeForSettingValue(SettingValue settingValue) {
     // This will be case when going through yaml path.
-    if (settingValue == null) {
-      return "Setting Attribute";
+    if (settingValue == null || settingValue.getSettingType() == null) {
+      return "Setting_Value";
     }
 
-    if (settingValue instanceof APMVerificationConfig) {
-      return "APM Verification Config";
-    } else if (settingValue instanceof AmazonS3HelmRepoConfig) {
-      return "Amazon S3 Helm Repo Config";
-    } else if (settingValue instanceof AppDynamicsConfig) {
-      return "AppDynamics Config";
-    } else if (settingValue instanceof ArtifactoryConfig) {
-      return "Artifactory Config";
-    } else if (settingValue instanceof AwsConfig) {
-      return "Aws Config";
-    } else if (settingValue instanceof AzureConfig) {
-      return "Azure Config";
-    } else if (settingValue instanceof BambooConfig) {
-      return "Bamboo Config";
-    } else if (settingValue instanceof BastionConnectionAttributes) {
-      return "Bastion Connection Config";
-    } else if (settingValue instanceof BugsnagConfig) {
-      return "Bugsnag Config";
-    } else if (settingValue instanceof DatadogConfig) {
-      return "Datadog Config";
-    } else if (settingValue instanceof DockerConfig) {
-      return "Docker Config";
-    } else if (settingValue instanceof DynaTraceConfig) {
-      return "DynaTrace Config";
-    } else if (settingValue instanceof ElasticLoadBalancerConfig) {
-      return "Elastic Load Balancer Config";
-    } else if (settingValue instanceof ElkConfig) {
-      return "Elk Config";
-    } else if (settingValue instanceof GcpConfig) {
-      return "Gcp Config";
-    } else if (settingValue instanceof HostConnectionAttributes) {
-      return SSH_KEYS_ENTITY_TYPE;
-    } else if (settingValue instanceof HttpHelmRepoConfig) {
-      return "Http Helm Repo Config";
-    } else if (settingValue instanceof JenkinsConfig) {
-      return "Jenkins Config";
-    } else if (settingValue instanceof JiraConfig) {
-      return "Jira Config";
-    } else if (settingValue instanceof KubernetesClusterConfig) {
-      return "Kubernetes Cluster Config";
-    } else if (settingValue instanceof KubernetesConfig) {
-      return "Kubernetes Config";
-    } else if (settingValue instanceof LogzConfig) {
-      return "Logz Config";
-    } else if (settingValue instanceof NewRelicConfig) {
-      return "New Relic Config";
-    } else if (settingValue instanceof NexusConfig) {
-      return "Nexus Config";
-    } else if (settingValue instanceof PcfConfig) {
-      return "Pcf Config";
-    } else if (settingValue instanceof PhysicalDataCenterConfig) {
-      return "Physical Data Center Config";
-    } else if (settingValue instanceof PrometheusConfig) {
-      return "Prometheus Config";
-    } else if (settingValue instanceof ServiceNowConfig) {
-      return "Service Now Config";
-    } else if (settingValue instanceof SftpConfig) {
-      return "Sftp Config";
-    } else if (settingValue instanceof SlackConfig) {
-      return "Slack Config";
-    } else if (settingValue instanceof SmbConfig) {
-      return "Smb Config";
-    } else if (settingValue instanceof SmtpConfig) {
-      return "Smtp Config";
-    } else if (settingValue instanceof SplunkConfig) {
-      return "Splunk Config";
-    } else if (settingValue instanceof SumoConfig) {
-      return "Sumo Config";
-    } else if (settingValue instanceof WinRmConnectionAttributes) {
-      return WIN_RM_CONNECTION_ENTITY_TYPE;
-    } else if (settingValue instanceof StringValue) {
-      return "String Value";
-    } else {
-      return settingValue.getClass().getSimpleName();
-    }
+    return settingValue.getSettingType().name();
   }
 
   @VisibleForTesting

@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.audit.ResourceType;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.HelmRepoYaml;
@@ -35,6 +36,11 @@ public class AmazonS3HelmRepoConfig extends SettingValue implements HelmRepoConf
     this.bucketName = bucketName;
     this.folderPath = folderPath;
     this.region = region;
+  }
+
+  @Override
+  public String fetchResourceCategory() {
+    return ResourceType.ARTIFACT_SERVER.name();
   }
 
   @Data
