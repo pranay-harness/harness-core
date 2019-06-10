@@ -1,4 +1,4 @@
-package io.harness.e2e.dailysanity.platform;
+package io.harness.e2e.dailysanity.platform.paid;
 
 import static io.harness.rule.OwnerRule.NATARAJA;
 import static junit.framework.TestCase.assertTrue;
@@ -22,9 +22,8 @@ import java.util.List;
 import javax.mail.MessagingException;
 
 @Slf4j
-public class TrialUserTest extends AbstractE2ETest {
-  final String EXPECTED_SUBJECT = "You have been invited to join the Harnesstrial account at Harness";
-  final String EXPECTED_RESET_PWD_SUBJECT = "Reset your HARNESS PLATFORM password";
+public class PaidUserTest extends AbstractE2ETest {
+  final String EXPECTED_SUBJECT = "You have been invited to join the Automation One account at Harness";
 
   @Test()
   @Owner(emails = NATARAJA, resent = false)
@@ -32,7 +31,7 @@ public class TrialUserTest extends AbstractE2ETest {
   public void listUsers() {
     logger.info("Starting the list users test");
     UserRestUtils urUtil = new UserRestUtils();
-    List<User> userList = urUtil.getUserList(trialBearerToken, getTrialAccount().getUuid());
+    List<User> userList = urUtil.getUserList(bearerToken, getAccount().getUuid());
     assertNotNull(userList);
     assertTrue(userList.size() > 0);
   }
@@ -41,12 +40,12 @@ public class TrialUserTest extends AbstractE2ETest {
   @Owner(emails = NATARAJA, resent = false)
   @Category(E2ETests.class)
   public void testUserInvite() throws IOException, MessagingException {
-    Account account = getTrialAccount();
+    Account account = getAccount();
     String domainName = "@harness.mailinator.com";
     String emailId = TestUtils.generateUniqueInboxId();
     List<UserInvite> userInvitationList =
-        UserUtils.inviteUserAndValidateInviteMail(account, trialBearerToken, emailId, domainName, EXPECTED_SUBJECT);
-    UserInvite completed = UserUtils.completeSignupAndValidateLogin(account, trialBearerToken, userInvitationList);
+        UserUtils.inviteUserAndValidateInviteMail(account, bearerToken, emailId, domainName, EXPECTED_SUBJECT);
+    UserInvite completed = UserUtils.completeSignupAndValidateLogin(account, bearerToken, userInvitationList);
     UserUtils.resetPasswordAndValidateLogin(completed, emailId, domainName);
   }
 }
