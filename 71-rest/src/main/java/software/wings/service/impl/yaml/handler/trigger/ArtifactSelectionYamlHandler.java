@@ -100,6 +100,10 @@ public class ArtifactSelectionYamlHandler extends BaseYamlHandler<Yaml, Artifact
   }
 
   private Type getArtifactSelectionType(String type) {
+    if (EmptyPredicate.isEmpty(type)) {
+      return null;
+    }
+
     if (type.equals(ARTIFACT_SOURCE.name())) {
       return ARTIFACT_SOURCE;
     } else if (type.equals(WEBHOOK_VARIABLE.name())) {
