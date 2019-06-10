@@ -28,6 +28,8 @@ import static software.wings.api.DeploymentType.WINRM;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.common.Constants.REFERENCED_ENTITIES_TO_SHOW;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MAX_INSTANCES;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_NAME;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AZURE;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
@@ -1859,6 +1861,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     notNullCheck("Compute Provider", computeProviderSetting);
     String region = infrastructureMapping.getRegion();
+    if (isEmpty(region)) {
+      // case that could happen since we support dynamic infra for Ami Asg
+      return AwsAsgGetRunningCountData.builder()
+          .asgName(DEFAULT_AMI_ASG_NAME)
+          .asgMax(DEFAULT_AMI_ASG_MAX_INSTANCES)
+          .build();
+    }
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(awsConfig, appId, null);
     return awsAsgHelperServiceManager.getCurrentlyRunningInstanceCount(
