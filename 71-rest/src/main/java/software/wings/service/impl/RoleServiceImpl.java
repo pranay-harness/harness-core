@@ -9,7 +9,6 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
-import software.wings.beans.Event.Type;
 import software.wings.beans.Role;
 import software.wings.beans.Role.RoleKeys;
 import software.wings.beans.RoleType;
@@ -33,7 +32,6 @@ public class RoleServiceImpl implements RoleService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;
   @Inject private ExecutorService executorService;
-  @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private AppService appService;
 
   /* (non-Javadoc)
@@ -49,10 +47,8 @@ public class RoleServiceImpl implements RoleService {
    */
   @Override
   public Role save(Role role) {
-    wingsPersistence.save(role);
-
-    // TODO: AUDIT: Once this entity is yamlized, this can be removed
-    auditServiceHelper.reportForAuditingUsingAccountId(role.getAccountId(), null, role, Type.CREATE);
+    String roleId = wingsPersistence.save(role);
+    role.setUuid(roleId);
     return role;
   }
 
@@ -78,10 +74,7 @@ public class RoleServiceImpl implements RoleService {
         ImmutableMap.of(
             "name", role.getName(), "description", role.getDescription(), "permissions", role.getPermissions()));
 
-    Role updatedRole = get(role.getUuid());
-    // TODO: AUDIT: Once this entity is yamlized, this can be removed
-    auditServiceHelper.reportForAuditingUsingAccountId(role.getAccountId(), savedRole, updatedRole, Type.UPDATE);
-    return updatedRole;
+    return get(role.getUuid());
   }
 
   private void ensureNonAdminRole(Role role) {
@@ -109,9 +102,6 @@ public class RoleServiceImpl implements RoleService {
         }
       });
     }
-
-    // TODO: AUDIT: Once this entity is yamlized, this can be removed
-    auditServiceHelper.reportDeleteForAuditingUsingAccountId(role.getAccountId(), role);
   }
 
   @Override

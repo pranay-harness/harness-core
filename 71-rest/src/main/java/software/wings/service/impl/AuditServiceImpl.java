@@ -94,9 +94,8 @@ public class AuditServiceImpl implements AuditService {
 
   private WingsPersistence wingsPersistence;
 
-  private static Set<String> nonYamlEntities =
-      newHashSet(EntityType.ROLE.name(), EntityType.TEMPLATE.name(), EntityType.TEMPLATE_FOLDER.name(),
-          EntityType.ENCRYPTED_RECORDS.name(), EntityType.USER_GROUP.name(), ResourceType.CONNECTION_ATTRIBUTES.name());
+  private static Set<String> nonYamlEntities = newHashSet(EntityType.TEMPLATE.name(), EntityType.TEMPLATE_FOLDER.name(),
+      EntityType.ENCRYPTED_RECORDS.name(), EntityType.USER_GROUP.name(), ResourceType.CONNECTION_ATTRIBUTES.name());
 
   /**
    * Instantiates a new audit service impl.
