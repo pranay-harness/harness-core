@@ -1,6 +1,5 @@
 package software.wings.graphql.datafetcher.instance;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.grouping;
@@ -13,17 +12,18 @@ import io.harness.exception.WingsException;
 import io.harness.persistence.ReadPref;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.aggregation.Group;
+import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcher;
 import software.wings.graphql.schema.type.aggregation.QLAggregateFunction;
-import software.wings.graphql.schema.type.aggregation.QLAggregateOperation;
 import software.wings.graphql.schema.type.aggregation.QLAggregatedData;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLDataPoint;
-import software.wings.graphql.schema.type.aggregation.QLReference;
+import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
 import software.wings.graphql.schema.type.aggregation.QLSinglePointData;
+import software.wings.graphql.schema.type.aggregation.QLStringFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceAggregation;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceFilter;
@@ -31,7 +31,6 @@ import software.wings.graphql.schema.type.aggregation.instance.QLInstanceFilterT
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.FlatEntitySummaryStats;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -49,18 +48,27 @@ public class InstanceStatsDataFetcher extends AbstractStatsDataFetcher<QLAggrega
 
     if (isNotEmpty(filters)) {
       filters.forEach(filter -> {
-        String[] values = filter.getValues();
-        if (isEmpty(values)) {
-          return;
+        QLStringFilter stringFilter = filter.getStringFilter();
+        QLNumberFilter numberFilter = filter.getNumberFilter();
+
+        if (stringFilter != null && numberFilter != null) {
+          throw new WingsException("Only one filter should be set");
+        }
+
+        if (stringFilter == null && numberFilter == null) {
+          throw new WingsException("All filters are null");
         }
 
         QLInstanceFilterType filterType = filter.getType();
         String columnName = getFieldName(filterType);
+        FieldEnd<? extends Query<Instance>> field = query.field(columnName);
 
-        if (values.length == 1) {
-          query.field(columnName).equal(values[0]);
-        } else {
-          query.field(columnName).in(Arrays.asList(values));
+        if (stringFilter != null) {
+          setStringFilter(field, stringFilter);
+        }
+
+        if (numberFilter != null) {
+          setNumberFilter(field, numberFilter);
         }
       });
     }
@@ -90,47 +98,6 @@ public class InstanceStatsDataFetcher extends AbstractStatsDataFetcher<QLAggrega
       long count = query.count();
       return QLSinglePointData.builder().dataPoint(QLDataPoint.builder().value(count).build()).build();
     }
-
-    //    int groupBySize = groupBy != null ? groupBy.size() : 0;
-    //    if (groupBySize == 0) {
-    //      return StatsStubDataHelper.getSinglePointData();
-    //    } else if (groupBySize == 1) {
-    //      if (groupByTime == null) {
-    //        return StatsStubDataHelper.getAggregatedData();
-    //      } else {
-    //        return StatsStubDataHelper.getTimeAggregatedData();
-    //      }
-    //    } else if (groupBySize == 2) {
-    //      if (groupByTime == null) {
-    //        return StatsStubDataHelper.getStackedAggregatedData();
-    //      } else {
-    //        return StatsStubDataHelper.getStackedTimeAggregatedData();
-    //      }
-    //    } else {
-    //      return null;
-    //    }
-  }
-
-  private String getAggregateFunction(QLAggregateFunction aggregateFunction) {
-    QLAggregateOperation aggregateOperation = aggregateFunction.getAggregateOperation();
-    switch (aggregateOperation) {
-      case MIN:
-        return "$min";
-      case MAX:
-        return "$max";
-      case SUM:
-        return "$sum";
-      case AVERAGE:
-        return "$avg";
-      default:
-        throw new WingsException("Unknown aggregation function" + aggregateOperation);
-    }
-  }
-
-  private QLDataPoint getDataPoint(FlatEntitySummaryStats stats, String entityType) {
-    QLReference qlReference =
-        QLReference.builder().type(entityType).name(stats.getEntityName()).id(stats.getEntityId()).build();
-    return QLDataPoint.builder().value(stats.getCount()).key(qlReference).build();
   }
 
   private String getFieldName(QLInstanceFilterType filterType) {
@@ -185,21 +152,4 @@ public class InstanceStatsDataFetcher extends AbstractStatsDataFetcher<QLAggrega
         throw new WingsException("Unknown aggregation type" + aggregation);
     }
   }
-
-  //  private String constructQuery(String accountId, QLAggregateFunction aggregateFunction, List<QLInstanceFilter>
-  //  filters,
-  //      List<QLInstanceAggregation> groupBy, QLTimeSeriesAggregation groupByTime) {
-  //    String aggregateFunc = aggregateFunction == null ? "" :
-  //    aggregateFunction.getAggregateOperation().name().toLowerCase() + "(" + aggregateFunction.getAggregateValue() +
-  //    ")"; String filter = isEmpty(filters) ? "" : getFilter(filters); String groupByQuery = isEmpty(groupBy) ? "" :
-  //    getGroupBy(groupBy); return String.format(queryTemplate, aggregateFunc, accountId, filter, groupByQuery);
-  //  }
-  //
-  //  private String getGroupBy(List<QLInstanceAggregation> groupBy) {
-  //    return null;
-  //  }
-  //
-  //  private String getFilter(List<QLInstanceFilter> filters) {
-  //    return null;
-  //  }
 }

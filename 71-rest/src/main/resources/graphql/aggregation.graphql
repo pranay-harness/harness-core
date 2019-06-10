@@ -4,6 +4,34 @@ type Reference {
   type: String
 }
 
+enum NumericOperator {
+  EQUALS
+  GREATER_THAN
+  GREATER_THAN_OR_EQUALS
+  IN
+  NOT_IN
+  LESS_THAN
+  LESS_THAN_OR_EQUALS
+  NOT_EQUALS
+}
+
+enum StringOperator {
+  EQUALS
+  IN
+  NOT_IN
+  NOT_EQUALS
+}
+
+input StringFilter {
+  operator: StringOperator
+  values: [String]
+}
+
+input NumberFilter {
+  operator: NumericOperator
+  values: [Number]
+}
+
 type DataPoint {
   key: Reference # Key refers to the label
   value: Number
@@ -99,6 +127,11 @@ enum TimeAggregationType {
 input TimeRange {
   from: Long
   to: Long
+}
+
+enum DataType {
+  STRING
+  NUMBER
 }
 
 input TimeSeriesAggregation {
