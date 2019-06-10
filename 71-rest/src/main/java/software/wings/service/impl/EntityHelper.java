@@ -43,7 +43,6 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.Pipeline;
-import software.wings.beans.Role;
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.ServiceVariable;
@@ -402,15 +401,6 @@ public class EntityHelper {
         affectedResourceOperation =
             getAffectedResourceOperation(EntityType.ENVIRONMENT, affectedResourceId, affectedResourceName);
       }
-    } else if (entity instanceof Role) {
-      Role role = (Role) entity;
-      entityType = EntityType.ROLE.name();
-      entityName = role.getName();
-      appId = role.getAppId();
-      affectedResourceId = role.getUuid();
-      affectedResourceName = role.getName();
-      affectedResourceType = EntityType.ROLE.name();
-      affectedResourceOperation = type.name();
     } else if (entity instanceof Template) {
       Template template = (Template) entity;
       entityType = EntityType.TEMPLATE.name();
