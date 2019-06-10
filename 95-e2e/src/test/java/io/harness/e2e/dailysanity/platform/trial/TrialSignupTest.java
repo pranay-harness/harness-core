@@ -1,4 +1,4 @@
-package io.harness.e2e.dailysanity.platform;
+package io.harness.e2e.dailysanity.platform.trial;
 
 import static io.harness.rule.OwnerRule.NATARAJA;
 import static junit.framework.TestCase.assertTrue;

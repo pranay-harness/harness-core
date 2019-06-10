@@ -1,4 +1,4 @@
-package io.harness.e2e.dailysanity.platform;
+package io.harness.e2e.dailysanity.platform.paid;
 
 import static io.harness.rule.OwnerRule.SWAMY;
 import static junit.framework.TestCase.assertTrue;
@@ -15,6 +15,7 @@ import io.harness.scm.SecretName;
 import io.harness.testframework.framework.Retry;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.framework.matchers.BooleanMatcher;
+import io.harness.testframework.framework.matchers.NotNullMatcher;
 import io.harness.testframework.framework.utils.SSOUtils;
 import io.harness.testframework.framework.utils.UserGroupUtils;
 import io.harness.testframework.framework.utils.UserUtils;
@@ -40,6 +41,7 @@ public class SSOTestTrial extends AbstractE2ETest {
   static final int MAX_RETRIES = 5;
   static final int DELAY_IN_MS = 6000;
   static final Retry<Object> retry = new Retry<>(MAX_RETRIES, DELAY_IN_MS);
+
   @Test()
   @Owner(emails = SWAMY, resent = false)
   @Category(E2ETests.class)
@@ -108,7 +110,10 @@ public class SSOTestTrial extends AbstractE2ETest {
 
     assertTrue(
         SSORestUtils.assignAuthMechanism(getTrialAccount().getUuid(), trialBearerToken, "LDAP") == HttpStatus.SC_OK);
-    String authToken = Setup.getAuthTokenForAccount(trialQAAccount, LDAP_LOGIN_ID, ldapLoginPassword);
+    String authToken = (String) retry.executeWithRetry(
+        ()
+            -> Setup.getAuthTokenForAccount(trialQAAccount, LDAP_LOGIN_ID, ldapLoginPassword),
+        new NotNullMatcher(), true);
     assertTrue(StringUtils.isNotBlank(authToken));
     logger.info("Logging out in as LDAP user");
     Setup.signOut(user.getUuid(), authToken);

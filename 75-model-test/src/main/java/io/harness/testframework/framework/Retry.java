@@ -5,6 +5,7 @@ import io.harness.testframework.framework.matchers.BooleanMatcher;
 import io.harness.testframework.framework.matchers.EmailMatcher;
 import io.harness.testframework.framework.matchers.MailinatorEmailMatcher;
 import io.harness.testframework.framework.matchers.Matcher;
+import io.harness.testframework.framework.matchers.NotNullMatcher;
 import io.harness.testframework.framework.matchers.SettingsAttributeMatcher;
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,6 +63,10 @@ public class Retry<T> {
             return actual;
           }
         } else if (matcher instanceof BooleanMatcher) {
+          if (matcher.matches(expected, actual)) {
+            return actual;
+          }
+        } else if (matcher instanceof NotNullMatcher) {
           if (matcher.matches(expected, actual)) {
             return actual;
           }

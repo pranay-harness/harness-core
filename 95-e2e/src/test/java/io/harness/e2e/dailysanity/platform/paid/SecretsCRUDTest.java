@@ -1,4 +1,4 @@
-package io.harness.e2e.dailysanity.platform;
+package io.harness.e2e.dailysanity.platform.paid;
 
 import static io.harness.rule.OwnerRule.SWAMY;
 import static junit.framework.TestCase.assertTrue;
