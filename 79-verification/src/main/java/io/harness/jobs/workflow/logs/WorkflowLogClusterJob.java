@@ -2,12 +2,10 @@ package io.harness.jobs.workflow.logs;
 
 import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.exception.ExceptionUtils;
 import io.harness.jobs.LogMLClusterGenerator;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
@@ -16,12 +14,10 @@ import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpStatus;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.SchedulerException;
-import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.LogRequest;
@@ -30,7 +26,6 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
-import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.Set;
 
@@ -87,12 +82,6 @@ public class WorkflowLogClusterJob implements Job {
     }
 
     private void cluster() {
-      ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.builder()
-                                            .stateExecutionId(context.getStateExecutionId())
-                                            .title("Triggering L0->L1 clustering task")
-                                            .requestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli())
-                                            .build();
-
       try {
         Set<String> nodes = getCollectedNodes();
         // TODO handle pause
@@ -154,10 +143,6 @@ public class WorkflowLogClusterJob implements Job {
         }
       } catch (Exception ex) {
         logger.info("Verification L0 => L1 cluster failed for {}", context.getStateExecutionId(), ex);
-        apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-        apiCallLog.addFieldToResponse(
-            HttpStatus.SC_INTERNAL_SERVER_ERROR, ExceptionUtils.getMessage(ex), ThirdPartyApiCallLog.FieldType.TEXT);
-        dataStoreService.save(ThirdPartyApiCallLog.class, Lists.newArrayList(apiCallLog), false);
       } finally {
         // Delete cron.
         try {
