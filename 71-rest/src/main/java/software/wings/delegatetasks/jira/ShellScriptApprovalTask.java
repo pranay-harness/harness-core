@@ -4,7 +4,6 @@ import static io.harness.delegate.command.CommandExecutionResult.CommandExecutio
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.INFO;
-import static software.wings.common.Constants.SCRIPT_APPROVAL_ENV_VARIABLE;
 
 import com.google.inject.Inject;
 
@@ -37,6 +36,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class ShellScriptApprovalTask extends AbstractDelegateRunnableTask {
+  private static final String SCRIPT_APPROVAL_ENV_VARIABLE = "HARNESS_APPROVAL_STATUS";
   private static final String APPROVE_STATUS = "Approved";
   private static final String REJECTED_STATUS = "Rejected";
 

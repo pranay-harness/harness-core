@@ -6,9 +6,6 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.common.Constants.BG_BLUE;
-import static software.wings.common.Constants.BG_GREEN;
-import static software.wings.common.Constants.BG_VERSION;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -31,6 +28,9 @@ import java.util.List;
 
 @Singleton
 public class EcsSwapRoutesCommandTaskHelper {
+  static final String BG_VERSION = "BG_VERSION";
+  static final String BG_GREEN = "GREEN";
+  private static final String BG_BLUE = "BLUE";
   @Inject private AwsHelperService awsHelperService;
   @Inject private EcsContainerService ecsContainerService;
 

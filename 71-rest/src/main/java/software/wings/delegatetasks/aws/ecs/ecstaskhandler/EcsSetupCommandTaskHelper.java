@@ -17,8 +17,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.EcsSetupCommandUnit.ERROR;
-import static software.wings.common.Constants.BG_GREEN;
-import static software.wings.common.Constants.BG_VERSION;
+import static software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsSwapRoutesCommandTaskHelper.BG_GREEN;
+import static software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsSwapRoutesCommandTaskHelper.BG_VERSION;
 import static software.wings.utils.EcsConvention.getServiceNamePrefixFromServiceName;
 
 import com.google.common.annotations.VisibleForTesting;
