@@ -1,5 +1,6 @@
 package software.wings.graphql.scalar;
 
+import graphql.language.IntValue;
 import graphql.schema.Coercing;
 import graphql.schema.CoercingParseLiteralException;
 import graphql.schema.CoercingParseValueException;
@@ -40,6 +41,8 @@ public class NumberScalar {
                 return (Long) input;
               } else if (input instanceof Double) {
                 return (Double) input;
+              } else if (input instanceof IntValue) {
+                return ((IntValue) input).getValue().longValue();
               } else {
                 Number val = null;
                 try {

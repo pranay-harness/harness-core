@@ -15,9 +15,40 @@ enum InstanceAggregation {
   InstanceType
 }
 
+#input InstanceFilter {
+#  stringFilters: [StringField]
+#  dateFilters: [DateField]
+#  numberFilters: [NumberField]
+#}
+#
+#input inputs {
+#  stringValues: [StringField]
+#  dateValues: [DateField]
+#  numberValues: [NumberField]
+#}
+#
+#input StringField {
+#  type: InstanceFilterType
+#  operator: ComparisonOperator
+#  value: [String]
+#}
+#
+#input DateField {
+#  type: InstanceFilterType
+#  operator: ComparisonOperator
+#  value: [DateTime]
+#}
+#
+#input NumberField {
+#  type: InstanceFilterType
+#  operator: ComparisonOperator
+#  value: [Number]
+#}
+
 input InstanceFilter {
   type: InstanceFilterType
-  values: [String]
+  stringFilter: StringFilter
+  numberFilter: NumberFilter
 }
 
 extend type Query {
