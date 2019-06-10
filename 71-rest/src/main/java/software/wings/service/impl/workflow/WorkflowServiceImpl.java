@@ -242,6 +242,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Slf4j
 public class WorkflowServiceImpl implements WorkflowService, DataProvider {
+  private static final String VERIFY = "Verify";
   private static final String ROLLBACK_PROVISION_INFRASTRUCTURE = "Rollback Provision Infrastructure";
 
   private static final List<String> kubernetesArtifactNeededStateTypes =
@@ -698,7 +699,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                     .build())
                        .build());
 
-    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.VERIFY).build());
+    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, VERIFY).build());
 
     phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.WRAP_UP).build());
   }
@@ -710,7 +711,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                .addStep(GraphNode.builder()
                                             .id(generateUuid())
                                             .type(K8S_DEPLOYMENT_ROLLING_ROLLBACK.name())
-                                            .name(Constants.K8S_DEPLOYMENT_ROLLING_ROLLBAK)
+                                            .name(Constants.K8S_DEPLOYMENT_ROLLING_ROLLBACK)
                                             .rollback(true)
                                             .build())
                                .withPhaseStepNameForRollback(WorkflowServiceHelper.DEPLOY)
@@ -745,7 +746,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                     .build())
                        .build());
 
-    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.VERIFY).build());
+    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, VERIFY).build());
 
     Map<String, Object> defaultRouteUpdateProperties = new HashMap<>();
     defaultRouteUpdateProperties.put("service1", primaryServiceNameExpression);
@@ -837,7 +838,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                     .build())
                        .build());
 
-    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, Constants.VERIFY).build());
+    phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, VERIFY).build());
 
     Map<String, Object> defaultCanaryDeleteProperties = new HashMap<>();
     defaultCanaryDeleteProperties.put("resources", "${k8s.canaryWorkload}");

@@ -33,11 +33,9 @@ import static software.wings.beans.PhaseStepType.STOP_SERVICE;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.common.Constants.AMI_SETUP_COMMAND_NAME;
 import static software.wings.common.Constants.DE_PROVISION_CLOUD_FORMATION;
-import static software.wings.common.Constants.K8S_DEPLOYMENT_ROLLING_ROLLBAK;
 import static software.wings.common.Constants.PROVISION_CLOUD_FORMATION;
 import static software.wings.common.Constants.PROVISION_SHELL_SCRIPT;
 import static software.wings.common.Constants.ROLLBACK_CLOUD_FORMATION;
-import static software.wings.common.Constants.ROLLBACK_ECS_SETUP;
 import static software.wings.common.Constants.ROLLBACK_TERRAFORM_NAME;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.AWS_CODE_DEPLOY;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.AWS_LAMBDA;
@@ -446,7 +444,7 @@ public enum StateType implements StateTypeDescriptor {
   ECS_SERVICE_SETUP(EcsServiceSetup.class, CLOUD, WorkflowServiceHelper.ECS_SERVICE_SETUP, Lists.newArrayList(AWS_ECS),
       asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
-  ECS_SERVICE_SETUP_ROLLBACK(EcsSetupRollback.class, CLOUD, ROLLBACK_ECS_SETUP, Lists.newArrayList(AWS_ECS),
+  ECS_SERVICE_SETUP_ROLLBACK(EcsSetupRollback.class, CLOUD, StateType.ROLLBACK_ECS_SETUP, Lists.newArrayList(AWS_ECS),
       asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
   ECS_DAEMON_SERVICE_SETUP(EcsDaemonServiceSetup.class, CLOUD, WorkflowServiceHelper.ECS_DAEMON_SERVICE_SETUP,
@@ -528,10 +526,10 @@ public enum StateType implements StateTypeDescriptor {
   PCF_ROLLBACK(PcfRollbackState.class, COMMANDS, WorkflowServiceHelper.PCF_ROLLBACK,
       Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
 
-  PCF_MAP_ROUTE(MapRouteState.class, FLOW_CONTROLS, Constants.PCF_MAP_ROUTE,
+  PCF_MAP_ROUTE(MapRouteState.class, FLOW_CONTROLS, StateType.PCF_MAP_ROUTE_NAME,
       Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
 
-  PCF_UNMAP_ROUTE(UnmapRouteState.class, FLOW_CONTROLS, Constants.PCF_UNMAP_ROUTE,
+  PCF_UNMAP_ROUTE(UnmapRouteState.class, FLOW_CONTROLS, StateType.PCF_UNMAP_ROUTE_NAME,
       Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
   PCF_BG_MAP_ROUTE(PcfSwitchBlueGreenRoutes.class, FLOW_CONTROLS, WorkflowServiceHelper.PCF_BG_MAP_ROUTE,
       Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
@@ -574,7 +572,8 @@ public enum StateType implements StateTypeDescriptor {
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
-  K8S_DEPLOYMENT_ROLLING_ROLLBACK(K8sRollingDeployRollback.class, KUBERNETES, 4, K8S_DEPLOYMENT_ROLLING_ROLLBAK,
+  K8S_DEPLOYMENT_ROLLING_ROLLBACK(K8sRollingDeployRollback.class, KUBERNETES, 4,
+      Constants.K8S_DEPLOYMENT_ROLLING_ROLLBACK,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
@@ -611,7 +610,9 @@ public enum StateType implements StateTypeDescriptor {
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS);
-
+  private static final String PCF_MAP_ROUTE_NAME = "Map Route";
+  private static final String PCF_UNMAP_ROUTE_NAME = "Unmap Route";
+  private static final String ROLLBACK_ECS_SETUP = "Rollback ECS Setup";
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
 

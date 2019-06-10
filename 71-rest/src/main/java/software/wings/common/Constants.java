@@ -15,20 +15,8 @@ public interface Constants {
    */
   String PHASE_PARAM = "PHASE_PARAM";
 
-  String BASIC = "BASIC";
-
-  String ROLLBACK_ECS_SETUP = "Rollback ECS Setup";
-
-  String VERIFY = "Verify";
-
-  String ROLLBACK = "Rollback";
-
-  String PCF_MAP_ROUTE = "Map Route";
-
-  String PCF_UNMAP_ROUTE = "Unmap Route";
-
   String K8S_DEPLOYMENT_ROLLING = "Rollout Deployment";
-  String K8S_DEPLOYMENT_ROLLING_ROLLBAK = "Rollback Deployment";
+  String K8S_DEPLOYMENT_ROLLING_ROLLBACK = "Rollback Deployment";
   String K8S_BLUE_GREEN_DEPLOY = "Blue/Green Deployment";
   String K8S_SCALE = "Scale";
   String K8S_DELETE = "Delete";
@@ -375,20 +363,9 @@ public interface Constants {
 
   Integer REFERENCED_ENTITIES_TO_SHOW = 10;
 
-  // ECS BG
-  String BG_VERSION = "BG_VERSION";
-  String BG_GREEN = "GREEN";
-  String BG_BLUE = "BLUE";
-
   /**
    * Quartz job detail key names
    */
   String ACCOUNT_ID_KEY = "accountId";
   String APP_ID_KEY = "appId";
-
-  /**
-   * Script as Approval
-   */
-
-  String SCRIPT_APPROVAL_ENV_VARIABLE = "HARNESS_APPROVAL_STATUS";
 }
