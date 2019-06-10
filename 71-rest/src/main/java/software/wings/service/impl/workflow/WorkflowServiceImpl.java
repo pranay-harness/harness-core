@@ -332,8 +332,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       String appId, String workflowId, String phaseId, StateTypeScope... stateTypeScopes) {
     Map<StateTypeScope, List<Stencil>> stencils = getStencils(appId, workflowId, phaseId, stateTypeScopes);
 
-    removeStencil(stencils, appId, FeatureName.SHELL_SCRIPT_PROVISION, StateTypeScope.ORCHESTRATION_STENCILS,
-        StateType.SHELL_SCRIPT_PROVISION);
     removeStencil(stencils, appId, FeatureName.CV_DATA_COLLECTION_JOB, StateTypeScope.ORCHESTRATION_STENCILS,
         StateType.DATA_DOG_LOG);
     return stencils;

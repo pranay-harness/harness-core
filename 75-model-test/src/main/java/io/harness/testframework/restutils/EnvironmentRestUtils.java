@@ -11,6 +11,7 @@ import software.wings.beans.Account;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
+import software.wings.beans.PhysicalInfrastructureMapping;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -92,5 +93,27 @@ public class EnvironmentRestUtils {
       return data.get("uuid").toString();
     }
     return null;
+  }
+
+  public static String saveInfraMapping(String bearerToken, String accountId, String applicationId,
+      String environmentId, PhysicalInfrastructureMapping infrastructureMapping) throws Exception {
+    GenericType<RestResponse<PhysicalInfrastructureMapping>> infraMappingType =
+        new GenericType<RestResponse<PhysicalInfrastructureMapping>>() {};
+    RestResponse<PhysicalInfrastructureMapping> savedApplicationResponse =
+        Setup.portal()
+            .auth()
+            .oauth2(bearerToken)
+            .queryParam("accountId", accountId)
+            .queryParam("appId", applicationId)
+            .queryParam("envId", environmentId)
+            .body(infrastructureMapping, ObjectMapperType.GSON)
+            .contentType(ContentType.JSON)
+            .post("/infrastructure-mappings")
+            .as(infraMappingType.getType());
+
+    if (savedApplicationResponse.getResource() == null) {
+      throw new Exception(String.valueOf(savedApplicationResponse.getResponseMessages()));
+    }
+    return savedApplicationResponse.getResource().getUuid();
   }
 }

@@ -124,6 +124,7 @@ public class PhysicalInfrastructureMapping extends PhysicalInfrastructureMapping
     private String deploymentType;
     private String computeProviderName;
     private String name;
+    private String provisionerId;
     private boolean autoPopulate = true;
     private List<Host> hosts;
 
@@ -135,6 +136,11 @@ public class PhysicalInfrastructureMapping extends PhysicalInfrastructureMapping
 
     public PhysicalInfrastructureMapping.Builder withHostConnectionAttrs(String hostConnectionAttrs) {
       this.hostConnectionAttrs = hostConnectionAttrs;
+      return this;
+    }
+
+    public Builder withProvisionerId(String provisionerId) {
+      this.provisionerId = provisionerId;
       return this;
     }
 
@@ -274,6 +280,7 @@ public class PhysicalInfrastructureMapping extends PhysicalInfrastructureMapping
       physicalInfrastructureMapping.setAutoPopulate(autoPopulate);
       physicalInfrastructureMapping.setAccountId(accountId);
       physicalInfrastructureMapping.hosts(hosts);
+      physicalInfrastructureMapping.setProvisionerId(provisionerId);
       return physicalInfrastructureMapping;
     }
   }

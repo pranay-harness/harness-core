@@ -968,6 +968,14 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
+  public EncryptedData getSecretByName(String accountId, String name) {
+    return wingsPersistence.createQuery(EncryptedData.class)
+        .filter(ACCOUNT_ID_KEY, accountId)
+        .filter(EncryptedDataKeys.name, name)
+        .get();
+  }
+
+  @Override
   public String saveSecret(
       String accountId, String name, String value, String path, UsageRestrictions usageRestrictions) {
     return upsertSecretInternal(accountId, null, name, value, path, getEncryptionType(accountId), usageRestrictions);

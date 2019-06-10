@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.harness.annotation.HarnessExportableEntity;
@@ -13,6 +15,7 @@ import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
+import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.List;
@@ -22,6 +25,11 @@ import javax.validation.Valid;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeInfo(use = Id.NAME, property = "infrastructureProvisionerType")
+@JsonSubTypes({
+  @Type(value = TerraformInfrastructureProvisioner.class, name = "TERRAFORM")
+  , @Type(value = ShellScriptInfrastructureProvisioner.class, name = "SHELL_SCRIPT"),
+      @Type(value = CloudFormationInfrastructureProvisioner.class, name = "CLOUD_FORMATION")
+})
 @Entity(value = "infrastructureProvisioner")
 @HarnessExportableEntity
 @FieldNameConstants(innerTypeName = "InfrastructureProvisionerKeys")

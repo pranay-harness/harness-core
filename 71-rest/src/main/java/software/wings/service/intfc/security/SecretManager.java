@@ -81,6 +81,8 @@ public interface SecretManager extends OwnedByAccount {
 
   EncryptedData getSecretById(String accountId, String id);
 
+  EncryptedData getSecretByName(String accountId, String name);
+
   String saveSecret(String accountId, String name, String value, String path, UsageRestrictions usageRestrictions);
 
   List<String> importSecrets(String accountId, List<SecretText> secretTexts);
