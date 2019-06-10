@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static software.wings.audit.ResourceType.CONNECTION_ATTRIBUTES;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
@@ -53,6 +55,11 @@ public class WinRmConnectionAttributes extends SettingValue implements Encryptab
     this.skipCertChecks = skipCertChecks;
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
+  }
+
+  @Override
+  public String fetchResourceCategory() {
+    return CONNECTION_ATTRIBUTES.name();
   }
 
   @Data

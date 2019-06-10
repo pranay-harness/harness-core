@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static software.wings.audit.ResourceType.COLLABORATION_PROVIDER;
 import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -61,6 +62,11 @@ public class JiraConfig extends SettingValue implements EncryptableSetting {
     }
 
     return setupType;
+  }
+
+  @Override
+  public String fetchResourceCategory() {
+    return COLLABORATION_PROVIDER.name();
   }
 
   @Data

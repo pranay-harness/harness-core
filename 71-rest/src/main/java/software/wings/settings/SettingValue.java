@@ -46,6 +46,7 @@ public abstract class SettingValue {
     return EncryptionReflectUtils.getEncryptedFields(this.getClass());
   }
 
+  public abstract String fetchResourceCategory();
   /**
    * The Enum SettingVariableTypes.
    */

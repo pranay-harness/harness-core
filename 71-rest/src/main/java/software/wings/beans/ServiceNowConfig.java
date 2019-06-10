@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static software.wings.audit.ResourceType.COLLABORATION_PROVIDER;
 import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -65,6 +66,11 @@ public class ServiceNowConfig extends SettingValue implements EncryptableSetting
     this.password = Arrays.copyOf(password, password.length);
     this.encryptedPassword = encryptedPassword;
     this.accountId = accountId;
+  }
+
+  @Override
+  public String fetchResourceCategory() {
+    return COLLABORATION_PROVIDER.name();
   }
 
   @Override

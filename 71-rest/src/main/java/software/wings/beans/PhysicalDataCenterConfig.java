@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import software.wings.audit.ResourceType;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.CloudProviderYaml;
@@ -18,6 +19,11 @@ public class PhysicalDataCenterConfig extends SettingValue {
    */
   public PhysicalDataCenterConfig() {
     super(SettingVariableTypes.PHYSICAL_DATA_CENTER.name());
+  }
+
+  @Override
+  public String fetchResourceCategory() {
+    return ResourceType.CLOUD_PROVIDER.name();
   }
 
   /**

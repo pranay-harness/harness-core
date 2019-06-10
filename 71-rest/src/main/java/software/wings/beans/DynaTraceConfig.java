@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
@@ -57,6 +58,11 @@ public class DynaTraceConfig extends SettingValue implements EncryptableSetting,
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     return Arrays.asList(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(dynaTraceUrl));
+  }
+
+  @Override
+  public String fetchResourceCategory() {
+    return ResourceType.VERIFICATION_PROVIDER.name();
   }
 
   @Data

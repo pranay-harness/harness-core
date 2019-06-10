@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
@@ -43,6 +44,11 @@ public class PcfConfig extends SettingValue implements EncryptableSetting {
     this.password = password == null ? null : password.clone();
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
+  }
+
+  @Override
+  public String fetchResourceCategory() {
+    return ResourceType.CLOUD_PROVIDER.name();
   }
 
   @Data

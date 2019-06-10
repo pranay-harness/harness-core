@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import software.wings.audit.ResourceType;
 import software.wings.settings.SettingValue;
 
 import java.util.Objects;
@@ -55,6 +56,11 @@ public class StringValue extends SettingValue {
     }
     final StringValue other = (StringValue) obj;
     return Objects.equals(this.value, other.value);
+  }
+
+  @Override
+  public String fetchResourceCategory() {
+    return ResourceType.SETTING.name();
   }
 
   /**

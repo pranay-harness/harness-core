@@ -16,8 +16,6 @@ import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static org.mongodb.morphia.query.Sort.descending;
-import static software.wings.service.impl.EntityHelper.SSH_KEYS_ENTITY_TYPE;
-import static software.wings.service.impl.EntityHelper.WIN_RM_CONNECTION_ENTITY_TYPE;
 import static software.wings.service.intfc.FileService.FileBucket;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -47,6 +45,7 @@ import software.wings.audit.AuditHeaderYamlResponse;
 import software.wings.audit.AuditHeaderYamlResponse.AuditHeaderYamlResponseBuilder;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.audit.EntityAuditRecord.EntityAuditRecordBuilder;
+import software.wings.audit.ResourceType;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityYamlRecord;
 import software.wings.beans.EntityYamlRecord.EntityYamlRecordKeys;
@@ -95,9 +94,9 @@ public class AuditServiceImpl implements AuditService {
 
   private WingsPersistence wingsPersistence;
 
-  private static Set<String> nonYamlEntities = newHashSet(EntityType.ROLE.name(), EntityType.TEMPLATE.name(),
-      EntityType.TEMPLATE_FOLDER.name(), EntityType.ENCRYPTED_RECORDS.name(), EntityType.USER_GROUP.name(),
-      SSH_KEYS_ENTITY_TYPE, WIN_RM_CONNECTION_ENTITY_TYPE);
+  private static Set<String> nonYamlEntities =
+      newHashSet(EntityType.ROLE.name(), EntityType.TEMPLATE.name(), EntityType.TEMPLATE_FOLDER.name(),
+          EntityType.ENCRYPTED_RECORDS.name(), EntityType.USER_GROUP.name(), ResourceType.CONNECTION_ATTRIBUTES.name());
 
   /**
    * Instantiates a new audit service impl.

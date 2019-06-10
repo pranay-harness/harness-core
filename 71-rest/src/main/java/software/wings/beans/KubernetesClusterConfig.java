@@ -20,6 +20,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.audit.ResourceType;
 import software.wings.beans.KubernetesConfig.KubernetesConfigBuilder;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
@@ -94,6 +95,11 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
   @SchemaIgnore
   public boolean isDecrypted() {
     return decrypted || isNotBlank(delegateName);
+  }
+
+  @Override
+  public String fetchResourceCategory() {
+    return ResourceType.CLOUD_PROVIDER.name();
   }
 
   public KubernetesConfig createKubernetesConfig(String namespace) {

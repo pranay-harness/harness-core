@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.audit.ResourceType;
 import software.wings.beans.config.ArtifactSourceable;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
@@ -70,6 +71,11 @@ public class BambooConfig
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(bambooUrl));
+  }
+
+  @Override
+  public String fetchResourceCategory() {
+    return ResourceType.ARTIFACT_SERVER.name();
   }
 
   @Data

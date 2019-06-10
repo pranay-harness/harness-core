@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
 import software.wings.service.impl.newrelic.NewRelicUrlProvider;
 import software.wings.settings.SettingValue;
@@ -80,6 +81,11 @@ public class NewRelicConfig extends SettingValue implements EncryptableSetting, 
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     return Arrays.asList(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(newRelicUrl));
+  }
+
+  @Override
+  public String fetchResourceCategory() {
+    return ResourceType.VERIFICATION_PROVIDER.name();
   }
 
   @Data
