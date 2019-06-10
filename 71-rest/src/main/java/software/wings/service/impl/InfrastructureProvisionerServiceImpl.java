@@ -444,6 +444,13 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       while (infrastructureMappings.hasNext()) {
         InfrastructureMapping infrastructureMapping = infrastructureMappings.next();
 
+        if (isEmpty(infrastructureProvisioner.getMappingBlueprints())) {
+          throw new InvalidRequestException(
+              "Service Mapping not found for Service Infra : " + infrastructureMapping.getName()
+                  + ". Add Service Mapping or de-link provisioner from Service Infra to resolve.",
+              USER);
+        }
+
         infrastructureProvisioner.getMappingBlueprints()
             .stream()
             .filter(blueprint -> blueprint.getServiceId().equals(infrastructureMapping.getServiceId()))
