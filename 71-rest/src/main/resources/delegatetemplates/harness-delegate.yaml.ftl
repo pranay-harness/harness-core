@@ -94,6 +94,8 @@ spec:
           value: ""
         - name: NO_PROXY
           value: ""
+        - name: PROXY_MANAGER
+          value: "true"
         - name: PROXY_USER
           valueFrom:
             secretKeyRef:

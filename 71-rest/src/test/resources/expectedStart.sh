@@ -100,8 +100,8 @@ if [[ -e proxy.config ]]; then
     PROXY_SYS_PROPS=$PROXY_SYS_PROPS" -DproxyScheme=$PROXY_SCHEME -Dhttp.proxyHost=$PROXY_HOST -Dhttp.proxyPort=$PROXY_PORT -Dhttps.proxyHost=$PROXY_HOST -Dhttps.proxyPort=$PROXY_PORT"
   fi
 
-  if [[ "$PROXY_MANAGER" == "true" ]] || [[ "$PROXY_MANAGER" == "" ]]; then
-    MANAGER_PROXY_CURL=$PROXY_CURL
+  if [[ $PROXY_MANAGER == "true" || $PROXY_MANAGER == "" ]]; then
+    export MANAGER_PROXY_CURL=$PROXY_CURL
   else
     MANAGER_HOST_AND_PORT=https://localhost:9090
     HOST_AND_PORT_ARRAY=(${MANAGER_HOST_AND_PORT//:/ })

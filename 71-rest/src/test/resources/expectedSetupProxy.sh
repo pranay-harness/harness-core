@@ -62,7 +62,7 @@ read no_proxy
 
 echo "Bypass proxy settings to reach Harness manager? (y/N):"
 read -n1 bypass
-if [[ bypass == "y" || bypass == "Y" ]]; then
+if [[ $bypass == "y" || $bypass == "Y" ]]; then
   proxy_manager=false
 else
   proxy_manager=true
