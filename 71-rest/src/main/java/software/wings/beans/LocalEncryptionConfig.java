@@ -1,13 +1,11 @@
 package software.wings.beans;
 
-import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.mongodb.morphia.annotations.Transient;
 import software.wings.service.intfc.security.SecretManager;
 
 /**
@@ -21,11 +19,24 @@ import software.wings.service.intfc.security.SecretManager;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class LocalEncryptionConfig implements EncryptionConfig {
+public class LocalEncryptionConfig extends SecretManagerConfig {
   private String uuid;
-  private String accountId;
   @Builder.Default private String name = SecretManager.HARNESS_DEFAULT_SECRET_MANAGER;
-  @Builder.Default private EncryptionType encryptionType = EncryptionType.LOCAL;
-  @Builder.Default private boolean isDefault = true;
-  @Transient private int numOfEncryptedValue;
+
+  @Override
+  public String getEncryptionServiceUrl() {
+    return null;
+  }
+
+  @Override
+  public String getValidationCriteria() {
+    return "encryption type: " + EncryptionType.LOCAL;
+  }
+
+  public EncryptionType getEncryptionType() {
+    return EncryptionType.LOCAL;
+  }
+
+  @Override
+  public void maskSecrets() {}
 }

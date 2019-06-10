@@ -7,7 +7,6 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.File;
 import java.io.OutputStream;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -25,13 +24,11 @@ public interface VaultService {
 
   char[] decrypt(EncryptedData data, String accountId, VaultConfig vaultConfig);
 
-  VaultConfig getSecretConfig(String accountId);
-
   String saveVaultConfig(String accountId, VaultConfig vaultConfig);
 
   boolean deleteVaultConfig(String accountId, String vaultConfigId);
 
-  Collection<VaultConfig> listVaultConfigs(String accountId, boolean maskSecret);
+  void decryptVaultConfigSecrets(String accountId, VaultConfig vaultConfig, boolean maskSecret);
 
   VaultConfig getVaultConfig(String accountId, String entityId);
 

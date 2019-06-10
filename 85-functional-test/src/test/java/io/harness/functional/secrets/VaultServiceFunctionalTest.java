@@ -48,15 +48,15 @@ public class VaultServiceFunctionalTest extends AbstractFunctionalTest {
   public void createVaultWithAppRoleAuth() throws IOException {
     VaultConfig vaultConfigWithAppRoleSecret =
         VaultConfig.builder()
-            .accountId(getAccount().getUuid())
             .name(APPROLE_VAULT_NAME)
             .vaultUrl(QA_VAULT_URL)
             .appRoleId(APPROLE_ID)
             .secretId(new ScmSecret().decryptToString(new SecretName("qa_vault_approle_secret_id")))
             .basePath("/foo2/bar2")
             .secretEngineVersion(2)
-            .isDefault(true)
             .build();
+    vaultConfigWithAppRoleSecret.setAccountId(getAccount().getUuid());
+    vaultConfigWithAppRoleSecret.setDefault(true);
 
     String appRoleVaultId = VaultRestUtils.addVault(bearerToken, vaultConfigWithAppRoleSecret);
     assertNotNull(appRoleVaultId);

@@ -3,10 +3,10 @@ package software.wings.service.intfc.security;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.persistence.UuidAware;
-import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.SecretManagerConfig;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.encryption.SecretChangeLog;
@@ -30,8 +30,11 @@ public interface SecretManager extends OwnedByAccount {
   String ENCRYPTED_FIELD_MASK = "*******";
   String ACCOUNT_ID_KEY = "accountId";
   String SECRET_NAME_KEY = "name";
+  String ID_KEY = "_id";
+  String IS_DEFAULT_KEY = "isDefault";
+  String CREATED_AT_KEY = "createdAt";
 
-  List<EncryptionConfig> listEncryptionConfig(String accountId);
+  List<SecretManagerConfig> listSecretManagers(String accountId);
 
   EncryptionType getEncryptionType(String accountId);
 
@@ -57,7 +60,7 @@ public interface SecretManager extends OwnedByAccount {
 
   List<EncryptedDataDetail> getEncryptionDetails(EncryptableSetting object, String appId, String workflowExecutionId);
 
-  EncryptionConfig getEncryptionConfig(String accountId, String entityId, EncryptionType encryptionType);
+  SecretManagerConfig getSecretManager(String accountId, String entityId, EncryptionType encryptionType);
 
   Collection<UuidAware> listEncryptedValues(String accountId);
 

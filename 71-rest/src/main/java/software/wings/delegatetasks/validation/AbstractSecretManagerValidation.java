@@ -8,12 +8,7 @@ import com.google.common.base.Preconditions;
 import com.amazonaws.regions.Regions;
 import io.harness.beans.DelegateTask;
 import io.harness.security.encryption.EncryptionConfig;
-import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.AwsSecretsManagerConfig;
-import software.wings.beans.KmsConfig;
-import software.wings.beans.LocalEncryptionConfig;
-import software.wings.beans.VaultConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
@@ -55,38 +50,7 @@ public abstract class AbstractSecretManagerValidation extends AbstractDelegateVa
     super(delegateId, delegateTask, postExecute);
   }
 
-  protected DelegateConnectionResult validateSecretManager() {
-    EncryptionConfig encryptionConfig = getEncryptionConfig();
-    // local encryption
-    if (encryptionConfig == null) {
-      return DelegateConnectionResult.builder()
-          .criteria("encryption type: " + EncryptionType.LOCAL)
-          .validated(true)
-          .build();
-    }
-
-    Preconditions.checkNotNull(encryptionConfig);
-    if (encryptionConfig instanceof LocalEncryptionConfig) {
-      return DelegateConnectionResult.builder().criteria(encryptionConfig.getName()).validated(true).build();
-    } else if (encryptionConfig instanceof KmsConfig) {
-      KmsConfig kmsConfig = (KmsConfig) encryptionConfig;
-      String kmsUrl = getAwsUrlFromRegion(kmsConfig.getRegion());
-      return validateSecretManagerUrl(kmsUrl, kmsConfig.getName(), kmsConfig.getValidationCriteria());
-    } else if (encryptionConfig instanceof VaultConfig) {
-      VaultConfig vaultConfig = (VaultConfig) encryptionConfig;
-      return validateSecretManagerUrl(
-          vaultConfig.getVaultUrl(), vaultConfig.getName(), vaultConfig.getValidationCriteria());
-    } else if (encryptionConfig instanceof AwsSecretsManagerConfig) {
-      AwsSecretsManagerConfig secretsManagerConfig = (AwsSecretsManagerConfig) encryptionConfig;
-      String asmUrl = getAwsUrlFromRegion(secretsManagerConfig.getRegion());
-      return validateSecretManagerUrl(
-          asmUrl, secretsManagerConfig.getName(), secretsManagerConfig.getValidationCriteria());
-    } else {
-      throw new IllegalStateException("Invalid encryptionConfig " + encryptionConfig);
-    }
-  }
-
-  private String getAwsUrlFromRegion(String region) {
+  public static String getAwsUrlFromRegion(String region) {
     Regions regions = Regions.US_EAST_1;
     if (region != null) {
       regions = Regions.fromName(region);
@@ -94,6 +58,15 @@ public abstract class AbstractSecretManagerValidation extends AbstractDelegateVa
     // If it's an unknown region, will default to US_EAST_1's URL.
     return AWS_REGION_URL_MAP.containsKey(regions) ? AWS_REGION_URL_MAP.get(regions)
                                                    : AWS_REGION_URL_MAP.get(Regions.US_EAST_1);
+  }
+
+  DelegateConnectionResult validateSecretManager() {
+    EncryptionConfig encryptionConfig = getEncryptionConfig();
+    Preconditions.checkNotNull(encryptionConfig);
+
+    String secretManagerUrl = encryptionConfig.getEncryptionServiceUrl();
+    return validateSecretManagerUrl(
+        secretManagerUrl, encryptionConfig.getName(), encryptionConfig.getValidationCriteria());
   }
 
   @Override
@@ -108,14 +81,8 @@ public abstract class AbstractSecretManagerValidation extends AbstractDelegateVa
 
   protected EncryptionConfig getEncryptionConfig() {
     for (Object parameter : getParameters()) {
-      if (parameter instanceof KmsConfig) {
-        return (KmsConfig) parameter;
-      } else if (parameter instanceof VaultConfig) {
-        return (VaultConfig) parameter;
-      } else if (parameter instanceof AwsSecretsManagerConfig) {
-        return (AwsSecretsManagerConfig) parameter;
-      } else if (parameter instanceof EncryptedDataDetail) {
-        return ((EncryptedDataDetail) parameter).getEncryptionConfig();
+      if (parameter instanceof EncryptionConfig) {
+        return (EncryptionConfig) parameter;
       } else if (parameter instanceof List) {
         List details = (List) parameter;
         for (Object detail : details) {
@@ -131,23 +98,13 @@ public abstract class AbstractSecretManagerValidation extends AbstractDelegateVa
   @Override
   public List<String> getCriteria() {
     EncryptionConfig encryptionConfig = getEncryptionConfig();
-    if (encryptionConfig instanceof KmsConfig) {
-      KmsConfig kmsConfig = (KmsConfig) encryptionConfig;
-      return singletonList(kmsConfig.getValidationCriteria());
-    } else if (encryptionConfig instanceof VaultConfig) {
-      VaultConfig vaultConfig = (VaultConfig) encryptionConfig;
-      return singletonList(vaultConfig.getValidationCriteria());
-    } else if (encryptionConfig instanceof AwsSecretsManagerConfig) {
-      AwsSecretsManagerConfig secretsManagerConfig = (AwsSecretsManagerConfig) encryptionConfig;
-      return singletonList(secretsManagerConfig.getValidationCriteria());
-    } else {
-      throw new IllegalStateException("Unsupported encryption config: " + encryptionConfig);
-    }
+    return singletonList(encryptionConfig.getValidationCriteria());
   }
 
   private DelegateConnectionResult validateSecretManagerUrl(
       String secretManagerUrl, String secretManagerName, String validationCriteria) {
-    boolean urlReachable = connectableHttpUrl(secretManagerUrl);
+    // Secret manager URL will be null for LOCAL secret manager, consider it reachable always.
+    boolean urlReachable = secretManagerUrl == null || connectableHttpUrl(secretManagerUrl);
     logger.info("Finished validating Vault config '{}' with URL {}.", secretManagerName, secretManagerUrl);
     return DelegateConnectionResult.builder().criteria(validationCriteria).validated(urlReachable).build();
   }

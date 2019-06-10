@@ -660,7 +660,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
           }
 
           EncryptionConfig encryptionConfig =
-              secretManager.getEncryptionConfig(accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
+              secretManager.getSecretManager(accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
 
           return EncryptedDataDetail.builder()
               .encryptionType(encryptedData.getEncryptionType())

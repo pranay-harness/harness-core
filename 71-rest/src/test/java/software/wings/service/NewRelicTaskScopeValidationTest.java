@@ -56,8 +56,8 @@ public class NewRelicTaskScopeValidationTest {
     PowerMockito.mockStatic(VaultRestClientFactory.class);
     PowerMockito.mockStatic(SecretManagementDelegateServiceImpl.class);
 
-    vaultConfig =
-        VaultConfig.builder().vaultUrl(generateUuid()).accountId(generateUuid()).authToken(generateUuid()).build();
+    vaultConfig = VaultConfig.builder().vaultUrl(generateUuid()).authToken(generateUuid()).build();
+    vaultConfig.setAccountId(generateUuid());
     PowerMockito.when(VaultRestClientFactory.create(vaultConfig)).thenReturn(vaultRestClient);
   }
 

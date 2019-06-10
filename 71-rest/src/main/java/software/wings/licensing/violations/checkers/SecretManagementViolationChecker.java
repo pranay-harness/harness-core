@@ -8,6 +8,7 @@ import software.wings.beans.Account;
 import software.wings.beans.FeatureEnabledViolation;
 import software.wings.beans.FeatureViolation;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.SecretManagerConfig;
 import software.wings.licensing.violations.FeatureViolationChecker;
 import software.wings.licensing.violations.RestrictedFeature;
 import software.wings.service.intfc.security.SecretManager;
@@ -32,7 +33,7 @@ public class SecretManagementViolationChecker implements FeatureViolationChecker
   }
 
   private int getCustomSecretManagersCount(String accountId) {
-    List<EncryptionConfig> encryptionConfigs = secretManager.listEncryptionConfig(accountId);
+    List<SecretManagerConfig> encryptionConfigs = secretManager.listSecretManagers(accountId);
 
     boolean isHarnessSecretManagerConfigured =
         encryptionConfigs.stream().anyMatch(SecretManagementViolationChecker::isHarnessSecretManager);

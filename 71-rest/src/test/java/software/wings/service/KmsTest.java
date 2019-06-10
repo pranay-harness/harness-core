@@ -49,7 +49,6 @@ import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.rest.RestResponse;
 import io.harness.rule.RealMongo;
 import io.harness.rule.RepeatRule.Repeat;
-import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
 import lombok.extern.slf4j.Slf4j;
@@ -78,6 +77,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LicenseInfo;
+import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -125,6 +125,7 @@ import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.security.SecretManagerConfigService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction;
@@ -158,6 +159,7 @@ public class KmsTest extends WingsBaseTest {
   @Inject private SecretManagementResource secretManagementResource;
   @Mock private AccountService accountService;
   @Inject @InjectMocks private KmsService kmsService;
+  @Inject @InjectMocks private SecretManagerConfigService secretManagerConfigService;
   @Inject private SecretManager secretManager;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private HarnessUserGroupService harnessUserGroupService;
@@ -246,14 +248,16 @@ public class KmsTest extends WingsBaseTest {
     KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setAccountId(GLOBAL_ACCOUNT_ID);
 
-    KmsConfig savedConfig = kmsService.getSecretConfig(UUID.randomUUID().toString());
+    KmsConfig savedConfig =
+        (KmsConfig) secretManagerConfigService.getDefaultSecretManager(UUID.randomUUID().toString());
     assertNull(savedConfig);
 
     kmsResource.saveGlobalKmsConfig(accountId, kmsConfig);
 
-    savedConfig = kmsService.getSecretConfig(UUID.randomUUID().toString());
+    savedConfig = (KmsConfig) secretManagerConfigService.getDefaultSecretManager(UUID.randomUUID().toString());
     kmsConfig = getKmsConfig();
     kmsConfig.setAccountId(GLOBAL_ACCOUNT_ID);
+    kmsConfig.setUuid(savedConfig.getUuid());
     assertEquals(kmsConfig, savedConfig);
   }
 
@@ -280,9 +284,10 @@ public class KmsTest extends WingsBaseTest {
 
     kmsResource.saveKmsConfig(kmsConfig.getAccountId(), kmsConfig);
 
-    KmsConfig savedConfig = kmsService.getSecretConfig(kmsConfig.getAccountId());
+    KmsConfig savedConfig = (KmsConfig) secretManagerConfigService.getDefaultSecretManager(kmsConfig.getAccountId());
     kmsConfig = getKmsConfig();
     kmsConfig.setAccountId(accountId);
+    kmsConfig.setUuid(savedConfig.getUuid());
     assertEquals(kmsConfig, savedConfig);
   }
 
@@ -297,10 +302,11 @@ public class KmsTest extends WingsBaseTest {
 
     kmsResource.saveKmsConfig(kmsConfig.getAccountId(), kmsConfig);
 
-    KmsConfig savedConfig = kmsService.getSecretConfig(kmsConfig.getAccountId());
+    KmsConfig savedConfig = (KmsConfig) secretManagerConfigService.getDefaultSecretManager(kmsConfig.getAccountId());
     kmsConfig = getKmsConfig();
     kmsConfig.setName(name);
     kmsConfig.setAccountId(accountId);
+    kmsConfig.setUuid(savedConfig.getUuid());
     assertEquals(kmsConfig, savedConfig);
     assertEquals(name, savedConfig.getName());
     List<EncryptedData> encryptedDataList =
@@ -767,7 +773,8 @@ public class KmsTest extends WingsBaseTest {
       assertEquals(kmsConfig.getUuid(), query.get().getKmsId());
     }
 
-    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId, true);
+    Collection<SecretManagerConfig> kmsConfigs =
+        secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.KMS, true);
     assertEquals(1, kmsConfigs.size());
     assertEquals(numOfSettingAttributes, kmsConfigs.iterator().next().getNumOfEncryptedValue());
   }
@@ -830,7 +837,8 @@ public class KmsTest extends WingsBaseTest {
     }
     wingsPersistence.save(settingAttributes);
 
-    List<EncryptionConfig> encryptionConfigs = secretManagementResource.listEncryptionConfig(accountId).getResource();
+    List<SecretManagerConfig> encryptionConfigs =
+        secretManagementResource.listEncryptionConfig(accountId).getResource();
     assertEquals(1, encryptionConfigs.size());
     assertEquals(numOfSettingAttributes1, ((KmsConfig) encryptionConfigs.get(0)).getNumOfEncryptedValue());
 
@@ -1882,7 +1890,7 @@ public class KmsTest extends WingsBaseTest {
     kmsResource.saveKmsConfig(GLOBAL_ACCOUNT_ID, kmsConfig);
     assertEquals(1, wingsPersistence.createQuery(KmsConfig.class).count());
 
-    KmsConfig savedKmsConfig = kmsService.getSecretConfig(accountId);
+    KmsConfig savedKmsConfig = (KmsConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
     assertNotNull(savedKmsConfig);
 
     kmsConfig = getKmsConfig();
@@ -1985,13 +1993,15 @@ public class KmsTest extends WingsBaseTest {
     kmsConfig2.setAccessKey(getKmsConfig().getAccessKey());
     kmsConfig2.setKmsArn(getKmsConfig().getKmsArn());
 
-    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId, true);
+    Collection<SecretManagerConfig> kmsConfigs =
+        secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.KMS, true);
     assertEquals(2, kmsConfigs.size());
 
     int defaultConfig = 0;
     int nonDefaultConfig = 0;
 
-    for (KmsConfig actualConfig : kmsConfigs) {
+    for (SecretManagerConfig config : kmsConfigs) {
+      KmsConfig actualConfig = (KmsConfig) config;
       if (actualConfig.isDefault()) {
         defaultConfig++;
         assertEquals(kmsConfig1.getName(), actualConfig.getName());
@@ -2022,12 +2032,13 @@ public class KmsTest extends WingsBaseTest {
     kmsConfig2.setAccessKey(getKmsConfig().getAccessKey());
     kmsConfig2.setKmsArn(getKmsConfig().getKmsArn());
 
-    kmsConfigs = kmsService.listKmsConfigs(accountId, true);
+    kmsConfigs = secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.KMS, true);
     assertEquals(2, kmsConfigs.size());
 
     defaultConfig = 0;
     nonDefaultConfig = 0;
-    for (KmsConfig actualConfig : kmsConfigs) {
+    for (SecretManagerConfig config : kmsConfigs) {
+      KmsConfig actualConfig = (KmsConfig) config;
       if (actualConfig.isDefault()) {
         defaultConfig++;
         assertEquals(kmsConfig2.getName(), actualConfig.getName());
@@ -2061,7 +2072,8 @@ public class KmsTest extends WingsBaseTest {
     globalKmsConfig.setDefault(false);
     kmsResource.saveGlobalKmsConfig(accountId, globalKmsConfig);
 
-    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId, true);
+    Collection<SecretManagerConfig> kmsConfigs =
+        secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.KMS, true);
     assertEquals(1, kmsConfigs.size());
     assertTrue(kmsConfigs.iterator().next().isDefault());
 
@@ -2073,11 +2085,11 @@ public class KmsTest extends WingsBaseTest {
       kmsResource.saveKmsConfig(accountId, kmsConfig);
     }
 
-    kmsConfigs = kmsService.listKmsConfigs(accountId, true);
+    kmsConfigs = secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.KMS, true);
     assertEquals(numOfKms + 1, kmsConfigs.size());
 
     int kmsNum = numOfKms;
-    for (KmsConfig kmsConfig : kmsConfigs) {
+    for (SecretManagerConfig kmsConfig : kmsConfigs) {
       if (kmsConfig.getAccountId().equals(GLOBAL_ACCOUNT_ID)) {
         assertFalse(kmsConfig.isDefault());
         assertEquals("Global config", kmsConfig.getName());
@@ -2094,12 +2106,12 @@ public class KmsTest extends WingsBaseTest {
 
     // delete the default and global should become default
     kmsResource.deleteKmsConfig(accountId, kmsConfigs.iterator().next().getUuid());
-    kmsConfigs = kmsService.listKmsConfigs(accountId, true);
+    kmsConfigs = secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.KMS, true);
     assertEquals(numOfKms, kmsConfigs.size());
 
     int defaultSet = 0;
     kmsNum = numOfKms - 1;
-    for (KmsConfig kmsConfig : kmsConfigs) {
+    for (SecretManagerConfig kmsConfig : kmsConfigs) {
       if (kmsConfig.getAccountId().equals(GLOBAL_ACCOUNT_ID)) {
         assertTrue(kmsConfig.isDefault());
         assertEquals("Global config", kmsConfig.getName());
@@ -2125,11 +2137,12 @@ public class KmsTest extends WingsBaseTest {
       kmsResource.saveKmsConfig(accountId, kmsConfig);
     }
 
-    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId, true);
+    Collection<SecretManagerConfig> kmsConfigs =
+        secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.KMS, true);
     assertEquals(numOfKms, kmsConfigs.size());
 
     int kmsNum = numOfKms;
-    for (KmsConfig kmsConfig : kmsConfigs) {
+    for (SecretManagerConfig kmsConfig : kmsConfigs) {
       if (kmsNum == numOfKms) {
         assertTrue(kmsConfig.isDefault());
       } else {
@@ -2155,13 +2168,15 @@ public class KmsTest extends WingsBaseTest {
     kmsResource.saveKmsConfig(accountId, kmsConfig);
     kmsConfig = getKmsConfig();
 
-    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId, true);
+    Collection<SecretManagerConfig> kmsConfigs =
+        secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.KMS, true);
     assertEquals(2, kmsConfigs.size());
 
     int defaultConfig = 0;
     int accountConfig = 0;
 
-    for (KmsConfig actualConfig : kmsConfigs) {
+    for (SecretManagerConfig secretManagerConfig : kmsConfigs) {
+      KmsConfig actualConfig = (KmsConfig) secretManagerConfig;
       if (actualConfig.isDefault()) {
         accountConfig++;
         assertEquals(kmsConfig.getName(), actualConfig.getName());
@@ -2184,13 +2199,14 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(1, accountConfig);
 
     // test with unmasked
-    kmsConfigs = kmsService.listKmsConfigs(accountId, false);
+    kmsConfigs = secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.KMS, false);
     assertEquals(2, kmsConfigs.size());
 
     defaultConfig = 0;
     accountConfig = 0;
 
-    for (KmsConfig actualConfig : kmsConfigs) {
+    for (SecretManagerConfig secretManagerConfig : kmsConfigs) {
+      KmsConfig actualConfig = (KmsConfig) secretManagerConfig;
       if (actualConfig.isDefault()) {
         accountConfig++;
         assertEquals(kmsConfig.getName(), actualConfig.getName());
@@ -2220,9 +2236,10 @@ public class KmsTest extends WingsBaseTest {
     kmsResource.saveKmsConfig(accountId, kmsConfig);
     kmsConfig = getKmsConfig();
 
-    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId, true);
+    Collection<SecretManagerConfig> kmsConfigs =
+        secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.KMS, true);
     assertEquals(1, kmsConfigs.size());
-    KmsConfig actualConfig = kmsConfigs.iterator().next();
+    KmsConfig actualConfig = (KmsConfig) kmsConfigs.iterator().next();
     assertEquals(kmsConfig.getName(), actualConfig.getName());
     assertEquals(kmsConfig.getAccessKey(), actualConfig.getAccessKey());
     assertEquals(SECRET_MASK, actualConfig.getKmsArn());
@@ -2237,11 +2254,11 @@ public class KmsTest extends WingsBaseTest {
     kmsConfig.setName(name);
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
-    kmsConfigs = kmsService.listKmsConfigs(accountId, true);
+    kmsConfigs = secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.KMS, true);
     assertEquals(2, kmsConfigs.size());
 
     int defaultPresent = 0;
-    for (KmsConfig config : kmsConfigs) {
+    for (SecretManagerConfig config : kmsConfigs) {
       if (config.getName().equals(name)) {
         defaultPresent++;
         assertTrue(config.isDefault());
@@ -2258,11 +2275,11 @@ public class KmsTest extends WingsBaseTest {
     kmsConfig.setName(name);
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
-    kmsConfigs = kmsService.listKmsConfigs(accountId, true);
+    kmsConfigs = secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.KMS, true);
     assertEquals(3, kmsConfigs.size());
 
     defaultPresent = 0;
-    for (KmsConfig config : kmsConfigs) {
+    for (SecretManagerConfig config : kmsConfigs) {
       if (config.getName().equals(name)) {
         defaultPresent++;
         assertTrue(config.isDefault());
@@ -3357,6 +3374,7 @@ public class KmsTest extends WingsBaseTest {
     kmsConfig.setKmsArn(accessKey);
     kmsConfig.setAccessKey(secretKey);
     kmsConfig.setSecretKey(arn);
+    kmsConfig.setDefault(true);
     return kmsConfig;
   }
 

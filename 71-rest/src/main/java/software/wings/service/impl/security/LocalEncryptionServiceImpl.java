@@ -59,7 +59,9 @@ public class LocalEncryptionServiceImpl implements LocalEncryptionService {
 
   @Override
   public LocalEncryptionConfig getEncryptionConfig(String accountId) {
-    return LocalEncryptionConfig.builder().accountId(accountId).uuid(accountId).build();
+    LocalEncryptionConfig localEncryptionConfig = LocalEncryptionConfig.builder().uuid(accountId).build();
+    localEncryptionConfig.setAccountId(accountId);
+    return localEncryptionConfig;
     // As LOCAL secret manager is HIDDEN right now. The following 'numOfEncryptedValues' field is not needed
     // Therefore commenting out the code below.
     //    Query<EncryptedData> encryptedDataQuery = wingsPersistence.createQuery(EncryptedData.class)

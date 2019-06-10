@@ -1,23 +1,18 @@
 package software.wings.service.impl.security;
 
-import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
-
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
-import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.KmsConfig;
-import software.wings.beans.VaultConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManagerConfigService;
 
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -33,6 +28,7 @@ public abstract class AbstractSecretServiceImpl {
 
   @Inject protected WingsPersistence wingsPersistence;
   @Inject protected DelegateProxyFactory delegateProxyFactory;
+  @Inject protected SecretManagerConfigService secretManagerConfigService;
   @Inject private KmsService kmsService;
 
   EncryptedData encryptLocal(char[] value) {
@@ -89,40 +85,5 @@ public abstract class AbstractSecretServiceImpl {
       default:
         throw new IllegalStateException("Unexpected Vault root token encryption type: " + encryptionType);
     }
-  }
-
-  protected boolean updateCurrentEncryptionConfigsToNonDefault(String accountId) {
-    boolean updated = false;
-    Query<KmsConfig> kmsConfigQuery = wingsPersistence.createQuery(KmsConfig.class).filter(ACCOUNT_ID_KEY, accountId);
-    List<KmsConfig> kmsConfigs = kmsConfigQuery.asList();
-    for (KmsConfig kmsConfig : kmsConfigs) {
-      if (kmsConfig.isDefault()) {
-        kmsConfig.setDefault(false);
-        wingsPersistence.save(kmsConfig);
-        updated = true;
-      }
-    }
-    Query<VaultConfig> vaultConfigQuery =
-        wingsPersistence.createQuery(VaultConfig.class).filter(ACCOUNT_ID_KEY, accountId);
-    List<VaultConfig> vaultConfigs = vaultConfigQuery.asList();
-    for (VaultConfig vaultConfig : vaultConfigs) {
-      if (vaultConfig.isDefault()) {
-        vaultConfig.setDefault(false);
-        wingsPersistence.save(vaultConfig);
-        updated = true;
-      }
-    }
-    Query<AwsSecretsManagerConfig> awsSecretsManagerConfigQuery =
-        wingsPersistence.createQuery(AwsSecretsManagerConfig.class).filter(ACCOUNT_ID_KEY, accountId);
-    List<AwsSecretsManagerConfig> awsSecretsManagerConfigs = awsSecretsManagerConfigQuery.asList();
-    for (AwsSecretsManagerConfig secretsManagerConfig : awsSecretsManagerConfigs) {
-      if (secretsManagerConfig.isDefault()) {
-        secretsManagerConfig.setDefault(false);
-        wingsPersistence.save(secretsManagerConfig);
-        updated = true;
-      }
-    }
-
-    return updated;
   }
 }

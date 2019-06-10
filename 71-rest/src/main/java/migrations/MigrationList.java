@@ -76,6 +76,7 @@ import migrations.all.RemoveResizeFromStatefulSetWorkflows;
 import migrations.all.RemoveServiceVariablesFromActivity;
 import migrations.all.RemoveUnusedLogDataRecordMigration;
 import migrations.all.RenameProvisionNodeToInfrastructureNodeWorkflows;
+import migrations.all.SecretManagerConfigMigration;
 import migrations.all.SecretTextNameKeyWordsMigration;
 import migrations.all.ServiceAddArtifactStreamIdsMigration;
 import migrations.all.ServiceHelmValuesToManifestFileMigration;
@@ -235,6 +236,7 @@ public class MigrationList {
         .add(Pair.of(251, AddAccountIdToArtifactStreamsMigration.class))
         .add(Pair.of(252, RemoveUnusedLogDataRecordMigration.class))
         .add(Pair.of(253, DatadogCVServiceConfigurationMigration.class))
+        .add(Pair.of(254, SecretManagerConfigMigration.class))
         .build();
   }
 }

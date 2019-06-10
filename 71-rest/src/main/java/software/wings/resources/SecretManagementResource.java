@@ -13,13 +13,13 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.WingsException;
 import io.harness.persistence.UuidAware;
 import io.harness.rest.RestResponse;
-import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import retrofit2.http.Body;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.SecretManagerConfig;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
@@ -108,8 +108,8 @@ public class SecretManagementResource {
   @Path("/list-configs")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<EncryptionConfig>> listEncryptionConfig(@QueryParam("accountId") final String accountId) {
-    return new RestResponse<>(secretManager.listEncryptionConfig(accountId));
+  public RestResponse<List<SecretManagerConfig>> listEncryptionConfig(@QueryParam("accountId") final String accountId) {
+    return new RestResponse<>(secretManager.listSecretManagers(accountId));
   }
 
   @GET
