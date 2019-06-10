@@ -1,6 +1,5 @@
-package software.wings.beans;
 
-import static io.harness.expression.SecretString.SECRET_MASK;
+package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.Attributes;
@@ -9,6 +8,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
+import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,22 +17,33 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.delegatetasks.validation.AbstractSecretManagerValidation;
 
 import java.util.Arrays;
 import java.util.List;
 
 /**
- * Created by rsingh on 9/29/17.
+ * @author marklu on 2019-06-06
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = {"secretKey", "kmsArn"})
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
+@Indexes({
+  @Index(fields = { @Field("name"), @Field("accountId") }, options = @IndexOptions(unique = true, name = "uniqueIdx"))
+})
+@Entity(value = "kmsConfig", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "KmsConfigKeys")
-public class KmsConfig extends SecretManagerConfig implements ExecutionCapabilityDemander {
+public class KmsLegacyConfig extends Base implements EncryptionConfig, ExecutionCapabilityDemander {
   @Attributes(title = "Name", required = true) private String name;
 
   @Attributes(title = "AWS Access Key", required = true) @Encrypted private String accessKey;
@@ -42,6 +53,14 @@ public class KmsConfig extends SecretManagerConfig implements ExecutionCapabilit
   @Attributes(title = "AWS key ARN", required = true) @Encrypted private String kmsArn;
 
   @Attributes(title = "AWS Region", required = true) private String region;
+
+  private boolean isDefault = true;
+
+  @SchemaIgnore @NotEmpty private String accountId;
+
+  @SchemaIgnore @Transient private int numOfEncryptedValue;
+
+  @SchemaIgnore @Transient private EncryptionType encryptionType;
 
   @JsonIgnore
   @SchemaIgnore
@@ -61,15 +80,5 @@ public class KmsConfig extends SecretManagerConfig implements ExecutionCapabilit
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     return Arrays.asList(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapabilityForKms(region));
-  }
-
-  public EncryptionType getEncryptionType() {
-    return EncryptionType.KMS;
-  }
-
-  @Override
-  public void maskSecrets() {
-    this.secretKey = SECRET_MASK;
-    this.kmsArn = SECRET_MASK;
   }
 }

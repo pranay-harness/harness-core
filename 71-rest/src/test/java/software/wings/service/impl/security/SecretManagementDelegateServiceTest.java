@@ -35,14 +35,14 @@ public class SecretManagementDelegateServiceTest {
     secretManagementDelegateService = new SecretManagementDelegateServiceImpl(timeLimiter);
 
     kmsConfig = KmsConfig.builder()
-                    .accountId(accountId)
                     .name("TestAwsKMS")
                     .accessKey("AKIAJXKK6OAOHQ5MO34Q")
                     .kmsArn("arn:aws:kms:us-east-1:448640225317:key/4feb7890-a727-4f88-af43-378b5a88e77c")
                     .secretKey(scmSecret.decryptToString(new SecretName("kms_qa_secret_key")))
                     .region("us-east-1")
-                    .isDefault(true)
                     .build();
+    kmsConfig.setAccountId(accountId);
+    kmsConfig.setDefault(true);
   }
 
   @Test

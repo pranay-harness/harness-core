@@ -90,13 +90,14 @@ public abstract class GraphQLMockBaseTest extends CategoryTest implements Mockab
   }
 
   protected VaultConfig getVaultConfig(String authToken) {
-    return VaultConfig.builder()
-        .vaultUrl("http://127.0.0.1:8200")
-        .authToken(authToken)
-        .name("myVault")
-        .isDefault(true)
-        .secretEngineVersion(1)
-        .build();
+    VaultConfig vaultConfig = VaultConfig.builder()
+                                  .vaultUrl("http://127.0.0.1:8200")
+                                  .authToken(authToken)
+                                  .name("myVault")
+                                  .secretEngineVersion(1)
+                                  .build();
+    vaultConfig.setDefault(true);
+    return vaultConfig;
   }
 
   protected KmsConfig getKmsConfig() {

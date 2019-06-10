@@ -59,6 +59,7 @@ import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.EntityType;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LicenseInfo;
+import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -85,6 +86,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.security.SecretManagerConfigService;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -119,6 +121,7 @@ public class VaultTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Inject @InjectMocks private VaultService vaultService;
   @Inject @InjectMocks private KmsService kmsService;
+  @Inject @InjectMocks private SecretManagerConfigService secretManagerConfigService;
   @Inject private SecretManager secretManager;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ConfigService configService;
@@ -222,7 +225,7 @@ public class VaultTest extends WingsBaseTest {
     vaultConfig.setDefault(false);
     String vaultConfigId = vaultService.saveVaultConfig(accountId, vaultConfig);
 
-    List<EncryptionConfig> encryptionConfigs = secretManager.listEncryptionConfig(accountId);
+    List<SecretManagerConfig> encryptionConfigs = secretManager.listSecretManagers(accountId);
     assertEquals(1, encryptionConfigs.size());
     VaultConfig next = (VaultConfig) encryptionConfigs.get(0);
     assertFalse(next.isDefault());
@@ -236,7 +239,7 @@ public class VaultTest extends WingsBaseTest {
     kmsConfig.setDefault(true);
     kmsId = kmsService.saveKmsConfig(accountId, kmsConfig);
 
-    encryptionConfigs = secretManager.listEncryptionConfig(accountId);
+    encryptionConfigs = secretManager.listSecretManagers(accountId);
     assertEquals(2, encryptionConfigs.size());
     int numOfVaultDefaults = 0;
     int numOfKmsDefaults = 0;
@@ -262,7 +265,7 @@ public class VaultTest extends WingsBaseTest {
     vaultConfig.setDefault(true);
     vaultConfigId = vaultService.saveVaultConfig(accountId, vaultConfig);
 
-    encryptionConfigs = secretManager.listEncryptionConfig(accountId);
+    encryptionConfigs = secretManager.listSecretManagers(accountId);
     assertEquals(3, encryptionConfigs.size());
 
     numOfVaultDefaults = 0;
@@ -292,7 +295,7 @@ public class VaultTest extends WingsBaseTest {
     kmsConfig.setDefault(true);
     kmsId = kmsService.saveKmsConfig(accountId, kmsConfig);
 
-    encryptionConfigs = secretManager.listEncryptionConfig(accountId);
+    encryptionConfigs = secretManager.listSecretManagers(accountId);
     assertEquals(4, encryptionConfigs.size());
 
     numOfVaultDefaults = 0;
@@ -333,7 +336,7 @@ public class VaultTest extends WingsBaseTest {
     vaultService.saveVaultConfig(renameAccountId, vaultConfig);
     vaultConfig.setAuthToken(VAULT_TOKEN);
 
-    VaultConfig savedConfig = vaultService.getSecretConfig(renameAccountId);
+    VaultConfig savedConfig = (VaultConfig) secretManagerConfigService.getDefaultSecretManager(renameAccountId);
     assertEquals(vaultConfig, savedConfig);
 
     // Testing getVaultConfigByName API is working properly
@@ -384,7 +387,7 @@ public class VaultTest extends WingsBaseTest {
     kmsConfig.setAccountId(GLOBAL_ACCOUNT_ID);
     kmsService.saveGlobalKmsConfig(accountId, kmsConfig);
 
-    List<EncryptionConfig> encryptionConfigs = secretManager.listEncryptionConfig(accountId);
+    List<SecretManagerConfig> encryptionConfigs = secretManager.listSecretManagers(accountId);
     assertEquals(1, encryptionConfigs.size());
     KmsConfig savedKmsConfig = (KmsConfig) encryptionConfigs.get(0);
     assertTrue(savedKmsConfig.isDefault());
@@ -393,7 +396,7 @@ public class VaultTest extends WingsBaseTest {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
-    encryptionConfigs = secretManager.listEncryptionConfig(accountId);
+    encryptionConfigs = secretManager.listSecretManagers(accountId);
     assertEquals(2, encryptionConfigs.size());
 
     VaultConfig savedVaultConfig = (VaultConfig) encryptionConfigs.get(0);
@@ -411,9 +414,10 @@ public class VaultTest extends WingsBaseTest {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
-    Collection<VaultConfig> vaultConfigs = vaultService.listVaultConfigs(accountId, true);
+    Collection<SecretManagerConfig> vaultConfigs =
+        secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.VAULT, true);
     assertEquals(1, vaultConfigs.size());
-    VaultConfig next = vaultConfigs.iterator().next();
+    VaultConfig next = (VaultConfig) vaultConfigs.iterator().next();
     assertTrue(next.isDefault());
 
     vaultConfig = getVaultConfig(VAULT_TOKEN);
@@ -421,13 +425,13 @@ public class VaultTest extends WingsBaseTest {
     vaultConfig.setDefault(true);
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
-    vaultConfigs = vaultService.listVaultConfigs(accountId, true);
+    vaultConfigs = secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.VAULT, true);
     assertEquals(2, vaultConfigs.size());
 
     int numOfDefault = 0;
     int numOfNonDefault = 0;
 
-    for (VaultConfig config : vaultConfigs) {
+    for (SecretManagerConfig config : vaultConfigs) {
       if (config.getName().equals(getVaultConfig(VAULT_TOKEN).getName())) {
         assertFalse(config.isDefault());
         numOfNonDefault++;
@@ -447,10 +451,10 @@ public class VaultTest extends WingsBaseTest {
     vaultConfig.setDefault(true);
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
-    vaultConfigs = vaultService.listVaultConfigs(accountId, true);
+    vaultConfigs = secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.VAULT, true);
     assertEquals(3, vaultConfigs.size());
 
-    for (VaultConfig config : vaultConfigs) {
+    for (SecretManagerConfig config : vaultConfigs) {
       if (config.getName().equals(getVaultConfig(VAULT_TOKEN).getName()) || config.getName().equals("config1")) {
         assertFalse(config.isDefault());
         numOfNonDefault++;
@@ -469,9 +473,10 @@ public class VaultTest extends WingsBaseTest {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
-    Collection<VaultConfig> vaultConfigs = vaultService.listVaultConfigs(accountId, true);
+    Collection<SecretManagerConfig> vaultConfigs =
+        secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.VAULT, true);
     assertEquals(1, vaultConfigs.size());
-    VaultConfig next = vaultConfigs.iterator().next();
+    VaultConfig next = (VaultConfig) vaultConfigs.iterator().next();
     assertTrue(next.isDefault());
 
     vaultConfig = getVaultConfig(VAULT_TOKEN);
@@ -484,10 +489,10 @@ public class VaultTest extends WingsBaseTest {
     vaultConfig.setDefault(false);
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
-    vaultConfigs = vaultService.listVaultConfigs(accountId, true);
+    vaultConfigs = secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.VAULT, true);
     assertEquals(3, vaultConfigs.size());
 
-    VaultConfig defaultConfig = vaultService.getSecretConfig(accountId);
+    VaultConfig defaultConfig = (VaultConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
     assertNotNull(defaultConfig);
 
     assertEquals(accountId, defaultConfig.getAccountId());
@@ -644,7 +649,7 @@ public class VaultTest extends WingsBaseTest {
     EncryptedData savedEncryptedData = wingsPersistence.get(
         EncryptedData.class, ((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword());
 
-    vaultConfig = vaultService.getSecretConfig(accountId);
+    vaultConfig = (VaultConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
     encryptedData = vaultService.encrypt(
         name, password, accountId, SettingVariableTypes.APP_DYNAMICS, vaultConfig, savedEncryptedData);
     assertNotNull(encryptedData.getEncryptedValue());
@@ -760,7 +765,8 @@ public class VaultTest extends WingsBaseTest {
       assertEquals(vaultConfig.getUuid(), query.get().getKmsId());
     }
 
-    Collection<VaultConfig> vaultConfigs = vaultService.listVaultConfigs(accountId, true);
+    Collection<SecretManagerConfig> vaultConfigs =
+        secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.VAULT, true);
     assertEquals(1, vaultConfigs.size());
     assertEquals(numOfSettingAttributes, vaultConfigs.iterator().next().getNumOfEncryptedValue());
   }
@@ -1333,7 +1339,8 @@ public class VaultTest extends WingsBaseTest {
       VaultConfig toConfig = getVaultConfig(VAULT_TOKEN);
       vaultService.saveVaultConfig(accountId, toConfig);
 
-      assertEquals(2, wingsPersistence.createQuery(VaultConfig.class).count());
+      assertEquals(
+          2, secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.VAULT, true).size());
       try {
         vaultService.deleteVaultConfig(accountId, fromConfig.getUuid());
         fail("Was able to delete vault which has reference in encrypted secrets");
@@ -1345,7 +1352,8 @@ public class VaultTest extends WingsBaseTest {
           accountId, EncryptionType.VAULT, fromConfig.getUuid(), EncryptionType.VAULT, toConfig.getUuid());
       Thread.sleep(TimeUnit.SECONDS.toMillis(10));
       vaultService.deleteVaultConfig(accountId, fromConfig.getUuid());
-      assertEquals(1, wingsPersistence.createQuery(VaultConfig.class).count());
+      assertEquals(
+          1, secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.VAULT, true).size());
 
       query = wingsPersistence.createQuery(EncryptedData.class);
       assertEquals(numOfEncRecords + numOfSettingAttributes, query.count());

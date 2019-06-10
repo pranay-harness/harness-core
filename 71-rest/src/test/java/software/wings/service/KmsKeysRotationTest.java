@@ -34,6 +34,7 @@ import software.wings.WingsBaseTest;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Account;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.SyncTaskContext;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -45,6 +46,7 @@ import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.security.SecretManagerConfigService;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -62,6 +64,7 @@ public class KmsKeysRotationTest extends WingsBaseTest {
   private static final String AWS_SECRET_ARN = "aws_secret_arn";
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Inject private KmsService kmsService;
+  @Inject private SecretManagerConfigService secretManagerConfigService;
   @Inject private SecretManagementDelegateService secretManagementDelegateService;
   @Inject private SecretManager secretManager;
   @Inject private Queue<KmsTransitionEvent> transitionKmsQueue;
@@ -83,9 +86,10 @@ public class KmsKeysRotationTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void rotateAwsKeysSameARN() throws Exception {
-    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(GLOBAL_ACCOUNT_ID, false);
+    Collection<SecretManagerConfig> kmsConfigs =
+        secretManagerConfigService.listSecretManagersByType(GLOBAL_ACCOUNT_ID, EncryptionType.KMS, true);
     assertEquals(1, kmsConfigs.size());
-    KmsConfig kmsConfig = kmsConfigs.iterator().next();
+    KmsConfig kmsConfig = (KmsConfig) kmsConfigs.iterator().next();
     assertNotNull(kmsConfig);
     String newAccessKey = System.getenv(AWS_ACCESS_KEY);
     if (isEmpty(newAccessKey)) {
@@ -115,9 +119,10 @@ public class KmsKeysRotationTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void rotateAwsKeysAndArn() throws Exception {
-    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(GLOBAL_ACCOUNT_ID, false);
+    Collection<SecretManagerConfig> kmsConfigs =
+        secretManagerConfigService.listSecretManagersByType(GLOBAL_ACCOUNT_ID, EncryptionType.KMS, true);
     assertEquals(1, kmsConfigs.size());
-    KmsConfig oldKmsConfig = kmsConfigs.iterator().next();
+    KmsConfig oldKmsConfig = (KmsConfig) kmsConfigs.iterator().next();
     String kmsName = oldKmsConfig.getName();
     assertNotNull(oldKmsConfig);
     String newAccessKey = System.getenv(AWS_ACCESS_KEY);

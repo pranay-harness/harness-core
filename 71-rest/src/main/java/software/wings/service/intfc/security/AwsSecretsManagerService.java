@@ -6,7 +6,6 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.File;
 import java.io.OutputStream;
-import java.util.Collection;
 
 /**
  * @author marklu on 2019-05-07
@@ -19,15 +18,15 @@ public interface AwsSecretsManagerService {
 
   void deleteSecret(String accountId, String path, AwsSecretsManagerConfig secretsManagerConfig);
 
-  AwsSecretsManagerConfig getSecretConfig(String accountId);
-
   AwsSecretsManagerConfig getAwsSecretsManagerConfig(String accountId, String configId);
 
   String saveAwsSecretsManagerConfig(String accountId, AwsSecretsManagerConfig secretsManagerConfig);
 
   boolean deleteAwsSecretsManagerConfig(String accountId, String configId);
 
-  Collection<AwsSecretsManagerConfig> listAwsSecretsManagerConfigs(String accountId, boolean maskSecret);
+  void validateSecretsManagerConfig(AwsSecretsManagerConfig secretsManagerConfig);
+
+  void decryptAsmConfigSecrets(String accountId, AwsSecretsManagerConfig secretsManagerConfig, boolean maskSecret);
 
   EncryptedData encryptFile(String accountId, AwsSecretsManagerConfig secretsManagerConfig, String name,
       byte[] inputBytes, EncryptedData savedEncryptedData);

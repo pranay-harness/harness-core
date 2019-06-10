@@ -18,7 +18,6 @@ import static io.harness.persistence.HQuery.excludeCount;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -72,6 +71,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
+import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
@@ -104,6 +104,7 @@ import software.wings.service.intfc.security.AwsSecretsManagerService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalEncryptionService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.security.SecretManagerConfigService;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.RestrictionsAndAppEnvMap;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -155,67 +156,16 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private LocalEncryptionService localEncryptionService;
   @Inject private UserService userService;
+  @Inject private SecretManagerConfigService secretManagerConfigService;
 
   @Override
   public EncryptionType getEncryptionType(String accountId) {
-    final EncryptionType encryptionType;
-    if (isLocalEncryptionEnabled(accountId)) {
-      // HAR-8025: Respect the account level 'localEncryptionEnabled' configuration.
-      encryptionType = LOCAL;
-    } else if (vaultService.getSecretConfig(accountId) != null) {
-      encryptionType = EncryptionType.VAULT;
-    } else if (secretsManagerService.getSecretConfig(accountId) != null) {
-      encryptionType = EncryptionType.AWS_SECRETS_MANAGER;
-    } else if (kmsService.getSecretConfig(accountId) != null) {
-      encryptionType = EncryptionType.KMS;
-    } else {
-      encryptionType = LOCAL;
-    }
-
-    return encryptionType;
+    return secretManagerConfigService.getEncryptionType(accountId);
   }
 
   @Override
-  public List<EncryptionConfig> listEncryptionConfig(String accountId) {
-    List<EncryptionConfig> rv = new ArrayList<>();
-
-    if (isLocalEncryptionEnabled(accountId)) {
-      // If account level local encryption is enabled. Mask all other encryption configs.
-      return rv;
-    }
-
-    Collection<VaultConfig> vaultConfigs = vaultService.listVaultConfigs(accountId, true);
-    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId, true);
-    Collection<AwsSecretsManagerConfig> secretsManagerConfigs =
-        secretsManagerService.listAwsSecretsManagerConfigs(accountId, true);
-
-    boolean defaultSet = false;
-    for (VaultConfig vaultConfig : vaultConfigs) {
-      if (vaultConfig.isDefault()) {
-        defaultSet = true;
-      }
-      rv.add(vaultConfig);
-    }
-
-    for (AwsSecretsManagerConfig secretsManagerConfig : secretsManagerConfigs) {
-      if (defaultSet) {
-        secretsManagerConfig.setDefault(false);
-      } else if (secretsManagerConfig.isDefault()) {
-        defaultSet = true;
-      }
-      rv.add(secretsManagerConfig);
-    }
-
-    for (KmsConfig kmsConfig : kmsConfigs) {
-      if (defaultSet) {
-        kmsConfig.setDefault(false);
-      } else if (kmsConfig.isDefault()) {
-        defaultSet = true;
-      }
-      rv.add(kmsConfig);
-    }
-
-    return rv;
+  public List<SecretManagerConfig> listSecretManagers(String accountId) {
+    return secretManagerConfigService.listSecretManagers(accountId);
   }
 
   @Override
@@ -231,15 +181,15 @@ public class SecretManagerImpl implements SecretManager {
         break;
 
       case KMS:
-        final KmsConfig kmsConfig = kmsService.getSecretConfig(accountId);
+        final KmsConfig kmsConfig = (KmsConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
         rv = kmsService.encrypt(secret, accountId, kmsConfig);
         rv.setKmsId(kmsConfig.getUuid());
         break;
 
       case VAULT:
-        final VaultConfig vaultConfig = vaultService.getSecretConfig(accountId);
+        final VaultConfig vaultConfig = (VaultConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
         toEncrypt = secret == null ? null : String.valueOf(secret);
-        // Need to initialize an EncrytpedData instance to carry the 'path' value for delegate to validate against.
+        // Need to initialize an EncryptedData instance to carry the 'path' value for delegate to validate against.
         if (encryptedData == null) {
           encryptedData = EncryptedData.builder()
                               .name(secretName)
@@ -256,9 +206,10 @@ public class SecretManagerImpl implements SecretManager {
         rv.setKmsId(vaultConfig.getUuid());
         break;
       case AWS_SECRETS_MANAGER:
-        final AwsSecretsManagerConfig secretsManagerConfig = secretsManagerService.getSecretConfig(accountId);
+        final AwsSecretsManagerConfig secretsManagerConfig =
+            (AwsSecretsManagerConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
         toEncrypt = secret == null ? null : String.valueOf(secret);
-        // Need to initialize an EncrytpedData instance to carry the 'path' value for delegate to validate against.
+        // Need to initialize an EncryptedData instance to carry the 'path' value for delegate to validate against.
         if (encryptedData == null) {
           encryptedData = EncryptedData.builder()
                               .name(secretName)
@@ -302,7 +253,7 @@ public class SecretManagerImpl implements SecretManager {
       return Optional.empty();
     }
     EncryptionConfig encryptionConfig =
-        getEncryptionConfig(accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
+        getSecretManager(accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
 
     return Optional.of(EncryptedDataDetail.builder()
                            .encryptionType(encryptedData.getEncryptionType())
@@ -350,7 +301,7 @@ public class SecretManagerImpl implements SecretManager {
             continue;
           }
           EncryptionConfig encryptionConfig =
-              getEncryptionConfig(object.getAccountId(), encryptedData.getKmsId(), encryptedData.getEncryptionType());
+              getSecretManager(object.getAccountId(), encryptedData.getKmsId(), encryptedData.getEncryptionType());
 
           EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder()
                                                         .encryptionType(encryptedData.getEncryptionType())
@@ -469,9 +420,9 @@ public class SecretManagerImpl implements SecretManager {
     if (variableType == SettingVariableTypes.SECRET_TEXT && encryptedData != null) {
       EncryptionType encryptionType = encryptedData.getEncryptionType();
       if (encryptionType == EncryptionType.VAULT && isNotEmpty(encryptedData.getPath())) {
-        VaultConfig vaultConfig = vaultService.getSecretConfig(accountId);
-        if (vaultConfig != null) {
-          secretChangeLogs.addAll(vaultService.getVaultSecretChangeLogs(encryptedData, vaultConfig));
+        EncryptionConfig encryptionConfig = secretManagerConfigService.getDefaultSecretManager(accountId);
+        if (encryptionConfig instanceof VaultConfig) {
+          secretChangeLogs.addAll(vaultService.getVaultSecretChangeLogs(encryptedData, (VaultConfig) encryptionConfig));
           // Sort the change log by change time in descending order.
           secretChangeLogs.sort(
               (SecretChangeLog o1, SecretChangeLog o2) -> (int) (o2.getLastUpdatedAt() - o1.getLastUpdatedAt()));
@@ -770,10 +721,10 @@ public class SecretManagerImpl implements SecretManager {
     Preconditions.checkNotNull(encryptedData, "No encrypted data with id " + entityId);
     Preconditions.checkState(encryptedData.getEncryptionType() == fromEncryptionType,
         "mismatch between saved encrypted type and from encryption type");
-    EncryptionConfig fromConfig = getEncryptionConfig(accountId, fromKmsId, fromEncryptionType);
+    EncryptionConfig fromConfig = getSecretManager(accountId, fromKmsId, fromEncryptionType);
     Preconditions.checkNotNull(
         fromConfig, "No kms found for account " + accountId + " with id " + entityId + " type: " + fromEncryptionType);
-    EncryptionConfig toConfig = getEncryptionConfig(accountId, toKmsId, toEncryptionType);
+    EncryptionConfig toConfig = getSecretManager(accountId, toKmsId, toEncryptionType);
     Preconditions.checkNotNull(
         toConfig, "No kms found for account " + accountId + " with id " + entityId + " type: " + fromEncryptionType);
 
@@ -922,8 +873,7 @@ public class SecretManagerImpl implements SecretManager {
       while (records.hasNext()) {
         Account account = records.next();
         try {
-          vaildateKmsConfigs(account.getUuid());
-          validateVaultConfigs(account.getUuid());
+          vaildateSecretManagerConfigs(account.getUuid());
           vaultService.renewTokens(account.getUuid());
           vaultService.appRoleLogin(account.getUuid());
         } catch (Exception e) {
@@ -1008,7 +958,7 @@ public class SecretManagerImpl implements SecretManager {
   public boolean transitionAllSecretsToHarnessSecretManager(String accountId) {
     // For now, the default/harness secret manager is the LOCAL secret manager, and it's HIDDEN from end-user
     EncryptionConfig harnessSecretManager = localEncryptionService.getEncryptionConfig(accountId);
-    List<EncryptionConfig> allEncryptionConfigs = listEncryptionConfig(accountId);
+    List<SecretManagerConfig> allEncryptionConfigs = listSecretManagers(accountId);
     for (EncryptionConfig encryptionConfig : allEncryptionConfigs) {
       logger.info("Transitioning secret from secret manager {} of type {} into Harness secret manager for account {}",
           encryptionConfig.getUuid(), encryptionConfig.getEncryptionType(), accountId);
@@ -1021,8 +971,8 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public void clearDefaultFlagOfSecretManagers(String accountId) {
     // Set custom secret managers as non-default
-    List<EncryptionConfig> defaultSecretManagerConfigs =
-        listEncryptionConfig(accountId).stream().filter(EncryptionConfig::isDefault).collect(Collectors.toList());
+    List<SecretManagerConfig> defaultSecretManagerConfigs =
+        listSecretManagers(accountId).stream().filter(EncryptionConfig::isDefault).collect(Collectors.toList());
 
     for (EncryptionConfig config : defaultSecretManagerConfigs) {
       switch (config.getEncryptionType()) {
@@ -1444,6 +1394,7 @@ public class SecretManagerImpl implements SecretManager {
       throw new WingsException(DEFAULT_ERROR_CODE, e);
     }
 
+    EncryptionConfig encryptionConfig;
     EncryptedData newEncryptedFile = null;
     // HAR-9736: Update of encrypted file may not pick a new file for upload and no need to encrypt empty file.
     if (isNotEmpty(inputBytes)) {
@@ -1457,8 +1408,9 @@ public class SecretManagerImpl implements SecretManager {
           break;
 
         case KMS:
-          KmsConfig kmsConfig = update ? kmsService.getKmsConfig(accountId, encryptedData.getKmsId())
-                                       : kmsService.getSecretConfig(accountId);
+          encryptionConfig = update ? secretManagerConfigService.getSecretManager(accountId, encryptedData.getKmsId())
+                                    : secretManagerConfigService.getDefaultSecretManager(accountId);
+          KmsConfig kmsConfig = (KmsConfig) encryptionConfig;
           newEncryptedFile = kmsService.encryptFile(accountId, kmsConfig, name, inputBytes);
           newEncryptedFile.setKmsId(kmsConfig.getUuid());
           if (update) {
@@ -1467,16 +1419,17 @@ public class SecretManagerImpl implements SecretManager {
           break;
 
         case VAULT:
-          VaultConfig vaultConfig = update ? vaultService.getVaultConfig(accountId, encryptedData.getKmsId())
-                                           : vaultService.getSecretConfig(accountId);
+          encryptionConfig = update ? secretManagerConfigService.getSecretManager(accountId, encryptedData.getKmsId())
+                                    : secretManagerConfigService.getDefaultSecretManager(accountId);
+          VaultConfig vaultConfig = (VaultConfig) encryptionConfig;
           newEncryptedFile = vaultService.encryptFile(accountId, vaultConfig, name, inputBytes, encryptedData);
           newEncryptedFile.setKmsId(vaultConfig.getUuid());
           break;
 
         case AWS_SECRETS_MANAGER:
-          AwsSecretsManagerConfig secretsManagerConfig = update
-              ? secretsManagerService.getAwsSecretsManagerConfig(accountId, encryptedData.getKmsId())
-              : secretsManagerService.getSecretConfig(accountId);
+          encryptionConfig = update ? secretManagerConfigService.getSecretManager(accountId, encryptedData.getKmsId())
+                                    : secretManagerConfigService.getDefaultSecretManager(accountId);
+          AwsSecretsManagerConfig secretsManagerConfig = (AwsSecretsManagerConfig) encryptionConfig;
           newEncryptedFile =
               secretsManagerService.encryptFile(accountId, secretsManagerConfig, name, inputBytes, encryptedData);
           newEncryptedFile.setKmsId(secretsManagerConfig.getUuid());
@@ -1797,7 +1750,7 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public EncryptionConfig getEncryptionConfig(String accountId, String entityId, EncryptionType encryptionType) {
+  public SecretManagerConfig getSecretManager(String accountId, String entityId, EncryptionType encryptionType) {
     switch (encryptionType) {
       case LOCAL:
         return localEncryptionService.getEncryptionConfig(accountId);
@@ -1866,7 +1819,10 @@ public class SecretManagerImpl implements SecretManager {
       List<String> parentIds = cell.getValue().stream().map(parent -> parent.getId()).collect(Collectors.toList());
       switch (cell.getRowKey()) {
         case KMS:
-          rv.add(kmsService.getSecretConfig(accountId));
+          EncryptionConfig encryptionConfig = secretManagerConfigService.getDefaultSecretManager(accountId);
+          if (encryptionConfig instanceof KmsConfig) {
+            rv.add((KmsConfig) encryptionConfig);
+          }
           break;
         case SERVICE_VARIABLE:
           List<ServiceVariable> serviceVariables = serviceVariableService
@@ -1982,50 +1938,35 @@ public class SecretManagerImpl implements SecretManager {
     }
   }
 
-  private void vaildateKmsConfigs(String accountId) {
-    Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId, false);
-    for (KmsConfig kmsConfig : kmsConfigs) {
+  private void vaildateSecretManagerConfigs(String accountId) {
+    List<SecretManagerConfig> encryptionConfigs = secretManagerConfigService.listSecretManagers(accountId);
+    for (EncryptionConfig encryptionConfig : encryptionConfigs) {
       KmsSetupAlert kmsSetupAlert =
           KmsSetupAlert.builder()
-              .kmsId(kmsConfig.getUuid())
-              .message(kmsConfig.getName() + "(Amazon KMS) is not able to encrypt/decrypt. Please check your setup")
+              .kmsId(encryptionConfig.getUuid())
+              .message("Secret manager " + encryptionConfig.getName() + " of type "
+                  + encryptionConfig.getEncryptionType() + " is not able to encrypt/decrypt. Please check your setup")
               .build();
       try {
-        kmsService.encrypt(UUID.randomUUID().toString().toCharArray(), accountId, kmsConfig);
+        switch (encryptionConfig.getEncryptionType()) {
+          case KMS:
+            kmsService.encrypt(UUID.randomUUID().toString().toCharArray(), accountId, (KmsConfig) encryptionConfig);
+            break;
+          case VAULT:
+            vaultService.encrypt(VAULT_VAILDATION_URL, Boolean.TRUE.toString(), accountId, SettingVariableTypes.VAULT,
+                (VaultConfig) encryptionConfig, null);
+            break;
+          case AWS_SECRETS_MANAGER:
+            secretsManagerService.validateSecretsManagerConfig((AwsSecretsManagerConfig) encryptionConfig);
+            break;
+          default:
+            break;
+        }
         alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
       } catch (Exception e) {
-        logger.info("Could not validate kms for account {} and kmsId {}", accountId, kmsConfig.getUuid(), e);
+        logger.info("Could not validate kms for account {} and kmsId {}", accountId, encryptionConfig.getUuid(), e);
         alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
       }
-    }
-  }
-
-  private void validateVaultConfigs(String accountId) {
-    Collection<VaultConfig> vaultConfigs = vaultService.listVaultConfigs(accountId, false);
-    for (VaultConfig vaultConfig : vaultConfigs) {
-      KmsSetupAlert kmsSetupAlert =
-          KmsSetupAlert.builder()
-              .kmsId(vaultConfig.getUuid())
-              .message(vaultConfig.getName()
-                  + "(Hashicorp Vault) is not able to encrypt/decrypt. Please check your setup and ensure that token is not expired")
-              .build();
-      try {
-        vaultService.encrypt(
-            VAULT_VAILDATION_URL, Boolean.TRUE.toString(), accountId, SettingVariableTypes.VAULT, vaultConfig, null);
-        alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
-      } catch (Exception e) {
-        logger.info("Could not validate vault for account {} and kmsId {}", accountId, vaultConfig.getUuid(), e);
-        alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
-      }
-    }
-  }
-
-  private boolean isLocalEncryptionEnabled(String accountId) {
-    Account account = wingsPersistence.get(Account.class, accountId);
-    if (account != null && account.isLocalEncryptionEnabled()) {
-      return true;
-    } else {
-      return false;
     }
   }
 

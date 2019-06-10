@@ -5,7 +5,6 @@ import software.wings.security.encryption.EncryptedData;
 
 import java.io.File;
 import java.io.OutputStream;
-import java.util.Collection;
 
 /**
  * Created by rsingh on 9/29/17.
@@ -15,8 +14,6 @@ public interface KmsService {
 
   char[] decrypt(EncryptedData data, String accountId, KmsConfig kmsConfig);
 
-  KmsConfig getSecretConfig(String accountId);
-
   KmsConfig getKmsConfig(String accountId, String entityId);
 
   String saveGlobalKmsConfig(String accountId, KmsConfig kmsConfig);
@@ -25,7 +22,7 @@ public interface KmsService {
 
   boolean deleteKmsConfig(String accountId, String kmsConfigId);
 
-  Collection<KmsConfig> listKmsConfigs(String accountId, boolean maskSecret);
+  void decryptKmsConfigSecrets(String accountId, KmsConfig kmsConfig, boolean maskSecret);
 
   EncryptedData encryptFile(String accountId, KmsConfig kmsConfig, String name, byte[] inputBytes);
 

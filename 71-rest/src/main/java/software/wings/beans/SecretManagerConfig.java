@@ -1,0 +1,68 @@
+package software.wings.beans;
+
+import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.HarnessExportableEntity;
+import io.harness.beans.EmbeddedUser;
+import io.harness.persistence.CreatedAtAware;
+import io.harness.persistence.CreatedByAware;
+import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UpdatedAtAware;
+import io.harness.persistence.UpdatedByAware;
+import io.harness.persistence.UuidAware;
+import io.harness.security.encryption.EncryptionConfig;
+import io.harness.security.encryption.EncryptionType;
+import io.harness.validation.Update;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.annotations.Transient;
+
+import javax.validation.constraints.NotNull;
+
+/**
+ * This is a shared persistent entity to track Secret Managers of different type (KMS/AWS Secrets Manager/Vault etc.) in
+ * a centralized location to simplify the logic to track which secret manager is the account level default.
+ *
+ *
+ * @author marklu on 2019-05-31
+ */
+@Data
+@EqualsAndHashCode(callSuper = false, exclude = {"createdBy", "createdAt", "lastUpdatedBy", "lastUpdatedAt"})
+@Entity(value = "secretManagers")
+@Indexes({
+  @Index(fields = {
+    @Field("name"), @Field("accountId"), @Field("encryptionType")
+  }, options = @IndexOptions(unique = true, name = "uniqueIdx"))
+})
+@HarnessExportableEntity
+public abstract class SecretManagerConfig implements EncryptionConfig, PersistentEntity, UuidAware, CreatedAtAware,
+                                                     CreatedByAware, UpdatedAtAware, UpdatedByAware {
+  @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
+
+  private EncryptionType encryptionType;
+
+  private boolean isDefault;
+
+  @NotEmpty private String accountId;
+
+  @SchemaIgnore @Transient private int numOfEncryptedValue;
+
+  @SchemaIgnore @Transient private String encryptedBy;
+
+  @SchemaIgnore private EmbeddedUser createdBy;
+
+  @SchemaIgnore @Indexed private long createdAt;
+
+  @SchemaIgnore private EmbeddedUser lastUpdatedBy;
+
+  @SchemaIgnore @NotNull private long lastUpdatedAt;
+
+  public abstract void maskSecrets();
+}

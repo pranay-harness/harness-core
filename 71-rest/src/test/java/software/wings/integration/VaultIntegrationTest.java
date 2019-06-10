@@ -20,7 +20,6 @@ import io.harness.exception.WingsException;
 import io.harness.expression.SecretString;
 import io.harness.rest.RestResponse;
 import io.harness.scm.SecretName;
-import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -32,6 +31,7 @@ import software.wings.beans.Account;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
+import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.VaultConfig;
 import software.wings.security.encryption.EncryptedData;
@@ -85,58 +85,50 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     this.vaultToken = System.getProperty("vault.token", "root");
     Preconditions.checkState(isNotEmpty(vaultToken));
 
-    vaultConfig = VaultConfig.builder()
-                      .accountId(accountId)
-                      .name("TestVault")
-                      .vaultUrl(VAULT_URL_1)
-                      .authToken(vaultToken)
-                      .isDefault(true)
-                      .build();
+    vaultConfig = VaultConfig.builder().name("TestVault").vaultUrl(VAULT_URL_1).authToken(vaultToken).build();
+    vaultConfig.setAccountId(accountId);
+    vaultConfig.setDefault(true);
 
-    vaultConfig2 = VaultConfig.builder()
-                       .accountId(accountId)
-                       .name("TestVault2")
-                       .vaultUrl(VAULT_URL_2)
-                       .authToken(vaultToken)
-                       .isDefault(true)
-                       .build();
+    vaultConfig2 = VaultConfig.builder().name("TestVault2").vaultUrl(VAULT_URL_2).authToken(vaultToken).build();
+    vaultConfig2.setAccountId(accountId);
+    vaultConfig2.setDefault(true);
 
     vaultConfigWithBasePath = VaultConfig.builder()
-                                  .accountId(accountId)
                                   .name("TestVaultWithBasePath")
                                   .vaultUrl(VAULT_URL_1)
                                   .authToken(vaultToken)
                                   .basePath(VAULT_BASE_PATH)
-                                  .isDefault(true)
                                   .build();
+    vaultConfigWithBasePath.setAccountId(accountId);
+    vaultConfigWithBasePath.setDefault(true);
 
     vaultConfigWithBasePath2 = VaultConfig.builder()
-                                   .accountId(accountId)
                                    .name("TestVaultWithBasePath")
                                    .vaultUrl(VAULT_URL_1)
                                    .authToken(vaultToken)
                                    .basePath(VAULT_BASE_PATH_2)
-                                   .isDefault(true)
                                    .build();
+    vaultConfigWithBasePath2.setAccountId(accountId);
+    vaultConfigWithBasePath2.setDefault(true);
 
     vaultConfigWithBasePath3 = VaultConfig.builder()
-                                   .accountId(accountId)
                                    .name("TestVaultWithRootBasePath")
                                    .vaultUrl(VAULT_URL_1)
                                    .authToken(vaultToken)
                                    .basePath(VAULT_BASE_PATH_3)
-                                   .isDefault(true)
                                    .build();
+    vaultConfigWithBasePath3.setAccountId(accountId);
+    vaultConfigWithBasePath3.setDefault(true);
 
     kmsConfig = KmsConfig.builder()
-                    .accountId(accountId)
                     .name("TestAwsKMS")
                     .accessKey("AKIAJXKK6OAOHQ5MO34Q")
                     .kmsArn("arn:aws:kms:us-east-1:448640225317:key/4feb7890-a727-4f88-af43-378b5a88e77c")
                     .secretKey(scmSecret.decryptToString(new SecretName("kms_qa_secret_key")))
                     .region("us-east-1")
-                    .isDefault(true)
                     .build();
+    kmsConfig.setAccountId(accountId);
+    kmsConfig.setDefault(true);
 
     localEncryptionConfig = localEncryptionService.getEncryptionConfig(accountId);
   }
@@ -172,7 +164,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     assertEquals(EncryptionType.LOCAL, encryptionType);
 
     // 4. No secret manager will be returned
-    List<EncryptionConfig> secretManagers = secretManager.listEncryptionConfig(accountId);
+    List<SecretManagerConfig> secretManagers = secretManager.listSecretManagers(accountId);
     assertEquals(0, secretManagers.size());
 
     // 5. Create new VAULT secret manager should fail.

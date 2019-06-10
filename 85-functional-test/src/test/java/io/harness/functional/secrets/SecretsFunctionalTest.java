@@ -41,13 +41,13 @@ public class SecretsFunctionalTest extends AbstractFunctionalTest {
   @Before
   public void vaultSetup() {
     vaultConfig = VaultConfig.builder()
-                      .accountId(getAccount().getUuid())
                       .name(VAULT_NAME)
                       .vaultUrl(QA_VAULT_URL)
                       .authToken(new ScmSecret().decryptToString(new SecretName("qa_vault_root_token")))
-                      .isDefault(true)
                       .basePath("/harness")
                       .build();
+    vaultConfig.setAccountId(getAccount().getUuid());
+    vaultConfig.setDefault(true);
 
     List<VaultConfig> beforeVault = SecretsRestUtils.getListConfigs(getAccount().getUuid(), bearerToken);
     if (SecretsUtils.isVaultAvailable(beforeVault, VAULT_NAME)) {

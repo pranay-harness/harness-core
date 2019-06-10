@@ -3,10 +3,10 @@ package io.harness.security;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.persistence.UuidAware;
-import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.SecretManagerConfig;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.encryption.SecretChangeLog;
@@ -27,7 +27,7 @@ import java.util.Optional;
  */
 public class NoOpSecretManagerImpl implements SecretManager {
   @Override
-  public List<EncryptionConfig> listEncryptionConfig(String accountId) {
+  public List<SecretManagerConfig> listSecretManagers(String accountId) {
     throw new UnsupportedOperationException();
   }
 
@@ -86,7 +86,7 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public EncryptionConfig getEncryptionConfig(String accountId, String entityId, EncryptionType encryptionType) {
+  public SecretManagerConfig getSecretManager(String accountId, String entityId, EncryptionType encryptionType) {
     throw new UnsupportedOperationException();
   }
 

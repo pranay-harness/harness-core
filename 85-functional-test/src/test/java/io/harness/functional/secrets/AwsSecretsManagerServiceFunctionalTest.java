@@ -47,14 +47,14 @@ public class AwsSecretsManagerServiceFunctionalTest extends AbstractFunctionalTe
   public void testCRUDSecretsWithAwsSecretsManager() {
     AwsSecretsManagerConfig secretsManagerConfig =
         AwsSecretsManagerConfig.builder()
-            .accountId(getAccount().getUuid())
             .name(ASM_NAME)
             .accessKey("AKIA5GUB5GGCID6JJB7D")
             .secretKey(new ScmSecret().decryptToString(new SecretName("plat_aws_secrets_manager_secret")))
             .region("us-east-1")
             .secretNamePrefix("foo/bar")
-            .isDefault(true)
             .build();
+    secretsManagerConfig.setAccountId(getAccount().getUuid());
+    secretsManagerConfig.setDefault(true);
 
     String secretsManagerId = null;
     try {

@@ -43,6 +43,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.Account;
+import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.alert.AlertType;
@@ -66,8 +67,6 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -120,13 +119,6 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   }
 
   @Override
-  public VaultConfig getSecretConfig(String accountId) {
-    Query<VaultConfig> query =
-        wingsPersistence.createQuery(VaultConfig.class).filter(ACCOUNT_ID_KEY, accountId).filter(IS_DEFAULT_KEY, true);
-    return getVaultConfigInternal(query);
-  }
-
-  @Override
   public VaultConfig getVaultConfig(String accountId, String entityId) {
     Query<VaultConfig> query =
         wingsPersistence.createQuery(VaultConfig.class).filter(ACCOUNT_ID_KEY, accountId).filter(ID_KEY, entityId);
@@ -169,10 +161,15 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   public void renewTokens(String accountId) {
     long currentTime = System.currentTimeMillis();
     logger.info("renewing vault token for {}", accountId);
-    try (HIterator<VaultConfig> query = new HIterator<>(
-             wingsPersistence.createQuery(VaultConfig.class).filter(ACCOUNT_ID_KEY, accountId).fetch())) {
+    try (HIterator<SecretManagerConfig> query = new HIterator<>(
+             wingsPersistence.createQuery(SecretManagerConfig.class).filter(ACCOUNT_ID_KEY, accountId).fetch())) {
       while (query.hasNext()) {
-        VaultConfig vaultConfig = query.next();
+        SecretManagerConfig secretManagerConfig = query.next();
+        if (!(secretManagerConfig instanceof VaultConfig)) {
+          continue;
+        }
+
+        VaultConfig vaultConfig = (VaultConfig) secretManagerConfig;
         // don't renew if renewal interval not configured
         if (vaultConfig.getRenewIntervalHours() <= 0) {
           logger.info("renewing not configured for {} for account {}", vaultConfig.getUuid(), accountId);
@@ -215,10 +212,15 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   @Override
   public void appRoleLogin(String accountId) {
     logger.info("Renewing Vault AppRole client token for {}", accountId);
-    try (HIterator<VaultConfig> query = new HIterator<>(
-             wingsPersistence.createQuery(VaultConfig.class).filter(ACCOUNT_ID_KEY, accountId).fetch())) {
+    try (HIterator<SecretManagerConfig> query = new HIterator<>(
+             wingsPersistence.createQuery(SecretManagerConfig.class).filter(ACCOUNT_ID_KEY, accountId).fetch())) {
       while (query.hasNext()) {
-        VaultConfig vaultConfig = query.next();
+        SecretManagerConfig secretManagerConfig = query.next();
+        if (!(secretManagerConfig instanceof VaultConfig)) {
+          continue;
+        }
+
+        VaultConfig vaultConfig = (VaultConfig) secretManagerConfig;
         if (isNotEmpty(vaultConfig.getAppRoleId())) {
           VaultConfig decryptedVaultConfig = getVaultConfig(accountId, vaultConfig.getUuid());
 
@@ -260,59 +262,53 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       // New vault configuration, need to validate it's parameters
       validateVaultConfig(accountId, vaultConfig);
     } else {
-      // When setting this vault config as default, set current default secret manager to non-default first.
-      if (vaultConfig.isDefault()) {
-        updateCurrentEncryptionConfigsToNonDefault(accountId);
-      }
-
       // update without token or url changes
       savedVaultConfig.setName(vaultConfig.getName());
       savedVaultConfig.setRenewIntervalHours(vaultConfig.getRenewIntervalHours());
       savedVaultConfig.setDefault(vaultConfig.isDefault());
       savedVaultConfig.setBasePath(vaultConfig.getBasePath());
       savedVaultConfig.setAppRoleId(vaultConfig.getAppRoleId());
-      return wingsPersistence.save(savedVaultConfig);
+
+      return secretManagerConfigService.save(savedVaultConfig);
     }
 
     vaultConfig.setAccountId(accountId);
 
-    EncryptedData authTokenEncryptedData = getEncryptedDataForSecretField(
-        savedVaultConfig, vaultConfig, vaultConfig.getAuthToken(), TOKEN_SECRET_NAME_SUFFIX);
-    EncryptedData secretIdEncryptedData = getEncryptedDataForSecretField(
-        savedVaultConfig, vaultConfig, vaultConfig.getSecretId(), SECRET_ID_SECRET_NAME_SUFFIX);
+    String authToken = vaultConfig.getAuthToken();
+    String secretId = vaultConfig.getSecretId();
 
-    vaultConfig.setAuthToken(null);
-    vaultConfig.setSecretId(null);
     String vaultConfigId;
     try {
-      // When setting this vault config as default, set current default secret manager to non-default first.
-      if (vaultConfig.isDefault()) {
-        updateCurrentEncryptionConfigsToNonDefault(accountId);
-      }
-      vaultConfigId = wingsPersistence.save(vaultConfig);
+      vaultConfig.setAuthToken(null);
+      vaultConfig.setSecretId(null);
+      vaultConfigId = secretManagerConfigService.save(vaultConfig);
     } catch (DuplicateKeyException e) {
       throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER_SRE)
           .addParam(REASON_KEY, "Another vault configuration with the same name or URL exists");
     }
 
     // Create a LOCAL encrypted record for Vault authToken
-    String authTokenEncryptedDataId =
-        saveSecretField(vaultConfig, vaultConfigId, authTokenEncryptedData, TOKEN_SECRET_NAME_SUFFIX);
-    vaultConfig.setAuthToken(authTokenEncryptedDataId);
+    if (isNotEmpty(authToken) && !SECRET_MASK.equals(authToken)) {
+      String authTokenEncryptedDataId =
+          saveSecretField(savedVaultConfig, vaultConfig, vaultConfigId, authToken, TOKEN_SECRET_NAME_SUFFIX);
+      vaultConfig.setAuthToken(authTokenEncryptedDataId);
+    }
 
     // Create a LOCAL encrypted record for Vault secretId
-    String secretIdEncryptedDataId =
-        saveSecretField(vaultConfig, vaultConfigId, secretIdEncryptedData, SECRET_ID_SECRET_NAME_SUFFIX);
-    vaultConfig.setSecretId(secretIdEncryptedDataId);
+    if (isNotEmpty(secretId) && !SECRET_MASK.equals(secretId)) {
+      String secretIdEncryptedDataId =
+          saveSecretField(savedVaultConfig, vaultConfig, vaultConfigId, secretId, SECRET_ID_SECRET_NAME_SUFFIX);
+      vaultConfig.setSecretId(secretIdEncryptedDataId);
+    }
 
-    wingsPersistence.save(vaultConfig);
+    secretManagerConfigService.save(vaultConfig);
     return vaultConfigId;
   }
 
-  private EncryptedData getEncryptedDataForSecretField(
-      VaultConfig savedVaultConfig, VaultConfig vaultConfig, String secretValue, String secretNameSuffix) {
-    EncryptedData encryptedData = isNotEmpty(secretValue) ? encryptLocal(secretValue.toCharArray()) : null;
-    if (savedVaultConfig != null && encryptedData != null) {
+  private String saveSecretField(VaultConfig savedVaultConfig, VaultConfig vaultConfig, String vaultConfigId,
+      String secretValue, String secretNameSuffix) {
+    EncryptedData encryptedData = encryptLocal(secretValue.toCharArray());
+    if (savedVaultConfig != null) {
       // Get by auth token encrypted record by Id or name.
       Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
       query.criteria(ACCOUNT_ID_KEY)
@@ -326,20 +322,12 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
         encryptedData = savedEncryptedData;
       }
     }
-    return encryptedData;
-  }
 
-  private String saveSecretField(
-      VaultConfig vaultConfig, String vaultConfigId, EncryptedData secretFieldEncryptedData, String secretNameSuffix) {
-    String secretFieldEncryptedDataId = null;
-    if (secretFieldEncryptedData != null) {
-      secretFieldEncryptedData.setAccountId(vaultConfig.getAccountId());
-      secretFieldEncryptedData.addParent(vaultConfigId);
-      secretFieldEncryptedData.setType(SettingVariableTypes.VAULT);
-      secretFieldEncryptedData.setName(vaultConfig.getName() + secretNameSuffix);
-      secretFieldEncryptedDataId = wingsPersistence.save(secretFieldEncryptedData);
-    }
-    return secretFieldEncryptedDataId;
+    encryptedData.setAccountId(vaultConfig.getAccountId());
+    encryptedData.addParent(vaultConfigId);
+    encryptedData.setType(SettingVariableTypes.VAULT);
+    encryptedData.setName(vaultConfig.getName() + secretNameSuffix);
+    return wingsPersistence.save(encryptedData);
   }
 
   private void checkIfVaultConfigCanBeCreatedOrUpdated(String accountId, VaultConfig vaultConfig) {
@@ -399,47 +387,31 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       logger.info("Deleted encrypted secret id record {} associated with vault secret manager '{}'",
           vaultConfig.getSecretId(), vaultConfig.getName());
     }
+
+    wingsPersistence.delete(SecretManagerConfig.class, vaultConfigId);
     return wingsPersistence.delete(vaultConfig);
   }
 
   @Override
-  public Collection<VaultConfig> listVaultConfigs(String accountId, boolean maskSecret) {
-    List<VaultConfig> rv = new ArrayList<>();
-    try (HIterator<VaultConfig> query = new HIterator<>(wingsPersistence.createQuery(VaultConfig.class)
-                                                            .filter(ACCOUNT_ID_KEY, accountId)
-                                                            .order("-createdAt")
-                                                            .fetch())) {
-      while (query.hasNext()) {
-        VaultConfig vaultConfig = query.next();
-        Query<EncryptedData> encryptedDataQuery = wingsPersistence.createQuery(EncryptedData.class)
-                                                      .filter(EncryptedDataKeys.kmsId, vaultConfig.getUuid())
-                                                      .filter(ACCOUNT_ID_KEY, accountId);
-        vaultConfig.setNumOfEncryptedValue(encryptedDataQuery.asKeyList().size());
-        if (maskSecret) {
-          vaultConfig.setAuthToken(SECRET_MASK);
-          vaultConfig.setSecretId(SECRET_MASK);
-        } else {
-          EncryptedData tokenData = wingsPersistence.get(EncryptedData.class, vaultConfig.getAuthToken());
-          EncryptedData secretIdData = wingsPersistence.get(EncryptedData.class, vaultConfig.getSecretId());
-          if (tokenData == null && secretIdData == null) {
-            throw new WingsException(
-                "Either auth token or secret Id field needs to be present for vault secret manager.");
-          }
+  public void decryptVaultConfigSecrets(String accountId, VaultConfig vaultConfig, boolean maskSecret) {
+    if (maskSecret) {
+      vaultConfig.maskSecrets();
+    } else {
+      EncryptedData tokenData = wingsPersistence.get(EncryptedData.class, vaultConfig.getAuthToken());
+      EncryptedData secretIdData = wingsPersistence.get(EncryptedData.class, vaultConfig.getSecretId());
+      if (tokenData == null && secretIdData == null) {
+        throw new WingsException("Either auth token or secret Id field needs to be present for vault secret manager.");
+      }
 
-          if (tokenData != null) {
-            char[] decryptedToken = decryptVaultToken(tokenData);
-            vaultConfig.setAuthToken(String.valueOf(decryptedToken));
-          }
-          if (secretIdData != null) {
-            char[] decryptedSecretId = decryptVaultToken(secretIdData);
-            vaultConfig.setSecretId(String.valueOf(decryptedSecretId));
-          }
-        }
-        vaultConfig.setEncryptionType(EncryptionType.VAULT);
-        rv.add(vaultConfig);
+      if (tokenData != null) {
+        char[] decryptedToken = decryptVaultToken(tokenData);
+        vaultConfig.setAuthToken(String.valueOf(decryptedToken));
+      }
+      if (secretIdData != null) {
+        char[] decryptedSecretId = decryptVaultToken(secretIdData);
+        vaultConfig.setSecretId(String.valueOf(decryptedSecretId));
       }
     }
-    return rv;
   }
 
   @Override

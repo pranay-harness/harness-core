@@ -395,7 +395,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       AwsSecretsManagerConfig secretsManagerConfig, EncryptedRecord savedEncryptedData) {
     final String fullSecretName;
     boolean pathReference = false;
-    if (isNotEmpty(savedEncryptedData.getPath())) {
+    if (savedEncryptedData != null && isNotEmpty(savedEncryptedData.getPath())) {
       pathReference = true;
       fullSecretName = savedEncryptedData.getPath();
     } else {
@@ -405,7 +405,16 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     long startTime = System.currentTimeMillis();
     logger.info("Saving secret '{}' into AWS Secrets Manager: {}", fullSecretName, secretsManagerConfig.getName());
 
-    EncryptedRecord encryptedData = savedEncryptedData;
+    EncryptedRecord encryptedData = savedEncryptedData != null ? savedEncryptedData
+                                                               : EncryptedData.builder()
+                                                                     .encryptionKey(fullSecretName)
+                                                                     .encryptionType(EncryptionType.AWS_SECRETS_MANAGER)
+                                                                     .enabled(true)
+                                                                     .accountId(accountId)
+                                                                     .parentIds(new HashSet<>())
+                                                                     .kmsId(secretsManagerConfig.getUuid())
+                                                                     .build();
+
     if (!pathReference && isEmpty(value)) {
       return encryptedData;
     }
