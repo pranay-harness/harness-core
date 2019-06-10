@@ -4,6 +4,7 @@ import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.globalcontex.AuditGlobalContextData.AUDIT_ID;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -28,7 +29,9 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.context.GlobalContextData;
 import io.harness.exception.WingsException;
+import io.harness.exception.WingsException.ExecutionContext;
 import io.harness.globalcontex.AuditGlobalContextData;
+import io.harness.logging.ExceptionLogger;
 import io.harness.manage.GlobalContextManager;
 import io.harness.persistence.NameAccess;
 import io.harness.persistence.ReadPref;
@@ -323,7 +326,7 @@ public class AuditServiceImpl implements AuditService {
     try {
       String auditHeaderId = getAuditHeaderIdFromGlobalContext();
       if (isEmpty(auditHeaderId)) {
-        throw new WingsException("AuditHeaderKey is null").addParam("message", "AuditHeaderKey is null");
+        throw new WingsException("AuditHeaderKey is null", USER).addParam("message", "AuditHeaderKey is null");
       }
 
       UuidAccess entityToQuery;
@@ -372,6 +375,8 @@ public class AuditServiceImpl implements AuditService {
       operations.set("accountId", accountId);
       wingsPersistence.update(
           wingsPersistence.createQuery(AuditHeader.class).filter(ID_KEY, auditHeaderId), operations);
+    } catch (WingsException exception) {
+      ExceptionLogger.logProcessedMessages(exception, ExecutionContext.MANAGER, logger);
     } catch (Exception ex) {
       logger.error(format("Exception while auditing records for account [%s]", accountId), ex);
     }

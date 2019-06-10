@@ -28,6 +28,7 @@ import io.harness.persistence.Store;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UserProvider;
+import io.harness.persistence.UuidAccess;
 import io.harness.persistence.UuidAware;
 import lombok.Builder;
 import lombok.Value;
@@ -262,6 +263,29 @@ public class MongoPersistence implements HPersistence {
     } catch (DuplicateKeyException ignore) {
       // ignore
     }
+  }
+
+  @Override
+  public <T extends PersistentEntity> String insert(T entity) {
+    onSave(entity);
+    final AdvancedDatastore datastore = getDatastore(entity, NORMAL);
+    return HPersistence.retry(() -> { return datastore.insert(entity).getId().toString(); });
+  }
+
+  @Override
+  public <T extends PersistentEntity> String insertIgnoringDuplicateKeys(T entity) {
+    onSave(entity);
+    final AdvancedDatastore datastore = getDatastore(entity, NORMAL);
+    try {
+      return HPersistence.retry(() -> { return datastore.insert(entity).getId().toString(); });
+    } catch (DuplicateKeyException ignore) {
+      // ignore
+    }
+    if (entity instanceof UuidAccess) {
+      return ((UuidAccess) entity).getUuid();
+    }
+
+    return null;
   }
 
   @Override

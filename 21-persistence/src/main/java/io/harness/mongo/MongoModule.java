@@ -14,13 +14,17 @@ import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
+import com.mongodb.client.MongoDatabase;
 import io.harness.logging.MorphiaLoggerFactory;
 import io.harness.persistence.ReadPref;
 import io.harness.serializer.KryoUtils;
+import io.harness.threading.Morpheus;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
 
+import java.time.Duration;
 import java.util.Set;
 
 @Slf4j
@@ -86,6 +90,19 @@ public class MongoModule extends AbstractModule {
     }
 
     ensureIndex(primaryDatastore, morphia);
+
+    //    final BasicDBObject currentOp = new BasicDBObject("currentOp", Boolean.TRUE);
+    //    currentOp.put("$all", Boolean.TRUE);
+
+    final Document document = new Document("currentOp", 1).append("$all", true);
+
+    final MongoDatabase database = mongoClient.getDatabase("admin");
+
+    for (int i = 0; i < 100; i++) {
+      final Document result = database.runCommand(document);
+      logger.info(result.toJson());
+      Morpheus.sleep(Duration.ofMillis(25));
+    }
   }
 
   @Provides

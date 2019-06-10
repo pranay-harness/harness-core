@@ -1,8 +1,24 @@
 package io.harness.beans.migration;
 
-import java.util.List;
+import lombok.Builder;
+import lombok.Singular;
+import lombok.Value;
 
+import java.util.List;
+import java.util.Set;
+
+@Value
+@Builder
 public class MigrationJob {
   private String id;
-  List<MigrationChannel> channels;
+  enum Allowance { BACKGROUND }
+
+  @Value
+  @Builder
+  public static class Metadata {
+    @Singular List<MigrationChannel> channels;
+    private Set<Allowance> allowances;
+  }
+
+  private Metadata metadata;
 }
