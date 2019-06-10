@@ -89,6 +89,13 @@ else
     sed -i "s|_noProxy_||" /opt/harness-delegate/start.sh
 fi
 
+if [[ -v "PROXY_MANAGER" ]]
+then
+    sed -i "s|_proxyManager_|${PROXY_MANAGER}|" /opt/harness-delegate/start.sh
+else
+    sed -i "s|_proxyManager_|true|" /opt/harness-delegate/start.sh
+fi
+
 if [[ -v "DEPLOY_MODE" ]]
 then
     sed -i "s|_deployMode_|${DEPLOY_MODE}|" /opt/harness-delegate/start.sh

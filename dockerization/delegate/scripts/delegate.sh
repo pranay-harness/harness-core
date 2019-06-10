@@ -32,6 +32,21 @@ if [ -e proxy.config ]; then
     PROXY_SYS_PROPS=$PROXY_SYS_PROPS" -DproxyScheme=$PROXY_SCHEME -Dhttp.proxyHost=$PROXY_HOST -Dhttp.proxyPort=$PROXY_PORT -Dhttps.proxyHost=$PROXY_HOST -Dhttps.proxyPort=$PROXY_PORT"
   fi
 
+  if [[ $PROXY_MANAGER == "true" || $PROXY_MANAGER == "" ]]; then
+    export MANAGER_PROXY_CURL=$PROXY_CURL
+  else
+    MANAGER_HOST_AND_PORT=_managerHostAndPort_
+    HOST_AND_PORT_ARRAY=(${MANAGER_HOST_AND_PORT//:/ })
+    MANAGER_HOST="${HOST_AND_PORT_ARRAY[1]}"
+    MANAGER_HOST="${MANAGER_HOST:2}"
+    echo "No proxy for Harness manager at $MANAGER_HOST"
+    if [[ $NO_PROXY == "" ]]; then
+      NO_PROXY=$MANAGER_HOST
+    else
+      NO_PROXY="$NO_PROXY,$MANAGER_HOST"
+    fi
+  fi
+
   if [[ $NO_PROXY != "" ]]; then
     echo "No proxy for domain suffixes $NO_PROXY"
     export no_proxy=$NO_PROXY
@@ -43,7 +58,7 @@ fi
 if [ ! -d $JRE_DIR -o ! -e $JRE_BINARY ]; then
   echo "Downloading JRE packages..."
   JVM_TAR_FILENAME=$(basename "$JVM_URL")
-  curl $PROXY_CURL -#kLO $JVM_URL
+  curl $MANAGER_PROXY_CURL -#kLO $JVM_URL
   echo "Extracting JRE packages..."
   rm -rf $JRE_DIR
   tar xzf $JVM_TAR_FILENAME
@@ -55,20 +70,20 @@ export DEPLOY_MODE=_deployMode_
 if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
   echo "Checking Delegate latest version..."
   DELEGATE_STORAGE_URL=_delegateStorageUrl_
-  REMOTE_DELEGATE_LATEST=$(curl $PROXY_CURL -#k $DELEGATE_STORAGE_URL/_delegateCheckLocation_)
+  REMOTE_DELEGATE_LATEST=$(curl $MANAGER_PROXY_CURL -ks $DELEGATE_STORAGE_URL/_delegateCheckLocation_)
   REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
   REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f1)
 
   if [ ! -e delegate.jar ]; then
     echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
-    curl $PROXY_CURL -#k $REMOTE_DELEGATE_URL -o delegate.jar
+    curl $MANAGER_PROXY_CURL -#k $REMOTE_DELEGATE_URL -o delegate.jar
   else
     CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
     if [[ $REMOTE_DELEGATE_VERSION != $CURRENT_VERSION ]]; then
       echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
       mkdir -p backup.$CURRENT_VERSION
       cp delegate.jar backup.$CURRENT_VERSION
-      curl $PROXY_CURL -#k $REMOTE_DELEGATE_URL -o delegate.jar
+      curl $MANAGER_PROXY_CURL -#k $REMOTE_DELEGATE_URL -o delegate.jar
     fi
   fi
 fi
