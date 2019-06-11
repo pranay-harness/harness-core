@@ -5,6 +5,15 @@ cd dist
 cp -R ../scripts/jenkins/ .
 cd ..
 
+mkdir -p dist/migrator ;
+
+cd dist/migrator ;
+
+cp ../../51-migrator/target/migrator-capsule.jar .
+cp ../../keystore.jks .
+
+cd ../..
+
 mkdir -p dist/manager ;
 
 cd dist/manager
