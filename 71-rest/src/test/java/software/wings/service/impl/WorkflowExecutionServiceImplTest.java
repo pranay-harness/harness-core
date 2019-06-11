@@ -1578,7 +1578,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = GEORGE)
   @Category(UnitTests.class)
+  @Ignore("This test is intermittent and the issue is not trivial to uncover")
   public void shouldTriggerTemplateCanaryWorkflow() throws InterruptedException {
     Service service1 = addService("svc1");
 
