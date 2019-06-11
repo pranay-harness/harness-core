@@ -1,6 +1,5 @@
 package software.wings.sm.states.k8s;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -37,6 +36,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,8 +52,8 @@ public class K8sTrafficSplitState extends State {
     super(name, K8S_TRAFFIC_SPLIT.name());
   }
 
-  public static final String K8S_VIRTUAL_SERVICE = "VIRTUAL_SERVICE";
-  public static final String K8S_VIRTUAL_SERVICE_PLACEDOLDER = "${VIRTUAL_SERVICE}";
+  public static final String K8S_VIRTUAL_SERVICE = "k8s.virtualServiceName";
+  public static final String K8S_VIRTUAL_SERVICE_PLACEHOLDER = "${k8s.virtualServiceName}";
   public static final String K8S_CANARY_DESTINATION = "k8s.canaryDestination";
   public static final String K8S_CANARY_DESTINATION_PLACEHOLDER = "${k8s.canaryDestination}";
   public static final String K8S_STABLE_DESTINATION = "k8s.stableDestination";
@@ -63,7 +63,7 @@ public class K8sTrafficSplitState extends State {
   @Getter
   @Setter
   @Attributes(title = "Destination Weights")
-  private List<IstioDestinationWeight> istioDestinationWeights;
+  private List<IstioDestinationWeight> istioDestinationWeights = new ArrayList<>();
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
@@ -74,7 +74,7 @@ public class K8sTrafficSplitState extends State {
       ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
       Activity activity = createActivity(context);
 
-      renderIstioDestinationWeights(context);
+      renderStateVariables(context);
 
       K8sTaskParameters k8sTaskParameters = K8sTrafficSplitTaskParameters.builder()
                                                 .activityId(activity.getUuid())
@@ -128,12 +128,18 @@ public class K8sTrafficSplitState extends State {
             new K8sDummyCommandUnit(K8sDummyCommandUnit.TrafficSplit)));
   }
 
-  private void renderIstioDestinationWeights(ExecutionContext context) {
-    if (isNotEmpty(istioDestinationWeights)) {
-      for (IstioDestinationWeight ruleWithWeight : istioDestinationWeights) {
-        if (isNotBlank(ruleWithWeight.getDestination())) {
-          ruleWithWeight.setDestination(context.renderExpression(ruleWithWeight.getDestination()));
-        }
+  private void renderStateVariables(ExecutionContext context) {
+    if (isNotBlank(virtualServiceName)) {
+      virtualServiceName = context.renderExpression(virtualServiceName);
+    }
+
+    for (IstioDestinationWeight ruleWithWeight : istioDestinationWeights) {
+      if (isNotBlank(ruleWithWeight.getDestination())) {
+        ruleWithWeight.setDestination(context.renderExpression(ruleWithWeight.getDestination()));
+      }
+
+      if (isNotBlank(ruleWithWeight.getWeight())) {
+        ruleWithWeight.setWeight(context.renderExpression(ruleWithWeight.getWeight()));
       }
     }
   }
@@ -147,6 +153,10 @@ public class K8sTrafficSplitState extends State {
       if (isNotBlank(istioDestinationWeight.getDestination())) {
         istioDestinationWeight.setDestination(istioDestinationWeight.getDestination().trim());
       }
+
+      if (isNotBlank(istioDestinationWeight.getWeight())) {
+        istioDestinationWeight.setWeight(istioDestinationWeight.getWeight().trim());
+      }
     }
   }
 
@@ -154,7 +164,21 @@ public class K8sTrafficSplitState extends State {
   public Map<String, String> validateFields() {
     Map<String, String> invalidFields = new HashMap<>();
     if (isBlank(virtualServiceName)) {
-      invalidFields.put("VirtualService Name", "VirtualService must not be blank");
+      invalidFields.put("VirtualService name", "VirtualService name must not be blank");
+    }
+
+    boolean emptyWeight = istioDestinationWeights.stream().anyMatch(
+        istioDestinationWeight -> isBlank(istioDestinationWeight.getWeight()));
+
+    if (emptyWeight) {
+      invalidFields.put("Weight", "Weight must not be blank");
+    }
+
+    boolean emptyDestination = istioDestinationWeights.stream().anyMatch(
+        istioDestinationWeight -> isBlank(istioDestinationWeight.getDestination()));
+
+    if (emptyDestination) {
+      invalidFields.put("Destination", "Destination must not be blank");
     }
 
     return invalidFields;

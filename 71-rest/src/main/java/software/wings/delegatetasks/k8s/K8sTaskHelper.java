@@ -1155,7 +1155,7 @@ public class K8sTaskHelper {
       Destination destination = new YamlUtils().read(destinationYaml, Destination.class);
 
       DestinationWeight destinationWeight = new DestinationWeight();
-      destinationWeight.setWeight(istioDestinationWeight.getWeight());
+      destinationWeight.setWeight(Integer.parseInt(istioDestinationWeight.getWeight()));
       destinationWeight.setDestination(destination);
 
       destinationWeights.add(destinationWeight);
@@ -1236,9 +1236,9 @@ public class K8sTaskHelper {
       KubernetesConfig kubernetesConfig, ExecutionLogCallback executionLogCallback) throws IOException {
     List<IstioDestinationWeight> istioDestinationWeights = new ArrayList<>();
     istioDestinationWeights.add(
-        IstioDestinationWeight.builder().destination(K8S_STABLE_DESTINATION_PLACEHOLDER).weight(100).build());
+        IstioDestinationWeight.builder().destination(K8S_STABLE_DESTINATION_PLACEHOLDER).weight("100").build());
     istioDestinationWeights.add(
-        IstioDestinationWeight.builder().destination(K8S_CANARY_DESTINATION_PLACEHOLDER).weight(0).build());
+        IstioDestinationWeight.builder().destination(K8S_CANARY_DESTINATION_PLACEHOLDER).weight("0").build());
 
     return updateVirtualServiceManifestFilesWithRoutes(
         resources, kubernetesConfig, istioDestinationWeights, executionLogCallback);
