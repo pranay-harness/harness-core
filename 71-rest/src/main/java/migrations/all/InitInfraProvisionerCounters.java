@@ -11,15 +11,12 @@ import migrations.Migration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
-import software.wings.beans.Application;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class InitInfraProvisionerCounters implements Migration {
   private static final Logger log = LoggerFactory.getLogger(InitInfraProvisionerCounters.class);
@@ -46,11 +43,10 @@ public class InitInfraProvisionerCounters implements Migration {
           continue;
         }
 
-        Set<String> appIds =
-            appService.getAppsByAccountId(accountId).stream().map(Application::getUuid).collect(Collectors.toSet());
-
-        long infraProvisionerCount =
-            wingsPersistence.createQuery(InfrastructureProvisioner.class).field("appId").in(appIds).count();
+        long infraProvisionerCount = wingsPersistence.createQuery(InfrastructureProvisioner.class)
+                                         .field(InfrastructureProvisioner.ACCOUNT_ID_KEY)
+                                         .equal(accountId)
+                                         .count();
 
         Action action = new Action(accountId, ActionType.CREATE_INFRA_PROVISIONER);
 

@@ -66,6 +66,7 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.RoleService;
@@ -122,6 +123,7 @@ public class AppServiceImpl implements AppService {
   @Inject private YamlGitService yamlGitService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private TemplateService templateService;
+  @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
 
   @Inject private Queue<PruneEvent> pruneQueue;
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;

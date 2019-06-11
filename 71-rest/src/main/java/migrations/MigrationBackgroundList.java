@@ -14,6 +14,7 @@ import migrations.all.CleanupSyncStatusForDeletedEntities;
 import migrations.all.DeleteAndAddInstanceSyncJobToAllAccounts;
 import migrations.all.DeleteOrphanNotificationGroups;
 import migrations.all.ExplodeLogMLFeedbackRecordsMigration;
+import migrations.all.InitInfraProvisionerCounters;
 import migrations.all.InitPipelineCounters;
 import migrations.all.InitServiceCounters;
 import migrations.all.InitWorkflowCounters;
@@ -73,6 +74,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(32, SetDummyTechStackForOldAccounts.class))
         .add(Pair.of(33, LogAnalysisAddExecutionIdMigration.class))
         .add(Pair.of(34, LogAnalysisBaselineMigration.class))
+        .add(Pair.of(35, InitInfraProvisionerCounters.class))
         .build();
   }
 }
