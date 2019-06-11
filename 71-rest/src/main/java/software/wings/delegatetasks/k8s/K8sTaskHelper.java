@@ -51,6 +51,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.harness.beans.FileData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
@@ -656,18 +657,16 @@ public class K8sTaskHelper {
                               .fileContent(new String(fileData.getFileBytes(), StandardCharsets.UTF_8))
                               .build());
       } else {
-        logger.info("Found file with invalid extension" + fileData.getFilePath());
+        logger.info(format("Found file [%s] with unsupported extension", fileData.getFilePath()));
       }
     }
 
     return manifestFiles;
   }
 
-  private List<ManifestFile> renderTemplateForGoTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
-      String manifestFilesDirectory, List<String> valuesFiles, ExecutionLogCallback executionLogCallback)
+  private List<ManifestFile> renderManifestFilesForGoTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
+      List<ManifestFile> manifestFiles, List<String> valuesFiles, ExecutionLogCallback executionLogCallback)
       throws Exception {
-    List<ManifestFile> manifestFiles = readManifestFilesFromDirectory(manifestFilesDirectory);
-
     if (isEmpty(valuesFiles)) {
       executionLogCallback.saveExecutionLog("No values.yaml file found. Skipping template rendering.");
       return manifestFiles;
@@ -679,7 +678,7 @@ public class K8sTaskHelper {
 
     List<ManifestFile> result = new ArrayList<>();
 
-    executionLogCallback.saveExecutionLog(color("Rendering manifest files using go template", White, Bold));
+    executionLogCallback.saveExecutionLog(color("\nRendering manifest files using go template", White, Bold));
     executionLogCallback.saveExecutionLog(
         color("Only manifest files with [.yaml] or [.yml] extension will be processed", White, Bold));
 
@@ -725,8 +724,9 @@ public class K8sTaskHelper {
     switch (storeType) {
       case Local:
       case Remote:
-        return renderTemplateForGoTemplate(
-            k8sDelegateTaskParams, manifestFilesDirectory, valuesFiles, executionLogCallback);
+        List<ManifestFile> manifestFiles = readManifestFilesFromDirectory(manifestFilesDirectory);
+        return renderManifestFilesForGoTemplate(
+            k8sDelegateTaskParams, manifestFiles, valuesFiles, executionLogCallback);
 
       case HelmSourceRepo:
         return renderTemplateForHelm(
@@ -738,6 +738,38 @@ public class K8sTaskHelper {
                 .toString();
         return renderTemplateForHelm(
             k8sDelegateTaskParams, manifestFilesDirectory, valuesFiles, releaseName, namespace, executionLogCallback);
+
+      default:
+        unhandled(storeType);
+    }
+
+    return new ArrayList<>();
+  }
+
+  public List<ManifestFile> renderTemplateForApply(K8sDelegateTaskParams k8sDelegateTaskParams,
+      K8sDelegateManifestConfig k8sDelegateManifestConfig, String manifestFilesDirectory, List<String> filesToApply,
+      List<String> valuesFiles, String releaseName, String namespace, ExecutionLogCallback executionLogCallback)
+      throws Exception {
+    StoreType storeType = k8sDelegateManifestConfig.getManifestStoreTypes();
+
+    switch (storeType) {
+      case Local:
+      case Remote:
+        List<ManifestFile> manifestFiles =
+            readFilesFromDirectory(manifestFilesDirectory, filesToApply, executionLogCallback);
+        return renderManifestFilesForGoTemplate(
+            k8sDelegateTaskParams, manifestFiles, valuesFiles, executionLogCallback);
+
+      case HelmSourceRepo:
+        return renderTemplateForHelmChartFiles(k8sDelegateTaskParams, manifestFilesDirectory, filesToApply, valuesFiles,
+            releaseName, namespace, executionLogCallback);
+
+      case HelmChartRepo:
+        manifestFilesDirectory =
+            Paths.get(manifestFilesDirectory, k8sDelegateManifestConfig.getHelmChartConfigParams().getChartName())
+                .toString();
+        return renderTemplateForHelmChartFiles(k8sDelegateTaskParams, manifestFilesDirectory, filesToApply, valuesFiles,
+            releaseName, namespace, executionLogCallback);
 
       default:
         unhandled(storeType);
@@ -1317,5 +1349,74 @@ public class K8sTaskHelper {
 
       executionLogCallback.saveExecutionLog("\n");
     }
+  }
+
+  private List<ManifestFile> readFilesFromDirectory(
+      String directory, List<String> filePaths, ExecutionLogCallback executionLogCallback) {
+    List<ManifestFile> manifestFiles = new ArrayList<>();
+
+    for (String filepath : filePaths) {
+      if (isValidManifestFile(filepath)) {
+        Path path = Paths.get(directory, filepath);
+        byte[] fileBytes;
+
+        try {
+          fileBytes = Files.readAllBytes(path);
+        } catch (Exception ex) {
+          logger.info(ExceptionUtils.getMessage(ex));
+          throw new InvalidRequestException(
+              format("Failed to read file at path [%s].\nError: %s", filepath, ExceptionUtils.getMessage(ex)));
+        }
+
+        manifestFiles.add(ManifestFile.builder()
+                              .fileName(filepath)
+                              .fileContent(new String(fileBytes, StandardCharsets.UTF_8))
+                              .build());
+      } else {
+        executionLogCallback.saveExecutionLog(
+            color(format("Ignoring file [%s] with unsupported extension", filepath), Yellow, Bold));
+      }
+    }
+
+    return manifestFiles;
+  }
+
+  private List<ManifestFile> renderTemplateForHelmChartFiles(K8sDelegateTaskParams k8sDelegateTaskParams,
+      String manifestFilesDirectory, List<String> chartFiles, List<String> valuesFiles, String releaseName,
+      String namespace, ExecutionLogCallback executionLogCallback) throws Exception {
+    String valuesFileOptions = writeValuesToFile(manifestFilesDirectory, valuesFiles);
+    logger.info("Values file options: " + valuesFileOptions);
+
+    executionLogCallback.saveExecutionLog(color("Rendering chart files using Helm", White, Bold));
+
+    List<ManifestFile> result = new ArrayList<>();
+
+    for (String chartFile : chartFiles) {
+      if (isValidManifestFile(chartFile)) {
+        try (LogOutputStream logErrorStream = getExecutionLogOutputStream(executionLogCallback, ERROR)) {
+          ProcessExecutor processExecutor =
+              new ProcessExecutor()
+                  .timeout(10, TimeUnit.SECONDS)
+                  .directory(new File(manifestFilesDirectory))
+                  .commandSplit(encloseWithQuotesIfNeeded(k8sDelegateTaskParams.getHelmPath()) + " template "
+                      + manifestFilesDirectory + " -x " + chartFile + " --name " + releaseName + " --namespace "
+                      + namespace + valuesFileOptions)
+                  .readOutput(true)
+                  .redirectError(logErrorStream);
+
+          ProcessResult processResult = processExecutor.execute();
+          if (processResult.getExitValue() != 0) {
+            throw new WingsException(format("Failed to render chart file [%s]", chartFile));
+          }
+
+          result.add(ManifestFile.builder().fileName(chartFile).fileContent(processResult.outputString()).build());
+        }
+      } else {
+        executionLogCallback.saveExecutionLog(
+            color(format("Ignoring file [%s] with unsupported extension", chartFile), Yellow, Bold));
+      }
+    }
+
+    return result;
   }
 }
