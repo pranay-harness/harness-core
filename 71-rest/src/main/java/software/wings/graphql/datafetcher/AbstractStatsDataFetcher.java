@@ -13,11 +13,14 @@ import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
 import io.harness.logging.ExceptionLogger;
 import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.beans.instance.dashboard.EntitySummary;
 import software.wings.graphql.schema.type.aggregation.QLAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLAggregateOperation;
 import software.wings.graphql.schema.type.aggregation.QLData;
@@ -237,5 +240,13 @@ public abstract class AbstractStatsDataFetcher<A, F, G, T> implements DataFetche
     QLReference qlReference =
         QLReference.builder().type(entityType).name(stats.getEntityName()).id(stats.getEntityId()).build();
     return QLDataPoint.builder().value(stats.getCount()).key(qlReference).build();
+  }
+
+  @Value
+  @Builder
+  public static class TwoLevelAggregatedData {
+    private EntitySummary firstLevelInfo;
+    private EntitySummary secondLevelInfo;
+    private long count;
   }
 }
