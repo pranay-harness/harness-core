@@ -8,7 +8,7 @@ import java.util.Map;
 
 public interface InstanceLimitProvider {
   Map<String, Integer> DEFAULT_SI_USAGE_LIMITS =
-      ImmutableMap.of(AccountType.COMMUNITY, 50, AccountType.PAID, 1500, AccountType.TRIAL, 100);
+      ImmutableMap.of(AccountType.COMMUNITY, 50, AccountType.PAID, 1500, AccountType.TRIAL, 50);
 
   static Integer defaults(String accountType) {
     if (!AccountType.isValid(accountType)) {

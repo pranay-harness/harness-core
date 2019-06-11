@@ -38,7 +38,7 @@ public class DefaultLimitsServiceImpl implements DefaultLimitsService {
         new LimitKey(ActionType.CREATE_APPLICATION, AccountType.COMMUNITY), new StaticLimit(MAX_APP_COUNT));
 
     // Service Limits
-    defaultLimits.put(new LimitKey(ActionType.CREATE_SERVICE, AccountType.TRIAL), new StaticLimit(MAX_APP_COUNT * 10));
+    defaultLimits.put(new LimitKey(ActionType.CREATE_SERVICE, AccountType.TRIAL), new StaticLimit(10));
     defaultLimits.put(new LimitKey(ActionType.CREATE_SERVICE, AccountType.PAID), new StaticLimit(MAX_APP_COUNT * 10));
     defaultLimits.put(new LimitKey(ActionType.CREATE_SERVICE, AccountType.COMMUNITY), new StaticLimit(10));
 
