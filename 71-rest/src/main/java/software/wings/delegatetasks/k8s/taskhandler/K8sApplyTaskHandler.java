@@ -4,7 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.k8s.manifest.ManifestHelper.getWorkloadsForApplyState;
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.Log.LogColor.Gray;
 import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogColor.Yellow;
 import static software.wings.beans.Log.LogLevel.ERROR;
@@ -45,7 +47,6 @@ import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
@@ -134,22 +135,34 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
     client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
 
     try {
-      List<ManifestFile> manifestFiles =
-          k8sTaskHelper.renderTemplate(k8sDelegateTaskParams, k8sApplyTaskParameters.getK8sDelegateManifestConfig(),
-              manifestFilesDirectory, k8sApplyTaskParameters.getValuesYamlList(), releaseName,
-              kubernetesConfig.getNamespace(), executionLogCallback);
+      List<String> applyFilePaths = Arrays.stream(k8sApplyTaskParameters.getFilePaths().split(","))
+                                        .map(String::trim)
+                                        .filter(filePath -> isNotBlank(filePath))
+                                        .collect(Collectors.toList());
 
-      // Remove files not specified in filePaths
-      Set<String> filePathsSet = Arrays.stream(k8sApplyTaskParameters.getFilePaths().split(","))
-                                     .map(String::trim)
-                                     .filter(filePath -> isNotBlank(filePath))
-                                     .collect(Collectors.toSet());
-      List<ManifestFile> filteredManifestFiles =
-          manifestFiles.stream()
-              .filter(manifestFile -> filePathsSet.contains(manifestFile.getFileName()))
-              .collect(Collectors.toList());
+      if (isEmpty(applyFilePaths)) {
+        executionLogCallback.saveExecutionLog(color("\nNo file specified in the state", Yellow, Bold));
+        executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
+        return false;
+      }
 
-      resources = k8sTaskHelper.readManifests(filteredManifestFiles, executionLogCallback);
+      executionLogCallback.saveExecutionLog(color("Found following files to be applied in the state", White, Bold));
+      StringBuilder sb = new StringBuilder(1024);
+      applyFilePaths.forEach(each -> sb.append(color(format("- %s", each), Gray)).append(System.lineSeparator()));
+      executionLogCallback.saveExecutionLog(sb.toString());
+
+      List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplateForApply(k8sDelegateTaskParams,
+          k8sApplyTaskParameters.getK8sDelegateManifestConfig(), manifestFilesDirectory, applyFilePaths,
+          k8sApplyTaskParameters.getValuesYamlList(), releaseName, kubernetesConfig.getNamespace(),
+          executionLogCallback);
+
+      if (isEmpty(manifestFiles)) {
+        executionLogCallback.saveExecutionLog(color("\nNo Manifests found after rendering", Yellow, Bold));
+        executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
+        return false;
+      }
+
+      resources = k8sTaskHelper.readManifests(manifestFiles, executionLogCallback);
       k8sTaskHelper.setNamespaceToKubernetesResourcesIfRequired(resources, kubernetesConfig.getNamespace());
 
       executionLogCallback.saveExecutionLog(color("\nManifests [Post template rendering] :\n", White, Bold));
