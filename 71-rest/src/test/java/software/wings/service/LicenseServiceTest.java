@@ -4,6 +4,8 @@ import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.common.Constants.HARNESS_NAME;
+import static software.wings.service.intfc.instance.licensing.InstanceLimitProvider.DEFAULT_SI_USAGE_LIMITS;
+import static software.wings.service.intfc.instance.licensing.InstanceLimitProvider.defaults;
 
 import com.google.inject.Inject;
 
@@ -24,7 +26,6 @@ import software.wings.beans.LicenseInfo;
 import software.wings.licensing.LicenseService;
 import software.wings.service.impl.LicenseUtils;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.instance.licensing.InstanceLimitProvider;
 
 import java.util.Calendar;
 
@@ -70,8 +71,7 @@ public class LicenseServiceTest extends WingsBaseTest {
     assertThat(accountFromDB.getLicenseInfo().getAccountType()).isEqualTo(AccountType.TRIAL);
     assertThat(accountFromDB.getLicenseInfo().getAccountStatus()).isEqualTo(AccountStatus.ACTIVE);
     assertThat(accountFromDB.getLicenseInfo().getExpiryTime()).isEqualTo(expiryTime);
-    assertThat(accountFromDB.getLicenseInfo().getLicenseUnits())
-        .isEqualTo(InstanceLimitProvider.defaults(AccountType.TRIAL));
+    assertThat(accountFromDB.getLicenseInfo().getLicenseUnits()).isEqualTo(defaults(AccountType.TRIAL));
   }
 
   @Test
@@ -296,7 +296,8 @@ public class LicenseServiceTest extends WingsBaseTest {
     assertThat(accountFromDB.getLicenseInfo().getAccountType()).isEqualTo(AccountType.TRIAL);
     assertThat(accountFromDB.getLicenseInfo().getAccountStatus()).isEqualTo(AccountStatus.ACTIVE);
     assertThat(accountFromDB.getLicenseInfo().getExpiryTime()).isEqualTo(expiryTime);
-    assertThat(accountFromDB.getLicenseInfo().getLicenseUnits()).isEqualTo(100);
+    assertThat(accountFromDB.getLicenseInfo().getLicenseUnits())
+        .isEqualTo(DEFAULT_SI_USAGE_LIMITS.get(AccountType.TRIAL));
   }
 
   @Test
