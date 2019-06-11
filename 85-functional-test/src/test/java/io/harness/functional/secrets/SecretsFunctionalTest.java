@@ -72,7 +72,7 @@ public class SecretsFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(emails = SWAMY, intermittent = true)
   @Category(FunctionalTests.class)
-  @Ignore("TODO: please provide clear motivation why this test is ignored")
+  @Ignore("TODO: This has some issue with datagen model, which may turn other tests flaky.")
   public void secretsCRUDTests() {
     logger.info("Secrets test starts");
     String secretsName = "Secret-" + System.currentTimeMillis();

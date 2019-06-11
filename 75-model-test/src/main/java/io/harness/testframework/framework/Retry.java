@@ -1,12 +1,6 @@
 package io.harness.testframework.framework;
 
-import io.harness.testframework.framework.matchers.ArtifactMatcher;
-import io.harness.testframework.framework.matchers.BooleanMatcher;
-import io.harness.testframework.framework.matchers.EmailMatcher;
-import io.harness.testframework.framework.matchers.MailinatorEmailMatcher;
 import io.harness.testframework.framework.matchers.Matcher;
-import io.harness.testframework.framework.matchers.NotNullMatcher;
-import io.harness.testframework.framework.matchers.SettingsAttributeMatcher;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.TimeUnit;
@@ -40,36 +34,14 @@ public class Retry<T> {
   private T retry(Supplier<T> function, Matcher<T> matcher, T expected) throws RuntimeException {
     logger.info("Execution will be retried : " + maxRetries + " times.");
     retryCounter = 0;
-    T actual = null;
+    T actual;
     while (retryCounter < maxRetries) {
       logger.info("Retry Attempt : " + retryCounter);
       try {
         TimeUnit.MILLISECONDS.sleep(this.introduceDelayInMS);
         actual = function.get();
-        if (matcher instanceof EmailMatcher) {
-          if (matcher.matches(expected, actual)) {
-            return actual;
-          }
-        } else if (matcher instanceof SettingsAttributeMatcher) {
-          if (matcher.matches(expected, actual)) {
-            return actual;
-          }
-        } else if (matcher instanceof MailinatorEmailMatcher) {
-          if (matcher.matches(expected, actual)) {
-            return actual;
-          }
-        } else if (matcher instanceof ArtifactMatcher) {
-          if (matcher.matches(expected, actual)) {
-            return actual;
-          }
-        } else if (matcher instanceof BooleanMatcher) {
-          if (matcher.matches(expected, actual)) {
-            return actual;
-          }
-        } else if (matcher instanceof NotNullMatcher) {
-          if (matcher.matches(expected, actual)) {
-            return actual;
-          }
+        if (matcher.matches(expected, actual)) {
+          return actual;
         }
       } catch (Exception ex) {
         logger.info("Execution failed on retry " + retryCounter + " of " + maxRetries + " error: " + ex);

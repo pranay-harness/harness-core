@@ -136,7 +136,7 @@ public class SSOTestPaid extends AbstractE2ETest {
   @Owner(emails = SWAMY, resent = false)
   @Category(E2ETests.class)
   public void createSAMLSettingsInPaid() {
-    logger.info("Starting the LDAP test");
+    logger.info("Starting the SAML test");
     String filePath = System.getProperty("user.dir");
     filePath = filePath + "/"
         + "src/test/resources/secrets/"
