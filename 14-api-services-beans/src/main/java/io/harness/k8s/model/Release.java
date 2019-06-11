@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -19,4 +20,15 @@ public class Release {
   private List<KubernetesResourceId> resources;
   private KubernetesResourceId managedWorkload;
   private String managedWorkloadRevision;
+
+  @Builder.Default private List<KubernetesResourceIdRevision> managedWorkloads = new ArrayList();
+
+  @Data
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class KubernetesResourceIdRevision {
+    private KubernetesResourceId workload;
+    private String revision;
+  }
 }
