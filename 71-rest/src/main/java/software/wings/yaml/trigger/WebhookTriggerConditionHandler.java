@@ -51,12 +51,14 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
             .webhookSource(getBeanWebhookSource(webhookConditionYaml.getRepositoryType()))
             .build();
 
-    if (webhookConditionYaml.getRepositoryType().equals("GitLab")) {
-      webHookTriggerCondition.setActions(
-          getPRActionTypes(webhookConditionYaml.getAction(), webhookConditionYaml.getRepositoryType()));
-    } else if (webhookConditionYaml.getRepositoryType().equals("Bitbucket")) {
-      webHookTriggerCondition.setBitBucketEvents(
-          getBitBucketEventType(webhookConditionYaml.getAction(), webhookConditionYaml.getRepositoryType()));
+    if (EmptyPredicate.isNotEmpty(webhookConditionYaml.getRepositoryType())) {
+      if (webhookConditionYaml.getRepositoryType().equals("GitLab")) {
+        webHookTriggerCondition.setActions(
+            getPRActionTypes(webhookConditionYaml.getAction(), webhookConditionYaml.getRepositoryType()));
+      } else if (webhookConditionYaml.getRepositoryType().equals("Bitbucket")) {
+        webHookTriggerCondition.setBitBucketEvents(
+            getBitBucketEventType(webhookConditionYaml.getAction(), webhookConditionYaml.getRepositoryType()));
+      }
     }
 
     return webHookTriggerCondition;
@@ -101,7 +103,8 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
   }
 
   private List<PrAction> getPRActionTypes(List<String> actions, String webhookSource) {
-    if (webhookSource.equals("GitLab") && EmptyPredicate.isNotEmpty(actions)) {
+    if (EmptyPredicate.isNotEmpty(actions) && EmptyPredicate.isNotEmpty(webhookSource)
+        && webhookSource.equals("GitLab")) {
       return actions.stream().map(action -> PrAction.find(action)).collect(Collectors.toList());
     } else {
       return null;
@@ -109,7 +112,8 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
   }
 
   private List<BitBucketEventType> getBitBucketEventType(List<String> actions, String webhookSource) {
-    if (webhookSource.equals("Bitbucket") && EmptyPredicate.isNotEmpty(actions)) {
+    if (EmptyPredicate.isNotEmpty(actions) && EmptyPredicate.isNotEmpty(webhookSource)
+        && webhookSource.equals("Bitbucket")) {
       return actions.stream().map(action -> BitBucketEventType.find(action)).collect(Collectors.toList());
     } else {
       return null;
