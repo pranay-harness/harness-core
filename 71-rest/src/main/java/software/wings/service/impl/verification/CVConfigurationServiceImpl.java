@@ -394,7 +394,6 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       TimeSeriesMetricTemplates timeSeriesMetricTemplates =
           wingsPersistence.createQuery(TimeSeriesMetricTemplates.class)
               .filter(TimeSeriesMetricTemplatesKeys.cvConfigId, serviceConfigurationId)
-              .filter(TimeSeriesMetricTemplates.ACCOUNT_ID_KEY, accountId)
               .get();
       if (timeSeriesMetricTemplates != null) {
         wingsPersistence.delete(TimeSeriesMetricTemplates.class, timeSeriesMetricTemplates.getUuid());

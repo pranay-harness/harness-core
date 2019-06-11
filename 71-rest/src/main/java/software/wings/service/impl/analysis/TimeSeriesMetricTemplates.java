@@ -29,8 +29,8 @@ import java.util.Map;
 @Entity(value = "timeSeriesMetricTemplates", noClassnameStored = true)
 @Indexes({
   @Index(fields = {
-    @Field("stateType"), @Field("stateExecutionId"), @Field("cvConfigId"), @Field("accountId")
-  }, options = @IndexOptions(unique = true, name = "uniqueIdx"))
+    @Field("stateExecutionId"), @Field("cvConfigId")
+  }, options = @IndexOptions(unique = true, name = "unique_Idx"))
 })
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -38,9 +38,9 @@ import java.util.Map;
 public class TimeSeriesMetricTemplates extends Base {
   @NotEmpty private StateType stateType;
 
-  @NotEmpty @Indexed private String stateExecutionId;
+  @NotEmpty private String stateExecutionId;
 
-  private String cvConfigId;
+  @Indexed private String cvConfigId;
 
   private String accountId;
 

@@ -419,8 +419,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
       String accountId, String appId, String cvConfigId, long startTime, long endTIme) {
     Set<String> tags = new HashSet<>();
     Map<String, Double> tagScoreMap = new HashMap<>();
-    TimeSeriesMetricTemplates template = wingsPersistence.createQuery(TimeSeriesMetricTemplates.class)
-                                             .filter("appId", appId)
+    TimeSeriesMetricTemplates template = wingsPersistence.createQuery(TimeSeriesMetricTemplates.class, excludeAuthority)
                                              .filter(TimeSeriesMetricTemplatesKeys.cvConfigId, cvConfigId)
                                              .get();
 
