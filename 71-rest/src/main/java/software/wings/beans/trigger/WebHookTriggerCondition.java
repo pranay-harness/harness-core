@@ -32,6 +32,7 @@ public class WebHookTriggerCondition extends TriggerCondition {
   private List<String> filePaths;
   private String gitConnectorId;
   private String branchName;
+  private String branchRegex;
   private boolean checkFileContentChanged;
 
   public WebHookTriggerCondition() {
@@ -41,7 +42,7 @@ public class WebHookTriggerCondition extends TriggerCondition {
   public WebHookTriggerCondition(WebHookToken webHookToken, String artifactStreamId, Map<String, String> parameters,
       WebhookSource webhookSource, List<WebhookEventType> eventTypes, List<PrAction> actions,
       List<BitBucketEventType> bitBucketEvents, List<String> filePaths, String gitConnectorId, String branchName,
-      boolean checkFileContentChanged) {
+      String branchRegex, boolean checkFileContentChanged) {
     this();
     this.webHookToken = webHookToken;
     this.artifactStreamId = artifactStreamId;
@@ -53,6 +54,7 @@ public class WebHookTriggerCondition extends TriggerCondition {
     this.filePaths = filePaths;
     this.gitConnectorId = gitConnectorId;
     this.branchName = branchName;
+    this.branchRegex = branchRegex;
     this.checkFileContentChanged = checkFileContentChanged;
   }
 }
