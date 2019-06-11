@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.annotation.HarnessExportableEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Base;
@@ -16,6 +17,7 @@ import javax.validation.constraints.NotNull;
 @HarnessExportableEntity
 @Data
 @EqualsAndHashCode(callSuper = false)
+@FieldNameConstants(innerTypeName = "SSOSettingsKeys")
 public abstract class SSOSettings extends Base {
   @NotNull protected SSOType type;
   @NotEmpty protected String displayName;

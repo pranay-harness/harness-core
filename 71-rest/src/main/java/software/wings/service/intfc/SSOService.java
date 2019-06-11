@@ -7,15 +7,17 @@ import software.wings.beans.sso.LdapTestResponse;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.authentication.SSOConfig;
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 // TODO: Refactor this to make it more abstract and common across different SSO providers
 public interface SSOService {
-  SSOConfig uploadOauthConfiguration(String accountId, String displayName, String filter);
+  SSOConfig uploadOauthConfiguration(String accountId, String filter, Set<OauthProviderType> allowedProviders);
 
   SSOConfig uploadSamlConfiguration(@NotNull String accountId, @NotNull InputStream inputStream,
       @NotNull String displayName, String groupMembershipAttr, @NotNull Boolean authorizationEnabled);
@@ -49,7 +51,7 @@ public interface SSOService {
 
   Collection<LdapGroupResponse> searchGroupsByName(@NotBlank String ldapSettingsId, @NotBlank String nameQuery);
 
-  OauthSettings updateOauthSettings(String accountId, String displayName, String filter);
+  OauthSettings updateOauthSettings(String accountId, String filter, Set<OauthProviderType> allowedProviders);
 
   SSOConfig deleteOauthConfiguration(String accountId);
 

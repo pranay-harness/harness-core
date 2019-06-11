@@ -50,6 +50,8 @@ import software.wings.service.intfc.security.SecretManager;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -102,9 +104,11 @@ public class SSOSettingServiceImpl implements SSOSettingService {
       queriedSettings.setDisplayName(settings.getDisplayName());
       queriedSettings.setOrigin(settings.getOrigin());
       queriedSettings.setGroupMembershipAttr(settings.getGroupMembershipAttr());
-      savedSettings = wingsPersistence.saveAndGet(SamlSettings.class, queriedSettings);
+      String ssoSettingUuid = wingsPersistence.save(queriedSettings);
+      savedSettings = wingsPersistence.get(SamlSettings.class, ssoSettingUuid);
     } else {
-      savedSettings = wingsPersistence.saveAndGet(SamlSettings.class, settings);
+      String ssoSettingUuid = wingsPersistence.save(settings);
+      savedSettings = wingsPersistence.get(SamlSettings.class, ssoSettingUuid);
       eventPublishHelper.publishSSOEvent(settings.getAccountId());
     }
 
@@ -118,26 +122,29 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     if (queriedSettings != null) {
       queriedSettings.setUrl(settings.getUrl());
       queriedSettings.setDisplayName(settings.getDisplayName());
+      queriedSettings.setAllowedProviders(settings.getAllowedProviders());
       queriedSettings.setFilter(settings.getFilter());
-      savedSettings = wingsPersistence.saveAndGet(OauthSettings.class, queriedSettings);
+      wingsPersistence.save(queriedSettings);
+      savedSettings = wingsPersistence.get(OauthSettings.class, queriedSettings.getUuid());
     } else {
-      savedSettings = wingsPersistence.saveAndGet(OauthSettings.class, settings);
+      String ssoSettingUuid = wingsPersistence.save(settings);
+      savedSettings = wingsPersistence.get(OauthSettings.class, ssoSettingUuid);
       eventPublishHelper.publishSSOEvent(settings.getAccountId());
     }
     return savedSettings;
   }
 
   @Override
-  public OauthSettings updateOauthSettings(String accountId, String displayName, String filter) {
+  public OauthSettings updateOauthSettings(String accountId, String filter, Set<OauthProviderType> allowedProviders) {
     OauthSettings oldSettings = getOauthSettingsByAccountId(accountId);
     if (oldSettings == null) {
       throw new InvalidRequestException("No existing Oauth settings found for this account.");
     }
     oldSettings.setFilter(filter);
-    oldSettings.setDisplayName(displayName);
-    OauthProviderType oauthProvider = OauthProviderType.valueOf(displayName.toUpperCase());
-    oldSettings.setUrl(oauthOptions.getRedirectURI(oauthProvider));
-    return wingsPersistence.saveAndGet(OauthSettings.class, oldSettings);
+    oldSettings.setAllowedProviders(allowedProviders);
+    oldSettings.setDisplayName(allowedProviders.stream().map(OauthProviderType::name).collect(Collectors.joining(",")));
+    wingsPersistence.save(oldSettings);
+    return wingsPersistence.get(OauthSettings.class, oldSettings.getUuid());
   }
 
   @Override

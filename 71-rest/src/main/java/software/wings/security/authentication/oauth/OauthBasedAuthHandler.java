@@ -1,11 +1,11 @@
 package software.wings.security.authentication.oauth;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.fabric8.utils.Strings;
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -27,6 +27,7 @@ import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -122,12 +123,14 @@ public class OauthBasedAuthHandler implements AuthHandler {
   }
 
   private void matchOauthProviderAndApplyEmailFilter(final User user, final OauthClient oauthClient) {
-    OauthSettings oauthSettings =
-        ssoSettingService.getOauthSettingsByAccountId(authenticationUtils.getPrimaryAccount(user).getUuid());
+    String primaryAccountId = authenticationUtils.getPrimaryAccount(user).getUuid();
+    OauthSettings oauthSettings = ssoSettingService.getOauthSettingsByAccountId(primaryAccountId);
     if (oauthSettings == null) {
       return;
     }
-    matchOauthProviderAndAuthMechanism(oauthClient.getName(), oauthSettings.getDisplayName());
+    Set<OauthProviderType> allowedOauthProviders = Sets.newHashSet(oauthSettings.getAllowedProviders());
+    logger.info("Matching OAuth Provider for user {}, account {}", user.getEmail(), primaryAccountId);
+    matchOauthProviderAndAuthMechanism(user.getEmail(), oauthClient.getName(), allowedOauthProviders);
     applyEmailFilter(user, oauthSettings);
   }
 
@@ -148,11 +151,13 @@ public class OauthBasedAuthHandler implements AuthHandler {
     }
   }
 
-  private void matchOauthProviderAndAuthMechanism(String oauthProvider, String oauthMechInDB) {
-    if (!oauthMechInDB.equals(oauthProvider)) {
-      logger.error("Mismatch in the oauth provider received {} and oauth provided in access settings {}", oauthProvider,
-          oauthMechInDB);
-      throw new InvalidRequestException("Oauth provider mismatch.");
+  private void matchOauthProviderAndAuthMechanism(
+      String email, String oauthProvider, Set<OauthProviderType> allowedOauthProviders) {
+    if (!allowedOauthProviders.contains(OauthProviderType.valueOf(oauthProvider.toUpperCase()))) {
+      logger.info("Could not login email {} with OAuth provider {} as the allowed providers for the account are {}",
+          email, oauthProvider, allowedOauthProviders);
+      String errorMsg = "OAuth via " + oauthProvider + " is not enabled for your account";
+      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, errorMsg, WingsException.USER);
     }
   }
 

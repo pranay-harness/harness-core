@@ -1,15 +1,20 @@
 package software.wings.security.authentication.oauth;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
-import software.wings.beans.Account;
+import io.harness.exception.WingsException;
 import software.wings.beans.User;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.saml.SSORequest;
 import software.wings.service.impl.SSOSettingServiceImpl;
+
+import java.util.List;
 
 public class OauthOptions {
   @Inject GithubClientImpl githubClient;
@@ -45,14 +50,15 @@ public class OauthOptions {
   }
 
   public SSORequest oauthProviderRedirectionUrl(User user) {
-    Account primaryAccount = authenticationUtils.getPrimaryAccount(user);
-    OauthSettings oauthSettings = ssoSettingService.getOauthSettingsByAccountId(primaryAccount.getUuid());
-    String displayName = oauthSettings.getPublicSSOSettings().getDisplayName();
-    OauthProviderType oauthProviderType = OauthProviderType.valueOf(displayName.toUpperCase());
-    OauthClient oauthProvider = getOauthProvider(oauthProviderType);
-    SSORequest ssoRequest = new SSORequest();
-    ssoRequest.setIdpRedirectUrl(oauthProvider.getRedirectUrl().toString());
-    ssoRequest.setOauthProviderType(oauthProviderType);
-    return ssoRequest;
+    OauthSettings oauthSettings = ssoSettingService.getOauthSettingsByAccountId(user.getDefaultAccountId());
+
+    if (null == oauthSettings || isEmpty(oauthSettings.getAllowedProviders())) {
+      throw new WingsException("Could not fetch OAuth settings");
+    }
+
+    List<OauthProviderType> oauthProviderTypes = Lists.newArrayList(oauthSettings.getAllowedProviders());
+    OauthProviderType defaultOAuthProviderType = oauthProviderTypes.get(0);
+
+    return new SSORequest(defaultOAuthProviderType, getRedirectURI(defaultOAuthProviderType), oauthProviderTypes);
   }
 }

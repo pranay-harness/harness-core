@@ -58,6 +58,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -88,10 +89,12 @@ public class SSOServiceImpl implements SSOService {
   }
 
   @Override
-  public SSOConfig uploadOauthConfiguration(String accountId, String displayName, String filter) {
+  public SSOConfig uploadOauthConfiguration(String accountId, String filter, Set<OauthProviderType> allowedProviders) {
     try {
-      OauthProviderType oauthProvider = OauthProviderType.valueOf(displayName.toUpperCase());
-      buildAndUploadOauthSettings(accountId, displayName, oauthOptions.getRedirectURI(oauthProvider), filter);
+      if (isEmpty(allowedProviders)) {
+        throw new InvalidRequestException("At least one OAuth provider must be selected.");
+      }
+      buildAndUploadOauthSettings(accountId, filter, allowedProviders);
       return getAccountAccessManagementSettings(accountId);
     } catch (Exception e) {
       throw new WingsException(ErrorCode.INVALID_OAUTH_CONFIGURATION, e);
@@ -214,9 +217,10 @@ public class SSOServiceImpl implements SSOService {
     return ssoSettingService.saveSamlSettings(samlSettings);
   }
 
-  private OauthSettings buildAndUploadOauthSettings(String accountId, String displayName, String url, String filter) {
+  private OauthSettings buildAndUploadOauthSettings(
+      String accountId, String filter, Set<OauthProviderType> allowedProviders) {
     OauthSettings oauthSettings =
-        OauthSettings.builder().accountId(accountId).displayName(displayName).url(url).filter(filter).build();
+        OauthSettings.builder().accountId(accountId).allowedProviders(allowedProviders).filter(filter).build();
     return ssoSettingService.saveOauthSettings(oauthSettings);
   }
 
@@ -403,8 +407,8 @@ public class SSOServiceImpl implements SSOService {
   }
 
   @Override
-  public OauthSettings updateOauthSettings(String accountId, String displayName, String filter) {
-    return ssoSettingService.updateOauthSettings(accountId, displayName, filter);
+  public OauthSettings updateOauthSettings(String accountId, String filter, Set<OauthProviderType> allowedProviders) {
+    return ssoSettingService.updateOauthSettings(accountId, filter, allowedProviders);
   }
 
   private boolean deleteSamlSettings(String accountId, String targetAccountType) {

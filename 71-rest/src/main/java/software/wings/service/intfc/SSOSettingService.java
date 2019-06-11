@@ -7,10 +7,12 @@ import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SamlSettings;
+import software.wings.security.authentication.OauthProviderType;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -82,7 +84,7 @@ public interface SSOSettingService extends OwnedByAccount {
    */
   boolean isDefault(@NotBlank String accountId, @NotBlank String ssoId);
 
-  OauthSettings updateOauthSettings(String accountId, String displayName, String filter);
+  OauthSettings updateOauthSettings(String accountId, String filter, Set<OauthProviderType> allowedProviders);
 
   boolean deleteOauthSettings(String accountId);
 

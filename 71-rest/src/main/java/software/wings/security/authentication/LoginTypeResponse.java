@@ -9,4 +9,5 @@ import software.wings.security.saml.SSORequest;
 public class LoginTypeResponse {
   private AuthenticationMechanism authenticationMechanism;
   private SSORequest SSORequest;
+  private boolean isOauthEnabled;
 }

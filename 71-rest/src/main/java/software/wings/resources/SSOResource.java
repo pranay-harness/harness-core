@@ -88,7 +88,7 @@ public class SSOResource {
       throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED);
     }
     return new RestResponse<>(
-        ssoService.uploadOauthConfiguration(accountId, oauthSettings.getDisplayName(), oauthSettings.getFilter()));
+        ssoService.uploadOauthConfiguration(accountId, oauthSettings.getFilter(), oauthSettings.getAllowedProviders()));
   }
 
   @DELETE
@@ -108,7 +108,7 @@ public class SSOResource {
       throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED);
     }
     return new RestResponse<>(
-        ssoService.updateOauthSettings(accountId, oauthSettings.getDisplayName(), oauthSettings.getFilter()));
+        ssoService.updateOauthSettings(accountId, oauthSettings.getFilter(), oauthSettings.getAllowedProviders()));
   }
 
   /**

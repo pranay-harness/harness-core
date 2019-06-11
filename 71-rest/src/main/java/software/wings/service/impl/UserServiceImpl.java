@@ -137,6 +137,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.AuthenticationUtils;
+import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
@@ -1466,11 +1467,13 @@ public class UserServiceImpl implements UserService {
   }
 
   private void createSSOSettingsAndMarkAsDefaultAuthMechanism(String accountId, OauthClient oauthClient) {
-    OauthSettings oauthSettings = OauthSettings.builder()
-                                      .accountId(accountId)
-                                      .displayName(oauthClient.getName())
-                                      .url(oauthClient.getRedirectUrl().toString())
-                                      .build();
+    OauthSettings oauthSettings =
+        OauthSettings.builder()
+            .accountId(accountId)
+            .displayName(
+                Arrays.stream(OauthProviderType.values()).map(OauthProviderType::name).collect(Collectors.joining(",")))
+            .allowedProviders(Arrays.stream(OauthProviderType.values()).collect(Collectors.toSet()))
+            .build();
     ssoSettingService.saveOauthSettings(oauthSettings);
     logger.info("Setting authentication mechanism as oauth for account id: {}", accountId);
     ssoService.setAuthenticationMechanism(accountId, AuthenticationMechanism.OAUTH);
@@ -2394,5 +2397,18 @@ public class UserServiceImpl implements UserService {
       logger.info("User {} is enabled: {}", user.getEmail(), enabled);
     }
     return true;
+  }
+
+  public boolean isOauthEnabled(User user) {
+    Account primaryAccount = authenticationUtils.getPrimaryAccount(user);
+    if (null != primaryAccount) {
+      final String accountId = primaryAccount.getUuid();
+      if (isNotEmpty(accountId)) {
+        OauthSettings oauthSettings = ssoSettingService.getOauthSettingsByAccountId(accountId);
+        return null != oauthSettings;
+      }
+      return false;
+    }
+    return false;
   }
 }
