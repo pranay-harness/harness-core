@@ -178,6 +178,8 @@ public class WebHookServiceImpl implements WebHookService {
       try {
         resolvedParameters = resolveWebhookParameters(
             webhookEventPayload, httpHeaders, trigger, triggerExecution.getWebhookEventDetails());
+        // Validate the give branch name matches the one with selected one
+        webhookTriggerProcessor.validateBranchName(trigger, triggerExecution);
       } catch (WingsException ex) {
         ExceptionLogger.logProcessedMessages(ex, MANAGER, logger);
         triggerExecution.setMessage(ExceptionUtils.getMessage(ex));
@@ -282,9 +284,9 @@ public class WebHookServiceImpl implements WebHookService {
     Map<String, Object> payLoadMap = JsonUtils.asObject(payload, new TypeReference<Map<String, Object>>() {});
 
     String branchName = webhookEventUtils.obtainBranchName(webhookSource, httpHeaders, payLoadMap);
-    String storedBranch = webhookTriggerCondition.getBranchName();
-    if (EmptyPredicate.isNotEmpty(storedBranch) && EmptyPredicate.isNotEmpty(branchName)) {
-      validateBranchWithRegex(storedBranch, branchName);
+    String storedBranchRegex = webhookTriggerCondition.getBranchRegex();
+    if (EmptyPredicate.isNotEmpty(storedBranchRegex) && EmptyPredicate.isNotEmpty(branchName)) {
+      validateBranchWithRegex(storedBranchRegex, branchName);
     }
     validateWebHook(webhookSource, trigger, webhookTriggerCondition, payLoadMap, httpHeaders);
     webhookEventDetails.setPayload(payload);

@@ -1019,6 +1019,7 @@ public class TriggerServiceImpl implements TriggerService {
         } else {
           // Clear the content
           webHookTriggerCondition.setFilePaths(null);
+          webHookTriggerCondition.setBranchName(null);
         }
         break;
       case SCHEDULED:

@@ -105,7 +105,7 @@ public class WebHookServiceTest extends WingsBaseTest {
                          .webhookSource(WebhookSource.BITBUCKET)
                          .parameters(of("PullRequestId", "${pullrequest.id}"))
                          .webHookToken(WebHookToken.builder().webHookToken(token).build())
-                         .branchName("harshBranch(.*)")
+                         .branchRegex("harshBranch(.*)")
                          .build())
           .build();
 
