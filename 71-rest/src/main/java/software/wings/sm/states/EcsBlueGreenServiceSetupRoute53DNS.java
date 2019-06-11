@@ -1,7 +1,9 @@
 package software.wings.sm.states;
 
+import static com.google.common.collect.Maps.newHashMap;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static java.util.Collections.singletonList;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -207,4 +209,22 @@ public class EcsBlueGreenServiceSetupRoute53DNS extends State {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
+
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> invalidFields = newHashMap();
+    if (isEmpty(serviceDiscoveryService1JSON)) {
+      invalidFields.put("serviceDiscoveryService1JSON", "Specification - 1 of Service Discovery should not be empty");
+    }
+    if (isEmpty(serviceDiscoveryService2JSON)) {
+      invalidFields.put("serviceDiscoveryService2JSON", "Specification - 2 of Service Discovery should not be empty");
+    }
+    if (isEmpty(parentRecordName)) {
+      invalidFields.put("parentRecordName", "Canonical Name should not be empty");
+    }
+    if (isEmpty(parentRecordHostedZoneId)) {
+      invalidFields.put("parentRecordHostedZoneId", "Zone hosting alias should not be empty");
+    }
+    return invalidFields;
+  }
 }
