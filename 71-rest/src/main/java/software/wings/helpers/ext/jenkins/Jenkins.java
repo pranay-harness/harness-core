@@ -142,4 +142,6 @@ public interface Jenkins {
   Build getBuild(QueueReference queueItem) throws IOException;
 
   boolean isRunning();
+
+  Map<String, String> getEnvVars(String buildUrl);
 }
