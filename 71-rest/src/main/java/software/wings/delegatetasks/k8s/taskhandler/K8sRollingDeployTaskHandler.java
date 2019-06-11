@@ -1,8 +1,8 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
-import static io.harness.k8s.manifest.ManifestHelper.getManagedWorkload;
 import static io.harness.k8s.manifest.ManifestHelper.getWorkloads;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
@@ -34,8 +34,11 @@ import io.harness.k8s.model.HarnessAnnotations;
 import io.harness.k8s.model.HarnessLabelValues;
 import io.harness.k8s.model.HarnessLabels;
 import io.harness.k8s.model.K8sPod;
+import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesResource;
+import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
+import io.harness.k8s.model.Release.KubernetesResourceIdRevision;
 import io.harness.k8s.model.Release.Status;
 import io.harness.k8s.model.ReleaseHistory;
 import lombok.NoArgsConstructor;
@@ -75,7 +78,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
   private Kubectl client;
   private ReleaseHistory releaseHistory;
   Release release;
-  KubernetesResource managedWorkload;
+  List<KubernetesResource> managedWorkloads;
   List<KubernetesResource> resources;
   private String releaseName;
   private String manifestFilesDirectory;
@@ -119,18 +122,21 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       return getFailureResponse();
     }
 
-    if (managedWorkload == null) {
+    if (isEmpty(managedWorkloads)) {
       k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, WaitForSteadyState)
           .saveExecutionLog("Skipping Status Check since there is no Managed Workload.", INFO, SUCCESS);
     } else {
-      release.setManagedWorkload(managedWorkload.getResourceId());
-      release.setManagedWorkloadRevision(
-          k8sTaskHelper.getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));
+      setManagedWorkloadsInRelease(k8sDelegateTaskParams);
 
       kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
           k8sRollingDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
 
-      success = k8sTaskHelper.doStatusCheck(client, managedWorkload.getResourceId(), k8sDelegateTaskParams,
+      List<KubernetesResourceId> managedWorkloadKubernetesResourceIds =
+          managedWorkloads.stream()
+              .map(kubernetesResource -> kubernetesResource.getResourceId())
+              .collect(Collectors.toList());
+      success = k8sTaskHelper.doStatusCheckForAllResources(client, managedWorkloadKubernetesResourceIds,
+          k8sDelegateTaskParams, kubernetesConfig.getNamespace(),
           k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, WaitForSteadyState));
       if (!success) {
         releaseHistory.setReleaseStatus(Status.Failed);
@@ -160,10 +166,18 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
   }
 
   private List<K8sPod> getPods() {
-    if (managedWorkload != null) {
-      return k8sTaskHelper.getPodDetails(kubernetesConfig, managedWorkload.getResourceId().getNamespace(), releaseName);
+    List<K8sPod> k8sPods = new ArrayList<>();
+
+    if (isEmpty(managedWorkloads)) {
+      return k8sPods;
     }
-    return new ArrayList<>();
+
+    for (KubernetesResource kubernetesResource : managedWorkloads) {
+      k8sPods.addAll(k8sTaskHelper.getPodDetails(
+          kubernetesConfig, kubernetesResource.getResourceId().getNamespace(), releaseName));
+    }
+
+    return k8sPods;
   }
 
   private List<K8sPod> getNewPods(List<K8sPod> existingPods) {
@@ -236,6 +250,10 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
       List<KubernetesResource> workloads = getWorkloads(resources);
 
+      // ToDo anshul Remove this once you enable multiple workloads in rolling workflow
+      // Search above in code while removing
+      // This is to support rollback of depployment after this change was enabled.
+      // It just provides backward comptability if you move to new version of code and then rollback
       if (workloads.size() > 1) {
         executionLogCallback.saveExecutionLog(
             "\nMore than one workloads found in the Manifests. Only one can be managed. Others should be marked with annotation "
@@ -256,29 +274,19 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
       k8sTaskHelper.cleanup(client, k8sDelegateTaskParams, releaseHistory, executionLogCallback);
 
-      managedWorkload = getManagedWorkload(resources);
+      managedWorkloads = getWorkloads(resources);
 
-      if (managedWorkload == null) {
+      if (isEmpty(managedWorkloads)) {
         executionLogCallback.saveExecutionLog(color("\nNo Managed Workload found.", Yellow, Bold));
       } else {
-        executionLogCallback.saveExecutionLog(
-            "\nManaged Workload is: " + color(managedWorkload.getResourceId().kindNameRef(), Cyan, Bold));
+        executionLogCallback.saveExecutionLog(color("\nFound following Managed Workloads: \n", Cyan, Bold)
+            + k8sTaskHelper.getResourcesInTableFormat(managedWorkloads));
 
         executionLogCallback.saveExecutionLog("\nVersioning resources.");
-
         addRevisionNumber(resources, release.getNumber());
 
-        Map<String, String> podLabels = k8sRollingDeployTaskParameters.isInCanaryWorkflow()
-            ? ImmutableMap.of(
-                  HarnessLabels.releaseName, releaseName, HarnessLabels.track, HarnessLabelValues.trackStable)
-            : ImmutableMap.of(HarnessLabels.releaseName, releaseName);
-
-        managedWorkload.addLabelsInPodSpec(podLabels);
-
-        if (k8sRollingDeployTaskParameters.isInCanaryWorkflow()) {
-          managedWorkload.addLabelsInDeploymentSelector(
-              ImmutableMap.of(HarnessLabels.track, HarnessLabelValues.trackStable));
-        }
+        addLabelsInManagedWorkloadPodSpec(k8sRollingDeployTaskParameters);
+        addLabelsInDeploymentSelectorForCanary(k8sRollingDeployTaskParameters);
       }
     } catch (Exception e) {
       logger.error("Exception:", e);
@@ -308,5 +316,48 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       throws IOException {
     k8sTaskHelper.updateDestinationRuleManifestFilesWithSubsets(resources,
         asList(HarnessLabelValues.trackCanary, HarnessLabelValues.trackStable), kubernetesConfig, executionLogCallback);
+  }
+
+  private void addLabelsInManagedWorkloadPodSpec(K8sRollingDeployTaskParameters k8sRollingDeployTaskParameters) {
+    Map<String, String> podLabels = k8sRollingDeployTaskParameters.isInCanaryWorkflow()
+        ? ImmutableMap.of(HarnessLabels.releaseName, releaseName, HarnessLabels.track, HarnessLabelValues.trackStable)
+        : ImmutableMap.of(HarnessLabels.releaseName, releaseName);
+
+    for (KubernetesResource kubernetesResource : managedWorkloads) {
+      kubernetesResource.addLabelsInPodSpec(podLabels);
+    }
+  }
+
+  private void addLabelsInDeploymentSelectorForCanary(K8sRollingDeployTaskParameters k8sRollingDeployTaskParameters) {
+    if (!k8sRollingDeployTaskParameters.isInCanaryWorkflow()) {
+      return;
+    }
+
+    for (KubernetesResource kubernetesResource : managedWorkloads) {
+      if (Kind.Deployment.name().equals(kubernetesResource.getResourceId().getKind())) {
+        kubernetesResource.addLabelsInDeploymentSelector(
+            ImmutableMap.of(HarnessLabels.track, HarnessLabelValues.trackStable));
+      }
+    }
+  }
+
+  private void setManagedWorkloadsInRelease(K8sDelegateTaskParams k8sDelegateTaskParams) throws Exception {
+    List<KubernetesResourceIdRevision> kubernetesResourceIdRevisions = new ArrayList<>();
+
+    for (KubernetesResource kubernetesResource : managedWorkloads) {
+      String latestRevision =
+          k8sTaskHelper.getLatestRevision(client, kubernetesResource.getResourceId(), k8sDelegateTaskParams);
+
+      kubernetesResourceIdRevisions.add(KubernetesResourceIdRevision.builder()
+                                            .workload(kubernetesResource.getResourceId())
+                                            .revision(latestRevision)
+                                            .build());
+
+      // ToDo anshul Remove this once you enable multiple workloads in rolling workflow
+      release.setManagedWorkload(kubernetesResource.getResourceId());
+      release.setManagedWorkloadRevision(latestRevision);
+    }
+
+    release.setManagedWorkloads(kubernetesResourceIdRevisions);
   }
 }

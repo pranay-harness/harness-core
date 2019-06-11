@@ -148,6 +148,7 @@ public class ManifestHelper {
         .filter(resource
             -> ImmutableSet.of(Kind.Deployment.name(), Kind.StatefulSet.name(), Kind.DaemonSet.name(), Kind.Job.name())
                    .contains(resource.getResourceId().getKind()))
+        .filter(resource -> !resource.isDirectApply())
         .collect(Collectors.toList());
   }
 
