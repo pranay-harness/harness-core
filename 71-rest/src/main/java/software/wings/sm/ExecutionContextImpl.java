@@ -405,12 +405,16 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       context.put(expressionProcessor.getPrefixObjectName(), expressionProcessor);
     }
 
+    if (isNotEmpty(normalizedExpressionMap)) {
+      logger.info("The above code seems obsolete, but if you see me in the logs, it is not");
+    }
+
     return evaluate(sb.toString(), normalizedExpressionMap, context, defaultObjectPrefix);
   }
 
   private Object evaluate(String expr, Map<String, String> normalizedExpressionMap, Map<String, Object> context,
       String defaultObjectPrefix) {
-    Map<String, Object> evaluatedValueMap = new HashMap<>();
+    Map<String, Object> evaluatedValueMap = new HashMap<>(context);
     for (Entry<String, String> entry : normalizedExpressionMap.entrySet()) {
       String key = entry.getKey();
       Object val = evaluator.evaluate(normalizedExpressionMap.get(key), context);
