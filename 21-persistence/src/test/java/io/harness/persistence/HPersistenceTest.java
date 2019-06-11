@@ -3,9 +3,11 @@ package io.harness.persistence;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 import com.google.inject.Inject;
 
+import com.mongodb.DuplicateKeyException;
 import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.TestEntity.TestEntityKeys;
@@ -28,7 +30,7 @@ import java.util.stream.IntStream;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldNameConstants(innerTypeName = "TestEntityKeys")
-class TestEntity implements PersistentEntity {
+class TestEntity implements PersistentEntity, UuidAccess {
   @Id private String uuid;
   private String test;
 }
@@ -73,6 +75,33 @@ public class HPersistenceTest extends PersistenceTest {
                                               .asList();
 
     assertThat(testEntities).hasSize(5);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldInsert() {
+    TestEntity entity = TestEntity.builder().uuid(generateUuid()).test("foo").build();
+    String id = persistence.insert(entity);
+    assertThat(id).isNotNull();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldNotInsertTwice() {
+    TestEntity entity = TestEntity.builder().uuid(generateUuid()).test("foo").build();
+    persistence.insert(entity);
+
+    assertThatThrownBy(() -> persistence.insert(entity)).isInstanceOf(DuplicateKeyException.class);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldInsertIgnoringDuplicateKeys() {
+    TestEntity entity = TestEntity.builder().uuid(generateUuid()).test("foo").build();
+    persistence.insert(entity);
+
+    String id = persistence.insertIgnoringDuplicateKeys(entity);
+    assertThat(id).isNotNull();
   }
 
   @Test
