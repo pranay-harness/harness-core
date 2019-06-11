@@ -41,6 +41,7 @@ import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaD
 import software.wings.service.impl.analysis.MetricAnalysisRecord.MetricAnalysisRecordKeys;
 import software.wings.service.impl.analysis.TimeSeriesMLScores.TimeSeriesMLScoresKeys;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
+import software.wings.service.impl.analysis.TimeSeriesMetricTemplates.TimeSeriesMetricTemplatesKeys;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
@@ -561,8 +562,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Override
   public void cleanUpForMetricRetry(String stateExecutionId) {
     // delete the metric templates
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(TimeSeriesMetricTemplates.class).filter("stateExecutionId", stateExecutionId));
+    wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMetricTemplates.class)
+                                .filter(TimeSeriesMetricTemplatesKeys.stateExecutionId, stateExecutionId));
 
     // delete new relic metric records
     wingsPersistence.delete(

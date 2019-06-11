@@ -60,6 +60,7 @@ import software.wings.service.impl.analysis.TimeSeriesMLTxnSummary;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
+import software.wings.service.impl.analysis.TimeSeriesMetricTemplates.TimeSeriesMetricTemplatesKeys;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.analysis.TimeSeriesRiskData;
 import software.wings.service.impl.analysis.TimeSeriesRiskSummary;
@@ -811,16 +812,11 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Override
   public Map<String, TimeSeriesMetricDefinition> getMetricTemplates(
       String appId, StateType stateType, String stateExecutionId, String cvConfigId) {
-    TimeSeriesMetricTemplates newRelicMetricTemplates = wingsPersistence.createQuery(TimeSeriesMetricTemplates.class)
-                                                            .field("appId")
-                                                            .equal(appId)
-                                                            .field("stateType")
-                                                            .equal(stateType)
-                                                            .field("stateExecutionId")
-                                                            .equal(stateExecutionId)
-                                                            .field("cvConfigId")
-                                                            .equal(cvConfigId)
-                                                            .get();
+    TimeSeriesMetricTemplates newRelicMetricTemplates =
+        wingsPersistence.createQuery(TimeSeriesMetricTemplates.class, excludeAuthority)
+            .filter(TimeSeriesMetricTemplatesKeys.stateExecutionId, stateExecutionId)
+            .filter(TimeSeriesMetricTemplatesKeys.cvConfigId, cvConfigId)
+            .get();
     return newRelicMetricTemplates == null ? null : newRelicMetricTemplates.getMetricTemplates();
   }
 

@@ -239,8 +239,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
   private Set<String> getTags(String cvConfigId, String appId) {
     Set<String> tags = new HashSet<>();
-    TimeSeriesMetricTemplates template = wingsPersistence.createQuery(TimeSeriesMetricTemplates.class)
-                                             .filter("appId", appId)
+    TimeSeriesMetricTemplates template = wingsPersistence.createQuery(TimeSeriesMetricTemplates.class, excludeAuthority)
                                              .filter(TimeSeriesMetricTemplatesKeys.cvConfigId, cvConfigId)
                                              .get();
 
