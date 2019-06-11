@@ -247,8 +247,10 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
       kubernetesResources.add(KubernetesResource.builder().resourceId(release.getManagedWorkload()).build());
     }
 
-    executionLogCallback.saveExecutionLog(color("\nFound following Managed Workloads: \n", Cyan, Bold)
-        + k8sTaskHelper.getResourcesInTableFormat(kubernetesResources));
+    if (isNotEmpty(kubernetesResources)) {
+      executionLogCallback.saveExecutionLog(color("\nFound following Managed Workloads: \n", Cyan, Bold)
+          + k8sTaskHelper.getResourcesInTableFormat(kubernetesResources));
+    }
   }
 
   private void updateManagedWorkloadRevisionsInRelease(K8sDelegateTaskParams k8sDelegateTaskParams) throws Exception {
