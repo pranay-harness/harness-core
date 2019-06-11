@@ -13,5 +13,5 @@ import org.hibernate.validator.constraints.NotEmpty;
 @AllArgsConstructor
 public class IstioDestinationWeight {
   @Trimmed @NotEmpty private String destination;
-  @Trimmed @NotEmpty private Integer weight;
+  @Trimmed @NotEmpty private String weight;
 }

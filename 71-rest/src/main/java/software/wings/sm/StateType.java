@@ -603,8 +603,10 @@ public enum StateType implements StateTypeDescriptor {
           DISABLE_SERVICE, CONTAINER_SETUP, CONTAINER_DEPLOY, WRAP_UP),
       ORCHESTRATION_STENCILS, COMMON),
 
-  K8S_TRAFFIC_SPLIT(K8sTrafficSplitState.class, KUBERNETES, 0, K8S_TRAFFIC_SPLIT_STATE_NAME, Lists.newArrayList(),
-      asList(), ORCHESTRATION_STENCILS),
+  K8S_TRAFFIC_SPLIT(K8sTrafficSplitState.class, KUBERNETES, 8, K8S_TRAFFIC_SPLIT_STATE_NAME,
+      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
+          InfrastructureMappingType.AZURE_KUBERNETES),
+      asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   K8S_APPLY(K8sApplyState.class, KUBERNETES, 5, K8S_APPLY_STATE,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
