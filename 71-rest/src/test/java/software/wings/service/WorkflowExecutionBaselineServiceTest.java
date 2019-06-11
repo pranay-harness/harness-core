@@ -38,7 +38,7 @@ import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.UserThreadLocal;
-import software.wings.service.impl.analysis.LogDataRecord;
+import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
@@ -765,10 +765,10 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       timeSeriesMLAnalysisRecord.setAppId(appId);
       wingsPersistence.save(timeSeriesMLAnalysisRecord);
 
-      LogDataRecord logDataRecord = new LogDataRecord();
-      logDataRecord.setWorkflowExecutionId(workflowExecutionId);
-      logDataRecord.setAppId(appId);
-      wingsPersistence.save(logDataRecord);
+      LogMLAnalysisRecord logMLAnalysisRecord = new LogMLAnalysisRecord();
+      logMLAnalysisRecord.setWorkflowExecutionId(workflowExecutionId);
+      logMLAnalysisRecord.setAppId(appId);
+      wingsPersistence.save(logMLAnalysisRecord);
     }
   }
 
@@ -804,12 +804,13 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
         }
       });
 
-      List<LogDataRecord> logDataRecords = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority).asList();
-      logDataRecords.forEach(logDataRecord -> {
+      List<LogMLAnalysisRecord> logMLAnalysisRecords =
+          wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList();
+      logMLAnalysisRecords.forEach(logMLAnalysisRecord -> {
         if (greater) {
-          assertTrue(validUntil.getTime() > logDataRecord.getValidUntil().getTime());
+          assertTrue(validUntil.getTime() > logMLAnalysisRecord.getValidUntil().getTime());
         } else {
-          assertTrue(validUntil.getTime() < logDataRecord.getValidUntil().getTime());
+          assertTrue(validUntil.getTime() < logMLAnalysisRecord.getValidUntil().getTime());
         }
       });
     });

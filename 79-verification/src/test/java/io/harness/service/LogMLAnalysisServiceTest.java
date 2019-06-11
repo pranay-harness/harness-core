@@ -281,43 +281,70 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Test
   @Category(UnitTests.class)
   @RealMongo
-  public void getLogDataNoSuccessfulWorkflowExecution() throws Exception {
-    final StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
-    stateExecutionInstance.setAppId(appId);
-    stateExecutionInstance.setUuid(stateExecutionId);
-    stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
-    wingsPersistence.save(stateExecutionInstance);
+  public void getLogDataNoPreviousAnalysis() throws Exception {
+    File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
 
-    final List<LogElement> logElements = new ArrayList<>();
+    final Gson gson = new Gson();
+    LogMLAnalysisRecord logMLAnalysisRecord;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
+      logMLAnalysisRecord = gson.fromJson(br, type);
+    }
 
-    final String query = UUID.randomUUID().toString();
-    final String host = UUID.randomUUID().toString();
-    final int logCollectionMinute = 3;
-    LogElement splunkHeartBeatElement = new LogElement();
-    splunkHeartBeatElement.setQuery(query);
-    splunkHeartBeatElement.setClusterLabel("-3");
-    splunkHeartBeatElement.setHost(host);
-    splunkHeartBeatElement.setCount(0);
-    splunkHeartBeatElement.setLogMessage("");
-    splunkHeartBeatElement.setTimeStamp(0);
-    splunkHeartBeatElement.setLogCollectionMinute(logCollectionMinute);
+    assertNotNull(logMLAnalysisRecord);
+    logMLAnalysisRecord.setWorkflowExecutionId(generateUuid());
+    wingsPersistence.save(logMLAnalysisRecord);
 
-    logElements.add(splunkHeartBeatElement);
-
-    LogElement logElement = new LogElement(query, "0", host, 0, 0, UUID.randomUUID().toString(), logCollectionMinute);
-    logElements.add(logElement);
-
-    final LogRequest logRequest = new LogRequest(
-        query, appId, stateExecutionId, workflowId, serviceId, Collections.singleton(host), logCollectionMinute, false);
-
-    boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId,
-        workflowId, workflowExecutionId, serviceId, ClusterLevel.L1, delegateTaskId, logElements);
-
-    assertTrue(status);
+    final LogRequest logRequest =
+        new LogRequest(generateUuid(), appId, stateExecutionId, workflowId, serviceId, null, -1, false);
 
     Set<LogDataRecord> logData = analysisService.getLogData(
-        logRequest, false, UUID.randomUUID().toString(), ClusterLevel.L1, StateType.SPLUNKV2, accountId);
+        logRequest, false, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
     assertEquals(0, logData.size());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  @RealMongo
+  public void getLogDataPreviousAnalysis() throws Exception {
+    File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
+
+    final Gson gson = new Gson();
+    LogMLAnalysisRecord logMLAnalysisRecord;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
+      logMLAnalysisRecord = gson.fromJson(br, type);
+    }
+
+    assertNotNull(logMLAnalysisRecord);
+    logMLAnalysisRecord.setWorkflowExecutionId(workflowExecutionId);
+    wingsPersistence.save(logMLAnalysisRecord);
+
+    final LogRequest logRequest =
+        new LogRequest(generateUuid(), appId, stateExecutionId, workflowId, serviceId, null, -1, false);
+
+    Set<LogDataRecord> logData = analysisService.getLogData(
+        logRequest, false, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
+    assertFalse(logData.isEmpty());
+    Set<LogDataRecord> expectedLogs = new HashSet<>();
+    logMLAnalysisRecord.getTest_events().forEach((s, analysisClusters) -> {
+      analysisClusters.forEach(analysisCluster -> {
+        final MessageFrequency messageFrequency = analysisCluster.getMessage_frequencies().get(0);
+        expectedLogs.add(LogDataRecord.builder()
+                             .stateType(logMLAnalysisRecord.getStateType())
+                             .workflowExecutionId(logMLAnalysisRecord.getWorkflowExecutionId())
+                             .stateExecutionId(logMLAnalysisRecord.getStateExecutionId())
+                             .query(logMLAnalysisRecord.getQuery())
+                             .clusterLabel(Integer.toString(analysisCluster.getCluster_label()))
+                             .host(messageFrequency.getHost())
+                             .timeStamp(messageFrequency.getTime())
+                             .logMessage(analysisCluster.getText())
+                             .count(messageFrequency.getCount())
+                             .build());
+      });
+    });
+
+    assertEquals(expectedLogs, logData);
   }
 
   @Test

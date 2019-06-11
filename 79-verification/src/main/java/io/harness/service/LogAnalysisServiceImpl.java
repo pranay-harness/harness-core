@@ -72,6 +72,7 @@ import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
+import software.wings.service.impl.splunk.SplunkAnalysisCluster.MessageFrequency;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.verification.CVConfigurationService;
@@ -80,9 +81,11 @@ import software.wings.sm.StateType;
 import software.wings.utils.Misc;
 import software.wings.verification.log.LogsCVConfiguration;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -366,6 +369,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       ClusterLevel clusterLevel, StateType stateType, String accountId) {
     Query<LogDataRecord> recordQuery;
 
+    Set<LogDataRecord> rv = new HashSet<>();
     if (compareCurrent) {
       recordQuery = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
                         .filter(LogDataRecordKeys.stateExecutionId, logRequest.getStateExecutionId())
@@ -374,55 +378,70 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                         .field(LogDataRecordKeys.host)
                         .hasAnyOf(logRequest.getNodes());
 
+      try (HIterator<LogDataRecord> records = new HIterator<>(recordQuery.fetch())) {
+        while (records.hasNext()) {
+          rv.add(records.next());
+        }
+      }
+
+      logger.info("returning " + rv.size() + " records for request: " + logRequest);
+
     } else {
-      long timeDelta = 0;
-
-      if (PER_MINUTE_CV_STATES.contains(stateType)) {
-        LogDataRecord logDataRecord = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
-                                          .project(LogDataRecordKeys.logCollectionMinute, true)
-                                          .filter(LogDataRecordKeys.stateExecutionId, logRequest.getStateExecutionId())
-                                          .filter(LogDataRecordKeys.clusterLevel, clusterLevel)
-                                          .order(Sort.ascending(LogDataRecordKeys.logCollectionMinute))
-                                          .get();
-
-        if (logDataRecord != null) {
-          timeDelta = logRequest.getLogCollectionMinute() - logDataRecord.getLogCollectionMinute();
-        }
-
-        logDataRecord = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
-                            .project(LogDataRecordKeys.logCollectionMinute, true)
-                            .filter(LogDataRecordKeys.workflowExecutionId, workflowExecutionId)
-                            .filter(LogDataRecordKeys.serviceId, logRequest.getServiceId())
-                            .filter(LogDataRecordKeys.stateType, stateType)
-                            .filter(LogDataRecordKeys.query, logRequest.getQuery())
-                            .filter(LogDataRecordKeys.clusterLevel, clusterLevel)
-                            .order(Sort.ascending(LogDataRecordKeys.logCollectionMinute))
-                            .get();
-
-        if (logDataRecord != null) {
-          logRequest.setLogCollectionMinute(timeDelta + logDataRecord.getLogCollectionMinute());
-        }
+      final LogMLAnalysisRecord logMLAnalysisRecord =
+          wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
+              .filter(LogMLAnalysisRecordKeys.workflowExecutionId, workflowExecutionId)
+              .order(Sort.descending(LogMLAnalysisRecordKeys.logCollectionMinute))
+              .get();
+      if (logMLAnalysisRecord == null) {
+        logger.info("No analysis found for control data for state {} with executionId ",
+            logRequest.getStateExecutionId(), workflowExecutionId);
+        return rv;
       }
 
-      recordQuery = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
-                        .filter(LogDataRecordKeys.workflowExecutionId, workflowExecutionId)
-                        .filter(LogDataRecordKeys.serviceId, logRequest.getServiceId())
-                        .filter(LogDataRecordKeys.stateType, stateType)
-                        .filter(LogDataRecordKeys.query, logRequest.getQuery())
-                        .filter(LogDataRecordKeys.clusterLevel, clusterLevel)
-                        .filter(LogDataRecordKeys.logCollectionMinute, logRequest.getLogCollectionMinute());
-    }
-
-    Set<LogDataRecord> rv = new HashSet<>();
-    try (HIterator<LogDataRecord> records = new HIterator<>(recordQuery.fetch())) {
-      while (records.hasNext()) {
-        rv.add(records.next());
+      logger.info(
+          "For {} serving control data from {}", logRequest.getStateExecutionId(), logMLAnalysisRecord.getUuid());
+      logMLAnalysisRecord.decompressLogAnalysisRecord();
+      if (isEmpty(logMLAnalysisRecord.getTest_events())) {
+        logger.info("No test events found for control data for state {} with analysisId ",
+            logRequest.getStateExecutionId(), logMLAnalysisRecord.getUuid());
+        return rv;
       }
+
+      logMLAnalysisRecord.getTest_events().forEach((s, analysisClusters) -> {
+        if (isEmpty(analysisClusters)) {
+          return;
+        }
+
+        analysisClusters.forEach(analysisCluster -> {
+          if (isEmpty(analysisCluster.getMessage_frequencies())) {
+            logger.error(
+                "for state {} the control analysis {} has empty message frequencies. Control data for this execution may not be correct",
+                logRequest.getStateExecutionId(), logMLAnalysisRecord.getUuid());
+            return;
+          }
+
+          if (analysisCluster.getMessage_frequencies().size() > 1) {
+            logger.error("for state {} the control analysis {} has {} message frequencies",
+                logRequest.getStateExecutionId(), logMLAnalysisRecord.getUuid(),
+                analysisCluster.getMessage_frequencies());
+          }
+
+          final MessageFrequency messageFrequency = analysisCluster.getMessage_frequencies().get(0);
+          rv.add(LogDataRecord.builder()
+                     .stateType(logMLAnalysisRecord.getStateType())
+                     .workflowExecutionId(logMLAnalysisRecord.getWorkflowExecutionId())
+                     .stateExecutionId(logMLAnalysisRecord.getStateExecutionId())
+                     .query(logMLAnalysisRecord.getQuery())
+                     .clusterLabel(Integer.toString(analysisCluster.getCluster_label()))
+                     .host(messageFrequency.getHost())
+                     .timeStamp(messageFrequency.getTime())
+                     .logMessage(analysisCluster.getText())
+                     .count(messageFrequency.getCount())
+                     .build());
+        });
+      });
     }
 
-    if (logger.isDebugEnabled()) {
-      logger.debug("returning " + rv.size() + " records for request: " + logRequest);
-    }
     return rv;
   }
 
@@ -569,6 +588,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   public boolean save24X7LogAnalysisRecords(String appId, String cvConfigId, int analysisMinute,
       AnalysisComparisonStrategy comparisonStrategy, LogMLAnalysisRecord mlAnalysisResponse, Optional<String> taskId,
       Optional<Boolean> isFeedbackAnalysis) {
+    mlAnalysisResponse.setValidUntil(Date.from(OffsetDateTime.now().plusMonths(1).toInstant()));
     final LogsCVConfiguration logsCVConfiguration = wingsPersistence.get(LogsCVConfiguration.class, cvConfigId);
     if (isNotEmpty(logsCVConfiguration.getContextId())) {
       AnalysisContext analysisContext = wingsPersistence.get(AnalysisContext.class, logsCVConfiguration.getContextId());

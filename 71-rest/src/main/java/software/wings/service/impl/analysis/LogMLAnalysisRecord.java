@@ -26,7 +26,6 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.Base;
 import software.wings.service.impl.splunk.LogMLClusterScores;
@@ -102,7 +101,6 @@ public class LogMLAnalysisRecord extends Base {
   private int timesLabeled;
   private boolean deprecated;
 
-  @Transient
   @JsonIgnore
   @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))

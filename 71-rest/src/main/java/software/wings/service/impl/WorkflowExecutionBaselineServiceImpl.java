@@ -16,7 +16,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.beans.baseline.WorkflowExecutionBaseline.WorkflowExecutionBaselineKeys;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.analysis.LogDataRecord;
+import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
@@ -164,8 +164,7 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
     updateTtl(workflowExecutionId, appId, NewRelicMetricDataRecord.class);
     updateTtl(workflowExecutionId, appId, NewRelicMetricAnalysisRecord.class);
     updateTtl(workflowExecutionId, appId, TimeSeriesMLAnalysisRecord.class);
-
-    updateTtl(workflowExecutionId, appId, LogDataRecord.class);
+    updateTtl(workflowExecutionId, appId, LogMLAnalysisRecord.class);
   }
 
   private <T extends Base> void updateTtl(String workflowExecutionId, String appId, Class<T> recordClass) {

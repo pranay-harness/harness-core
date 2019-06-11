@@ -3,7 +3,6 @@ package software.wings.service.impl.analysis;
 import static io.harness.data.encoding.EncodingUtils.compressString;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.govern.Switch.noop;
 import static software.wings.common.Constants.ML_RECORDS_TTL_MONTHS;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.addFieldIfNotEmpty;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.readBlob;
@@ -101,7 +100,7 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware {
   @JsonIgnore
   @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
-  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
+  private Date validUntil = Date.from(OffsetDateTime.now().plusWeeks(1).toInstant());
 
   public static List<LogDataRecord> generateDataRecords(StateType stateType, String applicationId, String cvConfigId,
       String stateExecutionId, String workflowId, String workflowExecutionId, String serviceId,
@@ -125,18 +124,6 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware {
       record.setClusterLevel(Integer.parseInt(logElement.getClusterLabel()) < 0 ? heartbeat : clusterLevel);
       record.setServiceId(serviceId);
       record.setLogCollectionMinute(logElement.getLogCollectionMinute());
-      switch (clusterLevel) {
-        case L0:
-        case L1:
-        case H0:
-        case H1:
-        case H2:
-        case L2:
-          record.setValidUntil(Date.from(OffsetDateTime.now().plusWeeks(1).toInstant()));
-          break;
-        default:
-          noop();
-      }
       records.add(record);
     }
     return records;
