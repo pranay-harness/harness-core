@@ -7,7 +7,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static io.harness.threading.Puller.pullFor;
+import static io.harness.threading.Poller.pollFor;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
@@ -67,7 +67,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.JsonUtils;
-import io.harness.threading.Puller;
+import io.harness.threading.Poller;
 import io.harness.waiter.NotifyEventListener;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
@@ -831,7 +831,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     logger.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
-    pullFor(ofSeconds(10), ofMillis(100), () -> {
+    pollFor(ofSeconds(10), ofMillis(100), () -> {
       final WorkflowExecution pull =
           workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, emptySet());
       return pull.getStatus() == ExecutionStatus.PAUSED;
@@ -918,7 +918,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     logger.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
-    pullFor(ofSeconds(3), ofMillis(100), () -> {
+    pollFor(ofSeconds(3), ofMillis(100), () -> {
       final WorkflowExecution pull =
           workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, emptySet());
       return pull.getStatus() == ExecutionStatus.RUNNING;
@@ -933,7 +933,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     executionInterrupt = workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
     assertThat(executionInterrupt).isNotNull().hasFieldOrProperty("uuid");
 
-    pullFor(ofSeconds(15), ofMillis(100), () -> {
+    pollFor(ofSeconds(15), ofMillis(100), () -> {
       final WorkflowExecution pull =
           workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, emptySet());
       return pull.getStatus() == ExecutionStatus.PAUSED && pull.getExecutionNode().getGroup() != null;
@@ -1082,7 +1082,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     logger.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
-    pullFor(ofSeconds(10), ofMillis(100), () -> {
+    pollFor(ofSeconds(10), ofMillis(100), () -> {
       final WorkflowExecution pull =
           workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, emptySet());
       return pull.getStatus() == ExecutionStatus.PAUSED;
@@ -1176,7 +1176,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     logger.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
-    pullFor(ofSeconds(5), ofMillis(100), () -> {
+    pollFor(ofSeconds(5), ofMillis(100), () -> {
       final WorkflowExecution pull =
           workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, emptySet());
       return pull.getStatus() == ExecutionStatus.RUNNING;
@@ -1191,7 +1191,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     executionInterrupt = workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
     assertThat(executionInterrupt).isNotNull().hasFieldOrProperty("uuid");
 
-    pullFor(ofSeconds(15), ofMillis(100), () -> {
+    pollFor(ofSeconds(15), ofMillis(100), () -> {
       final WorkflowExecution pull =
           workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, emptySet());
       return pull.getStatus() == ExecutionStatus.ABORTED;
@@ -1379,7 +1379,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   private List<GraphNode> getNodes(String executionId) {
-    Puller.pullFor(ofSeconds(10), ofMillis(100), () -> {
+    Poller.pollFor(ofSeconds(10), ofMillis(100), () -> {
       WorkflowExecution execution =
           workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, emptySet());
       if (execution.getExecutionNode() == null) {

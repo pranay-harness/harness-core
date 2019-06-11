@@ -19,7 +19,7 @@ import io.harness.queue.Queue;
 import io.harness.queue.Queue.Filter;
 import io.harness.queue.QueueListenerController;
 import io.harness.threading.Concurrent;
-import io.harness.threading.Puller;
+import io.harness.threading.Poller;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -80,7 +80,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
           .extracting(NotifyResponse::getResponse)
           .containsExactly(data);
 
-      Puller.pullFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyEventQueue.count(Filter.ALL) == 0);
+      Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyEventQueue.count(Filter.ALL) == 0);
 
       assertThat(responseMap).hasSize(1).isEqualTo(of(uuid, data));
       assertThat(callCount.get()).isEqualTo(1);
@@ -149,7 +149,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
           .extracting(NotifyResponse::getResponse)
           .containsExactly(data1);
 
-      Puller.pullFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyEventQueue.count(Filter.ALL) == 0);
+      Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyEventQueue.count(Filter.ALL) == 0);
 
       assertThat(responseMap).hasSize(0);
       ResponseData data2 = StringNotifyResponseData.builder().data("response-" + uuid2).build();
@@ -161,7 +161,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
           .extracting(NotifyResponse::getResponse)
           .containsExactly(data2);
 
-      Puller.pullFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyEventQueue.count(Filter.ALL) == 0);
+      Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyEventQueue.count(Filter.ALL) == 0);
 
       assertThat(responseMap).hasSize(0);
       ResponseData data3 = StringNotifyResponseData.builder().data("response-" + uuid3).build();
@@ -173,7 +173,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
           .extracting(NotifyResponse::getResponse)
           .containsExactly(data3);
 
-      Puller.pullFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyEventQueue.count(Filter.ALL) == 0);
+      Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyEventQueue.count(Filter.ALL) == 0);
 
       assertThat(responseMap).hasSize(3).containsAllEntriesOf(of(uuid1, data1, uuid2, data2, uuid3, data3));
       assertThat(callCount.get()).isEqualTo(1);

@@ -13,7 +13,7 @@ import io.harness.filesystem.FileIo;
 import io.harness.resource.Project;
 import io.harness.testframework.framework.utils.FileUtils;
 import io.harness.testframework.framework.utils.TestUtils;
-import io.harness.threading.Puller;
+import io.harness.threading.Poller;
 import io.restassured.RestAssured;
 import io.restassured.config.RestAssuredConfig;
 import lombok.extern.slf4j.Slf4j;
@@ -89,7 +89,7 @@ public class ManagerExecutor {
 
         processExecutor.start();
 
-        Puller.pullFor(ofMinutes(2), ofSeconds(2), () -> isHealthy());
+        Poller.pollFor(ofMinutes(2), ofSeconds(2), () -> isHealthy());
       } catch (RuntimeException | IOException exception) {
         failedAlready = true;
         throw exception;

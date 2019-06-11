@@ -10,7 +10,7 @@ import com.google.inject.Singleton;
 import io.fabric8.utils.Strings;
 import io.harness.filesystem.FileIo;
 import io.harness.resource.Project;
-import io.harness.threading.Puller;
+import io.harness.threading.Poller;
 import lombok.extern.slf4j.Slf4j;
 import org.zeroturnaround.exec.ProcessExecutor;
 import software.wings.beans.Account;
@@ -73,7 +73,7 @@ public class DelegateExecutor {
 
         processExecutor.start();
 
-        Puller.pullFor(ofMinutes(2), ofSeconds(2), () -> isHealthy(account.getUuid()));
+        Poller.pollFor(ofMinutes(2), ofSeconds(2), () -> isHealthy(account.getUuid()));
 
       } catch (RuntimeException exception) {
         failedAlready = true;

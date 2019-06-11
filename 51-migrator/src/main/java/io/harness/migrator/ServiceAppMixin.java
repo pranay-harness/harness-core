@@ -9,6 +9,9 @@ import io.harness.beans.migration.MigrationList;
 import io.harness.beans.migration.MongoCollectionMigrationChannel;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
+import io.harness.threading.Poller;
+
+import java.time.Duration;
 
 @Singleton
 public class ServiceAppMixin {
@@ -24,7 +27,8 @@ public class ServiceAppMixin {
     //}
   }
 
-  private void updateStoreMigrationJobInstances(Store store) {
+  public MigrationJob updateStoreMigrationJobInstances(Store store) {
+    MigrationJob lastJob = null;
     for (MigrationJob job : MigrationList.jobs.values()) {
       final boolean anyMatch = job.getMetadata()
                                    .getChannels()
@@ -33,11 +37,21 @@ public class ServiceAppMixin {
                                    .map(channel -> (MongoCollectionMigrationChannel) channel)
                                    .anyMatch(channel -> channel.getStore().getName().equals(store.getName()));
 
-      upsertMigrationJobInstance(job);
+      if (anyMatch) {
+        lastJob = job;
+        upsertMigrationJobInstance(job);
+      }
     }
+
+    return lastJob;
   }
 
   public void waitForMongoSchema(Store store) {
-    updateStoreMigrationJobInstances(store);
+    final MigrationJob lastJob = updateStoreMigrationJobInstances(store);
+
+    Poller.pollFor(Duration.ofMinutes(10), Duration.ofSeconds(10), () -> {
+      final MigrationJobInstance migrationJobInstance = persistence.get(MigrationJobInstance.class, lastJob.getId());
+      return MigrationJobInstance.Status.isFinalStatus(migrationJobInstance.getStatus());
+    });
   }
 }
