@@ -89,6 +89,8 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
 
   private boolean unstableSuccess;
 
+  private boolean injectEnvVars;
+
   private List<FilePathAssertionEntry> filePathsForAssertion = Lists.newArrayList();
 
   @Getter @Setter private String sweepingOutputName;
@@ -183,6 +185,14 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
     this.unstableSuccess = unstableSuccess;
   }
 
+  public boolean isInjectEnvVars() {
+    return injectEnvVars;
+  }
+
+  public void setInjectEnvVars(boolean injectEnvVars) {
+    this.injectEnvVars = injectEnvVars;
+  }
+
   @Override
   @Attributes(title = "Wait interval before execution (s)")
   public Integer getWaitInterval() {
@@ -253,6 +263,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
                                               .activityId(activityId)
                                               .unitName(COMMAND_UNIT_NAME)
                                               .unstableSuccess(unstableSuccess)
+                                              .injectEnvVars(injectEnvVars)
                                               .subTaskType(JenkinsSubTaskType.START_TASK)
                                               .queuedBuildUrl(null)
                                               .build();
@@ -333,6 +344,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
                                               .activityId(jenkinsExecutionResponse.activityId)
                                               .unitName(COMMAND_UNIT_NAME)
                                               .unstableSuccess(unstableSuccess)
+                                              .injectEnvVars(injectEnvVars)
                                               .subTaskType(JenkinsSubTaskType.POLL_TASK)
                                               .queuedBuildUrl(jenkinsExecutionResponse.queuedBuildUrl)
                                               .build();
@@ -386,6 +398,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
     jenkinsExecutionData.setBuildFullDisplayName(jenkinsExecutionResponse.getBuildFullDisplayName());
     jenkinsExecutionData.setDescription(jenkinsExecutionResponse.getDescription());
     jenkinsExecutionData.setMetadata(jenkinsExecutionResponse.getMetadata());
+    jenkinsExecutionData.setEnvVars(jenkinsExecutionResponse.getEnvVars());
 
     // Async response for START_TASK received, start POLL_TASK
     if (isNotEmpty(jenkinsExecutionResponse.getSubTaskType().name())
@@ -531,6 +544,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
     private String buildNumber;
     private Map<String, String> metadata;
     private Map<String, String> jobParameters;
+    private Map<String, String> envVars;
     private String description;
     private String buildDisplayName;
     private String buildFullDisplayName;

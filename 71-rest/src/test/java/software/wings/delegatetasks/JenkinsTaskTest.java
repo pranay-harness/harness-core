@@ -1,8 +1,11 @@
 package software.wings.delegatetasks;
 
 import static io.harness.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
+import static io.harness.exception.WingsException.USER;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 import static org.joor.Reflect.on;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
@@ -20,6 +23,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
+import io.harness.exception.WingsException;
 import org.apache.http.client.HttpResponseException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -104,6 +108,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
     params.setSubTaskType(JenkinsSubTaskType.POLL_TASK);
     response = jenkinsTask.run(params);
     assertEquals("jenkins job description didn't come through", "test-description", response.getDescription());
+    assertThat(response.getEnvVars()).isNullOrEmpty();
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
@@ -126,6 +131,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
     // Jenkins Poll Task
     params.setSubTaskType(JenkinsSubTaskType.POLL_TASK);
     response = jenkinsTask.run(params);
+    assertThat(response.getEnvVars()).isNullOrEmpty();
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
   }
 
@@ -189,6 +195,67 @@ public class JenkinsTaskTest extends WingsBaseTest {
     params.setSubTaskType(JenkinsSubTaskType.POLL_TASK);
     response = jenkinsTask.run(params);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldInjectEnvVarsWhenInjectEnvVarsSet() throws Exception {
+    when(buildWithDetails.getResult()).thenReturn(BuildResult.SUCCESS);
+    when(buildWithDetails.getDescription()).thenReturn("test-description");
+
+    JenkinsTaskParams params = buildJenkinsTaskParams();
+    params.setSubTaskType(JenkinsSubTaskType.START_TASK);
+    params.setQueuedBuildUrl(jenkinsUrl);
+    params.setInjectEnvVars(true);
+
+    // Invoke Jenkins Start Task
+    when(jenkins.trigger(jobName, Collections.emptyMap())).thenReturn(new QueueReference(jenkinsUrl));
+    JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
+    verify(jenkinsFactory).create(jenkinsUrl, userName, password);
+    verify(jenkins).trigger(jobName, Collections.emptyMap());
+    assertThat(response.getEnvVars()).isNullOrEmpty();
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+
+    // Invoke Jenkins Poll Task
+    Map<String, String> envVars = new HashMap<>();
+    String env1 = "ENV1";
+    envVars.put(env1, env1 + "_VAL");
+    when(jenkins.getEnvVars(anyString())).thenReturn(envVars);
+    params.setSubTaskType(JenkinsSubTaskType.POLL_TASK);
+    response = jenkinsTask.run(params);
+    assertEquals("jenkins job description didn't come through", "test-description", response.getDescription());
+    assertThat(response.getEnvVars()).isNotEmpty().containsOnly(entry(env1, envVars.get(env1)));
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFailWhenGetEnvVarsThrows() throws Exception {
+    when(buildWithDetails.getResult()).thenReturn(BuildResult.SUCCESS);
+    when(buildWithDetails.getDescription()).thenReturn("test-description");
+
+    JenkinsTaskParams params = buildJenkinsTaskParams();
+    params.setSubTaskType(JenkinsSubTaskType.START_TASK);
+    params.setQueuedBuildUrl(jenkinsUrl);
+    params.setInjectEnvVars(true);
+
+    // Invoke Jenkins Start Task
+    when(jenkins.trigger(jobName, Collections.emptyMap())).thenReturn(new QueueReference(jenkinsUrl));
+    JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
+    verify(jenkinsFactory).create(jenkinsUrl, userName, password);
+    verify(jenkins).trigger(jobName, Collections.emptyMap());
+    assertThat(response.getEnvVars()).isNullOrEmpty();
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+
+    // Invoke Jenkins Poll Task
+    Map<String, String> envVars = new HashMap<>();
+    String env1 = "ENV1";
+    envVars.put(env1, env1 + "_VAL");
+    when(jenkins.getEnvVars(anyString())).thenThrow(new WingsException(INVALID_ARTIFACT_SERVER, USER));
+    params.setSubTaskType(JenkinsSubTaskType.POLL_TASK);
+    response = jenkinsTask.run(params);
+    assertThat(response.getErrorMessage()).isNotBlank();
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
   }
 
   // Helper functions

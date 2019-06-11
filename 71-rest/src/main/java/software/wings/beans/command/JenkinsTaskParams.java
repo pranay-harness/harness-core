@@ -22,6 +22,7 @@ public class JenkinsTaskParams implements ExecutionCapabilityDemander {
   String activityId;
   String unitName;
   boolean unstableSuccess;
+  boolean injectEnvVars;
   JenkinsSubTaskType subTaskType;
   String queuedBuildUrl;
   long timeout;

@@ -24,6 +24,7 @@ public class JenkinsExecutionData extends StateExecutionData implements Response
   private String buildUrl;
   private List<FilePathAssertionEntry> filePathAssertionMap;
   private Map<String, String> jobParameters;
+  private Map<String, String> envVars;
   private String activityId;
   private Map<String, String> metadata;
   private String buildNumber;
@@ -52,6 +53,11 @@ public class JenkinsExecutionData extends StateExecutionData implements Response
     if (isNotEmpty(jobParameters)) {
       putNotNull(executionDetails, "jobParameters",
           ExecutionDataValue.builder().displayName("Job Parameters").value(removeNullValues(jobParameters)).build());
+    }
+
+    if (isNotEmpty(envVars)) {
+      putNotNull(executionDetails, "envVars",
+          ExecutionDataValue.builder().displayName("Environment Variables").value(removeNullValues(envVars)).build());
     }
 
     putNotNull(executionDetails, "fileAssertionData",

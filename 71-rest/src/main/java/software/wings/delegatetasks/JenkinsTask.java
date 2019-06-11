@@ -158,6 +158,13 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
               jenkinsBuild, jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName());
           jenkinsExecutionResponse.setJobUrl(jenkinsBuildWithDetails.getUrl());
 
+          if (jenkinsTaskParams.isInjectEnvVars()) {
+            logService.save(getAccountId(),
+                constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(), getAppId(),
+                    LogLevel.INFO, "Collecting environment variables for Jenkins task", RUNNING));
+            jenkinsExecutionResponse.setEnvVars(jenkins.getEnvVars(jenkinsBuildWithDetails.getUrl()));
+          }
+
           logService.save(getAccountId(),
               constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(), getAppId(),
                   LogLevel.INFO, "Jenkins task execution complete", SUCCESS));

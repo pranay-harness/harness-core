@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 
+import com.jayway.jsonpath.DocumentContext;
 import com.offbytwo.jenkins.JenkinsServer;
 import com.offbytwo.jenkins.client.JenkinsHttpClient;
 import com.offbytwo.jenkins.model.Artifact;
@@ -36,6 +37,7 @@ import com.offbytwo.jenkins.model.QueueReference;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
+import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -52,6 +54,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -63,6 +66,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import javax.net.ssl.HostnameVerifier;
 
 /**
@@ -482,6 +486,60 @@ public class JenkinsImpl implements Jenkins {
       return true;
     } catch (IOException e) {
       throw prepareWingsException(e);
+    }
+  }
+
+  @Override
+  public Map<String, String> getEnvVars(String buildUrl) {
+    if (isBlank(buildUrl)) {
+      return new HashMap<>();
+    }
+
+    logger.info("Retrieving environment variables for job {}", buildUrl);
+    try {
+      return timeLimiter.callWithTimeout(() -> {
+        while (true) {
+          String path = buildUrl;
+          if (path.charAt(path.length() - 1) != '/') {
+            path += '/';
+          }
+          path += "injectedEnvVars/api/json";
+
+          String jsonString;
+          try {
+            jsonString = jenkinsHttpClient.get(path);
+          } catch (HttpResponseException e) {
+            if (e.getStatusCode() == 500 || ExceptionUtils.getMessage(e).contains("Server Error")) {
+              logger.warn(
+                  format("Error occurred while retrieving environment variables for job %s. Retrying", buildUrl), e);
+              sleep(ofSeconds(1L));
+              continue;
+            } else {
+              throw e;
+            }
+          }
+
+          DocumentContext documentContext = JsonUtils.parseJson(jsonString);
+          Map<String, String> envVars = documentContext.read("$['envMap']");
+          if (isEmpty(envVars)) {
+            envVars = new HashMap<>();
+          } else {
+            // NOTE: Removing environment variables where keys contain '.'. Storing and retrieving these keys is
+            // throwing error with MongoDB and might also cause problems with expression evaluation as '.' is used as a
+            // separator there.
+            envVars = envVars.entrySet()
+                          .stream()
+                          .filter(entry -> !entry.getKey().contains("."))
+                          .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+          }
+
+          logger.info("Retrieving environment variables for job {} success", buildUrl);
+          return envVars;
+        }
+      }, 30L, TimeUnit.SECONDS, true);
+    } catch (Exception e) {
+      logger.warn("Failure in fetching environment variables for job: [{}]", e.getMessage());
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
     }
   }
 
