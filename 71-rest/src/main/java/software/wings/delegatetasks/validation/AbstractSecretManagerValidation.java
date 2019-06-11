@@ -83,6 +83,8 @@ public abstract class AbstractSecretManagerValidation extends AbstractDelegateVa
     for (Object parameter : getParameters()) {
       if (parameter instanceof EncryptionConfig) {
         return (EncryptionConfig) parameter;
+      } else if (parameter instanceof EncryptedDataDetail) {
+        return ((EncryptedDataDetail) parameter).getEncryptionConfig();
       } else if (parameter instanceof List) {
         List details = (List) parameter;
         for (Object detail : details) {
