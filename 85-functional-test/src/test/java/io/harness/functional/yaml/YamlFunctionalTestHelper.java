@@ -211,7 +211,8 @@ public class YamlFunctionalTestHelper {
     return map;
   }
 
-  public void verify(String oldAppName, String newAppName, String repoName, String repoPath, String clonedRepoPath) {
+  public int getMismatchCount(
+      String oldAppName, String newAppName, String repoName, String repoPath, String clonedRepoPath) {
     Map<String, String> filesFromHarness = getFilesMapFromHarness(oldAppName, newAppName);
     Map<String, String> filesFromGit = getFilesMapFromGit(repoName, repoPath, clonedRepoPath);
 
@@ -229,6 +230,11 @@ public class YamlFunctionalTestHelper {
       }
     }
 
+    return count;
+  }
+
+  public void verify(String oldAppName, String newAppName, String repoName, String repoPath, String clonedRepoPath) {
+    int count = getMismatchCount(oldAppName, newAppName, repoName, repoPath, clonedRepoPath);
     assertThat(count).isEqualTo(0);
   }
 
