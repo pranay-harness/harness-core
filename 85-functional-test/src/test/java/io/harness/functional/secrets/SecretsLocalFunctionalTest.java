@@ -69,7 +69,7 @@ public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(emails = SWAMY)
   @Category(FunctionalTests.class)
-  @Ignore("TODO: please provide clear motivation why this test is ignored")
+  @Ignore("TODO: Ignored because it was causing RBAC errors when running in parallel")
   public void secretsTextCRUDTestsWithUsageRestrictions() {
     logger.info("Local secrets text test starts");
     String secretsName = "AnotherSecret-" + System.currentTimeMillis();
