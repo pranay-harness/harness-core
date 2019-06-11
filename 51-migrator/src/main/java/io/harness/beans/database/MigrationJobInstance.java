@@ -8,6 +8,9 @@ import lombok.Data;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 @Data
 @Builder
 @Entity(value = "migrationJobInstances", noClassnameStored = true)
@@ -17,6 +20,18 @@ public class MigrationJobInstance implements PersistentEntity, UpdatedAtAware {
 
   private MigrationJob.Metadata metadata;
 
-  enum Status { BASELINE, PENDING, FAILED, SUCCEEDED }
+  public enum Status {
+    BASELINE,
+    PENDING,
+    FAILED,
+    SUCCEEDED;
+
+    private static Set<Status> finalStatuses = EnumSet.<Status>of(BASELINE, FAILED, SUCCEEDED);
+
+    public static boolean isFinalStatus(Status status) {
+      return status != null && finalStatuses.contains(status);
+    }
+  }
+
   private Status status;
 }

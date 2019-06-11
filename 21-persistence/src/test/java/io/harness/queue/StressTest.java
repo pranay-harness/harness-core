@@ -13,7 +13,7 @@ import io.harness.mongo.MongoQueue;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.BypassRuleMixin.Bypass;
 import io.harness.rule.RealMongo;
-import io.harness.threading.Puller;
+import io.harness.threading.Poller;
 import io.harness.version.VersionInfoManager;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
@@ -55,7 +55,7 @@ public class StressTest extends PersistenceTest {
 
       final long start = queue.count(ALL);
       try {
-        Puller.pullFor(Duration.ofSeconds(10), ofMillis(100), () -> {
+        Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> {
           final long count = queue.count(ALL);
           logger.info("Queue count: {}", count);
           return count == 0;
