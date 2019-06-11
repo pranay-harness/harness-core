@@ -38,8 +38,9 @@ import java.util.concurrent.TimeUnit;
   @Index(fields = {
     @Field("state_execution_id")
     , @Field(value = "analysis_minute", type = IndexType.DESC), @Field("executionStatus"), @Field("ml_analysis_type"),
-        @Field("cluster_level"), @Field("group_name"), @Field("version")
-  }, options = @IndexOptions(name = "taskFetchIdx"))
+        @Field("cluster_level"), @Field("group_name"), @Field("version"),
+        @Field(value = "createdAt", type = IndexType.DESC)
+  }, options = @IndexOptions(name = "task_fetch_idx"))
 })
 @Data
 @Builder
