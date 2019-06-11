@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
@@ -25,6 +26,7 @@ import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SSOType;
 import software.wings.beans.sso.SamlSettings;
+import software.wings.security.authentication.OauthProviderType;
 import software.wings.service.intfc.SSOSettingService;
 
 import java.util.List;
@@ -73,7 +75,10 @@ public class SSOViolationCheckerTest extends WingsBaseTest {
   }
 
   private List<SSOSettings> getAllowedSSOSettings() {
-    OauthSettings oauthSettings = OauthSettings.builder().displayName(TEST_OAUTH_SSO).build();
+    OauthSettings oauthSettings = OauthSettings.builder()
+                                      .displayName(TEST_OAUTH_SSO)
+                                      .allowedProviders(Sets.newHashSet(OauthProviderType.values()))
+                                      .build();
     oauthSettings.setType(SSOType.OAUTH);
     oauthSettings.setUuid(generateUuid());
     return Lists.newArrayList(oauthSettings);

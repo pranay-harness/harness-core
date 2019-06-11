@@ -36,7 +36,7 @@ import software.wings.security.saml.SamlClientService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
-import software.wings.service.intfc.UsageRestrictionsService;
+import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserService;
 
 import java.net.URI;
@@ -60,9 +60,9 @@ public class AuthenticationManager {
   @Inject private AccountService accountService;
   @Inject private AuthService authService;
   @Inject private FeatureFlagService featureFlagService;
-  @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private OauthBasedAuthHandler oauthBasedAuthHandler;
   @Inject private OauthOptions oauthOptions;
+  @Inject private SSOSettingService ssoSettingService;
 
   @Inject private LicenseService licenseService;
 
@@ -135,6 +135,8 @@ public class AuthenticationManager {
       User user = authenticationUtils.getUser(userName, USER);
       AuthenticationMechanism authenticationMechanism = getAuthenticationMechanism(user, accountId);
 
+      builder.isOauthEnabled(userService.isOauthEnabled(user));
+
       SSORequest ssoRequest;
       switch (authenticationMechanism) {
         case USER_PASSWORD:
@@ -142,14 +144,17 @@ public class AuthenticationManager {
             // HAR-7984: Return 401 http code if user email not verified yet.
             throw new WingsException(EMAIL_NOT_VERIFIED, USER);
           }
+          if (null != ssoSettingService.getOauthSettingsByAccountId(user.getDefaultAccountId())) {
+            builder.SSORequest(oauthOptions.oauthProviderRedirectionUrl(user));
+            break;
+          }
           break;
         case SAML:
           ssoRequest = samlClientService.generateSamlRequest(user);
           builder.SSORequest(ssoRequest);
           break;
         case OAUTH:
-          ssoRequest = oauthOptions.oauthProviderRedirectionUrl(user);
-          builder.SSORequest(ssoRequest);
+          builder.SSORequest(oauthOptions.oauthProviderRedirectionUrl(user));
           break;
         case LDAP: // No need to build anything extra for the response.
         default:
