@@ -3,6 +3,7 @@ package software.wings.service.impl.prometheus;
 import com.google.common.collect.TreeBasedTable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.exception.WingsException;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
@@ -75,7 +76,7 @@ public class PrometheusMetricDataResponse implements MetricCollectionResponse {
       }
 
       for (List<Object> metricValues : dataResult.getValues()) {
-        long timeStamp = (int) metricValues.get(0) * TimeUnit.SECONDS.toMillis(1);
+        long timeStamp = parseTimeStamp(metricValues.get(0));
         Double value = Double.valueOf((String) metricValues.get(1));
 
         NewRelicMetricDataRecord metricDataRecord = rv.get(transactionName, timeStamp);
@@ -119,6 +120,18 @@ public class PrometheusMetricDataResponse implements MetricCollectionResponse {
       }
     }
     return rv;
+  }
+
+  private long parseTimeStamp(Object timeStamp) {
+    if (timeStamp instanceof Double) {
+      return ((Double) timeStamp).longValue() * TimeUnit.SECONDS.toMillis(1);
+    } else if (timeStamp instanceof Long) {
+      return (long) timeStamp * TimeUnit.SECONDS.toMillis(1);
+    } else if (timeStamp instanceof Integer) {
+      return (int) timeStamp * TimeUnit.SECONDS.toMillis(1);
+    } else {
+      throw new WingsException("Timestamp value in the metric is not valid. Received timestamp " + timeStamp);
+    }
   }
 
   private String getDeeplinkString(String url) {
