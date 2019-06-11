@@ -42,8 +42,8 @@ public enum WebhookSource {
     FORK("Fork", "repo:fork"),
     UPDATED("Updated", "repo:updated"),
     COMMIT_COMMENT_CREATED("Commit Comment Created", "repo:commit_comment_created"),
-    COMMIT_STATUS_CREATED("Commit Status Created", "repo:commit_status_created"),
-    COMMIT_STATUS_UPDATED("Commit Status Updated", "repo:commit_status_updated"),
+    BUILD_STATUS_CREATED("Build Status Created", "repo:commit_status_created"),
+    BUILD_STATUS_UPDATED("Build Status Updated", "repo:commit_status_updated"),
     PUSH("Push", "repo:push"),
 
     ISSUE_CREATED("Issue Created", "issue:created"),
