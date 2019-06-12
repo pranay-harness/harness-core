@@ -86,12 +86,8 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
 
   @Override
   public SecretManagerConfig getSecretManager(String accountId, String entityId) {
-    SecretManagerConfig secretManagerConfig = wingsPersistence.createQuery(SecretManagerConfig.class)
-                                                  .field(ACCOUNT_ID_KEY)
-                                                  .equal(accountId)
-                                                  .field(ID_KEY)
-                                                  .equal(entityId)
-                                                  .get();
+    SecretManagerConfig secretManagerConfig =
+        wingsPersistence.createQuery(SecretManagerConfig.class).field(ID_KEY).equal(entityId).get();
     return getEncryptionConfigInternal(accountId, secretManagerConfig);
   }
 
