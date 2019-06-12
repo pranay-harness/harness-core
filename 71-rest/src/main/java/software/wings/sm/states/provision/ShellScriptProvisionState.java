@@ -124,6 +124,7 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
     if (executionData.getExecutionStatus() == ExecutionStatus.SUCCESS) {
       String output = executionData.getOutput();
       Map<String, Object> outputMap = parseOutput(output);
+      infrastructureProvisionerService.getManagerExecutionCallback(context.getAppId(), activityId, COMMAND_UNIT);
       infrastructureProvisionerService.regenerateInfrastructureMappings(provisionerId, context, outputMap);
       handleSweepingOutput(sweepingOutputService, context, outputMap);
     }

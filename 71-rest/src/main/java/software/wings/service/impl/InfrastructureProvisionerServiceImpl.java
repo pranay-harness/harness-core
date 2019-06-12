@@ -9,6 +9,7 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -37,6 +38,7 @@ import io.harness.validation.Update;
 import io.harness.waiter.ErrorNotifyResponseData;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.jexl3.JexlException;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.Key;
@@ -56,6 +58,7 @@ import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisionerDetails;
 import software.wings.beans.InfrastructureProvisionerDetails.InfrastructureProvisionerDetailsBuilder;
+import software.wings.beans.Log;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
@@ -77,6 +80,7 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
+import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.aws.manager.AwsCFHelperServiceManager;
@@ -113,7 +117,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Inject private SecretManager secretManager;
   @Inject private GitConfigHelperService gitConfigHelperService;
   @Inject FileService fileService;
-  @Inject FeatureFlagService featureFlagService;
+  @Inject private FeatureFlagService featureFlagService;
+  @Inject private LogService logService;
 
   @Inject private WingsPersistence wingsPersistence;
 
@@ -423,9 +428,9 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     return propertyNameEvaluatedMap;
   }
 
-  private void addToExecutionLog(Optional<ManagerExecutionLogCallback> executionLogCallbackOptional, String errorMsg) {
+  private void addToExecutionLog(Optional<ManagerExecutionLogCallback> executionLogCallbackOptional, String msg) {
     if (executionLogCallbackOptional.isPresent()) {
-      executionLogCallbackOptional.get().saveExecutionLog("# " + errorMsg);
+      executionLogCallbackOptional.get().saveExecutionLog("# " + msg);
     }
   }
 
@@ -450,32 +455,71 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
                                  .filter(InfrastructureMapping.APP_ID_KEY, infrastructureProvisioner.getAppId())
                                  .filter(InfrastructureMapping.PROVISIONER_ID_KEY, infrastructureProvisioner.getUuid())
                                  .fetch())) {
-      while (infrastructureMappings.hasNext()) {
-        InfrastructureMapping infrastructureMapping = infrastructureMappings.next();
+      if (infrastructureMappings.hasNext()) {
+        boolean featureFlagEnabled =
+            featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infrastructureProvisioner.getAccountId());
+        while (infrastructureMappings.hasNext()) {
+          InfrastructureMapping infrastructureMapping = infrastructureMappings.next();
 
-        if (isEmpty(infrastructureProvisioner.getMappingBlueprints())) {
-          throw new InvalidRequestException(
-              "Service Mapping not found for Service Infra : " + infrastructureMapping.getName()
-                  + ". Add Service Mapping or de-link provisioner from Service Infra to resolve.",
-              USER);
+          if (featureFlagEnabled) {
+            Map<String, Object> resolvedBlueprints =
+                resolveBlueprints(contextMap, infrastructureMapping.getBlueprints(), infrastructureMapping.getName());
+            updateInfraMapping(infrastructureMapping, resolvedBlueprints);
+            addToExecutionLog(
+                executionLogCallbackOptional, "Updated service infra \"" + infrastructureMapping.getName() + "\"");
+          } else {
+            if (isEmpty(infrastructureProvisioner.getMappingBlueprints())) {
+              throw new InvalidRequestException(
+                  "Service Mapping not found for Service Infra : " + infrastructureMapping.getName()
+                      + ". Add Service Mapping or de-link provisioner from Service Infra to resolve.",
+                  USER);
+            }
+
+            infrastructureProvisioner.getMappingBlueprints()
+                .stream()
+                .filter(blueprint -> blueprint.getServiceId().equals(infrastructureMapping.getServiceId()))
+                .filter(blueprint
+                    -> blueprint.infrastructureMappingType().name().equals(infrastructureMapping.getInfraMappingType()))
+                .forEach(blueprint -> {
+                  logger.info("Provisioner {} updates infrastructureMapping {}", infrastructureProvisioner.getUuid(),
+                      infrastructureMapping.getUuid());
+                  addToExecutionLog(executionLogCallbackOptional,
+                      "Provisioner " + infrastructureProvisioner.getUuid() + " updates infrastructureMapping "
+                          + infrastructureMapping.getUuid());
+                  applyProperties(contextMap, infrastructureMapping, blueprint.getProperties(),
+                      executionLogCallbackOptional, region, blueprint.getNodeFilteringType());
+                });
+          }
         }
-
-        infrastructureProvisioner.getMappingBlueprints()
-            .stream()
-            .filter(blueprint -> blueprint.getServiceId().equals(infrastructureMapping.getServiceId()))
-            .filter(blueprint
-                -> blueprint.infrastructureMappingType().name().equals(infrastructureMapping.getInfraMappingType()))
-            .forEach(blueprint -> {
-              logger.info("Provisioner {} updates infrastructureMapping {}", infrastructureProvisioner.getUuid(),
-                  infrastructureMapping.getUuid());
-              addToExecutionLog(executionLogCallbackOptional,
-                  "Provisioner " + infrastructureProvisioner.getUuid() + " updates infrastructureMapping "
-                      + infrastructureMapping.getUuid());
-              applyProperties(contextMap, infrastructureMapping, blueprint.getProperties(),
-                  executionLogCallbackOptional, region, blueprint.getNodeFilteringType());
-            });
       }
     }
+  }
+
+  private void updateInfraMapping(InfrastructureMapping infrastructureMapping, Map<String, Object> resolvedBlueprints) {
+    infrastructureMapping.applyProvisionerVariables(resolvedBlueprints, null);
+    infrastructureMappingService.update(infrastructureMapping);
+  }
+
+  @VisibleForTesting
+  public Map<String, Object> resolveBlueprints(
+      Map<String, Object> contextMap, Map<String, String> blueprints, String infraMappingName) {
+    if (isEmpty(blueprints)) {
+      throw new InvalidRequestException(
+          "Invalid Configuration. Blueprints does not exists for service infra \"" + infraMappingName + "\"");
+    }
+    Map<String, Object> resolvedBlueprints = new HashMap<>(blueprints.size());
+
+    for (Map.Entry<String, String> blueprint : blueprints.entrySet()) {
+      Object evaluated;
+      try {
+        evaluated = evaluator.evaluate(blueprint.getValue(), contextMap);
+      } catch (JexlException.Variable ex) {
+        throw new InvalidRequestException(
+            "Unable to resolve blueprint \"" + blueprint.getValue() + "\" from outputs", USER);
+      }
+      resolvedBlueprints.put(blueprint.getKey(), evaluated);
+    }
+    return resolvedBlueprints;
   }
 
   @Override
@@ -682,5 +726,13 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Override
   public String getEntityId(String provisionerId, String envId) {
     return provisionerId + "-" + envId;
+  }
+
+  @Override
+  public ManagerExecutionLogCallback getManagerExecutionCallback(
+      String appId, String activityId, String commandUnitName) {
+    Log.Builder logBuilder =
+        Log.Builder.aLog().withCommandUnitName(commandUnitName).withAppId(appId).withActivityId(activityId);
+    return new ManagerExecutionLogCallback(logService, logBuilder, activityId);
   }
 }
