@@ -1615,7 +1615,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     } catch (LimitApproachingException e) {
       String errMsg = e.getPercent()
           + "% of Deployment Rate Limit reached. Some deployments may not be allowed beyond 100% usage. Please contact Harness support.";
-      logger.error(e.getMessage());
+      logger.info("Approaching Limit Message: {}", e.getMessage());
       AlertData alertData = new DeploymentRateApproachingLimitAlert(e.getLimit(), accountId, e.getPercent(), errMsg);
       alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.DEPLOYMENT_RATE_APPROACHING_LIMIT, alertData);
     } catch (UsageLimitExceededException e) {
