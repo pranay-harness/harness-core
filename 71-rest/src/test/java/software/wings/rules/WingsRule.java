@@ -234,7 +234,7 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
   }
 
   protected void registerObservers() {
-    WingsApplication.registerObservers(injector);
+    WingsApplication.registerSharedObservers(injector);
   }
 
   protected void addQueueModules(List<Module> modules) {
