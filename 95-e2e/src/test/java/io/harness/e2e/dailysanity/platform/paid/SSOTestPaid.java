@@ -33,8 +33,11 @@ import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.helpers.ext.ldap.LdapResponse;
+import software.wings.security.authentication.OauthProviderType;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 @Slf4j
 public class SSOTestPaid extends AbstractE2ETest {
@@ -47,9 +50,11 @@ public class SSOTestPaid extends AbstractE2ETest {
   public void createGoogleOauth() {
     logger.info("Starting the google oauth test");
     logger.info("Creating the oauth provider for google");
-    OauthSettings oauthSettings = OauthSettings.builder().build();
-    oauthSettings.setFilter("");
-    oauthSettings.setDisplayName("google");
+    Set<OauthProviderType> oauthProviderTypeSet = new HashSet<>();
+    oauthProviderTypeSet.add(OauthProviderType.GOOGLE);
+    OauthSettings oauthSettings =
+        OauthSettings.builder().allowedProviders(oauthProviderTypeSet).displayName("Google").filter("").build();
+    oauthSettings.setDisplayName("GOOGLE");
     assertTrue(SSORestUtils.addOauthSettings(getAccount().getUuid(), bearerToken, oauthSettings) == HttpStatus.SC_OK);
     Object ssoConfig = SSORestUtils.getAccessManagementSettings(getAccount().getUuid(), bearerToken);
     assertTrue(SSORestUtils.deleteOAUTHSettings(getAccount().getUuid(), bearerToken) == HttpStatus.SC_OK);
