@@ -13,7 +13,7 @@ public interface SecretManagerConfigService {
 
   EncryptionType getEncryptionType(String accountId);
 
-  List<SecretManagerConfig> listSecretManagers(String accountId);
+  List<SecretManagerConfig> listSecretManagers(String accountId, boolean maskSecret);
 
   List<SecretManagerConfig> listSecretManagersByType(
       String accountId, EncryptionType encryptionType, boolean maskSecret);

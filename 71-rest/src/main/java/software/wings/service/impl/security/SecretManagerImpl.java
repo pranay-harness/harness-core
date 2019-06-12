@@ -165,7 +165,7 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public List<SecretManagerConfig> listSecretManagers(String accountId) {
-    return secretManagerConfigService.listSecretManagers(accountId);
+    return secretManagerConfigService.listSecretManagers(accountId, true);
   }
 
   @Override
@@ -1939,7 +1939,7 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   private void vaildateSecretManagerConfigs(String accountId) {
-    List<SecretManagerConfig> encryptionConfigs = secretManagerConfigService.listSecretManagers(accountId);
+    List<SecretManagerConfig> encryptionConfigs = secretManagerConfigService.listSecretManagers(accountId, false);
     for (EncryptionConfig encryptionConfig : encryptionConfigs) {
       KmsSetupAlert kmsSetupAlert =
           KmsSetupAlert.builder()
@@ -1963,8 +1963,11 @@ public class SecretManagerImpl implements SecretManager {
             break;
         }
         alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
+        logger.info("Successfully validated secret manager {} of type {} for account {} ", encryptionConfig.getUuid(),
+            encryptionConfig.getEncryptionType(), accountId);
       } catch (Exception e) {
-        logger.info("Could not validate kms for account {} and kmsId {}", accountId, encryptionConfig.getUuid(), e);
+        logger.info("Could not validate secret manager {} of type {} for account {}", encryptionConfig.getUuid(),
+            encryptionConfig.getEncryptionType(), accountId, e);
         alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
       }
     }
