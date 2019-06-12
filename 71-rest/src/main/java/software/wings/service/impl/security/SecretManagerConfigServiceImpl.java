@@ -134,9 +134,9 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
   }
 
   @Override
-  public List<SecretManagerConfig> listSecretManagers(String accountId) {
+  public List<SecretManagerConfig> listSecretManagers(String accountId, boolean maskSecret) {
     // encryptionType null means all secret manager types.
-    return listSecretManagersInternal(accountId, null, true);
+    return listSecretManagersInternal(accountId, null, maskSecret);
   }
 
   @Override

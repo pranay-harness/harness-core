@@ -8,6 +8,7 @@ import com.google.common.base.Preconditions;
 import com.amazonaws.regions.Regions;
 import io.harness.beans.DelegateTask;
 import io.harness.security.encryption.EncryptionConfig;
+import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.security.encryption.EncryptedDataDetail;
 
@@ -62,6 +63,13 @@ public abstract class AbstractSecretManagerValidation extends AbstractDelegateVa
 
   DelegateConnectionResult validateSecretManager() {
     EncryptionConfig encryptionConfig = getEncryptionConfig();
+    // local encryption
+    if (encryptionConfig == null) {
+      return DelegateConnectionResult.builder()
+          .criteria("encryption type: " + EncryptionType.LOCAL)
+          .validated(true)
+          .build();
+    }
     Preconditions.checkNotNull(encryptionConfig);
 
     String secretManagerUrl = encryptionConfig.getEncryptionServiceUrl();
