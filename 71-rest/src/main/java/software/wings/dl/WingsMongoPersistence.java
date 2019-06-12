@@ -6,6 +6,7 @@ import static io.harness.encryption.EncryptionReflectUtils.getDecryptedField;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.allChecks;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.ReadPref.NORMAL;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -228,7 +229,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   public <T extends PersistentEntity> boolean delete(Class<T> cls, String uuid) {
     if (cls.equals(SettingAttribute.class) || EncryptableSetting.class.isAssignableFrom(cls)) {
       final AdvancedDatastore datastore = getDatastore(cls, ReadPref.NORMAL);
-      Query<T> query = datastore.createQuery(cls).filter(ID_KEY, uuid);
+      Query<T> query = createQuery(cls, excludeAuthority).filter(ID_KEY, uuid);
       return delete(query);
     }
 

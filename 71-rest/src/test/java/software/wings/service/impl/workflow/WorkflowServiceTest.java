@@ -314,11 +314,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @InjectMocks @Inject private WorkflowServiceHelper workflowServiceHelper;
   @InjectMocks @Inject private WorkflowServiceTemplateHelper workflowServiceTemplateHelper;
 
-  private StencilPostProcessor stencilPostProcessor =
-      mock(StencilPostProcessor.class, (Answer<List<Stencil>>) invocationOnMock -> {
-        logger.info("invocationOnMock.getArguments()[0] " + invocationOnMock.getArguments()[0]);
-        return (List<Stencil>) invocationOnMock.getArguments()[0];
-      });
+  private StencilPostProcessor stencilPostProcessor = mock(StencilPostProcessor.class,
+      (Answer<List<Stencil>>) invocationOnMock -> { return (List<Stencil>) invocationOnMock.getArguments()[0]; });
 
   @Mock private UpdateOperations<Workflow> updateOperations;
   @Mock private LimitCheckerFactory limitCheckerFactory;
@@ -2022,7 +2019,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(graph.getNodes().get(1).getId()).isEqualTo(orchestrationWorkflow3.getWorkflowPhaseIds().get(0));
     assertThat(graph.getNodes().get(3).getId()).isEqualTo(orchestrationWorkflow3.getWorkflowPhaseIds().get(1));
     assertThat(graph.getNodes().get(5).getId()).isEqualTo(orchestrationWorkflow3.getPostDeploymentSteps().getUuid());
-    logger.info("Graph Nodes: {}", graph.getNodes());
+
     assertThat(graph.getSubworkflows())
         .isNotNull()
         .containsKeys(orchestrationWorkflow3.getPreDeploymentSteps().getUuid(),
