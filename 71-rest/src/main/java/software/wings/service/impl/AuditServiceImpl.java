@@ -49,6 +49,7 @@ import software.wings.audit.AuditHeaderYamlResponse.AuditHeaderYamlResponseBuild
 import software.wings.audit.EntityAuditRecord;
 import software.wings.audit.EntityAuditRecord.EntityAuditRecordBuilder;
 import software.wings.audit.ResourceType;
+import software.wings.beans.AuditPreference;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityYamlRecord;
 import software.wings.beans.EntityYamlRecord.EntityYamlRecordKeys;
@@ -94,6 +95,7 @@ public class AuditServiceImpl implements AuditService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
   @Inject private ResourceLookupService resourceLookupService;
+  @Inject private AuditPreferenceHelper auditPreferenceHelper;
 
   private WingsPersistence wingsPersistence;
 
@@ -380,6 +382,17 @@ public class AuditServiceImpl implements AuditService {
     } catch (Exception ex) {
       logger.error(format("Exception while auditing records for account [%s]", accountId), ex);
     }
+  }
+
+  @Override
+  public PageResponse<AuditHeader> listUsingFilter(
+      String accountId, String filterJson, String limit, String offset, boolean isCommunityAccount) {
+    AuditPreference auditPreference = (AuditPreference) auditPreferenceHelper.parseJsonIntoPreference(filterJson);
+    auditPreference.setAccountId(accountId);
+
+    PageRequest<AuditHeader> pageRequest =
+        auditPreferenceHelper.generatePageRequestFromAuditPreference(auditPreference, offset, limit);
+    return wingsPersistence.query(AuditHeader.class, pageRequest);
   }
 
   private <T> void updateEntityNameCacheIfRequired(T oldEntity, T newEntity, EntityAuditRecord record) {

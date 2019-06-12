@@ -5,6 +5,7 @@ import static software.wings.beans.PreferenceType.AUDIT_PREFERENCE;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 
 import java.util.List;
 
@@ -14,6 +15,7 @@ import java.util.List;
 
 @Data
 @JsonTypeName("AUDIT_PREFERENCE")
+@FieldNameConstants(innerTypeName = "AuditPreferenceKeys")
 @EqualsAndHashCode(callSuper = true)
 public class AuditPreference extends Preference {
   String startTime;
@@ -29,5 +31,12 @@ public class AuditPreference extends Preference {
 
   public AuditPreference() {
     super(AUDIT_PREFERENCE.name());
+  }
+
+  public static final class AuditPreferenceKeys {
+    public static final String accountId = "accountId";
+    public static final String createdAt = "createdAt";
+    public static final String uuid = "uuid";
+    public static final String name = "name";
   }
 }
