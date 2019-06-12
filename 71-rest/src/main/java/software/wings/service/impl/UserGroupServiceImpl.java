@@ -49,6 +49,7 @@ import software.wings.scheduler.LdapGroupSyncJob;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.UserGroupUtils;
+import software.wings.service.impl.workflow.UserGroupDeleteEventHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AuthService;
@@ -68,6 +69,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
@@ -84,6 +86,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   public static final String DEFAULT_USER_GROUP_DESCRIPTION = "Default account admin user group";
 
+  @Inject private ExecutorService executors;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;
   @Inject private AccountService accountService;
@@ -92,6 +95,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Inject private AlertService alertService;
   @Inject private PagerDutyService pagerDutyService;
   @Inject private EventPublishHelper eventPublishHelper;
+  @Inject private UserGroupDeleteEventHandler userGroupDeleteEventHandler;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   @Override
@@ -420,6 +424,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     boolean deleted = wingsPersistence.delete(userGroupQuery);
     if (deleted) {
       evictUserPermissionInfoCacheForUserGroup(userGroup);
+      executors.submit(() -> userGroupDeleteEventHandler.handleUserGroupDelete(accountId, userGroupId));
     }
     return deleted;
   }
