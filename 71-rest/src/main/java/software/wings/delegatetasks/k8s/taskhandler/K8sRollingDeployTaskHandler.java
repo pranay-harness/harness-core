@@ -30,7 +30,6 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
-import io.harness.k8s.model.HarnessAnnotations;
 import io.harness.k8s.model.HarnessLabelValues;
 import io.harness.k8s.model.HarnessLabels;
 import io.harness.k8s.model.K8sPod;
@@ -248,20 +247,6 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       executionLogCallback.saveExecutionLog(
           "Manifests processed. Found following resources: \n" + k8sTaskHelper.getResourcesInTableFormat(resources));
 
-      List<KubernetesResource> workloads = getWorkloads(resources);
-
-      // ToDo anshul Remove this once you enable multiple workloads in rolling workflow
-      // Search above in code while removing
-      // This is to support rollback of depployment after this change was enabled.
-      // It just provides backward comptability if you move to new version of code and then rollback
-      if (workloads.size() > 1) {
-        executionLogCallback.saveExecutionLog(
-            "\nMore than one workloads found in the Manifests. Only one can be managed. Others should be marked with annotation "
-                + HarnessAnnotations.directApply + ": true",
-            ERROR, FAILURE);
-        return false;
-      }
-
       if (!k8sRollingDeployTaskParameters.isInCanaryWorkflow()) {
         release = releaseHistory.createNewRelease(
             resources.stream().map(resource -> resource.getResourceId()).collect(Collectors.toList()));
@@ -352,10 +337,6 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
                                             .workload(kubernetesResource.getResourceId())
                                             .revision(latestRevision)
                                             .build());
-
-      // ToDo anshul Remove this once you enable multiple workloads in rolling workflow
-      release.setManagedWorkload(kubernetesResource.getResourceId());
-      release.setManagedWorkloadRevision(latestRevision);
     }
 
     release.setManagedWorkloads(kubernetesResourceIdRevisions);

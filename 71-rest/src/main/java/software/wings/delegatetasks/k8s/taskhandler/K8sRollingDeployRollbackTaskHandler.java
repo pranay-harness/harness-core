@@ -261,10 +261,6 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
             k8sTaskHelper.getLatestRevision(client, kubernetesResourceIdRevision.getWorkload(), k8sDelegateTaskParams);
 
         kubernetesResourceIdRevision.setRevision(latestRevision);
-
-        // ToDo anshul Remove this once you enable multiple workloads in rolling workflow
-        previousRollbackEligibleRelease.setManagedWorkload(kubernetesResourceIdRevision.getWorkload());
-        previousRollbackEligibleRelease.setManagedWorkloadRevision(latestRevision);
       }
     } else if (previousRollbackEligibleRelease.getManagedWorkload() != null) {
       previousRollbackEligibleRelease.setManagedWorkloadRevision(k8sTaskHelper.getLatestRevision(
