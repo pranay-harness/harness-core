@@ -8,7 +8,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.persistence.HQuery.excludeCount;
 import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
 import static java.lang.Math.min;
@@ -88,7 +87,6 @@ import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataKeys;
 import software.wings.service.impl.analysis.MetricAnalysisRecord.MetricAnalysisRecordKeys;
@@ -104,6 +102,7 @@ import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricDataRecord.NewRelicMetricDataRecordKeys;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
@@ -1093,13 +1092,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     long startTime = filter.getHistoryStartTime();
     long endTime = filter.getEndTime();
     long riskCutOffTime = filter.getStartTime();
-    boolean isMultiTagMaxRisk = isNotEmpty(filter.getTags()) && filter.getTags().size() > 1;
 
     SettingValue connectorConfig = getConnectorConfig(cvConfiguration);
     int endMinute = (int) TimeUnit.MILLISECONDS.toMinutes(endTime);
     int startMinute = (int) TimeUnit.MILLISECONDS.toMinutes(startTime);
 
-    final List<NewRelicMetricDataRecord> metricRecords = new ArrayList<>();
+    final Set<NewRelicMetricDataRecord> metricRecords = new HashSet<>();
     Map<Integer, Integer> startEndMap = new HashMap<>();
     int movingStart = startMinute, movingEnd = startMinute + 60;
     while (movingEnd <= endMinute) {
@@ -1115,52 +1113,28 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     startEndMap.forEach((start, end) -> callables.add(() -> {
       PageRequest<NewRelicMetricDataRecord> dataRecordPageRequest =
           PageRequestBuilder.aPageRequest()
-              .addFilter("cvConfigId", Operator.EQ, cvConfiguration.getUuid())
-              .addFilter("dataCollectionMinute", Operator.GE, start)
+              .addFilter(NewRelicMetricDataRecordKeys.cvConfigId, Operator.EQ, cvConfiguration.getUuid())
+              .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.GE, start)
               .build();
 
       if (end == endMinute) {
-        dataRecordPageRequest.addFilter("dataCollectionMinute", Operator.LT_EQ, end);
+        dataRecordPageRequest.addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.LT_EQ, end);
       } else {
-        dataRecordPageRequest.addFilter("dataCollectionMinute", Operator.LT, end);
+        dataRecordPageRequest.addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.LT, end);
       }
 
       if (isNotEmpty(filter.getTags()) && filter.getTags().size() == 1) {
-        dataRecordPageRequest.addFilter("tag", Operator.EQ, filter.getTags().iterator().next());
+        dataRecordPageRequest.addFilter(
+            NewRelicMetricDataRecordKeys.tag, Operator.EQ, filter.getTags().iterator().next());
       }
 
-      if (dataStoreService instanceof GoogleDataStoreServiceImpl) {
-        dataRecordPageRequest.setLimit(UNLIMITED);
-        final List<NewRelicMetricDataRecord> records = new ArrayList<>();
-        dataStoreService.list(NewRelicMetricDataRecord.class, dataRecordPageRequest)
-            .getResponse()
-            .stream()
-            .filter(dataRecord -> !HEARTBEAT_METRIC_NAME.equals(dataRecord.getName()))
-            .forEach(dataRecord -> {
-              // filter for txnName
-              if (isEmpty(filter.getTxnNames())) {
-                records.add(dataRecord);
-              } else if (filter.getTxnNames().contains(dataRecord.getName())) {
-                records.add(dataRecord);
-              }
-            });
-        filterMetrics(filter, records);
-        setDeeplinkUrlInRecords(cvConfiguration, connectorConfig, startTime, endTime, records);
-
-        metricRecords.addAll(records);
-      } else {
-        dataRecordPageRequest.addFilter("appId", Operator.EQ, cvConfiguration.getAppId());
-        dataRecordPageRequest.addFilter("name", Operator.NOT_EQ, HEARTBEAT_METRIC_NAME);
-        dataRecordPageRequest.setFieldsIncluded(
-            Lists.newArrayList("name", "values", "dataCollectionMinute", "stateType", "deeplinkMetadata", "tag"));
-        dataRecordPageRequest.setOffset("0");
-        dataRecordPageRequest.setLimit("5000");
-        int previousOffset = 0;
-        PageResponse<NewRelicMetricDataRecord> response =
-            wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest, excludeCount);
-        while (!response.isEmpty()) {
-          final List<NewRelicMetricDataRecord> records = new ArrayList<>();
-          response.getResponse().forEach(dataRecord -> {
+      dataRecordPageRequest.setLimit(UNLIMITED);
+      final List<NewRelicMetricDataRecord> records = new ArrayList<>();
+      dataStoreService.list(NewRelicMetricDataRecord.class, dataRecordPageRequest)
+          .getResponse()
+          .stream()
+          .filter(dataRecord -> !HEARTBEAT_METRIC_NAME.equals(dataRecord.getName()))
+          .forEach(dataRecord -> {
             // filter for txnName
             if (isEmpty(filter.getTxnNames())) {
               records.add(dataRecord);
@@ -1168,16 +1142,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               records.add(dataRecord);
             }
           });
-
-          // filter for metric names
-          filterMetrics(filter, records);
-          setDeeplinkUrlInRecords(cvConfiguration, connectorConfig, startTime, endTime, records);
-          metricRecords.addAll(records);
-          previousOffset += response.size();
-          dataRecordPageRequest.setOffset(String.valueOf(previousOffset));
-          response = wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest, excludeCount);
-        }
-      }
+      filterMetrics(filter, records);
+      setDeeplinkUrlInRecords(cvConfiguration, connectorConfig, startTime, endTime, records);
+      metricRecords.addAll(records);
       return null;
     }));
 

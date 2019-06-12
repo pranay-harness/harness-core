@@ -142,14 +142,14 @@ public class WorkflowTimeSeriesAnalysisJob implements Job {
       final String lastSuccessfulWorkflowExecutionIdWithData =
           analysisService.getLastSuccessfulWorkflowExecutionIdWithData(
               context.getStateType(), context.getAppId(), context.getWorkflowId(), context.getServiceId());
-      final List<NewRelicMetricDataRecord> controlRecords =
+      final Set<NewRelicMetricDataRecord> controlRecords =
           context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
           ? analysisService.getPreviousSuccessfulRecords(context.getAppId(), lastSuccessfulWorkflowExecutionIdWithData,
                 groupName, analysisMinute, analysisStartMin)
           : analysisService.getRecords(context.getAppId(), context.getStateExecutionId(), groupName,
                 getNodesForGroup(groupName, context.getControlNodes()), analysisMinute, analysisStartMin);
 
-      final List<NewRelicMetricDataRecord> testRecords =
+      final Set<NewRelicMetricDataRecord> testRecords =
           analysisService.getRecords(context.getAppId(), context.getStateExecutionId(), groupName,
               getNodesForGroup(groupName, context.getTestNodes()), analysisMinute, analysisStartMin);
 
@@ -158,8 +158,8 @@ public class WorkflowTimeSeriesAnalysisJob implements Job {
         message = "No test data found. Please check load. Skipping analysis for minute " + analysisMinute;
       }
 
-      Map<String, List<NewRelicMetricDataRecord>> controlRecordsByMetric = splitMetricsByName(controlRecords);
-      Map<String, List<NewRelicMetricDataRecord>> testRecordsByMetric = splitMetricsByName(testRecords);
+      Map<String, Set<NewRelicMetricDataRecord>> controlRecordsByMetric = splitMetricsByName(controlRecords);
+      Map<String, Set<NewRelicMetricDataRecord>> testRecordsByMetric = splitMetricsByName(testRecords);
 
       NewRelicMetricAnalysisRecord analysisRecord = NewRelicMetricAnalysisRecord.builder()
                                                         .appId(context.getAppId())
@@ -194,7 +194,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Job {
           throw new IllegalStateException("Invalid stateType " + context.getStateType());
       }
 
-      for (Map.Entry<String, List<NewRelicMetricDataRecord>> metric : testRecordsByMetric.entrySet()) {
+      for (Map.Entry<String, Set<NewRelicMetricDataRecord>> metric : testRecordsByMetric.entrySet()) {
         final String metricName = metric.getKey();
         NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis metricAnalysis =
             NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis.builder()
@@ -546,14 +546,14 @@ public class WorkflowTimeSeriesAnalysisJob implements Job {
       }
     }
 
-    private Map<String, List<NewRelicMetricDataRecord>> splitMetricsByName(List<NewRelicMetricDataRecord> records) {
-      final Map<String, List<NewRelicMetricDataRecord>> rv = new HashMap<>();
+    private Map<String, Set<NewRelicMetricDataRecord>> splitMetricsByName(Set<NewRelicMetricDataRecord> records) {
+      final Map<String, Set<NewRelicMetricDataRecord>> rv = new HashMap<>();
       for (NewRelicMetricDataRecord record : records) {
         if (record.getName().equals(NewRelicDataCollectionTask.HARNESS_HEARTBEAT_METRIC_NAME)) {
           continue;
         }
         if (!rv.containsKey(record.getName())) {
-          rv.put(record.getName(), new ArrayList<>());
+          rv.put(record.getName(), new HashSet<>());
         }
 
         rv.get(record.getName()).add(record);
