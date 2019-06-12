@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -19,6 +20,7 @@ import com.google.inject.Inject;
 import com.mongodb.DBCursor;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.exception.InvalidRequestException;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -33,6 +35,7 @@ import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.BlueprintProperty;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
@@ -41,6 +44,8 @@ import software.wings.beans.InfrastructureProvisioner;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
+import software.wings.service.impl.InfrastructureProvisionerServiceImpl;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.sm.ExecutionContext;
@@ -56,11 +61,13 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Mock DBCursor dbCursor;
   @Mock MorphiaIterator infrastructureMappings;
   @Mock InfrastructureMappingService infrastructureMappingService;
+  @Mock FeatureFlagService featureFlagService;
   @Inject @InjectMocks InfrastructureProvisionerService infrastructureProvisionerService;
 
   @Test
   @Category(UnitTests.class)
   public void testRegenerateInfrastructureMappings() throws Exception {
+    doReturn(false).when(featureFlagService).isEnabled(eq(FeatureName.INFRA_MAPPING_REFACTOR), any());
     InfrastructureProvisioner infrastructureProvisioner =
         CloudFormationInfrastructureProvisioner.builder()
             .appId(APP_ID)
@@ -85,7 +92,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     doReturn(infrastructureMappings).when(query).fetch();
     doReturn(new HashMap<>()).when(executionContext).asMap();
 
-    doReturn(true).doReturn(false).when(infrastructureMappings).hasNext();
+    doReturn(true).doReturn(true).doReturn(false).when(infrastructureMappings).hasNext();
     InfrastructureMapping infrastructureMapping = anAwsInfrastructureMapping()
                                                       .withAppId(APP_ID)
                                                       .withProvisionerId(ID_KEY)
@@ -129,5 +136,27 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     assertEquals(1, awsInstanceFilter.getTags().size());
     assertEquals("name", awsInstanceFilter.getTags().get(0).getKey());
     assertEquals("mockName", awsInstanceFilter.getTags().get(0).getValue());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testResolveBlueprints() {
+    Map<String, Object> contextMap = new HashMap<>();
+    Map<String, String> blueprints = new HashMap<>();
+    assertThatThrownBy(()
+                           -> ((InfrastructureProvisionerServiceImpl) infrastructureProvisionerService)
+                                  .resolveBlueprints(contextMap, blueprints, ""))
+        .isInstanceOf(InvalidRequestException.class);
+    blueprints.put("abc", "def");
+    assertThatThrownBy(()
+                           -> ((InfrastructureProvisionerServiceImpl) infrastructureProvisionerService)
+                                  .resolveBlueprints(contextMap, blueprints, ""))
+        .isInstanceOf(InvalidRequestException.class);
+    contextMap.put("def", 1);
+    Map<String, Object> resolveBlueprints = ((InfrastructureProvisionerServiceImpl) infrastructureProvisionerService)
+                                                .resolveBlueprints(contextMap, blueprints, "");
+    assertTrue(resolveBlueprints.size() == 1);
+    Object value = resolveBlueprints.get("abc");
+    assertTrue(value instanceof Integer && (Integer) value == 1);
   }
 }

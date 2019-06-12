@@ -71,6 +71,7 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
+import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -81,6 +82,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.utils.Validator;
 
 import java.io.IOException;
@@ -123,6 +125,7 @@ public abstract class TerraformProvisionState extends State {
   @Inject protected transient FileService fileService;
   @Inject protected transient SecretManager secretManager;
   @Inject private transient GitConfigHelperService gitConfigHelperService;
+  @Inject private transient LogService logService;
 
   @Attributes(title = "Provisioner") @Getter @Setter String provisionerId;
 
@@ -322,7 +325,11 @@ public abstract class TerraformProvisionState extends State {
           }
         }
         outputInfoElement.addOutPuts(contextOutputs);
-        infrastructureProvisionerService.regenerateInfrastructureMappings(provisionerId, context, outputs);
+
+        ManagerExecutionLogCallback executionLogCallback = infrastructureProvisionerService.getManagerExecutionCallback(
+            terraformProvisioner.getAppId(), terraformExecutionData.getActivityId(), commandUnit().name());
+        infrastructureProvisionerService.regenerateInfrastructureMappings(
+            provisionerId, context, outputs, Optional.of(executionLogCallback), Optional.empty());
       }
     }
 
