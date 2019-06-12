@@ -263,6 +263,32 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  @RealMongo
+  public void updateFileWithGlobalKms() throws IOException {
+    KmsConfig globalKmsConfig = getKmsConfig();
+    globalKmsConfig.setName("Global config");
+    globalKmsConfig.setDefault(true);
+    kmsResource.saveGlobalKmsConfig(accountId, globalKmsConfig);
+
+    String randomAccountId = UUID.randomUUID().toString();
+
+    String secretName = UUID.randomUUID().toString();
+    File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+    String secretFileId = secretManager.saveFile(
+        randomAccountId, secretName, null, new BoundedInputStream(new FileInputStream(fileToSave)));
+    assertNotNull(secretFileId);
+
+    String newSecretName = UUID.randomUUID().toString();
+    File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
+    boolean result = secretManager.updateFile(
+        randomAccountId, newSecretName, secretFileId, null, new BoundedInputStream(new FileInputStream(fileToUpdate)));
+    assertTrue(result);
+
+    assertTrue(secretManager.deleteFile(randomAccountId, secretFileId));
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void validateConfig() throws IOException {
     KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setAccountId(accountId);
