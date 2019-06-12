@@ -504,6 +504,15 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   public static void registerObservers(Injector injector) {
+    // Register Audit observer
+    YamlPushServiceImpl yamlPushService = (YamlPushServiceImpl) injector.getInstance(Key.get(YamlPushService.class));
+    AuditServiceImpl auditService = (AuditServiceImpl) injector.getInstance(Key.get(AuditService.class));
+    yamlPushService.getEntityCrudSubject().register(auditService);
+
+    registerSharedObservers(injector);
+  }
+
+  public static void registerSharedObservers(Injector injector) {
     final MaintenanceController maintenanceController = injector.getInstance(MaintenanceController.class);
     maintenanceController.register(new HazelcastListener());
 
@@ -518,11 +527,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     settingsService.getManipulationSubject().register(workflowService);
     stateMachineExecutor.getStatusUpdateSubject().register(workflowExecutionService);
     stateInspectionService.getSubject().register(stateMachineExecutor);
-
-    // Register Audit observer
-    YamlPushServiceImpl yamlPushService = (YamlPushServiceImpl) injector.getInstance(Key.get(YamlPushService.class));
-    AuditServiceImpl auditService = (AuditServiceImpl) injector.getInstance(Key.get(AuditService.class));
-    yamlPushService.getEntityCrudSubject().register(auditService);
   }
 
   public static void registerIterators(Injector injector) {
