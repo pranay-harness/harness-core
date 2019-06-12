@@ -9,7 +9,9 @@ import io.harness.exception.InvalidRequestException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.apache.commons.lang3.StringUtils;
+import software.wings.annotation.Blueprint;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.stencils.EnumData;
 import software.wings.utils.Utils;
@@ -25,6 +27,7 @@ import java.util.Optional;
 @JsonTypeName("AWS_AWS_LAMBDA")
 @Data
 @EqualsAndHashCode(callSuper = false)
+@FieldNameConstants(innerTypeName = "AwsLambdaInfraStructureMappingKeys")
 public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
   /**
    * Instantiates a new Infrastructure mapping.
@@ -35,12 +38,13 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
 
   @Attributes(title = "Region", required = true)
   @EnumData(enumDataProvider = AwsInfrastructureMapping.AwsRegionDataProvider.class)
+  @Blueprint
   private String region;
 
-  @Attributes(title = "VPC") private String vpcId;
-  @Attributes(title = "Subnets") private List<String> subnetIds = new ArrayList<>();
-  @Attributes(title = "Security Groups") private List<String> securityGroupIds = new ArrayList<>();
-  @Attributes(title = " IAM role") private String role;
+  @Blueprint @Attributes(title = "VPC") private String vpcId;
+  @Blueprint @Attributes(title = "Subnets") private List<String> subnetIds = new ArrayList<>();
+  @Blueprint @Attributes(title = "Security Groups") private List<String> securityGroupIds = new ArrayList<>();
+  @Blueprint @Attributes(title = " IAM role") private String role;
 
   @SchemaIgnore
   @Override

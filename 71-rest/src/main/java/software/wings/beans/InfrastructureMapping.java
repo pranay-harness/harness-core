@@ -77,6 +77,8 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
 
   @Indexed private Long nextIteration;
 
+  private Map<String, String> blueprints;
+
   /**
    * Instantiates a new Infrastructure mapping.
    */
@@ -94,7 +96,7 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
       EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt,
       String computeProviderSettingId, String envId, String serviceTemplateId, String serviceId,
       String computeProviderType, String infraMappingType, String deploymentType, String computeProviderName,
-      String name, boolean autoPopulateName) {
+      String name, boolean autoPopulateName, Map<String, String> blueprints) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.computeProviderSettingId = computeProviderSettingId;
     this.envId = envId;
@@ -107,6 +109,7 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
     this.name = name;
     this.autoPopulate = autoPopulateName;
     this.accountId = accountId;
+    this.blueprints = blueprints;
   }
 
   public abstract void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType);
@@ -290,6 +293,15 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
 
   public void setProvisionerId(String provisionerId) {
     this.provisionerId = provisionerId;
+  }
+
+  @SchemaIgnore
+  public Map<String, String> getBlueprints() {
+    return blueprints;
+  }
+
+  public void setBlueprints(Map<String, String> blueprints) {
+    this.blueprints = blueprints;
   }
 
   @Override
