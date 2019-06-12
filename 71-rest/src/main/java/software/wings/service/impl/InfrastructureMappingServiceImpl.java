@@ -38,6 +38,7 @@ import static software.wings.utils.KubernetesConvention.DASH;
 import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.notNullCheck;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -67,6 +68,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FindOptions;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.annotation.BlueprintProcessor;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
@@ -74,6 +76,7 @@ import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
+import software.wings.beans.AwsLambdaInfraStructureMapping.AwsLambdaInfraStructureMappingKeys;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureInfrastructureMapping;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
@@ -83,10 +86,12 @@ import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.HostValidationRequest;
 import software.wings.beans.HostValidationResponse;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
@@ -508,6 +513,17 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       } else {
         fieldsToRemove.add("role");
       }
+
+      // BLUEPRINT
+      if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infrastructureMapping.getAccountId())) {
+        Map<String, String> blueprints = infrastructureMapping.getBlueprints();
+        if (blueprints == null) {
+          fieldsToRemove.add(InfrastructureMappingKeys.blueprints);
+        } else {
+          keyValuePairs.put(InfrastructureMappingKeys.blueprints, blueprints);
+        }
+      }
+
     } else if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
       PhysicalInfrastructureMapping physicalInfrastructureMapping =
           (PhysicalInfrastructureMapping) infrastructureMapping;
@@ -900,8 +916,24 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     notNullCheck("ComputeProviderSettingAttribute", settingAttribute, USER);
   }
 
-  private void validateAwsLambdaInfrastructureMapping(AwsLambdaInfraStructureMapping lambdaInfraStructureMapping) {
+  @VisibleForTesting
+  public void validateAwsLambdaInfrastructureMapping(AwsLambdaInfraStructureMapping lambdaInfraStructureMapping) {
     if (!StringUtils.isEmpty(lambdaInfraStructureMapping.getProvisionerId())) {
+      if (featureFlagService.isEnabled(
+              FeatureName.INFRA_MAPPING_REFACTOR, lambdaInfraStructureMapping.getAccountId())) {
+        if (lambdaInfraStructureMapping.getBlueprints() == null) {
+          throw new InvalidRequestException("Blueprints can't be empty with provisioner", USER);
+        }
+        BlueprintProcessor.validateKeys(lambdaInfraStructureMapping, lambdaInfraStructureMapping.getBlueprints());
+        if (StringUtils.isEmpty(
+                lambdaInfraStructureMapping.getBlueprints().get(AwsLambdaInfraStructureMappingKeys.region))) {
+          throw new InvalidRequestException("Blueprint Region is mandatory", USER);
+        }
+        if (StringUtils.isEmpty(
+                lambdaInfraStructureMapping.getBlueprints().get(AwsLambdaInfraStructureMappingKeys.role))) {
+          throw new InvalidRequestException("Blueprint IAM Role is mandatory", USER);
+        }
+      }
       return;
     }
     if (StringUtils.isEmpty(lambdaInfraStructureMapping.getRegion())) {

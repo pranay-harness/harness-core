@@ -64,6 +64,7 @@ import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery;
 import org.apache.commons.lang3.StringUtils;
@@ -75,6 +76,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -83,11 +85,14 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.AwsLambdaInfraStructureMapping;
+import software.wings.beans.AwsLambdaInfraStructureMapping.AwsLambdaInfraStructureMappingKeys;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
@@ -110,6 +115,7 @@ import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.PipelineService;
@@ -161,6 +167,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Mock private TriggerService triggerService;
   @Mock private YamlPushService yamlPushService;
   @Mock private AzureHelperService azureHelperService;
+  @Mock private FeatureFlagService featureFlagService;
 
   @Inject @InjectMocks private InfrastructureMappingService infrastructureMappingService;
 
@@ -172,6 +179,8 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Mock private Environment env;
   @Mock private Service service;
   @Mock private ContainerService containerService;
+  @InjectMocks
+  private InfrastructureMappingServiceImpl infrastructureMappingServiceImpl = new InfrastructureMappingServiceImpl();
 
   @Before
   public void setUp() throws Exception {
@@ -1051,5 +1060,25 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .when(wingsPersistence)
         .saveAndGet(InfrastructureMapping.class, azureWinRMInfrastructureMapping);
     assertThat(azureWinRMInfrastructureMapping.getWinRmConnectionAttributes()).isNotNull();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateAwsLambdaInfrastructureMapping() {
+    AwsLambdaInfraStructureMapping awsLambdaInfraStructureMapping = new AwsLambdaInfraStructureMapping();
+    Mockito.when(featureFlagService.isEnabled(eq(FeatureName.INFRA_MAPPING_REFACTOR), any())).thenReturn(true);
+    awsLambdaInfraStructureMapping.setProvisionerId("test");
+    assertThatThrownBy(
+        () -> infrastructureMappingServiceImpl.validateAwsLambdaInfrastructureMapping(awsLambdaInfraStructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+    Map<String, String> blueprints = new HashMap<>();
+    blueprints.put(AwsLambdaInfraStructureMappingKeys.region, "region");
+    awsLambdaInfraStructureMapping.setBlueprints(blueprints);
+    assertThatThrownBy(
+        () -> infrastructureMappingServiceImpl.validateAwsLambdaInfrastructureMapping(awsLambdaInfraStructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+    blueprints.put(AwsLambdaInfraStructureMappingKeys.role, "role");
+    awsLambdaInfraStructureMapping.setBlueprints(blueprints);
+    infrastructureMappingServiceImpl.validateAwsLambdaInfrastructureMapping(awsLambdaInfraStructureMapping);
   }
 }

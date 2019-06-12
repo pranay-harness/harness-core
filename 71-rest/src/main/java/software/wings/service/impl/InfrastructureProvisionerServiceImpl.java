@@ -46,6 +46,7 @@ import software.wings.api.TerraformExecutionData;
 import software.wings.beans.BlueprintProperty;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.Event.Type;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.beans.InfrastructureMapping;
@@ -71,6 +72,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -111,6 +113,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Inject private SecretManager secretManager;
   @Inject private GitConfigHelperService gitConfigHelperService;
   @Inject FileService fileService;
+  @Inject FeatureFlagService featureFlagService;
 
   @Inject private WingsPersistence wingsPersistence;
 
@@ -178,14 +181,18 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       CloudProviderType cloudProviderType) {
     PageRequestBuilder requestBuilder = aPageRequest();
 
-    if (serviceId != null) {
-      requestBuilder.addFilter(InfrastructureMappingBlueprint.SERVICE_ID_KEY, Operator.EQ, serviceId);
-    }
-    if (deploymentType != null) {
-      requestBuilder.addFilter(InfrastructureMappingBlueprint.DEPLOYMENT_TYPE_KEY, Operator.EQ, deploymentType);
-    }
-    if (cloudProviderType != null) {
-      requestBuilder.addFilter(InfrastructureMappingBlueprint.CLOUD_PROVIDER_TYPE_KEY, Operator.EQ, cloudProviderType);
+    String accountIdByAppId = appService.getAccountIdByAppId(appId);
+    if (!featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountIdByAppId)) {
+      if (serviceId != null) {
+        requestBuilder.addFilter(InfrastructureMappingBlueprint.SERVICE_ID_KEY, Operator.EQ, serviceId);
+      }
+      if (deploymentType != null) {
+        requestBuilder.addFilter(InfrastructureMappingBlueprint.DEPLOYMENT_TYPE_KEY, Operator.EQ, deploymentType);
+      }
+      if (cloudProviderType != null) {
+        requestBuilder.addFilter(
+            InfrastructureMappingBlueprint.CLOUD_PROVIDER_TYPE_KEY, Operator.EQ, cloudProviderType);
+      }
     }
 
     final PageRequest blueprintRequest = requestBuilder.build();
@@ -196,9 +203,11 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
           InfrastructureProvisioner.INFRASTRUCTURE_PROVISIONER_TYPE_KEY, Operator.EQ, infrastructureProvisionerType);
     }
 
-    if (isNotEmpty(blueprintRequest.getFilters())) {
-      requestBuilder.addFilter(
-          InfrastructureProvisioner.MAPPING_BLUEPRINTS_KEY, Operator.ELEMENT_MATCH, blueprintRequest);
+    if (!featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountIdByAppId)) {
+      if (isNotEmpty(blueprintRequest.getFilters())) {
+        requestBuilder.addFilter(
+            InfrastructureProvisioner.MAPPING_BLUEPRINTS_KEY, Operator.ELEMENT_MATCH, blueprintRequest);
+      }
     }
 
     return wingsPersistence.query(InfrastructureProvisioner.class, requestBuilder.build());
