@@ -14,6 +14,7 @@ import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.event.listener.EventListener;
 import io.harness.event.publisher.EventPublisher;
+import io.harness.event.timeseries.TimeSeriesHandler;
 import io.harness.event.usagemetrics.HarnessMetricsRegistryHandler;
 import software.wings.app.MainConfiguration;
 import software.wings.service.impl.event.GenericEventListener;
@@ -59,6 +60,8 @@ public class EventsModule extends AbstractModule {
     eventHandlerMapBinder.addBinding("VerificationEventListner")
         .toInstance(new VerificationEventHandler(eventListener));
 
+    eventHandlerMapBinder.addBinding(TimeSeriesHandler.class.getSimpleName())
+        .toInstance(new TimeSeriesHandler(eventListener));
     eventHandlerMapBinder.addBinding("NateroEventHandler").toInstance(new NateroEventHandler(eventListener));
   }
 }

@@ -32,6 +32,8 @@ import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.SchedulerConfig;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
+import io.harness.timescaledb.TimeScaleDBService;
+import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.version.VersionModule;
 import software.wings.DataStorageMode;
 import software.wings.beans.AwsConfig;
@@ -747,6 +749,7 @@ public class WingsModule extends DependencyModule {
                 .build()));
 
     bind(DashboardSettingsService.class).to(DashboardSettingsServiceImpl.class);
+    bind(TimeScaleDBService.class).toInstance(new TimeScaleDBServiceImpl(configuration.getTimeScaleDBConfig()));
     if (configuration.getExecutionLogsStorageMode() == null) {
       configuration.setExecutionLogsStorageMode(DataStorageMode.MONGO);
     }

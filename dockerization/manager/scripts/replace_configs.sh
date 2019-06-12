@@ -272,14 +272,14 @@ if [[ -v "ALLOW_BLACKLISTED_EMAIL_DOMAINS" ]]; then
     sed -i "s|blacklistedEmailDomainsAllowed: true|blacklistedEmailDomainsAllowed: ${ALLOW_BLACKLISTED_EMAIL_DOMAINS}|" /opt/harness/config.yml
 fi
 
-if [[ -v "INFLUX_URI" ]]; then
-    sed -i "s|influxUri:|influxUri: ${INFLUX_URI}|" /opt/harness/config.yml
+if [[ -v "TIMESCALEDB_URI" ]]; then
+    sed -i "s|timescaledb_url:|timescaledbUrl: ${TIMESCALEDB_URI}|" /opt/harness/config.yml
 fi
 
-if [[ -v "INFLUX_USERNAME" ]]; then
-    sed -i "s|influxUserName:|influxUserName: ${INFLUX_USERNAME}|" /opt/harness/config.yml
+if [[ -v "TIMESCALEDB_USERNAME" ]]; then
+    sed -i "s|timescaledb_username:|timescaledbUsername: ${TIMESCALEDB_USERNAME}|" /opt/harness/config.yml
 fi
 
-if [[ -v "INFLUX_PASSWORD" ]]; then
-    sed -i "s|influxPassword:|influxPassword: ${INFLUX_PASSWORD}|" /opt/harness/config.yml
+if [[ -v "TIMESCALEDB_PASSWORD" ]]; then
+    sed -i "s|timescaledb_password:|timescaledbPassword: ${TIMESCALEDB_PASSWORD}|" /opt/harness/config.yml
 fi

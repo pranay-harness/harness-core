@@ -34,6 +34,13 @@ public enum EventType {
 
   DEPLOYMENT_VERIFIED,
   JOIN_ACCOUNT_REQUEST,
+
+  /**
+   * Runtime entites
+   */
+  DEPLOYMENT_EVENT,
+  INSTANCE_EVENT,
+
   CUSTOM,
   TECH_STACK
 }

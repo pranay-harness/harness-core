@@ -7,7 +7,6 @@ import static java.util.Arrays.asList;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.ID_KEY;
 import static software.wings.beans.Schema.SCHEMA_ID;
-import static software.wings.beans.Schema.SchemaBuilder.aSchema;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
@@ -27,6 +26,8 @@ import migrations.MigrationBackgroundList;
 import migrations.MigrationList;
 import migrations.SeedDataMigration;
 import migrations.SeedDataMigrationList;
+import migrations.TimeScaleDBMigration;
+import migrations.TimescaleDBMigrationList;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -66,6 +67,10 @@ public class MigrationServiceImpl implements MigrationService {
         SeedDataMigrationList.getMigrations().stream().collect(Collectors.toMap(Pair::getKey, Pair::getValue));
     int maxSeedDataVersion = seedDataMigrations.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
 
+    Map<Integer, Class<? extends TimeScaleDBMigration>> timescaleDBMigrations =
+        TimescaleDBMigrationList.getMigrations().stream().collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+    int maxTimeScaleDBMigration = timescaleDBMigrations.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
+
     try (
         AcquiredLock lock = persistentLocker.waitToAcquireLock(Schema.class, SCHEMA_ID, ofMinutes(25), ofMinutes(27))) {
       if (lock == null) {
@@ -80,10 +85,11 @@ public class MigrationServiceImpl implements MigrationService {
       Schema schema = wingsPersistence.createQuery(Schema.class).get();
 
       if (schema == null) {
-        schema = aSchema()
-                     .withVersion(maxVersion)
-                     .withBackgroundVersion(maxBackgroundVersion)
-                     .withSeedDataVersion(0)
+        schema = Schema.builder()
+                     .version(maxVersion)
+                     .backgroundVersion(maxBackgroundVersion)
+                     .seedDataVersion(0)
+                     .timescaleDbVersion(0)
                      .build();
         wingsPersistence.save(schema);
       }
@@ -111,7 +117,7 @@ public class MigrationServiceImpl implements MigrationService {
                 }
 
                 final UpdateOperations<Schema> updateOperations = wingsPersistence.createUpdateOperations(Schema.class);
-                updateOperations.set(Schema.BACKGROUND_VERSION_KEY, i);
+                updateOperations.set(Schema.BACKGROUND_VERSION, i);
                 wingsPersistence.update(wingsPersistence.createQuery(Schema.class), updateOperations);
               }
 
@@ -127,7 +133,7 @@ public class MigrationServiceImpl implements MigrationService {
         logger.info("[Migration] - Rolling back schema background version from {} to {}", currentBackgroundVersion,
             maxBackgroundVersion);
         final UpdateOperations<Schema> updateOperations = wingsPersistence.createUpdateOperations(Schema.class);
-        updateOperations.set(Schema.BACKGROUND_VERSION_KEY, maxBackgroundVersion);
+        updateOperations.set(Schema.BACKGROUND_VERSION, maxBackgroundVersion);
         wingsPersistence.update(wingsPersistence.createQuery(Schema.class), updateOperations);
       } else {
         logger.info("[Migration] - Schema background is up to date");
@@ -142,7 +148,7 @@ public class MigrationServiceImpl implements MigrationService {
             injector.getInstance(migration).migrate();
 
             final UpdateOperations<Schema> updateOperations = wingsPersistence.createUpdateOperations(Schema.class);
-            updateOperations.set(Schema.VERSION_KEY, i);
+            updateOperations.set(Schema.VERSION, i);
             wingsPersistence.update(wingsPersistence.createQuery(Schema.class), updateOperations);
           }
         }
@@ -171,7 +177,7 @@ public class MigrationServiceImpl implements MigrationService {
         // If the current version is bigger than the max version we are downgrading. Restore to the previous version
         logger.info("[Migration] - Rolling back schema version from {} to {}", schema.getVersion(), maxVersion);
         final UpdateOperations<Schema> updateOperations = wingsPersistence.createUpdateOperations(Schema.class);
-        updateOperations.set(Schema.VERSION_KEY, maxVersion);
+        updateOperations.set(Schema.VERSION, maxVersion);
         wingsPersistence.update(wingsPersistence.createQuery(Schema.class), updateOperations);
       } else {
         logger.info("[Migration] - Schema is up to date");
@@ -192,12 +198,35 @@ public class MigrationServiceImpl implements MigrationService {
             injector.getInstance(seedDataMigration).migrate();
 
             final UpdateOperations<Schema> updateOperations = wingsPersistence.createUpdateOperations(Schema.class);
-            updateOperations.set(Schema.SEED_DATA_VERSION_KEY, i);
+            updateOperations.set(Schema.SEED_DATA_VERSION, i);
             wingsPersistence.update(wingsPersistence.createQuery(Schema.class), updateOperations);
           }
         }
       } else {
         logger.info("[SeedDataMigration] - Schema is up to date");
+      }
+
+      if (schema.getTimescaleDbVersion() < maxTimeScaleDBMigration) {
+        logger.info("[TimescaleDBMigration] - Forward migrating schema version from {} to {}",
+            schema.getTimescaleDbVersion(), maxTimeScaleDBMigration, maxSeedDataVersion);
+        for (int i = schema.getTimescaleDbVersion() + 1; i <= maxTimeScaleDBMigration; i++) {
+          if (timescaleDBMigrations.containsKey(i)) {
+            Class<? extends TimeScaleDBMigration> timescaleDBMigration = timescaleDBMigrations.get(i);
+            logger.info("[TimescaleDBMigration] - Forward Migrating to version {}: {} ...", i,
+                timescaleDBMigration.getSimpleName());
+            boolean result = injector.getInstance(timescaleDBMigration).migrate();
+            if (!result) {
+              logger.info("Forward TimescaleDBMigration did not run successfully");
+            } else {
+              final UpdateOperations<Schema> updateOperations = wingsPersistence.createUpdateOperations(Schema.class);
+              updateOperations.set(Schema.TIMESCALEDB_VERSION, i);
+              wingsPersistence.update(wingsPersistence.createQuery(Schema.class), updateOperations);
+            }
+          }
+        }
+      } else {
+        logger.info(
+            "No TimescaleDB migration required, schema version is valid : [{}]", schema.getTimescaleDbVersion());
       }
 
     } catch (RuntimeException e) {
