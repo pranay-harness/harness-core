@@ -1889,7 +1889,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = GEORGE)
   @Category(UnitTests.class)
+  @Ignore("this test is intermittent because of issue in triggerWorkflow")
   public void shouldObtainLastGoodDeployedArtifacts() throws InterruptedException {
     String appId = app.getUuid();
     Workflow workflow = createExecutableWorkflow(appId, env);
