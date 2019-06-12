@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeCount;
 import static java.lang.Math.abs;
@@ -1891,35 +1892,32 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     savedDataCollectionInfo.setStartTime(collectionStartMinute);
     savedDataCollectionInfo.setEndTime(collectionStartMinute + 1);
     savedDataCollectionInfo.setCollectionTime(1);
+    switch (savedDataCollectionInfo.getStateType()) {
+      case ELK:
+        savedDataCollectionInfo.setEncryptedDataDetails(
+            secretManager.getEncryptionDetails(((ElkDataCollectionInfo) savedDataCollectionInfo).getElkConfig(),
+                context.getAppId(), context.getWorkflowExecutionId()));
+        break;
+      case SUMO:
+        savedDataCollectionInfo.setEncryptedDataDetails(
+            secretManager.getEncryptionDetails(((SumoDataCollectionInfo) savedDataCollectionInfo).getSumoConfig(),
+                context.getAppId(), context.getWorkflowExecutionId()));
+        break;
+      default:
+        unhandled(savedDataCollectionInfo.getStateType());
+    }
     return savedDataCollectionInfo;
   }
 
   private CustomLogDataCollectionInfo createCustomLogDataCollectionInfo(
       DatadogConfig datadogConfig, AnalysisContext context, long collectionStartMinute, Set<String> hostBatch) {
-    return CustomLogDataCollectionInfo.builder()
-        .baseUrl(datadogConfig.getUrl())
-        .validationUrl(DatadogConfig.validationUrl)
-        .dataUrl(DatadogConfig.logAnalysisUrl)
-        .headers(new HashMap<>())
-        .options(datadogConfig.fetchLogOptionsMap())
-        .body(DatadogLogState.resolveHostnameField(datadogConfig.fetchLogBodyMap(false), context.getHostNameField()))
-        .query(context.getQuery())
-        .encryptedDataDetails(
-            secretManager.getEncryptionDetails(datadogConfig, context.getAppId(), context.getWorkflowExecutionId()))
-        .hosts(hostBatch)
-        .stateType(StateType.DATA_DOG_LOG)
-        .applicationId(context.getAppId())
-        .stateExecutionId(context.getStateExecutionId())
-        .workflowId(context.getWorkflowId())
-        .workflowExecutionId(context.getWorkflowExecutionId())
-        .serviceId(context.getServiceId())
-        .startMinute((int) collectionStartMinute)
-        .collectionTime(1)
-        .accountId(context.getAccountId())
-        .hostnameField(context.getHostNameField())
-        .hostnameSeparator(DatadogLogState.hostNameSeparator)
-        .responseDefinition(DatadogLogState.constructLogDefinitions(datadogConfig, context.getHostNameField(), false))
-        .build();
+    CustomLogDataCollectionInfo savedDataCollectionInfo = (CustomLogDataCollectionInfo) context.getDataCollectionInfo();
+    savedDataCollectionInfo.setHosts(hostBatch);
+    savedDataCollectionInfo.setStartMinute((int) collectionStartMinute);
+    savedDataCollectionInfo.setCollectionTime(1);
+    savedDataCollectionInfo.setEncryptedDataDetails(
+        secretManager.getEncryptionDetails(datadogConfig, context.getAppId(), context.getWorkflowExecutionId()));
+    return savedDataCollectionInfo;
   }
 
   private VerificationStateAnalysisExecutionData createLogAnalysisExecutionData(

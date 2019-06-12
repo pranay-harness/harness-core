@@ -95,6 +95,7 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
+import software.wings.sm.states.DatadogLogState;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
@@ -576,8 +577,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
-    AnalysisContext context = createAnalysisContext(null,
-        TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()), StateType.DATA_DOG_LOG, datadogConnectorId);
+    AnalysisContext context =
+        createDatadogLogAnalysisContext((int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()));
     wingsPersistence.save(context);
     continuousVerificationService.triggerWorkflowDataCollection(context);
     List<DelegateTask> delegateTasks =
@@ -1345,6 +1346,33 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
             .build();
 
     return createAnalysisContext(dataCollectionInfo, startMinute, StateType.ELK, connectorId);
+  }
+
+  private AnalysisContext createDatadogLogAnalysisContext(int startMinute) {
+    String messageField = UUID.randomUUID().toString();
+    String timestampFieldFormat = UUID.randomUUID().toString();
+
+    CustomLogDataCollectionInfo dataCollectionInfo = CustomLogDataCollectionInfo.builder()
+                                                         .baseUrl(datadogConfig.getUrl())
+                                                         .validationUrl(DatadogConfig.validationUrl)
+                                                         .dataUrl(DatadogConfig.logAnalysisUrl)
+                                                         .headers(new HashMap<>())
+                                                         .options(datadogConfig.fetchLogOptionsMap())
+                                                         .query("test query")
+                                                         .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
+                                                         .stateType(StateType.DATA_DOG_LOG)
+                                                         .applicationId(appId)
+                                                         .stateExecutionId(stateExecutionId)
+                                                         .workflowId(workflowId)
+                                                         .workflowExecutionId(workflowExecutionId)
+                                                         .serviceId(serviceId)
+                                                         .hostnameSeparator(DatadogLogState.hostNameSeparator)
+                                                         .shouldInspectHosts(true)
+                                                         .collectionFrequency(1)
+                                                         .collectionTime(15)
+                                                         .accountId(accountId)
+                                                         .build();
+    return createAnalysisContext(dataCollectionInfo, startMinute, StateType.DATA_DOG_LOG, datadogConnectorId);
   }
 
   private AnalysisContext createSUMOAnalysisContext(long startTimeInterval) {
