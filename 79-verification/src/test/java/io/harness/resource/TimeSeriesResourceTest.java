@@ -7,6 +7,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.Sets;
+
 import io.harness.VerificationBaseTest;
 import io.harness.category.element.UnitTests;
 import io.harness.resources.TimeSeriesResource;
@@ -54,7 +56,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   private StateType stateType = StateType.APP_DYNAMICS;
   private TSRequest tsRequest;
   private Set<String> nodes;
-  private List<NewRelicMetricDataRecord> newRelicMetricDataRecords;
+  private Set<NewRelicMetricDataRecord> newRelicMetricDataRecords;
   private TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord;
   private List<TimeSeriesMLScores> timeSeriesMLScores;
   private Map<String, Map<String, TimeSeriesMetricDefinition>> metricTemplate;
@@ -67,7 +69,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   private TimeSeriesResource timeSeriesResource;
 
   @Before
-  public void setup() throws IOException {
+  public void setup() {
     MockitoAnnotations.initMocks(this);
     accountId = generateUuid();
     applicationId = generateUuid();
@@ -80,9 +82,9 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
     cvConfigIdId = generateUuid();
     cvConfigId = generateUuid();
     groupName = "groupName-";
-    nodes = new HashSet<String>();
+    nodes = new HashSet<>();
     nodes.add("someNode");
-    newRelicMetricDataRecords = Collections.singletonList(new NewRelicMetricDataRecord());
+    newRelicMetricDataRecords = Sets.newHashSet(new NewRelicMetricDataRecord());
     transactionName = UUID.randomUUID().toString();
     metricName = UUID.randomUUID().toString();
 
@@ -114,12 +116,12 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
     boolean compareCurrent = true;
     when(timeSeriesAnalysisService.getRecords(applicationId, stateExecutionId, groupName, nodes, 0, 0))
         .thenReturn(newRelicMetricDataRecords);
-    RestResponse<List<NewRelicMetricDataRecord>> resp = timeSeriesResource.getMetricData(
+    RestResponse<Set<NewRelicMetricDataRecord>> resp = timeSeriesResource.getMetricData(
         accountId, applicationId, workflowExecutionId, groupName, compareCurrent, tsRequest);
-    assertEquals(Collections.singletonList(new NewRelicMetricDataRecord()), resp.getResource());
+    assertEquals(Sets.newHashSet(new NewRelicMetricDataRecord()), resp.getResource());
 
     resp = timeSeriesResource.getMetricData(accountId, applicationId, null, groupName, false, tsRequest);
-    assertEquals(new ArrayList<>(), resp.getResource());
+    assertEquals(new HashSet<>(), resp.getResource());
 
     when(timeSeriesAnalysisService.getPreviousSuccessfulRecords(applicationId, workflowExecutionId, groupName, 0, 0))
         .thenReturn(newRelicMetricDataRecords);

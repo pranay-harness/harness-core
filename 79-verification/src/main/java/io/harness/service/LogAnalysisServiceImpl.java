@@ -249,7 +249,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
         try {
           dataStoreService.save(LogDataRecord.class, logDataRecords, true);
         } catch (Exception e) {
-          logger.error("Error saving log records for cvConfig {} stateExecution {}", cvConfigId, stateExecutionId, e);
+          logger.info("Error saving log records for cvConfig {} stateExecution {}", cvConfigId, stateExecutionId, e);
         }
       }
 

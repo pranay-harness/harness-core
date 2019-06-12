@@ -43,10 +43,10 @@ public interface TimeSeriesAnalysisService {
 
   List<TimeSeriesMLScores> getTimeSeriesMLScores(String appId, String workflowId, int analysisMinute, int limit);
 
-  List<NewRelicMetricDataRecord> getRecords(String appId, String stateExecutionId, String groupName, Set<String> nodes,
+  Set<NewRelicMetricDataRecord> getRecords(String appId, String stateExecutionId, String groupName, Set<String> nodes,
       int analysisMinute, int analysisStartMinute);
 
-  List<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(
+  Set<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(
       String appId, String workflowExecutionID, String groupName, int analysisMinute, int analysisStartMinute);
 
   List<String> getLastSuccessfulWorkflowExecutionIds(String appId, String workflowId, String serviceId);

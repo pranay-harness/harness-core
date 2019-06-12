@@ -35,7 +35,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.TimeSeriesMetricDefinition;
-import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataKeys;
 import software.wings.service.impl.analysis.MetricAnalysisRecord.MetricAnalysisRecordKeys;
@@ -48,6 +47,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewReli
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricDataRecord.NewRelicMetricDataRecordKeys;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.LearningEngineService;
@@ -92,12 +92,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       PageRequest<NewRelicMetricDataRecord> pageRequest =
           aPageRequest()
               .withLimit(UNLIMITED)
-              .addFilter("workflowExecutionId", Operator.EQ, successfulExecution)
+              .addFilter(NewRelicMetricDataRecordKeys.workflowExecutionId, Operator.EQ, successfulExecution)
               .build();
-
-      if (dataStoreService instanceof MongoDataStoreServiceImpl) {
-        pageRequest.addFilter("appId", Operator.EQ, appId);
-      }
 
       final PageResponse<NewRelicMetricDataRecord> results =
           dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
@@ -566,8 +562,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                 .filter(TimeSeriesMetricTemplatesKeys.stateExecutionId, stateExecutionId));
 
     // delete new relic metric records
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(NewRelicMetricDataRecord.class).filter("stateExecutionId", stateExecutionId));
+    wingsPersistence.delete(wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
+                                .filter(NewRelicMetricDataRecordKeys.stateExecutionId, stateExecutionId));
 
     // delete new relic analysis records
     wingsPersistence.delete(

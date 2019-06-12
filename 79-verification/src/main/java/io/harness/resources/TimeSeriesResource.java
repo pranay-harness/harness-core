@@ -22,7 +22,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.StateType;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -67,7 +67,7 @@ public class TimeSeriesResource {
   @Timed
   @LearningEngineAuth
   @ExceptionMetered
-  public RestResponse<List<NewRelicMetricDataRecord>> getMetricData(@QueryParam("accountId") String accountId,
+  public RestResponse<Set<NewRelicMetricDataRecord>> getMetricData(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, @QueryParam("workflowExecutionId") String workflowExecutionId,
       @QueryParam("groupName") final String groupName, @QueryParam("compareCurrent") boolean compareCurrent,
       TSRequest request) {
@@ -76,7 +76,7 @@ public class TimeSeriesResource {
           request.getNodes(), request.getAnalysisMinute(), request.getAnalysisStartMinute()));
     } else {
       if (workflowExecutionId == null || workflowExecutionId.equals("-1")) {
-        return new RestResponse<>(new ArrayList<>());
+        return new RestResponse<>(new HashSet<>());
       }
 
       return new RestResponse<>(timeSeriesAnalysisService.getPreviousSuccessfulRecords(

@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
 /**
  * Created by rsingh on 9/6/17.
  */
@@ -126,7 +128,7 @@ public class NewRelicMetricValueDefinition {
   private MetricType metricType;
 
   public NewRelicMetricAnalysisValue analyze(
-      List<NewRelicMetricDataRecord> testRecords, List<NewRelicMetricDataRecord> controlRecords) {
+      Set<NewRelicMetricDataRecord> testRecords, Set<NewRelicMetricDataRecord> controlRecords) {
     double testValue = getValueForComparison(testRecords);
     double controlValue = getValueForComparison(controlRecords);
 
@@ -138,7 +140,7 @@ public class NewRelicMetricValueDefinition {
         .build();
   }
 
-  private double getValueForComparison(List<NewRelicMetricDataRecord> records) {
+  private double getValueForComparison(Set<NewRelicMetricDataRecord> records) {
     double value;
     if (isEmpty(records)) {
       value = -1;
@@ -159,7 +161,7 @@ public class NewRelicMetricValueDefinition {
     return value;
   }
 
-  private List<Double> parseValuesForAnalysis(List<NewRelicMetricDataRecord> records) {
+  private List<Double> parseValuesForAnalysis(Set<NewRelicMetricDataRecord> records) {
     List<Double> values = new ArrayList<>();
     for (NewRelicMetricDataRecord metricDataRecord : records) {
       if (metricDataRecord.getValues() == null) {

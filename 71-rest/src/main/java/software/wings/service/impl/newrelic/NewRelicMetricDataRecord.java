@@ -47,16 +47,18 @@ import java.util.Map;
  * Created by rsingh on 08/30/17.
  */
 @Entity(value = "newRelicMetricRecords", noClassnameStored = true)
+
 @Indexes({
   @Index(fields =
       {
-        @Field("name")
-        , @Field("host"), @Field("timeStamp"), @Field("stateExecutionId"), @Field("level"), @Field("stateType"),
-            @Field("groupName")
+        @Field("stateExecutionId"), @Field("groupName"), @Field(value = "dataCollectionMinute", type = IndexType.DESC)
       },
-      options = @IndexOptions(unique = true, name = "metricUniqueIdx"))
+      options = @IndexOptions(name = "stateExIdx"))
   ,
       @Index(fields = {
+        @Field("workflowExecutionId")
+        , @Field("groupName"), @Field(value = "dataCollectionMinute", type = IndexType.DESC)
+      }, options = @IndexOptions(name = "workflowExIdx")), @Index(fields = {
         @Field(value = "dataCollectionMinute", type = IndexType.DESC), @Field("cvConfigId")
       }, options = @IndexOptions(name = "serviceGuardIdx"))
 })
@@ -75,13 +77,13 @@ public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAwa
 
   private String workflowId;
 
-  @Indexed private String workflowExecutionId;
+  private String workflowExecutionId;
 
   private String serviceId;
 
   @Indexed private String cvConfigId;
 
-  @Indexed private String stateExecutionId;
+  private String stateExecutionId;
 
   @NotEmpty private long timeStamp;
 
