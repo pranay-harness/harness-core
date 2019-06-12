@@ -287,6 +287,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       artifactStream.setAccountId(existingArtifactStream.getAccountId());
     }
 
+    if (artifactStream.isMetadataOnly() != existingArtifactStream.isMetadataOnly()) {
+      throw new InvalidRequestException("Artifact Stream's metadata-only property cannot be changed", USER);
+    }
+
     validateRepositoryType(artifactStream, existingArtifactStream);
 
     boolean versionChanged = false;
