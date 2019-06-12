@@ -472,8 +472,6 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .timestampFieldFormat(elkAnalysisState.getTimestampFormat())
             .queryType(elkAnalysisState.getQueryType())
             .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
-            .encryptedDataDetails(secretManager.getEncryptionDetails(
-                elkConfig, analysisContext.getAppId(), analysisContext.getWorkflowExecutionId()))
             .build();
       case SUMO:
         SumoLogicAnalysisState sumoLogicAnalysisState = (SumoLogicAnalysisState) this;
@@ -489,8 +487,6 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .query(sumoLogicAnalysisState.getRenderedQuery())
             .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
             .hostnameField(sumoLogicAnalysisState.getHostnameField().getHostNameField())
-            .encryptedDataDetails(secretManager.getEncryptionDetails(
-                sumoConfig, analysisContext.getAppId(), analysisContext.getWorkflowExecutionId()))
             .build();
       case DATA_DOG_LOG:
         DatadogLogState datadogLogState = (DatadogLogState) this;
@@ -504,8 +500,6 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .body(DatadogLogState.resolveHostnameField(
                 datadogConfig.fetchLogBodyMap(false), analysisContext.getHostNameField()))
             .query(getRenderedQuery())
-            .encryptedDataDetails(secretManager.getEncryptionDetails(
-                datadogConfig, analysisContext.getAppId(), analysisContext.getWorkflowExecutionId()))
             .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
             .stateType(StateType.DATA_DOG_LOG)
             .applicationId(analysisContext.getAppId())
