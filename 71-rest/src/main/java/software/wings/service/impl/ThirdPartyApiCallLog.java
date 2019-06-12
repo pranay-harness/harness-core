@@ -88,10 +88,11 @@ public class ThirdPartyApiCallLog implements GoogleDataStoreAware, CreatedAtAwar
   private long createdAt;
   @Id private String uuid;
 
+  @Default
   @JsonIgnore
   @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
-  private Date validUntil = Date.from(OffsetDateTime.now().plusWeeks(1).toInstant());
+  private Date validUntil = Date.from(OffsetDateTime.now().plusWeeks(2).toInstant());
 
   public ThirdPartyApiCallLog copy() {
     return ThirdPartyApiCallLog.builder()
