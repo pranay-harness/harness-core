@@ -79,6 +79,17 @@ public class AuditResource {
   }
 
   @GET
+  @Path("filter")
+  @Timed
+  @ExceptionMetered
+  @Produces("application/json")
+  public RestResponse<PageResponse<AuditHeader>> listUsingFilter(@QueryParam("accountId") String accountId,
+      @QueryParam("filter") String filter, @QueryParam("limit") String limit, @QueryParam("offset") String offset) {
+    boolean isCommunityAccount = accountService.isCommunityAccount(accountId);
+    return new RestResponse<>(httpAuditService.listUsingFilter(accountId, filter, limit, offset, isCommunityAccount));
+  }
+
+  @GET
   @Path("{auditHeaderId}/yamldetails")
   @Timed
   @ExceptionMetered

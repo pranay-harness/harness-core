@@ -77,4 +77,7 @@ public interface AuditService extends EntityCrudOperationObserver {
   AuditHeaderYamlResponse fetchAuditEntityYamls(String headerId, String entityId, String accountId);
 
   <T> void registerAuditActions(String accountId, T oldEntity, T newEntity, Type type);
+
+  PageResponse<AuditHeader> listUsingFilter(
+      String accountId, String filter, String limit, String offset, boolean isCommunityAccount);
 }
