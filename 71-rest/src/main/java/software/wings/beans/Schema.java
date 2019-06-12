@@ -1,62 +1,45 @@
 package software.wings.beans;
 
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
+import io.harness.persistence.CreatedAtAware;
+import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UpdatedAtAware;
+import io.harness.persistence.UuidAware;
+import io.harness.validation.Update;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Indexed;
+
+import javax.validation.constraints.NotNull;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
 @Entity(value = "schema", noClassnameStored = true)
 @HarnessExportableEntity
-public class Schema extends Base {
+public class Schema implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   public static final String SCHEMA_ID = "schema";
-  public static final String VERSION_KEY = "version";
-  public static final String BACKGROUND_VERSION_KEY = "backgroundVersion";
-  public static final String SEED_DATA_VERSION_KEY = "seedDataVersion";
+  public static final String VERSION = "version";
+  public static final String BACKGROUND_VERSION = "backgroundVersion";
+  public static final String SEED_DATA_VERSION = "seedDataVersion";
+  public static final String TIMESCALEDB_VERSION = "timescaleDbVersion";
+  @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
+  @SchemaIgnore @Indexed private long createdAt;
+  @SchemaIgnore @NotNull private long lastUpdatedAt;
 
   private int version;
   private int backgroundVersion;
   private int seedDataVersion;
+  private int timescaleDbVersion;
 
-  public static final class SchemaBuilder {
-    private int version;
-    private int backgroundVersion;
-    private int seedDataVersion;
-    private String uuid = SCHEMA_ID;
-
-    private SchemaBuilder() {}
-
-    public static SchemaBuilder aSchema() {
-      return new SchemaBuilder();
-    }
-
-    public SchemaBuilder withVersion(int version) {
-      this.version = version;
-      return this;
-    }
-
-    public SchemaBuilder withBackgroundVersion(int backgroundVersion) {
-      this.backgroundVersion = backgroundVersion;
-      return this;
-    }
-
-    public SchemaBuilder withSeedDataVersion(int seedDataVersion) {
-      this.seedDataVersion = seedDataVersion;
-      return this;
-    }
-
-    public Schema build() {
-      Schema schema = new Schema();
-      schema.setVersion(version);
-      schema.setBackgroundVersion(backgroundVersion);
-      schema.setUuid(uuid);
-      schema.setSeedDataVersion(seedDataVersion);
-      return schema;
-    }
+  @Override
+  public String getUuid() {
+    return SCHEMA_ID;
   }
 }

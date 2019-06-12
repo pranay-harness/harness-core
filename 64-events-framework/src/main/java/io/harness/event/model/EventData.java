@@ -14,6 +14,7 @@ import java.util.Map;
 @Builder
 public class EventData {
   @Default private Map<String, String> properties = new HashMap<>();
+  // TODO : Remove this value once prometheus is deprecated
   private double value;
 
   /**

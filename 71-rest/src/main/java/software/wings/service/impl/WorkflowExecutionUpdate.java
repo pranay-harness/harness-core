@@ -215,6 +215,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
                 workflowId, workflowExecution.getName(), appId, applicationName);
             usageMetricsEventPublisher.publishDeploymentMetadataEvent(status, manual, accountID, accountName,
                 workflowId, workflowExecution.getName(), appId, applicationName);
+            usageMetricsEventPublisher.publishDeploymentTimeSeriesEvent(accountID, workflowExecution);
           }
         }
         if (!WorkflowType.PIPELINE.equals(context.getWorkflowType())) {

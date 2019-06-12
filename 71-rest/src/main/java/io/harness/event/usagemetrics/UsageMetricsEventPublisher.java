@@ -21,20 +21,27 @@ import static io.harness.event.model.EventConstants.WORKFLOW_TYPE;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.fabric8.utils.Lists;
 import io.harness.beans.ExecutionStatus;
 import io.harness.event.model.Event;
 import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
 import io.harness.event.publisher.EventPublisher;
+import io.harness.event.timeseries.processor.EventProcessor;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
+import software.wings.beans.WorkflowExecution;
+import software.wings.beans.artifact.Artifact;
+import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
@@ -74,6 +81,58 @@ public class UsageMetricsEventPublisher {
 
     EventData eventData = EventData.builder().properties(properties).build();
     publishEvent(Event.builder().eventType(EventType.DEPLOYMENT_METADATA).eventData(eventData).build());
+  }
+
+  public void publishDeploymentTimeSeriesEvent(String accountId, WorkflowExecution workflowExecution) {
+    Map properties = new HashMap<>();
+
+    Map<String, String> stringData = new HashMap<>();
+    Map<String, List<String>> listData = new HashMap<>();
+    Map<String, Long> longData = new HashMap<>();
+    stringData.put(EventProcessor.EXECUTIONID, workflowExecution.getUuid());
+    stringData.put(EventProcessor.STATUS, workflowExecution.getStatus().name());
+    if (workflowExecution.getPipelineExecution() != null) {
+      stringData.put(EventProcessor.PIPELINE, workflowExecution.getPipelineExecution().getPipelineId());
+      /**
+       * TODO Get data for workflows in an execution
+       */
+    } else {
+      listData.put(EventProcessor.WORKFLOW_LIST, Lists.newArrayList(workflowExecution.getWorkflowId()));
+    }
+    /**
+     * TODO CLOUDPROVIDER
+     */
+    stringData.put(EventProcessor.APPID, workflowExecution.getAppId());
+    longData.put(EventProcessor.STARTTIME, workflowExecution.getStartTs());
+    longData.put(EventProcessor.ENDTIME, workflowExecution.getEndTs());
+
+    if (!Lists.isNullOrEmpty(workflowExecution.getArtifacts())) {
+      listData.put(EventProcessor.ARTIFACT_LIST,
+          workflowExecution.getArtifacts().stream().map(Artifact::getBuildNo).collect(Collectors.toList()));
+    }
+    if (!Lists.isNullOrEmpty(workflowExecution.getServiceIds())) {
+      listData.put(EventProcessor.SERVICE_LIST, workflowExecution.getServiceIds());
+    }
+    if (!Lists.isNullOrEmpty(workflowExecution.getEnvIds())) {
+      listData.put(EventProcessor.ENV_LIST, workflowExecution.getEnvIds());
+    }
+    if (workflowExecution.getDeploymentTriggerId() != null) {
+      stringData.put(EventProcessor.TRIGGER_ID, workflowExecution.getDeploymentTriggerId());
+    }
+    if (workflowExecution.getTriggeredBy() != null) {
+      stringData.put(EventProcessor.TRIGGERED_BY, workflowExecution.getTriggeredBy().getUuid());
+    }
+    stringData.put(EventProcessor.ACCOUNTID, accountId);
+    longData.put(EventProcessor.DURATION, workflowExecution.getEndTs() - workflowExecution.getStartTs());
+
+    TimeSeriesEventInfo eventInfo = TimeSeriesEventInfo.builder()
+                                        .accountId(accountId)
+                                        .stringData(stringData)
+                                        .listData(listData)
+                                        .longData(longData)
+                                        .build();
+    EventData eventData = EventData.builder().eventInfo(eventInfo).build();
+    publishEvent(Event.builder().eventType(EventType.DEPLOYMENT_EVENT).eventData(eventData).build());
   }
 
   /**

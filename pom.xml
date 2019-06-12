@@ -44,6 +44,7 @@
         <buildTimeStamp>${maven.build.timestamp}</buildTimeStamp>
         <categories>io.harness.category.element.UnitTests.class</categories>
         <checkStyleFile>harness_checks.xml</checkStyleFile>
+        <dbcp.version>1.4</dbcp.version>
         <deployHost>{env.HOSTNAME}</deployHost>
         <deployUsername>${user.name}</deployUsername>
         <dropwizard.version>1.0.2</dropwizard.version>
@@ -52,7 +53,7 @@
         <fastxml.version>2.7.7</fastxml.version>
         <gitBranch>default</gitBranch>
         <gitCommitId>default</gitCommitId>
-        <influxdb.java.version>2.15</influxdb.java.version>
+        <ibatis.core.version>3.0</ibatis.core.version>
         <jgit.version>5.3.0.201903130848-r</jgit.version>
         <maven.build.timestamp.format>yyMMdd-HHmm</maven.build.timestamp.format>
         <maven.deploy.skip>true</maven.deploy.skip>
@@ -62,6 +63,7 @@
         <nexus.version>2.14.3-02</nexus.version>
         <pcf.client.version>3.15.0.RELEASE</pcf.client.version>
         <portalHost>localhost:8000</portalHost>
+        <postgres.jdbc.version>42.2.5</postgres.jdbc.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
@@ -643,6 +645,11 @@
                 <version>3.2.1</version>
             </dependency>
             <dependency>
+                <groupId>commons-dbcp</groupId>
+                <artifactId>commons-dbcp</artifactId>
+                <version>${dbcp.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
                 <version>2.6</version>
@@ -865,6 +872,11 @@
                 <version>4.4.1</version>
             </dependency>
             <dependency>
+                <groupId>org.apache.ibatis</groupId>
+                <artifactId>ibatis-core</artifactId>
+                <version>${ibatis.core.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.maven</groupId>
                 <artifactId>maven-artifact</artifactId>
                 <version>3.3.3</version>
@@ -935,11 +947,6 @@
                 <groupId>org.glassfish.web</groupId>
                 <artifactId>javax.el</artifactId>
                 <version>2.2.6</version>
-            </dependency>
-            <dependency>
-                <groupId>org.influxdb</groupId>
-                <artifactId>influxdb-java</artifactId>
-                <version>${influxdb.java.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.javassist</groupId>
@@ -1033,6 +1040,11 @@
                 <groupId>org.ow2.asm</groupId>
                 <artifactId>asm-commons</artifactId>
                 <version>5.0.3</version>
+            </dependency>
+            <dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${postgres.jdbc.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.powermock</groupId>
