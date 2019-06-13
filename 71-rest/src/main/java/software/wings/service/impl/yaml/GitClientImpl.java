@@ -160,10 +160,8 @@ public class GitClientImpl implements GitClient {
     }
   }
 
-  private void updateRemoteOriginInConfig(GitConfig gitConfig) {
-    String gitRepoDirectory = gitClientHelper.getRepoDirectory(gitConfig);
-
-    try (Git git = Git.open(new File(gitRepoDirectory))) {
+  private void updateRemoteOriginInConfig(GitConfig gitConfig, File gitRepoDirectory) {
+    try (Git git = Git.open(gitRepoDirectory)) {
       StoredConfig config = git.getRepository().getConfig();
       // Update local remote url if its changed
       if (!config.getString("remote", "origin", "url").equals(gitConfig.getRepoUrl())) {
@@ -172,7 +170,7 @@ public class GitClientImpl implements GitClient {
         logger.info(GIT_YAML_LOG_PREFIX + "Local repo remote origin is updated to : ", gitConfig.getRepoUrl());
       }
     } catch (IOException ioex) {
-      logger.error(GIT_YAML_LOG_PREFIX + "Failed to update repo url in git config");
+      logger.error(GIT_YAML_LOG_PREFIX + "Failed to update repo url in git config", ioex);
     }
   }
 
@@ -900,10 +898,10 @@ public class GitClientImpl implements GitClient {
     File repoDir = new File(gitClientHelper.getFileDownloadRepoDirectory(gitConfig, connectorId));
     // If repo already exists, update references
     if (repoDir.exists()) {
-      try (Git git = Git.open(repoDir)) {
-        // Check URL change (ssh, https) and update in .git/config
-        updateRemoteOriginInConfig(gitConfig);
+      // Check URL change (ssh, https) and update in .git/config
+      updateRemoteOriginInConfig(gitConfig, repoDir);
 
+      try (Git git = Git.open(repoDir)) {
         // update ref with latest commits on remote
         FetchResult fetchResult =
             ((FetchCommand) (getAuthConfiguredCommand(git.fetch(), gitConfig))).call(); // fetch all remote references
@@ -946,9 +944,10 @@ public class GitClientImpl implements GitClient {
     File repoDir = new File(gitClientHelper.getRepoDirectory(gitConfig));
     boolean executionFailed = false;
     if (repoDir.exists()) {
+      // Check URL change (ssh, https) and update in .git/config
+      updateRemoteOriginInConfig(gitConfig, repoDir);
+
       try (Git git = Git.open(repoDir)) {
-        // Check URL change (ssh, https) and update in .git/config
-        updateRemoteOriginInConfig(gitConfig);
         logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Repo exist. do hard sync with remote branch");
 
         FetchResult fetchResult =
