@@ -231,9 +231,10 @@ public class AzureKubernetesInfrastructureMapping extends ContainerInfrastructur
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
         String infraMappingType, String deploymentType, String computeProviderName, String cluster,
-        String subscriptionId, String resourceGroup, String namespace, String releaseName) {
+        String subscriptionId, String resourceGroup, String namespace, String releaseName,
+        Map<String, String> blueprints) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName, cluster);
+          computeProviderName, cluster, blueprints);
       this.subscriptionId = subscriptionId;
       this.resourceGroup = resourceGroup;
       this.namespace = namespace;

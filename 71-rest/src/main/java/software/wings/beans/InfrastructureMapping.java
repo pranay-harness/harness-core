@@ -368,13 +368,15 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
     private String serviceName;
     private String infraMappingType;
     private String deploymentType;
+    private Map<String, String> blueprints;
 
-    public Yaml(
-        String type, String harnessApiVersion, String serviceName, String infraMappingType, String deploymentType) {
+    public Yaml(String type, String harnessApiVersion, String serviceName, String infraMappingType,
+        String deploymentType, Map<String, String> blueprints) {
       super(type, harnessApiVersion);
       this.serviceName = serviceName;
       this.infraMappingType = infraMappingType;
       this.deploymentType = deploymentType;
+      this.blueprints = blueprints;
     }
   }
 
@@ -386,8 +388,8 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
     private String computeProviderName;
 
     public YamlWithComputeProvider(String type, String harnessApiVersion, String serviceName, String infraMappingType,
-        String deploymentType, String computeProviderType, String computeProviderName) {
-      super(type, harnessApiVersion, serviceName, infraMappingType, deploymentType);
+        String deploymentType, String computeProviderType, String computeProviderName, Map<String, String> blueprints) {
+      super(type, harnessApiVersion, serviceName, infraMappingType, deploymentType, blueprints);
       this.computeProviderType = computeProviderType;
       this.computeProviderName = computeProviderName;
     }

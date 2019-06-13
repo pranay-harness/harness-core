@@ -127,9 +127,9 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
         String infraMappingType, String deploymentType, String computeProviderName, String region, String vpcId,
-        List<String> subnetIds, List<String> securityGroupIds, String role) {
+        List<String> subnetIds, List<String> securityGroupIds, String role, Map<String, String> blueprints) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName);
+          computeProviderName, blueprints);
       this.region = region;
       this.vpcId = vpcId;
       this.subnetIds = subnetIds;

@@ -619,9 +619,9 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
         String infraMappingType, String deploymentType, String computeProviderName, String cluster, String region,
         String vpcId, String subnetIds, String securityGroupIds, String launchType, boolean assignPublicIp,
-        String executionRole) {
+        String executionRole, Map<String, String> blueprints) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName, cluster);
+          computeProviderName, cluster, blueprints);
       this.region = region;
       this.vpcId = vpcId;
       this.subnetIds = subnetIds;

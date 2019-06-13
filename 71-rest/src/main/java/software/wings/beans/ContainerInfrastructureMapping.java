@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
+
 /**
  * Created by rishi on 5/18/17.
  */
@@ -54,8 +56,8 @@ public abstract class ContainerInfrastructureMapping extends InfrastructureMappi
     private String cluster;
 
     public Yaml(String type, String harnessApiVersion, String serviceName, String infraMappingType,
-        String deploymentType, String cluster) {
-      super(type, harnessApiVersion, serviceName, infraMappingType, deploymentType);
+        String deploymentType, String cluster, Map<String, String> blueprints) {
+      super(type, harnessApiVersion, serviceName, infraMappingType, deploymentType, blueprints);
       this.cluster = cluster;
     }
   }
@@ -67,9 +69,10 @@ public abstract class ContainerInfrastructureMapping extends InfrastructureMappi
     private String cluster;
 
     public YamlWithComputeProvider(String type, String harnessApiVersion, String serviceName, String infraMappingType,
-        String deploymentType, String computeProviderType, String computeProviderName, String cluster) {
+        String deploymentType, String computeProviderType, String computeProviderName, String cluster,
+        Map<String, String> blueprints) {
       super(type, harnessApiVersion, serviceName, infraMappingType, deploymentType, computeProviderType,
-          computeProviderName);
+          computeProviderName, blueprints);
       this.cluster = cluster;
     }
   }
