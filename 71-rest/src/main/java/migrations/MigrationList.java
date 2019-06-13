@@ -221,7 +221,7 @@ public class MigrationList {
         .add(Pair.of(235, NexusDockerArtifactStreamMigration.class))
         .add(Pair.of(236, LogAnalysisDeprecatedRecordMigration.class))
         .add(Pair.of(237, K8sV2ServiceInfraReleaseNameMigration.class))
-        .add(Pair.of(238, MigrateLogFeedbackRecordsToGoogle.class))
+        .add(Pair.of(238, BaseMigration.class))
         .add(Pair.of(239, ServiceNameMigrationIfEmpty.class))
         .add(Pair.of(240, DeleteCVAlertsMigration.class))
         .add(Pair.of(241, BaseMigration.class))
@@ -239,6 +239,7 @@ public class MigrationList {
         .add(Pair.of(253, DatadogCVServiceConfigurationMigration.class))
         .add(Pair.of(254, SecretManagerConfigMigration.class))
         .add(Pair.of(255, OAuthAllowedProvidersListMigration.class))
+        .add(Pair.of(256, MigrateLogFeedbackRecordsToGoogle.class))
         .build();
   }
 }
