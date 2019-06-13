@@ -5,24 +5,31 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.yaml.BaseYaml;
 
+import java.util.List;
+
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class ArtifactStreamBinding {
-  private String artifactStreamId;
+  private String name;
+  private List<String> artifactStreamIds;
 
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends BaseYaml {
-    private String artifactStreamType;
-    private String artifactServerName;
-    private String artifactStreamName;
+    private String name;
+    private List<SingleBinding> bindings;
 
     @lombok.Builder
-    public Yaml(String artifactStreamType, String artifactServerName, String artifactStreamName) {
-      this.artifactStreamType = artifactStreamType;
-      this.artifactServerName = artifactServerName;
-      this.artifactStreamName = artifactStreamName;
+    public static final class SingleBinding {
+      private String artifactServerName;
+      private String artifactStreamName;
+    }
+
+    @lombok.Builder
+    public Yaml(String name, List<SingleBinding> bindings) {
+      this.name = name;
+      this.bindings = bindings;
     }
   }
 }

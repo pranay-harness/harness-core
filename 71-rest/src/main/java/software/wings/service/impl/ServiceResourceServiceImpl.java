@@ -108,6 +108,7 @@ import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.ArtifactStreamBinding;
 import software.wings.beans.command.AmiCommandUnit;
 import software.wings.beans.command.AwsLambdaCommandUnit;
 import software.wings.beans.command.CodeDeployCommandUnit;
@@ -648,6 +649,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           artifactStreamIds = new ArrayList<>();
         }
         updateOperations.set("artifactStreamIds", artifactStreamIds);
+
+        List<ArtifactStreamBinding> artifactStreamBindings = service.getArtifactStreamBindings();
+        if (artifactStreamBindings == null) {
+          artifactStreamBindings = new ArrayList<>();
+        }
+        updateOperations.set("artifactStreamBindings", artifactStreamBindings);
       }
     }
 
@@ -679,6 +686,28 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     UpdateOperations<Service> updateOperations =
         wingsPersistence.createUpdateOperations(Service.class).set(ServiceKeys.artifactStreamIds, artifactStreamIds);
+
+    wingsPersistence.update(savedService, updateOperations);
+    Service updatedService = get(service.getAppId(), service.getUuid(), false);
+
+    String accountId = appService.getAccountIdByAppId(service.getAppId());
+    yamlPushService.pushYamlChangeSet(
+        accountId, savedService, updatedService, Type.UPDATE, service.isSyncFromGit(), false);
+
+    return updatedService;
+  }
+
+  @Override
+  public Service updateArtifactStreamBindings(Service service, List<ArtifactStreamBinding> artifactStreamBindings) {
+    if (artifactStreamBindings == null) {
+      artifactStreamBindings = new ArrayList<>();
+    }
+
+    Service savedService = get(service.getAppId(), service.getUuid(), false);
+    notNullCheck("Service", savedService);
+
+    UpdateOperations<Service> updateOperations = wingsPersistence.createUpdateOperations(Service.class)
+                                                     .set(ServiceKeys.artifactStreamBindings, artifactStreamBindings);
 
     wingsPersistence.update(savedService, updateOperations);
     Service updatedService = get(service.getAppId(), service.getUuid(), false);

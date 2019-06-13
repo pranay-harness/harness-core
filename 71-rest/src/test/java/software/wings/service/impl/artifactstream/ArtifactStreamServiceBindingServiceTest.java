@@ -60,12 +60,12 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(service);
 
     ArtifactStream gotArtifactStream1 =
-        artifactStreamServiceBindingService.create(APP_ID, SERVICE_ID, ARTIFACT_STREAM_ID_1);
+        artifactStreamServiceBindingService.createOld(APP_ID, SERVICE_ID, ARTIFACT_STREAM_ID_1);
     assertThat(gotArtifactStream1).isNotNull();
     assertThat(gotArtifactStream1.getUuid()).isEqualTo(ARTIFACT_STREAM_ID_1);
 
     ArtifactStream gotArtifactStream2 =
-        artifactStreamServiceBindingService.create(APP_ID, SERVICE_ID, ARTIFACT_STREAM_ID_2);
+        artifactStreamServiceBindingService.createOld(APP_ID, SERVICE_ID, ARTIFACT_STREAM_ID_2);
     assertThat(gotArtifactStream2).isNotNull();
     assertThat(gotArtifactStream2.getUuid()).isEqualTo(ARTIFACT_STREAM_ID_2);
   }
@@ -81,10 +81,10 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
     Service service = getService().artifactStreamIds(new ArrayList<>(artifactStreamIds)).build();
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(service);
 
-    artifactStreamServiceBindingService.delete(APP_ID, SERVICE_ID, ARTIFACT_STREAM_ID_1);
+    artifactStreamServiceBindingService.deleteOld(APP_ID, SERVICE_ID, ARTIFACT_STREAM_ID_1);
     assertThat(service.getArtifactStreamIds()).isEqualTo(Arrays.asList(ARTIFACT_STREAM_ID_2));
 
-    artifactStreamServiceBindingService.delete(APP_ID, SERVICE_ID, ARTIFACT_STREAM_ID_2);
+    artifactStreamServiceBindingService.deleteOld(APP_ID, SERVICE_ID, ARTIFACT_STREAM_ID_2);
     assertThat(service.getArtifactStreamIds()).isNullOrEmpty();
   }
 

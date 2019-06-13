@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.exception.WingsException.USER;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 import com.google.inject.Inject;
@@ -9,6 +10,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
@@ -734,23 +736,53 @@ public class ServiceResource {
     return new RestResponse<>(artifactStreamServiceBindingService.listArtifactStreams(appId, serviceId));
   }
 
-  @POST
-  @Path("{serviceId}/artifact-streams")
+  @GET
+  @Path("{serviceId}/artifact-stream-bindings")
   @Timed
   @ExceptionMetered
-  public RestResponse<ArtifactStream> createArtifactStreamBinding(@QueryParam("appId") String appId,
+  public RestResponse<List<ArtifactStreamBinding>> listArtifactStreamBindings(
+      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
+    return new RestResponse<>(artifactStreamServiceBindingService.list(appId, serviceId));
+  }
+
+  @GET
+  @Path("{serviceId}/artifact-stream-bindings/{name}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<ArtifactStreamBinding> getArtifactStreamBinding(
+      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId, @PathParam("name") String name) {
+    return new RestResponse<>(artifactStreamServiceBindingService.get(appId, serviceId, name));
+  }
+
+  @POST
+  @Path("{serviceId}/artifact-stream-bindings")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<ArtifactStreamBinding> createArtifactStreamBinding(@QueryParam("appId") String appId,
       @PathParam("serviceId") String serviceId, @NotNull ArtifactStreamBinding artifactStreamBinding) {
-    return new RestResponse<>(
-        artifactStreamServiceBindingService.create(appId, serviceId, artifactStreamBinding.getArtifactStreamId()));
+    return new RestResponse<>(artifactStreamServiceBindingService.create(appId, serviceId, artifactStreamBinding));
+  }
+
+  @PUT
+  @Path("{serviceId}/artifact-stream-bindings/{name}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<ArtifactStreamBinding> updateArtifactStreamBinding(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @PathParam("name") String name,
+      @NotNull ArtifactStreamBinding artifactStreamBinding) {
+    if (name == null || artifactStreamBinding == null || !name.equals(artifactStreamBinding.getName())) {
+      throw new InvalidRequestException("Name in path parameter does not match the body", USER);
+    }
+    return new RestResponse<>(artifactStreamServiceBindingService.update(appId, serviceId, artifactStreamBinding));
   }
 
   @DELETE
-  @Path("{serviceId}/artifact-streams/{artifactStreamId}")
+  @Path("{serviceId}/artifact-stream-bindings/{name}")
   @Timed
   @ExceptionMetered
-  public RestResponse deleteArtifactStreamBinding(@QueryParam("appId") String appId,
-      @PathParam("serviceId") String serviceId, @PathParam("artifactStreamId") String artifactStreamId) {
-    artifactStreamServiceBindingService.delete(appId, serviceId, artifactStreamId);
+  public RestResponse deleteArtifactStreamBinding(
+      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId, @PathParam("name") String name) {
+    artifactStreamServiceBindingService.delete(appId, serviceId, name);
     return new RestResponse();
   }
 }

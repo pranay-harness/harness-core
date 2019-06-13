@@ -16,6 +16,7 @@ import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.ArtifactStreamBinding;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
@@ -95,6 +96,9 @@ public interface ServiceResourceService extends OwnedByApplication {
 
   @ValidationGroups(Update.class)
   Service updateArtifactStreamIds(@Valid Service service, List<String> artifactStreamIds);
+
+  @ValidationGroups(Update.class)
+  Service updateArtifactStreamBindings(@Valid Service service, List<ArtifactStreamBinding> artifactStreamBindings);
 
   /**
    * Gets the.

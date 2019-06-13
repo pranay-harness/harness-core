@@ -155,7 +155,6 @@ public class SettingsServiceImpl implements SettingsService {
           .withResponse(filteredSettingAttributes)
           .withTotal(filteredSettingAttributes.size())
           .build();
-
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }

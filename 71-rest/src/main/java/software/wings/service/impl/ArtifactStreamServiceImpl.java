@@ -759,7 +759,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     // NOTE: artifactStream and binding must be created atomically
     ArtifactStream savedArtifactStream = create(artifactStream, validate);
     try {
-      artifactStreamServiceBindingService.create(appId, serviceId, savedArtifactStream.getUuid());
+      artifactStreamServiceBindingService.createOld(appId, serviceId, savedArtifactStream.getUuid());
     } catch (Exception e) {
       delete(appId, savedArtifactStream, false, false);
       throw e;
@@ -790,7 +790,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     // NOTE: artifactStream and binding must be deleted atomically
     boolean retVal = delete(appId, artifactStream, forceDelete, syncFromGit);
     try {
-      artifactStreamServiceBindingService.delete(appId, serviceId, artifactStreamId);
+      artifactStreamServiceBindingService.deleteOld(appId, serviceId, artifactStreamId);
     } catch (Exception e) {
       create(artifactStream, false);
       throw e;

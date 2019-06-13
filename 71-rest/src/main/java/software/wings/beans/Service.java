@@ -74,6 +74,7 @@ public class Service extends Base implements KeywordsAware, NameAccess {
   private boolean isK8sV2;
   @Indexed private String accountId;
   @Indexed private List<String> artifactStreamIds;
+  private List<ArtifactStreamBinding> artifactStreamBindings;
 
   @Builder
   public Service(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
@@ -82,7 +83,7 @@ public class Service extends Base implements KeywordsAware, NameAccess {
       long version, AppContainer appContainer, List<ConfigFile> configFiles, List<ServiceVariable> serviceVariables,
       List<ArtifactStream> artifactStreams, List<ServiceCommand> serviceCommands, Activity lastDeploymentActivity,
       Activity lastProdDeploymentActivity, Setup setup, boolean isK8sV2, String accountId,
-      List<String> artifactStreamIds) {
+      List<String> artifactStreamIds, List<ArtifactStreamBinding> artifactStreamBindings) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
@@ -103,8 +104,10 @@ public class Service extends Base implements KeywordsAware, NameAccess {
     this.isK8sV2 = isK8sV2;
     this.accountId = accountId;
     this.artifactStreamIds = artifactStreamIds;
+    this.artifactStreamBindings = artifactStreamBindings;
   }
 
+  // TODO: check what to do with artifactStreamIds and artifactStreamBindings
   public Service cloneInternal() {
     return Service.builder()
         .appId(getAppId())
