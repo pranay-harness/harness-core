@@ -2,10 +2,12 @@ package io.harness.dl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.DataGenApplication;
 import io.harness.OrchestrationMorphiaClasses;
 import io.harness.category.element.UnitTests;
 import io.harness.mongo.HObjectFactory;
+import io.harness.mongo.MigratorMorphiaClasses;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -16,7 +18,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Slf4j
-public class MorphiaClassesTest {
+public class MorphiaClassesTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testSearchAndList() {
@@ -29,6 +31,7 @@ public class MorphiaClassesTest {
     Set<Class> classes = new HashSet();
     classes.addAll(DataGenApplication.morphiaClasses);
     classes.addAll(OrchestrationMorphiaClasses.classes);
+    classes.addAll(MigratorMorphiaClasses.classes);
 
     boolean success = true;
     for (MappedClass cls : morphia.getMapper().getMappedClasses()) {

@@ -1,5 +1,8 @@
 package io.harness.migrator;
 
+import static io.harness.beans.database.MigrationJobInstance.Status.BASELINE;
+import static io.harness.beans.database.MigrationJobInstance.Status.PENDING;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -8,18 +11,20 @@ import io.harness.beans.migration.MigrationJob;
 import io.harness.beans.migration.MigrationList;
 import io.harness.beans.migration.MongoCollectionMigrationChannel;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.ReadPref;
 import io.harness.persistence.Store;
 import io.harness.threading.Poller;
 
 import java.time.Duration;
+import java.util.Set;
 
 @Singleton
 public class ServiceAppMixin {
   @Inject private HPersistence persistence;
 
   private void upsertMigrationJobInstance(MigrationJob job) {
-    final String inserted =
-        persistence.insert(MigrationJobInstance.builder().id(job.getId()).metadata(job.getMetadata()).build());
+    final String inserted = persistence.insert(
+        MigrationJobInstance.builder().id(job.getId()).metadata(job.getMetadata()).status(PENDING).build());
 
     // It was there from before
     // if (inserted == null) {
@@ -27,7 +32,26 @@ public class ServiceAppMixin {
     //}
   }
 
+  public boolean initIfFirstTime() {
+    final Set<String> collectionNames =
+        persistence.getDatastore(MigrationJobInstance.class, ReadPref.NORMAL).getDB().getCollectionNames();
+
+    if (collectionNames.contains("migrationJobInstances")) {
+      return false;
+    }
+
+    for (MigrationJob job : MigrationList.jobs.values()) {
+      persistence.save(
+          MigrationJobInstance.builder().id(job.getId()).metadata(job.getMetadata()).status(BASELINE).build());
+    }
+
+    return true;
+  }
+
   public MigrationJob updateStoreMigrationJobInstances(Store store) {
+    if (initIfFirstTime()) {
+      return null;
+    }
     MigrationJob lastJob = null;
     for (MigrationJob job : MigrationList.jobs.values()) {
       final boolean anyMatch = job.getMetadata()
