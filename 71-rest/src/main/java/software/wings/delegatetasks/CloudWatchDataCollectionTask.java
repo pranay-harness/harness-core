@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.EC2ContainerCredentialsProviderWrapper;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClientBuilder;
 import io.harness.beans.DelegateTask;
@@ -204,13 +205,19 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
 
       long endTimeForCollection = System.currentTimeMillis();
 
-      AmazonCloudWatchClient cloudWatchClient =
-          (AmazonCloudWatchClient) AmazonCloudWatchClientBuilder.standard()
-              .withRegion(dataCollectionInfo.getRegion())
-              .withCredentials(new AWSStaticCredentialsProvider(
-                  new BasicAWSCredentials(dataCollectionInfo.getAwsConfig().getAccessKey(),
-                      String.valueOf(dataCollectionInfo.getAwsConfig().getSecretKey()))))
-              .build();
+      AmazonCloudWatchClientBuilder clientBuilder =
+          AmazonCloudWatchClientBuilder.standard().withRegion(dataCollectionInfo.getRegion());
+
+      if (dataCollectionInfo.getAwsConfig().isUseEc2IamCredentials()) {
+        logger.info("isUseEc2IamCredentials is true. Instantiating EC2ContainerCredentialsProviderWrapper");
+        clientBuilder.withCredentials(new EC2ContainerCredentialsProviderWrapper());
+      } else {
+        clientBuilder.withCredentials(
+            new AWSStaticCredentialsProvider(new BasicAWSCredentials(dataCollectionInfo.getAwsConfig().getAccessKey(),
+                String.valueOf(dataCollectionInfo.getAwsConfig().getSecretKey()))));
+      }
+
+      AmazonCloudWatchClient cloudWatchClient = (AmazonCloudWatchClient) clientBuilder.build();
 
       Map<String, List<CloudWatchMetric>> cloudWatchMetricsByLambdaFunction =
           dataCollectionInfo.getLambdaFunctionNames();
