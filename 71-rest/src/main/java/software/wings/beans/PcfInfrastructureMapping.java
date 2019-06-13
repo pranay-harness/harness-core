@@ -77,9 +77,9 @@ public class PcfInfrastructureMapping extends InfrastructureMapping {
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
         String infraMappingType, String deploymentType, String computeProviderName, String organization, String space,
-        List<String> tempRouteMap, List<String> routeMaps) {
+        List<String> tempRouteMap, List<String> routeMaps, Map<String, String> blueprints) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName);
+          computeProviderName, blueprints);
       this.organization = organization;
       this.space = space;
       this.tempRouteMap = tempRouteMap;

@@ -242,9 +242,9 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
         String infraMappingType, String deploymentType, String computeProviderName, String cluster, String masterUrl,
         String username, String password, String caCert, String clientCert, String clientKey,
         String clientKeyPassphrase, String serviceAccountToken, String clientKeyAlgo, String namespace,
-        String releaseName) {
+        String releaseName, Map<String, String> blueprints) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName, cluster);
+          computeProviderName, cluster, blueprints);
       this.masterUrl = masterUrl;
       this.username = username;
       this.password = password;

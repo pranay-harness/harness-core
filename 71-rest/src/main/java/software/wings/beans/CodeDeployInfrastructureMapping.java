@@ -55,9 +55,10 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
     @Builder
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
         String infraMappingType, String deploymentType, String computeProviderName, String region,
-        String applicationName, String deploymentGroup, String deploymentConfig, String hostNameConvention) {
+        String applicationName, String deploymentGroup, String deploymentConfig, String hostNameConvention,
+        Map<String, String> blueprints) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName);
+          computeProviderName, blueprints);
       this.region = region;
       this.applicationName = applicationName;
       this.deploymentGroup = deploymentGroup;

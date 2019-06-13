@@ -322,9 +322,10 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
         String infraMappingType, String deploymentType, String computeProviderName, String region,
         String autoScalingGroupName, List<String> classicLoadBalancers, List<String> targetGroupArns,
-        String hostNameConvention, List<String> stageClassicLoadBalancers, List<String> stageTargetGroupArns) {
+        String hostNameConvention, List<String> stageClassicLoadBalancers, List<String> stageTargetGroupArns,
+        Map<String, String> blueprints) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName);
+          computeProviderName, blueprints);
       this.region = region;
       this.autoScalingGroupName = autoScalingGroupName;
       this.classicLoadBalancers = classicLoadBalancers;

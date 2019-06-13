@@ -214,9 +214,9 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
         String infraMappingType, String deploymentType, String computeProviderName, String name, String restrictions,
         String expression, String region, String provisionerName, String connectionType, String loadBalancer,
         boolean usePublicDns, boolean provisionInstances, String autoScalingGroup, int desiredCapacity,
-        List<String> vpcs, List<NameValuePair.Yaml> tags, String hostNameConvention) {
+        List<String> vpcs, List<NameValuePair.Yaml> tags, String hostNameConvention, Map<String, String> blueprints) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName);
+          computeProviderName, blueprints);
       this.restrictions = restrictions;
       this.expression = expression;
       this.region = region;

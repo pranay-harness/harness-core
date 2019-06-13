@@ -371,9 +371,9 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
         String infraMappingType, String deploymentType, String computeProviderName, String cluster, String namespace,
-        String releaseName) {
+        String releaseName, Map<String, String> blueprints) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName, cluster);
+          computeProviderName, cluster, blueprints);
       this.namespace = namespace;
       this.releaseName = releaseName;
     }

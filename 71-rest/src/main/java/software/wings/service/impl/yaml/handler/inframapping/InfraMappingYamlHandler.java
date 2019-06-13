@@ -10,6 +10,7 @@ import io.harness.exception.HarnessException;
 import org.mongodb.morphia.Key;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Service;
@@ -19,6 +20,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -40,6 +42,7 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
   @Inject InfrastructureMappingService infraMappingService;
   @Inject InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject ServiceTemplateService serviceTemplateService;
+  @Inject private FeatureFlagService featureFlagService;
 
   protected String getSettingId(String accountId, String appId, String settingName) {
     SettingAttribute settingAttribute = settingsService.getByName(accountId, appId, settingName);
@@ -116,6 +119,9 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
     yaml.setInfraMappingType(infraMapping.getInfraMappingType());
     yaml.setDeploymentType(infraMapping.getDeploymentType());
     yaml.setHarnessApiVersion(getHarnessApiVersion());
+    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infraMapping.getAccountId())) {
+      yaml.setBlueprints(infraMapping.getBlueprints());
+    }
   }
 
   protected void toBean(ChangeContext<Y> context, B bean, String appId, String envId, String serviceId,
@@ -132,6 +138,9 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
     bean.setAccountId(context.getChange().getAccountId());
     String name = yamlHelper.getNameFromYamlFilePath(context.getChange().getFilePath());
     bean.setName(name);
+    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, context.getChange().getAccountId())) {
+      bean.setBlueprints(yaml.getBlueprints());
+    }
   }
 
   protected <T extends InfrastructureMapping> T upsertInfrastructureMapping(

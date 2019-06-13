@@ -11,6 +11,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.infrastructure.Host;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public abstract class PhysicalInfrastructureMappingBase extends InfrastructureMapping {
@@ -33,9 +34,9 @@ public abstract class PhysicalInfrastructureMappingBase extends InfrastructureMa
 
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
         String infraMappingType, String deploymentType, String computeProviderName, String name, List<String> hostNames,
-        String loadBalancer, List<Host> hosts) {
+        String loadBalancer, List<Host> hosts, Map<String, String> blueprints) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName);
+          computeProviderName, blueprints);
       this.hostNames = hostNames;
       this.loadBalancer = loadBalancer;
       this.hosts = hosts;
