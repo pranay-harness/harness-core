@@ -3,15 +3,18 @@ package io.harness.jobs;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.beans.FeatureName.LOGML_NEURAL_NET;
+import static software.wings.common.VerificationConstants.GET_LOG_FEEDBACKS;
 
 import com.google.common.collect.Lists;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.FeatureName;
 import software.wings.common.VerificationConstants;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
@@ -24,7 +27,11 @@ import software.wings.service.impl.newrelic.MLExperiments;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.StateType;
+import software.wings.verification.VerificationDataAnalysisResponse;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -47,10 +54,12 @@ public class LogMLAnalysisGenerator implements Runnable {
   private LearningEngineService learningEngineService;
   private VerificationManagerClient managerClient;
   private VerificationManagerClientHelper managerClientHelper;
+  private MLAnalysisType analysisType;
 
   public LogMLAnalysisGenerator(AnalysisContext context, long logAnalysisMinute, boolean createExperiment,
       LogAnalysisService analysisService, LearningEngineService learningEngineService,
-      VerificationManagerClient managerClient, VerificationManagerClientHelper managerClientHelper) {
+      VerificationManagerClient managerClient, VerificationManagerClientHelper managerClientHelper,
+      MLAnalysisType mlAnalysisType) {
     this.context = context;
     this.analysisService = analysisService;
     this.applicationId = context.getAppId();
@@ -65,11 +74,16 @@ public class LogMLAnalysisGenerator implements Runnable {
     this.createExperiment = createExperiment;
     this.managerClient = managerClient;
     this.managerClientHelper = managerClientHelper;
+    this.analysisType = mlAnalysisType;
   }
 
   @Override
   public void run() {
-    generateAnalysis();
+    if (analysisType != null && analysisType.equals(MLAnalysisType.FEEDBACK_ANALYSIS)) {
+      generateFeedbackAnalysis();
+    } else {
+      generateAnalysis();
+    }
     logAnalysisMinute++;
   }
 
@@ -125,7 +139,12 @@ public class LogMLAnalysisGenerator implements Runnable {
 
       String feedback_url = "";
 
-      if (logAnalysisMinute == 0 || logAnalysisMinute == context.getStartDataCollectionMinute()) {
+      boolean isNewFeedbacksEnabled =
+          managerClientHelper
+              .callManagerWithRetry(managerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, context.getAccountId()))
+              .getResource();
+      if (!isNewFeedbacksEnabled
+          && (logAnalysisMinute == 0 || logAnalysisMinute == context.getStartDataCollectionMinute())) {
         feedback_url = "/verification/" + LogAnalysisResource.LOG_ANALYSIS + LogAnalysisResource.ANALYSIS_USER_FEEDBACK
             + "?accountId=" + accountId + "&appId=" + context.getAppId() + "&serviceId=" + serviceId
             + "&workflowId=" + workflowId + "&workflowExecutionId=" + context.getWorkflowExecutionId();
@@ -229,6 +248,80 @@ public class LogMLAnalysisGenerator implements Runnable {
       throw new RuntimeException("Log analysis failed for " + context.getStateExecutionId() + " for minute "
               + logAnalysisMinute + ", reason: " + ExceptionUtils.getMessage(e),
           e);
+    }
+  }
+
+  private void generateFeedbackAnalysis() {
+    logger.info("Creating Feedback analysis task for {}", context.getStateExecutionId());
+    String feedbackUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS + GET_LOG_FEEDBACKS
+        + "?stateExecutionId=" + context.getStateExecutionId() + "&appId=" + context.getAppId();
+    final String taskId = generateUuid();
+
+    final String lastWorkflowExecutionId = context.getPrevWorkflowExecutionId();
+    final boolean isBaselineCreated = context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
+        || !isEmpty(lastWorkflowExecutionId);
+
+    String logAnalysisSaveUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
+        + LogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL + "?accountId=" + accountId
+        + "&applicationId=" + applicationId + "&stateExecutionId=" + context.getStateExecutionId()
+        + "&logCollectionMinute=" + logAnalysisMinute + "&isBaselineCreated=" + isBaselineCreated + "&taskId=" + taskId
+        + "&stateType=" + context.getStateType() + "&isFeedbackAnalysis=true";
+    //
+    final String logMLResultUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
+        + LogAnalysisResource.WORKFLOW_GET_ANALYSIS_RECORDS_URL + "?appId=" + context.getAppId()
+        + "&accountId=" + context.getAccountId() + "&stateExecutionId=" + context.getStateExecutionId()
+        + "&analysisMinute=" + logAnalysisMinute;
+
+    final String failureUrl = "/verification/" + LearningEngineService.RESOURCE_URL
+        + VerificationConstants.NOTIFY_LEARNING_FAILURE + "?taskId=" + taskId;
+
+    LearningEngineAnalysisTask feedbackTask = LearningEngineAnalysisTask.builder()
+                                                  .feedback_url(feedbackUrl)
+                                                  .logMLResultUrl(logMLResultUrl)
+                                                  .state_execution_id(context.getStateExecutionId())
+                                                  .query(Arrays.asList(context.getQuery()))
+                                                  .ml_analysis_type(MLAnalysisType.FEEDBACK_ANALYSIS)
+                                                  .analysis_save_url(logAnalysisSaveUrl)
+                                                  .analysis_failure_url(failureUrl)
+                                                  .analysis_minute(logAnalysisMinute)
+                                                  .stateType(context.getStateType())
+                                                  .build();
+
+    feedbackTask.setAppId(context.getAppId());
+    feedbackTask.setUuid(taskId);
+
+    learningEngineService.addLearningEngineAnalysisTask(feedbackTask);
+    logger.info("Created feedback task for state {} and minute {}", context.getStateExecutionId(), logAnalysisMinute);
+  }
+
+  public void sendStateNotification(AnalysisContext context, boolean error, String errorMsg, int logAnalysisMinute) {
+    if (learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
+      final ExecutionStatus status = error ? ExecutionStatus.ERROR : ExecutionStatus.SUCCESS;
+
+      VerificationStateAnalysisExecutionData logAnalysisExecutionData =
+          VerificationStateAnalysisExecutionData.builder()
+              .stateExecutionInstanceId(context.getStateExecutionId())
+              .serverConfigId(context.getAnalysisServerConfigId())
+              .query(context.getQuery())
+              .timeDuration(context.getTimeDuration())
+              .canaryNewHostNames(context.getTestNodes().keySet())
+              .lastExecutionNodes(
+                  context.getControlNodes() == null ? Collections.emptySet() : context.getControlNodes().keySet())
+              .correlationId(context.getCorrelationId())
+              .analysisMinute(logAnalysisMinute)
+              .build();
+
+      logAnalysisExecutionData.setStatus(status);
+
+      if (error) {
+        logAnalysisExecutionData.setErrorMsg(errorMsg);
+      }
+
+      final VerificationDataAnalysisResponse response =
+          VerificationDataAnalysisResponse.builder().stateExecutionData(logAnalysisExecutionData).build();
+      response.setExecutionStatus(status);
+      logger.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
+      managerClientHelper.notifyManagerForVerificationAnalysis(context, response);
     }
   }
 }

@@ -41,16 +41,15 @@ public interface LogAnalysisService {
   Set<LogDataRecord> getLogData(String appId, String cvConfigId, ClusterLevel clusterLevel, int logCollectionMinute,
       int startMinute, int endMinute, LogRequest logRequest);
 
-  boolean saveLogAnalysisRecords(LogMLAnalysisRecord mlAnalysisResponse, StateType stateType, Optional<String> taskId);
+  boolean saveLogAnalysisRecords(LogMLAnalysisRecord mlAnalysisResponse, StateType stateType, Optional<String> taskId,
+      Optional<Boolean> isFeedbackAnalysis);
 
   boolean save24X7LogAnalysisRecords(String appId, String cvConfigId, int analysisMinute,
       AnalysisComparisonStrategy comparisonStrategy, LogMLAnalysisRecord mlAnalysisResponse, Optional<String> taskId,
       Optional<Boolean> isFeedbackAnalysis);
 
   LogMLAnalysisRecord getLogAnalysisRecords(
-      String appId, String stateExecutionId, String query, StateType stateType, int logCollectionMinute);
-
-  LogMLAnalysisRecord getLogAnalysisRecords(String cvConfigId, int analysisMinute, boolean isCompressed);
+      String fieldName, String fieldValue, int analysisMinute, boolean isCompressed);
 
   List<LogMLExpAnalysisInfo> getExpAnalysisInfoList();
 
@@ -102,9 +101,11 @@ public interface LogAnalysisService {
 
   long getLastCVAnalysisMinute(String appId, String cvConfigId, LogMLAnalysisStatus status);
 
+  long getLastWorkflowAnalysisMinute(String appId, String stateExecutionId, LogMLAnalysisStatus status);
+
   long getLastLogDataCollectedMinute(String query, String appId, String stateExecutionId, StateType type);
 
   Map<FeedbackAction, List<CVFeedbackRecord>> getUserFeedback(String cvConfigId, String stateExecutionId, String appId);
 
-  boolean updateAnalysisStatus(String cvConfigId, long analysisMinute, LogMLAnalysisStatus status);
+  boolean updateAnalysisStatus(String fieldName, String fieldValue, long analysisMinute, LogMLAnalysisStatus status);
 }

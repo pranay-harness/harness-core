@@ -19,15 +19,14 @@ import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.SchedulerException;
+import software.wings.beans.FeatureName;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.LogRequest;
+import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.ClusterLevel;
-import software.wings.verification.VerificationDataAnalysisResponse;
-import software.wings.verification.VerificationStateAnalysisExecutionData;
 
-import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -144,6 +143,7 @@ public class WorkflowLogAnalysisJob implements Job {
                 context.getStateType(), context.getTimeDuration(), context.getStartDataCollectionMinute(),
                 context.getAccountId())) {
           completeCron = true;
+
         } else {
           long logAnalysisClusteringTestMinute =
               analysisService.getCollectionMinuteForLevel(context.getQuery(), context.getAppId(),
@@ -181,7 +181,7 @@ public class WorkflowLogAnalysisJob implements Job {
              */
             createExperiment = logAnalysisMinute >= context.getTimeDuration() - 1;
             new LogMLAnalysisGenerator(context, logAnalysisMinute, createExperiment, analysisService,
-                learningEngineService, managerClient, managerClientHelper)
+                learningEngineService, managerClient, managerClientHelper, MLAnalysisType.LOG_ML)
                 .run();
 
           } else {
@@ -197,6 +197,7 @@ public class WorkflowLogAnalysisJob implements Job {
 
         return logAnalysisMinute;
       } catch (Exception ex) {
+        error = true;
         logger.info("Verification Analysis failed for {}", context.getStateExecutionId(), ex);
       } finally {
         try {
@@ -205,7 +206,14 @@ public class WorkflowLogAnalysisJob implements Job {
             try {
               logger.info(
                   "send notification to state manager and delete cron with error : {} errorMsg : {}", error, errorMsg);
-              sendStateNotification(context, error, errorMsg, (int) logAnalysisMinute);
+              if (!managerClientHelper
+                       .callManagerWithRetry(
+                           managerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, context.getAccountId()))
+                       .getResource()) {
+                new LogMLAnalysisGenerator(context, logAnalysisMinute, false, analysisService, learningEngineService,
+                    managerClient, managerClientHelper, MLAnalysisType.LOG_ML)
+                    .sendStateNotification(context, error, errorMsg, (int) logAnalysisMinute);
+              }
             } catch (Exception e) {
               logger.error("Send notification failed for log analysis manager", e);
             } finally {
@@ -222,37 +230,6 @@ public class WorkflowLogAnalysisJob implements Job {
       }
 
       return -1L;
-    }
-
-    private void sendStateNotification(AnalysisContext context, boolean error, String errorMsg, int logAnalysisMinute) {
-      if (learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
-        final ExecutionStatus status = error ? ExecutionStatus.ERROR : ExecutionStatus.SUCCESS;
-
-        VerificationStateAnalysisExecutionData logAnalysisExecutionData =
-            VerificationStateAnalysisExecutionData.builder()
-                .stateExecutionInstanceId(context.getStateExecutionId())
-                .serverConfigId(context.getAnalysisServerConfigId())
-                .query(context.getQuery())
-                .timeDuration(context.getTimeDuration())
-                .canaryNewHostNames(context.getTestNodes().keySet())
-                .lastExecutionNodes(
-                    context.getControlNodes() == null ? Collections.emptySet() : context.getControlNodes().keySet())
-                .correlationId(context.getCorrelationId())
-                .analysisMinute(logAnalysisMinute)
-                .build();
-
-        logAnalysisExecutionData.setStatus(status);
-
-        if (error) {
-          logAnalysisExecutionData.setErrorMsg(errorMsg);
-        }
-
-        final VerificationDataAnalysisResponse response =
-            VerificationDataAnalysisResponse.builder().stateExecutionData(logAnalysisExecutionData).build();
-        response.setExecutionStatus(status);
-        logger.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
-        managerClientHelper.notifyManagerForVerificationAnalysis(context, response);
-      }
     }
   }
 }

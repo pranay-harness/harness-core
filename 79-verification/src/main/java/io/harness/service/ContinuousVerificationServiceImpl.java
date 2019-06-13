@@ -62,6 +62,7 @@ import software.wings.service.impl.analysis.CVFeedbackRecord;
 import software.wings.service.impl.analysis.FeedbackAction;
 import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
+import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRecordKeys;
 import software.wings.service.impl.analysis.LogMLAnalysisStatus;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
@@ -877,8 +878,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               }
             });
             if (isEmptyFeedbacks.get()) {
-              logAnalysisService.updateAnalysisStatus(
-                  cvConfiguration.getUuid(), lastLogMLAnalysisMinute, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
+              logAnalysisService.updateAnalysisStatus(LogMLAnalysisRecordKeys.cvConfigId, cvConfiguration.getUuid(),
+                  lastLogMLAnalysisMinute, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
             } else {
               createFeedbackAnalysisTask(logsCVConfiguration, minuteForFeedbackAnalysis);
               logger.info("Created Feedback analysis task for {} and minute {}", logsCVConfiguration.getUuid(),

@@ -21,6 +21,7 @@ import software.wings.service.impl.analysis.FeedbackAction;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
+import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRecordKeys;
 import software.wings.service.impl.analysis.LogMLAnalysisRequest;
 import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.LogRequest;
@@ -132,6 +133,7 @@ public class LogVerificationResource {
       @QueryParam("logCollectionMinute") Integer logCollectionMinute,
       @QueryParam("isBaselineCreated") boolean isBaselineCreated, @QueryParam("taskId") String taskId,
       @QueryParam("baseLineExecutionId") String baseLineExecutionId, @QueryParam("stateType") StateType stateType,
+      @QueryParam("isFeedbackAnalysis") boolean isFeedbackAnalysis,
       @QueryParam("workflowExecutionId") String workflowExecutionId, LogMLAnalysisRecord mlAnalysisResponse) {
     mlAnalysisResponse.setStateExecutionId(stateExecutionId);
     mlAnalysisResponse.setWorkflowExecutionId(workflowExecutionId);
@@ -139,8 +141,8 @@ public class LogVerificationResource {
     mlAnalysisResponse.setBaseLineCreated(isBaselineCreated);
     mlAnalysisResponse.setBaseLineExecutionId(baseLineExecutionId);
     mlAnalysisResponse.setAppId(applicationId);
-    return new RestResponse<>(
-        analysisService.saveLogAnalysisRecords(mlAnalysisResponse, stateType, Optional.of(taskId)));
+    return new RestResponse<>(analysisService.saveLogAnalysisRecords(
+        mlAnalysisResponse, stateType, Optional.of(taskId), Optional.of(isFeedbackAnalysis)));
   }
 
   @Produces({"application/json", "application/v1+json"})
@@ -166,9 +168,21 @@ public class LogVerificationResource {
   @LearningEngineAuth
   public RestResponse<LogMLAnalysisRecord> getLogMLAnalysisRecords(@QueryParam("accountId") String accountId,
       @QueryParam("stateType") StateType stateType, LogMLAnalysisRequest mlAnalysisRequest) {
-    return new RestResponse<>(analysisService.getLogAnalysisRecords(mlAnalysisRequest.getApplicationId(),
-        mlAnalysisRequest.getStateExecutionId(), mlAnalysisRequest.getQuery(), stateType,
-        mlAnalysisRequest.getLogCollectionMinute()));
+    return new RestResponse<>(analysisService.getLogAnalysisRecords(LogMLAnalysisRecordKeys.stateExecutionId,
+        mlAnalysisRequest.getStateExecutionId(), mlAnalysisRequest.getLogCollectionMinute(), false));
+  }
+
+  @Produces({"application/json", "application/v1+json"})
+  @GET
+  @Path(LogAnalysisResource.WORKFLOW_GET_ANALYSIS_RECORDS_URL)
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  public RestResponse<LogMLAnalysisRecord> getWorkflowAnalysisRecord(@QueryParam("accountId") String accountId,
+      @QueryParam("appId") String appId, @QueryParam("stateExecutionId") String stateExecutionId,
+      @QueryParam("analysisMinute") int analysisMinute) {
+    return new RestResponse<>(analysisService.getLogAnalysisRecords(
+        LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId, analysisMinute, false));
   }
 
   @Produces({"application/json", "application/v1+json"})
@@ -180,7 +194,8 @@ public class LogVerificationResource {
   public RestResponse<LogMLAnalysisRecord> getLogMLAnalysisRecords(@QueryParam("appId") String appId,
       @QueryParam("cvConfigId") String cvConfigId, @QueryParam("analysisMinute") int analysisMinute,
       @QueryParam("compressed") boolean isCompressed) {
-    return new RestResponse<>(analysisService.getLogAnalysisRecords(cvConfigId, analysisMinute, isCompressed));
+    return new RestResponse<>(analysisService.getLogAnalysisRecords(
+        LogMLAnalysisRecordKeys.cvConfigId, cvConfigId, analysisMinute, isCompressed));
   }
 
   @GET
@@ -190,9 +205,11 @@ public class LogVerificationResource {
   @ExceptionMetered
   @LearningEngineAuth
   public RestResponse<LogMLAnalysisRecord> getLogAnalysisRecords(@QueryParam("appId") String appId,
+
       @QueryParam("cvConfigId") String cvConfigId, @QueryParam("analysisMinute") int analysisMinute,
       @QueryParam("compressed") boolean isCompressed) {
-    return new RestResponse<>(analysisService.getLogAnalysisRecords(cvConfigId, analysisMinute, isCompressed));
+    return new RestResponse<>(analysisService.getLogAnalysisRecords(
+        LogMLAnalysisRecordKeys.cvConfigId, cvConfigId, analysisMinute, isCompressed));
   }
 
   @DELETE

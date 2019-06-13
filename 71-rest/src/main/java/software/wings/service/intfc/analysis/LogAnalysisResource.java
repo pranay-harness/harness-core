@@ -41,6 +41,8 @@ public interface LogAnalysisResource {
    */
   String ANALYSIS_STATE_GET_ANALYSIS_RECORDS_URL = "/get-analysis-records";
 
+  String WORKFLOW_GET_ANALYSIS_RECORDS_URL = "/workflow-analysis-record";
+
   String ANALYSIS_GET_24X7_ANALYSIS_RECORDS_URL = "/get-24X7-analysis-records";
 
   /**

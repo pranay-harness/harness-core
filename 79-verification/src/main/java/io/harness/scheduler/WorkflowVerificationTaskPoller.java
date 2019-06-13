@@ -15,6 +15,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.jobs.workflow.collection.WorkflowDataCollectionJob;
+import io.harness.jobs.workflow.logs.WorkflowFeedbackAnalysisJob;
 import io.harness.jobs.workflow.logs.WorkflowLogAnalysisJob;
 import io.harness.jobs.workflow.logs.WorkflowLogClusterJob;
 import io.harness.jobs.workflow.timeseries.WorkflowTimeSeriesAnalysisJob;
@@ -86,6 +87,12 @@ public class WorkflowVerificationTaskPoller {
               case LOG_ML:
                 scheduleLogAnalysisCronJob(verificationAnalysisTask);
                 scheduleClusterCronJob(verificationAnalysisTask);
+                if (verificationManagerClientHelper
+                        .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(
+                            FeatureName.CV_FEEDBACKS, verificationAnalysisTask.getAccountId()))
+                        .getResource()) {
+                  scheduleFeedbackAnalysisCronJob(verificationAnalysisTask);
+                }
                 break;
               default:
                 throw new IllegalStateException("invalid analysis type " + verificationAnalysisTask.getAnalysisType());
@@ -293,6 +300,29 @@ public class WorkflowVerificationTaskPoller {
 
     jobScheduler.scheduleJob(job, trigger);
     logger.info("Scheduled Log Analysis cluster Job with details : {}", job);
+  }
+
+  private void scheduleFeedbackAnalysisCronJob(AnalysisContext context) {
+    Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(DELAY_MINUTES + 1));
+    JobDetail job = JobBuilder.newJob(WorkflowFeedbackAnalysisJob.class)
+                        .withIdentity(context.getStateExecutionId(), "WORKFLOW_FEEDBACK_ANALYSIS_CRON_GROUP")
+                        .usingJobData("jobParams", JsonUtils.asJson(context))
+                        .usingJobData("timestamp", System.currentTimeMillis())
+                        .usingJobData("delegateTaskId", context.getDelegateTaskId())
+                        .withDescription(context.getStateType() + "-" + context.getStateExecutionId())
+                        .build();
+
+    Trigger trigger = TriggerBuilder.newTrigger()
+                          .withIdentity(context.getStateExecutionId(), "WORKFLOW_FEEDBACK_ANALYSIS_CRON_GROUP")
+                          .withSchedule(SimpleScheduleBuilder.simpleSchedule()
+                                            .withIntervalInSeconds(60)
+                                            .repeatForever()
+                                            .withMisfireHandlingInstructionNowWithExistingCount())
+                          .startAt(startDate)
+                          .build();
+
+    jobScheduler.scheduleJob(job, trigger);
+    logger.info("Scheduled Feedback Analysis Cron Job with details : {}", job);
   }
 
   public static void addJob(PersistentScheduler jobScheduler) {
