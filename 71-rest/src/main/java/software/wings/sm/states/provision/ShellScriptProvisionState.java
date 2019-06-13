@@ -44,6 +44,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
+import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 
 import java.io.IOException;
@@ -53,6 +54,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -124,8 +126,10 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
     if (executionData.getExecutionStatus() == ExecutionStatus.SUCCESS) {
       String output = executionData.getOutput();
       Map<String, Object> outputMap = parseOutput(output);
-      infrastructureProvisionerService.getManagerExecutionCallback(context.getAppId(), activityId, COMMAND_UNIT);
-      infrastructureProvisionerService.regenerateInfrastructureMappings(provisionerId, context, outputMap);
+      ManagerExecutionLogCallback managerExecutionCallback =
+          infrastructureProvisionerService.getManagerExecutionCallback(context.getAppId(), activityId, COMMAND_UNIT);
+      infrastructureProvisionerService.regenerateInfrastructureMappings(
+          provisionerId, context, outputMap, Optional.of(managerExecutionCallback), Optional.empty());
       handleSweepingOutput(sweepingOutputService, context, outputMap);
     }
 

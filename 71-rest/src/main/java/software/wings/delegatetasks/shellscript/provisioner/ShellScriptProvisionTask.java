@@ -64,6 +64,9 @@ public class ShellScriptProvisionTask extends AbstractDelegateRunnableTask {
     try {
       ShellScriptProvisionParameters parameters = (ShellScriptProvisionParameters) taskParameters;
       String outputPath = getOutputPath(parameters.getEntityId());
+      saveExecutionLog(parameters,
+          "\"" + PROVISIONER_OUTPUT_PATH_KEY + "\" has been initialized to \"" + outputPath + "\"",
+          CommandExecutionStatus.RUNNING);
 
       HashMap<String, String> variablesMap =
           getCombinedVariablesMap(parameters.getTextVariables(), parameters.getEncryptedVariables());
