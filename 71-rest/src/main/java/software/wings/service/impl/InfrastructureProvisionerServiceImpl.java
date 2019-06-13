@@ -484,8 +484,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
                   logger.info("Provisioner {} updates infrastructureMapping {}", infrastructureProvisioner.getUuid(),
                       infrastructureMapping.getUuid());
                   addToExecutionLog(executionLogCallbackOptional,
-                      "Provisioner " + infrastructureProvisioner.getUuid() + " updates infrastructureMapping "
-                          + infrastructureMapping.getUuid());
+                      "Updating service infra \"" + infrastructureMapping.getName() + "\"");
                   applyProperties(contextMap, infrastructureMapping, blueprint.getProperties(),
                       executionLogCallbackOptional, region, blueprint.getNodeFilteringType());
                 });

@@ -1,12 +1,13 @@
 package software.wings.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.String.format;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -31,7 +32,7 @@ public class PhysicalInfrastructureMapping extends PhysicalInfrastructureMapping
 
   @Override
   public void applyProvisionerVariables(Map<String, Object> blueprintProperties, NodeFilteringType nodeFilteringType) {
-    if (EmptyPredicate.isEmpty(blueprintProperties)) {
+    if (isEmpty(blueprintProperties)) {
       throw new InvalidRequestException("Infra Provisioner Mapping inputs can't be empty");
     }
     List<Map<String, Object>> hostList = (List<Map<String, Object>>) blueprintProperties.get("hostArrayPath");
@@ -60,10 +61,13 @@ public class PhysicalInfrastructureMapping extends PhysicalInfrastructureMapping
             host.getProperties().put(entry.getKey(), hostAttributes.get(entry.getKey()));
         }
       }
-      if (EmptyPredicate.isEmpty(host.getPublicDns())) {
+      if (isEmpty(host.getPublicDns())) {
         throw new InvalidRequestException("Hostname can't be empty");
       }
       hosts.add(host);
+    }
+    if (isEmpty(hosts)) {
+      throw new InvalidRequestException("Host list can't be empty", WingsException.USER);
     }
     hosts(hosts);
   }
