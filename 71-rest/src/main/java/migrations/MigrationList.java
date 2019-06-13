@@ -69,6 +69,7 @@ import migrations.all.NewRelicMetricDataBaselineMigration;
 import migrations.all.NewRelicMetricDataGroupNameMigration;
 import migrations.all.NewRelicMetricDataRecordsMigration;
 import migrations.all.NexusDockerArtifactStreamMigration;
+import migrations.all.NonWorkflowCVConfigurationMigration;
 import migrations.all.OAuthAllowedProvidersListMigration;
 import migrations.all.OverrideDefaultLimits;
 import migrations.all.PreferenceUserIdRemoveDollarSignMigration;
@@ -240,6 +241,7 @@ public class MigrationList {
         .add(Pair.of(254, SecretManagerConfigMigration.class))
         .add(Pair.of(255, OAuthAllowedProvidersListMigration.class))
         .add(Pair.of(256, MigrateLogFeedbackRecordsToGoogle.class))
+        .add(Pair.of(257, NonWorkflowCVConfigurationMigration.class))
         .build();
   }
 }
