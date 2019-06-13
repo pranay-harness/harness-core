@@ -66,6 +66,7 @@ public abstract class ArtifactStream
   private String artifactStreamType;
   private String sourceName;
   private String settingId;
+  @Transient private String artifactServerName;
   @EntityName private String name;
   private boolean autoPopulate;
   @Indexed private String serviceId;

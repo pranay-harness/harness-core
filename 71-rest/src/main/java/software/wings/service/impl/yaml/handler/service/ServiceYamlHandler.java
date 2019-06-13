@@ -1,8 +1,6 @@
 package software.wings.service.impl.yaml.handler.service;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
-import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -19,7 +17,6 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
 import software.wings.beans.Service.Yaml;
@@ -27,9 +24,6 @@ import software.wings.beans.Service.Yaml.YamlBuilder;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.ServiceVariableBuilder;
 import software.wings.beans.ServiceVariable.Type;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.artifact.ArtifactStreamBinding;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
@@ -86,22 +80,22 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
                                   .configVariables(nameValuePairList)
                                   .applicationStack(applicationStack);
 
-    List<ArtifactStreamBinding.Yaml> artifactStreamBindings = new ArrayList<>();
-    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, service.getAccountId())) {
-      List<ArtifactStream> artifactStreams =
-          artifactStreamServiceBindingService.listArtifactStreams(service.getAppId(), service.getUuid());
-      if (isNotEmpty(artifactStreams)) {
-        for (ArtifactStream artifactStream : artifactStreams) {
-          SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
-          artifactStreamBindings.add(ArtifactStreamBinding.Yaml.builder()
-                                         .artifactStreamType(artifactStream.getArtifactStreamType())
-                                         .artifactStreamName(artifactStream.getName())
-                                         .artifactServerName(settingAttribute.getName())
-                                         .build());
-        }
-      }
-      yamlBuilder.artifactStreamBindings(artifactStreamBindings);
-    }
+    //    List<ArtifactStreamBinding.Yaml> artifactStreamBindings = new ArrayList<>();
+    //    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, service.getAccountId())) {
+    //      List<ArtifactStream> artifactStreams =
+    //          artifactStreamServiceBindingService.listArtifactStreams(service.getAppId(), service.getUuid());
+    //      if (isNotEmpty(artifactStreams)) {
+    //        for (ArtifactStream artifactStream : artifactStreams) {
+    //          SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
+    //          artifactStreamBindings.add(ArtifactStreamBinding.Yaml.builder()
+    //                                         .artifactStreamType(artifactStream.getArtifactStreamType())
+    //                                         .artifactStreamName(artifactStream.getName())
+    //                                         .artifactServerName(settingAttribute.getName())
+    //                                         .build());
+    //        }
+    //      }
+    //      yamlBuilder.artifactStreamBindings(artifactStreamBindings);
+    //    }
     return yamlBuilder.build();
   }
 
@@ -164,37 +158,37 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     boolean syncFromGit = changeContext.getChange().isSyncFromGit();
     currentService.setSyncFromGit(syncFromGit);
 
-    List<String> artifactStreamIds = new ArrayList<>();
-    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-      List<ArtifactStreamBinding.Yaml> artifactStreamBindings = yaml.getArtifactStreamBindings();
-      if (isNotEmpty(artifactStreamBindings)) {
-        for (ArtifactStreamBinding.Yaml artifactStreamBinding : artifactStreamBindings) {
-          // Fetch artifact source from artifact source name
-          SettingVariableTypes settingVariableTypes =
-              getSettingVariableTypeFromArtifactStreamType(artifactStreamBinding.getArtifactStreamType());
-          SettingAttribute settingAttribute = settingsService.fetchSettingAttributeByName(
-              accountId, artifactStreamBinding.getArtifactServerName(), settingVariableTypes);
-          if (settingAttribute == null) {
-            throw new WingsException(
-                format("Artifact Server with name: [%s] not found", artifactStreamBinding.getArtifactServerName()),
-                USER);
-          }
-          // Fetch artifact stream from artifact stream name
-          ArtifactStream artifactStream = artifactStreamService.getArtifactStreamByName(
-              settingAttribute.getUuid(), artifactStreamBinding.getArtifactStreamName());
-          if (artifactStream == null) {
-            throw new WingsException(
-                format("Artifact Stream with name: [%s] not found under artifact xxxxxxxx [%s]",
-                    artifactStreamBinding.getArtifactStreamName(), artifactStreamBinding.getArtifactServerName()),
-                USER);
-          }
-          if (!artifactStreamIds.contains(artifactStream.getUuid())) {
-            artifactStreamIds.add(artifactStream.getUuid());
-          }
-        }
-      }
-      currentService.setArtifactStreamIds(artifactStreamIds);
-    }
+    //    List<String> artifactStreamIds = new ArrayList<>();
+    //    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+    //      List<ArtifactStreamBinding.Yaml> artifactStreamBindings = yaml.getArtifactStreamBindings();
+    //      if (isNotEmpty(artifactStreamBindings)) {
+    //        for (ArtifactStreamBinding.Yaml artifactStreamBinding : artifactStreamBindings) {
+    //          // Fetch artifact source from artifact source name
+    //          SettingVariableTypes settingVariableTypes =
+    //              getSettingVariableTypeFromArtifactStreamType(artifactStreamBinding.getArtifactStreamType());
+    //          SettingAttribute settingAttribute = settingsService.fetchSettingAttributeByName(
+    //              accountId, artifactStreamBinding.getArtifactServerName(), settingVariableTypes);
+    //          if (settingAttribute == null) {
+    //            throw new WingsException(
+    //                format("Artifact Server with name: [%s] not found",
+    //                artifactStreamBinding.getArtifactServerName()), USER);
+    //          }
+    //          // Fetch artifact stream from artifact stream name
+    //          ArtifactStream artifactStream = artifactStreamService.getArtifactStreamByName(
+    //              settingAttribute.getUuid(), artifactStreamBinding.getArtifactStreamName());
+    //          if (artifactStream == null) {
+    //            throw new WingsException(
+    //                format("Artifact Stream with name: [%s] not found under artifact xxxxxxxx [%s]",
+    //                    artifactStreamBinding.getArtifactStreamName(), artifactStreamBinding.getArtifactServerName()),
+    //                USER);
+    //          }
+    //          if (!artifactStreamIds.contains(artifactStream.getUuid())) {
+    //            artifactStreamIds.add(artifactStream.getUuid());
+    //          }
+    //        }
+    //      }
+    //      currentService.setArtifactStreamIds(artifactStreamIds);
+    //    }
     if (previousService != null) {
       currentService.setUuid(previousService.getUuid());
       currentService = serviceResourceService.update(currentService, true);

@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamBinding;
 import software.wings.service.intfc.ownership.OwnedByArtifactStream;
 
 import java.util.List;
@@ -11,12 +12,33 @@ public interface ArtifactStreamServiceBindingService extends OwnedByArtifactStre
   /**
    * Create artifact stream service binding.
    *
+   * @param appId                 the app id
+   * @param serviceId             the service id
+   * @param artifactStreamBinding the artifact stream binding
+   * @return artifact stream binding
+   */
+  ArtifactStreamBinding create(
+      @NotEmpty String appId, @NotEmpty String serviceId, ArtifactStreamBinding artifactStreamBinding);
+
+  /**
+   * Create artifact stream service binding.
+   *
    * @param appId            the app id
    * @param serviceId        the service id
    * @param artifactStreamId the artifact stream id
    * @return artifact stream
    */
-  ArtifactStream create(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String artifactStreamId);
+  ArtifactStream createOld(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String artifactStreamId);
+
+  /**
+   * Delete artifact stream service binding.
+   *
+   * @param appId     the app id
+   * @param serviceId the service id
+   * @param name      the artifact stream binding name
+   * @return true, if successful
+   */
+  boolean delete(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String name);
 
   /**
    * Delete artifact stream service binding.
@@ -26,7 +48,22 @@ public interface ArtifactStreamServiceBindingService extends OwnedByArtifactStre
    * @param artifactStreamId the artifact stream id
    * @return true, if successful
    */
-  boolean delete(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String artifactStreamId);
+  boolean deleteOld(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String artifactStreamId);
+
+  /**
+   * Update artifact stream service binding.
+   *
+   * @param appId                 the app id
+   * @param serviceId             the service id
+   * @param artifactStreamBinding the artifact stream binding
+   * @return artifact stream binding
+   */
+  ArtifactStreamBinding update(
+      @NotEmpty String appId, @NotEmpty String serviceId, ArtifactStreamBinding artifactStreamBinding);
+
+  List<ArtifactStreamBinding> list(@NotEmpty String appId, @NotEmpty String serviceId);
+
+  ArtifactStreamBinding get(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String name);
 
   /**
    * List artifact stream ids with bindings to service.
