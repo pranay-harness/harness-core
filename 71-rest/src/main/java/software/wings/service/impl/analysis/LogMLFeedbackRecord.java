@@ -1,7 +1,7 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.addFieldIfNotEmpty;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.readLong;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.readString;
@@ -102,26 +102,29 @@ public class LogMLFeedbackRecord extends Base implements GoogleDataStoreAware {
   public com.google.cloud.datastore.Entity convertToCloudStorageEntity(Datastore datastore) {
     Key taskKey = datastore.newKeyFactory()
                       .setKind(this.getClass().getAnnotation(org.mongodb.morphia.annotations.Entity.class).value())
-                      .newKey(this.getUuid() == null ? generateUUID() : this.getUuid());
+                      .newKey(this.getUuid() == null ? generateUuid() : this.getUuid());
     com.google.cloud.datastore.Entity.Builder recordBuilder = com.google.cloud.datastore.Entity.newBuilder(taskKey);
     addFieldIfNotEmpty(recordBuilder, "appId", appId, false);
-    addFieldIfNotEmpty(recordBuilder, "workflowId", workflowId, false);
-    addFieldIfNotEmpty(recordBuilder, "workflowExecutionId", workflowExecutionId, false);
-    addFieldIfNotEmpty(recordBuilder, "serviceId", serviceId, false);
-    addFieldIfNotEmpty(recordBuilder, "stateExecutionId", stateExecutionId, false);
-    addFieldIfNotEmpty(recordBuilder, "cvConfigId", cvConfigId, false);
-    addFieldIfNotEmpty(recordBuilder, "clusterType", clusterType.name(), false);
-    addFieldIfNotEmpty(recordBuilder, "logMLFeedbackType", logMLFeedbackType.name(), true);
-    addFieldIfNotEmpty(recordBuilder, "logMD5Hash", logMD5Hash, true);
-    addFieldIfNotEmpty(recordBuilder, "logMessage", logMessage, true);
-    addFieldIfNotEmpty(recordBuilder, "supervisedLabel", supervisedLabel, true);
+    addFieldIfNotEmpty(recordBuilder, LogMLFeedbackRecordKeys.workflowId, workflowId, false);
+    addFieldIfNotEmpty(recordBuilder, LogMLFeedbackRecordKeys.workflowExecutionId, workflowExecutionId, false);
+    addFieldIfNotEmpty(recordBuilder, LogMLFeedbackRecordKeys.serviceId, serviceId, false);
+    addFieldIfNotEmpty(recordBuilder, LogMLFeedbackRecordKeys.stateExecutionId, stateExecutionId, false);
+    addFieldIfNotEmpty(recordBuilder, LogMLFeedbackRecordKeys.cvConfigId, cvConfigId, false);
+    addFieldIfNotEmpty(recordBuilder, LogMLFeedbackRecordKeys.clusterType, clusterType.name(), false);
+    addFieldIfNotEmpty(recordBuilder, LogMLFeedbackRecordKeys.logMLFeedbackType, logMLFeedbackType.name(), true);
+    addFieldIfNotEmpty(recordBuilder, LogMLFeedbackRecordKeys.logMD5Hash, logMD5Hash, true);
+    addFieldIfNotEmpty(recordBuilder, LogMLFeedbackRecordKeys.logMessage, logMessage, true);
+    addFieldIfNotEmpty(recordBuilder, LogMLFeedbackRecordKeys.supervisedLabel, supervisedLabel, true);
+    addFieldIfNotEmpty(recordBuilder, LogMLFeedbackRecordKeys.clusterLabel, clusterLabel, true);
+    addFieldIfNotEmpty(recordBuilder, "createdAt", this.getCreatedAt(), true);
+    addFieldIfNotEmpty(recordBuilder, "lastUpdatedAt", this.getLastUpdatedAt(), true);
 
     if (stateType != null) {
-      addFieldIfNotEmpty(recordBuilder, "stateType", stateType.name(), true);
+      addFieldIfNotEmpty(recordBuilder, LogMLFeedbackRecordKeys.stateType, stateType.name(), true);
     }
 
     if (isNotEmpty(comment)) {
-      addFieldIfNotEmpty(recordBuilder, "comment", comment, true);
+      addFieldIfNotEmpty(recordBuilder, LogMLFeedbackRecordKeys.comment, comment, true);
     }
 
     return recordBuilder.build();
@@ -133,29 +136,31 @@ public class LogMLFeedbackRecord extends Base implements GoogleDataStoreAware {
         LogMLFeedbackRecord.builder()
             .appId(readString(entity, "appId"))
             .uuid(entity.getKey().getName())
-            .logMessage(readString(entity, "logMessage"))
-            .logMD5Hash(readString(entity, "logMD5Hash"))
-            .workflowId(readString(entity, "workflowId"))
-            .workflowExecutionId(readString(entity, "workflowExecutionId"))
-            .serviceId(readString(entity, "serviceId"))
-            .stateExecutionId(readString(entity, "stateExecutionId"))
-            .clusterLabel((int) readLong(entity, "clusterLabel"))
-            .clusterType(CLUSTER_TYPE.valueOf(readString(entity, "clusterType")))
-            .logMLFeedbackType(LogMLFeedbackType.valueOf(readString(entity, "logMLFeedbackType")))
-            .cvConfigId(readString(entity, "cvConfigId"))
+            .logMessage(readString(entity, LogMLFeedbackRecordKeys.logMessage))
+            .logMD5Hash(readString(entity, LogMLFeedbackRecordKeys.logMD5Hash))
+            .workflowId(readString(entity, LogMLFeedbackRecordKeys.workflowId))
+            .workflowExecutionId(readString(entity, LogMLFeedbackRecordKeys.workflowExecutionId))
+            .serviceId(readString(entity, LogMLFeedbackRecordKeys.serviceId))
+            .stateExecutionId(readString(entity, LogMLFeedbackRecordKeys.stateExecutionId))
+            .clusterLabel((int) readLong(entity, LogMLFeedbackRecordKeys.clusterLabel))
+            .clusterType(CLUSTER_TYPE.valueOf(readString(entity, LogMLFeedbackRecordKeys.clusterType)))
+            .logMLFeedbackType(LogMLFeedbackType.valueOf(readString(entity, LogMLFeedbackRecordKeys.logMLFeedbackType)))
+            .cvConfigId(readString(entity, LogMLFeedbackRecordKeys.cvConfigId))
+            .createdAt(readLong(entity, "createdAt"))
+            .lastUpdatedAt(readLong(entity, "lastUpdatedAt"))
             .build();
 
-    final String comment = readString(entity, "comment");
+    final String comment = readString(entity, LogMLFeedbackRecordKeys.comment);
     if (isNotEmpty(comment)) {
       dataRecord.setComment(comment);
     }
 
-    final String stateType = readString(entity, "stateType");
+    final String stateType = readString(entity, LogMLFeedbackRecordKeys.stateType);
     if (isNotEmpty(stateType)) {
       dataRecord.setStateType(StateType.valueOf(stateType));
     }
 
-    final String supervisedLabel = readString(entity, "supervisedLabel");
+    final String supervisedLabel = readString(entity, LogMLFeedbackRecordKeys.supervisedLabel);
     if (isNotEmpty(supervisedLabel)) {
       dataRecord.setSupervisedLabel(supervisedLabel);
     }
