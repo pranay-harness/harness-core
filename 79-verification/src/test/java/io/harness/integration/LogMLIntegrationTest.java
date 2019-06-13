@@ -62,6 +62,7 @@ import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
+import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRecordKeys;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogMLFeedbackRecord;
@@ -281,7 +282,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     record.setQuery("cv-demo-query");
     record.setControl_events(controlEvents);
     record.setTest_clusters(testClusters);
-    analysisService.saveLogAnalysisRecords(record, StateType.ELK, Optional.empty());
+    analysisService.saveLogAnalysisRecords(record, StateType.ELK, Optional.empty(), Optional.empty());
 
     WebTarget getTarget = client.target(API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS
         + LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_SUMMARY_URL + "?accountId=" + accountId
@@ -343,7 +344,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     record.setQuery("cv-demo-query");
     record.setControl_events(controlEvents);
     record.setTest_clusters(testClusters);
-    analysisService.saveLogAnalysisRecords(record, StateType.ELK, Optional.empty());
+    analysisService.saveLogAnalysisRecords(record, StateType.ELK, Optional.empty(), Optional.empty());
 
     WebTarget getTarget = client.target(API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS
         + LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_SUMMARY_URL + "?accountId=" + accountId
@@ -740,7 +741,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
         mgrAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
     assertEquals("No baseline data for the given query was found.", logMLAnalysisSummary.getAnalysisSummaryMessage());
     LogMLAnalysisRecord logAnalysisRecord =
-        analysisService.getLogAnalysisRecords(appId, stateExecutionId, query, StateType.SUMO, 0);
+        analysisService.getLogAnalysisRecords(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId, 0, false);
     assertFalse(logAnalysisRecord.isBaseLineCreated());
     assertEquals(1, logAnalysisRecord.getControl_clusters().size());
     assertTrue(isEmpty(logAnalysisRecord.getTest_clusters()));
@@ -823,7 +824,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     //    assertEquals("No baseline data for the given query was found.",
     //    logMLAnalysisSummary.getAnalysisSummaryMessage());
     LogMLAnalysisRecord logAnalysisRecord =
-        analysisService.getLogAnalysisRecords(appId, stateExecutionId, query, StateType.SUMO, 0);
+        analysisService.getLogAnalysisRecords(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId, 0, false);
     assertTrue(logAnalysisRecord.isBaseLineCreated());
     assertTrue(isEmpty(logAnalysisRecord.getControl_clusters()));
     assertTrue(isEmpty(logAnalysisRecord.getTest_clusters()));
@@ -935,8 +936,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     LogMLAnalysisSummary logMLAnalysisSummary =
         mgrAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.ELK);
     assertEquals("No data found for the given queries.", logMLAnalysisSummary.getAnalysisSummaryMessage());
-    LogMLAnalysisRecord logAnalysisRecord =
-        analysisService.getLogAnalysisRecords(appId, stateExecutionId, query, StateType.ELK, logCollectionMinute);
+    LogMLAnalysisRecord logAnalysisRecord = analysisService.getLogAnalysisRecords(
+        LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId, logCollectionMinute, false);
     assertNotNull(logAnalysisRecord);
   }
 
@@ -1515,7 +1516,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
         .call();
     Thread.sleep(TimeUnit.SECONDS.toMillis(20));
     LogMLAnalysisRecord logAnalysisRecord =
-        analysisService.getLogAnalysisRecords(appId, stateExecutionId, query, StateType.SPLUNKV2, 0);
+        analysisService.getLogAnalysisRecords(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId, 0, false);
     assertEquals(1, logAnalysisRecord.getControl_events().size());
     assertEquals(0, logAnalysisRecord.getTest_events().size());
     assertEquals("ignore", logAnalysisRecord.getControl_events().get("20000").get(0).getText());

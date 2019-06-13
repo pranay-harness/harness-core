@@ -77,7 +77,9 @@ import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster.MessageFrequency;
 import software.wings.service.impl.verification.CV24x7DashboardServiceImpl;
 import software.wings.service.impl.verification.CVConfigurationServiceImpl;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DataStoreService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -135,6 +137,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   private AnalysisService managerAnalysisService;
   private CVConfigurationService cvConfigurationService;
   @Mock VerificationManagerClient verificationManagerClient;
+  @Mock AppService appService;
+  @Mock FeatureFlagService featureFlagService;
 
   @Before
   public void setup() throws IOException, IllegalAccessException {
@@ -155,6 +159,15 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     when(verificationManagerClient.isStateValid(appId, stateExecutionId)).thenReturn(managerCall);
     when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_DATA_COLLECTION_JOB, accountId))
         .thenReturn(managerCall);
+
+    Call<RestResponse<Boolean>> managerCallFeedbacks = mock(Call.class);
+    when(managerCallFeedbacks.execute()).thenReturn(Response.success(new RestResponse<>(false)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
+        .thenReturn(managerCallFeedbacks);
+
+    when(appService.getAccountIdByAppId(appId)).thenReturn(accountId);
+    when(featureFlagService.isEnabled(FeatureName.CV_FEEDBACKS, accountId)).thenReturn(false);
+
     setInternalState(analysisService, "managerClient", verificationManagerClient);
     setInternalState(learningEngineService, "managerClient", verificationManagerClient);
     setInternalState(analysisService, "learningEngineService", learningEngineService);
@@ -168,6 +181,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     WorkflowExecutionService workflowExecutionService = new WorkflowExecutionServiceImpl();
     FieldUtils.writeField(workflowExecutionService, "wingsPersistence", wingsPersistence, true);
     FieldUtils.writeField(managerAnalysisService, "dataStoreService", dataStoreService, true);
+    FieldUtils.writeField(managerAnalysisService, "appService", appService, true);
+    FieldUtils.writeField(managerAnalysisService, "featureFlagService", featureFlagService, true);
     FieldUtils.writeField(analysisService, "dataStoreService", dataStoreService, true);
 
     FieldUtils.writeField(managerAnalysisService, "wingsPersistence", wingsPersistence, true);
@@ -530,7 +545,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     record.setLogCollectionMinute(-1);
     record.setAnalysisSummaryMessage("This is a -1 test");
     record.setQuery(UUID.randomUUID().toString());
-    analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty());
+    analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty(), Optional.empty());
 
     LogMLAnalysisSummary analysisSummary =
         managerAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
@@ -562,7 +577,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     record.setLogCollectionMinute(0);
     record.setAnalysisSummaryMessage("This is a -1 test");
     record.setQuery(UUID.randomUUID().toString());
-    analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty());
+    analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty(), Optional.empty());
 
     LogMLAnalysisSummary analysisSummary =
         managerAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
@@ -596,7 +611,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     record.setQuery(UUID.randomUUID().toString());
     record.setControl_events(controlEvents);
     record.setUnknown_clusters(unknownClusters);
-    analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty());
+    analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty(), Optional.empty());
 
     LogMLAnalysisSummary analysisSummary =
         managerAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
@@ -640,7 +655,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     record.setTest_clusters(testClusters);
     record.setIgnore_clusters(ignoreClusters);
 
-    assertTrue(analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty()));
+    assertTrue(analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty(), Optional.empty()));
 
     LogMLAnalysisRecord logMLAnalysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class)
                                                   .filter("appId", appId)
@@ -658,7 +673,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertNull(logMLAnalysisRecord.getAnalysisDetailsCompressedJson());
 
     LogMLAnalysisRecord logAnalysisRecord = analysisService.getLogAnalysisRecords(
-        appId, stateExecutionId, record.getQuery(), record.getStateType(), record.getLogCollectionMinute());
+        LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId, record.getLogCollectionMinute(), false);
 
     assertEquals(unknownEvents, logAnalysisRecord.getUnknown_events());
     assertEquals(testEvents, logAnalysisRecord.getTest_events());
@@ -696,7 +711,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     record.setQuery(UUID.randomUUID().toString());
     record.setControl_events(controlEvents);
     record.setTest_clusters(testClusters);
-    analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty());
+    analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty(), Optional.empty());
 
     int numOfUnexpectedFreq = 0;
     for (SplunkAnalysisCluster cluster : clusterEvents) {
@@ -757,7 +772,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     record.setQuery(UUID.randomUUID().toString());
     record.setControl_clusters(controlClusters);
     record.setControl_events(controlEvents);
-    analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty());
+    analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty(), Optional.empty());
     LogMLAnalysisRecord logMLAnalysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class)
                                                   .filter("appId", appId)
                                                   .filter(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId)
@@ -1027,7 +1042,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     AnalysisContext context =
         AnalysisContext.builder().appId(appId).stateExecutionId(stateExecutionId).serviceId(serviceId).build();
     wingsPersistence.save(context);
-    analysisService.saveLogAnalysisRecords(records, StateType.SPLUNKV2, Optional.empty());
+    analysisService.saveLogAnalysisRecords(records, StateType.SPLUNKV2, Optional.empty(), Optional.empty());
     LogMLAnalysisSummary analysisSummary =
         managerAnalysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
     assertEquals(0, Double.compare(analysisSummary.getScore(), 0.23477964144180682 * 100));
@@ -1057,7 +1072,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     records.setAppId(appId);
     records.setStateExecutionId(stateExecutionId);
     records.setAnalysisSummaryMessage("10");
-    analysisService.saveLogAnalysisRecords(records, ELK, Optional.empty());
+    analysisService.saveLogAnalysisRecords(records, ELK, Optional.empty(), Optional.empty());
 
     LogMLFeedback logMLFeedback = LogMLFeedback.builder()
                                       .appId(appId)
@@ -1337,8 +1352,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertNull(savedMlAnalysisRecord.getProtoSerializedAnalyisDetails());
     assertNotNull(savedMlAnalysisRecord.getAnalysisDetailsCompressedJson());
 
-    analysisService.getLogAnalysisRecords(
-        logMLAnalysisRecord.getCvConfigId(), logMLAnalysisRecord.getLogCollectionMinute(), false);
+    analysisService.getLogAnalysisRecords(LogMLAnalysisRecordKeys.cvConfigId, logMLAnalysisRecord.getCvConfigId(),
+        logMLAnalysisRecord.getLogCollectionMinute(), true);
     savedMlAnalysisRecord = wingsPersistence.get(LogMLAnalysisRecord.class, logMLAnalysisRecord.getUuid());
     assertNull(savedMlAnalysisRecord.getUnknown_events());
     assertNull(savedMlAnalysisRecord.getTest_events());
@@ -1366,7 +1381,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertNull(logMLAnalysisRecordToCompare.getAnalysisDetailsCompressedJson());
     assertNull(logMLAnalysisRecordToCompare.getProtoSerializedAnalyisDetails());
 
-    logMLAnalysisRecord = analysisService.getLogAnalysisRecords(
+    logMLAnalysisRecord = analysisService.getLogAnalysisRecords(LogMLAnalysisRecordKeys.cvConfigId,
         logMLAnalysisRecord.getCvConfigId(), logMLAnalysisRecord.getLogCollectionMinute(), true);
     assertNull(logMLAnalysisRecord.getUnknown_events());
     assertNull(logMLAnalysisRecord.getTest_events());
@@ -1388,7 +1403,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertEquals(logMLAnalysisRecord.getUnknown_clusters(), logMLAnalysisRecordToCompare.getUnknown_clusters());
     assertEquals(logMLAnalysisRecord.getIgnore_clusters(), logMLAnalysisRecordToCompare.getIgnore_clusters());
 
-    logMLAnalysisRecord = analysisService.getLogAnalysisRecords(
+    logMLAnalysisRecord = analysisService.getLogAnalysisRecords(LogMLAnalysisRecordKeys.cvConfigId,
         logMLAnalysisRecord.getCvConfigId(), logMLAnalysisRecord.getLogCollectionMinute(), false);
     assertNotNull(logMLAnalysisRecord.getUnknown_events());
     assertNotNull(logMLAnalysisRecord.getTest_events());
@@ -1435,8 +1450,9 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertEquals(
         numOfRecords, wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList().size());
 
-    final LogMLAnalysisRecord logAnalysisRecord =
-        analysisService.getLogAnalysisRecords(logMLAnalysisRecord.getCvConfigId(), numOfRecords, false);
+    final LogMLAnalysisRecord logAnalysisRecord = analysisService.getLogAnalysisRecords(
+        LogMLAnalysisRecordKeys.cvConfigId, logMLAnalysisRecord.getCvConfigId(), numOfRecords, false);
+
     assertEquals(numOfRecords, logAnalysisRecord.getLogCollectionMinute());
   }
 

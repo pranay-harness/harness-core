@@ -90,7 +90,7 @@ public class LogAnalysisGeneratorTest {
                           .build();
 
     logMLAnalysisGenerator = new LogMLAnalysisGenerator(analysisContext, logAnalysisMinute, false, analysisService,
-        learningEngineService, managerClient, managerClientHelper);
+        learningEngineService, managerClient, managerClientHelper, null);
   }
 
   @Test
@@ -99,7 +99,7 @@ public class LogAnalysisGeneratorTest {
     analysisContext.setStateType(StateType.BUG_SNAG);
     when(managerClientHelper.callManagerWithRetry(any())).thenReturn(new RestResponse<Boolean>(false));
     logMLAnalysisGenerator = new LogMLAnalysisGenerator(analysisContext, logAnalysisMinute, false, analysisService,
-        learningEngineService, managerClient, managerClientHelper);
+        learningEngineService, managerClient, managerClientHelper, null);
     logMLAnalysisGenerator.run();
     ArgumentCaptor<LearningEngineAnalysisTask> taskCaptor = ArgumentCaptor.forClass(LearningEngineAnalysisTask.class);
 
@@ -113,7 +113,7 @@ public class LogAnalysisGeneratorTest {
     analysisContext.setStateType(StateType.APP_DYNAMICS);
     when(managerClientHelper.callManagerWithRetry(any())).thenReturn(new RestResponse<Boolean>(false));
     logMLAnalysisGenerator = new LogMLAnalysisGenerator(analysisContext, logAnalysisMinute, false, analysisService,
-        learningEngineService, managerClient, managerClientHelper);
+        learningEngineService, managerClient, managerClientHelper, null);
     logMLAnalysisGenerator.run();
     ArgumentCaptor<LearningEngineAnalysisTask> taskCaptor = ArgumentCaptor.forClass(LearningEngineAnalysisTask.class);
 

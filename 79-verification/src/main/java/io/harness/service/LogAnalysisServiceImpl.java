@@ -562,15 +562,20 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   }
 
   @Override
-  public boolean saveLogAnalysisRecords(
-      LogMLAnalysisRecord mlAnalysisResponse, StateType stateType, Optional<String> taskId) {
+  public boolean saveLogAnalysisRecords(LogMLAnalysisRecord mlAnalysisResponse, StateType stateType,
+      Optional<String> taskId, Optional<Boolean> isFeedbackAnalysis) {
     mlAnalysisResponse.setStateType(stateType);
     boolean isAnalysisEmpty =
         isEmpty(mlAnalysisResponse.getControl_events()) && isEmpty(mlAnalysisResponse.getTest_events());
     mlAnalysisResponse.compressLogAnalysisRecord();
-    mlAnalysisResponse.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+    if (!isFeedbackAnalysis.isPresent() || !isFeedbackAnalysis.get()) {
+      mlAnalysisResponse.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+    } else {
+      mlAnalysisResponse.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
+    }
 
-    if (mlAnalysisResponse.getLogCollectionMinute() == -1 || !isAnalysisEmpty) {
+    if (mlAnalysisResponse.getLogCollectionMinute() == -1 || !isAnalysisEmpty
+        || (isFeedbackAnalysis.isPresent() && isFeedbackAnalysis.get())) {
       wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(mlAnalysisResponse));
       logger.info("inserted ml LogMLAnalysisRecord to persistence layer for stateExecutionInstanceId: {}",
           mlAnalysisResponse.getStateExecutionId());
@@ -711,28 +716,19 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
   @Override
   public LogMLAnalysisRecord getLogAnalysisRecords(
-      String appId, String stateExecutionId, String query, StateType stateType, int logCollectionMinute) {
-    LogMLAnalysisRecord logMLAnalysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
-                                                  .filter(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId)
-                                                  .field(LogMLAnalysisRecordKeys.logCollectionMinute)
-                                                  .lessThanOrEq(logCollectionMinute)
-                                                  .order(Sort.descending(LogMLAnalysisRecordKeys.logCollectionMinute))
-                                                  .get();
-    if (logMLAnalysisRecord != null) {
-      logMLAnalysisRecord.decompressLogAnalysisRecord();
-    }
-    return logMLAnalysisRecord;
-  }
+      String fieldName, String fieldValue, int analysisMinute, boolean isCompressed) {
+    Query<LogMLAnalysisRecord> logMLAnalysisRecordQuery =
+        wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
+            .filter(fieldName, fieldValue) // field will be either cvConfigId or stateExecutionId
+            .field(LogMLAnalysisRecordKeys.logCollectionMinute)
+            .lessThanOrEq(analysisMinute)
+            .order(Sort.descending(LogMLAnalysisRecordKeys.logCollectionMinute), Sort.descending("lastUpdatedAt"));
 
-  @Override
-  public LogMLAnalysisRecord getLogAnalysisRecords(String cvConfigId, int analysisMinute, boolean isCompressed) {
-    LogMLAnalysisRecord logMLAnalysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
-                                                  .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
-                                                  .field(LogMLAnalysisRecordKeys.logCollectionMinute)
-                                                  .lessThanOrEq(analysisMinute)
-                                                  .filter(LogMLAnalysisRecordKeys.deprecated, false)
-                                                  .order(Sort.descending(LogMLAnalysisRecordKeys.logCollectionMinute))
-                                                  .get();
+    if (fieldName.equals(LogMLAnalysisRecordKeys.cvConfigId)) {
+      logMLAnalysisRecordQuery = logMLAnalysisRecordQuery.filter(LogMLAnalysisRecordKeys.deprecated, false);
+    }
+    LogMLAnalysisRecord logMLAnalysisRecord = logMLAnalysisRecordQuery.get();
+
     if (logMLAnalysisRecord != null) {
       // everything that has been json compressed should eventually move to protobuf compressed
       if (logMLAnalysisRecord.getAnalysisDetailsCompressedJson() != null) {
@@ -878,7 +874,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                                    .control_events(Collections.emptyMap())
                                                    .test_events(Collections.emptyMap())
                                                    .build();
-    saveLogAnalysisRecords(analysisRecord, stateType, Optional.empty());
+    saveLogAnalysisRecords(analysisRecord, stateType, Optional.empty(), Optional.empty());
   }
 
   @Override
@@ -1087,10 +1083,21 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
   @Override
   public long getLastCVAnalysisMinute(String appId, String cvConfigId, LogMLAnalysisStatus status) {
-    // TODO; Write migration to add analysis status to all analyses in the past one month.
     final LogMLAnalysisRecord mlAnalysisRecord =
         wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
             .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
+            .filter(LogMLAnalysisRecordKeys.analysisStatus, status)
+            .project(LogMLAnalysisRecordKeys.logCollectionMinute, true)
+            .order(Sort.descending(LogMLAnalysisRecordKeys.logCollectionMinute))
+            .get();
+    return mlAnalysisRecord == null ? -1 : mlAnalysisRecord.getLogCollectionMinute();
+  }
+
+  @Override
+  public long getLastWorkflowAnalysisMinute(String appId, String stateExecutionId, LogMLAnalysisStatus status) {
+    final LogMLAnalysisRecord mlAnalysisRecord =
+        wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
+            .filter(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId)
             .filter(LogMLAnalysisRecordKeys.analysisStatus, status)
             .project(LogMLAnalysisRecordKeys.logCollectionMinute, true)
             .order(Sort.descending(LogMLAnalysisRecordKeys.logCollectionMinute))
@@ -1106,19 +1113,21 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     return logDataRecords == null ? -1 : logDataRecords.getLogCollectionMinute();
   }
 
-  public boolean updateAnalysisStatus(String cvConfigId, long analysisMinute, LogMLAnalysisStatus status) {
-    final Query<LogMLAnalysisRecord> query = wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
-                                                 .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
-                                                 .filter(LogMLAnalysisRecordKeys.logCollectionMinute, analysisMinute);
+  public boolean updateAnalysisStatus(
+      String fieldName, String fieldValue, long analysisMinute, LogMLAnalysisStatus status) {
+    final Query<LogMLAnalysisRecord> query =
+        wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
+            .filter(fieldName, fieldValue) // this will query with either stateExecutionId or cvConfigId
+            .filter(LogMLAnalysisRecordKeys.logCollectionMinute, analysisMinute);
 
     try {
       UpdateResults results = wingsPersistence.update(query,
           wingsPersistence.createUpdateOperations(LogMLAnalysisRecord.class)
               .set(LogMLAnalysisRecordKeys.analysisStatus, status));
-      logger.info("for {} and minute {} bumped the analysisStatus to  {}", cvConfigId, analysisMinute, status);
+      logger.info("for {} and minute {} bumped the analysisStatus to  {}", fieldValue, analysisMinute, status);
       return true;
     } catch (DuplicateKeyException e) {
-      logger.info("for {} and minute {} Failed to bump the analysisStatus to  {}", cvConfigId, analysisMinute, status);
+      logger.info("for {} and minute {} Failed to bump the analysisStatus to  {}", fieldValue, analysisMinute, status);
       return false;
     }
   }

@@ -35,6 +35,7 @@ import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.mongodb.morphia.query.CountOptions;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.HostElement;
@@ -76,7 +77,9 @@ import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.LogMLClusterScores.LogMLScore;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster.MessageFrequency;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DataStoreService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.StateExecutionService;
@@ -143,6 +146,8 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Inject private CVConfigurationService cvConfigurationService;
   @Inject private StateExecutionService stateExecutionService;
   @Inject private JiraHelperService jiraHelperService;
+  @Inject private FeatureFlagService featureFlagService;
+  @Inject private AppService appService;
 
   @Override
   public void cleanUpForLogRetry(String stateExecutionId) {
@@ -676,11 +681,24 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   @Override
   public LogMLAnalysisSummary getAnalysisSummary(String stateExecutionId, String appId, StateType stateType) {
-    LogMLAnalysisRecord analysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
-                                             .filter(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId)
-                                             .order(Sort.descending(LogMLAnalysisRecordKeys.logCollectionMinute))
-                                             .get();
+    Query<LogMLAnalysisRecord> analysisRecordQuery =
+        wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
+            .filter(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId)
 
+            .order(Sort.descending(LogMLAnalysisRecordKeys.logCollectionMinute));
+
+    String accountId = appService.getAccountIdByAppId(appId);
+
+    if (isNotEmpty(accountId) && featureFlagService.isEnabled(FeatureName.CV_FEEDBACKS, accountId)) {
+      analysisRecordQuery = analysisRecordQuery.filter(
+          LogMLAnalysisRecordKeys.analysisStatus, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
+    } else if (isEmpty(accountId)) {
+      logger.error("Incorrect appId in getAnalysisSummary. AppId {}, StateExecId {}, stateType {}", appId,
+          stateExecutionId, stateType);
+      throw new WingsException("Incorrect appId in getAnalysisSummary");
+    }
+
+    LogMLAnalysisRecord analysisRecord = analysisRecordQuery.get();
     if (analysisRecord == null) {
       return null;
     }
