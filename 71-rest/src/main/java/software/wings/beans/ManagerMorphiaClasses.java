@@ -117,6 +117,7 @@ import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.log.BugsnagCVConfiguration;
 import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
+import software.wings.verification.log.StackdriverCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 import software.wings.yaml.YamlHistory;
@@ -180,10 +181,10 @@ public class ManagerMorphiaClasses {
       ExecutionInterrupt.class, APMCVServiceConfiguration.class, EmailData.class, YamlGitConfig.class,
       TimeSeriesMLTransactionThresholds.class, TimeSeriesRiskSummary.class, GitSyncWebhook.class, ExecutionEvent.class,
       ManifestFile.class, GcsFileMetadata.class, PruneEvent.class, LogsCVConfiguration.class, ElkCVConfiguration.class,
-      Permit.class, LabeledLogRecord.class, AlertNotificationRule.class, CustomArtifactStream.class,
-      NotificationReceiverInfo.class, DelegateSequenceConfig.class, OauthSettings.class, GovernanceConfig.class,
-      HarnessApiKey.class, ShellScriptInfrastructureProvisioner.class, KeywordsAware.class, MarketPlace.class,
-      Personalization.class, EntityYamlRecord.class, ProvisionerWithOnlyAuditNeededData.class,
+      StackdriverCVConfiguration.class, Permit.class, LabeledLogRecord.class, AlertNotificationRule.class,
+      CustomArtifactStream.class, NotificationReceiverInfo.class, DelegateSequenceConfig.class, OauthSettings.class,
+      GovernanceConfig.class, HarnessApiKey.class, ShellScriptInfrastructureProvisioner.class, KeywordsAware.class,
+      MarketPlace.class, Personalization.class, EntityYamlRecord.class, ProvisionerWithOnlyAuditNeededData.class,
       ArtifactStreamWithOnlyAuditNeededData.class, InfraMappingWithOnlyAuditNeededData.class,
       NotificationRulesStatus.class, AwsSecretsManagerConfig.class, ApprovalPollingJobEntity.class, HarnessTag.class,
       HarnessTagLink.class, CVFeedbackRecord.class, SecretManagerConfig.class, VaultLegacyConfig.class,

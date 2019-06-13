@@ -192,6 +192,7 @@ import software.wings.verification.ElkCVConfigurationYamlHandler;
 import software.wings.verification.LogsCVConfigurationYamlHandler;
 import software.wings.verification.NewRelicCVConfigurationYamlHandler;
 import software.wings.verification.PrometheusCVConfigurationYamlHandler;
+import software.wings.verification.StackdriverCVConfigurationYamlHandler;
 import software.wings.yaml.trigger.ArtifactTriggerConditionHandler;
 import software.wings.yaml.trigger.PipelineTriggerConditionHandler;
 import software.wings.yaml.trigger.ScheduledTriggerConditionHandler;
@@ -325,6 +326,8 @@ public class YamlModule extends AbstractModule {
     cvConfigYamlHelperMapBinder.addBinding(StateType.CLOUD_WATCH.name()).to(CloudWatchCVConfigurationYamlHandler.class);
     cvConfigYamlHelperMapBinder.addBinding(StateType.DATA_DOG_LOG.name()).to(LogsCVConfigurationYamlHandler.class);
     cvConfigYamlHelperMapBinder.addBinding(StateType.APM_VERIFICATION.name()).to(APMCVConfigurationYamlHandler.class);
+    cvConfigYamlHelperMapBinder.addBinding(StateType.STACK_DRIVER.name())
+        .to(StackdriverCVConfigurationYamlHandler.class);
 
     MapBinder<String, CollaborationProviderYamlHandler> collaborationProviderYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CollaborationProviderYamlHandler.class);

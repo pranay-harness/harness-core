@@ -20,7 +20,6 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
-import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpStatus;
@@ -85,6 +84,11 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
   }
 
   @Override
+  protected int getInitialDelayMinutes() {
+    return dataCollectionInfo.getInitialDelayMinutes();
+  }
+
+  @Override
   protected Logger getLogger() {
     return logger;
   }
@@ -103,16 +107,20 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
     private final StackDriverDataCollectionInfo dataCollectionInfo;
     private final DataCollectionTaskResult taskResult;
     private long collectionStartTime;
-    private int dataCollectionMinute;
+    private long dataCollectionStartMinute;
+    private int dataCollectionCurrentMinute;
     private boolean is247Task;
 
     private StackDriverMetricCollector(
         StackDriverDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult, boolean is247Task) {
       this.dataCollectionInfo = dataCollectionInfo;
       this.taskResult = taskResult;
-      this.collectionStartTime = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime());
-      this.dataCollectionMinute = dataCollectionInfo.getDataCollectionMinute();
       this.is247Task = is247Task;
+
+      this.dataCollectionCurrentMinute = dataCollectionInfo.getStartMinute();
+      this.dataCollectionStartMinute = dataCollectionInfo.getStartMinute();
+
+      this.collectionStartTime = dataCollectionCurrentMinute * TimeUnit.MINUTES.toMillis(1);
     }
 
     @Override
@@ -122,9 +130,11 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
       int retry = 0;
       while (!completed.get() && retry < RETRIES) {
         try {
-          logger.info("starting metric data collection for {} for minute {}", dataCollectionInfo, dataCollectionMinute);
+          logger.info(
+              "starting metric data collection for {} for minute {}", dataCollectionInfo, dataCollectionCurrentMinute);
 
-          dataCollectionInfo.setDataCollectionMinute(dataCollectionMinute);
+          dataCollectionInfo.setDataCollectionMinute(dataCollectionCurrentMinute);
+
           TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricDataRecords = getMetricsData();
           // HeartBeat
           metricDataRecords.put(HARNESS_HEARTBEAT_METRIC_NAME, 0L,
@@ -144,18 +154,19 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
                   .build());
 
           List<NewRelicMetricDataRecord> recordsToSave = getAllMetricRecords(metricDataRecords);
-          if (!saveMetrics(dataCollectionInfo.getGcpConfig().getAccountId(), dataCollectionInfo.getAppId(),
+          if (!saveMetrics(dataCollectionInfo.getGcpConfig().getAccountId(), dataCollectionInfo.getApplicationId(),
                   dataCollectionInfo.getStateExecutionId(), recordsToSave)) {
             retry = RETRIES;
             taskResult.setErrorMessage("Cannot save new stack driver metric records to Harness. Server returned error");
             throw new RuntimeException("Cannot save new stack driver metric records to Harness. Server returned error");
           }
           logger.info("Sent {} stack driver metric records to the server for minute {}", recordsToSave.size(),
-              dataCollectionMinute);
+              dataCollectionCurrentMinute);
 
-          dataCollectionMinute++;
+          dataCollectionCurrentMinute++;
           collectionStartTime += TimeUnit.MINUTES.toMillis(1);
-          if (dataCollectionMinute >= dataCollectionInfo.getCollectionTime()) {
+
+          if (dataCollectionCurrentMinute - dataCollectionStartMinute >= dataCollectionInfo.getCollectionTime()) {
             // We are done with all data collection, so setting task status to success and quitting.
             logger.info(
                 "Completed stack driver collection task. So setting task status to success and quitting. StateExecutionId {}",
@@ -167,7 +178,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
         } catch (Throwable ex) {
           if (!(ex instanceof Exception) || ++retry >= RETRIES) {
             logger.error("error fetching metrics for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
-                dataCollectionMinute, ex);
+                dataCollectionCurrentMinute, ex);
             taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
             completed.set(true);
             break;
@@ -175,8 +186,8 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
             if (retry == 1) {
               taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
             }
-            logger.warn("error fetching stack driver metrics for minute " + dataCollectionMinute + ". retrying in "
-                    + RETRY_SLEEP + "s",
+            logger.warn("error fetching stack driver metrics for minute " + dataCollectionCurrentMinute
+                    + ". retrying in " + RETRY_SLEEP + "s",
                 ex);
             sleep(RETRY_SLEEP);
           }
@@ -191,7 +202,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
     }
 
     private int getDataCollectionMinuteForHeartbeat(boolean is247Task) {
-      int collectionMin = dataCollectionMinute;
+      int collectionMin = dataCollectionCurrentMinute;
       if (is247Task) {
         collectionMin = (int) TimeUnit.MILLISECONDS.toMinutes(dataCollectionInfo.getStartTime())
             + dataCollectionInfo.getCollectionTime();
@@ -340,8 +351,8 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
       final TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricDataResponses = TreeBasedTable.create();
       List<Callable<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> callables = new ArrayList<>();
 
-      long endTime = Timestamp.minuteBoundary(System.currentTimeMillis());
-      long startTime = endTime - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES);
+      long endTime = collectionStartTime;
+      long startTime = endTime - TimeUnit.MINUTES.toMillis(1);
 
       if (!isEmpty(dataCollectionInfo.getLoadBalancerMetrics())) {
         dataCollectionInfo.getLoadBalancerMetrics().forEach(
@@ -351,7 +362,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
                       -> getMetricDataRecords(LOADBALANCER, stackDriverMetric, forwardRule, DEFAULT_GROUP_NAME,
                           stackDriverDelegateService.createFilter(
                               LOADBALANCER, stackDriverMetric.getMetricName(), forwardRule),
-                          startTime, endTime, dataCollectionMinute,
+                          startTime, endTime, dataCollectionCurrentMinute,
                           createApiCallLog(dataCollectionInfo.getStateExecutionId()), is247Task));
             }));
       }
@@ -364,17 +375,17 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
                                          -> getMetricDataRecords(POD_NAME, stackDriverMetric, host, groupName,
                                              stackDriverDelegateService.createFilter(
                                                  POD_NAME, stackDriverMetric.getMetricName(), host),
-                                             startTime, endTime, dataCollectionMinute,
+                                             startTime, endTime, dataCollectionCurrentMinute,
                                              createApiCallLog(dataCollectionInfo.getStateExecutionId()), is247Task))));
       }
 
       logger.info("fetching stackdriver metrics for {} strategy {} for min {}",
           dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getTimeSeriesMlAnalysisType(),
-          dataCollectionMinute);
+          dataCollectionCurrentMinute);
       List<Optional<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> results = executeParrallel(callables);
       logger.info("done fetching stackdriver metrics for {} strategy {} for min {}",
           dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getTimeSeriesMlAnalysisType(),
-          dataCollectionMinute);
+          dataCollectionCurrentMinute);
       results.forEach(result -> {
         if (result.isPresent()) {
           TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = result.get();

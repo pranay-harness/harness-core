@@ -100,4 +100,6 @@ public interface TimeSeriesAnalysisService {
 
   Set<TimeSeriesCumulativeSums> getCumulativeSumsForRange(
       String appId, String cvConfigId, int startMinute, int endMinute, String tag);
+
+  long getLastDataCollectedMinute(String appId, String stateExecutionId, StateType stateType);
 }

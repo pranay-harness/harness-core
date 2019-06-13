@@ -15,6 +15,7 @@ import static java.util.Collections.emptySet;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.TaskType.CUSTOM_LOG_COLLECTION_TASK;
 import static software.wings.beans.TaskType.ELK_COLLECT_LOG_DATA;
+import static software.wings.beans.TaskType.STACKDRIVER_COLLECT_METRIC_DATA;
 import static software.wings.beans.TaskType.SUMO_COLLECT_LOG_DATA;
 import static software.wings.beans.alert.AlertType.CONTINUOUS_VERIFICATION_ALERT;
 import static software.wings.common.VerificationConstants.APPDYNAMICS_DEEPLINK_FORMAT;
@@ -67,6 +68,7 @@ import software.wings.beans.DatadogConfig;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.FeatureName;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.Service;
@@ -105,6 +107,8 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord.NewRelicMetricDataRecordKeys;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
+import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
+import software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
@@ -144,6 +148,7 @@ import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.log.BugsnagCVConfiguration;
 import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
+import software.wings.verification.log.StackdriverCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
@@ -1410,6 +1415,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         BugsnagCVConfiguration bugsnagCVConfiguration = (BugsnagCVConfiguration) cvConfiguration;
         task = createBugSnagDelegateTask(bugsnagCVConfiguration, waitId, startTime, endTime);
         break;
+      case STACK_DRIVER:
+        StackdriverCVConfiguration stackdriverCVConfiguration = (StackdriverCVConfiguration) cvConfiguration;
+        task = createDataCollectionDelegateTask(stackdriverCVConfiguration, waitId, startTime, endTime);
+        break;
       default:
         logger.error("Calling collect 24x7 data for an unsupported state");
         return false;
@@ -1437,6 +1446,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       case SUMO:
       case ELK:
       case DATA_DOG_LOG:
+      case STACK_DRIVER:
         return createDataCollectionDelegateTask(context, collectionMinute);
       default:
         logger.error("Calling collect data for an unsupported state");
@@ -1714,6 +1724,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   private DelegateTask createDataCollectionDelegateTask(
       LogsCVConfiguration config, String waitId, long startTime, long endTime) {
     String stateExecutionId = CV_24x7_STATE_EXECUTION + "-" + config.getUuid();
+    long duration = TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
+    logger.info("Created data collection delegate task for config : {} startTime : {} endTime : {} duration: {}",
+        config, startTime, endTime, duration);
     if (config.isWorkflowConfig()) {
       stateExecutionId = wingsPersistence.get(AnalysisContext.class, config.getContextId()).getStateExecutionId();
     }
@@ -1762,6 +1775,33 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 .build();
         return createDelegateTask(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA, config.getAccountId(), config.getAppId(),
             waitId, new Object[] {customLogDataCollectionInfo}, config.getEnvId());
+      case STACK_DRIVER:
+        StackdriverCVConfiguration stackdriverCVConfiguration = (StackdriverCVConfiguration) config;
+        GcpConfig gcpConfig = (GcpConfig) settingsService.get(config.getConnectorId()).getValue();
+        if (stackdriverCVConfiguration.isLogsConfiguration()) {
+          StackDriverLogDataCollectionInfo stackDriverLogDataCollectionInfo =
+              StackDriverLogDataCollectionInfo.builder()
+                  .gcpConfig(gcpConfig)
+                  .accountId(config.getAccountId())
+                  .applicationId(config.getAppId())
+                  .stateExecutionId(stateExecutionId)
+                  .serviceId(config.getServiceId())
+                  .query(stackdriverCVConfiguration.getQuery())
+                  .startTime(startTime)
+                  .endTime(endTime)
+                  .hostnameField(stackdriverCVConfiguration.getHostnameField())
+                  .collectionTime((int) duration)
+                  .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
+                  .cvConfigId(config.getUuid())
+                  .stateType(StateType.STACK_DRIVER)
+                  .encryptedDataDetails(
+                      secretManager.getEncryptionDetails(gcpConfig, stackdriverCVConfiguration.getAppId(), null))
+                  .build();
+          return createDelegateTask(TaskType.STACKDRIVER_COLLECT_24_7_LOG_DATA, config.getAccountId(),
+              config.getAppId(), waitId, new Object[] {stackDriverLogDataCollectionInfo}, config.getEnvId());
+        } else {
+          throw new IllegalArgumentException("Stackdriver timeseries not implemented yet");
+        }
 
       default:
         throw new IllegalStateException("Invalid state: " + config.getStateType());
@@ -1769,21 +1809,24 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   private boolean createDataCollectionDelegateTask(AnalysisContext context, long collectionStartMinute) {
-    Set<String> canaryNewHostNames = context.getTestNodes().keySet();
+    Map<String, String> canaryNewHostNames = context.getTestNodes();
     Map<String, String> lastExecutionNodes = context.getControlNodes();
-    List<String> hostsToBeCollected = new ArrayList<>();
+    Map<String, String> hostsToBeCollected = new HashMap<>();
+
     if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
         && lastExecutionNodes != null) {
-      hostsToBeCollected.addAll(lastExecutionNodes.keySet());
+      hostsToBeCollected.putAll(lastExecutionNodes);
     }
-    hostsToBeCollected.addAll(canaryNewHostNames);
+    hostsToBeCollected.putAll(canaryNewHostNames);
+
     VerificationStateAnalysisExecutionData executionData =
-        createLogAnalysisExecutionData(context, canaryNewHostNames, lastExecutionNodes);
+        createLogAnalysisExecutionData(context, canaryNewHostNames.keySet(), lastExecutionNodes);
     List<DelegateTask> delegateTasks = new ArrayList<>();
+    List<String> hostList = hostsToBeCollected.keySet().stream().collect(Collectors.toList());
     switch (context.getStateType()) {
       case SUMO:
         try {
-          for (List<String> hostBatch : Lists.partition(hostsToBeCollected, HOST_BATCH_SIZE)) {
+          for (List<String> hostBatch : Lists.partition(hostList, HOST_BATCH_SIZE)) {
             final LogDataCollectionInfo dataCollectionInfo =
                 createLogDataCollectionInfo(context, collectionStartMinute, new HashSet<>(hostBatch));
             delegateTasks.add(
@@ -1798,7 +1841,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         break;
       case ELK:
         try {
-          for (List<String> hostBatch : Lists.partition(hostsToBeCollected, HOST_BATCH_SIZE)) {
+          for (List<String> hostBatch : Lists.partition(hostList, HOST_BATCH_SIZE)) {
             final LogDataCollectionInfo dataCollectionInfo =
                 createLogDataCollectionInfo(context, collectionStartMinute, new HashSet<>(hostBatch));
             delegateTasks.add(
@@ -1815,12 +1858,26 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         try {
           DatadogConfig datadogConfig =
               (DatadogConfig) settingsService.get(context.getAnalysisServerConfigId()).getValue();
-          for (List<String> hostBatch : Lists.partition(hostsToBeCollected, HOST_BATCH_SIZE)) {
+          for (List<String> hostBatch : Lists.partition(hostList, HOST_BATCH_SIZE)) {
             final CustomLogDataCollectionInfo dataCollectionInfo = createCustomLogDataCollectionInfo(
                 datadogConfig, context, collectionStartMinute, new HashSet<>(hostBatch));
             delegateTasks.add(createDelegateTaskAndNotify(
                 dataCollectionInfo, CUSTOM_LOG_COLLECTION_TASK, executionData, context, true));
           }
+          for (DelegateTask task : delegateTasks) {
+            delegateService.queueTask(task);
+          }
+        } catch (Exception ex) {
+          throw new WingsException("log analysis state failed ", ex);
+        }
+        break;
+      case STACK_DRIVER:
+        try {
+          GcpConfig gcpConfig = (GcpConfig) settingsService.get(context.getAnalysisServerConfigId()).getValue();
+          final StackDriverDataCollectionInfo dataCollectionInfo =
+              createStackdriverDataCollectionInfo(gcpConfig, context, collectionStartMinute, hostsToBeCollected);
+          delegateTasks.add(createDelegateTaskAndNotify(
+              dataCollectionInfo, STACKDRIVER_COLLECT_METRIC_DATA, executionData, context, true));
           for (DelegateTask task : delegateTasks) {
             delegateService.queueTask(task);
           }
@@ -1884,6 +1941,20 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     savedDataCollectionInfo.setCollectionTime(1);
     savedDataCollectionInfo.setEncryptedDataDetails(
         secretManager.getEncryptionDetails(datadogConfig, context.getAppId(), context.getWorkflowExecutionId()));
+    return savedDataCollectionInfo;
+  }
+
+  private StackDriverDataCollectionInfo createStackdriverDataCollectionInfo(
+      GcpConfig gcpConfig, AnalysisContext context, long collectionStartMinute, Map<String, String> hostBatch) {
+    StackDriverDataCollectionInfo savedDataCollectionInfo =
+        (StackDriverDataCollectionInfo) context.getDataCollectionInfo();
+    savedDataCollectionInfo.setHosts(hostBatch);
+
+    savedDataCollectionInfo.setStartMinute((int) collectionStartMinute);
+    savedDataCollectionInfo.setStartTime(collectionStartMinute * TimeUnit.MINUTES.toMillis(1));
+    savedDataCollectionInfo.setEndTime((collectionStartMinute + 1) * TimeUnit.MINUTES.toMillis(1));
+    savedDataCollectionInfo.setCollectionTime(1);
+
     return savedDataCollectionInfo;
   }
 

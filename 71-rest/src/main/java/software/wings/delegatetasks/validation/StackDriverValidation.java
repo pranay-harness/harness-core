@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GcpConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
+import software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.ByteArrayInputStream;
@@ -43,6 +44,9 @@ public class StackDriverValidation extends AbstractSecretManagerValidation {
       if (getParameters()[0] instanceof StackDriverDataCollectionInfo) {
         gcpConfig = ((StackDriverDataCollectionInfo) getParameters()[0]).getGcpConfig();
         encryptionDetails = ((StackDriverDataCollectionInfo) getParameters()[0]).getEncryptedDataDetails();
+      } else if (getParameters()[0] instanceof StackDriverLogDataCollectionInfo) {
+        gcpConfig = ((StackDriverLogDataCollectionInfo) getParameters()[0]).getGcpConfig();
+        encryptionDetails = ((StackDriverLogDataCollectionInfo) getParameters()[0]).getEncryptedDataDetails();
       } else {
         gcpConfig = (GcpConfig) getParameters()[2];
         encryptionDetails = (List<EncryptedDataDetail>) getParameters()[3];

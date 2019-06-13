@@ -6,11 +6,15 @@ import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static software.wings.common.VerificationConstants.LAMBDA_HOST_NAME;
+import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
+import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
+import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.service.impl.security.SecretManagementDelegateServiceImpl.NUM_OF_RETRIES;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
@@ -19,17 +23,22 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
+import io.harness.time.Timestamp;
 import io.harness.version.VersionInfoManager;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.PcfInstanceElement;
+import software.wings.beans.FeatureName;
+import software.wings.beans.GcpConfig;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
+import software.wings.service.impl.analysis.DataCollectionInfo;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
+import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -45,6 +54,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by rsingh on 9/25/17.
@@ -128,7 +138,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       }
 
       String responseMessage = "Metric Verification running";
-      if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS) {
+      if (getComparisonStrategy() == COMPARE_WITH_PREVIOUS) {
         WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
         String baselineWorkflowExecutionId = workflowExecutionBaselineService.getBaselineExecutionId(context.getAppId(),
             context.getWorkflowId(), workflowStandardParams.getEnv().getUuid(), analysisContext.getServiceId());
@@ -169,7 +179,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       executionData.setErrorMsg(responseMessage);
       executionData.setStatus(ExecutionStatus.RUNNING);
       Map<String, String> hostsToCollect = new HashMap<>();
-      if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS) {
+      if (getComparisonStrategy() == COMPARE_WITH_PREVIOUS) {
         hostsToCollect.putAll(canaryNewHostNames);
 
       } else {
@@ -181,9 +191,17 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           "triggering data collection for {} state, id: {} ", getStateType(), context.getStateExecutionInstanceId());
       hostsToCollect.remove(null);
       createAndSaveMetricGroups(context, hostsToCollect);
-      delegateTaskId = triggerAnalysisDataCollection(context, analysisContext, executionData, hostsToCollect);
-      getLogger().info("triggered data collection for {} state, id: {}, delgateTaskId: {}", getStateType(),
-          context.getStateExecutionInstanceId(), delegateTaskId);
+
+      if (getComparisonStrategy() == PREDICTIVE
+          || (featureFlagService.isEnabled(FeatureName.CV_DATA_COLLECTION_JOB, context.getAccountId())
+                 && (PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))))) {
+        getLogger().info(
+            "Feature flag CV_DATA_COLLECTION_JOB is enabled will use data collection for triggering delegate task");
+      } else {
+        delegateTaskId = triggerAnalysisDataCollection(context, analysisContext, executionData, hostsToCollect);
+        getLogger().info("triggered data collection for {} state, id: {}, delgateTaskId: {}", getStateType(),
+            context.getStateExecutionInstanceId(), delegateTaskId);
+      }
 
       executionData.setDelegateTaskId(delegateTaskId);
       final VerificationDataAnalysisResponse response =
@@ -366,36 +384,78 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   }
 
   private AnalysisContext getAnalysisContext(ExecutionContext context, String correlationId) {
-    Map<String, String> controlNodes = getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
-        ? Collections.emptyMap()
-        : getLastExecutionNodes(context);
+    Map<String, String> controlNodes =
+        getComparisonStrategy() == COMPARE_WITH_PREVIOUS ? Collections.emptyMap() : getLastExecutionNodes(context);
     Map<String, String> testNodes = getCanaryNewHostNames(context);
     testNodes.keySet().forEach(testNode -> controlNodes.remove(testNode));
     int timeDurationInt = Integer.parseInt(getTimeDuration());
-    return AnalysisContext.builder()
-        .accountId(this.appService.get(context.getAppId()).getAccountId())
-        .appId(context.getAppId())
-        .workflowId(getWorkflowId(context))
-        .workflowExecutionId(context.getWorkflowExecutionId())
-        .stateExecutionId(context.getStateExecutionInstanceId())
-        .serviceId(getPhaseServiceId(context))
-        .analysisType(MLAnalysisType.TIME_SERIES)
-        .controlNodes(controlNodes)
-        .testNodes(testNodes)
-        .isSSL(this.configuration.isSslEnabled())
-        .appPort(this.configuration.getApplicationPort())
-        .comparisonStrategy(getComparisonStrategy())
-        .timeDuration(timeDurationInt)
-        .stateType(StateType.valueOf(getStateType()))
-        .analysisServerConfigId(getAnalysisServerConfigId())
-        .correlationId(correlationId)
-        .smooth_window(SMOOTH_WINDOW)
-        .tolerance(getAnalysisTolerance().tolerance())
-        .minimumRequestsPerMinute(MIN_REQUESTS_PER_MINUTE)
-        .comparisonWindow(COMPARISON_WINDOW)
-        .parallelProcesses(PARALLEL_PROCESSES)
-        .managerVersion(versionInfoManager.getVersionInfo().getVersion())
-        .build();
+    String accountId = this.appService.get(context.getAppId()).getAccountId();
+
+    AnalysisContext analysisContext =
+        AnalysisContext.builder()
+            .accountId(this.appService.get(context.getAppId()).getAccountId())
+            .appId(context.getAppId())
+            .workflowId(getWorkflowId(context))
+            .workflowExecutionId(context.getWorkflowExecutionId())
+            .stateExecutionId(context.getStateExecutionInstanceId())
+            .serviceId(getPhaseServiceId(context))
+            .analysisType(MLAnalysisType.TIME_SERIES)
+            .controlNodes(controlNodes)
+            .testNodes(testNodes)
+            .isSSL(this.configuration.isSslEnabled())
+            .appPort(this.configuration.getApplicationPort())
+            .comparisonStrategy(getComparisonStrategy())
+            .timeDuration(timeDurationInt)
+            .stateType(StateType.valueOf(getStateType()))
+            .analysisServerConfigId(getAnalysisServerConfigId())
+            .correlationId(correlationId)
+            .smooth_window(SMOOTH_WINDOW)
+            .tolerance(getAnalysisTolerance().tolerance())
+            .minimumRequestsPerMinute(MIN_REQUESTS_PER_MINUTE)
+            .comparisonWindow(COMPARISON_WINDOW)
+            .startDataCollectionMinute(TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()))
+            .parallelProcesses(PARALLEL_PROCESSES)
+            .managerVersion(versionInfoManager.getVersionInfo().getVersion())
+            .build();
+
+    if (getComparisonStrategy() == PREDICTIVE
+        || (featureFlagService.isEnabled(FeatureName.CV_DATA_COLLECTION_JOB, accountId)
+               && (PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))))) {
+      DataCollectionInfo dataCollectionInfo = createDataCollectionInfo(context);
+      analysisContext.setDataCollectionInfo(dataCollectionInfo);
+    }
+    return analysisContext;
+  }
+
+  private DataCollectionInfo createDataCollectionInfo(ExecutionContext context) {
+    StateType stateType = StateType.valueOf(getStateType());
+    switch (stateType) {
+      case STACK_DRIVER:
+        TimeSeriesMlAnalysisType analyzedTierAnalysisType =
+            getComparisonStrategy() == AnalysisComparisonStrategy.PREDICTIVE ? TimeSeriesMlAnalysisType.PREDICTIVE
+                                                                             : TimeSeriesMlAnalysisType.COMPARATIVE;
+        StackDriverState stackDriverState = (StackDriverState) this;
+        GcpConfig gcpConfig = (GcpConfig) settingsService.get(getAnalysisServerConfigId()).getValue();
+        ((StackDriverState) this).saveMetricTemplates(context);
+        return StackDriverDataCollectionInfo.builder()
+            .gcpConfig(gcpConfig)
+            .applicationId(context.getAppId())
+            .stateExecutionId(context.getStateExecutionInstanceId())
+            .workflowId(context.getWorkflowId())
+            .workflowExecutionId(context.getWorkflowExecutionId())
+            .serviceId(getPhaseServiceId(context))
+            .timeSeriesMlAnalysisType(analyzedTierAnalysisType)
+            .collectionTime(Integer.parseInt(getTimeDuration()))
+            .encryptedDataDetails(
+                secretManager.getEncryptionDetails(gcpConfig, context.getAppId(), context.getWorkflowExecutionId()))
+            .hosts(Maps.newHashMap())
+            .loadBalancerMetrics(stackDriverState.fetchLoadBalancerMetrics())
+            .podMetrics(stackDriverState.fetchPodMetrics())
+            .build();
+
+      default:
+        return null;
+    }
   }
 
   @Override

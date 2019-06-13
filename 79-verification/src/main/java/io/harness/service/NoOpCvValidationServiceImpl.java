@@ -10,4 +10,9 @@ public class NoOpCvValidationServiceImpl implements CvValidationService {
   public Boolean validateELKQuery(String accountId, String appId, String settingId, String query, String index) {
     throw new UnsupportedOperationException();
   }
+
+  @Override
+  public Boolean validateStackdriverQuery(String accountId, String appId, String connectorId, String query) {
+    throw new UnsupportedOperationException();
+  }
 }

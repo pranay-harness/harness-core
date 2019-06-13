@@ -32,6 +32,7 @@ import software.wings.delegatetasks.ServiceImplDelegateTask;
 import software.wings.delegatetasks.ShellScriptTask;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.delegatetasks.StackDriverDataCollectionTask;
+import software.wings.delegatetasks.StackDriverLogDataCollectionTask;
 import software.wings.delegatetasks.SumoDataCollectionTask;
 import software.wings.delegatetasks.TerraformFetchTargetsTask;
 import software.wings.delegatetasks.TerraformInputVariablesObtainTask;
@@ -213,6 +214,8 @@ public enum TaskType {
   STACKDRIVER_LIST_FORWARDING_RULES(TaskGroup.STACKDRIVER, ServiceImplDelegateTask.class, StackDriverValidation.class),
   STACKDRIVER_COLLECT_24_7_METRIC_DATA(
       TaskGroup.STACKDRIVER, StackDriverDataCollectionTask.class, StackDriverValidation.class),
+  STACKDRIVER_COLLECT_24_7_LOG_DATA(
+      TaskGroup.STACKDRIVER, StackDriverLogDataCollectionTask.class, StackDriverValidation.class),
   SPLUNK(TaskGroup.SPLUNK, HttpTask.class, SplunkValidation.class),
   SPLUNK_CONFIGURATION_VALIDATE_TASK(TaskGroup.SPLUNK, ServiceImplDelegateTask.class, SplunkValidation.class),
   SPLUNK_GET_HOST_RECORDS(TaskGroup.SPLUNK, ServiceImplDelegateTask.class, SplunkValidation.class),

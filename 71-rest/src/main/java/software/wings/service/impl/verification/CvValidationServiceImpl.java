@@ -16,4 +16,10 @@ public class CvValidationServiceImpl implements CvValidationService {
   public Boolean validateELKQuery(String accountId, String appId, String settingId, String query, String index) {
     return elkAnalysisService.validateQuery(accountId, appId, settingId, query, index, null);
   }
+
+  @Override
+  public Boolean validateStackdriverQuery(String accountId, String appId, String connectorId, String query) {
+    // todo: validate stackdriver query
+    return true;
+  }
 }

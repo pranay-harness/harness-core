@@ -1053,4 +1053,16 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       throw new WingsException(errorMsg);
     }
   }
+
+  @Override
+  public long getLastDataCollectedMinute(String appId, String stateExecutionId, StateType stateType) {
+    NewRelicMetricDataRecord newRelicMetricDataRecord =
+        wingsPersistence.createQuery(NewRelicMetricDataRecord.class, excludeAuthority)
+            .filter(NewRelicMetricDataRecordKeys.stateExecutionId, stateExecutionId)
+            .filter(NewRelicMetricDataRecordKeys.stateType, stateType)
+            .project(NewRelicMetricDataRecordKeys.dataCollectionMinute, true)
+            .order(Sort.descending(NewRelicMetricDataRecordKeys.dataCollectionMinute))
+            .get();
+    return newRelicMetricDataRecord == null ? -1 : newRelicMetricDataRecord.getDataCollectionMinute();
+  }
 }
