@@ -47,7 +47,11 @@ import java.util.List;
         , @Field(AuditHeaderKeys.appIdEntityRecord), @Field(AuditHeaderKeys.affectedResourceId),
             @Field(AuditHeaderKeys.affectedResourceOp),
             @Field(value = AuditHeaderKeys.createdAt, type = IndexType.DESC),
-      }, options = @IndexOptions(name = "entityRecordIndex_2"))
+      }, options = @IndexOptions(name = "entityRecordIndex_2")), @Index(fields = {
+        @Field(AuditHeaderKeys.accountId)
+        , @Field(AuditHeaderKeys.affectedResourceType), @Field(AuditHeaderKeys.affectedResourceOp),
+            @Field(value = AuditHeaderKeys.createdAt, type = IndexType.DESC),
+      }, options = @IndexOptions(name = "entityRecordIndex_3"))
 })
 
 public class AuditHeader extends Base {
