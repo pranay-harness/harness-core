@@ -561,6 +561,7 @@ import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowMe
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
+import software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverMetric;
 import software.wings.service.impl.stackdriver.StackDriverSetupTestNodeData;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
@@ -1261,5 +1262,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsAsgGetRunningCountRequest.class, 7188);
     kryo.register(AwsAsgGetRunningCountResponse.class, 7189);
     kryo.register(AwsAsgGetRunningCountData.class, 7190);
+    kryo.register(StackDriverLogDataCollectionInfo.class, 7191);
   }
 }

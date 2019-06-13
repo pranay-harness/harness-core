@@ -22,6 +22,7 @@ import static software.wings.beans.SystemCatalog.Builder.aSystemCatalog;
 import static software.wings.beans.SystemCatalog.CatalogType.APPSTACK;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 import static software.wings.sm.StateType.ENV_STATE;
+import static software.wings.sm.StateType.STACK_DRIVER;
 import static software.wings.utils.ContainerFamily.TOMCAT;
 import static software.wings.utils.UsageRestrictionsUtils.getAllAppAllEnvUsageRestrictions;
 
@@ -48,6 +49,7 @@ import io.harness.generator.ResourceConstraintGenerator;
 import io.harness.generator.ResourceConstraintGenerator.ResourceConstraints;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.ServiceGenerator.Services;
+import io.harness.generator.ServiceGuardGenerator;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.WorkflowGenerator;
 import io.harness.generator.WorkflowGenerator.Workflows;
@@ -155,6 +157,7 @@ public class DataGenService {
   @Inject private ArtifactStreamManager artifactStreamManager;
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
+  @Inject private ServiceGuardGenerator serviceGuardGenerator;
   @Inject private InfrastructureProvisionerGenerator infrastructureProvisionerGenerator;
   @Inject private LicenseGenerator licenseGenerator;
   @Inject private ResourceConstraintGenerator resourceConstraintGenerator;
@@ -346,6 +349,8 @@ public class DataGenService {
     Workflow workflow1 = workflowGenerator.ensurePredefined(seed, owners, Workflows.BASIC_SIMPLE);
 
     infrastructureMappingGenerator.ensurePredefined(seed, owners, AWS_SSH_TEST);
+
+    serviceGuardGenerator.ensurePredefined(seed, owners, STACK_DRIVER);
 
     Workflow workflow2 = workflowGenerator.ensurePredefined(seed, owners, Workflows.BASIC_10_NODES);
 

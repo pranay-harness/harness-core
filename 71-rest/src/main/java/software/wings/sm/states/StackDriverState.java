@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 import static software.wings.service.impl.analysis.TimeSeriesMlAnalysisType.PREDICTIVE;
 
 import com.google.inject.Inject;
@@ -57,6 +58,8 @@ public class StackDriverState extends AbstractMetricAnalysisState {
   @Attributes(title = "Region") @DefaultValue("us-east-1") private String region = "us-east-1";
 
   private Map<String, List<StackDriverMetric>> loadBalancerMetrics;
+
+  private boolean isLogState;
 
   private List<StackDriverMetric> podMetrics;
 
@@ -138,6 +141,13 @@ public class StackDriverState extends AbstractMetricAnalysisState {
     this.analysisServerConfigId = analysisServerConfigId;
   }
 
+  public void saveMetricTemplates(ExecutionContext context) {
+    Map<String, List<StackDriverMetric>> stackDriverMetrics = stackDriverService.getMetrics();
+
+    metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.STACK_DRIVER,
+        context.getStateExecutionInstanceId(), null, fetchMetricTemplates(stackDriverMetrics));
+  }
+
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
       VerificationStateAnalysisExecutionData executionData, Map<String, String> hosts) {
@@ -166,18 +176,20 @@ public class StackDriverState extends AbstractMetricAnalysisState {
     final StackDriverDataCollectionInfo dataCollectionInfo =
         StackDriverDataCollectionInfo.builder()
             .gcpConfig(gcpConfig)
-            .appId(context.getAppId())
+            .applicationId(context.getAppId())
             .stateExecutionId(context.getStateExecutionInstanceId())
             .workflowId(getWorkflowId(context))
             .workflowExecutionId(context.getWorkflowExecutionId())
             .serviceId(getPhaseServiceId(context))
             .timeSeriesMlAnalysisType(analyzedTierAnalysisType)
+            .startMinute((int) (dataCollectionStartTimeStamp / TimeUnit.MINUTES.toMillis(1)))
             .startTime(dataCollectionStartTimeStamp)
             // Collection time is amount of time data collection needs to happen
             .collectionTime(Integer.parseInt(timeDuration))
+            .initialDelayMinutes(DELAY_MINUTES)
             // its a counter for each minute data. So basically the max value of
             // dataCollectionMinute can be equal to timeDuration
-            .dataCollectionMinute(0)
+            //            .dataCollectionMinute(0)
             .encryptedDataDetails(
                 secretManager.getEncryptionDetails(gcpConfig, context.getAppId(), context.getWorkflowExecutionId()))
             .hosts(hosts)
@@ -229,5 +241,13 @@ public class StackDriverState extends AbstractMetricAnalysisState {
 
   public void setHostnameTemplate(String hostnameTemplate) {
     this.hostnameTemplate = hostnameTemplate;
+  }
+
+  public boolean isLogState() {
+    return isLogState;
+  }
+
+  public void setLogState(boolean logState) {
+    isLogState = logState;
   }
 }

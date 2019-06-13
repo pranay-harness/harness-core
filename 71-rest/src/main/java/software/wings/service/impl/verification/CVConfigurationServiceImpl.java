@@ -55,6 +55,7 @@ import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.log.BugsnagCVConfiguration;
 import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
+import software.wings.verification.log.StackdriverCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
@@ -140,6 +141,15 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         break;
       case BUG_SNAG:
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), BugsnagCVConfiguration.class);
+        break;
+
+      case STACK_DRIVER:
+        cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), StackdriverCVConfiguration.class);
+        StackdriverCVConfiguration stackdriverCVConfiguration = (StackdriverCVConfiguration) cvConfiguration;
+        if (stackdriverCVConfiguration.isLogsConfiguration()) {
+          cvValidationService.validateStackdriverQuery(
+              accountId, appId, stackdriverCVConfiguration.getConnectorId(), stackdriverCVConfiguration.getQuery());
+        }
         break;
 
       default:
@@ -289,6 +299,14 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         break;
       case SUMO:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), LogsCVConfiguration.class);
+        break;
+      case STACK_DRIVER:
+        updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), StackdriverCVConfiguration.class);
+        StackdriverCVConfiguration stackdriverCVConfiguration = (StackdriverCVConfiguration) updatedConfig;
+        if (stackdriverCVConfiguration.isLogsConfiguration()) {
+          cvValidationService.validateStackdriverQuery(
+              accountId, appId, stackdriverCVConfiguration.getConnectorId(), stackdriverCVConfiguration.getQuery());
+        }
         break;
       case ELK:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), ElkCVConfiguration.class);
@@ -519,8 +537,15 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         updateOperations.set("query", logsCVConfiguration.getQuery())
             .set("baselineStartMinute", logsCVConfiguration.getBaselineStartMinute())
             .set("baselineEndMinute", logsCVConfiguration.getBaselineEndMinute());
-
         resetBaselineIfNecessary(logsCVConfiguration, (LogsCVConfiguration) savedConfiguration);
+        break;
+      case STACK_DRIVER:
+        StackdriverCVConfiguration stackdriverCVConfiguration = (StackdriverCVConfiguration) cvConfiguration;
+        updateOperations.set("query", stackdriverCVConfiguration.getQuery())
+            .set("isLogsConfiguration", stackdriverCVConfiguration.isLogsConfiguration())
+            .set("baselineStartMinute", stackdriverCVConfiguration.getBaselineStartMinute())
+            .set("baselineEndMinute", stackdriverCVConfiguration.getBaselineEndMinute());
+        resetBaselineIfNecessary(stackdriverCVConfiguration, (StackdriverCVConfiguration) savedConfiguration);
         break;
       case ELK:
         ElkCVConfiguration elkCVConfiguration = (ElkCVConfiguration) cvConfiguration;
@@ -656,6 +681,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       case SUMO:
       case ELK:
       case BUG_SNAG:
+      case STACK_DRIVER:
         return;
 
       default:

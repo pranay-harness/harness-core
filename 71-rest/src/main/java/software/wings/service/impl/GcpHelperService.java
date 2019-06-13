@@ -9,6 +9,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.compute.Compute;
 import com.google.api.services.container.Container;
 import com.google.api.services.container.ContainerScopes;
+import com.google.api.services.logging.v2.Logging;
 import com.google.api.services.monitoring.v3.Monitoring;
 import com.google.api.services.storage.Storage;
 import com.google.inject.Inject;
@@ -118,6 +119,24 @@ public class GcpHelperService {
       NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
       GoogleCredential credential = getGoogleCredential(gcpConfig, encryptedDataDetails);
       return new Monitoring.Builder(transport, jsonFactory, credential).setApplicationName(projectId).build();
+    } catch (GeneralSecurityException e) {
+      logger.error("Security exception getting Google storage service", e);
+      throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER)
+          .addParam("message", "Invalid Google Cloud Platform credentials.");
+    } catch (IOException e) {
+      logger.error("Error getting Google storage service", e);
+      throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER)
+          .addParam("message", "Invalid Google Cloud Platform credentials.");
+    }
+  }
+
+  public Logging getLoggingResource(
+      GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails, String projectId) {
+    try {
+      JacksonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+      NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
+      GoogleCredential credential = getGoogleCredential(gcpConfig, encryptedDataDetails);
+      return new Logging.Builder(transport, jsonFactory, credential).setApplicationName(projectId).build();
     } catch (GeneralSecurityException e) {
       logger.error("Security exception getting Google storage service", e);
       throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER)

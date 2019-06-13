@@ -5,4 +5,6 @@ package software.wings.service.impl.verification;
  */
 public interface CvValidationService {
   Boolean validateELKQuery(String accountId, String appId, String settingId, String query, String index);
+
+  Boolean validateStackdriverQuery(String accountId, String appId, String connectorId, String query);
 }

@@ -1366,6 +1366,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
                                                          .workflowId(workflowId)
                                                          .workflowExecutionId(workflowExecutionId)
                                                          .serviceId(serviceId)
+
                                                          .hostnameSeparator(DatadogLogState.hostNameSeparator)
                                                          .shouldInspectHosts(true)
                                                          .collectionFrequency(1)
@@ -1401,6 +1402,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         .appId(appId)
         .workflowId(workflowId)
         .query(query)
+        .analysisType(MLAnalysisType.LOG_CLUSTER)
         .workflowExecutionId(workflowExecutionId)
         .stateExecutionId(stateExecutionId)
         .analysisServerConfigId(connectorId)

@@ -78,7 +78,6 @@ public class TimeSeriesResource {
       if (workflowExecutionId == null || workflowExecutionId.equals("-1")) {
         return new RestResponse<>(new HashSet<>());
       }
-
       return new RestResponse<>(timeSeriesAnalysisService.getPreviousSuccessfulRecords(
           appId, workflowExecutionId, groupName, request.getAnalysisMinute(), request.getAnalysisStartMinute()));
     }
