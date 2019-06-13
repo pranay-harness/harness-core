@@ -2,6 +2,7 @@ package io.harness.dl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.OrchestrationMorphiaClasses;
 import io.harness.app.VerificationServiceApplication;
 import io.harness.category.element.UnitTests;
@@ -20,7 +21,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Slf4j
-public class MorphiaClassesTest {
+public class MorphiaClassesTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testSearchAndList() {

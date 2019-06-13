@@ -14,17 +14,13 @@ import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
-import com.mongodb.client.MongoDatabase;
 import io.harness.logging.MorphiaLoggerFactory;
 import io.harness.persistence.ReadPref;
 import io.harness.serializer.KryoUtils;
-import io.harness.threading.Morpheus;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
 
-import java.time.Duration;
 import java.util.Set;
 
 @Slf4j
@@ -32,7 +28,8 @@ public class MongoModule extends AbstractModule {
   private Morphia morphia;
   private AdvancedDatastore primaryDatastore;
   private AdvancedDatastore secondaryDatastore;
-  private DistributedLockSvc distributedLockSvc;
+  MongoClientURI locksUri;
+  MongoClient mongoLocksClient;
 
   public static final MongoClientOptions mongoClientOptions =
       MongoClientOptions.builder()
@@ -70,17 +67,12 @@ public class MongoModule extends AbstractModule {
     primaryDatastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, uri.getDatabase());
     primaryDatastore.setQueryFactory(new QueryFactory());
 
-    MongoClientURI locksUri = uri;
-    MongoClient mongoLocksClient = mongoClient;
+    locksUri = uri;
+    mongoLocksClient = mongoClient;
     if (isNotEmpty(mongoConfig.getLocksUri())) {
       locksUri = new MongoClientURI(mongoConfig.getLocksUri(), MongoClientOptions.builder(mongoClientOptions));
       mongoLocksClient = new MongoClient(locksUri);
     }
-
-    DistributedLockSvcOptions distributedLockSvcOptions =
-        new DistributedLockSvcOptions(mongoLocksClient, locksUri.getDatabase(), "locks");
-    distributedLockSvcOptions.setEnableHistory(false);
-    distributedLockSvc = new DistributedLockSvcFactory(distributedLockSvcOptions).getLockSvc();
 
     if (uri.getHosts().size() > 1) {
       secondaryDatastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, uri.getDatabase());
@@ -90,19 +82,6 @@ public class MongoModule extends AbstractModule {
     }
 
     ensureIndex(primaryDatastore, morphia);
-
-    //    final BasicDBObject currentOp = new BasicDBObject("currentOp", Boolean.TRUE);
-    //    currentOp.put("$all", Boolean.TRUE);
-
-    final Document document = new Document("currentOp", 1).append("$all", true);
-
-    final MongoDatabase database = mongoClient.getDatabase("admin");
-
-    for (int i = 0; i < 100; i++) {
-      final Document result = database.runCommand(document);
-      logger.info(result.toJson());
-      Morpheus.sleep(Duration.ofMillis(25));
-    }
   }
 
   @Provides
@@ -124,7 +103,10 @@ public class MongoModule extends AbstractModule {
 
   @Provides
   public DistributedLockSvc distributedLockSvc() {
-    return distributedLockSvc;
+    DistributedLockSvcOptions distributedLockSvcOptions =
+        new DistributedLockSvcOptions(mongoLocksClient, locksUri.getDatabase(), "locks");
+    distributedLockSvcOptions.setEnableHistory(false);
+    return new DistributedLockSvcFactory(distributedLockSvcOptions).getLockSvc();
   }
 
   @Override
