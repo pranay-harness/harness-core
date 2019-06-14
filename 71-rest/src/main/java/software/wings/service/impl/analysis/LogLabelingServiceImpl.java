@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
@@ -182,7 +183,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
    * @param serviceId
    * @return
    */
-  public CVFeedbackRecord getCVFeedbackToClassify(String accountId, String serviceId, String envId) {
+  public List<CVFeedbackRecord> getCVFeedbackToClassify(String accountId, String serviceId, String envId) {
     if (!featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)) {
       return null;
     }
@@ -192,30 +193,30 @@ public class LogLabelingServiceImpl implements LogLabelingService {
             .addFilter(CVFeedbackRecordKeys.envId, Operator.EQ, envId)
             .withLimit(UNLIMITED)
             .build();
-    return getUnlabeledFeedback(feedbackRecordPageRequest);
+    return getUnlabeledFeedback(feedbackRecordPageRequest, 5);
   }
 
-  private CVFeedbackRecord getUnlabeledFeedback(PageRequest<CVFeedbackRecord> feedbackRecordPageRequest) {
+  private List<CVFeedbackRecord> getUnlabeledFeedback(
+      PageRequest<CVFeedbackRecord> feedbackRecordPageRequest, int count) {
     List<CVFeedbackRecord> feedbackRecords = dataStoreService.list(CVFeedbackRecord.class, feedbackRecordPageRequest);
-    for (CVFeedbackRecord record : feedbackRecords) {
-      if (isEmpty(record.getSupervisedLabel())) {
-        return record;
-      }
-    }
-    return null;
+    List<CVFeedbackRecord> returnList =
+        feedbackRecords.stream().filter(record -> isEmpty(record.getSupervisedLabel())).collect(Collectors.toList());
+
+    int toIndex = Integer.min(returnList.size(), count);
+    return returnList.subList(0, toIndex);
   }
   /**
    * This method will return a currently unclassified cv feedback for any account.
    * @param accountId
    * @return
    */
-  public CVFeedbackRecord getCVFeedbackToClassify(String accountId) {
+  public List<CVFeedbackRecord> getCVFeedbackToClassify(String accountId) {
     if (!featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)) {
       return null;
     }
     PageRequest<CVFeedbackRecord> feedbackRecordPageRequest =
         PageRequestBuilder.aPageRequest().withLimit(UNLIMITED).build();
-    return getUnlabeledFeedback(feedbackRecordPageRequest);
+    return getUnlabeledFeedback(feedbackRecordPageRequest, 5);
   }
 
   /**
@@ -300,6 +301,27 @@ public class LogLabelingServiceImpl implements LogLabelingService {
     CVFeedbackRecord recordFromDB = dataStoreService.getEntity(CVFeedbackRecord.class, feedbackRecord.getUuid());
     recordFromDB.setSupervisedLabel(label);
     dataStoreService.save(CVFeedbackRecord.class, Arrays.asList(recordFromDB), false);
+    return true;
+  }
+
+  /**
+   * Saves the cv feedback with a label
+   * @return
+   */
+  public boolean saveLabeledIgnoreFeedback(String accountId, Map<String, List<CVFeedbackRecord>> feedbackRecordMap) {
+    if (!featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)) {
+      return false;
+    }
+    if (isEmpty(feedbackRecordMap)) {
+      return true;
+    }
+    List<CVFeedbackRecord> recordsToSave = new ArrayList<>();
+    feedbackRecordMap.forEach((label, recordList) -> {
+      recordList.forEach(record -> record.setSupervisedLabel(label));
+      recordsToSave.addAll(recordList);
+    });
+
+    dataStoreService.save(CVFeedbackRecord.class, recordsToSave, false);
     return true;
   }
 }

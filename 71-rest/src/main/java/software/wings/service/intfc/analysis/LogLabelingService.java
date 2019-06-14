@@ -12,10 +12,11 @@ public interface LogLabelingService {
   void saveClassifiedLogRecord(LogDataRecord record, List<LogLabel> labels, String accountId, Object params);
   List<LogLabel> getLabels();
 
-  CVFeedbackRecord getCVFeedbackToClassify(String accountId, String serviceId, String envId);
+  List<CVFeedbackRecord> getCVFeedbackToClassify(String accountId, String serviceId, String envId);
   Map<String, List<CVFeedbackRecord>> getLabeledSamplesForIgnoreFeedback(
       String accountId, String serviceId, String envId);
-  CVFeedbackRecord getCVFeedbackToClassify(String accountId);
+  List<CVFeedbackRecord> getCVFeedbackToClassify(String accountId);
   Map<String, List<CVFeedbackRecord>> getLabeledSamplesForIgnoreFeedback(String accountId);
   boolean saveLabeledIgnoreFeedback(String accountId, CVFeedbackRecord feedbackRecord, String label);
+  boolean saveLabeledIgnoreFeedback(String accountId, Map<String, List<CVFeedbackRecord>> feedbackRecordMap);
 }

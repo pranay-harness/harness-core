@@ -58,7 +58,7 @@ public class LogClassificationDashboardResource {
   @Path(VerificationConstants.GET_IGNORE_RECORDS_TO_CLASSIFY)
   @Timed
   @ExceptionMetered
-  public RestResponse<CVFeedbackRecord> getIgnoreFeedbacksToClassify(@QueryParam("accountId") String accountId,
+  public RestResponse<List<CVFeedbackRecord>> getIgnoreFeedbacksToClassify(@QueryParam("accountId") String accountId,
       @QueryParam("serviceId") String serviceId, @QueryParam("envId") String envId) {
     return new RestResponse<>(logLabelingService.getCVFeedbackToClassify(accountId, serviceId, envId));
   }
@@ -77,7 +77,7 @@ public class LogClassificationDashboardResource {
   @Path(VerificationConstants.GET_GLOBAL_IGNORE_RECORDS_TO_CLASSIFY)
   @Timed
   @ExceptionMetered
-  public RestResponse<CVFeedbackRecord> getGlobalFeedbacksToClassify(@QueryParam("accountId") String accountId) {
+  public RestResponse<List<CVFeedbackRecord>> getGlobalFeedbacksToClassify(@QueryParam("accountId") String accountId) {
     return new RestResponse<>(logLabelingService.getCVFeedbackToClassify(accountId));
   }
 
@@ -97,5 +97,14 @@ public class LogClassificationDashboardResource {
   public RestResponse<Boolean> saveLabeledIgnoreFeedback(
       @QueryParam("accountId") String accountId, @QueryParam("label") String label, CVFeedbackRecord feedbackRecord) {
     return new RestResponse<>(logLabelingService.saveLabeledIgnoreFeedback(accountId, feedbackRecord, label));
+  }
+
+  @POST
+  @Path(VerificationConstants.POST_CLASSIFY_LABELS_LIST_URL)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> saveLabeledIgnoreFeedbackList(
+      @QueryParam("accountId") String accountId, Map<String, List<CVFeedbackRecord>> feedbackRecordMap) {
+    return new RestResponse<>(logLabelingService.saveLabeledIgnoreFeedback(accountId, feedbackRecordMap));
   }
 }
