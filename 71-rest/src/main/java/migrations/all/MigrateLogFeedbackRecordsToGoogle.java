@@ -44,8 +44,11 @@ public class MigrateLogFeedbackRecordsToGoogle implements Migration {
 
     List<LogMLFeedbackRecord> records =
         dataStoreService.list(LogMLFeedbackRecord.class, logMLFeedbackRecordPageRequest);
-    records.forEach(
-        feedbackRecord -> { dataStoreService.delete(LogMLFeedbackRecord.class, feedbackRecord.getUuid()); });
+    records.forEach(feedbackRecord -> {
+      if (!feedbackRecord.getUuid().startsWith("urn:uuid")) {
+        dataStoreService.delete(LogMLFeedbackRecord.class, feedbackRecord.getUuid());
+      }
+    });
     logger.info("Deleted {} records from GDS for LogMLFeedbackRecords", records.size());
   }
 }
