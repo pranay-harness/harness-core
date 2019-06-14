@@ -43,7 +43,6 @@ import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.LsRemoteCommand;
 import org.eclipse.jgit.api.PullCommand;
-import org.eclipse.jgit.api.PullResult;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
@@ -81,6 +80,7 @@ import org.eclipse.jgit.util.FS;
 import org.eclipse.jgit.util.HttpSupport;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
+import software.wings.beans.GitOperationContext;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.NoopExecutionCallback;
@@ -175,15 +175,18 @@ public class GitClientImpl implements GitClient {
   }
 
   @Override
-  public synchronized GitDiffResult diff(GitConfig gitConfig, String startCommitId) {
-    ensureRepoLocallyClonedAndUpdated(gitConfig);
+  public synchronized GitDiffResult diff(GitOperationContext gitOperationContext) {
+    GitConfig gitConfig = gitOperationContext.getGitConfig();
+    String startCommitId = gitOperationContext.getGitDiffRequest().getLastProcessedCommitId();
+
+    ensureRepoLocallyClonedAndUpdated(gitOperationContext);
 
     GitDiffResult diffResult = GitDiffResult.builder()
                                    .branch(gitConfig.getBranch())
                                    .repoName(gitConfig.getRepoUrl())
                                    .gitFileChanges(new ArrayList<>())
                                    .build();
-    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitConfig)))) {
+    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitOperationContext)))) {
       git.checkout().setName(gitConfig.getBranch()).call();
       ((PullCommand) (getAuthConfiguredCommand(git.pull(), gitConfig))).call();
       Repository repository = git.getRepository();
@@ -276,8 +279,10 @@ public class GitClientImpl implements GitClient {
   }
 
   @Override
-  public synchronized GitCheckoutResult checkout(GitConfig gitConfig) {
-    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitConfig)))) {
+  public synchronized GitCheckoutResult checkout(GitOperationContext gitOperationContext) {
+    GitConfig gitConfig = gitOperationContext.getGitConfig();
+
+    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitOperationContext)))) {
       try {
         Ref ref = git.checkout()
                       .setCreateBranch(true)
@@ -304,15 +309,18 @@ public class GitClientImpl implements GitClient {
   }
 
   @Override
-  public synchronized GitCommitResult commit(GitConfig gitConfig, GitCommitRequest gitCommitRequest) {
-    ensureRepoLocallyClonedAndUpdated(gitConfig);
+  public synchronized GitCommitResult commit(GitOperationContext gitOperationContext) {
+    GitConfig gitConfig = gitOperationContext.getGitConfig();
+    GitCommitRequest gitCommitRequest = gitOperationContext.getGitCommitRequest();
+
+    ensureRepoLocallyClonedAndUpdated(gitOperationContext);
 
     // TODO:: pull latest remote branch??
-    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitConfig)))) {
+    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitOperationContext)))) {
       String timestamp = new SimpleDateFormat(COMMIT_TIMESTAMP_FORMAT).format(new java.util.Date());
       StringBuilder commitMessage = new StringBuilder("Harness IO Git Sync. \n");
 
-      String repoDirectory = gitClientHelper.getRepoDirectory(gitConfig);
+      String repoDirectory = gitClientHelper.getRepoDirectory(gitOperationContext);
       gitCommitRequest.getGitFileChanges().forEach(gitFileChange -> {
         String filePath = repoDirectory + "/" + gitFileChange.getFilePath();
         File file = new File(filePath);
@@ -423,9 +431,13 @@ public class GitClientImpl implements GitClient {
   }
 
   @Override
-  public synchronized GitPushResult push(GitConfig gitConfig, boolean forcePush) {
+  public synchronized GitPushResult push(GitOperationContext gitOperationContext) {
+    GitConfig gitConfig = gitOperationContext.getGitConfig();
+    boolean forcePush = gitOperationContext.getGitCommitRequest().isForcePush();
+
     logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Performing git PUSH, forcePush is: " + forcePush);
-    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitConfig)))) {
+
+    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitOperationContext)))) {
       Iterable<PushResult> pushResults = ((PushCommand) (getAuthConfiguredCommand(git.push(), gitConfig)))
                                              .setRemote("origin")
                                              .setForce(forcePush)
@@ -467,16 +479,16 @@ public class GitClientImpl implements GitClient {
   }
 
   @Override
-  public synchronized GitCommitAndPushResult commitAndPush(GitConfig gitConfig, GitCommitRequest gitCommitRequest) {
-    GitCommitResult commitResult = commit(gitConfig, gitCommitRequest);
+  public synchronized GitCommitAndPushResult commitAndPush(GitOperationContext gitOperationContext) {
+    GitCommitResult commitResult = commit(gitOperationContext);
     GitCommitAndPushResult gitCommitAndPushResult =
         GitCommitAndPushResult.builder().gitCommitResult(commitResult).build();
     if (isNotBlank(commitResult.getCommitId())) {
-      gitCommitAndPushResult.setGitPushResult(push(gitConfig, gitCommitRequest.isForcePush()));
+      gitCommitAndPushResult.setGitPushResult(push(gitOperationContext));
     } else {
-      logger.warn(
-          getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Null commitId. Nothing to push for request [{}]",
-          gitCommitRequest);
+      logger.warn(getGitLogMessagePrefix(gitOperationContext.getGitConfig().getGitRepoType())
+              + "Null commitId. Nothing to push for request [{}]",
+          gitOperationContext.getGitCommitRequest());
     }
     return gitCommitAndPushResult;
   }
@@ -834,23 +846,6 @@ public class GitClientImpl implements GitClient {
   }
 
   @Override
-  public synchronized PullResult pull(GitConfig gitConfig) {
-    ensureRepoLocallyClonedAndUpdated(gitConfig);
-    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitConfig)))) {
-      git.branchCreate()
-          .setForce(true)
-          .setName(gitConfig.getBranch())
-          .setStartPoint("origin/" + gitConfig.getBranch())
-          .call();
-      git.checkout().setName(gitConfig.getBranch()).call();
-      return ((PullCommand) (getAuthConfiguredCommand(git.pull(), gitConfig))).call();
-    } catch (IOException | GitAPIException ex) {
-      logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
-      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in getting commit diff");
-    }
-  }
-
-  @Override
   public String validate(GitConfig gitConfig) {
     try {
       // Init Git repo
@@ -936,13 +931,10 @@ public class GitClientImpl implements GitClient {
     clone(gitConfig, gitClientHelper.getFileDownloadRepoDirectory(gitConfig, connectorId), branch, true);
   }
 
-  /**
-   * Ensure repo locally cloned. This is called before performing any git operation with remote
-   *
-   * @param gitConfig the git config
-   */
-  public synchronized void ensureRepoLocallyClonedAndUpdated(GitConfig gitConfig) {
-    File repoDir = new File(gitClientHelper.getRepoDirectory(gitConfig));
+  public synchronized void ensureRepoLocallyClonedAndUpdated(GitOperationContext gitOperationContext) {
+    GitConfig gitConfig = gitOperationContext.getGitConfig();
+
+    File repoDir = new File(gitClientHelper.getRepoDirectory(gitOperationContext));
     boolean executionFailed = false;
     if (repoDir.exists()) {
       // Check URL change (ssh, https) and update in .git/config
@@ -953,7 +945,7 @@ public class GitClientImpl implements GitClient {
 
         FetchResult fetchResult =
             ((FetchCommand) (getAuthConfiguredCommand(git.fetch(), gitConfig))).call(); // fetch all remote references
-        checkout(gitConfig);
+        checkout(gitOperationContext);
 
         // Do not sync to the HEAD of the branch if a specific commit SHA is provided
         if (StringUtils.isEmpty(gitConfig.getReference())) {
@@ -984,7 +976,7 @@ public class GitClientImpl implements GitClient {
           // no other method inside this one at the same time. Also all callers are synchronized as well.
           // Means if we fail due to existing index.lock it has to be orphan lock file
           // and needs to be deleted.
-          gitClientHelper.releaseLock(gitConfig, gitClientHelper.getRepoDirectory(gitConfig));
+          gitClientHelper.releaseLock(gitConfig, gitClientHelper.getRepoDirectory(gitOperationContext));
         }
       }
     }
@@ -992,7 +984,7 @@ public class GitClientImpl implements GitClient {
     // We are here, so either repo doesnt exist or we encounter some error while
     // opening/updating repo
     logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Do a fresh clone");
-    clone(gitConfig, gitClientHelper.getRepoDirectory(gitConfig), gitConfig.getBranch(), false);
+    clone(gitConfig, gitClientHelper.getRepoDirectory(gitOperationContext), gitConfig.getBranch(), false);
   }
 
   protected String getGitLogMessagePrefix(GitRepositoryType repositoryType) {

@@ -32,6 +32,7 @@ public class TerraformProvisionParameters implements ExecutionCapabilityDemander
   private final String appId;
   private final String entityId;
   private final String currentStateFileId;
+  private final String sourceRepoSettingId;
   private final GitConfig sourceRepo;
   private final String sourceRepoBranch;
   List<EncryptedDataDetail> sourceRepoEncryptionDetails;

@@ -1,11 +1,10 @@
 package software.wings.service.intfc.yaml;
 
-import org.eclipse.jgit.api.PullResult;
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitOperationContext;
 import software.wings.beans.yaml.GitCheckoutResult;
 import software.wings.beans.yaml.GitCloneResult;
 import software.wings.beans.yaml.GitCommitAndPushResult;
-import software.wings.beans.yaml.GitCommitRequest;
 import software.wings.beans.yaml.GitCommitResult;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFetchFilesRequest;
@@ -29,64 +28,17 @@ public interface GitClient {
    */
   GitCloneResult clone(GitConfig gitConfig, String gitRepoDirectory, String branch, boolean noCheckout);
 
-  /**
-   * Ensure repo locally cloned and updated.
-   *
-   * @param gitConfig the git config
-   */
-  void ensureRepoLocallyClonedAndUpdated(GitConfig gitConfig);
+  void ensureRepoLocallyClonedAndUpdated(GitOperationContext gitOperationContext);
 
-  /**
-   * Diff git diff result.
-   *
-   * @param gitConfig     the git config
-   * @param startCommitId the start commit id
-   * @return the git diff result
-   */
-  GitDiffResult diff(GitConfig gitConfig, String startCommitId);
+  GitDiffResult diff(GitOperationContext gitOperationContext);
 
-  /**
-   * Checkout git checkout result.
-   *
-   * @param gitConfig the git config
-   * @return the git checkout result
-   */
-  GitCheckoutResult checkout(GitConfig gitConfig);
+  GitCheckoutResult checkout(GitOperationContext gitOperationContext);
 
-  /**
-   * Commit git commit result.
-   *
-   * @param gitConfig        the git config
-   * @param gitCommitRequest the git commit request
-   * @return the git commit result
-   */
-  GitCommitResult commit(GitConfig gitConfig, GitCommitRequest gitCommitRequest);
+  GitCommitResult commit(GitOperationContext gitOperationContext);
 
-  /**
-   * Push git push result.
-   *
-   * @param gitConfig the git config
-   * @param forcePush push the changes to git forcefully
-   * @return the git push result
-   */
-  GitPushResult push(GitConfig gitConfig, boolean forcePush);
+  GitPushResult push(GitOperationContext gitOperationContext);
 
-  /**
-   * Commit and push git commit and push result.
-   *
-   * @param gitConfig        the git config
-   * @param gitCommitRequest the git commit request
-   * @return the git commit and push result
-   */
-  GitCommitAndPushResult commitAndPush(GitConfig gitConfig, GitCommitRequest gitCommitRequest);
-
-  /**
-   * Pull git pull result.
-   *
-   * @param gitConfig the git config
-   * @return the git pull result
-   */
-  PullResult pull(GitConfig gitConfig);
+  GitCommitAndPushResult commitAndPush(GitOperationContext gitOperationContext);
 
   String validate(GitConfig gitConfig);
 

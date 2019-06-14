@@ -1,6 +1,8 @@
 package software.wings.delegatetasks;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER_ADMIN;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 
 import com.google.inject.Inject;
@@ -14,6 +16,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
+import software.wings.beans.GitOperationContext;
 import software.wings.beans.yaml.GitCommand.GitCommandType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandExecutionResponseBuilder;
@@ -62,11 +65,27 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
       // Decrypt git config
       decryptGitConfig(gitConfig, encryptionDetails);
 
+      String gitConnectorId = null;
+      GitOperationContext gitOperationContext = null;
+
       switch (gitCommandType) {
         case COMMIT_AND_PUSH:
           GitCommitRequest gitCommitRequest = (GitCommitRequest) parameters[3];
           logger.info(GIT_YAML_LOG_PREFIX + "COMMIT_AND_PUSH: [{}]", gitCommitRequest);
-          GitCommitAndPushResult gitCommitAndPushResult = gitClient.commitAndPush(gitConfig, gitCommitRequest);
+
+          gitConnectorId = gitCommitRequest.getYamlGitConfig().getGitConnectorId();
+          if (isBlank(gitConnectorId)) {
+            gitConnectorId = generateUuid();
+          }
+
+          gitOperationContext = GitOperationContext.builder()
+                                    .gitConnectorId(gitConnectorId)
+                                    .gitConfig(gitConfig)
+                                    .gitCommitRequest(gitCommitRequest)
+                                    .build();
+
+          GitCommitAndPushResult gitCommitAndPushResult = gitClient.commitAndPush(gitOperationContext);
+
           gitCommitAndPushResult.setYamlGitConfig(gitCommitRequest.getYamlGitConfig());
 
           return GitCommandExecutionResponse.builder()
@@ -77,7 +96,19 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
         case DIFF:
           GitDiffRequest gitDiffRequest = (GitDiffRequest) parameters[3];
           logger.info(GIT_YAML_LOG_PREFIX + "DIFF: [{}]", gitDiffRequest);
-          GitDiffResult gitDiffResult = gitClient.diff(gitConfig, gitDiffRequest.getLastProcessedCommitId());
+
+          gitConnectorId = gitDiffRequest.getYamlGitConfig().getGitConnectorId();
+          if (isBlank(gitConnectorId)) {
+            gitConnectorId = generateUuid();
+          }
+
+          gitOperationContext = GitOperationContext.builder()
+                                    .gitConnectorId(gitConnectorId)
+                                    .gitConfig(gitConfig)
+                                    .gitDiffRequest(gitDiffRequest)
+                                    .build();
+
+          GitDiffResult gitDiffResult = gitClient.diff(gitOperationContext);
           gitDiffResult.setYamlGitConfig(gitDiffRequest.getYamlGitConfig());
 
           return GitCommandExecutionResponse.builder()
