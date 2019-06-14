@@ -215,8 +215,8 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
     }
 
     try {
-      Method getAppIdMethod = entity.getClass().getMethod("getAppId", null);
-      Object appIdObj = getAppIdMethod.invoke(entity, null);
+      Method getAppIdMethod = entity.getClass().getMethod("getAppId");
+      Object appIdObj = getAppIdMethod.invoke(entity);
       if (appIdObj instanceof String) {
         return (String) appIdObj;
       }
