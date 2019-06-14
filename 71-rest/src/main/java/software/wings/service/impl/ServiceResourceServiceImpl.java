@@ -974,7 +974,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                                     .filter(CommandKeys.originEntityId, serviceCommand.getUuid()));
       if (deleted) {
         String accountId = appService.getAccountIdByAppId(service.getAppId());
-        yamlPushService.pushYamlChangeSet(accountId, service, serviceCommand, Type.DELETE, syncFromGit);
+        yamlPushService.pushYamlChangeSet(accountId, serviceCommand, null, Type.DELETE, syncFromGit, false);
       }
     }
   }
@@ -1447,6 +1447,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Service service = wingsPersistence.getWithAppId(Service.class, appId, serviceId);
     notNullCheck("Service was deleted", service, USER);
 
+    ServiceCommand savedServiceCommand = commandService.getServiceCommand(appId, serviceCommand.getUuid());
+
     UpdateOperations<ServiceCommand> updateOperation = wingsPersistence.createUpdateOperations(ServiceCommand.class);
 
     EntityVersion lastEntityVersion =
@@ -1474,7 +1476,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     boolean syncFromGit = serviceCommand.isSyncFromGit();
     serviceCommand = commandService.getServiceCommand(appId, serviceCommand.getUuid());
-    yamlPushService.pushYamlChangeSet(accountId, service, serviceCommand, Type.UPDATE, syncFromGit);
+
+    boolean isRename = !savedServiceCommand.getName().equals(serviceCommand.getName());
+    yamlPushService.pushYamlChangeSet(
+        accountId, savedServiceCommand, serviceCommand, Type.UPDATE, syncFromGit, isRename);
 
     return get(appId, serviceId);
   }

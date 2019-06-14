@@ -229,6 +229,10 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       ConfigFile configFile = (ConfigFile) entity;
       return obtainEntity(configFile.getAppId(), configFile.getEnvId(), configFile.getEntityId(), configFile.getUuid(),
           configFile.getEntityType());
+    } else if (entity instanceof ServiceCommand) {
+      ServiceCommand serviceCommand = (ServiceCommand) entity;
+      return obtainEntity(
+          serviceCommand.getAppId(), null, serviceCommand.getServiceId(), serviceCommand.getUuid(), EntityType.SERVICE);
     }
 
     return helperEntity;
