@@ -42,6 +42,7 @@ public class ExecutionArgs {
   @Deprecated @JsonIgnore private EmbeddedUser triggeredBy;
   private boolean excludeHostsWithSameArtifact;
   @Getter @Setter private boolean notifyTriggeredUserOnly;
+  private List<ArtifactVariable> artifactVariables;
 
   /**
    * Gets service id.
@@ -303,5 +304,13 @@ public class ExecutionArgs {
 
   public void setExcludeHostsWithSameArtifact(boolean excludeHostsWithSameArtifact) {
     this.excludeHostsWithSameArtifact = excludeHostsWithSameArtifact;
+  }
+
+  public List<ArtifactVariable> getArtifactVariables() {
+    return artifactVariables;
+  }
+
+  public void setArtifactVariables(List<ArtifactVariable> artifactVariables) {
+    this.artifactVariables = artifactVariables;
   }
 }

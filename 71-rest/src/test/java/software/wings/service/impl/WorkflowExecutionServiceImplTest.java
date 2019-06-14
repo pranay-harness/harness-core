@@ -117,7 +117,6 @@ import software.wings.beans.WorkflowPhase;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.infrastructure.Host;
-import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.licensing.LicenseService;
 import software.wings.rules.Listeners;
@@ -171,6 +170,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
   @InjectMocks @Inject private Injector injector;
   @Rule public ExpectedException thrown = ExpectedException.none();
+
+  private static final String PHASE_PARAM = "PHASE_PARAM";
 
   private Account account;
   private Application app;
@@ -1669,7 +1670,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                         .stream()
                                         .filter(contextElement
                                             -> contextElement.getElementType() == ContextElementType.PARAM
-                                                && contextElement.getName() == Constants.PHASE_PARAM)
+                                                && contextElement.getName() == PHASE_PARAM)
                                         .collect(toList());
     assertThat(elements).isNotNull().isNotEmpty();
     assertThat(elements.get(0)).isInstanceOf(PhaseElement.class);

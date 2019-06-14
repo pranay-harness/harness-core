@@ -55,6 +55,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
+import software.wings.beans.PhaseStepType;
 import software.wings.beans.ResourceConstraint;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable.Type;
@@ -63,7 +64,6 @@ import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.command.ShellScriptTemplate;
-import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.ServiceResourceService;
@@ -95,6 +95,11 @@ public class WorkflowGenerator {
   @Inject private WorkflowGenerator workflowGenerator;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private TemplateGenerator templateGenerator;
+
+  /**
+   * The constant COLLECT_ARTIFACT.
+   */
+  private static final String COLLECT_ARTIFACT = "Collect Artifact";
 
   public enum Workflows {
     BASIC_SIMPLE,
@@ -309,7 +314,7 @@ public class WorkflowGenerator {
                     .addWorkflowPhase(
                         aWorkflowPhase()
                             .phaseSteps(asList(aPhaseStep(PREPARE_STEPS, WorkflowServiceHelper.PREPARE_STEPS).build(),
-                                aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
+                                aPhaseStep(PhaseStepType.COLLECT_ARTIFACT, COLLECT_ARTIFACT)
                                     .addStep(
                                         GraphNode.builder()
                                             .id(generateUuid())
@@ -395,7 +400,7 @@ public class WorkflowGenerator {
                     .addWorkflowPhase(
                         aWorkflowPhase()
                             .phaseSteps(asList(aPhaseStep(PREPARE_STEPS, WorkflowServiceHelper.PREPARE_STEPS).build(),
-                                aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
+                                aPhaseStep(PhaseStepType.COLLECT_ARTIFACT, COLLECT_ARTIFACT)
                                     .addStep(GraphNode.builder()
                                                  .id(generateUuid())
                                                  .type(StateType.SHELL_SCRIPT.name())

@@ -100,6 +100,7 @@ import software.wings.beans.Account;
 import software.wings.beans.AppContainer;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.ApprovalDetails.Action;
+import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureConfig;
@@ -179,6 +180,7 @@ import software.wings.beans.VaultConfig;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.AbstractCommandUnit;
@@ -1263,5 +1265,9 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsAsgGetRunningCountResponse.class, 7189);
     kryo.register(AwsAsgGetRunningCountData.class, 7190);
     kryo.register(StackDriverLogDataCollectionInfo.class, 7191);
+    kryo.register(Artifact.class, 7192);
+    kryo.register(Artifact.ContentStatus.class, 7193);
+    kryo.register(Artifact.Status.class, 7194);
+    kryo.register(ArtifactVariable.class, 7195);
   }
 }
