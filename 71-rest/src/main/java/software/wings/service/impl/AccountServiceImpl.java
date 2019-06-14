@@ -703,6 +703,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     return wingsPersistence.createQuery(DelegateConnection.class)
+               .filter(DelegateConnectionKeys.accountId, accountId)
                .filter(DelegateConnectionKeys.delegateId, delegateKey.getId())
                .getKey()
         != null;
