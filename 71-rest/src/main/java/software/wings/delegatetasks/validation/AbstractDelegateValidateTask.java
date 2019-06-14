@@ -5,7 +5,6 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -78,7 +77,6 @@ public abstract class AbstractDelegateValidateTask implements DelegateValidateTa
     }
   }
 
-  @SuppressFBWarnings("EI_EXPOSE_REP")
   public Object[] getParameters() {
     return getTaskData().getParameters();
   }

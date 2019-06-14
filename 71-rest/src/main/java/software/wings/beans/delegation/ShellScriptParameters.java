@@ -1,12 +1,16 @@
 package software.wings.beans.delegation;
 
+import static io.harness.govern.Switch.unhandled;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.mixin.SSHConnectionExecutionCapabilityGenerator;
+import io.harness.delegate.task.mixin.WinRMExecutionCapabilityGenerator;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.expression.Expression;
 import lombok.Builder;
-import lombok.Setter;
 import lombok.Value;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.KerberosConfig;
@@ -21,16 +25,17 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.ShellScriptState;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Value
 @Builder
-public class ShellScriptParameters implements TaskParameters {
+public class ShellScriptParameters implements TaskParameters, ExecutionCapabilityDemander {
   public static final String CommandUnit = "Execute";
 
-  @Setter private String accountId;
+  private String accountId;
   private final String appId;
   private final String activityId;
   @Expression final String host;
@@ -153,5 +158,19 @@ public class ShellScriptParameters implements TaskParameters {
         .kubeConfigContent(kubeConfigContent)
         .scriptType(scriptType)
         .build();
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    switch (connectionType) {
+      case SSH:
+        return Arrays.asList(SSHConnectionExecutionCapabilityGenerator.buildSSHConnectionExecutionCapability(host));
+      case WINRM:
+        return Arrays.asList(WinRMExecutionCapabilityGenerator.buildWinRMExecutionCapability(
+            host, Integer.toString(winrmConnectionAttributes.getPort())));
+      default:
+        unhandled(connectionType);
+        return null;
+    }
   }
 }

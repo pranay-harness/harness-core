@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,7 +17,8 @@ import java.util.Set;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-public abstract class LogDataCollectionInfo extends DataCollectionInfo implements TaskParameters {
+public abstract class LogDataCollectionInfo
+    extends DataCollectionInfo implements TaskParameters, ExecutionCapabilityDemander {
   private String query;
   private long startTime;
   private long endTime;

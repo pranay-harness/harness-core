@@ -1,10 +1,13 @@
 package software.wings.service.impl.stackdriver;
 
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.GcpConfig;
+import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.DataCollectionInfo;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
@@ -17,7 +20,8 @@ import java.util.Map;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class StackDriverDataCollectionInfo extends DataCollectionInfo implements TaskParameters {
+public class StackDriverDataCollectionInfo
+    extends DataCollectionInfo implements TaskParameters, ExecutionCapabilityDemander {
   private GcpConfig gcpConfig;
   private long startTime;
   private long endTime;
@@ -53,5 +57,10 @@ public class StackDriverDataCollectionInfo extends DataCollectionInfo implements
     this.hosts = hosts;
     this.loadBalancerMetrics = loadBalancerMetrics;
     this.podMetrics = podMetrics;
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return CapabilityHelper.generateDelegateCapabilities(gcpConfig, encryptedDataDetails);
   }
 }

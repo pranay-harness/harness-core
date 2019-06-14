@@ -4,6 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
 import io.harness.exception.WingsException;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -18,6 +21,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -31,7 +35,7 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "LdapSettingsKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class LdapSettings extends SSOSettings {
+public class LdapSettings extends SSOSettings implements ExecutionCapabilityDemander {
   @NotBlank String accountId;
   @NotNull @Valid LdapConnectionSettings connectionSettings;
 
@@ -100,5 +104,12 @@ public class LdapSettings extends SSOSettings {
   @Override
   public SSOSettings getPublicSSOSettings() {
     return this;
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return Arrays.asList(ProcessExecutorCapabilityGenerator.buildProcessExecutorCapability("LDAP",
+        Arrays.asList(
+            "nc", "-z", "-G5", connectionSettings.getHost(), Integer.toString(connectionSettings.getPort()))));
   }
 }

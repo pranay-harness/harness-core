@@ -12,6 +12,9 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -27,13 +30,16 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.CloudProviderYaml;
 
+import java.util.Arrays;
+import java.util.List;
+
 @JsonTypeName("KUBERNETES_CLUSTER")
 @JsonInclude(Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
-public class KubernetesClusterConfig extends SettingValue implements EncryptableSetting {
+public class KubernetesClusterConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
   private boolean useKubernetesDelegate;
   private String delegateName;
   private String masterUrl;
@@ -156,6 +162,11 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
     }
 
     return kubernetesConfig.build();
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(masterUrl));
   }
 
   @Data

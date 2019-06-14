@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -18,12 +21,16 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.CloudProviderYaml;
 
+import java.util.Arrays;
+import java.util.List;
+
 @JsonTypeName("AZURE")
 @Data
 @Builder
 @ToString(exclude = "key")
 @EqualsAndHashCode(callSuper = false)
-public class AzureConfig extends SettingValue implements EncryptableSetting {
+public class AzureConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
+  private static final String AZURE_URL = "https://azure.microsoft.com/";
   @Attributes(title = "Client ID [Application ID]", required = true) @NotEmpty private String clientId;
 
   @Attributes(title = "Tenant ID [Directory ID]", required = true) @NotEmpty private String tenantId;
@@ -53,6 +60,11 @@ public class AzureConfig extends SettingValue implements EncryptableSetting {
   @Override
   public String fetchResourceCategory() {
     return ResourceType.CLOUD_PROVIDER.name();
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(AZURE_URL));
   }
 
   @Data

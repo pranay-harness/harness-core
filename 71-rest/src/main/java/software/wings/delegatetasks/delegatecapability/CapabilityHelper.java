@@ -2,9 +2,11 @@ package software.wings.delegatetasks.delegatecapability;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
@@ -22,6 +24,7 @@ import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import software.wings.settings.SettingValue;
 
 import java.util.ArrayList;
@@ -36,6 +39,13 @@ import java.util.stream.Collectors;
 @Slf4j
 public class CapabilityHelper {
   public static final String TERRAFORM = "terraform";
+  public static final String HELM = "helm";
+  public static final String CHART_MUSEUM = "chart-museum";
+
+  private static final String HELM_VERSION_COMMAND = "${HELM_PATH} version -c";
+
+  private static final String CHART_MUSEUM_VERSION_COMMAND = "${CHART_MUSEUM_PATH} -v";
+  @Inject private static K8sGlobalConfigService k8sGlobalConfigService;
 
   public static void embedCapabilitiesInDelegateTask(
       DelegateTask task, Collection<EncryptionConfig> encryptionConfigs) {
@@ -225,5 +235,25 @@ public class CapabilityHelper {
     processExecutorArguments.add("terraform --version");
 
     return generateExecutionCapabilitiesForProcessExecutor(TERRAFORM, processExecutorArguments, encryptedDataDetails);
+  }
+
+  public static List<ExecutionCapability> generateExecutionCapabilitiesForHelm(
+      List<EncryptedDataDetail> encryptedDataDetails) {
+    String helmPath = k8sGlobalConfigService.getHelmPath();
+    String helmVersionCommand = HELM_VERSION_COMMAND.replace("${HELM_PATH}", encloseWithQuotesIfNeeded(helmPath));
+
+    List<String> processExecutorArguments = Arrays.asList(helmVersionCommand.split("\\s+"));
+    return generateExecutionCapabilitiesForProcessExecutor(HELM, processExecutorArguments, encryptedDataDetails);
+  }
+
+  public static List<ExecutionCapability> generateExecutionCapabilitiesForChartMeuseum(
+      List<EncryptedDataDetail> encryptedDataDetails) {
+    String chartMuseumPath = k8sGlobalConfigService.getChartMuseumPath();
+    String chartMuseumVersionCommand =
+        CHART_MUSEUM_VERSION_COMMAND.replace("${CHART_MUSEUM_PATH}", encloseWithQuotesIfNeeded(chartMuseumPath));
+
+    List<String> processExecutorArguments = Arrays.asList(chartMuseumVersionCommand.split("\\s+"));
+    return generateExecutionCapabilitiesForProcessExecutor(
+        CHART_MUSEUM, processExecutorArguments, encryptedDataDetails);
   }
 }

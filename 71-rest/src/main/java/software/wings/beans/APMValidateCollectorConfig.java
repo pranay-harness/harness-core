@@ -1,5 +1,8 @@
 package software.wings.beans;
 
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Data;
@@ -9,12 +12,13 @@ import software.wings.sm.states.APMVerificationState.Method;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 @Data
 @Builder
-public class APMValidateCollectorConfig {
+public class APMValidateCollectorConfig implements ExecutionCapabilityDemander {
   @NonNull private String baseUrl;
   @NonNull private String url;
   private String body;
@@ -33,5 +37,10 @@ public class APMValidateCollectorConfig {
     } catch (UnsupportedEncodingException e) {
       throw new WingsException("Unsupported encoding exception while encoding backticks in " + url);
     }
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(getUrl()));
   }
 }

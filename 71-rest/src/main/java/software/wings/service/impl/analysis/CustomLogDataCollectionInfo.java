@@ -1,13 +1,17 @@
 package software.wings.service.impl.analysis;
 
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.sm.StateType;
 import software.wings.sm.states.CustomLogVerificationState.ResponseMapper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,5 +52,14 @@ public class CustomLogDataCollectionInfo extends LogDataCollectionInfo {
     this.collectionFrequency = collectionFrequency;
     this.shouldInspectHosts = shouldInspectHosts;
     this.hostnameSeparator = hostnameSeparator;
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    List<ExecutionCapability> executionCapabilities = new ArrayList<>();
+    executionCapabilities.add(
+        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(getBaseUrl()));
+    executionCapabilities.addAll(CapabilityHelper.generateVaultHttpCapabilities(encryptedDataDetails));
+    return executionCapabilities;
   }
 }

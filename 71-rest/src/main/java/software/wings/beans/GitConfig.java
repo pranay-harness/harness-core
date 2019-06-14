@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.audit.ResourceType.SOURCE_REPO_PROVIDER;
 import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD;
 
@@ -8,6 +9,10 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.data.validator.Trimmed;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
+import io.harness.delegate.task.mixin.SSHConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -15,6 +20,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
@@ -25,11 +31,15 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.ArtifactServerYaml;
 
+import java.util.Arrays;
+import java.util.List;
+
 @JsonTypeName("GIT")
 @Data
 @ToString(exclude = {"password", "sshSettingAttribute"})
 @EqualsAndHashCode(callSuper = false, exclude = {"sshSettingAttribute"})
-public class GitConfig extends SettingValue implements EncryptableSetting {
+@Slf4j
+public class GitConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
   @Attributes(title = "Username", required = true) private String username;
   @Attributes(title = "Password", required = true) @Encrypted private char[] password;
   @NotEmpty @Trimmed @Attributes(title = "Git Repo Url", required = true) private String repoUrl;
@@ -51,6 +61,18 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
 
   @Trimmed private String authorName;
   @Trimmed @Email private String authorEmailId;
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    if (!keyAuth) {
+      return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(repoUrl));
+    } else if (keyAuth && isNotBlank(sshSettingId)) {
+      return Arrays.asList(SSHConnectionExecutionCapabilityGenerator.buildSSHConnectionExecutionCapability(repoUrl));
+    } else {
+      logger.error("This Should Not Happen");
+      return null;
+    }
+  }
 
   @Override
   public String fetchResourceCategory() {

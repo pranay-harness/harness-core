@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 
@@ -38,7 +37,7 @@ public class GitFetchFilesValidation extends AbstractDelegateValidateTask {
     for (Entry<String, GitFetchFilesConfig> entry : gitFetchFileConfigMap.entrySet()) {
       GitFetchFilesConfig gitFetchFileConfig = entry.getValue();
 
-      if (!validateGitConfig(gitFetchFileConfig.getGitConfig(), gitFetchFileConfig.getEncryptedDataDetails())) {
+      if (!validateGitConfig(gitFetchFileConfig.getGitConfig())) {
         return taskValidationResult(false);
       }
     }
@@ -51,18 +50,10 @@ public class GitFetchFilesValidation extends AbstractDelegateValidateTask {
         DelegateConnectionResult.builder().criteria(getCriteria().get(0)).validated(validated).build());
   }
 
-  private boolean validateGitConfig(GitConfig gitConfig, List<EncryptedDataDetail> encryptionDetails) {
-    try {
-      encryptionService.decrypt(gitConfig, encryptionDetails);
-    } catch (Exception e) {
-      logger.info("Failed to decrypt " + gitConfig, e);
-      return false;
-    }
-
+  private boolean validateGitConfig(GitConfig gitConfig) {
     if (isNotEmpty(gitClient.validate(gitConfig))) {
       return false;
     }
-
     return true;
   }
 
