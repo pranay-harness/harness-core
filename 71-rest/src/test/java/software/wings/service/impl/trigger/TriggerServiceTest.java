@@ -115,6 +115,7 @@ import software.wings.beans.trigger.WebhookSource;
 import software.wings.common.MongoIdempotentRegistry;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.scheduler.ScheduledTriggerJob;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.trigger.TriggerServiceImpl.TriggerIdempotentResult;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactCollectionService;
@@ -158,6 +159,7 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Mock private HarnessTagService harnessTagService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock private YamlPushService yamlPushService;
+  @Mock private AuditServiceHelper auditServiceHelper;
 
   @Inject @InjectMocks private TriggerService triggerService;
 
@@ -205,6 +207,11 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(artifactStreamServiceBindingService.getService(APP_ID, ARTIFACT_STREAM_ID, false))
         .thenReturn(Service.builder().uuid(SERVICE_ID).name(CATALOG_SERVICE_NAME).build());
     doNothing().when(harnessTagService).pruneTagLinks(anyString(), anyString());
+
+    doNothing().when(auditServiceHelper).reportForAuditingUsingAccountId(anyString(), any(), any(), any());
+    doNothing().when(auditServiceHelper).reportDeleteForAuditingUsingAccountId(anyString(), any());
+    doNothing().when(auditServiceHelper).reportDeleteForAuditing(anyString(), any());
+    doNothing().when(auditServiceHelper).reportForAuditingUsingAppId(anyString(), any(), any(), any());
   }
 
   @Test

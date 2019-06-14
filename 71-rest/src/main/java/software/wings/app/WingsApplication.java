@@ -127,6 +127,7 @@ import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.AuthenticationFilter;
 import software.wings.security.ThreadLocalUserProvider;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.AuditServiceImpl;
 import software.wings.service.impl.DelayEventListener;
 import software.wings.service.impl.DelegateServiceImpl;
@@ -506,6 +507,10 @@ public class WingsApplication extends Application<MainConfiguration> {
     YamlPushServiceImpl yamlPushService = (YamlPushServiceImpl) injector.getInstance(Key.get(YamlPushService.class));
     AuditServiceImpl auditService = (AuditServiceImpl) injector.getInstance(Key.get(AuditService.class));
     yamlPushService.getEntityCrudSubject().register(auditService);
+
+    AuditServiceHelper auditServiceHelper =
+        (AuditServiceHelper) injector.getInstance(Key.get(AuditServiceHelper.class));
+    auditServiceHelper.getEntityCrudSubject().register(auditService);
 
     registerSharedObservers(injector);
   }
