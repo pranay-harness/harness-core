@@ -120,11 +120,13 @@ import software.wings.api.PipelineElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.WorkflowElement;
+import software.wings.api.WorkflowElement.WorkflowElementBuilder;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.ApprovalAuthorization;
 import software.wings.beans.ApprovalDetails;
+import software.wings.beans.ArtifactVariable;
 import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CanaryWorkflowExecutionAdvisor;
@@ -278,6 +280,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private WorkflowServiceHelper workflowServiceHelper;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private MultiArtifactWorkflowExecutionServiceHelper multiArtifactWorkflowExecutionServiceHelper;
 
   @Inject @RateLimitCheck private PreDeploymentChecker deployLimitChecker;
   @Inject @ServiceInstanceUsage private PreDeploymentChecker siUsageChecker;
@@ -1188,11 +1191,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     ExecutionArgs executionArgs = workflowExecution.getExecutionArgs();
 
-    populateArtifactsAndServices(workflowExecution, stdParams, keywords, executionArgs);
+    Application app = appService.get(workflowExecution.getAppId());
+
+    populateArtifactsAndServices(workflowExecution, stdParams, keywords, executionArgs, app.getAccountId());
 
     populatePipelineSummary(workflowExecution, keywords, executionArgs);
 
-    Application app = appService.get(workflowExecution.getAppId());
     workflowExecution.setAppName(app.getName());
     keywords.add(workflowExecution.getAppName());
 
@@ -1215,7 +1219,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     logger.info("Created workflow execution {}", workflowExecution.getUuid());
 
-    updateWorkflowElement(workflowExecution, stdParams, workflow);
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, app.getAccountId())) {
+      if (workflowExecution.getWorkflowType().equals(ORCHESTRATION)) {
+        multiArtifactWorkflowExecutionServiceHelper.saveArtifactVariablesInSweepingOutput(
+            executionArgs, workflowExecution, workflowExecution.getWorkflowId(), app.getAccountId());
+      }
+    }
+    updateWorkflowElement(workflowExecution, stdParams, workflow, app.getAccountId());
 
     LinkedList<ContextElement> elements = new LinkedList<>();
     elements.push(stdParams);
@@ -1288,26 +1298,33 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private void updateWorkflowElement(
-      WorkflowExecution workflowExecution, WorkflowStandardParams stdParams, Workflow workflow) {
+      WorkflowExecution workflowExecution, WorkflowStandardParams stdParams, Workflow workflow, String accountId) {
     stdParams.setErrorStrategy(workflowExecution.getErrorStrategy());
     String workflowUrl = mainConfiguration.getPortal().getUrl() + "/"
         + format(mainConfiguration.getPortal().getExecutionUrlPattern(), workflowExecution.getAppId(),
               workflowExecution.getEnvId(), workflowExecution.getUuid());
 
     if (stdParams.getWorkflowElement() == null) {
-      stdParams.setWorkflowElement(WorkflowElement.builder()
-                                       .uuid(workflowExecution.getUuid())
-                                       .name(workflowExecution.normalizedName())
-                                       .url(workflowUrl)
-                                       .displayName(workflowExecution.displayName())
-                                       .releaseNo(workflowExecution.getReleaseNo())
-                                       .build());
+      WorkflowElementBuilder workflowElementBuilder = WorkflowElement.builder()
+                                                          .uuid(workflowExecution.getUuid())
+                                                          .name(workflowExecution.normalizedName())
+                                                          .url(workflowUrl)
+                                                          .displayName(workflowExecution.displayName())
+                                                          .releaseNo(workflowExecution.getReleaseNo());
+      if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+        workflowElementBuilder.artifactVariables(workflowExecution.getExecutionArgs().getArtifactVariables());
+      }
+      stdParams.setWorkflowElement(workflowElementBuilder.build());
     } else {
       stdParams.getWorkflowElement().setName(workflowExecution.normalizedName());
       stdParams.getWorkflowElement().setUuid(workflowExecution.getUuid());
       stdParams.getWorkflowElement().setUrl(workflowUrl);
       stdParams.getWorkflowElement().setDisplayName(workflowExecution.displayName());
       stdParams.getWorkflowElement().setReleaseNo(workflowExecution.getReleaseNo());
+      if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+        stdParams.getWorkflowElement().setArtifactVariables(
+            workflowExecution.getExecutionArgs().getArtifactVariables());
+      }
     }
     stdParams.getWorkflowElement().setPipelineDeploymentUuid(workflowExecution.getWorkflowType() == PIPELINE
             ? workflowExecution.getUuid()
@@ -1409,85 +1426,152 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private void populateArtifactsAndServices(WorkflowExecution workflowExecution, WorkflowStandardParams stdParams,
-      List<Object> keywords, ExecutionArgs executionArgs) {
-    if (isNotEmpty(executionArgs.getArtifacts())) {
-      List<String> artifactIds = executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(toList());
-      List<Artifact> artifacts =
-          artifactService.listByIds(appService.getAccountIdByAppId(workflowExecution.getAppId()), artifactIds);
+      List<Object> keywords, ExecutionArgs executionArgs, String accountId) {
+    if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+      if (isNotEmpty(executionArgs.getArtifacts())) {
+        List<String> artifactIds = executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(toList());
+        List<Artifact> artifacts =
+            artifactService.listByIds(appService.getAccountIdByAppId(workflowExecution.getAppId()), artifactIds);
 
-      if (artifacts == null || artifacts.size() != artifactIds.size()) {
-        logger.error("Artifact argument and valid artifact retrieved size not matching");
-        throw new InvalidRequestException("Invalid artifact");
+        if (artifacts == null || artifacts.size() != artifactIds.size()) {
+          logger.error("Artifact argument and valid artifact retrieved size not matching");
+          throw new InvalidRequestException("Invalid artifact");
+        }
+
+        // Filter out the artifacts that does not belong to the workflow
+        List<String> serviceIds =
+            isEmpty(workflowExecution.getServiceIds()) ? new ArrayList<>() : workflowExecution.getServiceIds();
+        Set<String> artifactStreamIds = new HashSet<>();
+        serviceIds.forEach(serviceId -> {
+          Service service = serviceResourceService.get(serviceId);
+          if (service == null) {
+            return;
+          }
+          List<String> ids = service.getArtifactStreamIds();
+          if (isEmpty(ids)) {
+            return;
+          }
+
+          artifactStreamIds.addAll(ids);
+        });
+
+        List<Artifact> filteredArtifacts = new ArrayList<>();
+        for (Artifact artifact : artifacts) {
+          if (artifactStreamIds.contains(artifact.getArtifactStreamId())) {
+            filteredArtifacts.add(artifact);
+          } else {
+            logger.warn(
+                "ArtifactStreamId {} is not available for serviceIds {}", artifact.getArtifactStreamId(), serviceIds);
+          }
+        }
+
+        // TODO: get rid of artifactIdNames when UI moves to artifact list
+        executionArgs.setArtifactIdNames(
+            filteredArtifacts.stream().collect(toMap(Artifact::getUuid, Artifact::getDisplayName)));
+        filteredArtifacts.forEach(artifact -> {
+          artifact.setArtifactFiles(null);
+          artifact.setCreatedBy(null);
+          artifact.setLastUpdatedBy(null);
+          keywords.add(artifact.getArtifactSourceName());
+          keywords.add(artifact.getDescription());
+          keywords.add(artifact.getRevision());
+          keywords.add(artifact.getMetadata());
+        });
+
+        executionArgs.setArtifacts(artifacts);
+        workflowExecution.setArtifacts(filteredArtifacts);
+
+        Set<String> serviceIdsSet = new HashSet<>();
+        List<ServiceElement> services = new ArrayList<>();
+        filteredArtifacts.forEach(artifact -> {
+          List<Service> relatedServices =
+              artifactStreamServiceBindingService.listServices(artifact.getArtifactStreamId());
+          if (isEmpty(relatedServices)) {
+            return;
+          }
+
+          for (Service relatedService : relatedServices) {
+            if (serviceIdsSet.contains(relatedService.getUuid())) {
+              continue;
+            }
+
+            serviceIdsSet.add(relatedService.getUuid());
+            ServiceElement se = new ServiceElement();
+            MapperUtils.mapObject(relatedService, se);
+            services.add(se);
+            keywords.add(se.getName());
+          }
+        });
+
+        // Set the services in the context
+        stdParams.setServices(services);
       }
+    } else {
+      populateArtifacts(workflowExecution, stdParams, keywords, executionArgs, accountId);
+    }
+  }
 
-      // Filter out the artifacts that does not belong to the workflow
-      List<String> serviceIds =
-          isEmpty(workflowExecution.getServiceIds()) ? new ArrayList<>() : workflowExecution.getServiceIds();
-      Set<String> artifactStreamIds = new HashSet<>();
-      serviceIds.forEach(serviceId -> {
-        Service service = serviceResourceService.get(serviceId);
-        if (service == null) {
-          return;
+  private void populateArtifacts(WorkflowExecution workflowExecution, WorkflowStandardParams stdParams,
+      List<Object> keywords, ExecutionArgs executionArgs, String accountId) {
+    // set artifacts in executionArgs
+    // TODO: filter for services
+    // check if artifact var exits in workflow
+    List<ArtifactVariable> artifactVariables = executionArgs.getArtifactVariables();
+    List<Artifact> artifacts = new ArrayList<>();
+    if (isNotEmpty(artifactVariables)) {
+      for (ArtifactVariable variable : artifactVariables) {
+        Artifact artifact = artifactService.get(accountId, variable.getValue());
+        if (artifact == null) {
+          throw new InvalidRequestException(
+              format("Unable to get artifact for artifact variable: [%s]", variable.getName()), USER);
         }
-        List<String> ids = service.getArtifactStreamIds();
-        if (isEmpty(ids)) {
-          return;
-        }
-
-        artifactStreamIds.addAll(ids);
-      });
-
-      List<Artifact> filteredArtifacts = new ArrayList<>();
-      for (Artifact artifact : artifacts) {
-        if (artifactStreamIds.contains(artifact.getArtifactStreamId())) {
-          filteredArtifacts.add(artifact);
-        } else {
-          logger.warn(
-              "ArtifactStreamId {} is not available for serviceIds {}", artifact.getArtifactStreamId(), serviceIds);
-        }
+        artifacts.add(artifact);
       }
+    }
+    executionArgs.setArtifacts(artifacts); // todo: artifacts distinct by key
+    workflowExecution.setArtifacts(artifacts); // todo: consolidated workflow ids should we filter - go over all
 
-      // TODO: get rid of artifactIdNames when UI moves to artifact list
-      executionArgs.setArtifactIdNames(
-          filteredArtifacts.stream().collect(toMap(Artifact::getUuid, Artifact::getDisplayName)));
-      filteredArtifacts.forEach(artifact -> {
-        artifact.setArtifactFiles(null);
-        artifact.setCreatedBy(null);
-        artifact.setLastUpdatedBy(null);
-        if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, artifact.getAccountId())) {
+    String workflowId = workflowExecution.getWorkflowId();
+    List<String> serviceIds =
+        isEmpty(workflowExecution.getServiceIds()) ? new ArrayList<>() : workflowExecution.getServiceIds();
+    if (workflowExecution.getWorkflowType().equals(ORCHESTRATION)) {
+      List<Artifact> filteredArtifacts = multiArtifactWorkflowExecutionServiceHelper.filterArtifactsForWorkflow(
+          artifactVariables, workflowId, serviceIds, accountId);
+      if (isNotEmpty(filteredArtifacts)) {
+        executionArgs.setArtifactIdNames(
+            filteredArtifacts.stream().collect(toMap(Artifact::getUuid, Artifact::getDisplayName)));
+        filteredArtifacts.forEach(artifact -> {
+          artifact.setArtifactFiles(null);
+          artifact.setCreatedBy(null);
+          artifact.setLastUpdatedBy(null);
           artifact.setServiceIds(artifactStreamServiceBindingService.listServiceIds(artifact.getArtifactStreamId()));
-        }
-        keywords.add(artifact.getArtifactSourceName());
-        keywords.add(artifact.getDescription());
-        keywords.add(artifact.getRevision());
-        keywords.add(artifact.getMetadata());
-      });
-
-      executionArgs.setArtifacts(artifacts);
+          keywords.add(artifact.getArtifactSourceName());
+          keywords.add(artifact.getDescription());
+          keywords.add(artifact.getRevision());
+          keywords.add(artifact.getBuildNo());
+        });
+      }
       workflowExecution.setArtifacts(filteredArtifacts);
 
       Set<String> serviceIdsSet = new HashSet<>();
       List<ServiceElement> services = new ArrayList<>();
-      filteredArtifacts.forEach(artifact -> {
-        List<Service> relatedServices =
-            artifactStreamServiceBindingService.listServices(artifact.getArtifactStreamId());
-        if (isEmpty(relatedServices)) {
-          return;
-        }
-
-        for (Service relatedService : relatedServices) {
-          if (serviceIdsSet.contains(relatedService.getUuid())) {
-            continue;
+      if (isNotEmpty(artifactVariables)) {
+        for (ArtifactVariable artifactVariable : artifactVariables) {
+          if (artifactVariable.getEntityId() != null && isNotEmpty(serviceIds)
+              && serviceIds.contains(artifactVariable.getEntityId())) {
+            if (serviceIdsSet.contains(artifactVariable.getEntityId())) {
+              continue;
+            }
+            serviceIdsSet.add(artifactVariable.getEntityId());
+            Service service = serviceResourceService.get(artifactVariable.getEntityId());
+            ServiceElement se = new ServiceElement();
+            MapperUtils.mapObject(service, se);
+            services.add(se);
+            services.add(se);
+            keywords.add(se.getName());
           }
-
-          serviceIdsSet.add(relatedService.getUuid());
-          ServiceElement se = new ServiceElement();
-          MapperUtils.mapObject(relatedService, se);
-          services.add(se);
-          keywords.add(se.getName());
         }
-      });
-
+      }
       // Set the services in the context
       stdParams.setServices(services);
     }

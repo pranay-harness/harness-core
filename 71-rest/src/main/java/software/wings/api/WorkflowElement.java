@@ -2,7 +2,9 @@ package software.wings.api;
 
 import lombok.Builder;
 import lombok.Data;
+import software.wings.beans.ArtifactVariable;
 
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -20,4 +22,5 @@ public class WorkflowElement {
   private String lastGoodReleaseNo;
   private String pipelineDeploymentUuid;
   private Long startTs;
+  private List<ArtifactVariable> artifactVariables;
 }

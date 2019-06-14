@@ -2,16 +2,19 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static java.lang.String.format;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder.aPhaseExecutionData;
 
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.beans.SweepingOutput;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.serializer.KryoUtils;
 import io.harness.serializer.MapperUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
@@ -23,15 +26,22 @@ import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
+import software.wings.beans.ArtifactVariable;
 import software.wings.beans.ContainerInfrastructureMapping;
+import software.wings.beans.EntityType;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.TemplateExpressionProcessor;
+import software.wings.service.impl.SweepingOutputServiceImpl;
+import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.settings.SettingValue;
 import software.wings.sm.ContextElement;
@@ -73,6 +83,12 @@ public class PhaseSubWorkflow extends SubWorkflowState {
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
 
   @Inject @Transient private transient TemplateExpressionProcessor templateExpressionProcessor;
+
+  @Inject @Transient private transient ArtifactService artifactService;
+
+  @Inject @Transient private transient SweepingOutputService sweepingOutputService;
+
+  @Inject @Transient private transient FeatureFlagService featureFlagService;
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
@@ -169,7 +185,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     SpawningExecutionResponse executionResponse = new SpawningExecutionResponse();
 
     StateExecutionInstance childStateExecutionInstance =
-        getSpawningInstance(workflowStandardParams, stateExecutionInstance, service, infrastructureMapping);
+        getSpawningInstance(context, workflowStandardParams, stateExecutionInstance, service, infrastructureMapping);
     executionResponse.add(childStateExecutionInstance);
     correlationIds.add(stateExecutionInstance.getUuid());
 
@@ -178,8 +194,9 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     return executionResponse;
   }
 
-  private StateExecutionInstance getSpawningInstance(WorkflowStandardParams workflowStandardParams,
-      StateExecutionInstance stateExecutionInstance, Service service, InfrastructureMapping infrastructureMapping) {
+  private StateExecutionInstance getSpawningInstance(ExecutionContext context,
+      WorkflowStandardParams workflowStandardParams, StateExecutionInstance stateExecutionInstance, Service service,
+      InfrastructureMapping infrastructureMapping) {
     StateExecutionInstance spawningInstance = super.getSpawningInstance(stateExecutionInstance);
 
     PhaseElementBuilder phaseElementBuilder = aPhaseElement()
@@ -244,6 +261,38 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     spawningInstance.getContextElements().push(phaseElement);
     spawningInstance.setContextElement(phaseElement);
 
+    String accountId;
+    if (service != null) {
+      accountId = context.getAccountId();
+      if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+        // TODO: why are we adding phaseName here? how to handle phase name change?
+        String phaseExecutionId =
+            context.getWorkflowExecutionId() + phaseElement.getUuid() + phaseElement.getPhaseName();
+        // go over all artifact variables of service
+        // throw exception if variable does not exist in service
+        List<ArtifactVariable> artifactVariables = workflowStandardParams.getWorkflowElement().getArtifactVariables();
+        if (isNotEmpty(artifactVariables)) {
+          for (ArtifactVariable artifactVariable : artifactVariables) {
+            if (artifactVariable.getEntityType().equals(EntityType.SERVICE)) {
+              if (artifactVariable.getEntityId().equals(service.getUuid())) {
+                Artifact artifact = artifactService.get(accountId, artifactVariable.getValue());
+                if (artifact != null) {
+                  sweepingOutputService.save(SweepingOutputServiceImpl
+                                                 .prepareSweepingOutputBuilder(stateExecutionInstance.getAppId(), null,
+                                                     null, phaseExecutionId, null, SweepingOutput.Scope.PHASE)
+                                                 .name(artifactVariable.getName())
+                                                 .output(KryoUtils.asDeflatedBytes(artifact))
+                                                 .build());
+                }
+              } else {
+                throw new WingsException(format(
+                    "Artifact Variable %s not defined in service %s", artifactVariable.getName(), service.getName()));
+              }
+            }
+          }
+        }
+      }
+    }
     return spawningInstance;
   }
 
