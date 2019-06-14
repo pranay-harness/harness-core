@@ -103,6 +103,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
   @Mock private AppService appService;
   @Mock private YamlDirectoryService yamlDirectoryService;
+  @Mock private AuditServiceHelper auditServiceHelper;
   @Inject @InjectMocks private ServiceVariableService serviceVariableService;
 
   /**
@@ -116,6 +117,11 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     when(query.filter(any(), any())).thenReturn(query);
     when(appService.get(TARGET_APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
     when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
+
+    doNothing().when(auditServiceHelper).reportForAuditingUsingAccountId(anyString(), any(), any(), any());
+    doNothing().when(auditServiceHelper).reportDeleteForAuditingUsingAccountId(anyString(), any());
+    doNothing().when(auditServiceHelper).reportDeleteForAuditing(anyString(), any());
+    doNothing().when(auditServiceHelper).reportForAuditingUsingAppId(anyString(), any(), any(), any());
   }
 
   /**

@@ -9,7 +9,9 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
@@ -89,6 +91,7 @@ import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.BackgroundJobScheduler;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -127,6 +130,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Mock private WorkflowService workflowService;
   @Mock private YamlPushService yamlPushService;
   @Mock private YamlDirectoryService yamlDirectoryService;
+  @Mock private AuditServiceHelper auditServiceHelper;
 
   @Inject @InjectMocks private WingsPersistence realWingsPersistence;
   @Inject @InjectMocks private EnvironmentService environmentService;
@@ -154,6 +158,11 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     when(updateOperations.unset(any())).thenReturn(updateOperations);
     when(appService.get(TARGET_APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
     when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
+
+    doNothing().when(auditServiceHelper).reportForAuditingUsingAccountId(anyString(), any(), any(), any());
+    doNothing().when(auditServiceHelper).reportDeleteForAuditingUsingAccountId(anyString(), any());
+    doNothing().when(auditServiceHelper).reportDeleteForAuditing(anyString(), any());
+    doNothing().when(auditServiceHelper).reportForAuditingUsingAppId(anyString(), any(), any(), any());
   }
 
   /**

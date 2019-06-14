@@ -42,12 +42,12 @@ public class YamlAuditRecordGenerationUtils {
   public AuditHeader processGitChangesForAudit(String accountId, GitDiffResult gitDiffResult) {
     AuditHeader.Builder builder = anAuditHeader();
     builder.withCreatedAt(System.currentTimeMillis())
-        .withCreatedBy(EmbeddedUser.builder().name("GIT_SYNC").build())
+        .withCreatedBy(EmbeddedUser.builder().name("GIT_SYNC").uuid("GIT").build())
         .withGitAuditDetails(GitAuditDetails.builder()
                                  .gitCommitId(gitDiffResult.getCommitId())
                                  .repoUrl(gitDiffResult.getRepoName())
                                  .build())
-        .withRemoteUser(anUser().withName("GIT_SYNC").build())
+        .withRemoteUser(anUser().withName("GIT_SYNC").withUuid("GIT").build())
         .withRequestMethod(HttpMethod.POST)
         .withRequestTime(System.currentTimeMillis())
         .withUrl("setup-as-code/yaml/webhook");
