@@ -60,11 +60,11 @@ public class LogLabelingServiceTest extends WingsBaseTest {
     wingsPersistence.save(record);
 
     // execute
-    CVFeedbackRecord labelRecord = labelingService.getCVFeedbackToClassify(accountId, serviceId, envId);
+    List<CVFeedbackRecord> labelRecord = labelingService.getCVFeedbackToClassify(accountId, serviceId, envId);
 
     // verify
     assertNotNull(labelRecord);
-    assertEquals(record.getLogMessage(), labelRecord.getLogMessage());
+    assertEquals(record.getLogMessage(), labelRecord.get(0).getLogMessage());
   }
 
   @Test
@@ -80,11 +80,11 @@ public class LogLabelingServiceTest extends WingsBaseTest {
     wingsPersistence.save(record2);
 
     // execute
-    CVFeedbackRecord labelRecord = labelingService.getCVFeedbackToClassify(accountId, serviceId, envId);
+    List<CVFeedbackRecord> labelRecord = labelingService.getCVFeedbackToClassify(accountId, serviceId, envId);
 
     // verify
     assertNotNull(labelRecord);
-    assertEquals(record2.getLogMessage(), labelRecord.getLogMessage());
+    assertEquals(record2.getLogMessage(), labelRecord.get(0).getLogMessage());
   }
 
   @Test
