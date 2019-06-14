@@ -36,7 +36,7 @@ public class ServiceAppMixin {
     final Set<String> collectionNames =
         persistence.getDatastore(MigrationJobInstance.class, ReadPref.NORMAL).getDB().getCollectionNames();
 
-    if (collectionNames.contains("migrationJobInstances")) {
+    if (collectionNames.contains(MigrationJobInstance.COLLECTION_NAME)) {
       return false;
     }
 
