@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import software.wings.beans.Event.Type;
-import software.wings.beans.Service;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.Command.CommandKeys;
 import software.wings.beans.command.ServiceCommand;
@@ -12,13 +11,11 @@ import software.wings.beans.command.ServiceCommand.ServiceCommandKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.CommandService;
-import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
 @Singleton
 public class CommandServiceImpl implements CommandService {
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private ServiceResourceService serviceResourceService;
   @Inject private AppService appService;
   @Inject private YamlPushService yamlPushService;
 
@@ -50,22 +47,9 @@ public class CommandServiceImpl implements CommandService {
     Command savedCommand = wingsPersistence.saveAndGet(Command.class, command);
     if (savedCommand != null && pushToYaml) {
       ServiceCommand serviceCommand = getServiceCommand(command.getAppId(), command.getOriginEntityId());
-      Service service = serviceResourceService.get(serviceCommand.getAppId(), serviceCommand.getServiceId());
       String accountId = appService.getAccountIdByAppId(command.getAppId());
-      yamlPushService.pushYamlChangeSet(accountId, service, serviceCommand, Type.CREATE, command.isSyncFromGit());
+      yamlPushService.pushYamlChangeSet(accountId, null, serviceCommand, Type.CREATE, command.isSyncFromGit(), false);
     }
     return savedCommand;
-  }
-
-  @Override
-  public Command update(Command command, boolean pushToYaml) {
-    if (pushToYaml) {
-      // check whether we need to push changes (through git sync)
-      String accountId = appService.getAccountIdByAppId(command.getAppId());
-      ServiceCommand serviceCommand = getServiceCommand(command.getAppId(), command.getOriginEntityId());
-      Service service = serviceResourceService.get(serviceCommand.getAppId(), serviceCommand.getServiceId());
-      yamlPushService.pushYamlChangeSet(accountId, service, serviceCommand, Type.UPDATE, command.isSyncFromGit());
-    }
-    return wingsPersistence.saveAndGet(Command.class, command);
   }
 }

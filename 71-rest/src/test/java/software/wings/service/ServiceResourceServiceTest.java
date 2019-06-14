@@ -769,6 +769,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
             .build();
     expectedCommand.setVersion(2L);
 
+    when(commandService.getServiceCommand(APP_ID, ID_KEY))
+        .thenReturn(aServiceCommand().withName("ServiceCommand").build());
     Service updatedService = srs.updateCommand(APP_ID, SERVICE_ID,
         aServiceCommand()
             .withTargetToAllEnv(true)
@@ -845,6 +847,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     expectedCommand.transformGraph();
     expectedCommand.setVersion(2L);
 
+    when(commandService.getServiceCommand(APP_ID, ID_KEY))
+        .thenReturn(aServiceCommand().withName("ServiceCommand").build());
     srs.updateCommand(APP_ID, SERVICE_ID,
         aServiceCommand()
             .withTargetToAllEnv(true)
@@ -888,6 +892,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
             .build();
     expectedCommand.setVersion(2L);
 
+    when(commandService.getServiceCommand(APP_ID, ID_KEY))
+        .thenReturn(aServiceCommand().withName("ServiceCommand").build());
     srs.updateCommand(APP_ID, SERVICE_ID,
         aServiceCommand()
             .withTargetToAllEnv(true)
@@ -985,6 +991,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     expectedCommand.setGraph(null);
     expectedCommand.setVersion(2L);
 
+    when(commandService.getServiceCommand(APP_ID, ID_KEY))
+        .thenReturn(aServiceCommand().withName("ServiceCommand").build());
     srs.updateCommand(APP_ID, SERVICE_ID,
         aServiceCommand()
             .withTargetToAllEnv(true)
@@ -1035,6 +1043,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     expectedCommand.transformGraph();
     expectedCommand.setVersion(2L);
 
+    when(commandService.getServiceCommand(APP_ID, ID_KEY))
+        .thenReturn(aServiceCommand().withName("ServiceCommand").build());
     srs.updateCommand(APP_ID, SERVICE_ID,
         aServiceCommand()
             .withTargetToAllEnv(true)
@@ -1109,6 +1119,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     expectedCommand.transformGraph();
     expectedCommand.setVersion(2L);
 
+    when(commandService.getServiceCommand(APP_ID, ID_KEY))
+        .thenReturn(aServiceCommand().withName("ServiceCommand").build());
     srs.updateCommand(APP_ID, SERVICE_ID,
         aServiceCommand()
             .withTargetToAllEnv(true)
@@ -1171,6 +1183,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     expectedCommand.transformGraph();
     expectedCommand.setVersion(2L);
 
+    when(commandService.getServiceCommand(APP_ID, ID_KEY))
+        .thenReturn(aServiceCommand().withName("ServiceCommand").build());
     Service updatedService = srs.updateCommand(APP_ID, SERVICE_ID,
         aServiceCommand()
             .withTargetToAllEnv(true)
@@ -1236,6 +1250,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     expectedCommand.setName("STOP");
     expectedCommand.setCommandType(CommandType.STOP);
 
+    when(commandService.getServiceCommand(APP_ID, ID_KEY))
+        .thenReturn(aServiceCommand().withName("ServiceCommand").build());
     srs.updateCommand(APP_ID, SERVICE_ID,
         aServiceCommand()
             .withTargetToAllEnv(true)
@@ -1911,6 +1927,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         .withTemplateVersion(LATEST_TAG)
         .withDefaultVersion(1)
         .withCommand(oldCommand)
+        .withName("ServiceCommand")
         .build();
   }
 

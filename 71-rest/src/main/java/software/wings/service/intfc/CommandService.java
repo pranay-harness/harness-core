@@ -11,5 +11,4 @@ public interface CommandService {
   ServiceCommand getServiceCommand(String appId, String serviceCommandId);
   ServiceCommand getServiceCommandByName(String appId, String serviceId, String serviceCommandName);
   Command save(Command command, boolean pushToYaml);
-  Command update(Command command, boolean pushToYaml);
 }
