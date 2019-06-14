@@ -903,8 +903,9 @@ public class GitClientImpl implements GitClient {
 
       try (Git git = Git.open(repoDir)) {
         // update ref with latest commits on remote
-        FetchResult fetchResult =
-            ((FetchCommand) (getAuthConfiguredCommand(git.fetch(), gitConfig))).call(); // fetch all remote references
+        FetchResult fetchResult = ((FetchCommand) (getAuthConfiguredCommand(git.fetch(), gitConfig)))
+                                      .setRemoveDeletedRefs(true)
+                                      .call(); // fetch all remote references
 
         logger.info(new StringBuilder()
                         .append(getGitLogMessagePrefix(gitConfig.getGitRepoType()))
