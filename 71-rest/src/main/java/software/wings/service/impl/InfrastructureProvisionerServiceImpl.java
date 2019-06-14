@@ -549,6 +549,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
                       .parameters(new Object[] {
                           TerraformProvisionParameters.builder()
                               .scriptPath(terraformDirectory)
+                              .sourceRepoSettingId(gitSettingAttribute.getUuid())
                               .sourceRepo(gitConfig)
                               .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
                               .sourceRepoBranch(sourceRepoBranch)
@@ -614,6 +615,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
                       .taskType(TaskType.TERRAFORM_FETCH_TARGETS_TASK.name())
                       .parameters(new Object[] {
                           TerraformProvisionParameters.builder()
+                              .sourceRepoSettingId(settingAttribute.getUuid())
                               .sourceRepo(gitConfig)
                               .sourceRepoBranch(terraformInfrastructureProvisioner.getSourceRepoBranch())
                               .scriptPath(normalizeScriptPath(terraformInfrastructureProvisioner.getPath()))

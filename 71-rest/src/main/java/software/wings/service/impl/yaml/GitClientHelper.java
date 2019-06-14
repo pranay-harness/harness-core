@@ -25,6 +25,7 @@ import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.errors.TransportException;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
+import software.wings.beans.GitOperationContext;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFile;
 
@@ -42,7 +43,8 @@ import java.util.stream.Stream;
 @Slf4j
 public class GitClientHelper {
   public static final String REPOSITORY = "./repository";
-  private static final String GIT_REPO_BASE_DIR = "./repository/${REPO_TYPE}/${ACCOUNT_ID}/${REPO_NAME}";
+  private static final String GIT_REPO_BASE_DIR =
+      "./repository/${REPO_TYPE}/${ACCOUNT_ID}/${CONNECTOR_ID}/${REPO_NAME}";
   public static final String REPOSITORY_GIT_FILE_DOWNLOADS = "./repository/gitFileDownloads";
   public static final String REPOSITORY_GIT_FILE_DOWNLOADS_ACCOUNT = "./repository/gitFileDownloads/{ACCOUNT_ID}";
   public static final String REPOSITORY_GIT_FILE_DOWNLOADS_BASE =
@@ -178,7 +180,10 @@ public class GitClientHelper {
     return null;
   }
 
-  public String getRepoDirectory(GitConfig gitConfig) {
+  public String getRepoDirectory(GitOperationContext gitOperationContext) {
+    GitConfig gitConfig = gitOperationContext.getGitConfig();
+    String gitConnectorId = gitOperationContext.getGitConnectorId();
+
     String repoName = gitConfig.getRepoUrl()
                           .substring(gitConfig.getRepoUrl().lastIndexOf('/') + 1)
                           .split("\\.")[0]; // TODO:: support more url types and validation
@@ -188,6 +193,7 @@ public class GitClientHelper {
     }
     return GIT_REPO_BASE_DIR.replace("${REPO_TYPE}", gitConfig.getGitRepoType().name().toLowerCase())
         .replace("${ACCOUNT_ID}", gitConfig.getAccountId())
+        .replace("${CONNECTOR_ID}", gitConnectorId)
         .replace("${REPO_NAME}", repoName);
   }
 }

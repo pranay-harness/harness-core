@@ -42,6 +42,7 @@ import software.wings.api.TerraformExecutionData.TerraformExecutionDataBuilder;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
+import software.wings.beans.GitOperationContext;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.delegation.TerraformProvisionParameters;
@@ -145,6 +146,11 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
 
   private TerraformExecutionData run(TerraformProvisionParameters parameters) {
     GitConfig gitConfig = parameters.getSourceRepo();
+    String sourceRepoSettingId = parameters.getSourceRepoSettingId();
+
+    GitOperationContext gitOperationContext =
+        GitOperationContext.builder().gitConfig(gitConfig).gitConnectorId(sourceRepoSettingId).build();
+
     saveExecutionLog(parameters,
         "Branch: " + gitConfig.getBranch() + "\nNormalized Path: " + parameters.getScriptPath(),
         CommandExecutionStatus.RUNNING);
@@ -157,7 +163,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
 
     try {
       encryptionService.decrypt(gitConfig, parameters.getSourceRepoEncryptionDetails());
-      gitClient.ensureRepoLocallyClonedAndUpdated(gitConfig);
+      gitClient.ensureRepoLocallyClonedAndUpdated(gitOperationContext);
     } catch (RuntimeException ex) {
       logger.error("Exception in processing git operation", ex);
       return TerraformExecutionData.builder()
@@ -165,14 +171,14 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           .errorMessage(ExceptionUtils.getMessage(ex))
           .build();
     }
-    String scriptDirectory = resolveScriptDirectory(gitConfig, parameters.getScriptPath());
+    String scriptDirectory = resolveScriptDirectory(gitOperationContext, parameters.getScriptPath());
     logger.info("Script Directory: " + scriptDirectory);
 
     File tfVariablesFile = null, tfBackendConfigsFile = null;
 
     try {
       ensureLocalCleanup(scriptDirectory);
-      String sourceRepoReference = getLatestCommitSHAFromLocalRepo(gitConfig);
+      String sourceRepoReference = getLatestCommitSHAFromLocalRepo(gitOperationContext);
 
       tfVariablesFile =
           Paths.get(scriptDirectory, format(TERRAFORM_VARIABLES_FILE_NAME, parameters.getEntityId())).toFile();
@@ -237,8 +243,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       File tfOutputsFile =
           Paths.get(scriptDirectory, format(TERRAFORM_VARIABLES_FILE_NAME, parameters.getEntityId())).toFile();
       String targetArgs = getTargetArgs(parameters.getTargets());
-      String tfVarFiles = getAllTfVarFilesArgument(
-          System.getProperty(USER_DIR_KEY), gitClientHelper.getRepoDirectory(gitConfig), parameters.getTfVarFiles());
+      String tfVarFiles = getAllTfVarFilesArgument(System.getProperty(USER_DIR_KEY),
+          gitClientHelper.getRepoDirectory(gitOperationContext), parameters.getTfVarFiles());
       if (entityIdTfVarFileCreated) {
         tfVarFiles = format("%s -var-file=\"%s\"", tfVarFiles, tfVariablesFile.toString());
       }
@@ -565,8 +571,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     return null;
   }
 
-  private String getLatestCommitSHAFromLocalRepo(GitConfig gitConfig) {
-    File repoDir = new File(gitClientHelper.getRepoDirectory(gitConfig));
+  private String getLatestCommitSHAFromLocalRepo(GitOperationContext gitOperationContext) {
+    File repoDir = new File(gitClientHelper.getRepoDirectory(gitOperationContext));
     if (repoDir.exists()) {
       try (Git git = Git.open(repoDir)) {
         Iterator<RevCommit> commits = git.log().call().iterator();
@@ -583,10 +589,10 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     return null;
   }
 
-  private String resolveScriptDirectory(GitConfig gitConfig, String scriptPath) {
+  private String resolveScriptDirectory(GitOperationContext gitOperationContext, String scriptPath) {
     return Paths
-        .get(Paths.get(System.getProperty(USER_DIR_KEY)).toString(), gitClientHelper.getRepoDirectory(gitConfig),
-            scriptPath == null ? "" : scriptPath)
+        .get(Paths.get(System.getProperty(USER_DIR_KEY)).toString(),
+            gitClientHelper.getRepoDirectory(gitOperationContext), scriptPath == null ? "" : scriptPath)
         .toString();
   }
 
