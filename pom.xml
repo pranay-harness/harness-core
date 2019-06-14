@@ -1309,10 +1309,6 @@
     </dependencyManagement>
     <repositories>
         <repository>
-            <id>localrepository</id>
-            <url>file://${basedir}/../repo</url>
-        </repository>
-        <repository>
             <id>harness</id>
             <name>harness-releases</name>
             <url>https://harness.jfrog.io/harness/thirdparty-annonymous</url>
