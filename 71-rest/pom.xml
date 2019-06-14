@@ -746,36 +746,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>default-prepare-agent</id>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>default-report</id>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                        <phase>prepare-package</phase>
-                    </execution>
-                    <execution>
-                        <id>default-check</id>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                        <configuration>
-                            <excludes>
-                                <exclude>**/migrations/all/*.class</exclude>
-                            </excludes>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.6.0</version>
@@ -808,31 +778,6 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <exclude>software/wings/service/intfc/*.class</exclude>
-                        <exclude>software/wings/beans/*.class</exclude>
-                        <exclude>software/wings/waitnotify/NotifyResponse.class</exclude>
-                        <exclude>software/wings/waitnotify/WaitInstance.class</exclude>
-                        <exclude>software/wings/waitnotify/WaitQueue.class</exclude>
-                        <exclude>software/wings/waitnotify/WaitInstanceError.class</exclude>
-                        <exclude>software/wings/sm/State.class</exclude>
-                        <exclude>software/wings/sm/Transition.class</exclude>
-                        <exclude>software/wings/sm/StateExecutionData.class</exclude>
-                        <exclude>software/wings/sm/StateEvent.class</exclude>
-                        <exclude>software/wings/sm/*$Builder.class</exclude>
-                        <exclude>software/wings/dl/MongoConfig.class</exclude>
-                        <exclude>software/wings/dl/DatastoreSet.class</exclude>
-                        <exclude>software/wings/app/WingsModule.class</exclude>
-                        <exclude>software/wings/app/WingsApplication.class</exclude>
-                        <exclude>software/wings/app/MainConfiguration.class</exclude>
-                        <exclude>software/wings/utils/RsyslogAppenderFactory.class</exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-project-info-reports-plugin</artifactId>
                 <version>2.9</version>
@@ -842,44 +787,4 @@
             </plugin>
         </plugins>
     </reporting>
-    <profiles>
-        <profile>
-            <id>deploy-int</id>
-            <activation>
-                <property>
-                    <name>env</name>
-                    <value>int</value>
-                </property>
-            </activation>
-            <properties>
-                <app.name>CI Server</app.name>
-                <checkstyle.skip>true</checkstyle.skip>
-                <deployHost>ec2-50-16-106-255.compute-1.amazonaws.com</deployHost>
-                <deployUsername>ubuntu</deployUsername>
-                <findbugs.skip>true</findbugs.skip>
-                <jacoco.skip>true</jacoco.skip>
-                <portalHost>ci.wings.software</portalHost>
-                <skipTests>true</skipTests>
-            </properties>
-        </profile>
-        <profile>
-            <id>deploy-demo</id>
-            <activation>
-                <property>
-                    <name>env</name>
-                    <value>demo</value>
-                </property>
-            </activation>
-            <properties>
-                <app.name>Demo Server</app.name>
-                <checkstyle.skip>true</checkstyle.skip>
-                <deployHost>ec2-52-45-103-102.compute-1.amazonaws.com</deployHost>
-                <deployUsername>ubuntu</deployUsername>
-                <findbugs.skip>true</findbugs.skip>
-                <jacoco.skip>true</jacoco.skip>
-                <portalHost>demo.wings.software</portalHost>
-                <skipTests>true</skipTests>
-            </properties>
-        </profile>
-    </profiles>
 </project>
