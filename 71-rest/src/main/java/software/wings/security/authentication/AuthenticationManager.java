@@ -11,6 +11,7 @@ import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
+import static org.apache.cxf.common.util.UrlUtils.urlDecode;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.FeatureName.LOGIN_PROMPT_WHEN_NO_USER;
 
@@ -21,6 +22,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AuthToken;
@@ -42,6 +44,7 @@ import software.wings.service.intfc.UserService;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -63,8 +66,8 @@ public class AuthenticationManager {
   @Inject private OauthBasedAuthHandler oauthBasedAuthHandler;
   @Inject private OauthOptions oauthOptions;
   @Inject private SSOSettingService ssoSettingService;
-
   @Inject private LicenseService licenseService;
+  @Inject private MainConfiguration mainConfiguration;
 
   public AuthHandler getAuthHandler(AuthenticationMechanism mechanism) {
     switch (mechanism) {
@@ -120,6 +123,22 @@ public class AuthenticationManager {
 
   public LoginTypeResponse getLoginTypeResponse(String userName) {
     return getLoginTypeResponse(userName, null);
+  }
+
+  public LoginTypeResponse getLoginTypeResponseForOnPrem() {
+    if (!DeployMode.ONPREM.equals(mainConfiguration.getDeployMode())) {
+      throw new InvalidRequestException("This API should only be called for on-prem deployments.");
+    }
+    List<Account> accounts = accountService.listAllAccounts();
+    if (accounts.size() > 1) {
+      logger.warn(
+          "On-prem deployments are expected to have exactly 1 account. Returning response for the primary account");
+    }
+    // It is assumed that an on-prem deployment has exactly 1 account
+    // as discussed with Vikas and Jesse
+    Account primaryAccount = accounts.get(0);
+    User user = userService.getUsersOfAccount(primaryAccount.getUuid()).get(0);
+    return getLoginTypeResponse(urlDecode(user.getEmail()), primaryAccount.getUuid());
   }
 
   public LoginTypeResponse getLoginTypeResponse(String userName, String accountId) {
