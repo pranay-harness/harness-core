@@ -3,6 +3,8 @@ package software.wings.beans.settings.helm;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -11,12 +13,15 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.audit.ResourceType;
+import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.HelmRepoYaml;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 @JsonTypeName("HTTP_HELM_REPO")
 @Data
@@ -53,6 +58,15 @@ public class HttpHelmRepoConfig extends SettingValue implements HelmRepoConfig {
   @Override
   public String fetchResourceCategory() {
     return ResourceType.ARTIFACT_SERVER.name();
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    List<ExecutionCapability> executionCapabilityList =
+        new ArrayList<>(CapabilityHelper.generateExecutionCapabilitiesForHelm(new ArrayList<>()));
+    executionCapabilityList.add(
+        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(chartRepoUrl));
+    return executionCapabilityList;
   }
 
   @Data

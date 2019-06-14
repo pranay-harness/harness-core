@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.external.comm;
 
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -40,5 +42,13 @@ public class EmailRequest extends CollaborationProviderRequest {
   @Override
   public List<String> getCriteria() {
     return Arrays.asList(smtpConfig.getHost() + ":" + smtpConfig.getPort());
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    List<String> processExecutorArgs =
+        Arrays.asList("nc", "-z", "-G5", smtpConfig.getHost(), Integer.toString(smtpConfig.getPort()));
+    return Arrays.asList(ProcessExecutorCapabilityGenerator.buildProcessExecutorCapability(
+        getCommunicationType().name(), processExecutorArgs));
   }
 }

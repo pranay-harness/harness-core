@@ -1,13 +1,16 @@
 package software.wings.helpers.ext.helm.request;
 
-import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.service.impl.ContainerServiceParams;
 
+import java.util.List;
+
 @Data
 @Builder
-public class HelmValuesFetchTaskParameters implements TaskParameters {
+public class HelmValuesFetchTaskParameters implements ExecutionCapabilityDemander {
   private String accountId;
   private String appId;
   private String activityId;
@@ -18,4 +21,9 @@ public class HelmValuesFetchTaskParameters implements TaskParameters {
   private String helmCommandFlags;
 
   private HelmChartConfigParams helmChartConfigTaskParams;
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return helmChartConfigTaskParams.fetchRequiredExecutionCapabilities();
+  }
 }

@@ -7,6 +7,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -21,12 +24,13 @@ import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.CollaborationProviderYaml;
 
 import java.util.Arrays;
+import java.util.List;
 
 @JsonTypeName("JIRA")
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
-public class JiraConfig extends SettingValue implements EncryptableSetting {
+public class JiraConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
   public enum JiraSetupType { JIRA_CLOUD, JIRA_SERVER }
   private static final CharSequence JIRA_CLOUD_DOMAINNAME = ".atlassian.net";
 
@@ -85,5 +89,10 @@ public class JiraConfig extends SettingValue implements EncryptableSetting {
       this.username = username;
       this.password = password;
     }
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(baseUrl));
   }
 }

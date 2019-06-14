@@ -5,6 +5,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Data;
@@ -24,6 +27,7 @@ import software.wings.sm.states.APMVerificationState.Method;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +38,7 @@ import java.util.stream.Collectors;
 @ToString(exclude = {"headersList", "optionsList"})
 @EqualsAndHashCode(callSuper = false)
 @Slf4j
-public class APMVerificationConfig extends SettingValue implements EncryptableSetting {
+public class APMVerificationConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
   @Transient @SchemaIgnore private static final String MASKED_STRING = "*****";
 
   @Attributes(title = "Base Url") private String url;
@@ -147,6 +151,12 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
   @Override
   public String fetchResourceCategory() {
     return ResourceType.VERIFICATION_PROVIDER.name();
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return Arrays.asList(
+        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(getValidationUrl()));
   }
 
   @Data

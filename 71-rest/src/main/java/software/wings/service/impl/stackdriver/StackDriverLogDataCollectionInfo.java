@@ -1,9 +1,11 @@
 package software.wings.service.impl.stackdriver;
 
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.GcpConfig;
+import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.LogDataCollectionInfo;
 import software.wings.sm.StateType;
@@ -25,5 +27,10 @@ public class StackDriverLogDataCollectionInfo extends LogDataCollectionInfo {
         startTime, endTime, startMinute, collectionTime, hostnameField, hosts, stateType, encryptedDataDetails,
         initialDelayMinutes);
     this.gcpConfig = gcpConfig;
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return CapabilityHelper.generateDelegateCapabilities(gcpConfig, getEncryptedDataDetails());
   }
 }

@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -18,7 +21,9 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -27,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 @Builder
 @ToString(exclude = {"apiKey", "applicationKey"})
 @EqualsAndHashCode(callSuper = false)
-public class DatadogConfig extends SettingValue implements EncryptableSetting {
+public class DatadogConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
   public static final String validationUrl = "metrics";
   public static final String logAnalysisUrl = "logs-queries/list";
 
@@ -103,6 +108,11 @@ public class DatadogConfig extends SettingValue implements EncryptableSetting {
   @Override
   public String fetchResourceCategory() {
     return ResourceType.VERIFICATION_PROVIDER.name();
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(url));
   }
 
   @Data

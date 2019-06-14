@@ -1,17 +1,20 @@
 package software.wings.helpers.ext.trigger.request;
 
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.GitConfig;
 import software.wings.beans.trigger.TriggerCommand.TriggerCommandType;
+import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class TriggerDeploymentNeededRequest extends TriggerRequest {
+public class TriggerDeploymentNeededRequest extends TriggerRequest implements ExecutionCapabilityDemander {
   private GitConfig gitConfig;
   private String gitConnectorId;
   private String currentCommitId;
@@ -36,5 +39,10 @@ public class TriggerDeploymentNeededRequest extends TriggerRequest {
     this.branch = branch;
     this.filePaths = filePaths;
     this.encryptionDetails = encryptionDetails;
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return CapabilityHelper.generateDelegateCapabilities(gitConfig, encryptionDetails);
   }
 }
