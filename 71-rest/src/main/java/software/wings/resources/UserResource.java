@@ -617,6 +617,15 @@ public class UserResource {
   }
 
   @GET
+  @Path("onprem-logintype")
+  @PublicApi
+  @Timed
+  @ExceptionMetered
+  public RestResponse<LoginTypeResponse> getLoginTypeForOnPremSetup() {
+    return new RestResponse<>(authenticationManager.getLoginTypeResponseForOnPrem());
+  }
+
+  @GET
   @Path("oauth2Redirect")
   @PublicApi
   public Response oauth2Redirect(@QueryParam("provider") @NotNull String provider) {
