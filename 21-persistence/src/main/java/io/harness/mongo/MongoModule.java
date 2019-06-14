@@ -6,6 +6,7 @@ import static org.mongodb.morphia.logging.MorphiaLoggerFactory.registerLogger;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import com.deftlabs.lock.mongo.DistributedLockSvc;
@@ -25,11 +26,8 @@ import java.util.Set;
 
 @Slf4j
 public class MongoModule extends AbstractModule {
-  private Morphia morphia;
-  private AdvancedDatastore primaryDatastore;
-  private AdvancedDatastore secondaryDatastore;
-  MongoClientURI locksUri;
-  MongoClient mongoLocksClient;
+  MongoConfig mongoConfig;
+  Set<Class> collectionClasses;
 
   public static final MongoClientOptions mongoClientOptions =
       MongoClientOptions.builder()
@@ -54,57 +52,54 @@ public class MongoModule extends AbstractModule {
   }
 
   public MongoModule(MongoConfig mongoConfig, Set<Class> collectionClasses) {
+    this.mongoConfig = mongoConfig;
+    this.collectionClasses = collectionClasses;
+
     registerLogger(MorphiaLoggerFactory.class);
-
-    morphia = new Morphia();
-    morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
-    morphia.getMapper().getOptions().setMapSubPackages(true);
-    morphia.map(collectionClasses);
-
-    MongoClientURI uri = new MongoClientURI(mongoConfig.getUri(), MongoClientOptions.builder(mongoClientOptions));
-    MongoClient mongoClient = new MongoClient(uri);
-
-    primaryDatastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, uri.getDatabase());
-    primaryDatastore.setQueryFactory(new QueryFactory());
-
-    locksUri = uri;
-    mongoLocksClient = mongoClient;
-    if (isNotEmpty(mongoConfig.getLocksUri())) {
-      locksUri = new MongoClientURI(mongoConfig.getLocksUri(), MongoClientOptions.builder(mongoClientOptions));
-      mongoLocksClient = new MongoClient(locksUri);
-    }
-
-    if (uri.getHosts().size() > 1) {
-      secondaryDatastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, uri.getDatabase());
-      secondaryDatastore.setQueryFactory(new QueryFactory());
-    } else {
-      secondaryDatastore = primaryDatastore;
-    }
-
-    ensureIndex(primaryDatastore, morphia);
   }
 
   @Provides
+  @Singleton
   public Morphia morphia() {
+    Morphia morphia = new Morphia();
+    morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
+    morphia.getMapper().getOptions().setMapSubPackages(true);
+    morphia.map(collectionClasses);
     return morphia;
   }
 
   @Provides
   @Named("primaryDatastore")
-  public AdvancedDatastore primaryDatastore() {
+  public AdvancedDatastore primaryDatastore(Morphia morphia) {
+    MongoClientURI uri = new MongoClientURI(mongoConfig.getUri(), MongoClientOptions.builder(mongoClientOptions));
+    MongoClient mongoClient = new MongoClient(uri);
+
+    AdvancedDatastore primaryDatastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, uri.getDatabase());
+    primaryDatastore.setQueryFactory(new QueryFactory());
+
+    ensureIndex(primaryDatastore, morphia());
     return primaryDatastore;
   }
 
   @Provides
   @Named("secondaryDatastore")
-  public AdvancedDatastore secondaryDatastore() {
-    return secondaryDatastore;
+  public AdvancedDatastore secondaryDatastore(Morphia morphia) {
+    return primaryDatastore(morphia);
   }
 
   @Provides
+  @Singleton
   public DistributedLockSvc distributedLockSvc() {
+    MongoClientURI uri;
+    if (isNotEmpty(mongoConfig.getLocksUri())) {
+      uri = new MongoClientURI(mongoConfig.getLocksUri(), MongoClientOptions.builder(mongoClientOptions));
+    } else {
+      uri = new MongoClientURI(mongoConfig.getUri(), MongoClientOptions.builder(mongoClientOptions));
+    }
+    MongoClient mongoClient = new MongoClient(uri);
+
     DistributedLockSvcOptions distributedLockSvcOptions =
-        new DistributedLockSvcOptions(mongoLocksClient, locksUri.getDatabase(), "locks");
+        new DistributedLockSvcOptions(mongoClient, uri.getDatabase(), "locks");
     distributedLockSvcOptions.setEnableHistory(false);
     return new DistributedLockSvcFactory(distributedLockSvcOptions).getLockSvc();
   }
