@@ -19,12 +19,12 @@ public enum MetricType {
   INFRA(Lists.newArrayList(Threshold.builder()
                                .thresholdType(ThresholdType.ALERT_HIGHER_OR_LOWER)
                                .comparisonType(ThresholdComparisonType.RATIO)
-                               .ml(0.25)
+                               .ml(0.2)
                                .build(),
       Threshold.builder()
           .thresholdType(ThresholdType.ALERT_HIGHER_OR_LOWER)
           .comparisonType(ThresholdComparisonType.DELTA)
-          .ml(25)
+          .ml(20)
           .build())),
 
   /**
@@ -34,12 +34,12 @@ public enum MetricType {
   VALUE(Lists.newArrayList(Threshold.builder()
                                .thresholdType(ThresholdType.ALERT_WHEN_LOWER)
                                .comparisonType(ThresholdComparisonType.RATIO)
-                               .ml(0.5)
+                               .ml(0.2)
                                .build(),
       Threshold.builder()
           .thresholdType(ThresholdType.ALERT_WHEN_LOWER)
           .comparisonType(ThresholdComparisonType.DELTA)
-          .ml(0.3)
+          .ml(0.2)
           .build())),
 
   /**
@@ -48,12 +48,12 @@ public enum MetricType {
   RESP_TIME(Lists.newArrayList(Threshold.builder()
                                    .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
                                    .comparisonType(ThresholdComparisonType.RATIO)
-                                   .ml(0.5)
+                                   .ml(0.2)
                                    .build(),
       Threshold.builder()
           .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
           .comparisonType(ThresholdComparisonType.DELTA)
-          .ml(50)
+          .ml(20)
           .build())),
 
   /**
@@ -62,7 +62,7 @@ public enum MetricType {
   THROUGHPUT(Lists.newArrayList(Threshold.builder()
                                     .thresholdType(ThresholdType.ALERT_WHEN_LOWER)
                                     .comparisonType(ThresholdComparisonType.RATIO)
-                                    .ml(0.5)
+                                    .ml(0.2)
                                     .build(),
       Threshold.builder()
           .thresholdType(ThresholdType.ALERT_WHEN_LOWER)
@@ -90,12 +90,12 @@ public enum MetricType {
   APDEX(Lists.newArrayList(Threshold.builder()
                                .thresholdType(ThresholdType.ALERT_WHEN_LOWER)
                                .comparisonType(ThresholdComparisonType.RATIO)
-                               .ml(0.5)
+                               .ml(0.2)
                                .build(),
       Threshold.builder()
           .thresholdType(ThresholdType.ALERT_WHEN_LOWER)
           .comparisonType(ThresholdComparisonType.DELTA)
-          .ml(0.3)
+          .ml(0.2)
           .build())),
 
   /**
