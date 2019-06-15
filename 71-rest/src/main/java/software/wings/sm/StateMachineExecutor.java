@@ -1685,6 +1685,9 @@ public class StateMachineExecutor implements StateInspectionListener {
           if (responseData instanceof DelegateTaskNotifyResponseData) {
             context.getStateExecutionData().setDelegateMetaInfo(
                 ((DelegateTaskNotifyResponseData) responseData).getDelegateMetaInfo());
+          } else if (responseData instanceof StateExecutionData) {
+            context.getStateExecutionData().setDelegateMetaInfo(
+                ((StateExecutionData) responseData).getDelegateMetaInfo());
           }
         }
       } catch (Exception ex) {

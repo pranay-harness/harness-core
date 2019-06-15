@@ -23,6 +23,7 @@ import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.DelegateTaskResponse.DelegateTaskResponseBuilder;
 import software.wings.beans.DelegateTaskResponse.ResponseCode;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.sm.StateExecutionData;
 
 import java.io.IOException;
 import java.util.List;
@@ -93,6 +94,8 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
       if (result != null) {
         if (result instanceof DelegateTaskNotifyResponseData) {
           ((DelegateTaskNotifyResponseData) result).setDelegateMetaInfo(delegateMetaInfo);
+        } else if (result instanceof StateExecutionData) {
+          ((StateExecutionData) result).setDelegateMetaInfo(delegateMetaInfo);
         }
         taskResponse.response(result);
         if (result instanceof RemoteMethodReturnValueData) {
