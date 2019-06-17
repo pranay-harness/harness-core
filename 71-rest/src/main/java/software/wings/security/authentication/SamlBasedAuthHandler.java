@@ -39,6 +39,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
   @Inject private AuthenticationUtils authenticationUtils;
   @Inject private SamlUserGroupSync samlUserGroupSync;
   @Inject private SSOSettingService ssoSettingService;
+  @Inject private DomainWhitelistCheckerService domainWhitelistCheckerService;
 
   @Override
   public AuthenticationResponse authenticate(String... credentials) {
@@ -51,6 +52,9 @@ public class SamlBasedAuthHandler implements AuthHandler {
 
       User user = decodeResponseAndReturnUser(idpUrl, samlResponseString);
       Account account = authenticationUtils.getPrimaryAccount(user);
+      if (!domainWhitelistCheckerService.isDomainWhitelisted(user, account)) {
+        domainWhitelistCheckerService.throwDomainWhitelistFilterException();
+      }
       SamlSettings samlSettings = ssoSettingService.getSamlSettingsByAccountId(account.getUuid());
 
       if (Objects.nonNull(samlSettings) && samlSettings.isAuthorizationEnabled()) {

@@ -167,8 +167,12 @@ public class AccountServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldUpdateCompanyName() {
-    Account account = wingsPersistence.saveAndGet(
-        Account.class, anAccount().withCompanyName("Wings").withAccountName("Wings").build());
+    Account account = wingsPersistence.saveAndGet(Account.class,
+        anAccount()
+            .withCompanyName("Wings")
+            .withAccountName("Wings")
+            .withWhitelistedDomains(Collections.singleton("mike@harness.io"))
+            .build());
     account.setCompanyName(HARNESS_NAME);
     accountService.update(account);
     assertThat(wingsPersistence.get(Account.class, account.getUuid())).isEqualTo(account);

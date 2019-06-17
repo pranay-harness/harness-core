@@ -18,6 +18,7 @@ import io.harness.rest.RestResponse.Builder;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
+import retrofit2.http.Body;
 import software.wings.beans.Account;
 import software.wings.beans.AccountSalesContactsInfo;
 import software.wings.beans.AccountType;
@@ -312,5 +313,18 @@ public class AccountResource {
     }
 
     return new RestResponse<>(transitionToCommunityAccountService.transition(accountId, properties));
+  }
+
+  @GET
+  @Path("{accountId}/whitelisted-domains")
+  public RestResponse<Set<String>> getWhitelistedDomains(@PathParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse<>(accountService.getWhitelistedDomains(accountId));
+  }
+
+  @PUT
+  @Path("{accountId}/whitelisted-domains")
+  public RestResponse<Account> updateWhitelistedDomains(
+      @PathParam("accountId") @NotEmpty String accountId, @Body Set<String> whitelistedDomains) {
+    return new RestResponse<>(accountService.updateWhitelistedDomains(accountId, whitelistedDomains));
   }
 }

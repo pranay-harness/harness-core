@@ -31,10 +31,12 @@ public class LdapBasedAuthHandler implements AuthHandler {
   @Inject private SecretManager secretManager;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   private UserService userService;
+  private DomainWhitelistCheckerService domainWhitelistCheckerService;
 
   @Inject
-  public LdapBasedAuthHandler(UserService userService) {
+  public LdapBasedAuthHandler(UserService userService, DomainWhitelistCheckerService domainWhitelistCheckerService) {
     this.userService = userService;
+    this.domainWhitelistCheckerService = domainWhitelistCheckerService;
   }
 
   @Override
@@ -52,6 +54,9 @@ public class LdapBasedAuthHandler implements AuthHandler {
     }
 
     Account account = authenticationUtils.getPrimaryAccount(user);
+    if (!domainWhitelistCheckerService.isDomainWhitelisted(user, account)) {
+      domainWhitelistCheckerService.throwDomainWhitelistFilterException();
+    }
     LdapSettings settings = ssoSettingService.getLdapSettingsByAccountId(account.getUuid());
     EncryptedDataDetail settingsEncryptedDataDetail = settings.getEncryptedDataDetails(secretManager);
     String encryptedPassword = secretManager.encrypt(settings.getAccountId(), password, null);
