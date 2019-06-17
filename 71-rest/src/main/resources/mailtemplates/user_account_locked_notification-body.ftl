@@ -45,8 +45,8 @@
                         <td valign="top" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%; width: 87.5%; font-size: 17px; font-weight: 400; line-height: 160%; padding-top: 25px; padding-bottom: 25px; color: #000000; font-family: 'Source Sans Pro', Tahoma, Verdana, Segoe, sans-serif; border-collapse: collapse;" class="paragraph" width="87.5%">
                             <div style="color: #77787b; line-height: 30px; font-weight: normal;">
                                 Hi ${(name!"there")?capitalize}, <br>
-                                Your account has been locked because of incorrect password attempts. You will be automatically unlocked in ${lockoutExpirationTime} hours. <br>
-                                Contact your account administrator if you want want to get unlocked now.
+                                Your user has been locked out due to multiple incorrect password attempts. It will be automatically unlocked in ${lockoutExpirationTime} hours.
+                                To unlock it sooner, please contact an account administrator.
                             </div>
                         </td>
                     </tr>
