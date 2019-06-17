@@ -258,7 +258,8 @@ public class AuditPreferenceHelper {
     }
 
     if (isNotEmpty(auditPreference.getCreatedByUserIds())) {
-      auditHeaderPageRequest.addFilter(AuditHeaderKeys.createdBy, IN, auditPreference.getCreatedByUserIds());
+      List<String> userIds = auditPreference.getCreatedByUserIds();
+      auditHeaderPageRequest.addFilter(AuditHeaderKeys.createdById, IN, userIds.toArray(new String[userIds.size()]));
     }
 
     auditHeaderPageRequest.addOrder(AuditHeaderKeys.createdAt, OrderType.DESC);

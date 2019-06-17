@@ -72,6 +72,7 @@ public class PreferenceServiceImpl implements PreferenceService {
         wingsPersistence.createQuery(AuditPreference.class)
             .filter(AuditPreferenceKeys.accountId, accountId)
             .filter(AuditPreferenceKeys.preferenceType, PreferenceType.AUDIT_PREFERENCE.name())
+            .filter(AuditPreferenceKeys.userId, userId)
             .asList();
 
     AuditPreferenceResponseBuilder responseBuilder =
