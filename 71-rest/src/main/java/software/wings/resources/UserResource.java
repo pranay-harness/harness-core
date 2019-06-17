@@ -765,7 +765,7 @@ public class UserResource {
   }
 
   @POST
-  @Path(" saml-login")
+  @Path("saml-login")
   @Produces(MediaType.TEXT_HTML)
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @PublicApi

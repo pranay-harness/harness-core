@@ -30,7 +30,6 @@ import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.FeatureFlagService;
-import software.wings.utils.Validator;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -103,7 +102,14 @@ public class AccountPasswordExpirationJob implements Job {
   }
 
   private void checkForPasswordExpiration(PasswordExpirationPolicy passwordExpirationPolicy, User user) {
-    long passwordAgeInDays = Instant.ofEpochMilli(user.getPasswordChangedAt()).until(Instant.now(), ChronoUnit.DAYS);
+    long passwordChangedAt = user.getPasswordChangedAt();
+
+    // for someone who has never changed his password, this value will be 0.
+    if (passwordChangedAt == 0) {
+      passwordChangedAt = user.getCreatedAt();
+    }
+
+    long passwordAgeInDays = Instant.ofEpochMilli(passwordChangedAt).until(Instant.now(), ChronoUnit.DAYS);
     if (hasPasswordExpired(passwordAgeInDays, passwordExpirationPolicy)) {
       markPasswordAsExpired(user);
       userService.sendPasswordExpirationMail(user.getEmail());
@@ -130,7 +136,6 @@ public class AccountPasswordExpirationJob implements Job {
   }
 
   private void update(User user, UpdateOperations<User> operations) {
-    Validator.notNullCheck("uuid", user.getUuid());
     Query<User> query = wingsPersistence.createQuery(User.class).filter(ID_KEY, user.getUuid());
     wingsPersistence.update(query, operations);
   }

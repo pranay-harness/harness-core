@@ -1186,7 +1186,7 @@ public class UserServiceImpl implements UserService {
       throw new InvalidRequestException("User name/password is not provided", USER);
     }
 
-    validatePasswordStrength(userInvite.getPassword(), accountService.get(userInvite.getAccountId()));
+    //    validatePasswordStrength(userInvite.getPassword(), accountService.get(userInvite.getAccountId()));
 
     User existingUser = getUserByEmail(existingInvite.getEmail());
     if (existingUser == null) {
