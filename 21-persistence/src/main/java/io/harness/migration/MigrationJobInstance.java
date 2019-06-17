@@ -1,8 +1,7 @@
-package io.harness.beans.database;
+package io.harness.migration;
 
-import static io.harness.beans.database.MigrationJobInstance.COLLECTION_NAME;
+import static io.harness.migration.MigrationJobInstance.COLLECTION_NAME;
 
-import io.harness.beans.migration.MigrationJob;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import lombok.Builder;

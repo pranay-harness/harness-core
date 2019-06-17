@@ -1,4 +1,4 @@
-package io.harness.beans.migration;
+package io.harness.migration;
 
 import io.harness.persistence.Store;
 import lombok.Builder;

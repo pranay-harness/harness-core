@@ -607,11 +607,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>51-migrator</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>64-events-framework</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

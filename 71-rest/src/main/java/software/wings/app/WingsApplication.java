@@ -59,7 +59,6 @@ import io.harness.maintenance.HazelcastListener;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
-import io.harness.mongo.MigratorMorphiaClasses;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.PersistenceMorphiaClasses;
@@ -179,7 +178,6 @@ public class WingsApplication extends Application<MainConfiguration> {
                                                       .addAll(ManagerMorphiaClasses.dependentClasses)
                                                       .addAll(EventsMorphiaClasses.classes)
                                                       .addAll(LimitsMorphiaClasses.classes)
-                                                      .addAll(MigratorMorphiaClasses.classes)
                                                       .addAll(OrchestrationMorphiaClasses.classes)
                                                       .addAll(PersistenceMorphiaClasses.classes)
                                                       .build();

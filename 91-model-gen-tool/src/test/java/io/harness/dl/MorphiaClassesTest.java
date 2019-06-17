@@ -7,7 +7,6 @@ import io.harness.DataGenApplication;
 import io.harness.OrchestrationMorphiaClasses;
 import io.harness.category.element.UnitTests;
 import io.harness.mongo.HObjectFactory;
-import io.harness.mongo.MigratorMorphiaClasses;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -31,7 +30,6 @@ public class MorphiaClassesTest extends CategoryTest {
     Set<Class> classes = new HashSet();
     classes.addAll(DataGenApplication.morphiaClasses);
     classes.addAll(OrchestrationMorphiaClasses.classes);
-    classes.addAll(MigratorMorphiaClasses.classes);
 
     boolean success = true;
     for (MappedClass cls : morphia.getMapper().getMappedClasses()) {
