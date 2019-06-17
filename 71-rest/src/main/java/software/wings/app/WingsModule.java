@@ -48,6 +48,8 @@ import software.wings.beans.SftpConfig;
 import software.wings.beans.SmbConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
+import software.wings.beans.loginSettings.LoginSettingsService;
+import software.wings.beans.loginSettings.LoginSettingsServiceImpl;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.trigger.Condition;
 import software.wings.cloudprovider.aws.AwsClusterService;
@@ -623,6 +625,8 @@ public class WingsModule extends DependencyModule {
     bind(SmbBuildService.class).to(SmbBuildServiceImpl.class);
     bind(SftpService.class).to(SftpServiceImpl.class);
     bind(SftpBuildService.class).to(SftpBuildServiceImpl.class);
+
+    bind(LoginSettingsService.class).to(LoginSettingsServiceImpl.class);
 
     bind(WingsMongoExportImport.class);
 

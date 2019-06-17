@@ -83,6 +83,7 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SystemCatalog;
 import software.wings.beans.Workflow;
+import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -176,6 +177,7 @@ public class DataGenService {
   @Inject private HarnessUserGroupService harnessUserGroupService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SampleDataProviderService sampleDataProviderService;
+  @Inject private LoginSettingsService loginSettingsService;
 
   public void populateData() throws IOException {
     dropDBAndEnsureIndexes();
@@ -329,6 +331,8 @@ public class DataGenService {
             .withUsageRestrictions(defaultUsageRestrictions)
             .build();
     wingsPersistence.save(hostConnection);
+
+    loginSettingsService.createDefaultLoginSettings(account);
   }
 
   private void createTestApplication(Account account) {

@@ -466,6 +466,12 @@ public interface UserService extends OwnedByAccount {
    */
   boolean enableUser(String accountId, String userId, boolean enabled);
 
+  boolean passwordExpired(String email);
+
+  void sendPasswordExpirationWarning(String email, Integer passExpirationDays);
+
+  void sendPasswordExpirationMail(String email);
+
   @ValidationGroups(Update.class) User updateUserProfile(@NotNull User user);
 
   @ValidationGroups(Update.class)

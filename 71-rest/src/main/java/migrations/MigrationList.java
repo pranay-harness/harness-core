@@ -7,6 +7,7 @@ import migrations.all.AddAccountIdToArtifactStreamsMigration;
 import migrations.all.AddAccountIdToArtifactsMigration;
 import migrations.all.AddInstanceStatsCollectionJobToAllAccounts;
 import migrations.all.AddLimitVicinityCheckJobToAllAccounts;
+import migrations.all.AddLoginSettingsToAccountMigration;
 import migrations.all.AddReplCtrlNameToKubeSetupProperties;
 import migrations.all.AddTemplateMgmtPermissionToAdminUserGroup;
 import migrations.all.AddValidUntilToActivity;
@@ -246,6 +247,7 @@ public class MigrationList {
         .add(Pair.of(257, NonWorkflowCVConfigurationMigration.class))
         .add(Pair.of(258, AddWhitelistedDomainsToAccountMigration.class))
         .add(Pair.of(259, OauthEnabledFieldMigration.class))
+        .add(Pair.of(260, AddLoginSettingsToAccountMigration.class))
         .build();
   }
 }

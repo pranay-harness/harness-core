@@ -81,6 +81,7 @@ import software.wings.beans.SystemCatalog;
 import software.wings.beans.TechStack;
 import software.wings.beans.User;
 import software.wings.beans.governance.GovernanceConfig;
+import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapSettings.LdapSettingsKeys;
 import software.wings.beans.sso.OauthSettings;
@@ -191,6 +192,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private SSOSettingServiceImpl ssoSettingService;
   @Inject private MainConfiguration mainConfiguration;
   @Inject private UserService userService;
+  @Inject private LoginSettingsService loginSettingsService;
   @Inject private EventPublishHelper eventPublishHelper;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
@@ -270,6 +272,7 @@ public class AccountServiceImpl implements AccountService {
         .forEach(role -> createDefaultNotificationGroup(account, role));
     createSystemAppContainers(account);
     authHandler.createDefaultUserGroups(account);
+    loginSettingsService.createDefaultLoginSettings(account);
     notificationRuleService.createDefaultRule(account.getUuid());
 
     executorService.submit(
