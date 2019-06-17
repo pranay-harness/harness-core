@@ -255,6 +255,7 @@ import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo
 import software.wings.beans.jira.JiraCustomFieldValue;
 import software.wings.beans.jira.JiraTaskParameters;
 import software.wings.beans.k8s.istio.IstioDestinationWeight;
+import software.wings.beans.loginSettings.UserLockoutInfo;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.beans.security.AccountPermissions;
@@ -1269,5 +1270,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(Artifact.ContentStatus.class, 7193);
     kryo.register(Artifact.Status.class, 7194);
     kryo.register(ArtifactVariable.class, 7195);
+    kryo.register(UserLockoutInfo.class, 7196);
   }
 }
