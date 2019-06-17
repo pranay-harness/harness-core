@@ -184,8 +184,8 @@ import javax.validation.constraints.NotNull;
 @Singleton
 @Slf4j
 public class DelegateServiceImpl implements DelegateService {
-  private static final int MAX_CONNECT_ATTEMPTS = 50;
-  private static final int RECONNECT_INTERVAL_SECONDS = 10;
+  private static final int MAX_CONNECT_ATTEMPTS = 3;
+  private static final int RECONNECT_INTERVAL_SECONDS = 3;
   private static final int POLL_INTERVAL_SECONDS = 3;
   private static final long UPGRADE_TIMEOUT = TimeUnit.HOURS.toMillis(2);
   private static final long HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
@@ -526,12 +526,14 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void handleClose(Object o) {
     logger.info("Event:{}, message:[{}]", Event.CLOSE.name(), o.toString());
-    pollingForTasks.set(true);
+    // TODO(brett): Disabling the fallback to poll for tasks as it can cause too much traffic to ingress controller
+    // pollingForTasks.set(true);
   }
 
   private void handleReopened(Object o, DelegateBuilder builder) {
     logger.info("Event:{}, message:[{}]", Event.REOPENED.name(), o.toString());
-    pollingForTasks.set(false);
+    // TODO(brett): Disabling the fallback to poll for tasks as it can cause too much traffic to ingress controller
+    // pollingForTasks.set(false);
     try {
       Delegate delegate = builder.build();
       delegate.setLastHeartBeat(clock.millis());
