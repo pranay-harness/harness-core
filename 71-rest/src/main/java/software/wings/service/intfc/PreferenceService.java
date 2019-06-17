@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.AuditPreferenceResponse;
 import software.wings.beans.Preference;
 
 public interface PreferenceService {
@@ -11,4 +12,5 @@ public interface PreferenceService {
   Preference get(String accountId, String userId, String preferenceId);
   Preference update(String accountId, String userId, String preferenceId, Preference preference);
   void delete(@NotEmpty String accountId, @NotEmpty String userId, @NotEmpty String preferenceId);
+  AuditPreferenceResponse listAuditPreferences(String accountId, String userId);
 }

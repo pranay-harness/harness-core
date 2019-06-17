@@ -66,29 +66,6 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
       + "  \"applicationAuditFilter\" : null"
       + "}";
 
-  private String appAndAccLevelCriteriaFilter = "{\n"
-      + "  \"preferenceType\" : \"AUDIT_PREFERENCE\",\n"
-      + "  \"appId\" : null,\n"
-      + "  \"accountId\" : \"accountId\",\n"
-      + "  \"preferenceType\" : \"AUDIT_PREFERENCE\",\n"
-      + "  \"startTime\" : \"1559076765000\",\n"
-      + "  \"endTime\" : \"1560195705972\",\n"
-      + "  \"createdByUserIds\" : null,\n"
-      + "  \"operationTypes\" : [\"CREATE\", \"UPDATE\"],\n"
-      + "  \"includeAccountLevelResources\" : true,\n"
-      + "  \"includeAppLevelResources\" : true,\n"
-      + "  \"accountAuditFilter\" : null,\n"
-      + "  \"applicationAuditFilter\" : {"
-      + "       \"appIds\" : [\"AppId1\", \"AppId2\"],\n"
-      + "       \"resourceIds\" : [\"AppresourceId1\", \"AppresourceId2\"],\n"
-      + "       \"resourceTypes\" : [\"AppresourceType1\", \"AppresourceType2\"]\n"
-      + "   }\n,"
-      + "  \"accountAuditFilter\" : {"
-      + "       \"resourceIds\" : [\"AccresourceId1\", \"AccresourceId2\"],\n"
-      + "       \"resourceTypes\" : [\"AccresourceType1\", \"AccresourceType2\"]\n"
-      + "   }\n"
-      + "}";
-
   private String appFilterCriteriaJson = "{"
       + "  \"preferenceType\" : \"AUDIT_PREFERENCE\","
       + "  \"appId\" : null,"
@@ -590,6 +567,24 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
     pageRequest = getAuditHeaderPageRequest(auditPreference);
     pageResponse = wingsPersistence.query(AuditHeader.class, pageRequest, excludeAuthority);
     assertThat(pageResponse.getResponse()).containsExactlyInAnyOrder(header0, header1, header7, header5);
+
+    // 5.
+    auditPreference.setApplicationAuditFilter(ApplicationAuditFilter.builder()
+                                                  .appIds(Arrays.asList("app2"))
+                                                  .resourceTypes(Arrays.asList(ResourceType.PROVISIONER.name()))
+                                                  .build());
+
+    auditPreference.setAccountAuditFilter(
+        AccountAuditFilter.builder().resourceTypes(Arrays.asList(ResourceType.ARTIFACT_SERVER.name())).build());
+    auditPreference.setOperationTypes(Arrays.asList(Type.CREATE.name(), Type.UPDATE.name()));
+    pageRequest = getAuditHeaderPageRequest(auditPreference);
+    pageResponse = wingsPersistence.query(AuditHeader.class, pageRequest, excludeAuthority);
+    assertThat(pageResponse.getResponse()).containsExactlyInAnyOrder(header2);
+
+    auditPreference.setOperationTypes(Arrays.asList(Type.DELETE.name(), Type.UPDATE.name()));
+    pageRequest = getAuditHeaderPageRequest(auditPreference);
+    pageResponse = wingsPersistence.query(AuditHeader.class, pageRequest, excludeAuthority);
+    assertThat(pageResponse.getResponse()).containsExactlyInAnyOrder(header2, header5);
   }
 
   private void assertAccountLevelFilter(AuditPreference auditPreference) {

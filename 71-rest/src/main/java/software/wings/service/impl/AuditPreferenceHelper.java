@@ -257,9 +257,9 @@ public class AuditPreferenceHelper {
           AuditHeaderKeys.createdAt, Operator.LT, Long.parseLong(auditPreference.getEndTime()));
     }
 
-    //    if (isNotEmpty(auditPreference.getCreatedByUserIds())) {
-    //      auditHeaderPageRequest.addFilter(AuditHeaderKeys, IN, auditPreference.getCreatedByUserIds());
-    //    }
+    if (isNotEmpty(auditPreference.getCreatedByUserIds())) {
+      auditHeaderPageRequest.addFilter(AuditHeaderKeys.createdBy, IN, auditPreference.getCreatedByUserIds());
+    }
 
     auditHeaderPageRequest.addOrder(AuditHeaderKeys.createdAt, OrderType.DESC);
   }

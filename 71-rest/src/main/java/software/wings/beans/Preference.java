@@ -7,6 +7,7 @@ import io.harness.annotation.HarnessExportableEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 
@@ -18,6 +19,7 @@ import org.mongodb.morphia.annotations.Entity;
   , @Type(value = AuditPreference.class, name = "AUDIT_PREFERENCE")
 })
 @Entity(value = "preferences")
+@FieldNameConstants(innerTypeName = "PreferenceKeys")
 @HarnessExportableEntity
 @EqualsAndHashCode(callSuper = false)
 public abstract class Preference extends Base {
@@ -28,5 +30,11 @@ public abstract class Preference extends Base {
 
   public Preference(String preferenceType) {
     this.preferenceType = preferenceType;
+  }
+
+  public static final class PreferenceKeys {
+    // Temporary
+    public static final String createdAt = "createdAt";
+    public static final String uuid = "uuid";
   }
 }
