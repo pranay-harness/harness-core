@@ -385,6 +385,7 @@ public class AuditHeader extends Base {
     // Temporary
     public static final String createdAt = "createdAt";
     public static final String createdBy = "createdBy";
+    public static final String createdById = "createdBy.uuid";
     public static final String uuid = "uuid";
     public static final String appIdEntityRecord = "entityAuditRecords.appId";
     public static final String affectedResourceId = "entityAuditRecords.affectedResourceId";
