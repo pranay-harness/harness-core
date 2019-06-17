@@ -2,6 +2,7 @@ package software.wings.helpers.ext.k8s.request;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.TaskParameters;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -10,7 +11,7 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
-public class K8sTaskParameters implements ExecutionCapabilityDemander {
+public class K8sTaskParameters implements TaskParameters, ExecutionCapabilityDemander {
   private String accountId;
   private String appId;
   private String commandName;
