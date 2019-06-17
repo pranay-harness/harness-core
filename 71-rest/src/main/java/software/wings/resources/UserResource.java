@@ -42,6 +42,7 @@ import software.wings.beans.FeatureFlag;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.ZendeskSsoLoginResponse;
+import software.wings.beans.loginSettings.PasswordSource;
 import software.wings.beans.security.UserGroup;
 import software.wings.scheduler.AccountPasswordExpirationJob;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -397,6 +398,16 @@ public class UserResource {
       @NotEmpty @PathParam("token") String resetPasswordToken, UpdatePasswordRequest updatePasswordRequest) {
     return new RestResponse(
         userService.updatePassword(resetPasswordToken, updatePasswordRequest.getPassword().toCharArray()));
+  }
+
+  @PublicApi
+  @GET
+  @Path("check-password-violations")
+  @Timed
+  @ExceptionMetered
+  public RestResponse checkPasswordViolations(@NotEmpty @QueryParam("token") String token,
+      @QueryParam("pollType") PasswordSource passwordSource, @HeaderParam(HttpHeaders.AUTHORIZATION) String password) {
+    return new RestResponse(userService.checkPasswordViolations(token, passwordSource, password));
   }
 
   /**
@@ -1117,6 +1128,16 @@ public class UserResource {
   public RestResponse<Boolean> updateMarketoForUser(
       @NotEmpty @QueryParam("email") String email, @NotEmpty @QueryParam("accountId") String accountId) {
     return new RestResponse<>(userService.updateLead(email, accountId));
+  }
+
+  @PUT
+  @Path("unlock-user")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = USER_PERMISSION_MANAGEMENT)
+  public RestResponse<User> unlockUser(
+      @NotEmpty @QueryParam("email") String email, @NotEmpty @QueryParam("accountId") String accountId) {
+    return new RestResponse<>(userService.unlockUser(email, accountId));
   }
 
   private RestResponse<UserInvite> getPublicUserInvite(UserInvite userInvite) {

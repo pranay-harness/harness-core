@@ -248,9 +248,10 @@ public class AuthenticationManager {
   }
 
   public User defaultLoginAccount(String basicToken, String accountId) {
+    String userName = null;
     try {
       String[] decryptedData = decryptBasicToken(basicToken);
-      String userName = decryptedData[0];
+      userName = decryptedData[0];
       String password = decryptedData[1];
 
       if (isNotEmpty(accountId)) {
@@ -266,7 +267,7 @@ public class AuthenticationManager {
       }
       throw e;
     } catch (Exception e) {
-      logger.warn("Failed to login via default mechanism", e);
+      logger.warn(String.format("Failed to login via default mechanism for username: [%s]", userName), e);
       throw new WingsException(INVALID_CREDENTIAL, USER);
     }
   }

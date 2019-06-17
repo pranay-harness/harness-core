@@ -335,6 +335,8 @@ public enum ErrorCode {
 
   PASSWORD_EXPIRED("Password has expired. Please reset it."),
 
+  USER_LOCKED,
+
   PASSWORD_STRENGTH_CHECK_FAILED,
 
   INVALID_ACCOUNT_PERMISSION("Invalid account permission"),

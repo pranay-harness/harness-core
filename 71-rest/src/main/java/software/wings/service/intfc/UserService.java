@@ -7,6 +7,7 @@ import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.query.UpdateOperations;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Account;
 import software.wings.beans.AccountJoinRequest;
@@ -15,6 +16,8 @@ import software.wings.beans.ApplicationRole;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.ZendeskSsoLoginResponse;
+import software.wings.beans.loginSettings.PasswordSource;
+import software.wings.beans.loginSettings.PasswordStrengthViolations;
 import software.wings.beans.security.UserGroup;
 import software.wings.security.SecretManager;
 import software.wings.security.UserPermissionInfo;
@@ -488,6 +491,15 @@ public interface UserService extends OwnedByAccount {
   boolean isOauthEnabled(User user);
 
   boolean postCustomEvent(String accountId, String event);
+
+  PasswordStrengthViolations checkPasswordViolations(
+      String resetPasswordToken, PasswordSource passwordSource, String password);
+
+  User applyUpdateOperations(User user, UpdateOperations<User> updateOperations);
+
+  User unlockUser(String userId, String accountId);
+
+  void sendAccountLockedNotificationMail(User user, int lockoutExpirationTime);
 
   Account getAccountByIdIfExistsElseGetDefaultAccount(User user, Optional<String> accountId);
 }

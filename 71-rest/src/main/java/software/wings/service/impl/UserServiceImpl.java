@@ -20,7 +20,9 @@ import static io.harness.eraro.ErrorCode.USER_ALREADY_REGISTERED;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.eraro.ErrorCode.USER_DOMAIN_NOT_ALLOWED;
 import static io.harness.eraro.ErrorCode.USER_INVITATION_DOES_NOT_EXIST;
+import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -71,6 +73,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.data.encoding.EncodingUtils;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.model.EventType;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
@@ -117,6 +120,9 @@ import software.wings.beans.UserInviteSource;
 import software.wings.beans.UserInviteSource.SourceType;
 import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.beans.loginSettings.LoginSettingsService;
+import software.wings.beans.loginSettings.PasswordSource;
+import software.wings.beans.loginSettings.PasswordStrengthViolations;
+import software.wings.beans.loginSettings.UserLockoutInfo;
 import software.wings.beans.marketplace.MarketPlaceConstants;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.AccountPermissions;
@@ -539,6 +545,8 @@ public class UserServiceImpl implements UserService {
     userSummary.setEmail(user.getEmail());
     userSummary.setEmailVerified(user.isEmailVerified());
     userSummary.setTwoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled());
+    userSummary.setUserLocked(user.isUserLocked());
+    userSummary.setPasswordExpired(user.isPasswordExpired());
     return userSummary;
   }
 
@@ -1787,7 +1795,22 @@ public class UserServiceImpl implements UserService {
     return applyUpdateOperations(user, updateOperations);
   }
 
-  private User applyUpdateOperations(User user, UpdateOperations<User> updateOperations) {
+  @Override
+  public User unlockUser(String email, String accountId) {
+    User user = getUserByEmail(email);
+    if (!getPrimaryAccount(user).getUuid().equals(accountId)) {
+      logger.error(String.format("Unlocking user: [%s] in account: [%s] failed because of insufficient permission",
+                       email, accountId),
+          USER);
+      throw new WingsException(USER_NOT_AUTHORIZED, USER);
+    }
+    UpdateOperations<User> operations = wingsPersistence.createUpdateOperations(User.class);
+    setUnset(operations, UserKeys.userLocked, false);
+    setUnset(operations, UserKeys.userLockoutInfo, new UserLockoutInfo());
+    return applyUpdateOperations(user, operations);
+  }
+
+  public User applyUpdateOperations(User user, UpdateOperations<User> updateOperations) {
     wingsPersistence.update(user, updateOperations);
     evictUserFromCache(user.getUuid());
     return wingsPersistence.getWithAppId(User.class, user.getAppId(), user.getUuid());
@@ -2552,6 +2575,58 @@ public class UserServiceImpl implements UserService {
   public boolean passwordExpired(String email) {
     User user = getUserByEmail(email);
     return user.isPasswordExpired();
+  }
+
+  @Override
+  public PasswordStrengthViolations checkPasswordViolations(
+      String token, PasswordSource passwordSource, String password) {
+    Account account = null;
+    try {
+      if (PasswordSource.PASSWORD_RESET_FLOW.equals(passwordSource)) {
+        account = getAccountFromResetPasswordToken(token);
+      } else if (PasswordSource.SIGN_UP_FLOW.equals(passwordSource)) {
+        account = getAccountFromInviteId(token);
+      } else {
+        throw new InvalidRequestException("Incorrect password source provided.", USER);
+      }
+      return loginSettingsService.getPasswordStrengthCheckViolations(
+          account, EncodingUtils.decodeBase64ToString(password).toCharArray());
+    } catch (Exception ex) {
+      logger.warn(String.format("Password violation polling failed for token: [%s]", token), ex);
+      throw new InvalidRequestException("Password violation polling failed", USER);
+    }
+  }
+
+  private Account getAccountFromInviteId(String inviteId) {
+    UserInvite userInvite = wingsPersistence.createQuery(UserInvite.class).filter("_id", inviteId).get();
+    return accountService.get(userInvite.getAccountId());
+  }
+
+  private Account getAccountFromResetPasswordToken(String resetPasswordToken) {
+    User user = verifyJWTToken(resetPasswordToken, JWT_CATEGORY.PASSWORD_SECRET);
+    return getPrimaryAccount(user);
+  }
+
+  @Override
+  public void sendAccountLockedNotificationMail(User user, int lockoutExpirationTime) {
+    Map<String, String> templateModel = new HashMap<>();
+    templateModel.put("name", user.getName());
+    templateModel.put("lockoutExpirationTime", Integer.toString(lockoutExpirationTime));
+
+    List<String> toList = new ArrayList();
+    toList.add(user.getEmail());
+
+    EmailData emailData = EmailData.builder()
+                              .to(toList)
+                              .templateName("user_account_locked_notification")
+                              .templateModel(templateModel)
+                              .accountId(getPrimaryAccount(user).getUuid())
+                              .build();
+
+    emailData.setCc(Collections.emptyList());
+    emailData.setRetries(2);
+
+    emailNotificationService.send(emailData);
   }
 
   public Account getAccountByIdIfExistsElseGetDefaultAccount(User user, Optional<String> accountId) {
