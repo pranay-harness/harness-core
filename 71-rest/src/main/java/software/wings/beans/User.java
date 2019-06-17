@@ -19,6 +19,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.loginSettings.UserLockoutInfo;
 import software.wings.beans.security.UserGroup;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserRequestInfo;
@@ -75,6 +76,8 @@ public class User extends Base implements Principal {
 
   private boolean passwordExpired;
 
+  private boolean userLocked;
+
   private long statsFetchedOn;
 
   private String lastAccountId;
@@ -84,6 +87,8 @@ public class User extends Base implements Principal {
   private String lastAppId;
 
   private boolean disabled;
+
+  private UserLockoutInfo userLockoutInfo = new UserLockoutInfo();
 
   @JsonIgnore private long passwordChangedAt;
 
@@ -118,6 +123,7 @@ public class User extends Base implements Principal {
     publicUser.setFirstLogin(isFirstLogin());
     publicUser.setLastLogin(getLastLogin());
     publicUser.setPasswordExpired(isPasswordExpired());
+    publicUser.setUserLocked(isUserLocked());
     // publicUser.setCompanyName(getCompanyName());
     return publicUser;
   }
@@ -226,6 +232,22 @@ public class User extends Base implements Principal {
 
   public void setPasswordExpired(boolean passwordExpired) {
     this.passwordExpired = passwordExpired;
+  }
+
+  public boolean isUserLocked() {
+    return userLocked;
+  }
+
+  public void setUserLocked(boolean userLocked) {
+    this.userLocked = userLocked;
+  }
+
+  public UserLockoutInfo getUserLockoutInfo() {
+    return userLockoutInfo;
+  }
+
+  public void setUserLockoutInfo(UserLockoutInfo userLockoutInfo) {
+    this.userLockoutInfo = userLockoutInfo;
   }
 
   /**
@@ -614,6 +636,7 @@ public class User extends Base implements Principal {
     private String twoFactorJwtToken;
     private String oauthProvider;
     private boolean passwordExpired;
+    private boolean userLocked;
 
     private Builder() {}
 
@@ -623,6 +646,11 @@ public class User extends Base implements Principal {
 
     public Builder withPasswordExpired(boolean passwordExpired) {
       this.passwordExpired = passwordExpired;
+      return this;
+    }
+
+    public Builder withUserLocked(boolean userLocked) {
+      this.userLocked = userLocked;
       return this;
     }
 
@@ -790,6 +818,7 @@ public class User extends Base implements Principal {
           .withTwoFactorAuthenticationMechanism(twoFactorAuthenticationMechanism)
           .withTotpSecretKey(totpSecretKey)
           .withTwoFactorJwtToken(twoFactorJwtToken)
+          .withPasswordExpired(passwordExpired)
           .withOauthProvider(oauthProvider);
     }
 
@@ -823,6 +852,7 @@ public class User extends Base implements Principal {
       user.setTwoFactorJwtToken(twoFactorJwtToken);
       user.setOauthProvider(oauthProvider);
       user.setPasswordExpired(passwordExpired);
+      user.setUserLocked(userLocked);
       return user;
     }
   }

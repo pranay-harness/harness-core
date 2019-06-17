@@ -1,6 +1,7 @@
 package software.wings.beans.loginSettings;
 
 import software.wings.beans.Account;
+import software.wings.beans.User;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import javax.validation.constraints.NotNull;
@@ -19,4 +20,10 @@ public interface LoginSettingsService extends OwnedByAccount {
   void deleteByAccountId(@NotNull String accountId);
 
   boolean verifyPasswordStrength(Account account, char[] password);
+
+  boolean isUserLocked(User user, Account account);
+
+  void updateUserLockoutInfo(User user, Account primaryAccount, int newCountOfFailedLoginAttempts);
+
+  PasswordStrengthViolations getPasswordStrengthCheckViolations(Account account, char[] password);
 }

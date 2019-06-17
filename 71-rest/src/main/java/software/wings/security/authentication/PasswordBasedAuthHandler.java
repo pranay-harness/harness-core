@@ -5,6 +5,7 @@ import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.PASSWORD_EXPIRED;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
+import static io.harness.eraro.ErrorCode.USER_LOCKED;
 import static io.harness.exception.WingsException.USER;
 import static org.mindrot.jbcrypt.BCrypt.checkpw;
 
@@ -12,18 +13,28 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
+import software.wings.beans.Account;
 import software.wings.beans.User;
+import software.wings.beans.loginSettings.LoginSettingsService;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 
 @Singleton
 public class PasswordBasedAuthHandler implements AuthHandler {
   private UserService userService;
+  private LoginSettingsService loginSettingsService;
+  private AuthenticationUtils authenticationUtils;
+  private AccountService accountService;
   private DomainWhitelistCheckerService domainWhitelistCheckerService;
 
   @Inject
-  public PasswordBasedAuthHandler(
-      UserService userService, DomainWhitelistCheckerService domainWhitelistCheckerService) {
+  public PasswordBasedAuthHandler(UserService userService, LoginSettingsService loginSettingsService,
+      AuthenticationUtils authenticationUtils, AccountService accountService,
+      DomainWhitelistCheckerService domainWhitelistCheckerService) {
     this.userService = userService;
+    this.loginSettingsService = loginSettingsService;
+    this.authenticationUtils = authenticationUtils;
+    this.accountService = accountService;
     this.domainWhitelistCheckerService = domainWhitelistCheckerService;
   }
 
@@ -58,15 +69,37 @@ public class PasswordBasedAuthHandler implements AuthHandler {
 
     if (isPasswordHash) {
       if (password.equals(user.getPasswordHash())) {
-        return new AuthenticationResponse(user);
+        return getAuthenticationResponse(user);
+      } else {
+        updateFailedLoginAttemptCount(user);
       }
     } else {
       if (checkpw(password, user.getPasswordHash())) {
-        return new AuthenticationResponse(user);
+        return getAuthenticationResponse(user);
+      } else {
+        updateFailedLoginAttemptCount(user);
       }
     }
-
     throw new WingsException(INVALID_CREDENTIAL, USER);
+  }
+
+  private void updateFailedLoginAttemptCount(User user) {
+    int newCountOfFailedLoginAttempts = user.getUserLockoutInfo().getNumberOfFailedLoginAttempts() + 1;
+    loginSettingsService.updateUserLockoutInfo(
+        user, authenticationUtils.getPrimaryAccount(user), newCountOfFailedLoginAttempts);
+  }
+
+  private AuthenticationResponse getAuthenticationResponse(User user) {
+    checkUserLockoutStatus(user);
+    loginSettingsService.updateUserLockoutInfo(user, authenticationUtils.getPrimaryAccount(user), 0);
+    return new AuthenticationResponse(user);
+  }
+
+  private void checkUserLockoutStatus(User user) {
+    Account primaryAccount = accountService.get(user.getDefaultAccountId());
+    if (loginSettingsService.isUserLocked(user, primaryAccount)) {
+      throw new WingsException(USER_LOCKED, USER);
+    }
   }
 
   public AuthenticationResponse authenticateWithPasswordHash(String... credentials) {

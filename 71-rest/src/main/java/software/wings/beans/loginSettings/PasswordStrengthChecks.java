@@ -17,6 +17,11 @@ public enum PasswordStrengthChecks {
           new PasswordValidator(new CharacterRule(EnglishCharacterData.UpperCase, minNumberOfUppercaseCharacters));
       return passwordMatcher.validate(passwordData).isValid();
     }
+
+    @Override
+    public int getMinimumCount(PasswordStrengthPolicy passwordStrengthPolicy) {
+      return passwordStrengthPolicy.getMinNumberOfUppercaseCharacters();
+    }
   },
 
   MUST_HAVE_LOWERCASE_LETTERS() {
@@ -31,6 +36,11 @@ public enum PasswordStrengthChecks {
       PasswordValidator passwordMatcher =
           new PasswordValidator(new CharacterRule(EnglishCharacterData.LowerCase, minNumberOfLowercaseLetters));
       return passwordMatcher.validate(passwordData).isValid();
+    }
+
+    @Override
+    public int getMinimumCount(PasswordStrengthPolicy passwordStrengthPolicy) {
+      return passwordStrengthPolicy.getMinNumberOfLowercaseCharacters();
     }
   },
 
@@ -47,6 +57,11 @@ public enum PasswordStrengthChecks {
           new PasswordValidator(new CharacterRule(EnglishCharacterData.Digit, minNumberOfDigits));
       return passwordMatcher.validate(passwordData).isValid();
     }
+
+    @Override
+    public int getMinimumCount(PasswordStrengthPolicy passwordStrengthPolicy) {
+      return passwordStrengthPolicy.getMinNumberOfDigits();
+    }
   },
 
   MUST_HAVE_SPECIAL_CHARACTERS() {
@@ -61,6 +76,11 @@ public enum PasswordStrengthChecks {
       PasswordValidator passwordMatcher = new PasswordValidator(new CharacterRule(
           SpecialCharactersPasswordData.SpecialCharactersAllowedInPassword, minNumberOfSpecialCharacters));
       return passwordMatcher.validate(passwordData).isValid();
+    }
+
+    @Override
+    public int getMinimumCount(PasswordStrengthPolicy passwordStrengthPolicy) {
+      return passwordStrengthPolicy.getMinNumberOfSpecialCharacters();
     }
   },
 
@@ -77,7 +97,14 @@ public enum PasswordStrengthChecks {
           new CharacterRule(AllowedCharactersPasswordData.AllCharactersPasswordData, minNumberOfCharacters));
       return passwordMatcher.validate(passwordData).isValid();
     }
+
+    @Override
+    public int getMinimumCount(PasswordStrengthPolicy passwordStrengthPolicy) {
+      return passwordStrengthPolicy.getMinNumberOfCharacters();
+    }
   };
 
   public abstract boolean validate(PasswordData passwordData, PasswordStrengthPolicy passwordStrengthPolicy);
+
+  public abstract int getMinimumCount(PasswordStrengthPolicy passwordStrengthPolicy);
 }

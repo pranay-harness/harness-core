@@ -162,6 +162,13 @@ RESOURCE_CONSTRAINT_UNBLOCKED_NOTIFICATION:
           href: ${WORKFLOW_URL}
           text: ${WORKFLOW_NAME} - Started ${START_DATE}
 
+USER_LOCKED_NOTIFICATION:
+  email:
+    subject: User ${lockedUser} has been locked
+    body: "User with email ${lockedUser} has been locked because of multiple incorrect password attempts."
+
+
+
 SSO_PROVIDER_NOT_REACHABLE_NOTIFICATION:
   web: "The default Single Sign-on Provider ${SSO_PROVIDER_NAME} (Type: ${SSO_PROVIDER_TYPE}, URL: ${SSO_PROVIDER_URL}) is no longer reachable. This will impact user's ability to login into Harness System. Please make sure at least one delegate is up and running and can reach the provider. ${DELEGATE_HOSTS}"
   slack: "The default Single Sign-on Provider ${SSO_PROVIDER_NAME} (Type: ${SSO_PROVIDER_TYPE}, URL: ${SSO_PROVIDER_URL}) is no longer reachable. This will impact user's ability to login into Harness System. Please make sure at least one delegate is up and running and can reach the provider. ${DELEGATE_HOSTS}"

@@ -1,1 +1,1 @@
-Your password has expired
+Your Harness password has expired

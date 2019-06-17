@@ -2,10 +2,12 @@ package software.wings.security.authentication;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -19,10 +21,15 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
+import software.wings.beans.Account;
 import software.wings.beans.User;
+import software.wings.beans.loginSettings.LoginSettingsService;
+import software.wings.beans.loginSettings.UserLockoutInfo;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 
 public class PasswordBasedAuthHandlerTest {
@@ -32,14 +39,19 @@ public class PasswordBasedAuthHandlerTest {
 
   @Mock private WingsPersistence wingsPersistence;
 
-  @Mock private DomainWhitelistCheckerService domainWhitelistCheckerService;
+  @Mock private LoginSettingsService loginSettingsService;
 
-  @InjectMocks @Inject PasswordBasedAuthHandler authHandler;
+  @Mock private AuthenticationUtils authenticationUtils;
+
+  @Mock private AccountService accountService;
+
+  @InjectMocks @Inject @Spy PasswordBasedAuthHandler authHandler;
+
+  @Mock private DomainWhitelistCheckerService domainWhitelistCheckerService;
 
   @Before
   public void setUp() {
     initMocks(this);
-    authHandler = spy(authHandler);
   }
 
   @Test
@@ -99,6 +111,8 @@ public class PasswordBasedAuthHandlerTest {
     try {
       User mockUser = mock(User.class);
       when(mockUser.isEmailVerified()).thenReturn(true);
+      when(mockUser.getUserLockoutInfo()).thenReturn(new UserLockoutInfo());
+      doNothing().when(loginSettingsService).updateUserLockoutInfo(any(User.class), any(Account.class), anyInt());
       doReturn(mockUser).when(authHandler).getUser(anyString());
       when(mockUser.getPasswordHash()).thenReturn("$2a$10$Rf/.q4HvUkS7uG2Utdkk7.jLnqnkck5ruH/vMrHjGVk4R9mL8nQE2");
       when(domainWhitelistCheckerService.isDomainWhitelisted(mockUser)).thenReturn(true);
@@ -115,8 +129,12 @@ public class PasswordBasedAuthHandlerTest {
     User mockUser = new User();
     mockUser.setEmailVerified(true);
     mockUser.setUuid("TestUID");
+    mockUser.setDefaultAccountId("accountId");
     mockUser.setPasswordHash("$2a$10$Rf/.q4HvUkS7uG2Utdkk7.jLnqnkck5ruH/vMrHjGVk4R9mL8nQE2");
     when(configuration.getPortal()).thenReturn(mock(PortalConfig.class));
+    when(authenticationUtils.getPrimaryAccount(any(User.class))).thenReturn(new Account());
+    when(loginSettingsService.isUserLocked(any(User.class), any(Account.class))).thenReturn(false);
+    doNothing().when(loginSettingsService).updateUserLockoutInfo(any(User.class), any(Account.class), anyInt());
     doReturn(mockUser).when(authHandler).getUser(anyString());
     when(domainWhitelistCheckerService.isDomainWhitelisted(mockUser)).thenReturn(true);
     User user = authHandler.authenticate("admin@harness.io", "admin").getUser();
