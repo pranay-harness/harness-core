@@ -236,8 +236,8 @@ public class TriggerServiceHelper {
 
   public static String getCronDescription(String cronExpression) {
     try {
-      String description =
-          getDescription(DescriptionTypeEnum.FULL, cronExpression, new Options(), I18nMessages.DEFAULT_LOCALE);
+      String description = getDescription(DescriptionTypeEnum.FULL, ScheduledTriggerJob.PREFIX + cronExpression,
+          new Options(), I18nMessages.DEFAULT_LOCALE);
       return StringUtils.lowerCase("" + description.charAt(0)) + description.substring(1);
     } catch (Exception e) {
       throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "Invalid cron expression");
@@ -252,8 +252,7 @@ public class TriggerServiceHelper {
     try {
       if (isNotBlank(scheduledTriggerCondition.getCronExpression())) {
         CronScheduleBuilder.cronSchedule(ScheduledTriggerJob.PREFIX + scheduledTriggerCondition.getCronExpression());
-        scheduledTriggerCondition.setCronDescription(
-            getCronDescription(ScheduledTriggerJob.PREFIX + scheduledTriggerCondition.getCronExpression()));
+        scheduledTriggerCondition.setCronDescription(getCronDescription(scheduledTriggerCondition.getCronExpression()));
       }
     } catch (Exception ex) {
       logger.warn("Error parsing cron expression: {} : {}", scheduledTriggerCondition.getCronExpression(),
