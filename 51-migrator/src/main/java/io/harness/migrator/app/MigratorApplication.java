@@ -9,7 +9,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 
-import io.harness.mongo.MigratorMorphiaClasses;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.PersistenceMorphiaClasses;
 import io.harness.serializer.YamlUtils;
@@ -30,10 +29,8 @@ import java.util.logging.Level;
 
 @Slf4j
 public class MigratorApplication {
-  public static final Set<Class> morphiaClasses = ImmutableSet.<Class>builder()
-                                                      .addAll(MigratorMorphiaClasses.classes)
-                                                      .addAll(PersistenceMorphiaClasses.classes)
-                                                      .build();
+  public static final Set<Class> morphiaClasses =
+      ImmutableSet.<Class>builder().addAll(PersistenceMorphiaClasses.classes).build();
 
   public static void main(String... args) throws Exception {
     // Optionally remove existing handlers attached to j.u.l root logger

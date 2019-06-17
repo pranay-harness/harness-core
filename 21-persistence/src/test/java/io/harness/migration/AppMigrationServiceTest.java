@@ -1,23 +1,20 @@
-package io.harness;
+package io.harness.migration;
 
-import static io.harness.beans.database.MigrationJobInstance.Status.BASELINE;
-import static io.harness.beans.database.MigrationJobInstance.Status.PENDING;
+import static io.harness.migration.MigrationJobInstance.Status.BASELINE;
+import static io.harness.migration.MigrationJobInstance.Status.PENDING;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.database.MigrationJobInstance;
-import io.harness.beans.database.MigrationJobInstance.MigrationJobInstanceKeys;
-import io.harness.beans.migration.MigrationList;
+import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
-import io.harness.migrator.MigratorTest;
-import io.harness.migrator.ServiceAppMixin;
+import io.harness.migration.MigrationJobInstance.MigrationJobInstanceKeys;
 import io.harness.persistence.HPersistence;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class ServiceAppMixinTest extends MigratorTest {
-  @Inject ServiceAppMixin serviceAppMixin;
+public class AppMigrationServiceTest extends PersistenceTest {
+  @Inject AppMigrationService serviceAppMixin;
   @Inject HPersistence persistence;
 
   @Test

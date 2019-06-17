@@ -1,8 +1,8 @@
-package io.harness.beans.migration;
+package io.harness.migration;
 
 import com.google.common.collect.ImmutableMap;
 
-import io.harness.beans.migration.MigrationJob.Metadata;
+import io.harness.migration.MigrationJob.Metadata;
 import io.harness.persistence.HPersistence;
 
 import java.util.Map;

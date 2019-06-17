@@ -54,7 +54,6 @@ import io.harness.maintenance.MaintenanceController;
 import io.harness.managerclient.VerificationManagerClientModule;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
-import io.harness.mongo.MigratorMorphiaClasses;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.PersistenceMorphiaClasses;
 import io.harness.persistence.HPersistence;
@@ -97,7 +96,6 @@ public class VerificationServiceApplication extends Application<VerificationServ
                                                       .addAll(ManagerMorphiaClasses.classes)
                                                       .addAll(ManagerMorphiaClasses.dependentClasses)
                                                       .addAll(EventsMorphiaClasses.classes)
-                                                      .addAll(MigratorMorphiaClasses.classes)
                                                       .addAll(PersistenceMorphiaClasses.classes)
                                                       .addAll(LimitsMorphiaClasses.classes)
                                                       .addAll(VerificationMorphiaClasses.classes)

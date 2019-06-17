@@ -1,15 +1,11 @@
-package io.harness.migrator;
+package io.harness.migration;
 
-import static io.harness.beans.database.MigrationJobInstance.Status.BASELINE;
-import static io.harness.beans.database.MigrationJobInstance.Status.PENDING;
+import static io.harness.migration.MigrationJobInstance.Status.BASELINE;
+import static io.harness.migration.MigrationJobInstance.Status.PENDING;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.beans.database.MigrationJobInstance;
-import io.harness.beans.migration.MigrationJob;
-import io.harness.beans.migration.MigrationList;
-import io.harness.beans.migration.MongoCollectionMigrationChannel;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import io.harness.persistence.Store;
@@ -19,7 +15,7 @@ import java.time.Duration;
 import java.util.Set;
 
 @Singleton
-public class ServiceAppMixin {
+public class AppMigrationService {
   @Inject private HPersistence persistence;
 
   private void upsertMigrationJobInstance(MigrationJob job) {
