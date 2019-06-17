@@ -537,6 +537,12 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         : originalPods;
     int controllerDesiredCount =
         getControllerPodCount(getController(kubernetesConfig, encryptedDataDetails, controllerName, namespace));
+
+    if (desiredCount == -1) {
+      // This indicates wait for all pods to be in steady state. In case of HPA you won't know absolute numbers
+      desiredCount = controllerDesiredCount;
+    }
+
     Set<String> originalPodNames = originalPods.stream().map(pod -> pod.getMetadata().getName()).collect(toSet());
     List<ContainerInfo> containerInfos = new ArrayList<>();
     boolean hasErrors = false;
@@ -1242,14 +1248,16 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
         while (true) {
           try {
+            int absoluteDesiredCount = desiredCount;
             HasMetadata currentController =
                 getController(kubernetesConfig, encryptedDataDetails, controllerName, namespace);
             if (currentController != null) {
               int controllerDesiredCount = getControllerPodCount(currentController);
-              if (controllerDesiredCount != desiredCount) {
-                String msg = format(
-                    "Controller replica count is set to %d instead of %d. ", controllerDesiredCount, desiredCount);
-                logger.error(msg);
+              absoluteDesiredCount = (desiredCount == -1) ? controllerDesiredCount : desiredCount;
+              if (controllerDesiredCount != absoluteDesiredCount) {
+                String msg = format("Replica count is set to %d instead of %d. [Could be due to HPA.]",
+                    controllerDesiredCount, absoluteDesiredCount);
+                logger.warn(msg);
                 executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
               }
             } else {
@@ -1270,54 +1278,55 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
             pods = prunePodsInFinalState(pods);
 
             // Check current state
-            if (pods.size() != desiredCount) {
+            if (pods.size() != absoluteDesiredCount) {
               executionLogCallback.saveExecutionLog(
-                  format("Waiting for desired number of pods [%d/%d]", pods.size(), desiredCount));
+                  format("Waiting for desired number of pods [%d/%d]", pods.size(), absoluteDesiredCount));
               sleep(ofSeconds(5));
               continue;
             }
             if (!countReached.getAndSet(true)) {
               executionLogCallback.saveExecutionLog(
-                  format("Desired number of pods reached [%d/%d]", pods.size(), desiredCount));
+                  format("Desired number of pods reached [%d/%d]", pods.size(), absoluteDesiredCount));
             }
 
-            if (desiredCount > 0) {
+            if (absoluteDesiredCount > 0) {
               int haveImages = (int) pods.stream().filter(pod -> podHasImages(pod, images)).count();
-              if (haveImages != desiredCount) {
-                executionLogCallback.saveExecutionLog(
-                    format("Waiting for pods to be updated with image %s [%d/%d]", images, haveImages, desiredCount),
+              if (haveImages != absoluteDesiredCount) {
+                executionLogCallback.saveExecutionLog(format("Waiting for pods to be updated with image %s [%d/%d]",
+                                                          images, haveImages, absoluteDesiredCount),
                     LogLevel.INFO);
                 sleep(ofSeconds(5));
                 continue;
               }
               if (!haveImagesCountReached.getAndSet(true)) {
                 executionLogCallback.saveExecutionLog(
-                    format("Pods are updated with image %s [%d/%d]", images, haveImages, desiredCount));
+                    format("Pods are updated with image %s [%d/%d]", images, haveImages, absoluteDesiredCount));
               }
             }
 
-            if (isNotVersioned || desiredCount > previousCount) {
+            if (isNotVersioned || absoluteDesiredCount > previousCount) {
               int running = (int) pods.stream().filter(this ::isRunning).count();
-              if (running != desiredCount) {
+              if (running != absoluteDesiredCount) {
                 executionLogCallback.saveExecutionLog(
-                    format("Waiting for pods to be running [%d/%d]", running, desiredCount));
+                    format("Waiting for pods to be running [%d/%d]", running, absoluteDesiredCount));
                 sleep(ofSeconds(10));
                 continue;
               }
               if (!runningCountReached.getAndSet(true)) {
-                executionLogCallback.saveExecutionLog(format("Pods are running [%d/%d]", running, desiredCount));
+                executionLogCallback.saveExecutionLog(
+                    format("Pods are running [%d/%d]", running, absoluteDesiredCount));
               }
 
               int steadyState = (int) pods.stream().filter(this ::inSteadyState).count();
-              if (steadyState != desiredCount) {
+              if (steadyState != absoluteDesiredCount) {
                 executionLogCallback.saveExecutionLog(
-                    format("Waiting for pods to reach steady state [%d/%d]", steadyState, desiredCount));
+                    format("Waiting for pods to reach steady state [%d/%d]", steadyState, absoluteDesiredCount));
                 sleep(ofSeconds(15));
                 continue;
               }
               if (!steadyStateCountReached.getAndSet(true)) {
                 executionLogCallback.saveExecutionLog(
-                    format("Pods have reached steady state [%d/%d]", steadyState, desiredCount));
+                    format("Pods have reached steady state [%d/%d]", steadyState, absoluteDesiredCount));
               }
             }
             return pods;
