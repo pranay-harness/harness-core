@@ -23,8 +23,8 @@ public class LimitEnforcementUtils {
   public static <T> T withLimitCheck(StaticLimitCheckerWithDecrement checker, Supplier<T> fn) {
     boolean allowed = checker.checkAndConsume();
     if (!allowed) {
-      log.info("Usage Limits Reached. actionType={}, Limit: {}, accountId={}", checker.getAction().getActionType(),
-          checker.getLimit(), checker.getAction().getAccountId());
+      log.info("Resource Usage Limit Reached. actionType={}, Limit: {}, accountId={}",
+          checker.getAction().getActionType(), checker.getLimit(), checker.getAction().getAccountId());
       throw new WingsException(
           ErrorCode.USAGE_LIMITS_EXCEEDED, "Usage Limit Reached. Please contact Harness support.", WingsException.USER);
     }

@@ -63,7 +63,11 @@ public class MongoStaticLimitChecker implements StaticLimitCheckerWithDecrement 
     }
 
     Counter counter = incrementAndGet(key, 1);
-    return counter.getValue() <= limit.getCount();
+    boolean underLimit = counter.getValue() <= limit.getCount();
+    if (!underLimit) {
+      log.info("Counter above limit. Counter: {} Limit: {}, Action: {}", counter, limit, action);
+    }
+    return underLimit;
   }
 
   /**
