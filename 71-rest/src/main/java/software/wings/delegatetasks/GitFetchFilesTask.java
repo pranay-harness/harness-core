@@ -29,6 +29,7 @@ import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.beans.yaml.GitFetchFilesResult;
+import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -64,46 +65,51 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(
         delegateLogService, taskParams.getAccountId(), taskParams.getAppId(), taskParams.getActivityId(), FetchFiles);
 
-    try {
-      Map<String, GitFetchFilesResult> filesFromMultipleRepo = new HashMap<>();
+    Map<String, GitFetchFilesResult> filesFromMultipleRepo = new HashMap<>();
 
-      for (Entry<String, GitFetchFilesConfig> entry : taskParams.getGitFetchFilesConfigMap().entrySet()) {
-        executionLogCallback.saveExecutionLog(
-            Log.color("\nFetching values files from git for " + entry.getKey(), LogColor.White, LogWeight.Bold));
-        GitFetchFilesConfig gitFetchFileConfig = entry.getValue();
+    for (Entry<String, GitFetchFilesConfig> entry : taskParams.getGitFetchFilesConfigMap().entrySet()) {
+      executionLogCallback.saveExecutionLog(
+          Log.color("\nFetching values files from git for " + entry.getKey(), LogColor.White, LogWeight.Bold));
 
-        GitFetchFilesResult gitFetchFilesResult = fetchFilesFromRepo(gitFetchFileConfig.getGitFileConfig(),
+      GitFetchFilesConfig gitFetchFileConfig = entry.getValue();
+      String k8ValuesLocation = entry.getKey();
+      GitFetchFilesResult gitFetchFilesResult;
+
+      try {
+        gitFetchFilesResult = fetchFilesFromRepo(gitFetchFileConfig.getGitFileConfig(),
             gitFetchFileConfig.getGitConfig(), gitFetchFileConfig.getEncryptedDataDetails(), executionLogCallback);
+      } catch (Exception ex) {
+        String exceptionMsg = ExceptionUtils.getMessage(ex);
 
-        filesFromMultipleRepo.put(entry.getKey(), gitFetchFilesResult);
-      }
+        // Values.yaml in service spec is optional.
+        if (K8sValuesLocation.Service.toString().equals(k8ValuesLocation)
+            && ex.getCause() instanceof NoSuchFileException) {
+          logger.info(exceptionMsg, ex);
+          executionLogCallback.saveExecutionLog(exceptionMsg, WARN);
+          continue;
+        }
 
-      if (taskParams.isFinalState()) {
-        executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
-      }
-
-      return GitCommandExecutionResponse.builder()
-          .gitCommandResult(
-              GitFetchFilesFromMultipleRepoResult.builder().filesFromMultipleRepo(filesFromMultipleRepo).build())
-          .gitCommandStatus(GitCommandStatus.SUCCESS)
-          .build();
-    } catch (Exception ex) {
-      String exceptionMsg = ExceptionUtils.getMessage(ex);
-
-      if (ex.getCause() instanceof NoSuchFileException) {
-        logger.info(exceptionMsg);
-        executionLogCallback.saveExecutionLog(exceptionMsg, WARN);
+        String msg = "Exception in processing GitFetchFilesTask. " + ExceptionUtils.getMessage(ex);
+        logger.error(msg, ex);
+        executionLogCallback.saveExecutionLog(msg, ERROR, CommandExecutionStatus.FAILURE);
         return GitCommandExecutionResponse.builder()
-            .errorMessage(exceptionMsg)
-            .gitCommandStatus(GitCommandStatus.SUCCESS)
+            .errorMessage(msg)
+            .gitCommandStatus(GitCommandStatus.FAILURE)
             .build();
       }
 
-      String msg = "Exception in processing GitFetchFilesTask. " + ExceptionUtils.getMessage(ex);
-      logger.error(msg, ex);
-      executionLogCallback.saveExecutionLog(msg, ERROR, CommandExecutionStatus.FAILURE);
-      return GitCommandExecutionResponse.builder().errorMessage(msg).gitCommandStatus(GitCommandStatus.FAILURE).build();
+      filesFromMultipleRepo.put(entry.getKey(), gitFetchFilesResult);
     }
+
+    if (taskParams.isFinalState()) {
+      executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+    }
+
+    return GitCommandExecutionResponse.builder()
+        .gitCommandResult(
+            GitFetchFilesFromMultipleRepoResult.builder().filesFromMultipleRepo(filesFromMultipleRepo).build())
+        .gitCommandStatus(GitCommandStatus.SUCCESS)
+        .build();
   }
 
   private GitFetchFilesResult fetchFilesFromRepo(GitFileConfig gitFileConfig, GitConfig gitConfig,
