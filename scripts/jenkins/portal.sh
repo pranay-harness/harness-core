@@ -11,6 +11,11 @@ cd dist/migrator ;
 
 cp ../../51-migrator/target/migrator-capsule.jar .
 cp ../../keystore.jks .
+echo ${VERSION} > version.txt
+if [ ! -z ${PURPOSE} ]
+then
+    echo ${PURPOSE} > purpose.txt
+fi
 
 cd ../..
 
