@@ -37,6 +37,7 @@ import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aD
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK;
 import static software.wings.beans.ServiceSecretKey.ServiceType.LEARNING_ENGINE;
+import static software.wings.beans.TaskType.HOST_VALIDATION;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.common.Constants.DELEGATE_DIR;
 import static software.wings.common.Constants.DOCKER_DELEGATE;
@@ -75,7 +76,9 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.executioncapability.ConnectivityCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.CapabilityUtils;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
@@ -128,7 +131,10 @@ import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.DelegateTaskResponse.ResponseCode;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FileMetadata;
+import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
+import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DelegateProfileErrorAlert;
 import software.wings.beans.alert.DelegatesDownAlert;
@@ -157,6 +163,7 @@ import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.settings.SettingValue;
 import software.wings.utils.Misc;
 
 import java.io.ByteArrayOutputStream;
@@ -172,6 +179,8 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -1428,14 +1437,42 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       return;
     }
 
+    addMergedParamsForCapabilityCheck(task);
+
     DelegatePackage delegatePackage = getDelegataePackageWithEncryptionConfig(task, task.getDelegateId());
-    CapabilityHelper.embedCapabilitiesInDelegateTask(task,
-        delegatePackage == null || isEmpty(delegatePackage.getEncryptionConfigs())
-            ? EMPTY_LIST
-            : delegatePackage.getEncryptionConfigs().values());
+    Collection<EncryptionConfig> encryptionConfigs =
+        (delegatePackage == null || isEmpty(delegatePackage.getEncryptionConfigs()))
+        ? EMPTY_LIST
+        : delegatePackage.getEncryptionConfigs().values();
+    CapabilityHelper.embedCapabilitiesInDelegateTask(task, encryptionConfigs);
 
     if (isNotEmpty(task.getExecutionCapabilities())) {
       logger.info(CapabilityHelper.generateLogStringWithCapabilitiesGenerated(task));
+    }
+  }
+
+  // For some of the tasks, the necesssary factors to do capability check is split across multiple
+  // params. So none of the params can provide the execution capability by itself. To work around this,
+  // we're adding extra params that combines these split params.
+  private void addMergedParamsForCapabilityCheck(DelegateTask task) {
+    TaskType type = TaskType.valueOf(task.getData().getTaskType());
+    Object[] params = task.getData().getParameters();
+    if (type == HOST_VALIDATION) {
+      // the host is in params[2] and port in params[3]
+      List<String> hosts = (List<String>) params[2];
+      SettingValue settingValue = ((SettingAttribute) params[3]).getValue();
+      int port = 22;
+      if (settingValue instanceof WinRmConnectionAttributes) {
+        port = ((WinRmConnectionAttributes) settingValue).getPort();
+      } else if (settingValue instanceof HostConnectionAttributes) {
+        port = ((HostConnectionAttributes) settingValue).getSshPort();
+      }
+      final int portf = port;
+      List<Object> newParams = new ArrayList<>(Arrays.asList(params));
+      List<ExecutionCapabilityDemander> capabilityDemanders =
+          hosts.stream().map(host -> new ConnectivityCapabilityDemander(host, portf)).collect(toList());
+      newParams.addAll(capabilityDemanders);
+      task.getData().setParameters(newParams.toArray());
     }
   }
 

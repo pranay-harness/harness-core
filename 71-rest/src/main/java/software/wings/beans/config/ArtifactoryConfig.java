@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
@@ -35,8 +34,7 @@ import java.util.Objects;
 @Builder
 @ToString(exclude = "password")
 @EqualsAndHashCode(callSuper = false)
-public class ArtifactoryConfig
-    extends SettingValue implements EncryptableSetting, ArtifactSourceable, ExecutionCapabilityDemander {
+public class ArtifactoryConfig extends SettingValue implements EncryptableSetting, ArtifactSourceable {
   @Attributes(title = "Artifactory URL", required = true) @NotEmpty private String artifactoryUrl;
 
   @Attributes(title = "Username") private String username;

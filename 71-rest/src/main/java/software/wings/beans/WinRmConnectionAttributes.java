@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +19,7 @@ import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @JsonTypeName("WINRM_CONNECTION_ATTRIBUTES")
@@ -36,6 +38,12 @@ public class WinRmConnectionAttributes extends SettingValue implements Encryptab
   @SchemaIgnore @NotEmpty private String accountId;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
+
+  // If used in HOST_VALIDATION_TASK handled by add addMergedParamsForCapabilityCheck
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return null;
+  }
 
   public enum AuthenticationScheme { BASIC, NTLM }
 

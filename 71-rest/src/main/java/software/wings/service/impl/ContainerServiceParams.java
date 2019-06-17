@@ -48,19 +48,6 @@ public class ContainerServiceParams implements ExecutionCapabilityDemander {
       return CapabilityHelper.generateVaultHttpCapabilities(encryptionDetails);
     }
     SettingValue value = settingAttribute.getValue();
-    if (value instanceof AzureConfig) {
-      return CapabilityHelper.generateDelegateCapabilities((AzureConfig) value, encryptionDetails);
-    } else if (value instanceof GcpConfig) {
-      return CapabilityHelper.generateDelegateCapabilities((GcpConfig) value, encryptionDetails);
-    } else if (value instanceof KubernetesConfig) {
-      return CapabilityHelper.generateDelegateCapabilities((KubernetesConfig) value, encryptionDetails);
-    } else if (value instanceof KubernetesClusterConfig) {
-      return CapabilityHelper.generateDelegateCapabilities((KubernetesClusterConfig) value, encryptionDetails);
-    } else {
-      // TODO => Prashant Pal
-      // Verify with Brett how to handle the rest of the instance type where they are not a implementation of
-      // ExecutionCapabilityDemander
-      return null;
-    }
+    return CapabilityHelper.generateDelegateCapabilities(value, encryptionDetails);
   }
 }

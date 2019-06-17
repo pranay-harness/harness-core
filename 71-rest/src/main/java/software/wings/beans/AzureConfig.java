@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
@@ -29,7 +28,7 @@ import java.util.List;
 @Builder
 @ToString(exclude = "key")
 @EqualsAndHashCode(callSuper = false)
-public class AzureConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
+public class AzureConfig extends SettingValue implements EncryptableSetting {
   private static final String AZURE_URL = "https://azure.microsoft.com/";
   @Attributes(title = "Client ID [Application ID]", required = true) @NotEmpty private String clientId;
 

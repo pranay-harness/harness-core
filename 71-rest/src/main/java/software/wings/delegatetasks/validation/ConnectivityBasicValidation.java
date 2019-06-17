@@ -78,10 +78,7 @@ public class ConnectivityBasicValidation extends AbstractDelegateValidateTask {
     String hostName = validationAttributes.getHostName();
     String criteria = getWinRmCriteria(request).get(0);
     SettingValue settingValue = request.getSettingAttribute().getValue();
-    int port = 22;
-    if (settingValue instanceof WinRmConnectionAttributes) {
-      port = ((WinRmConnectionAttributes) settingValue).getPort();
-    }
+    int port = ((WinRmConnectionAttributes) settingValue).getPort();
     return getSocketConnectivity(hostName, port, criteria);
   }
 
@@ -91,10 +88,7 @@ public class ConnectivityBasicValidation extends AbstractDelegateValidateTask {
     String hostName = validationAttributes.getHostName();
     String criteria = getSshCriteria(request).get(0);
     SettingValue settingValue = request.getSettingAttribute().getValue();
-    int port = 22;
-    if (settingValue instanceof HostConnectionAttributes) {
-      port = ((HostConnectionAttributes) settingValue).getSshPort();
-    }
+    int port = ((HostConnectionAttributes) settingValue).getSshPort();
     return getSocketConnectivity(hostName, port, criteria);
   }
 

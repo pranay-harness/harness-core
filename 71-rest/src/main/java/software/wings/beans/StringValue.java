@@ -1,9 +1,13 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.IgnoreValidationCapability;
 import software.wings.audit.ResourceType;
 import software.wings.settings.SettingValue;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -61,6 +65,11 @@ public class StringValue extends SettingValue {
   @Override
   public String fetchResourceCategory() {
     return ResourceType.SETTING.name();
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return Arrays.asList(IgnoreValidationCapability.builder().build());
   }
 
   /**

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
@@ -33,7 +32,7 @@ import java.util.List;
 @Builder
 @ToString(exclude = "apiToken")
 @EqualsAndHashCode(callSuper = false)
-public class DynaTraceConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
+public class DynaTraceConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "URL", required = true) private String dynaTraceUrl;
 
   @Attributes(title = "API Token", required = true) @Encrypted private char[] apiToken;

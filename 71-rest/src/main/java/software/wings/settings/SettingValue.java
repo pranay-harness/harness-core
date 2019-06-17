@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.encryption.EncryptionReflectUtils;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,7 +17,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = As.EXISTING_PROPERTY)
-public abstract class SettingValue {
+public abstract class SettingValue implements ExecutionCapabilityDemander {
   @Getter @Setter private String type;
   @JsonIgnore @SchemaIgnore private transient boolean decrypted;
 
@@ -47,6 +48,7 @@ public abstract class SettingValue {
   }
 
   public abstract String fetchResourceCategory();
+
   /**
    * The Enum SettingVariableTypes.
    */
@@ -295,6 +297,7 @@ public abstract class SettingValue {
     SettingVariableTypes() {
       this.displayName = name();
     }
+
     SettingVariableTypes(String displayName) {
       this.displayName = displayName;
     }
