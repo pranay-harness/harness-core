@@ -109,6 +109,24 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       if (isAwsLambdaState(context)) {
         canaryNewHostNames.put(LAMBDA_HOST_NAME, DEFAULT_GROUP_NAME);
       }
+
+      if (isAwsECSState(context)) {
+        CloudWatchState cloudWatchState = (CloudWatchState) this;
+        if (isNotEmpty(cloudWatchState.fetchEcsMetrics())) {
+          for (String clusterName : cloudWatchState.fetchEcsMetrics().keySet()) {
+            canaryNewHostNames.put(clusterName, DEFAULT_GROUP_NAME);
+          }
+        }
+      }
+      if (getStateType().equals(StateType.CLOUD_WATCH.name())) {
+        CloudWatchState cloudWatchState = (CloudWatchState) this;
+        if (isNotEmpty(cloudWatchState.fetchLoadBalancerMetrics())) {
+          for (String lbName : cloudWatchState.fetchLoadBalancerMetrics().keySet()) {
+            canaryNewHostNames.put(lbName, DEFAULT_GROUP_NAME);
+          }
+        }
+      }
+
       if (isEmpty(canaryNewHostNames) && !isAwsLambdaState(context)) {
         getLogger().warn(
             "id: {}, Could not find test nodes to compare the data", context.getStateExecutionInstanceId());

@@ -622,6 +622,10 @@ public abstract class AbstractAnalysisState extends State {
         && getDeploymentType(context).equals(DeploymentType.AWS_LAMBDA);
   }
 
+  protected boolean isAwsECSState(ExecutionContext context) {
+    return getStateType().equals(StateType.CLOUD_WATCH.name()) && getDeploymentType(context).equals(DeploymentType.ECS);
+  }
+
   protected String getPcfHostName(PcfInstanceElement pcfInstanceElement, boolean includePrevious) {
     if (includePrevious || pcfInstanceElement.isUpsize()) {
       return pcfInstanceElement.getApplicationId();

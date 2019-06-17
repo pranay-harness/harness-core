@@ -175,7 +175,8 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
       // in-case no ecsMetrics provided than fetch cluster details from the context and use default ecs metrics for
       // verification.
       if (isEmpty(ecsMetrics)) {
-        ContainerServiceElement containerServiceElement = context.getContextElement(ContextElementType.PARAM);
+        ContainerServiceElement containerServiceElement =
+            context.getContextElement(ContextElementType.CONTAINER_SERVICE);
         String clusterName = containerServiceElement.getClusterName();
         ecsMetrics = createECSMetrics(clusterName, cloudWatchMetrics);
       }

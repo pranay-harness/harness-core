@@ -261,9 +261,7 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
     delegateLogService.save(dataCollectionInfo.getAwsConfig().getAccountId(), apiCallLog);
     List<Datapoint> datapoints = metricStatistics.getDatapoints();
     String metricName = awsNameSpace == AwsNameSpace.EC2 ? "EC2 Metrics/" + dimensionValue : dimensionValue;
-    String hostNameForRecord = awsNameSpace == AwsNameSpace.LAMBDA
-        ? VerificationConstants.LAMBDA_HOST_NAME
-        : awsNameSpace == AwsNameSpace.ECS ? VerificationConstants.ECS_HOST_NAME : host;
+    String hostNameForRecord = awsNameSpace == AwsNameSpace.LAMBDA ? VerificationConstants.LAMBDA_HOST_NAME : host;
     datapoints.forEach(datapoint -> {
       NewRelicMetricDataRecord newRelicMetricDataRecord =
           NewRelicMetricDataRecord.builder()
@@ -315,7 +313,7 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
           if (hostStartTimeMap.containsKey(host)) {
             collectionStartTime = hostStartTimeMap.get(host);
           } else {
-            collectionStartTime = startTime;
+            return dataCollectionMinute;
           }
         }
         collectionMinute = (int) (TimeUnit.MILLISECONDS.toMinutes(metricTimeStamp - collectionStartTime));
