@@ -17,10 +17,13 @@ import software.wings.service.intfc.UserService;
 @Singleton
 public class PasswordBasedAuthHandler implements AuthHandler {
   private UserService userService;
+  private DomainWhitelistCheckerService domainWhitelistCheckerService;
 
   @Inject
-  public PasswordBasedAuthHandler(UserService userService) {
+  public PasswordBasedAuthHandler(
+      UserService userService, DomainWhitelistCheckerService domainWhitelistCheckerService) {
     this.userService = userService;
+    this.domainWhitelistCheckerService = domainWhitelistCheckerService;
   }
 
   @Override
@@ -42,6 +45,10 @@ public class PasswordBasedAuthHandler implements AuthHandler {
     }
     if (!user.isEmailVerified()) {
       throw new WingsException(EMAIL_NOT_VERIFIED, USER);
+    }
+
+    if (!domainWhitelistCheckerService.isDomainWhitelisted(user)) {
+      domainWhitelistCheckerService.throwDomainWhitelistFilterException();
     }
 
     if (isPasswordHash) {

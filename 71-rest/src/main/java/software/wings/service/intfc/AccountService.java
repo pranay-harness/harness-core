@@ -13,6 +13,7 @@ import software.wings.beans.FeatureFlag;
 import software.wings.beans.Service;
 import software.wings.beans.TechStack;
 import software.wings.beans.User;
+import software.wings.security.authentication.AccountSettingsResponse;
 import software.wings.service.impl.analysis.CVEnabledService;
 
 import java.util.Collection;
@@ -112,4 +113,10 @@ public interface AccountService {
   boolean isCommunityAccount(String accountId);
 
   boolean isTrialAccount(String accountId);
+
+  Set<String> getWhitelistedDomains(String accountId);
+
+  Account updateWhitelistedDomains(String accountId, Set<String> whitelistedDomains);
+
+  AccountSettingsResponse getAuthSettingsByAccountId(String accountId);
 }

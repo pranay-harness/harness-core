@@ -83,6 +83,7 @@ import software.wings.beans.User;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapSettings.LdapSettingsKeys;
+import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOType;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerConditionType;
@@ -98,7 +99,9 @@ import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.authentication.AccountSettingsResponse;
 import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.security.authentication.OauthProviderType;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
@@ -467,7 +470,8 @@ public class AccountServiceImpl implements AccountService {
 
     UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class)
                                                      .set("companyName", account.getCompanyName())
-                                                     .set("twoFactorAdminEnforced", account.isTwoFactorAdminEnforced());
+                                                     .set("twoFactorAdminEnforced", account.isTwoFactorAdminEnforced())
+                                                     .set("whitelistedDomains", account.getWhitelistedDomains());
     if (account.getAuthenticationMechanism() != null) {
       updateOperations.set("authenticationMechanism", account.getAuthenticationMechanism());
     }
@@ -1070,6 +1074,33 @@ public class AccountServiceImpl implements AccountService {
         .withResponse(new ArrayList<>())
         .withOffset(String.valueOf(offset + returnList.size()))
         .withTotal(totalSize)
+        .build();
+  }
+
+  public Set<String> getWhitelistedDomains(String accountId) {
+    Account account = get(accountId);
+    return account.getWhitelistedDomains();
+  }
+
+  public Account updateWhitelistedDomains(String accountId, Set<String> whitelistedDomains) {
+    Account account = get(accountId);
+    account.setWhitelistedDomains(whitelistedDomains);
+    return update(account);
+  }
+
+  public AccountSettingsResponse getAuthSettingsByAccountId(String accountId) {
+    Account account = get(accountId);
+    AuthenticationMechanism authenticationMechanism = account.getAuthenticationMechanism();
+    if (authenticationMechanism == null) {
+      authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
+    }
+    Set<String> whitelistedDomains = account.getWhitelistedDomains();
+    OauthSettings oauthSettings = ssoSettingService.getOauthSettingsByAccountId(accountId);
+    Set<OauthProviderType> oauthProviderTypes = oauthSettings == null ? null : oauthSettings.getAllowedProviders();
+    return AccountSettingsResponse.builder()
+        .authenticationMechanism(authenticationMechanism)
+        .allowedDomains(whitelistedDomains)
+        .oauthProviderTypes(oauthProviderTypes)
         .build();
   }
 }

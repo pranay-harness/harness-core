@@ -7,7 +7,7 @@ import java.util.concurrent.ExecutionException;
 public interface AuthHandler {
   /***
    * Check if a user's credentials are valid
-   * @param params
+   * @param credentials
    * @return
    */
   AuthenticationResponse authenticate(String... credentials)

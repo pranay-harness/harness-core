@@ -32,6 +32,8 @@ public class PasswordBasedAuthHandlerTest {
 
   @Mock private WingsPersistence wingsPersistence;
 
+  @Mock private DomainWhitelistCheckerService domainWhitelistCheckerService;
+
   @InjectMocks @Inject PasswordBasedAuthHandler authHandler;
 
   @Before
@@ -99,6 +101,7 @@ public class PasswordBasedAuthHandlerTest {
       when(mockUser.isEmailVerified()).thenReturn(true);
       doReturn(mockUser).when(authHandler).getUser(anyString());
       when(mockUser.getPasswordHash()).thenReturn("$2a$10$Rf/.q4HvUkS7uG2Utdkk7.jLnqnkck5ruH/vMrHjGVk4R9mL8nQE2");
+      when(domainWhitelistCheckerService.isDomainWhitelisted(mockUser)).thenReturn(true);
       authHandler.authenticate("admin@harness.io", "admintest");
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
@@ -115,6 +118,7 @@ public class PasswordBasedAuthHandlerTest {
     mockUser.setPasswordHash("$2a$10$Rf/.q4HvUkS7uG2Utdkk7.jLnqnkck5ruH/vMrHjGVk4R9mL8nQE2");
     when(configuration.getPortal()).thenReturn(mock(PortalConfig.class));
     doReturn(mockUser).when(authHandler).getUser(anyString());
+    when(domainWhitelistCheckerService.isDomainWhitelisted(mockUser)).thenReturn(true);
     User user = authHandler.authenticate("admin@harness.io", "admin").getUser();
     assertThat(user).isNotNull();
   }

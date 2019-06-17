@@ -3,6 +3,7 @@ package software.wings.security.authentication;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.DOMAIN_WHITELIST_FILTER_CHECK_FAILED;
 import static io.harness.eraro.ErrorCode.EMAIL_NOT_VERIFIED;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
@@ -257,6 +258,11 @@ public class AuthenticationManager {
       } else {
         return defaultLogin(userName, password);
       }
+    } catch (WingsException e) {
+      if (e.getCode() == ErrorCode.DOMAIN_WHITELIST_FILTER_CHECK_FAILED) {
+        throw new WingsException(DOMAIN_WHITELIST_FILTER_CHECK_FAILED, USER);
+      }
+      throw e;
     } catch (Exception e) {
       logger.warn("Failed to login via default mechanism", e);
       throw new WingsException(INVALID_CREDENTIAL, USER);

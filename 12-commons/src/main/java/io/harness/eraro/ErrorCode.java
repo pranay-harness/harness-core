@@ -339,6 +339,8 @@ public enum ErrorCode {
 
   HEALTH_ERROR,
 
+  DOMAIN_WHITELIST_FILTER_CHECK_FAILED(UNAUTHORIZED),
+
   INVALID_DASHBOARD_UPDATE_REQUEST("Invalid Dashboard update request");
 
   private Status status = BAD_REQUEST;

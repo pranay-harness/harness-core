@@ -12,12 +12,10 @@ import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
-import software.wings.beans.HarnessApiKey.ClientType;
 import software.wings.beans.User;
 import software.wings.beans.User.UserKeys;
-import software.wings.beans.security.HarnessUserGroup;
-import software.wings.security.annotations.HarnessApiKeyAuth;
 import software.wings.security.annotations.IdentityServiceAuth;
+import software.wings.security.authentication.AccountSettingsResponse;
 import software.wings.security.authentication.AuthenticationManager;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -42,7 +40,7 @@ import javax.ws.rs.core.MediaType;
 @Path("/identity")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@HarnessApiKeyAuth(clientTypes = ClientType.IDENTITY_SERVICE)
+@IdentityServiceAuth
 @Slf4j
 public class IdentityServiceResource {
   private AuthenticationManager authenticationManager;
@@ -63,7 +61,6 @@ public class IdentityServiceResource {
   @Path("/user/login")
   @Timed
   @ExceptionMetered
-  @IdentityServiceAuth
   public RestResponse<User> loginUser(@QueryParam("email") String email) {
     return new RestResponse<>(authenticationManager.loginUserForIdentityService(urlDecode(email)));
   }
@@ -82,7 +79,6 @@ public class IdentityServiceResource {
   @Path("/users")
   @Timed
   @ExceptionMetered
-  @IdentityServiceAuth
   public RestResponse<List<User>> listUsers(@BeanParam PageRequest<User> pageRequest) {
     // Filter out 'disabled' users
     pageRequest.getFilters().add(SearchFilter.builder()
@@ -98,18 +94,15 @@ public class IdentityServiceResource {
   @Path("/accounts")
   @Timed
   @ExceptionMetered
-  @IdentityServiceAuth
   public RestResponse<List<Account>> listAccounts(@BeanParam PageRequest<Account> pageRequest) {
     return new RestResponse<>(accountService.list(pageRequest));
   }
 
   @GET
-  @Path("/harnessUserGroups")
+  @Path("/account-settings")
   @Timed
   @ExceptionMetered
-  @IdentityServiceAuth
-  public RestResponse<List<HarnessUserGroup>> getHarnessUserGroup(
-      @BeanParam PageRequest<HarnessUserGroup> pageRequest) {
-    return new RestResponse<>(harnessUserGroupService.list(pageRequest).getResponse());
+  public RestResponse<AccountSettingsResponse> getAccountSettings(@QueryParam("accountId") String accountId) {
+    return new RestResponse<>(accountService.getAuthSettingsByAccountId(accountId));
   }
 }

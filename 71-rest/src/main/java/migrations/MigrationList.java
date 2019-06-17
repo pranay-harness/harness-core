@@ -13,6 +13,7 @@ import migrations.all.AddValidUntilToActivity;
 import migrations.all.AddValidUntilToAlert;
 import migrations.all.AddValidUntilToDelegateTask;
 import migrations.all.AddValidUntilToWaitQueue;
+import migrations.all.AddWhitelistedDomainsToAccountMigration;
 import migrations.all.AppDTemplateMigration;
 import migrations.all.AppKeywordsMigration;
 import migrations.all.AuthTokenTtlMigration;
@@ -242,6 +243,7 @@ public class MigrationList {
         .add(Pair.of(255, OAuthAllowedProvidersListMigration.class))
         .add(Pair.of(256, MigrateLogFeedbackRecordsToGoogle.class))
         .add(Pair.of(257, NonWorkflowCVConfigurationMigration.class))
+        .add(Pair.of(258, AddWhitelistedDomainsToAccountMigration.class))
         .build();
   }
 }

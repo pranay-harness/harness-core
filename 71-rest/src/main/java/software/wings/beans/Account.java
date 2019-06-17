@@ -27,6 +27,7 @@ import software.wings.yaml.BaseEntityYaml;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,6 +43,8 @@ public class Account extends Base {
   @NotNull private String companyName;
 
   @Indexed(options = @IndexOptions(unique = true)) @NotNull private String accountName;
+
+  private Set<String> whitelistedDomains = new HashSet<>();
 
   @JsonIgnore @NotNull(groups = Create.class) @Encrypted private String accountKey;
 
@@ -249,6 +252,14 @@ public class Account extends Base {
     this.emailSentToSales = emailSentToSales;
   }
 
+  public Set<String> getWhitelistedDomains() {
+    return whitelistedDomains;
+  }
+
+  public void setWhitelistedDomains(Set<String> whitelistedDomains) {
+    this.whitelistedDomains = whitelistedDomains;
+  }
+
   public Set<TechStack> getTechStacks() {
     return techStacks;
   }
@@ -303,6 +314,7 @@ public class Account extends Base {
     private Map<String, String> defaults = new HashMap<>();
     private LicenseInfo licenseInfo;
     private boolean emailSentToSales;
+    private Set<String> whitelistedDomains;
     private long lastLicenseExpiryReminderSentAt;
 
     private Builder() {}
@@ -318,6 +330,11 @@ public class Account extends Base {
 
     public Builder withAccountName(String accountName) {
       this.accountName = accountName;
+      return this;
+    }
+
+    public Builder withWhitelistedDomains(Set<String> whitelistedDomains) {
+      this.whitelistedDomains = whitelistedDomains;
       return this;
     }
 
@@ -408,6 +425,7 @@ public class Account extends Base {
           .withDefaults(defaults)
           .withLicenseInfo(licenseInfo)
           .withEmailSentToSales(emailSentToSales)
+          .withWhitelistedDomains(whitelistedDomains)
           .withLastLicenseExpiryReminderSentAt(lastLicenseExpiryReminderSentAt);
     }
 
@@ -428,6 +446,7 @@ public class Account extends Base {
       account.setDefaults(defaults);
       account.setLicenseInfo(licenseInfo);
       account.setEmailSentToSales(emailSentToSales);
+      account.setWhitelistedDomains(whitelistedDomains);
       account.setLastLicenseExpiryReminderSentAt(lastLicenseExpiryReminderSentAt);
       return account;
     }

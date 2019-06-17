@@ -1,16 +1,16 @@
 package software.wings.security.authentication.oauth;
 
+import static io.harness.exception.WingsException.USER;
+
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.fabric8.utils.Strings;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
@@ -19,6 +19,7 @@ import software.wings.security.authentication.AuthHandler;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.AuthenticationResponse;
 import software.wings.security.authentication.AuthenticationUtils;
+import software.wings.security.authentication.DomainWhitelistCheckerService;
 import software.wings.security.authentication.OauthAuthenticationResponse;
 import software.wings.security.authentication.OauthProviderType;
 import software.wings.service.impl.SSOSettingServiceImpl;
@@ -26,7 +27,6 @@ import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -46,6 +46,7 @@ public class OauthBasedAuthHandler implements AuthHandler {
   @Inject SSOSettingServiceImpl ssoSettingService;
   @Inject UserServiceImpl userServiceImpl;
   @Inject OauthOptions oauthOptions;
+  @Inject DomainWhitelistCheckerService domainWhitelistCheckerService;
 
   @Override
   public AuthenticationMechanism getAuthenticationMechanism() {
@@ -87,17 +88,20 @@ public class OauthBasedAuthHandler implements AuthHandler {
             .oauthClient(oauthProvider)
             .build();
       } else {
+        if (!domainWhitelistCheckerService.isDomainWhitelisted(user)) {
+          domainWhitelistCheckerService.throwDomainWhitelistFilterException();
+        }
         verifyAuthMechanismOfUser(user, oauthProvider);
         return new AuthenticationResponse(user);
       }
     } catch (Exception ex) {
       logger.error(String.format("Failed to login via OauthBasedAuthHandler, email was %s", userInfo.getEmail()), ex);
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, WingsException.USER);
+      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
     }
   }
 
   private void verifyAuthMechanismOfUser(User user, OauthClient oauthProvider) {
-    matchOauthProviderAndApplyEmailFilter(user, oauthProvider);
+    matchOauthProvider(user, oauthProvider);
     verifyAccountLevelAuthMechanismEqualsOauth(user);
   }
 
@@ -122,7 +126,7 @@ public class OauthBasedAuthHandler implements AuthHandler {
     }
   }
 
-  private void matchOauthProviderAndApplyEmailFilter(final User user, final OauthClient oauthClient) {
+  private void matchOauthProvider(final User user, final OauthClient oauthClient) {
     String primaryAccountId = authenticationUtils.getPrimaryAccount(user).getUuid();
     OauthSettings oauthSettings = ssoSettingService.getOauthSettingsByAccountId(primaryAccountId);
     if (oauthSettings == null) {
@@ -131,24 +135,6 @@ public class OauthBasedAuthHandler implements AuthHandler {
     Set<OauthProviderType> allowedOauthProviders = Sets.newHashSet(oauthSettings.getAllowedProviders());
     logger.info("Matching OAuth Provider for user {}, account {}", user.getEmail(), primaryAccountId);
     matchOauthProviderAndAuthMechanism(user.getEmail(), oauthClient.getName(), allowedOauthProviders);
-    applyEmailFilter(user, oauthSettings);
-  }
-
-  private void applyEmailFilter(User user, OauthSettings oauthSettings) {
-    String filter = oauthSettings.getFilter();
-    if (Strings.isNullOrBlank(filter)) {
-      return;
-    }
-
-    String[] filters = filter.split(",");
-    filters = StringUtils.stripAll(filters);
-    String email = user.getEmail();
-
-    String domain = email.substring(email.indexOf('@') + 1);
-    if (!Arrays.asList(filters).contains(domain)) {
-      logger.error(String.format("Domain filter was: [%s] while the email was: [%s]", Arrays.asList(filters), email));
-      throw new WingsException("Domain name filter failed. Please contact your Account Administrator");
-    }
   }
 
   private void matchOauthProviderAndAuthMechanism(
