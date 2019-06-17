@@ -2400,15 +2400,27 @@ public class UserServiceImpl implements UserService {
   }
 
   public boolean isOauthEnabled(User user) {
-    Account primaryAccount = authenticationUtils.getPrimaryAccount(user);
+    final Account primaryAccount = accountService.get(user.getDefaultAccountId());
     if (null != primaryAccount) {
-      final String accountId = primaryAccount.getUuid();
-      if (isNotEmpty(accountId)) {
-        OauthSettings oauthSettings = ssoSettingService.getOauthSettingsByAccountId(accountId);
-        return null != oauthSettings;
-      }
-      return false;
+      return primaryAccount.isOauthEnabled();
     }
     return false;
+  }
+
+  public Account getAccountByIdIfExistsElseGetDefaultAccount(User user, Optional<String> accountId) {
+    if (accountId.isPresent()) {
+      // First check if the user is associated with the account.
+      if (!isUserAssignedToAccount(user, accountId.get())) {
+        throw new InvalidRequestException("User is not assigned to account", USER);
+      }
+      return accountService.get(accountId.get());
+    } else {
+      Account defaultAccount = accountService.get(user.getDefaultAccountId());
+      if (null == defaultAccount) {
+        return getPrimaryAccount(user);
+      } else {
+        return defaultAccount;
+      }
+    }
   }
 }

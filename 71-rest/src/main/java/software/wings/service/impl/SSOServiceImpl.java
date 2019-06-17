@@ -7,6 +7,8 @@ import static io.harness.eraro.ErrorCode.FEAT_UNAVAILABLE_IN_COMMUNITY_VERSION;
 import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED;
 import static java.util.Arrays.asList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.security.authentication.AuthenticationMechanism.OAUTH;
+import static software.wings.security.authentication.AuthenticationMechanism.USER_PASSWORD;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -130,7 +132,7 @@ public class SSOServiceImpl implements SSOService {
   @Override
   public SSOConfig deleteSamlConfiguration(String accountId) {
     ssoSettingService.deleteSamlSettings(accountId);
-    return setAuthenticationMechanism(accountId, AuthenticationMechanism.USER_PASSWORD);
+    return setAuthenticationMechanism(accountId, USER_PASSWORD);
   }
 
   @Override
@@ -145,7 +147,28 @@ public class SSOServiceImpl implements SSOService {
               .toString(),
           WingsException.USER);
     }
-    account.setAuthenticationMechanism(mechanism);
+
+    AuthenticationMechanism currentAuthMechanism = account.getAuthenticationMechanism();
+    if (null == currentAuthMechanism) {
+      currentAuthMechanism = USER_PASSWORD;
+    }
+    boolean isOauthEnabledCurrently = account.isOauthEnabled();
+
+    boolean shouldEnableOauth = false;
+    boolean shouldUpdateAuthMechanism = true;
+
+    if (mechanism == OAUTH && (currentAuthMechanism == USER_PASSWORD && !isOauthEnabledCurrently)) {
+      shouldUpdateAuthMechanism = false;
+    }
+
+    if (mechanism == OAUTH || (currentAuthMechanism == OAUTH && mechanism == USER_PASSWORD)) {
+      shouldEnableOauth = true;
+    }
+
+    account.setOauthEnabled(shouldEnableOauth);
+    if (shouldUpdateAuthMechanism) {
+      account.setAuthenticationMechanism(mechanism);
+    }
     accountService.update(account);
     return getAccountAccessManagementSettings(accountId);
   }
@@ -233,7 +256,7 @@ public class SSOServiceImpl implements SSOService {
   public LdapSettings deleteLdapSettings(@NotBlank String accountId) {
     LdapSettings settings = ssoSettingService.deleteLdapSettings(accountId);
     if (accountService.get(accountId).getAuthenticationMechanism().equals(AuthenticationMechanism.LDAP)) {
-      setAuthenticationMechanism(accountId, AuthenticationMechanism.USER_PASSWORD);
+      setAuthenticationMechanism(accountId, USER_PASSWORD);
     }
     return settings;
   }
@@ -381,7 +404,7 @@ public class SSOServiceImpl implements SSOService {
   @Override
   public SSOConfig deleteOauthConfiguration(String accountId) {
     ssoSettingService.deleteOauthSettings(accountId);
-    return setAuthenticationMechanism(accountId, AuthenticationMechanism.USER_PASSWORD);
+    return setAuthenticationMechanism(accountId, USER_PASSWORD);
   }
 
   @Override
@@ -390,9 +413,8 @@ public class SSOServiceImpl implements SSOService {
     if (AccountType.COMMUNITY.equals(targetAccountType)) {
       if (AuthenticationMechanism.DISABLED_FOR_COMMUNITY.contains(
               accountService.get(accountId).getAuthenticationMechanism())) {
-        logger.info(
-            "Setting AuthenticationMechanism for accountId={} to {}", accountId, AuthenticationMechanism.USER_PASSWORD);
-        setAuthenticationMechanism(accountId, AuthenticationMechanism.USER_PASSWORD);
+        logger.info("Setting AuthenticationMechanism for accountId={} to {}", accountId, USER_PASSWORD);
+        setAuthenticationMechanism(accountId, USER_PASSWORD);
       }
 
       logger.info("Deleting SSO violations for accountId={} and targetAccountType={}", accountId, targetAccountType);

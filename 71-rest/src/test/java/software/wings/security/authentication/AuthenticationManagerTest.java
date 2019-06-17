@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -38,6 +39,7 @@ import software.wings.service.intfc.UserService;
 
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.Optional;
 
 public class AuthenticationManagerTest extends WingsBaseTest {
   public static final String NON_EXISTING_USER = "nonExistingUser";
@@ -95,6 +97,8 @@ public class AuthenticationManagerTest extends WingsBaseTest {
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1, account2));
     when(AUTHENTICATION_UTL.getUser(Matchers.anyString(), any(EnumSet.class))).thenReturn(mockUser);
+    when(USER_SERVICE.getAccountByIdIfExistsElseGetDefaultAccount(any(User.class), Optional.of(anyString())))
+        .thenReturn(account1);
     loginTypeResponse = authenticationManager.getLoginTypeResponse("testUser");
     assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.USER_PASSWORD);
     assertThat(loginTypeResponse.getSSORequest()).isNull();
@@ -128,7 +132,8 @@ public class AuthenticationManagerTest extends WingsBaseTest {
 
     when(FEATURE_FLAG_SERVICE.isEnabled(LOGIN_PROMPT_WHEN_NO_USER, GLOBAL_ACCOUNT_ID)).thenReturn(false);
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1));
-
+    when(USER_SERVICE.getAccountByIdIfExistsElseGetDefaultAccount(any(User.class), Optional.of(anyString())))
+        .thenReturn(account1);
     when(AUTHENTICATION_UTL.getUser(Matchers.anyString(), any(EnumSet.class))).thenReturn(mockUser);
     try {
       authenticationManager.getLoginTypeResponse("testUser");

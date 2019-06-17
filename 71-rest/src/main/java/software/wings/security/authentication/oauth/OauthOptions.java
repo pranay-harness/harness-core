@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.User;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.security.authentication.AuthenticationUtils;
@@ -16,6 +17,7 @@ import software.wings.service.impl.SSOSettingServiceImpl;
 
 import java.util.List;
 
+@Slf4j
 public class OauthOptions {
   @Inject GithubClientImpl githubClient;
   @Inject LinkedinClientImpl linkedinClient;
@@ -49,7 +51,8 @@ public class OauthOptions {
     }
   }
 
-  public SSORequest oauthProviderRedirectionUrl(User user) {
+  public SSORequest createOauthSSORequest(User user) {
+    logger.info("Creating OAuth SSO Request for user {}", user.getEmail());
     OauthSettings oauthSettings = ssoSettingService.getOauthSettingsByAccountId(user.getDefaultAccountId());
 
     if (null == oauthSettings || isEmpty(oauthSettings.getAllowedProviders())) {
@@ -57,7 +60,9 @@ public class OauthOptions {
     }
 
     List<OauthProviderType> oauthProviderTypes = Lists.newArrayList(oauthSettings.getAllowedProviders());
+    logger.info("OAuth provider types: {}", oauthProviderTypes);
     OauthProviderType defaultOAuthProviderType = oauthProviderTypes.get(0);
+    logger.info("Default OAuth provider: {}", defaultOAuthProviderType);
 
     return new SSORequest(defaultOAuthProviderType, getRedirectURI(defaultOAuthProviderType), oauthProviderTypes);
   }

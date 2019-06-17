@@ -471,6 +471,7 @@ public class AccountServiceImpl implements AccountService {
     UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class)
                                                      .set("companyName", account.getCompanyName())
                                                      .set("twoFactorAdminEnforced", account.isTwoFactorAdminEnforced())
+                                                     .set(AccountKeys.oauthEnabled, account.isOauthEnabled())
                                                      .set("whitelistedDomains", account.getWhitelistedDomains());
     if (account.getAuthenticationMechanism() != null) {
       updateOperations.set("authenticationMechanism", account.getAuthenticationMechanism());

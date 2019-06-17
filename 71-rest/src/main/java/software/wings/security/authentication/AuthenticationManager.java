@@ -2,6 +2,7 @@ package software.wings.security.authentication;
 
 import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.DOMAIN_WHITELIST_FILTER_CHECK_FAILED;
 import static io.harness.eraro.ErrorCode.EMAIL_NOT_VERIFIED;
@@ -153,9 +154,16 @@ public class AuthenticationManager {
      */
     try {
       User user = authenticationUtils.getUser(userName, USER);
-      AuthenticationMechanism authenticationMechanism = getAuthenticationMechanism(user, accountId);
-
-      builder.isOauthEnabled(userService.isOauthEnabled(user));
+      Account account = userService.getAccountByIdIfExistsElseGetDefaultAccount(
+          user, isEmpty(accountId) ? Optional.empty() : Optional.of(accountId));
+      AuthenticationMechanism authenticationMechanism = account.getAuthenticationMechanism();
+      if (null == authenticationMechanism) {
+        authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
+      }
+      builder.isOauthEnabled(account.isOauthEnabled());
+      if (account.isOauthEnabled()) {
+        builder.SSORequest(oauthOptions.createOauthSSORequest(user));
+      }
 
       SSORequest ssoRequest;
       switch (authenticationMechanism) {
@@ -164,18 +172,12 @@ public class AuthenticationManager {
             // HAR-7984: Return 401 http code if user email not verified yet.
             throw new WingsException(EMAIL_NOT_VERIFIED, USER);
           }
-          if (null != ssoSettingService.getOauthSettingsByAccountId(user.getDefaultAccountId())) {
-            builder.SSORequest(oauthOptions.oauthProviderRedirectionUrl(user));
-            break;
-          }
           break;
         case SAML:
           ssoRequest = samlClientService.generateSamlRequest(user);
           builder.SSORequest(ssoRequest);
           break;
         case OAUTH:
-          builder.SSORequest(oauthOptions.oauthProviderRedirectionUrl(user));
-          break;
         case LDAP: // No need to build anything extra for the response.
         default:
           // Nothing to do by default
