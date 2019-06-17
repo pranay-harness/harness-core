@@ -12,6 +12,7 @@ import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.AuditPreferenceResponse;
 import software.wings.beans.Preference;
 import software.wings.beans.User;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -61,6 +62,17 @@ public class PreferenceResource {
       @QueryParam("accountId") @NotEmpty String accountId, @BeanParam PageRequest<Preference> pageRequest) {
     User user = UserThreadLocal.get();
     return new RestResponse<>(prefService.list(pageRequest, user.getUuid()));
+  }
+
+  @GET
+  @Timed
+  @Path("auditPreference")
+  @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
+  public RestResponse<AuditPreferenceResponse> listAuditPreferences(
+      @QueryParam("accountId") @NotEmpty String accountId) {
+    User user = UserThreadLocal.get();
+    return new RestResponse<>(prefService.listAuditPreferences(accountId, user.getUuid()));
   }
 
   /**
