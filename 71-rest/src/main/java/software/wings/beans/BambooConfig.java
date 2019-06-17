@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
@@ -33,8 +32,7 @@ import java.util.List;
 @Builder
 @ToString(exclude = "password")
 @EqualsAndHashCode(callSuper = false)
-public class BambooConfig
-    extends SettingValue implements EncryptableSetting, ArtifactSourceable, ExecutionCapabilityDemander {
+public class BambooConfig extends SettingValue implements EncryptableSetting, ArtifactSourceable {
   @Attributes(title = "Bamboo URL", required = true) @NotEmpty private String bambooUrl;
   @Attributes(title = "Username", required = true) @NotEmpty private String username;
   @Attributes(title = "Password", required = true) @Encrypted private char[] password;

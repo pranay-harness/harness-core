@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
@@ -38,7 +37,7 @@ import java.util.List;
 @Builder
 @ToString(exclude = "password")
 @EqualsAndHashCode(callSuper = false)
-public class ElkConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
+public class ElkConfig extends SettingValue implements EncryptableSetting {
   @Attributes(required = true, title = "Connector type")
   @DefaultValue("ELASTIC_SEARCH_SERVER")
   private ElkConnector elkConnector;

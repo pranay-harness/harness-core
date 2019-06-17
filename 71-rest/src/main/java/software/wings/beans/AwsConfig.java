@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
@@ -32,7 +31,7 @@ import java.util.List;
 @Builder
 @ToString(exclude = "secretKey")
 @EqualsAndHashCode(callSuper = false)
-public class AwsConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
+public class AwsConfig extends SettingValue implements EncryptableSetting {
   private static final String AWS_URL = "https://aws.amazon.com/";
   @Attributes(title = "Access Key") private String accessKey;
   @Attributes(title = "Secret Key") @Encrypted private char[] secretKey;

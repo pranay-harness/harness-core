@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
@@ -36,8 +35,7 @@ import java.util.Objects;
 @Builder
 @ToString(exclude = "password")
 @EqualsAndHashCode(callSuper = false)
-public class DockerConfig
-    extends SettingValue implements EncryptableSetting, ArtifactSourceable, ExecutionCapabilityDemander {
+public class DockerConfig extends SettingValue implements EncryptableSetting, ArtifactSourceable {
   @Attributes(title = "Docker Registry URL", required = true) @NotEmpty private String dockerRegistryUrl;
   @Attributes(title = "Username") private String username;
   @Attributes(title = "Password") @Encrypted private char[] password;

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
@@ -32,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 @Builder
 @ToString(exclude = {"apiKey", "applicationKey"})
 @EqualsAndHashCode(callSuper = false)
-public class DatadogConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
+public class DatadogConfig extends SettingValue implements EncryptableSetting {
   public static final String validationUrl = "metrics";
   public static final String logAnalysisUrl = "logs-queries/list";
 

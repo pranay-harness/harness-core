@@ -1,13 +1,16 @@
 package software.wings.helpers.ext.k8s.request;
 
-import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
-public class K8sTaskParameters implements TaskParameters {
+public class K8sTaskParameters implements ExecutionCapabilityDemander {
   private String accountId;
   private String appId;
   private String commandName;
@@ -17,6 +20,12 @@ public class K8sTaskParameters implements TaskParameters {
   private String releaseName;
   private Integer timeoutIntervalInMin;
   @NotEmpty private K8sTaskType commandType;
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return k8sClusterConfig.fetchRequiredExecutionCapabilities();
+  }
+
   public enum K8sTaskType {
     DEPLOYMENT_ROLLING,
     DEPLOYMENT_ROLLING_ROLLBACK,

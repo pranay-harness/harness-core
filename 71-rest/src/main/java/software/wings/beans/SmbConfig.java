@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.task.mixin.SSHConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -17,6 +19,9 @@ import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.ArtifactServerYaml;
+
+import java.util.Arrays;
+import java.util.List;
 
 @JsonTypeName("SMB")
 @Data
@@ -49,6 +54,17 @@ public class SmbConfig extends SettingValue implements EncryptableSetting {
   @Override
   public String fetchResourceCategory() {
     return ResourceType.ARTIFACT_SERVER.name();
+  }
+
+  /*
+    Scheme syntax:
+    smb://[<user>@]<host>[:<port>][/[<path>]][?<param1>=<value1>[;<param2>=<value2>]] or
+    smb://[<user>@]<workgroup>[:<port>][/] or s
+    mb://[[<domain>;]<username>[:<password>]@]<server>[:<port>][/[<share>[/[<path>]]][?[<param>=<value>[<param2>=<value2>[...]]]]]
+   */
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    return Arrays.asList(SSHConnectionExecutionCapabilityGenerator.buildSSHConnectionExecutionCapability(smbUrl));
   }
 
   @Data

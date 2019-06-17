@@ -10,7 +10,6 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.delegate.task.mixin.SSHConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
@@ -39,7 +38,7 @@ import java.util.List;
 @ToString(exclude = {"password", "sshSettingAttribute"})
 @EqualsAndHashCode(callSuper = false, exclude = {"sshSettingAttribute"})
 @Slf4j
-public class GitConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
+public class GitConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Username", required = true) private String username;
   @Attributes(title = "Password", required = true) @Encrypted private char[] password;
   @NotEmpty @Trimmed @Attributes(title = "Git Repo Url", required = true) private String repoUrl;
