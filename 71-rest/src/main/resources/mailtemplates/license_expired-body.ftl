@@ -72,7 +72,7 @@
                                 </li>
                                 <li>
                                   <div style="display: inline-block;color: black;">
-                                    Expiry Date:
+                                    Expiration Date:
                                   </div>
                                   <span style="margin-left: 38px;color: black;">
                                     ${expiry}
