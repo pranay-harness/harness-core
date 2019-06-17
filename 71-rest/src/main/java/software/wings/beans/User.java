@@ -73,6 +73,8 @@ public class User extends Base implements Principal {
 
   private boolean emailVerified;
 
+  private boolean passwordExpired;
+
   private long statsFetchedOn;
 
   private String lastAccountId;
@@ -115,6 +117,7 @@ public class User extends Base implements Principal {
     publicUser.setTwoFactorAuthenticationMechanism(getTwoFactorAuthenticationMechanism());
     publicUser.setFirstLogin(isFirstLogin());
     publicUser.setLastLogin(getLastLogin());
+    publicUser.setPasswordExpired(isPasswordExpired());
     // publicUser.setCompanyName(getCompanyName());
     return publicUser;
   }
@@ -215,6 +218,14 @@ public class User extends Base implements Principal {
    */
   public void setPasswordHash(String passwordHash) {
     this.passwordHash = passwordHash;
+  }
+
+  public boolean isPasswordExpired() {
+    return passwordExpired;
+  }
+
+  public void setPasswordExpired(boolean passwordExpired) {
+    this.passwordExpired = passwordExpired;
   }
 
   /**
@@ -602,11 +613,17 @@ public class User extends Base implements Principal {
     private String totpSecretKey;
     private String twoFactorJwtToken;
     private String oauthProvider;
+    private boolean passwordExpired;
 
     private Builder() {}
 
     public static Builder anUser() {
       return new Builder();
+    }
+
+    public Builder withPasswordExpired(boolean passwordExpired) {
+      this.passwordExpired = passwordExpired;
+      return this;
     }
 
     public Builder withName(String name) {
@@ -805,6 +822,7 @@ public class User extends Base implements Principal {
       user.setTotpSecretKey(totpSecretKey);
       user.setTwoFactorJwtToken(twoFactorJwtToken);
       user.setOauthProvider(oauthProvider);
+      user.setPasswordExpired(passwordExpired);
       return user;
     }
   }

@@ -3,6 +3,7 @@ package software.wings.security.authentication;
 import static io.harness.eraro.ErrorCode.EMAIL_NOT_VERIFIED;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
+import static io.harness.eraro.ErrorCode.PASSWORD_EXPIRED;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;
 import static org.mindrot.jbcrypt.BCrypt.checkpw;
@@ -49,6 +50,10 @@ public class PasswordBasedAuthHandler implements AuthHandler {
 
     if (!domainWhitelistCheckerService.isDomainWhitelisted(user)) {
       domainWhitelistCheckerService.throwDomainWhitelistFilterException();
+    }
+
+    if (user.isPasswordExpired() == true) {
+      throw new WingsException(PASSWORD_EXPIRED, USER);
     }
 
     if (isPasswordHash) {

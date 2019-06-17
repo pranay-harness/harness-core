@@ -43,6 +43,7 @@ import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.beans.security.UserGroup;
+import software.wings.scheduler.AccountPasswordExpirationJob;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserThreadLocal;
@@ -121,23 +122,14 @@ public class UserResource {
   private UsageRestrictionsService usageRestrictionsService;
   private AccountPermissionUtils accountPermissionUtils;
   private MainConfiguration mainConfiguration;
+  private AccountPasswordExpirationJob accountPasswordExpirationJob;
 
-  /**
-   * Instantiates a new User resource.
-   * @param userService
-   * @param authService
-   * @param accountService
-   * @param authenticationManager
-   * @param twoFactorAuthenticationManager
-   * @param cacheManager
-   * @param harnessUserGroupService
-   */
   @Inject
   public UserResource(UserService userService, AuthService authService, AccountService accountService,
       UsageRestrictionsService usageRestrictionsService, AccountPermissionUtils accountPermissionUtils,
       AuthenticationManager authenticationManager, TwoFactorAuthenticationManager twoFactorAuthenticationManager,
       CacheManager cacheManager, HarnessUserGroupService harnessUserGroupService, UserGroupService userGroupService,
-      MainConfiguration mainConfiguration) {
+      MainConfiguration mainConfiguration, AccountPasswordExpirationJob accountPasswordExpirationJob) {
     this.userService = userService;
     this.authService = authService;
     this.accountService = accountService;
@@ -149,6 +141,7 @@ public class UserResource {
     this.harnessUserGroupService = harnessUserGroupService;
     this.userGroupService = userGroupService;
     this.mainConfiguration = mainConfiguration;
+    this.accountPasswordExpirationJob = accountPasswordExpirationJob;
   }
 
   /**
@@ -761,7 +754,7 @@ public class UserResource {
   }
 
   @POST
-  @Path("saml-login")
+  @Path(" saml-login")
   @Produces(MediaType.TEXT_HTML)
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @PublicApi
@@ -900,13 +893,31 @@ public class UserResource {
   }
 
   /**
+   * List invites rest response.
+   *
+   * @param accountId   the account id
+   * @param pageRequest the page request
+   * @return the rest response
+   */
+  @POST
+  @Path("trigger-account-password-expiration-job")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = USER_PERMISSION_MANAGEMENT)
+  public RestResponse<String> triggerAccountPasswordExpirationCheckJob() {
+    accountPermissionUtils.checkIfHarnessUser("User not authorized");
+    accountPasswordExpirationJob.checkAccountPasswordExpiration();
+    return new RestResponse<>("Running password expiration cron job");
+  }
+
+  /**
    * Gets invite.
    *
    * @param accountId the account id
    * @param inviteId  the invite id
    * @return the invite
    */
-  @GET
+  @POST
   @Path("invites/{inviteId}")
   @Timed
   @ExceptionMetered

@@ -116,6 +116,7 @@ import software.wings.beans.UserInvite.UserInviteKeys;
 import software.wings.beans.UserInviteSource;
 import software.wings.beans.UserInviteSource.SourceType;
 import software.wings.beans.ZendeskSsoLoginResponse;
+import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.beans.marketplace.MarketPlaceConstants;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.AccountPermissions;
@@ -227,6 +228,7 @@ public class UserServiceImpl implements UserService {
   @Inject private AuthenticationManager authenticationManager;
   @Inject private AuthenticationUtils authenticationUtils;
   @Inject private SSOService ssoService;
+  @Inject private LoginSettingsService loginSettingsService;
   @Inject private LimitConfigurationService limits;
 
   private volatile Set<String> blacklistedDomains = new HashSet<>();
@@ -1176,6 +1178,8 @@ public class UserServiceImpl implements UserService {
       throw new InvalidRequestException("User name/password is not provided", USER);
     }
 
+    validatePasswordStrength(userInvite.getPassword(), accountService.get(userInvite.getAccountId()));
+
     User existingUser = getUserByEmail(existingInvite.getEmail());
     if (existingUser == null) {
       throw new WingsException(USER_INVITATION_DOES_NOT_EXIST, USER);
@@ -1564,13 +1568,45 @@ public class UserServiceImpl implements UserService {
     } else if (user.getPasswordChangedAt() > tokenIssuedAt) {
       throw new WingsException(EXPIRED_TOKEN, USER);
     }
-
+    validatePasswordStrength(email, password);
     String hashed = hashpw(new String(password), BCrypt.gensalt());
     wingsPersistence.update(user,
         wingsPersistence.createUpdateOperations(User.class)
             .set("passwordHash", hashed)
+            .set("passwordExpired", false)
             .set("passwordChangedAt", System.currentTimeMillis()));
     executorService.submit(() -> authService.invalidateAllTokensForUser(user.getUuid()));
+  }
+
+  private void validatePasswordStrength(String email, char[] password) {
+    User user = getUserByEmail(email);
+    List<Account> accounts = user.getAccounts();
+    if (accounts.size() == 1) {
+      validatePasswordStrength(password, accounts.get(0));
+    } else {
+      // if not harness user, and is part of multiple accounts, the check is not applicable
+      if (email.endsWith("harness.io")) {
+        Account harnessAccount = getHarnessIoAccountForUser(accounts);
+        // harness users - apply Harness.io account settings.
+        if (harnessAccount != null) {
+          validatePasswordStrength(password, harnessAccount);
+        }
+      }
+    }
+  }
+
+  private Account getHarnessIoAccountForUser(List<Account> accounts) {
+    Account harnessAccount = null;
+    for (Account account : accounts) {
+      if (account.getAccountName().equals("Harness.io")) {
+        harnessAccount = account;
+      }
+    }
+    return harnessAccount;
+  }
+
+  private void validatePasswordStrength(char[] password, Account account) {
+    loginSettingsService.verifyPasswordStrength(account, password);
   }
 
   @Override
@@ -2405,6 +2441,117 @@ public class UserServiceImpl implements UserService {
       return primaryAccount.isOauthEnabled();
     }
     return false;
+  }
+
+  public void sendPasswordExpirationWarning(String email, Integer passExpirationDays) {
+    User user = getUserByEmail(email);
+
+    if (user == null) {
+      throw new InvalidRequestException(
+          String.format("Email [%s] exist while sending mail for password expiration.", email));
+    }
+
+    String jwtPasswordSecret = getJwtSecret();
+
+    try {
+      String token = createTokeFromSecret(jwtPasswordSecret, email);
+      sendPasswordExpirationWarningMail(user, token, passExpirationDays);
+    } catch (UnsupportedEncodingException | JWTCreationException exception) {
+      throw new WingsException(GENERAL_ERROR).addParam("message", "reset password link could not be generated");
+    }
+  }
+
+  private void sendPasswordExpirationWarningMail(User user, String token, Integer passExpirationDays) {
+    try {
+      String resetPasswordUrl = buildAbsoluteUrl("/reset-password/" + token);
+
+      Map<String, String> templateModel = new HashMap<>();
+      templateModel.put("name", user.getName());
+      templateModel.put("url", resetPasswordUrl);
+      templateModel.put("passExpirationDays", passExpirationDays.toString());
+
+      List<String> toList = new ArrayList();
+      toList.add(user.getEmail());
+      EmailData emailData = EmailData.builder()
+                                .to(toList)
+                                .templateName("password_expiration_warning")
+                                .templateModel(templateModel)
+                                .accountId(getPrimaryAccount(user).getUuid())
+                                .build();
+      emailData.setCc(Collections.emptyList());
+      emailData.setRetries(2);
+
+      emailNotificationService.send(emailData);
+    } catch (URISyntaxException e) {
+      logger.error("Reset password email couldn't be sent", e);
+    }
+  }
+
+  public void sendPasswordExpirationMail(String email) {
+    User user = getUserByEmail(email);
+
+    if (user == null) {
+      throw new InvalidRequestException(
+          String.format("Email [%s] exist while sending mail for password expiration.", email));
+    }
+
+    String jwtPasswordSecret = getJwtSecret();
+
+    try {
+      String token = createTokeFromSecret(jwtPasswordSecret, email);
+      sendPasswordExpirationMail(user, token);
+    } catch (UnsupportedEncodingException | JWTCreationException exception) {
+      throw new WingsException(GENERAL_ERROR).addParam("message", "reset password link could not be generated");
+    }
+  }
+
+  private void sendPasswordExpirationMail(User user, String token) {
+    try {
+      String resetPasswordUrl = buildAbsoluteUrl("/reset-password/" + token);
+
+      Map<String, String> templateModel = new HashMap<>();
+      templateModel.put("name", user.getName());
+      templateModel.put("url", resetPasswordUrl);
+
+      List<String> toList = new ArrayList();
+      toList.add(user.getEmail());
+      EmailData emailData = EmailData.builder()
+                                .to(toList)
+                                .templateName("password_expiration")
+                                .templateModel(templateModel)
+                                .accountId(getPrimaryAccount(user).getUuid())
+                                .build();
+      emailData.setCc(Collections.emptyList());
+      emailData.setRetries(2);
+
+      emailNotificationService.send(emailData);
+    } catch (URISyntaxException e) {
+      logger.error("Reset password email couldn't be sent", e);
+    }
+  }
+
+  private String createTokeFromSecret(String jwtPasswordSecret, String email) throws UnsupportedEncodingException {
+    Algorithm algorithm = Algorithm.HMAC256(jwtPasswordSecret);
+    return JWT.create()
+        .withIssuer("Harness Inc")
+        .withIssuedAt(new Date())
+        .withExpiresAt(new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000)) // 24 hrs
+        .withClaim("email", email)
+        .sign(algorithm);
+  }
+
+  private String getJwtSecret() {
+    String jwtPasswordSecret = configuration.getPortal().getJwtPasswordSecret();
+    if (jwtPasswordSecret == null) {
+      throw new InvalidRequestException("incorrect portal setup");
+    }
+    return jwtPasswordSecret;
+  }
+
+  @Override
+  public boolean passwordExpired(String email) {
+    User user = getUserByEmail(email);
+    return user.isPasswordExpired();
   }
 
   public Account getAccountByIdIfExistsElseGetDefaultAccount(User user, Optional<String> accountId) {

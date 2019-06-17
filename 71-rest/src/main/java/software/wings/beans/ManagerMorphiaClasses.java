@@ -54,6 +54,7 @@ import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.ManualSyncJob;
 import software.wings.beans.infrastructure.instance.SyncStatus;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
+import software.wings.beans.loginSettings.LoginSettings;
 import software.wings.beans.peronalization.Personalization;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.beans.security.UserGroup;
@@ -188,7 +189,8 @@ public class ManagerMorphiaClasses {
       ArtifactStreamWithOnlyAuditNeededData.class, InfraMappingWithOnlyAuditNeededData.class,
       NotificationRulesStatus.class, AwsSecretsManagerConfig.class, ApprovalPollingJobEntity.class, HarnessTag.class,
       HarnessTagLink.class, CVFeedbackRecord.class, SecretManagerConfig.class, VaultLegacyConfig.class,
-      KmsLegacyConfig.class, AwsSecretsManagerLegacyConfig.class, LocalEncryptionConfig.class, ResourceLookup.class);
+      KmsLegacyConfig.class, AwsSecretsManagerLegacyConfig.class, LocalEncryptionConfig.class, ResourceLookup.class,
+      LoginSettings.class);
 
   public static final Set<Class> dependentClasses =
       ImmutableSet.<Class>of(EncryptionConfig.class, EncryptedRecord.class, ExecutionCapabilityDemander.class);

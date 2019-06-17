@@ -54,6 +54,19 @@ Click below to reset your password. Link expires in 4 hours.
 
 RESET PASSWORD
 
+### password_expiration_warning-body.ftl
+
+Hi ${(name!"there")?capitalize},
+Your password will expire in ${passExpirationDays}.
+Please click this ${url} if you wish to change your password.
+
+### password_expiration-body.ftl
+
+Hi ${(name!"there")?capitalize},
+Your password has expired.
+
+Please click this ${url} if you wish to reset your password.
+
 ### signup-body.ftl
 
 Hi ${(name!"there")?capitalize},

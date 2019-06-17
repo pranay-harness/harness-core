@@ -23,6 +23,7 @@ import org.junit.experimental.categories.Category;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.User;
 import software.wings.exception.WingsExceptionMapper;
+import software.wings.scheduler.AccountPasswordExpirationJob;
 import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.service.intfc.AccountService;
@@ -51,6 +52,8 @@ public class UserResourceTest {
   public static final AccountService ACCOUNT_SERVICE = mock(AccountService.class);
   public static final MainConfiguration MAIN_CONFIGURATION = mock(MainConfiguration.class);
   public static final AuthenticationManager AUTHENTICATION_MANAGER = mock(AuthenticationManager.class);
+  public static final AccountPasswordExpirationJob ACCOUNT_PASSWORD_EXPIRATION_JOB =
+      mock(AccountPasswordExpirationJob.class);
   public static final TwoFactorAuthenticationManager TWO_FACTOR_AUTHENTICATION_MANAGER =
       mock(TwoFactorAuthenticationManager.class);
   static final UsageRestrictionsService USAGE_RESTRICTIONS_SERVICE = mock(UsageRestrictionsService.class);
@@ -64,7 +67,7 @@ public class UserResourceTest {
       ResourceTestRule.builder()
           .addResource(new UserResource(USER_SERVICE, AUTH_SERVICE, ACCOUNT_SERVICE, USAGE_RESTRICTIONS_SERVICE,
               ACCOUNT_PERMISSION_UTILS, AUTHENTICATION_MANAGER, TWO_FACTOR_AUTHENTICATION_MANAGER, CACHE_HELPER,
-              HARNESS_USER_GROUP_SERVICE, USER_GROUP_SERVICE, MAIN_CONFIGURATION))
+              HARNESS_USER_GROUP_SERVICE, USER_GROUP_SERVICE, MAIN_CONFIGURATION, ACCOUNT_PASSWORD_EXPIRATION_JOB))
           .addProvider(WingsExceptionMapper.class)
           .addProvider(MultiPartFeature.class)
           .build();

@@ -333,6 +333,10 @@ public enum ErrorCode {
 
   SERVICENOW_ERROR,
 
+  PASSWORD_EXPIRED("Password has expired. Please reset it."),
+
+  PASSWORD_STRENGTH_CHECK_FAILED,
+
   INVALID_ACCOUNT_PERMISSION("Invalid account permission"),
 
   PAGERDUTY_ERROR,

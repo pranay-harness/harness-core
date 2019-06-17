@@ -112,6 +112,7 @@ import software.wings.beans.User;
 import software.wings.beans.User.UserKeys;
 import software.wings.beans.UserInvite;
 import software.wings.beans.UserInvite.UserInviteBuilder;
+import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.beans.marketplace.MarketPlaceType;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
@@ -191,6 +192,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Mock private LimitCheckerFactory limitCheckerFactory;
   @Mock private AuthenticationManager authenticationManager;
   @Mock private UserServiceLimitChecker userServiceLimitChecker;
+  @Mock private LoginSettingsService loginSettingsService;
 
   /**
    * The Cache.
@@ -830,6 +832,8 @@ public class UserServiceTest extends WingsBaseTest {
     when(userInviteQuery.get())
         .thenReturn(anUserInvite().withUuid(USER_INVITE_ID).withAccountId(ACCOUNT_ID).withEmail(USER_EMAIL).build());
     when(query.get()).thenReturn(userBuilder.withUuid(USER_ID).build());
+    when(loginSettingsService.verifyPasswordStrength(Mockito.any(Account.class), Mockito.any(char[].class)))
+        .thenReturn(true);
 
     UserInvite userInvite =
         anUserInvite().withAccountId(ACCOUNT_ID).withEmail(USER_EMAIL).withUuid(USER_INVITE_ID).build();
@@ -991,7 +995,7 @@ public class UserServiceTest extends WingsBaseTest {
 
     userService.updatePassword(token, USER_PASSWORD);
 
-    verify(query).filter("email", USER_EMAIL);
+    verify(query, times(2)).filter("email", USER_EMAIL);
     verify(authService).invalidateAllTokensForUser(USER_ID);
     verify(wingsPersistence).update(eq(userBuilder.withUuid(USER_ID).build()), any(UpdateOperations.class));
     verify(updateOperations).set(eq("passwordHash"), anyString());
