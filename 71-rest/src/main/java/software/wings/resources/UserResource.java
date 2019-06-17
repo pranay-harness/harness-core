@@ -928,7 +928,7 @@ public class UserResource {
    * @param inviteId  the invite id
    * @return the invite
    */
-  @POST
+  @GET
   @Path("invites/{inviteId}")
   @Timed
   @ExceptionMetered
