@@ -12,6 +12,7 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.sso.OauthSettings;
@@ -27,6 +28,7 @@ import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -106,15 +108,15 @@ public class OauthBasedAuthHandler implements AuthHandler {
   }
 
   private void verifyAccountLevelAuthMechanismEqualsOauth(User user) {
-    AuthenticationMechanism userAuthMechanism = userService.getAuthenticationMechanism(user);
-    if (!userAuthMechanism.equals(AuthenticationMechanism.OAUTH)) {
+    Account account = userService.getAccountByIdIfExistsElseGetDefaultAccount(user, Optional.empty());
+    if (!account.isOauthEnabled()) {
       // Freemium user who has already signed up should get a mail saying his signup is complete and ask him to login on
       // harness website.
       sendTrialSignupCompleteMailForFreeUsers(user);
 
       logger.error(
           String.format("User [{}] tried to login using OauthMechanism while his authentication mechanism was: [{}]"),
-          user.getEmail(), userAuthMechanism);
+          user.getEmail(), account.getAuthenticationMechanism());
       throw new WingsException(ErrorCode.INCORRECT_SIGN_IN_MECHANISM);
     }
   }

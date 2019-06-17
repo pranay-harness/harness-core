@@ -131,6 +131,8 @@ public class SSOSettingServiceImpl implements SSOSettingService {
       savedSettings = wingsPersistence.get(OauthSettings.class, ssoSettingUuid);
       eventPublishHelper.publishSSOEvent(settings.getAccountId());
     }
+    Account account = accountService.get(settings.getAccountId());
+    accountService.update(account);
     return savedSettings;
   }
 
@@ -153,6 +155,12 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     if (settings == null) {
       throw new InvalidRequestException("No Oauth settings found for this account.");
     }
+    Account account = accountService.get(accountId);
+    if (AuthenticationMechanism.OAUTH.equals(account.getAuthenticationMechanism())) {
+      throw new InvalidRequestException("Oauth settings cannot be deleted as authentication mechanism is OAUTH.");
+    }
+    account.setOauthEnabled(false);
+    accountService.update(account);
     return wingsPersistence.delete(settings);
   }
 

@@ -72,6 +72,7 @@ import migrations.all.NewRelicMetricDataRecordsMigration;
 import migrations.all.NexusDockerArtifactStreamMigration;
 import migrations.all.NonWorkflowCVConfigurationMigration;
 import migrations.all.OAuthAllowedProvidersListMigration;
+import migrations.all.OauthEnabledFieldMigration;
 import migrations.all.OverrideDefaultLimits;
 import migrations.all.PreferenceUserIdRemoveDollarSignMigration;
 import migrations.all.RemoveDupInstanceStats;
@@ -244,6 +245,7 @@ public class MigrationList {
         .add(Pair.of(256, MigrateLogFeedbackRecordsToGoogle.class))
         .add(Pair.of(257, NonWorkflowCVConfigurationMigration.class))
         .add(Pair.of(258, AddWhitelistedDomainsToAccountMigration.class))
+        .add(Pair.of(259, OauthEnabledFieldMigration.class))
         .build();
   }
 }

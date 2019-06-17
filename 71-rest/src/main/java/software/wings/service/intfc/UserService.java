@@ -28,6 +28,7 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -481,4 +482,6 @@ public interface UserService extends OwnedByAccount {
   boolean isOauthEnabled(User user);
 
   boolean postCustomEvent(String accountId, String event);
+
+  Account getAccountByIdIfExistsElseGetDefaultAccount(User user, Optional<String> accountId);
 }

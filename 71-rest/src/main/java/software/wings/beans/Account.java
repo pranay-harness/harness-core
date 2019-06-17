@@ -80,6 +80,8 @@ public class Account extends Base {
 
   private Set<TechStack> techStacks;
 
+  private boolean oauthEnabled;
+
   private transient Map<String, String> defaults = new HashMap<>();
   /**
    * Default mechanism is USER_PASSWORD
@@ -268,6 +270,14 @@ public class Account extends Base {
     this.techStacks = techStacks;
   }
 
+  public boolean isOauthEnabled() {
+    return this.oauthEnabled;
+  }
+
+  public void setOauthEnabled(boolean oauthEnabled) {
+    this.oauthEnabled = oauthEnabled;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -316,6 +326,7 @@ public class Account extends Base {
     private boolean emailSentToSales;
     private Set<String> whitelistedDomains;
     private long lastLicenseExpiryReminderSentAt;
+    private boolean oauthEnabled;
 
     private Builder() {}
 
@@ -408,6 +419,11 @@ public class Account extends Base {
       return this;
     }
 
+    public Builder withOauthEnabled(boolean oauthEnabled) {
+      this.oauthEnabled = oauthEnabled;
+      return this;
+    }
+
     public Builder but() {
       return anAccount()
           .withCompanyName(companyName)
@@ -426,7 +442,8 @@ public class Account extends Base {
           .withLicenseInfo(licenseInfo)
           .withEmailSentToSales(emailSentToSales)
           .withWhitelistedDomains(whitelistedDomains)
-          .withLastLicenseExpiryReminderSentAt(lastLicenseExpiryReminderSentAt);
+          .withLastLicenseExpiryReminderSentAt(lastLicenseExpiryReminderSentAt)
+          .withOauthEnabled(oauthEnabled);
     }
 
     public Account build() {
@@ -448,6 +465,7 @@ public class Account extends Base {
       account.setEmailSentToSales(emailSentToSales);
       account.setWhitelistedDomains(whitelistedDomains);
       account.setLastLicenseExpiryReminderSentAt(lastLicenseExpiryReminderSentAt);
+      account.setOauthEnabled(oauthEnabled);
       return account;
     }
   }
