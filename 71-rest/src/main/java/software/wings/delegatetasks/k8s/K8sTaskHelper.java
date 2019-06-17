@@ -81,6 +81,7 @@ import me.snowdrop.istio.api.networking.v1alpha3.DestinationWeight;
 import me.snowdrop.istio.api.networking.v1alpha3.DoneableDestinationRule;
 import me.snowdrop.istio.api.networking.v1alpha3.DoneableVirtualService;
 import me.snowdrop.istio.api.networking.v1alpha3.HTTPRoute;
+import me.snowdrop.istio.api.networking.v1alpha3.PortSelector;
 import me.snowdrop.istio.api.networking.v1alpha3.Subset;
 import me.snowdrop.istio.api.networking.v1alpha3.TCPRoute;
 import me.snowdrop.istio.api.networking.v1alpha3.TLSRoute;
@@ -1165,6 +1166,10 @@ public class K8sTaskHelper {
     return routes.get(0).getDestination().getHost();
   }
 
+  private PortSelector getPortSelectorFromRoute(List<DestinationWeight> routes) {
+    return routes.get(0).getDestination().getPort();
+  }
+
   public void updateVirtualServiceWithDestinationWeights(List<IstioDestinationWeight> istioDestinationWeights,
       VirtualService virtualService, ExecutionLogCallback executionLogCallback) throws IOException {
     validateRoutesInVirtualService(virtualService);
@@ -1174,17 +1179,19 @@ public class K8sTaskHelper {
     List<HTTPRoute> http = virtualService.getSpec().getHttp();
     if (isNotEmpty(http)) {
       String host = getHostFromRoute(http.get(0).getRoute());
-      http.get(0).setRoute(generateDestinationWeights(istioDestinationWeights, host));
+      PortSelector portSelector = getPortSelectorFromRoute(http.get(0).getRoute());
+      http.get(0).setRoute(generateDestinationWeights(istioDestinationWeights, host, portSelector));
     }
   }
 
   private List<DestinationWeight> generateDestinationWeights(
-      List<IstioDestinationWeight> istioDestinationWeights, String host) throws IOException {
+      List<IstioDestinationWeight> istioDestinationWeights, String host, PortSelector portSelector) throws IOException {
     List<DestinationWeight> destinationWeights = new ArrayList<>();
 
     for (IstioDestinationWeight istioDestinationWeight : istioDestinationWeights) {
       String destinationYaml = getDestinationYaml(istioDestinationWeight.getDestination(), host);
       Destination destination = new YamlUtils().read(destinationYaml, Destination.class);
+      destination.setPort(portSelector);
 
       DestinationWeight destinationWeight = new DestinationWeight();
       destinationWeight.setWeight(Integer.parseInt(istioDestinationWeight.getWeight()));
