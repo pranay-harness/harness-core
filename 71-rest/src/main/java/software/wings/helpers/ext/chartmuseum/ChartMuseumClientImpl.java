@@ -114,6 +114,8 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
     Random rand = new Random();
     StringBuffer stringBuffer = null;
 
+    logger.info(command);
+
     while (retries < CHART_MUSEUM_SERVER_START_RETRIES) {
       port = getNextRandomPort(rand);
       command = command.replace("${PORT}", Integer.toString(port));
