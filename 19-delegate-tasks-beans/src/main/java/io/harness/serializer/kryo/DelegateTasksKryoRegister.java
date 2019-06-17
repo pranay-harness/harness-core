@@ -9,6 +9,7 @@ import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
 import io.harness.delegate.beans.executioncapability.SSHConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.WinRMExecutionCapability;
 import io.harness.delegate.command.CommandExecutionData;
@@ -40,5 +41,6 @@ public class DelegateTasksKryoRegister implements KryoRegistrar {
     kryo.register(DelegateTaskNotifyResponseData.class, 5373);
     kryo.register(SSHConnectionExecutionCapability.class, 19005);
     kryo.register(WinRMExecutionCapability.class, 19006);
+    kryo.register(ProcessExecutorCapability.class, 19007);
   }
 }

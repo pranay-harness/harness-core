@@ -9,6 +9,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
@@ -33,8 +34,8 @@ import java.util.List;
 @Data
 @ToString(exclude = {"password", "token"})
 @EqualsAndHashCode(callSuper = false)
-public class JenkinsConfig
-    extends SettingValue implements EncryptableSetting, ArtifactSourceable, ExecutionCapabilityDemander {
+public class JenkinsConfig extends SettingValue
+    implements EncryptableSetting, ArtifactSourceable, TaskParameters, ExecutionCapabilityDemander {
   public static final String USERNAME_PASSWORD_FIELD = "UserName/Password";
 
   @Attributes(title = "Jenkins URL", required = true) @NotEmpty private String jenkinsUrl;
