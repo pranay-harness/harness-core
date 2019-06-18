@@ -13,6 +13,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.trigger.TriggerCommand.TriggerCommandType;
 import software.wings.helpers.ext.trigger.request.TriggerDeploymentNeededRequest;
 import software.wings.helpers.ext.trigger.request.TriggerRequest;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 
@@ -77,6 +78,15 @@ public class TriggerValidation extends AbstractDelegateValidateTask {
   private boolean validateDeploymentNeeded(TriggerRequest triggerRequest) {
     TriggerDeploymentNeededRequest triggerDeploymentNeededRequest = (TriggerDeploymentNeededRequest) triggerRequest;
     GitConfig gitConfig = triggerDeploymentNeededRequest.getGitConfig();
+    List<EncryptedDataDetail> encryptionDetails = triggerDeploymentNeededRequest.getEncryptionDetails();
+
+    try {
+      encryptionService.decrypt(gitConfig, encryptionDetails);
+    } catch (Exception e) {
+      logger.info("Failed to decrypt " + gitConfig, e);
+      return false;
+    }
+
     return isEmpty(gitClient.validate(gitConfig));
   }
 }
