@@ -49,7 +49,8 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
   }
 
   @Override
-  public void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType) {
+  public void applyProvisionerVariables(
+      Map<String, Object> map, NodeFilteringType nodeFilteringType, boolean featureFlagEnabled) {
     if (!AWS_ASG_AMI.equals(nodeFilteringType)) {
       // Should never happen
       throw new InvalidRequestException(format("Unidentified: [%s] node filtering type", nodeFilteringType.name()));

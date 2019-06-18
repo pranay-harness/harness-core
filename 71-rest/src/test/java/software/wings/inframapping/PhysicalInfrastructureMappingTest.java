@@ -38,7 +38,7 @@ public class PhysicalInfrastructureMappingTest extends WingsBaseTest {
     List<Map<String, Object>> hosts = Lists.newArrayList(host1, host2);
     blueprintProperties.put("hostArrayPath", hosts);
 
-    infrastructureMapping.applyProvisionerVariables(blueprintProperties, null);
+    infrastructureMapping.applyProvisionerVariables(blueprintProperties, null, false);
 
     assertEquals(2, infrastructureMapping.hosts().size());
     assertEquals("abc.com", infrastructureMapping.hosts().get(0).getPublicDns());
@@ -47,16 +47,16 @@ public class PhysicalInfrastructureMappingTest extends WingsBaseTest {
     assertEquals(1234, infrastructureMapping.hosts().get(1).getProperties().get("amiId"));
 
     Assertions.assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(() -> infrastructureMapping.applyProvisionerVariables(null, null));
+        .isThrownBy(() -> infrastructureMapping.applyProvisionerVariables(null, null, false));
 
     Assertions.assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(() -> infrastructureMapping.applyProvisionerVariables(Collections.EMPTY_MAP, null));
+        .isThrownBy(() -> infrastructureMapping.applyProvisionerVariables(Collections.EMPTY_MAP, null, false));
 
     Map<String, Object> host3 = Maps.newLinkedHashMap();
     host2.put("amiId", 1234);
     hosts.add(host3);
 
     Assertions.assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(() -> infrastructureMapping.applyProvisionerVariables(Maps.newHashMap(), null));
+        .isThrownBy(() -> infrastructureMapping.applyProvisionerVariables(Maps.newHashMap(), null, false));
   }
 }

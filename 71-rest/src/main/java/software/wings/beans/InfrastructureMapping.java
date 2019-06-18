@@ -112,7 +112,8 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
     this.blueprints = blueprints;
   }
 
-  public abstract void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType);
+  public abstract void applyProvisionerVariables(
+      Map<String, Object> map, NodeFilteringType nodeFilteringType, boolean featureFlagEnabled);
 
   @SchemaIgnore
   public String getAccountId() {
