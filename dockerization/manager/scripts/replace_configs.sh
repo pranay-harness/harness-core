@@ -273,13 +273,13 @@ if [[ -v "ALLOW_BLACKLISTED_EMAIL_DOMAINS" ]]; then
 fi
 
 if [[ -v "TIMESCALEDB_URI" ]]; then
-    sed -i "s|timescaledb_url:|timescaledbUrl: ${TIMESCALEDB_URI}|" /opt/harness/config.yml
+    sed -i "s|timescaledbUrl:|timescaledbUrl: ${TIMESCALEDB_URI}|" /opt/harness/config.yml
 fi
 
 if [[ -v "TIMESCALEDB_USERNAME" ]]; then
-    sed -i "s|timescaledb_username:|timescaledbUsername: ${TIMESCALEDB_USERNAME}|" /opt/harness/config.yml
+    sed -i "s|timescaledbUsername:|timescaledbUsername: ${TIMESCALEDB_USERNAME}|" /opt/harness/config.yml
 fi
 
 if [[ -v "TIMESCALEDB_PASSWORD" ]]; then
-    sed -i "s|timescaledb_password:|timescaledbPassword: ${TIMESCALEDB_PASSWORD}|" /opt/harness/config.yml
+    sed -i "s|timescaledbPassword:|timescaledbPassword: ${TIMESCALEDB_PASSWORD}|" /opt/harness/config.yml
 fi

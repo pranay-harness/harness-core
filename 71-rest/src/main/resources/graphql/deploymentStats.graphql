@@ -2,22 +2,27 @@ enum DeploymentFilterType {
   Application
   Service
   Environment
-  Artifact
   CloudProvider
   Status
-  Note
-  StartTime
   EndTime
+  StartTime
+  Duration
+  Triggered_By
+  Trigger
+  Workflow
+  Pipeline
 }
 
 enum DeploymentAggregation {
   Application
   Service
   Environment
-  Artifact
   CloudProvider
   Status
-  Note
+  TriggeredBy
+  Trigger
+  Workflow
+  Pipeline
 }
 
 input DeploymentFilter {
@@ -26,7 +31,7 @@ input DeploymentFilter {
 }
 
 extend type Query {
-  # Get deployment stats.
+  #Get deployment stats.
   deploymentStats(
     aggregateFunction: AggregateFunction
     filters: [DeploymentFilter]

@@ -222,6 +222,11 @@
             <artifactId>hazelcast-kubernetes</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.healthmarketscience.sqlbuilder</groupId>
+            <artifactId>sqlbuilder</artifactId>
+            <version>${sqlbuilder.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.hierynomus</groupId>
             <artifactId>smbj</artifactId>
         </dependency>
