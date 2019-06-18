@@ -17,6 +17,7 @@ import migrations.all.AddValidUntilToWaitQueue;
 import migrations.all.AddWhitelistedDomainsToAccountMigration;
 import migrations.all.AppDTemplateMigration;
 import migrations.all.AppKeywordsMigration;
+import migrations.all.AuditRecordMigration;
 import migrations.all.AuthTokenTtlMigration;
 import migrations.all.CVCollectionCronFrequencyMigration;
 import migrations.all.CleanUpDatadogCallLogMigration;
@@ -248,6 +249,7 @@ public class MigrationList {
         .add(Pair.of(258, AddWhitelistedDomainsToAccountMigration.class))
         .add(Pair.of(259, OauthEnabledFieldMigration.class))
         .add(Pair.of(260, AddLoginSettingsToAccountMigration.class))
+        .add(Pair.of(261, AuditRecordMigration.class))
         .build();
   }
 }
