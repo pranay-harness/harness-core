@@ -40,7 +40,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Slf4j
-public class SSOTestPaid extends AbstractE2ETest {
+public class SSOTestPaidTest extends AbstractE2ETest {
   static final int MAX_RETRIES = 5;
   static final int DELAY_IN_MS = 6000;
   static final Retry<Object> retry = new Retry<>(MAX_RETRIES, DELAY_IN_MS);
