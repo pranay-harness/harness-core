@@ -56,7 +56,7 @@ public abstract class ContainerInfrastructureMapping extends InfrastructureMappi
     private String cluster;
 
     public Yaml(String type, String harnessApiVersion, String serviceName, String infraMappingType,
-        String deploymentType, String cluster, Map<String, String> blueprints) {
+        String deploymentType, String cluster, Map<String, Object> blueprints) {
       super(type, harnessApiVersion, serviceName, infraMappingType, deploymentType, blueprints);
       this.cluster = cluster;
     }
@@ -70,7 +70,7 @@ public abstract class ContainerInfrastructureMapping extends InfrastructureMappi
 
     public YamlWithComputeProvider(String type, String harnessApiVersion, String serviceName, String infraMappingType,
         String deploymentType, String computeProviderType, String computeProviderName, String cluster,
-        Map<String, String> blueprints) {
+        Map<String, Object> blueprints) {
       super(type, harnessApiVersion, serviceName, infraMappingType, deploymentType, computeProviderType,
           computeProviderName, blueprints);
       this.cluster = cluster;

@@ -10,6 +10,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -64,11 +66,13 @@ import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -85,6 +89,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.AwsInfrastructureMapping.AwsInfrastructureMappingKeys;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.AwsLambdaInfraStructureMapping.AwsLambdaInfraStructureMappingKeys;
 import software.wings.beans.AzureConfig;
@@ -1071,7 +1076,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     assertThatThrownBy(
         () -> infrastructureMappingServiceImpl.validateAwsLambdaInfrastructureMapping(awsLambdaInfraStructureMapping))
         .isInstanceOf(InvalidRequestException.class);
-    Map<String, String> blueprints = new HashMap<>();
+    Map<String, Object> blueprints = new HashMap<>();
     blueprints.put(AwsLambdaInfraStructureMappingKeys.region, "region");
     awsLambdaInfraStructureMapping.setBlueprints(blueprints);
     assertThatThrownBy(
@@ -1080,5 +1085,54 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     blueprints.put(AwsLambdaInfraStructureMappingKeys.role, "role");
     awsLambdaInfraStructureMapping.setBlueprints(blueprints);
     infrastructureMappingServiceImpl.validateAwsLambdaInfrastructureMapping(awsLambdaInfraStructureMapping);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateProvisionerConfig() {
+    InfrastructureMapping infrastructureMapping = new AwsLambdaInfraStructureMapping();
+
+    InfrastructureMappingServiceImpl infrastructureMappingService =
+        (InfrastructureMappingServiceImpl) this.infrastructureMappingService;
+    infrastructureMappingService.validateProvisionerConfig(infrastructureMapping);
+
+    infrastructureMapping.setProvisionerId("p123");
+    Assertions.assertThatThrownBy(() -> infrastructureMappingService.validateProvisionerConfig(infrastructureMapping));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateAwsInfraMapping() {
+    AwsInfrastructureMapping infrastructureMapping = new AwsInfrastructureMapping();
+    infrastructureMapping.setProvisionerId("p123");
+    Map<String, Object> blueprints = new HashMap<>();
+    infrastructureMapping.setBlueprints(blueprints);
+    doReturn(true).when(featureFlagService).isEnabled(any(), any());
+    InfrastructureMappingServiceImpl infrastructureMappingService =
+        (InfrastructureMappingServiceImpl) this.infrastructureMappingService;
+    try {
+      infrastructureMappingService.validateAwsInfraMapping(infrastructureMapping);
+      fail("Should have thrown exception");
+    } catch (WingsException ex) {
+      assertTrue(ExceptionUtils.getMessage(ex).contains("Instance filter Blueprint"));
+    }
+
+    infrastructureMapping.setProvisionInstances(true);
+    try {
+      infrastructureMappingService.validateAwsInfraMapping(infrastructureMapping);
+      fail("Should have thrown exception");
+    } catch (WingsException ex) {
+      assertTrue(ExceptionUtils.getMessage(ex).contains("Auto Scaling group Blueprint"));
+    }
+
+    blueprints.put(AwsInfrastructureMappingKeys.autoScalingGroupName, "fad");
+    infrastructureMapping.setSetDesiredCapacity(true);
+    infrastructureMapping.setDesiredCapacity(0);
+    try {
+      infrastructureMappingService.validateAwsInfraMapping(infrastructureMapping);
+      fail("Should have thrown exception");
+    } catch (WingsException ex) {
+      assertTrue(ExceptionUtils.getMessage(ex).contains("Desired count "));
+    }
   }
 }

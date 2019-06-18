@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -20,6 +21,7 @@ import com.google.inject.Inject;
 import com.mongodb.DBCursor;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
@@ -50,6 +52,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.sm.ExecutionContext;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -142,21 +145,40 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testResolveBlueprints() {
     Map<String, Object> contextMap = new HashMap<>();
-    Map<String, String> blueprints = new HashMap<>();
-    assertThatThrownBy(()
-                           -> ((InfrastructureProvisionerServiceImpl) infrastructureProvisionerService)
-                                  .resolveBlueprints(contextMap, blueprints, ""))
+    Map<String, Object> blueprints = new HashMap<>();
+    InfrastructureProvisionerServiceImpl infrastructureProvisionerService =
+        (InfrastructureProvisionerServiceImpl) this.infrastructureProvisionerService;
+    assertThatThrownBy(() -> infrastructureProvisionerService.resolveBlueprints(contextMap, blueprints, ""))
         .isInstanceOf(InvalidRequestException.class);
-    blueprints.put("abc", "def");
-    assertThatThrownBy(()
-                           -> ((InfrastructureProvisionerServiceImpl) infrastructureProvisionerService)
-                                  .resolveBlueprints(contextMap, blueprints, ""))
+    blueprints.put("abc", "out1");
+    assertThatThrownBy(() -> infrastructureProvisionerService.resolveBlueprints(contextMap, blueprints, ""))
         .isInstanceOf(InvalidRequestException.class);
-    contextMap.put("def", 1);
-    Map<String, Object> resolveBlueprints = ((InfrastructureProvisionerServiceImpl) infrastructureProvisionerService)
-                                                .resolveBlueprints(contextMap, blueprints, "");
+    contextMap.put("out1", 1);
+    Map<String, Object> resolveBlueprints =
+        infrastructureProvisionerService.resolveBlueprints(contextMap, blueprints, "");
     assertTrue(resolveBlueprints.size() == 1);
     Object value = resolveBlueprints.get("abc");
     assertTrue(value instanceof Integer && (Integer) value == 1);
+
+    Map<String, Object> someMap = new HashMap<String, Object>() {
+      {
+        put("innerpojo", new HashMap<String, Object>() {
+          { put("key1", "out2"); }
+        });
+      }
+    };
+    blueprints.put("awsInstance", someMap);
+    contextMap.put("out2", 2);
+    resolveBlueprints = infrastructureProvisionerService.resolveBlueprints(contextMap, blueprints, "");
+    value = ((Map) ((Map) resolveBlueprints.get("awsInstance")).get("innerpojo")).get("key1");
+    assertTrue(value instanceof Integer && (Integer) value == 2);
+
+    blueprints.put("key2", new ArrayList<>());
+    try {
+      infrastructureProvisionerService.resolveBlueprints(contextMap, blueprints, "");
+      fail("Should throw exception");
+    } catch (InvalidRequestException ex) {
+      assertTrue(ExceptionUtils.getMessage(ex).contains("Unknown Blueprint value"));
+    }
   }
 }

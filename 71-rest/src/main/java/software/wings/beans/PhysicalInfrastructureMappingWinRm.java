@@ -52,7 +52,7 @@ public class PhysicalInfrastructureMappingWinRm extends PhysicalInfrastructureMa
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
         String infraMappingType, String deploymentType, String computeProviderName, String name, List<String> hostNames,
-        String loadBalancer, String winRmProfile, List<Host> hosts, Map<String, String> blueprints) {
+        String loadBalancer, String winRmProfile, List<Host> hosts, Map<String, Object> blueprints) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
           computeProviderName, name, hostNames, loadBalancer, hosts, blueprints);
       this.winRmProfile = winRmProfile;

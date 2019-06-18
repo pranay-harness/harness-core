@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class BlueprintProcessor {
-  public static void validateKeys(InfrastructureMapping infraStructureMapping, Map<String, String> blueprints) {
+  public static void validateKeys(InfrastructureMapping infraStructureMapping, Map<String, Object> blueprints) {
     if (isEmpty(blueprints)) {
       return;
     }

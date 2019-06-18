@@ -77,7 +77,7 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
 
   @Indexed private Long nextIteration;
 
-  private Map<String, String> blueprints;
+  private Map<String, Object> blueprints;
 
   /**
    * Instantiates a new Infrastructure mapping.
@@ -96,7 +96,7 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
       EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt,
       String computeProviderSettingId, String envId, String serviceTemplateId, String serviceId,
       String computeProviderType, String infraMappingType, String deploymentType, String computeProviderName,
-      String name, boolean autoPopulateName, Map<String, String> blueprints) {
+      String name, boolean autoPopulateName, Map<String, Object> blueprints) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.computeProviderSettingId = computeProviderSettingId;
     this.envId = envId;
@@ -296,11 +296,11 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
   }
 
   @SchemaIgnore
-  public Map<String, String> getBlueprints() {
+  public Map<String, Object> getBlueprints() {
     return blueprints;
   }
 
-  public void setBlueprints(Map<String, String> blueprints) {
+  public void setBlueprints(Map<String, Object> blueprints) {
     this.blueprints = blueprints;
   }
 
@@ -368,10 +368,10 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
     private String serviceName;
     private String infraMappingType;
     private String deploymentType;
-    private Map<String, String> blueprints;
+    private Map<String, Object> blueprints;
 
     public Yaml(String type, String harnessApiVersion, String serviceName, String infraMappingType,
-        String deploymentType, Map<String, String> blueprints) {
+        String deploymentType, Map<String, Object> blueprints) {
       super(type, harnessApiVersion);
       this.serviceName = serviceName;
       this.infraMappingType = infraMappingType;
@@ -388,7 +388,7 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
     private String computeProviderName;
 
     public YamlWithComputeProvider(String type, String harnessApiVersion, String serviceName, String infraMappingType,
-        String deploymentType, String computeProviderType, String computeProviderName, Map<String, String> blueprints) {
+        String deploymentType, String computeProviderType, String computeProviderName, Map<String, Object> blueprints) {
       super(type, harnessApiVersion, serviceName, infraMappingType, deploymentType, blueprints);
       this.computeProviderType = computeProviderType;
       this.computeProviderName = computeProviderName;
