@@ -1,6 +1,7 @@
 package io.harness.event.timeseries;
 
 import static io.harness.event.model.EventType.DEPLOYMENT_EVENT;
+import static io.harness.event.model.EventType.DEPLOYMENT_VERIFIED;
 import static io.harness.event.model.EventType.INSTANCE_EVENT;
 
 import com.google.common.collect.Sets;
@@ -12,6 +13,7 @@ import io.harness.event.listener.EventListener;
 import io.harness.event.model.Event;
 import io.harness.event.timeseries.processor.DeploymentEventProcessor;
 import io.harness.event.timeseries.processor.InstanceEventProcessor;
+import io.harness.event.timeseries.processor.VerificationEventProcessor;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
 
@@ -20,6 +22,7 @@ import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
 public class TimeSeriesHandler implements EventHandler {
   @Inject DeploymentEventProcessor deploymentEventProcessor;
   @Inject InstanceEventProcessor instanceEventProcessor;
+  @Inject VerificationEventProcessor verificationEventProcessor;
 
   @Inject
   public TimeSeriesHandler(EventListener eventListener) {
@@ -30,10 +33,11 @@ public class TimeSeriesHandler implements EventHandler {
   private void init() {
     deploymentEventProcessor.init();
     instanceEventProcessor.init();
+    verificationEventProcessor.init();
   }
 
   private void registerForEvents(EventListener eventListener) {
-    eventListener.registerEventHandler(this, Sets.newHashSet(DEPLOYMENT_EVENT, INSTANCE_EVENT));
+    eventListener.registerEventHandler(this, Sets.newHashSet(DEPLOYMENT_EVENT, INSTANCE_EVENT, DEPLOYMENT_VERIFIED));
   }
 
   @Override
@@ -44,6 +48,9 @@ public class TimeSeriesHandler implements EventHandler {
         break;
       case DEPLOYMENT_EVENT:
         deploymentEventProcessor.processEvent((TimeSeriesEventInfo) event.getEventData().getEventInfo());
+        break;
+      case DEPLOYMENT_VERIFIED:
+        verificationEventProcessor.processEvent(event.getEventData().getProperties());
         break;
       default:
         logger.error("Invalid event typ e, dropping event : [{}]", event);
