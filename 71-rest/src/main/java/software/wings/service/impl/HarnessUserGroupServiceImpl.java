@@ -16,16 +16,21 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.app.DeployMode;
 import software.wings.beans.Account;
+import software.wings.beans.FeatureName;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.HarnessUserAccountActions;
+import software.wings.security.HarnessUserThreadLocal;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessUserGroupService;
 
 import java.io.Serializable;
@@ -35,10 +40,12 @@ import java.util.List;
 import java.util.Set;
 
 @Singleton
+@Slf4j
 public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
   @Inject WingsPersistence wingsPersistence;
   @Inject private AuthService authService;
   @Inject private AccountService accountService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public HarnessUserGroup save(HarnessUserGroup harnessUserGroup) {
@@ -53,44 +60,76 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
 
   @Override
   public Set<Action> listAllowedUserActionsForAccount(String accountId, String userId) {
-    Query<HarnessUserGroup> query = wingsPersistence.createQuery(HarnessUserGroup.class, excludeAuthority);
-    query.filter("memberIds", userId);
-    query.or(query.criteria("applyToAllAccounts").equal(true), query.criteria("accountIds").equal(accountId));
-    List<HarnessUserGroup> harnessUserGroups = query.asList();
     Set<Action> actionSet = Sets.newHashSet();
-    harnessUserGroups.forEach(harnessUserGroup -> {
-      Set<Action> actions = harnessUserGroup.getActions();
-      if (isNotEmpty(actions)) {
-        actionSet.addAll(actions);
+
+    if (featureFlagService.isEnabled(FeatureName.GLOBAL_HARNESS_USER_GROUP, accountId)) {
+      // If it's called by identity service, thread local should have been populated
+      HarnessUserAccountActions harnessUserAccountActions = HarnessUserThreadLocal.get();
+      if (harnessUserAccountActions != null) {
+        Set<Action> actionSetFromAccountActions = harnessUserAccountActions.getAccountActions().get(accountId);
+        logger.info("Got account actions {} for account {} from context", actionSetFromAccountActions, accountId);
+        if (actionSetFromAccountActions != null) {
+          actionSet.addAll(actionSetFromAccountActions);
+        }
       }
-    });
+    } else {
+      Query<HarnessUserGroup> query = wingsPersistence.createQuery(HarnessUserGroup.class, excludeAuthority);
+      query.filter("memberIds", userId);
+      query.or(query.criteria("applyToAllAccounts").equal(true), query.criteria("accountIds").equal(accountId));
+      List<HarnessUserGroup> harnessUserGroups = query.asList();
+      harnessUserGroups.forEach(harnessUserGroup -> {
+        Set<Action> actions = harnessUserGroup.getActions();
+        if (isNotEmpty(actions)) {
+          actionSet.addAll(actions);
+        }
+      });
+    }
     return actionSet;
   }
 
   @Override
   public List<Account> listAllowedSupportAccountsForUser(String userId, Set<String> excludeAccountIds) {
-    Query<HarnessUserGroup> query = wingsPersistence.createQuery(HarnessUserGroup.class, excludeAuthority);
-    query.filter("memberIds", userId);
-    List<HarnessUserGroup> harnessUserGroups = query.asList();
-
     Set<String> accountIds = Sets.newHashSet();
-    for (HarnessUserGroup harnessUserGroup : harnessUserGroups) {
-      // If any of the groups have all accounts selected, we just return all the accounts except the excluded ones
-      if (harnessUserGroup.isApplyToAllAccounts()) {
-        if (isNotEmpty(excludeAccountIds)) {
-          return accountService.listAccounts(excludeAccountIds);
-        } else {
-          return accountService.listAccounts(Collections.emptySet());
+    boolean applyToAllAccounts = false;
+
+    if (featureFlagService.isGlobalEnabled(FeatureName.GLOBAL_HARNESS_USER_GROUP)) {
+      // If it's called by identity service, thread local should have been populated
+      HarnessUserAccountActions harnessUserAccountActions = HarnessUserThreadLocal.get();
+      if (harnessUserAccountActions != null) {
+        applyToAllAccounts = harnessUserAccountActions.isApplyToAllAccounts();
+        logger.info("Got user {}'s apply-for-all-account flag value from context: {}", userId, applyToAllAccounts);
+        if (!applyToAllAccounts) {
+          Set<String> accountsFromHarnessUserAccountActions = harnessUserAccountActions.getAccountActions().keySet();
+          if (isNotEmpty(accountsFromHarnessUserAccountActions)) {
+            accountIds.addAll(accountsFromHarnessUserAccountActions);
+          }
         }
-      } else {
-        Set<String> accountIdsFromUserGroup = harnessUserGroup.getAccountIds();
-        if (isNotEmpty(accountIdsFromUserGroup)) {
-          accountIds.addAll(accountIdsFromUserGroup);
+      }
+    } else {
+      Query<HarnessUserGroup> query = wingsPersistence.createQuery(HarnessUserGroup.class, excludeAuthority);
+      query.filter("memberIds", userId);
+      List<HarnessUserGroup> harnessUserGroups = query.asList();
+
+      for (HarnessUserGroup harnessUserGroup : harnessUserGroups) {
+        // If any of the groups have all accounts selected, we just return all the accounts except the excluded ones
+        if (harnessUserGroup.isApplyToAllAccounts()) {
+          applyToAllAccounts = true;
+          break;
+        } else {
+          Set<String> accountIdsFromUserGroup = harnessUserGroup.getAccountIds();
+          if (isNotEmpty(accountIdsFromUserGroup)) {
+            accountIds.addAll(accountIdsFromUserGroup);
+          }
         }
       }
     }
 
-    accountIds.removeAll(excludeAccountIds);
+    if (applyToAllAccounts) {
+      return getAllAccounts(excludeAccountIds);
+    } else {
+      accountIds.removeAll(excludeAccountIds);
+    }
+
     if (isNotEmpty(accountIds)) {
       List<Account> accountList =
           accountService.list(aPageRequest().addFilter("_id", Operator.IN, accountIds.toArray()).build());
@@ -99,6 +138,14 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
     }
 
     return Collections.emptyList();
+  }
+
+  private List<Account> getAllAccounts(Set<String> excludeAccountIds) {
+    if (isNotEmpty(excludeAccountIds)) {
+      return accountService.listAccounts(excludeAccountIds);
+    } else {
+      return accountService.listAccounts(Collections.emptySet());
+    }
   }
 
   private static class AccountComparator implements Comparator<Account>, Serializable {
@@ -181,6 +228,13 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
     if (DeployMode.isOnPrem(deployMode)) {
       return false;
     }
+
+    // Identity service auth filter may set this thread local if the call comes from identity service
+    // and identity service indicates this call should be treated as from a harness user.
+    if (HarnessUserThreadLocal.get() != null) {
+      return true;
+    }
+
     Query<HarnessUserGroup> query = wingsPersistence.createQuery(HarnessUserGroup.class, excludeAuthority);
     query.filter("memberIds", userId);
     Key<HarnessUserGroup> userGroupKey = query.getKey();

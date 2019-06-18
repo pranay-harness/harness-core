@@ -17,11 +17,13 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
 import software.wings.beans.User;
+import software.wings.security.HarnessUserAccountActions;
 import software.wings.security.SecretManager;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.authentication.AccountSettingsResponse;
 import software.wings.security.authentication.AuthenticationMechanism;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -95,9 +97,14 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   }
 
   private String generateIdentityServiceToken() {
-    Map<String, String> claims = new HashMap<>();
-    claims.put("env", "gateway");
-    return secretManager.generateJWTToken(claims, DEV_IDENTITY_SERVICE_SECRET, JWT_CATEGORY.IDENTITY_SERVICE_SECRET);
+    try {
+      Map<String, String> claims = new HashMap<>();
+      claims.put(SecretManager.ENV, "gateway");
+      claims.put(SecretManager.HARNESS_USER, SecretManager.serializeAccountActions(new HarnessUserAccountActions()));
+      return secretManager.generateJWTToken(claims, DEV_IDENTITY_SERVICE_SECRET, JWT_CATEGORY.IDENTITY_SERVICE_SECRET);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private <T> T getDataForIdentityService(
