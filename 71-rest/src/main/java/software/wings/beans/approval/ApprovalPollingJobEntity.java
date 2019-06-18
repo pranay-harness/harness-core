@@ -1,8 +1,11 @@
 package software.wings.beans.approval;
 
 import io.harness.persistence.PersistentIterable;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.ToString;
+import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
@@ -14,6 +17,8 @@ import software.wings.sm.states.ApprovalState.ApprovalStateType;
 @FieldNameConstants(innerTypeName = "ApprovalPollingJobEntityKeys")
 @Data
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@ToString(exclude = "scriptString")
 public class ApprovalPollingJobEntity implements PersistentIterable {
   String appId;
   String accountId;
@@ -33,6 +38,10 @@ public class ApprovalPollingJobEntity implements PersistentIterable {
   // snow fields
   String issueNumber;
   ServiceNowTicketType issueType;
+
+  // shell script approval fields
+  String scriptString;
+  String activityId;
 
   ApprovalStateType approvalType;
 

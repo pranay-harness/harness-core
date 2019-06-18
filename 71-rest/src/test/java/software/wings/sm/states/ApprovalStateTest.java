@@ -40,14 +40,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.WorkflowElement;
-import software.wings.beans.NotificationRule;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.AlertType;
@@ -63,7 +61,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.WorkflowStandardParams;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -74,7 +71,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   private static final WorkflowStandardParams WORKFLOW_STANDARD_PARAMS =
       aWorkflowStandardParams().withArtifactIds(asList(ARTIFACT_ID)).build();
   private static final String USER_NAME_1_KEY = "UserName1";
-  Integer DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS = 7 * 24 * 60 * 60 * 1000; // 7 days
+  private Integer DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS = 7 * 24 * 60 * 60 * 1000; // 7 days
   @Mock private ExecutionContextImpl context;
   @Mock private AlertService alertService;
   @Mock private NotificationService notificationService;
@@ -84,7 +81,6 @@ public class ApprovalStateTest extends WingsBaseTest {
   @Mock private WorkflowNotificationHelper workflowNotificationHelper;
 
   @InjectMocks private ApprovalState approvalState = new ApprovalState("ApprovalState");
-  @Captor private ArgumentCaptor<List<NotificationRule>> notificationRuleArgumentCaptor;
 
   @Before
   public void setUp() throws Exception {

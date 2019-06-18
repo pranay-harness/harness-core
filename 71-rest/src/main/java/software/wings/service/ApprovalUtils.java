@@ -21,7 +21,7 @@ import software.wings.sm.states.ApprovalState;
 
 @Slf4j
 public class ApprovalUtils {
-  public static void approveWorkflow(WorkflowExecutionService workflowExecutionService,
+  private static void approveWorkflow(WorkflowExecutionService workflowExecutionService,
       StateExecutionService stateExecutionService, WaitNotifyEngine waitNotifyEngine, Action action, String approvalId,
       String appId, String workflowExecutionId, ExecutionStatus approvalStatus, String currentStatus,
       String stateExecutionInstanceId) {
@@ -58,9 +58,8 @@ public class ApprovalUtils {
     waitNotifyEngine.notify(approvalId, executionData);
   }
 
-  public static void continuePauseWorkflow(StateExecutionService stateExecutionService, String approvalId, String appId,
-      String workflowExecutionId, ExecutionStatus approvalStatus, String currentStatus,
-      String stateExecutionInstanceId) {
+  private static void continuePauseWorkflow(StateExecutionService stateExecutionService, String approvalId,
+      String appId, String workflowExecutionId, String currentStatus, String stateExecutionInstanceId) {
     if (stateExecutionInstanceId == null) {
       return;
     }
@@ -99,8 +98,8 @@ public class ApprovalUtils {
       } else if (issueStatus == ExecutionStatus.PAUSED) {
         logger.info("Still waiting for approval or rejected for issueId {}. Issue Status {} and Current Status {}",
             issueId, issueStatus, currentStatus);
-        continuePauseWorkflow(stateExecutionService, approvalId, appId, workflowExecutionId, issueStatus, currentStatus,
-            stateExecutionInstanceId);
+        continuePauseWorkflow(
+            stateExecutionService, approvalId, appId, workflowExecutionId, currentStatus, stateExecutionInstanceId);
       } else if (issueStatus == ExecutionStatus.FAILED) {
         logger.info("Jira delegate task failed with error: " + errorMsg);
       }

@@ -3,17 +3,8 @@ package software.wings.scheduler;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import io.harness.beans.DelegateTask;
-import io.harness.beans.EmbeddedUser;
-import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.beans.ResponseData;
-import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.task.shell.ScriptType;
-import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
 import io.harness.scheduler.PersistentScheduler;
-import io.harness.waiter.ErrorNotifyResponseData;
-import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -22,37 +13,31 @@ import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import software.wings.api.ApprovalStateExecutionData;
-import software.wings.api.ShellScriptApprovalExecutionData;
-import software.wings.beans.ApprovalDetails.Action;
-import software.wings.beans.TaskType;
 import software.wings.beans.approval.ShellScriptApprovalParams;
-import software.wings.service.impl.DelegateServiceImpl;
-import software.wings.service.intfc.WorkflowExecutionService;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
+
+/**
+ * @deprecated Migrated to mongo persistent iterator. Only left for handling old jobs.
+ * TODO: Delete this class.
+ */
+@Deprecated
 @Slf4j
 public class ScriptApprovalJob implements Job {
   private static final String SCRIPT_STRING_KEY = "SCRIPT_STRING_KEY";
   private static final String ACTIVITY_ID_KEY = "activityId";
   private static final String APPROVAL_ID_KEY = "approvalId";
 
-  private static final long TIME_OUT_IN_MINUTES = 5;
   private static final int DELAY_START_SECONDS = 10;
-  private static final String SCRIPT_APPROVAL_DIRECTORY = "/tmp";
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
+  @Inject ShellScriptApprovalService shellScriptApprovalService;
 
-  @Inject private DelegateServiceImpl delegateService;
-  @Inject WorkflowExecutionService workflowExecutionService;
-  @Inject WaitNotifyEngine waitNotifyEngine;
-  private String SCRIPT_APPROVAL_COMMAND = "Execute Approval Script";
   private static String SCRIPT_APPROVAL_JOB_GROUP = "SHELL_SCRIPT_APPROVAL_JOB";
   private static String ACCOUNT_ID_KEY = "accountId";
   private static String APP_ID_KEY = "appId";
-  private String SCRIPT_APPROVAL_ENV_VARIABLE = "HARNESS_APPROVAL_STATUS";
   private static String WORKFLOW_EXECUTION_ID_KEY = "workflowExecutionId";
 
   public static void doRetryJob(PersistentScheduler jobScheduler, String accountId, String appId, String approvalId,
@@ -104,78 +89,8 @@ public class ScriptApprovalJob implements Job {
       return;
     }
 
-    ShellScriptApprovalTaskParameters shellScriptApprovalTaskParameters =
-        ShellScriptApprovalTaskParameters.builder()
-            .accountId(accountId)
-            .appId(appId)
-            .activityId(activityId)
-            .commandName(SCRIPT_APPROVAL_COMMAND)
-            .outputVars(SCRIPT_APPROVAL_ENV_VARIABLE)
-            .workingDirectory(SCRIPT_APPROVAL_DIRECTORY)
-            .scriptType(ScriptType.BASH)
-            .script(scriptString)
-            .build();
-
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(accountId)
-                                    .appId(appId)
-                                    .waitId(activityId)
-                                    .data(TaskData.builder()
-                                              .taskType(TaskType.SHELL_SCRIPT_APPROVAL.name())
-                                              .parameters(new Object[] {shellScriptApprovalTaskParameters})
-                                              .timeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
-                                              .build())
-                                    .async(false)
-                                    .build();
-
-    boolean isTerminal = false;
-
-    // TODO : @swagat make this async
-    ResponseData responseData = null;
-    try {
-      responseData = delegateService.executeTask(delegateTask);
-    } catch (Exception e) {
-      logger.error("Failed to fetch Approval Status from Script", e);
-      isTerminal = true;
-    }
-
-    if (responseData instanceof ShellScriptApprovalExecutionData) {
-      ShellScriptApprovalExecutionData executionData = (ShellScriptApprovalExecutionData) responseData;
-      if (executionData.getApprovalAction() == Action.APPROVE || executionData.getApprovalAction() == Action.REJECT) {
-        isTerminal = true;
-
-        try {
-          approveWorkflow(approvalId, null, appId, workflowExecutionId, executionData.getExecutionStatus());
-        } catch (Exception e) {
-          logger.error("Failed to Approve/Reject Status", e);
-        }
-      }
-    } else if (responseData instanceof ErrorNotifyResponseData) {
-      logger.error("Shell Script Approval task failed unexpectedly.", (ErrorNotifyResponseData) responseData);
-      isTerminal = true;
-    }
-
-    if (isTerminal) {
+    if (shellScriptApprovalService.tryShellScriptApproval(accountId, appId, approvalId, activityId, scriptString)) {
       jobScheduler.deleteJob(approvalId, SCRIPT_APPROVAL_JOB_GROUP);
     }
-  }
-
-  public void approveWorkflow(
-      String approvalId, EmbeddedUser user, String appId, String workflowExecutionId, ExecutionStatus approvalStatus) {
-    ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()
-                                                   .appId(appId)
-                                                   .approvalId(approvalId)
-                                                   .approvedOn(System.currentTimeMillis())
-                                                   .build();
-
-    if (approvalStatus == ExecutionStatus.SUCCESS || approvalStatus == ExecutionStatus.REJECTED) {
-      executionData.setApprovedOn(System.currentTimeMillis());
-    }
-
-    executionData.setStatus(approvalStatus);
-    if (user != null) {
-      executionData.setApprovedBy(user);
-    }
-    waitNotifyEngine.notify(approvalId, executionData);
   }
 }

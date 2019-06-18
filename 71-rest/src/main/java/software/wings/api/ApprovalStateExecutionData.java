@@ -62,6 +62,9 @@ public class ApprovalStateExecutionData extends StateExecutionData implements Re
   private String ticketUrl;
   private ServiceNowTicketType ticketType;
 
+  // Shell script approval
+  private String activityId;
+
   // Setting these variables for pipeline executions with only approval state
   @Transient private transient List<UserGroup> userGroupList;
   @Transient private transient boolean isAuthorized;
