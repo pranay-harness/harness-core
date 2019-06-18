@@ -62,6 +62,7 @@ import static software.wings.stencils.StencilCategory.COLLABORATION;
 import static software.wings.stencils.StencilCategory.COLLECTIONS;
 import static software.wings.stencils.StencilCategory.COMMANDS;
 import static software.wings.stencils.StencilCategory.CONTROLS;
+import static software.wings.stencils.StencilCategory.ECS;
 import static software.wings.stencils.StencilCategory.ENVIRONMENTS;
 import static software.wings.stencils.StencilCategory.FLOW_CONTROLS;
 import static software.wings.stencils.StencilCategory.KUBERNETES;
@@ -441,38 +442,38 @@ public enum StateType implements StateTypeDescriptor {
       Lists.newArrayList(InfrastructureMappingType.AWS_AMI), asList(AMI_DEPLOY_AUTOSCALING_GROUP),
       ORCHESTRATION_STENCILS),
 
-  ECS_SERVICE_SETUP(EcsServiceSetup.class, CLOUD, WorkflowServiceHelper.ECS_SERVICE_SETUP, Lists.newArrayList(AWS_ECS),
+  ECS_SERVICE_SETUP(EcsServiceSetup.class, ECS, WorkflowServiceHelper.ECS_SERVICE_SETUP, Lists.newArrayList(AWS_ECS),
       asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
-  ECS_SERVICE_SETUP_ROLLBACK(EcsSetupRollback.class, CLOUD, StateType.ROLLBACK_ECS_SETUP, Lists.newArrayList(AWS_ECS),
+  ECS_SERVICE_SETUP_ROLLBACK(EcsSetupRollback.class, ECS, StateType.ROLLBACK_ECS_SETUP, Lists.newArrayList(AWS_ECS),
       asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
-  ECS_DAEMON_SERVICE_SETUP(EcsDaemonServiceSetup.class, CLOUD, WorkflowServiceHelper.ECS_DAEMON_SERVICE_SETUP,
+  ECS_DAEMON_SERVICE_SETUP(EcsDaemonServiceSetup.class, ECS, WorkflowServiceHelper.ECS_DAEMON_SERVICE_SETUP,
       Lists.newArrayList(AWS_ECS), asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
-  ECS_BG_SERVICE_SETUP(EcsBlueGreenServiceSetup.class, CLOUD, WorkflowServiceHelper.ECS_BG_SERVICE_SETUP_ELB,
+  ECS_BG_SERVICE_SETUP(EcsBlueGreenServiceSetup.class, ECS, WorkflowServiceHelper.ECS_BG_SERVICE_SETUP_ELB,
       Lists.newArrayList(AWS_ECS), asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
-  ECS_BG_SERVICE_SETUP_ROUTE53(EcsBlueGreenServiceSetupRoute53DNS.class, CLOUD,
+  ECS_BG_SERVICE_SETUP_ROUTE53(EcsBlueGreenServiceSetupRoute53DNS.class, ECS,
       WorkflowServiceHelper.ECS_BG_SERVICE_SETUP_ROUTE_53, Lists.newArrayList(AWS_ECS), asList(CONTAINER_SETUP),
       ORCHESTRATION_STENCILS),
 
-  ECS_SERVICE_DEPLOY(EcsServiceDeploy.class, COMMANDS, "ECS Upgrade Containers", Lists.newArrayList(AWS_ECS),
+  ECS_SERVICE_DEPLOY(EcsServiceDeploy.class, ECS, "ECS Upgrade Containers", Lists.newArrayList(AWS_ECS),
       asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
-  ECS_SERVICE_ROLLBACK(EcsServiceRollback.class, COMMANDS, "ECS Rollback Containers", Lists.newArrayList(AWS_ECS),
+  ECS_SERVICE_ROLLBACK(EcsServiceRollback.class, ECS, "ECS Rollback Containers", Lists.newArrayList(AWS_ECS),
       asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
-  ECS_LISTENER_UPDATE(EcsBGUpdateListnerState.class, FLOW_CONTROLS, ECS_SWAP_TARGET_GROUPS, Lists.newArrayList(AWS_ECS),
+  ECS_LISTENER_UPDATE(EcsBGUpdateListnerState.class, ECS, ECS_SWAP_TARGET_GROUPS, Lists.newArrayList(AWS_ECS),
       singletonList(ECS_UPDATE_LISTENER_BG), ORCHESTRATION_STENCILS),
 
-  ECS_LISTENER_UPDATE_ROLLBACK(EcsBGUpdateListnerRollbackState.class, FLOW_CONTROLS, ECS_SWAP_TARGET_GROUPS_ROLLBACK,
+  ECS_LISTENER_UPDATE_ROLLBACK(EcsBGUpdateListnerRollbackState.class, ECS, ECS_SWAP_TARGET_GROUPS_ROLLBACK,
       Lists.newArrayList(AWS_ECS), singletonList(ECS_UPDATE_LISTENER_BG), ORCHESTRATION_STENCILS),
 
-  ECS_ROUTE53_DNS_WEIGHT_UPDATE(EcsBGUpdateRoute53DNSWeightState.class, FLOW_CONTROLS, ECS_ROUTE53_DNS_WEIGHTS,
+  ECS_ROUTE53_DNS_WEIGHT_UPDATE(EcsBGUpdateRoute53DNSWeightState.class, ECS, ECS_ROUTE53_DNS_WEIGHTS,
       Lists.newArrayList(AWS_ECS), singletonList(ECS_UPDATE_ROUTE_53_DNS_WEIGHT), ORCHESTRATION_STENCILS),
 
-  ECS_ROUTE53_DNS_WEIGHT_UPDATE_ROLLBACK(EcsBGRollbackRoute53DNSWeightState.class, FLOW_CONTROLS,
+  ECS_ROUTE53_DNS_WEIGHT_UPDATE_ROLLBACK(EcsBGRollbackRoute53DNSWeightState.class, ECS,
       ROLLBACK_ECS_ROUTE53_DNS_WEIGHTS, Lists.newArrayList(AWS_ECS), singletonList(ECS_UPDATE_ROUTE_53_DNS_WEIGHT),
       ORCHESTRATION_STENCILS),
 
@@ -501,8 +502,8 @@ public enum StateType implements StateTypeDescriptor {
           InfrastructureMappingType.GCP_KUBERNETES),
       asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
-  ECS_STEADY_STATE_CHECK(EcsSteadyStateCheck.class, COMMANDS, Constants.ECS_STEADY_STATE_CHECK,
-      Lists.newArrayList(AWS_ECS), asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
+  ECS_STEADY_STATE_CHECK(EcsSteadyStateCheck.class, ECS, Constants.ECS_STEADY_STATE_CHECK, Lists.newArrayList(AWS_ECS),
+      asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
   GCP_CLUSTER_SETUP(GcpClusterSetup.class, CLOUD,
       Lists.newArrayList(InfrastructureMappingType.GCP_KUBERNETES, InfrastructureMappingType.AZURE_KUBERNETES),
@@ -772,7 +773,7 @@ public enum StateType implements StateTypeDescriptor {
       InfrastructureMapping infrastructureMapping = (InfrastructureMapping) context;
       InfrastructureMappingType infrastructureMappingType =
           InfrastructureMappingType.valueOf(infrastructureMapping.getInfraMappingType());
-      return (stencilCategory != COMMANDS && stencilCategory != CLOUD)
+      return (stencilCategory != COMMANDS && stencilCategory != CLOUD && stencilCategory != ECS)
           || supportedInfrastructureMappingTypes.contains(infrastructureMappingType);
     }
     DeploymentType deploymentType = (DeploymentType) context;
