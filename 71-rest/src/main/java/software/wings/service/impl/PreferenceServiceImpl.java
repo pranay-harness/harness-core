@@ -90,13 +90,13 @@ public class PreferenceServiceImpl implements PreferenceService {
     // generate Id set
     auditPreferences.forEach(auditPreference -> {
       ApplicationAuditFilter applicationAuditFilter = auditPreference.getApplicationAuditFilter();
-      if (auditPreference.getApplicationAuditFilter() != null) {
+      if (applicationAuditFilter != null) {
         addToSet(ids, applicationAuditFilter.getAppIds());
         addToSet(ids, applicationAuditFilter.getResourceIds());
       }
 
       AccountAuditFilter accountAuditFilter = auditPreference.getAccountAuditFilter();
-      if (auditPreference.getApplicationAuditFilter() != null) {
+      if (accountAuditFilter != null) {
         addToSet(ids, accountAuditFilter.getResourceIds());
       }
     });
