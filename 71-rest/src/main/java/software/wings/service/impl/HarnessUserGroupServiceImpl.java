@@ -62,7 +62,7 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
   public Set<Action> listAllowedUserActionsForAccount(String accountId, String userId) {
     Set<Action> actionSet = Sets.newHashSet();
 
-    if (featureFlagService.isEnabled(FeatureName.GLOBAL_HARNESS_USER_GROUP, accountId)) {
+    if (featureFlagService.isGlobalEnabled(FeatureName.GLOBAL_HARNESS_USER_GROUP)) {
       // If it's called by identity service, thread local should have been populated
       HarnessUserAccountActions harnessUserAccountActions = HarnessUserThreadLocal.get();
       if (harnessUserAccountActions != null) {
