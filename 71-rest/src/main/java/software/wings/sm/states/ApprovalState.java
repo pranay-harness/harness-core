@@ -17,6 +17,7 @@ import static io.harness.event.model.EventConstants.ENVIRONMENT_NAME;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
@@ -34,7 +35,6 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -46,7 +46,6 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.JiraExecutionData;
 import software.wings.api.ServiceNowExecutionData;
-import software.wings.api.ShellScriptApprovalExecutionData;
 import software.wings.api.WorkflowElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
@@ -68,7 +67,6 @@ import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.scheduler.JiraPollingJob;
-import software.wings.scheduler.ScriptApprovalJob;
 import software.wings.scheduler.ServiceNowApprovalJob;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.JiraHelperService;
@@ -78,7 +76,6 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ApprovalPolingService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.NotificationDispatcherService;
-import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
@@ -88,7 +85,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
-import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.Misc;
@@ -108,7 +104,6 @@ public class ApprovalState extends State {
   public enum ApprovalStateType { JIRA, USER_GROUP, SHELL_SCRIPT, SERVICENOW }
 
   @Inject private AlertService alertService;
-  @Inject private NotificationService notificationService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private NotificationSetupService notificationSetupService;
   @Inject private NotificationMessageResolver notificationMessageResolver;
@@ -124,9 +119,8 @@ public class ApprovalState extends State {
 
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
   private Integer DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS = 7 * 24 * 60 * 60 * 1000; // 7 days
-  String SCRIPT_APPROVAL_COMMAND = "Execute Approval Script";
-  String SCRIPT_APPROVAL_JOB_GROUP = "SHELL_SCRIPT_APPROVAL_JOB";
-  String SCRIPT_APPROVAL_ENV_VARIABLE = "HARNESS_APPROVAL_STATUS";
+  private String SCRIPT_APPROVAL_COMMAND = "Execute Approval Script";
+  private String SCRIPT_APPROVAL_JOB_GROUP = "SHELL_SCRIPT_APPROVAL_JOB";
   public static final String APPROVAL_STATE_TYPE_VARIABLE = "approvalStateType";
   public static final String USER_GROUPS_VARIABLE = "userGroups";
 
@@ -156,7 +150,7 @@ public class ApprovalState extends State {
 
     setPipelineVariables(context);
 
-    Application app = ((ExecutionContextImpl) context).getApp();
+    Application app = context.getApp();
     Map<String, String> placeholderValues = getPlaceholderValues(context, "", PAUSED);
     // Open an alert
     ApprovalNeededAlert approvalNeededAlert = ApprovalNeededAlert.builder()
@@ -169,7 +163,7 @@ public class ApprovalState extends State {
 
     try {
       workflowNotificationHelper.sendApprovalNotification(
-          app.getAccountId(), APPROVAL_NEEDED_NOTIFICATION, placeholderValues, (ExecutionContextImpl) context);
+          app.getAccountId(), APPROVAL_NEEDED_NOTIFICATION, placeholderValues, context);
     } catch (Exception e) {
       // catch exception so that failure to send notification doesn't affect rest of execution
       logger.error("Error sending approval notifiaction. accountId={}", app.getAccountId(), e);
@@ -221,7 +215,7 @@ public class ApprovalState extends State {
   }
 
   private String createActivity(ExecutionContext executionContext) {
-    Application app = ((ExecutionContextImpl) executionContext).getApp();
+    Application app = executionContext.getApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
     WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
     notNullCheck("workflowStandardParams", workflowStandardParams, USER);
@@ -265,25 +259,36 @@ public class ApprovalState extends State {
       String approvalId, ShellScriptApprovalParams parameters, ApprovalStateExecutionData executionData) {
     parameters.setScriptString(context.renderExpression(parameters.getScriptString()));
     String activityId = createActivity(context);
+    executionData.setActivityId(activityId);
 
-    ScriptApprovalJob.doRetryJob(
-        serviceJobScheduler, accountId, appId, approvalId, context.getWorkflowExecutionId(), activityId, parameters);
+    ApprovalPollingJobEntity approvalPollingJobEntity =
+        ApprovalPollingJobEntity.builder()
+            .accountId(accountId)
+            .appId(appId)
+            .approvalId(approvalId)
+            .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+            .workflowExecutionId(context.getWorkflowExecutionId())
+            .activityId(activityId)
+            .scriptString(parameters.getScriptString())
+            .approvalType(approvalStateType)
+            .build();
 
-    ExecutionResponse executionResponse = anExecutionResponse()
-                                              .withAsync(true)
-                                              .withExecutionStatus(RUNNING)
-                                              .withErrorMessage("Waiting for Approval")
-                                              .withCorrelationIds(asList(approvalId))
-                                              .build();
-
-    if (EmptyPredicate.isNotEmpty(context.getPipelineStateElementId())) {
-      executionResponse.setStateExecutionData(executionData);
-    } else {
-      executionResponse.setStateExecutionData(
-          ShellScriptApprovalExecutionData.builder().activityId(activityId).approvalId(approvalId).build());
+    try {
+      approvalPolingService.save(approvalPollingJobEntity);
+      return anExecutionResponse()
+          .withAsync(true)
+          .withExecutionStatus(PAUSED)
+          .withErrorMessage("Waiting for Approval")
+          .withCorrelationIds(singletonList(approvalId))
+          .withStateExecutionData(executionData)
+          .build();
+    } catch (WingsException e) {
+      return anExecutionResponse()
+          .withExecutionStatus(FAILED)
+          .withErrorMessage("Failed to schedule Approval" + e.getMessage())
+          .withStateExecutionData(executionData)
+          .build();
     }
-
-    return executionResponse;
   }
 
   private ExecutionResponse executeJiraApproval(
@@ -299,7 +304,7 @@ public class ApprovalState extends State {
           .build();
     }
 
-    Application app = ((ExecutionContextImpl) context).getApp();
+    Application app = context.getApp();
 
     executionData.setApprovalField(jiraApprovalParams.getApprovalField());
     executionData.setApprovalValue(jiraApprovalParams.getApprovalValue());
@@ -391,7 +396,7 @@ public class ApprovalState extends State {
     executionData.setRejectionField(servicenowApprovalParams.getRejectionField());
     executionData.setRejectionValue(servicenowApprovalParams.getRejectionValue());
 
-    Application app = ((ExecutionContextImpl) context).getApp();
+    Application app = context.getApp();
 
     try {
       ServiceNowExecutionData serviceNowExecutionData = serviceNowService.getIssueUrl(
@@ -427,7 +432,7 @@ public class ApprovalState extends State {
     }
 
     // Create a cron job which polls ServiceNow for approval status
-    logger.info("IssueId = {} while creating Jira polling Job", servicenowApprovalParams.getIssueNumber());
+    logger.info("IssueId = {} while creating ServiceNow polling Job", servicenowApprovalParams.getIssueNumber());
     ApprovalPollingJobEntity approvalPollingJobEntity =
         ApprovalPollingJobEntity.builder()
             .accountId(app.getAccountId())
@@ -481,7 +486,7 @@ public class ApprovalState extends State {
         (ApprovalStateExecutionData) response.values().iterator().next();
 
     // Close the alert
-    Application app = ((ExecutionContextImpl) context).getApp();
+    Application app = context.getApp();
     ApprovalNeededAlert approvalNeededAlert = ApprovalNeededAlert.builder()
                                                   .executionId(context.getWorkflowExecutionId())
                                                   .approvalId(approvalNotifyResponse.getApprovalId())
@@ -489,17 +494,13 @@ public class ApprovalState extends State {
     populateApprovalAlert(approvalNeededAlert, context);
     alertService.closeAlert(app.getAccountId(), app.getUuid(), ApprovalNeeded, approvalNeededAlert);
 
-    if (context.getStateExecutionData() instanceof ShellScriptApprovalExecutionData) {
-      return handleAsyncShellScript(context, context.getStateExecutionData(), approvalNotifyResponse);
-    }
-
     ApprovalStateExecutionData executionData = (ApprovalStateExecutionData) context.getStateExecutionData();
     executionData.setApprovedBy(approvalNotifyResponse.getApprovedBy());
     executionData.setComments(approvalNotifyResponse.getComments());
     executionData.setApprovedOn(System.currentTimeMillis());
     executionData.setCurrentStatus(approvalNotifyResponse.getCurrentStatus());
 
-    Map<String, String> placeholderValues = new HashMap<>();
+    Map<String, String> placeholderValues;
     if (approvalNotifyResponse.getApprovedBy() != null) {
       placeholderValues = getPlaceholderValues(
           context, approvalNotifyResponse.getApprovedBy().getName(), approvalNotifyResponse.getStatus());
@@ -520,15 +521,15 @@ public class ApprovalState extends State {
       case USER_GROUP:
         return handleAsyncUserGroup(userGroups, placeholderValues, context, executionData, approvalNotifyResponse);
       case SHELL_SCRIPT:
-        return handleAsyncShellScript(context, context.getStateExecutionData(), approvalNotifyResponse);
+        return handleAsyncShellScript(context, executionData, approvalNotifyResponse);
       default:
         throw new WingsException("Invalid ApprovalStateType");
     }
   }
 
-  private ExecutionResponse handleAsyncShellScript(
-      ExecutionContext context, StateExecutionData executionData, ApprovalStateExecutionData approvalNotifyResponse) {
-    String errorMessage = "";
+  private ExecutionResponse handleAsyncShellScript(ExecutionContext context, ApprovalStateExecutionData executionData,
+      ApprovalStateExecutionData approvalNotifyResponse) {
+    String errorMessage;
     if (approvalNotifyResponse.getStatus() == REJECTED) {
       errorMessage = "Rejected by Script";
     } else if (approvalNotifyResponse.getStatus() == SUCCESS) {
@@ -538,31 +539,13 @@ public class ApprovalState extends State {
     }
 
     setPipelineVariables(context);
+    approvalPolingService.delete(executionData.getApprovalId());
 
-    // If the Approval is in a pipeline, ApprovalStateExecutionData is expected.
-    if (executionData instanceof ShellScriptApprovalExecutionData) {
-      return anExecutionResponse()
-          .withStateExecutionData(executionData)
-          .withExecutionStatus(approvalNotifyResponse.getStatus())
-          .withErrorMessage(errorMessage)
-          .build();
-    } else {
-      ApprovalStateExecutionData approvalStateExecutionData = ApprovalStateExecutionData.builder()
-                                                                  .approvalId(approvalNotifyResponse.getApprovalId())
-                                                                  .appId(context.getAppId())
-                                                                  .comments(errorMessage)
-                                                                  .build();
-
-      if (approvalNotifyResponse.getStatus() == SUCCESS || approvalNotifyResponse.getStatus() == REJECTED) {
-        approvalStateExecutionData.setApprovedOn(approvalNotifyResponse.getApprovedOn());
-      }
-
-      return anExecutionResponse()
-          .withStateExecutionData(approvalStateExecutionData)
-          .withExecutionStatus(approvalNotifyResponse.getStatus())
-          .withErrorMessage(errorMessage)
-          .build();
-    }
+    return anExecutionResponse()
+        .withStateExecutionData(executionData)
+        .withExecutionStatus(approvalNotifyResponse.getStatus())
+        .withErrorMessage(errorMessage)
+        .build();
   }
 
   private ExecutionResponse handleAsyncJira(ExecutionContext context, ApprovalStateExecutionData executionData,
@@ -607,7 +590,7 @@ public class ApprovalState extends State {
   private ExecutionResponse handleAsyncUserGroup(List<String> userGroups, Map<String, String> placeholderValues,
       ExecutionContext context, ApprovalStateExecutionData executionData,
       ApprovalStateExecutionData approvalNotifyResponse) {
-    Application app = ((ExecutionContextImpl) context).getApp();
+    Application app = context.getApp();
     sendEmailToUserGroupMembers(userGroups, app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues);
     return anExecutionResponse()
         .withStateExecutionData(executionData)
@@ -621,13 +604,13 @@ public class ApprovalState extends State {
       return;
     }
 
-    Application app = ((ExecutionContextImpl) context).getApp();
+    Application app = context.getApp();
     Integer timeout = getTimeoutMillis();
     Long startTimeMillis = context.getStateExecutionData().getStartTs();
-    Long currentTimeMillis = System.currentTimeMillis();
+    long currentTimeMillis = System.currentTimeMillis();
     NotificationMessageType notificationMessageType;
 
-    String errorMsg = "";
+    String errorMsg;
     String approvalType = "";
     if (((ExecutionContextImpl) context).getStateExecutionInstance() != null
         && ((ExecutionContextImpl) context).getStateExecutionInstance().getExecutionType() != null) {
@@ -672,28 +655,30 @@ public class ApprovalState extends State {
     }
     switch (approvalStateType) {
       case JIRA:
-        handleAbortEventJira(context, app);
+        handleAbortEventJira(context);
         return;
       case SERVICENOW:
-        handleAbortEventServiceNow(context, app);
+        handleAbortEventServiceNow(context);
         return;
       case USER_GROUP:
         sendEmailToUserGroupMembers(userGroups, app.getAccountId(), notificationMessageType, placeholderValues);
         return;
       case SHELL_SCRIPT:
-        handleAbortScriptApproval(context.getStateExecutionData());
+        handleAbortScriptApproval(context);
         return;
       default:
         throw new WingsException("Invalid ApprovalStateType : neither JIRA nor USER_GROUP");
     }
   }
 
-  private void handleAbortScriptApproval(StateExecutionData stateExecutionData) {
-    ShellScriptApprovalExecutionData executionData = (ShellScriptApprovalExecutionData) stateExecutionData;
+  private void handleAbortScriptApproval(ExecutionContext context) {
+    ApprovalStateExecutionData executionData = (ApprovalStateExecutionData) context.getStateExecutionData();
+    approvalPolingService.delete(executionData.getApprovalId());
+    // left to clean up the old jobs. Remove later.
     serviceJobScheduler.deleteJob(executionData.getApprovalId(), SCRIPT_APPROVAL_JOB_GROUP);
   }
 
-  private void handleAbortEventJira(ExecutionContext context, Application app) {
+  private void handleAbortEventJira(ExecutionContext context) {
     ApprovalStateExecutionData executionData = (ApprovalStateExecutionData) context.getStateExecutionData();
     approvalPolingService.delete(executionData.getApprovalId());
     // Todo: keeping this for backward compatibility and cleanup of old jobs. Can be removed a disconnected onprem
@@ -701,7 +686,7 @@ public class ApprovalState extends State {
     JiraPollingJob.deleteJob(serviceJobScheduler, executionData.getApprovalId());
   }
 
-  private void handleAbortEventServiceNow(ExecutionContext context, Application app) {
+  private void handleAbortEventServiceNow(ExecutionContext context) {
     ApprovalStateExecutionData executionData = (ApprovalStateExecutionData) context.getStateExecutionData();
     approvalPolingService.delete(executionData.getApprovalId());
 
@@ -737,8 +722,8 @@ public class ApprovalState extends State {
   }
 
   Map<String, String> getPlaceholderValues(ExecutionContext context, String userName, ExecutionStatus status) {
-    WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(
-        ((ExecutionContextImpl) context).getApp().getUuid(), context.getWorkflowExecutionId());
+    WorkflowExecution workflowExecution =
+        workflowExecutionService.getWorkflowExecution(context.getApp().getUuid(), context.getWorkflowExecutionId());
 
     String statusMsg = getStatusMessage(status);
     long startTs = (status == PAUSED) ? workflowExecution.getCreatedAt() : context.getStateExecutionData().getStartTs();
@@ -750,12 +735,12 @@ public class ApprovalState extends State {
         context, userName, startTs, System.currentTimeMillis(), "", statusMsg, "", status, ApprovalNeeded);
   }
 
-  Map<String, String> getPlaceholderValues(ExecutionContext context, String timeout) {
+  private Map<String, String> getPlaceholderValues(ExecutionContext context, String timeout) {
     return notificationMessageResolver.getPlaceholderValues(
         context, "", 0, 0, timeout, "", "", EXPIRED, ApprovalNeeded);
   }
 
-  void sendEmailToUserGroupMembers(List<String> userGroups, String accountId,
+  private void sendEmailToUserGroupMembers(List<String> userGroups, String accountId,
       NotificationMessageType notificationMessageType, Map<String, String> placeHolderValues) {
     List<String> userEmailAddress = getUserGroupMemberEmailAddresses(accountId, userGroups);
     if (isEmpty(userEmailAddress)) {
@@ -798,7 +783,7 @@ public class ApprovalState extends State {
     return userService.fetchUserEmailAddressesFromUserIds(userGroupMembers);
   }
 
-  void populateApprovalAlert(ApprovalNeededAlert approvalNeededAlert, ExecutionContext context) {
+  private void populateApprovalAlert(ApprovalNeededAlert approvalNeededAlert, ExecutionContext context) {
     if (((ExecutionContextImpl) context).getStateExecutionInstance() != null
         && ((ExecutionContextImpl) context).getStateExecutionInstance().getExecutionType() != null) {
       approvalNeededAlert.setWorkflowType(

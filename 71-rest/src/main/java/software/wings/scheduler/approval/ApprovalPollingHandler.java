@@ -14,6 +14,7 @@ import io.harness.mongo.MongoPersistenceIterator.Handler;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.approval.ApprovalPollingJobEntity;
 import software.wings.beans.approval.ApprovalPollingJobEntity.ApprovalPollingJobEntityKeys;
+import software.wings.scheduler.ShellScriptApprovalService;
 import software.wings.service.impl.JiraHelperService;
 import software.wings.service.intfc.servicenow.ServiceNowService;
 
@@ -23,8 +24,9 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class ApprovalPollingHandler implements Handler<ApprovalPollingJobEntity> {
-  @Inject JiraHelperService jiraHelperService;
-  @Inject ServiceNowService serviceNowService;
+  @Inject private JiraHelperService jiraHelperService;
+  @Inject private ServiceNowService serviceNowService;
+  @Inject private ShellScriptApprovalService shellScriptApprovalService;
 
   public static class ApprovalPollingExecutor {
     static int POOL_SIZE = 5;
@@ -52,10 +54,7 @@ public class ApprovalPollingHandler implements Handler<ApprovalPollingJobEntity>
   }
   @Override
   public void handle(ApprovalPollingJobEntity entity) {
-    logger.info(
-        "Polling Approval Status for approvalId {},issueId {}, approvalField {}, approvalValue {} , rejectionField {}, RejectionValue {}",
-        entity.getApprovalId(), entity.getIssueId(), entity.getApprovalField(), entity.getApprovalField(),
-        entity.getRejectionField(), entity.getRejectionValue());
+    logger.info("Polling Approval status for approval polling job {}", entity);
 
     switch (entity.getApprovalType()) {
       case JIRA:
@@ -63,6 +62,9 @@ public class ApprovalPollingHandler implements Handler<ApprovalPollingJobEntity>
         return;
       case SERVICENOW:
         serviceNowService.handleServiceNowPolling(entity);
+        return;
+      case SHELL_SCRIPT:
+        shellScriptApprovalService.handleShellScriptPolling(entity);
         return;
       default:
         throw new WingsException("No Polling should be required for approval type: " + entity.getApprovalType());
