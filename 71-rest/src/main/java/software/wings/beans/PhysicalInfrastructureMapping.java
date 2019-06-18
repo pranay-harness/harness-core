@@ -31,7 +31,8 @@ public class PhysicalInfrastructureMapping extends PhysicalInfrastructureMapping
   }
 
   @Override
-  public void applyProvisionerVariables(Map<String, Object> blueprintProperties, NodeFilteringType nodeFilteringType) {
+  public void applyProvisionerVariables(
+      Map<String, Object> blueprintProperties, NodeFilteringType nodeFilteringType, boolean featureFlagEnabled) {
     if (isEmpty(blueprintProperties)) {
       throw new InvalidRequestException("Infra Provisioner Mapping inputs can't be empty");
     }

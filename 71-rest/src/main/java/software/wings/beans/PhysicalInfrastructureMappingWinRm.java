@@ -26,7 +26,8 @@ public class PhysicalInfrastructureMappingWinRm extends PhysicalInfrastructureMa
   }
 
   @Override
-  public void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType) {}
+  public void applyProvisionerVariables(
+      Map<String, Object> map, NodeFilteringType nodeFilteringType, boolean featureFlagEnabled) {}
 
   @SchemaIgnore
   @Override

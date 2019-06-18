@@ -62,7 +62,8 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
   }
 
   @Override
-  public void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType) {
+  public void applyProvisionerVariables(
+      Map<String, Object> map, NodeFilteringType nodeFilteringType, boolean featureFlagEnabled) {
     for (Map.Entry<String, Object> entry : map.entrySet()) {
       switch (entry.getKey()) {
         case "region":

@@ -123,7 +123,8 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
   }
 
   @Override
-  public void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType) {
+  public void applyProvisionerVariables(
+      Map<String, Object> map, NodeFilteringType nodeFilteringType, boolean featureFlagEnabled) {
     switch (nodeFilteringType) {
       case AWS_ECS_EC2: {
         applyEcsEc2Variables(map);

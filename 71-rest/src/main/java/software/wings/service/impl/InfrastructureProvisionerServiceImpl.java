@@ -356,7 +356,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         generateMapToUpdateInfraMapping(contextMap, properties, executionLogCallbackOptional, region);
 
     try {
-      infrastructureMapping.applyProvisionerVariables(propertyNameEvaluatedMap, nodeFilteringType);
+      infrastructureMapping.applyProvisionerVariables(propertyNameEvaluatedMap, nodeFilteringType, false);
       infrastructureMappingService.update(infrastructureMapping);
     } catch (Exception e) {
       addToExecutionLog(executionLogCallbackOptional, ExceptionUtils.getMessage(e));
@@ -496,7 +496,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   }
 
   private void updateInfraMapping(InfrastructureMapping infrastructureMapping, Map<String, Object> resolvedBlueprints) {
-    infrastructureMapping.applyProvisionerVariables(resolvedBlueprints, null);
+    infrastructureMapping.applyProvisionerVariables(resolvedBlueprints, null,
+        featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infrastructureMapping.getAccountId()));
     infrastructureMappingService.update(infrastructureMapping);
   }
 

@@ -30,7 +30,8 @@ public class AzureKubernetesInfrastructureMapping extends ContainerInfrastructur
   }
 
   @Override
-  public void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType) {}
+  public void applyProvisionerVariables(
+      Map<String, Object> map, NodeFilteringType nodeFilteringType, boolean featureFlagEnabled) {}
 
   @SchemaIgnore
   @Override

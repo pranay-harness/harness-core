@@ -32,7 +32,7 @@ public class AwsLambdaInfraMappingTest extends WingsBaseTest {
     outputVariablesMap.put("vpcId", "testVpc");
 
     awsLambdaInfraStructureMapping.applyProvisionerVariables(
-        outputVariablesMap, NodeFilteringType.AWS_AUTOSCALING_GROUP);
+        outputVariablesMap, NodeFilteringType.AWS_AUTOSCALING_GROUP, false);
     assertEquals("testRegion", awsLambdaInfraStructureMapping.getRegion());
     assertEquals("testRole", awsLambdaInfraStructureMapping.getRole());
     assertEquals("testVpc", awsLambdaInfraStructureMapping.getVpcId());
@@ -45,7 +45,7 @@ public class AwsLambdaInfraMappingTest extends WingsBaseTest {
 
     outputVariablesMap.put("region1", "testRegion");
     awsLambdaInfraStructureMapping.applyProvisionerVariables(
-        outputVariablesMap, NodeFilteringType.AWS_AUTOSCALING_GROUP);
+        outputVariablesMap, NodeFilteringType.AWS_AUTOSCALING_GROUP, false);
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -53,6 +53,6 @@ public class AwsLambdaInfraMappingTest extends WingsBaseTest {
   public void testMandatoryFields() {
     Map<String, Object> outputVariablesMap = new HashMap<>();
     awsLambdaInfraStructureMapping.applyProvisionerVariables(
-        outputVariablesMap, NodeFilteringType.AWS_AUTOSCALING_GROUP);
+        outputVariablesMap, NodeFilteringType.AWS_AUTOSCALING_GROUP, false);
   }
 }

@@ -80,7 +80,8 @@ public class AzureInfrastructureMapping extends InfrastructureMapping {
     return Utils.normalize(String.join(" - ", parts));
   }
   @Override
-  public void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType) {}
+  public void applyProvisionerVariables(
+      Map<String, Object> map, NodeFilteringType nodeFilteringType, boolean featureFlagEnabled) {}
 
   public static final class Builder {
     public transient String entityYamlPath;

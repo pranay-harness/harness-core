@@ -1,10 +1,12 @@
 package software.wings.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
@@ -146,20 +148,67 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
   }
 
   @Override
-  public void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType) {
-    switch (nodeFilteringType) {
-      case AWS_INSTANCE_FILTER: {
-        applyAwsInstanceFilters(map);
-        break;
+  public void applyProvisionerVariables(
+      Map<String, Object> map, NodeFilteringType nodeFilteringType, boolean featureFlagEnabled) {
+    if (featureFlagEnabled) {
+      applyProvisionerVariables(map);
+    } else {
+      switch (nodeFilteringType) {
+        case AWS_INSTANCE_FILTER: {
+          applyAwsInstanceFilters(map);
+          break;
+        }
+        case AWS_AUTOSCALING_GROUP: {
+          applyAutoScalingGroups(map);
+          break;
+        }
+        default: {
+          // Should never happen
+          throw new InvalidRequestException(format("Unidentified: [%s] node filtering type", nodeFilteringType.name()));
+        }
       }
-      case AWS_AUTOSCALING_GROUP: {
-        applyAutoScalingGroups(map);
-        break;
+    }
+  }
+
+  @VisibleForTesting
+  public void applyProvisionerVariables(Map<String, Object> resolvedBlueprints) {
+    if (isNotEmpty(resolvedBlueprints)) {
+      for (Map.Entry<String, Object> entry : resolvedBlueprints.entrySet()) {
+        switch (entry.getKey()) {
+          case "autoScalingGroupName":
+            setAutoScalingGroupName((String) entry.getValue());
+            break;
+          case "awsInstanceFilter":
+            AwsInstanceFilterBuilder builder = AwsInstanceFilter.builder();
+            Map<String, Object> awsInstanceFilterMap = (Map<String, Object>) entry.getValue();
+            for (Map.Entry<String, Object> awsInstanceFilterEntry : awsInstanceFilterMap.entrySet()) {
+              switch (awsInstanceFilterEntry.getKey()) {
+                case "vpcIds":
+                  builder.vpcIds(getList(awsInstanceFilterEntry.getValue()));
+                  break;
+                case "tags":
+                  getTags(awsInstanceFilterEntry.getValue(), builder);
+                  break;
+                default:
+                  throw new InvalidRequestException(
+                      format("Unknown blueprint field : [%s]", awsInstanceFilterEntry.getKey()));
+              }
+            }
+            setAwsInstanceFilter(builder.build());
+            break;
+          case "region":
+            setRegion((String) entry.getValue());
+            break;
+          default:
+            throw new InvalidRequestException(format("Unknown blueprint field : [%s]", entry.getKey()));
+        }
       }
-      default: {
-        // Should never happen
-        throw new InvalidRequestException(format("Unidentified: [%s] node filtering type", nodeFilteringType.name()));
-      }
+    }
+    if (isEmpty(getRegion())) {
+      throw new InvalidRequestException("Region is required");
+    }
+    if (isProvisionInstances() && isEmpty(getAutoScalingGroupName())) {
+      throw new InvalidRequestException("Auto scaling group is required");
     }
   }
 

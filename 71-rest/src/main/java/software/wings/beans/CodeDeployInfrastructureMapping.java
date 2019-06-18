@@ -40,7 +40,8 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
   }
 
   @Override
-  public void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType) {}
+  public void applyProvisionerVariables(
+      Map<String, Object> map, NodeFilteringType nodeFilteringType, boolean featureFlagEnabled) {}
 
   @Data
   @NoArgsConstructor
