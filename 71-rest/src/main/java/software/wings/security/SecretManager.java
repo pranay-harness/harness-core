@@ -18,11 +18,13 @@ import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.auth0.jwt.interfaces.Claim;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.app.MainConfiguration;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.Map;
@@ -30,9 +32,16 @@ import java.util.Map;
 @Slf4j
 @Singleton
 public class SecretManager {
+  // A boolean claim to denote if the user is in harness user group
+  public static final String HARNESS_USER = "harnessUser";
+  // A claim in the token to denote which environment the token is generated.
+  public static final String ENV = "env";
+
   private static final String ISSUER = "Harness Inc";
 
   @Inject private MainConfiguration configuration;
+
+  private static ObjectMapper objectMapper = new ObjectMapper();
 
   public enum JWT_CATEGORY {
     MULTIFACTOR_AUTH(3 * 60 * 1000), // 3 mins
@@ -105,6 +114,26 @@ public class SecretManager {
       logger.info("Failed to verify JWT token {} in category {} with error: {}", jwtToken, category, e.getMessage());
       throw new WingsException(EXPIRED_TOKEN, USER, e).addParam("message", "Token expired");
     }
+  }
+
+  HarnessUserAccountActions getHarnessUserAccountActions(Map<String, Claim> claims) {
+    Claim claim = claims.get(HARNESS_USER);
+    if (claim != null && !claim.isNull() && claim.asString().length() > 0) {
+      try {
+        return deserializeAccountActions(claim.asString());
+      } catch (IOException e) {
+        logger.error("Failed to deserialize the harness user account actions data object from token", e);
+      }
+    }
+    return null;
+  }
+
+  public static String serializeAccountActions(HarnessUserAccountActions harnessUserAccountActions) throws IOException {
+    return objectMapper.writeValueAsString(harnessUserAccountActions);
+  }
+
+  static HarnessUserAccountActions deserializeAccountActions(String serializedAccountActions) throws IOException {
+    return objectMapper.readValue(serializedAccountActions, HarnessUserAccountActions.class);
   }
 
   public String generateJWTToken(Map<String, String> claims, JWT_CATEGORY category) {

@@ -18,7 +18,6 @@ import software.wings.security.annotations.IdentityServiceAuth;
 import software.wings.security.authentication.AccountSettingsResponse;
 import software.wings.security.authentication.AuthenticationManager;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.UserService;
 
 import java.io.UnsupportedEncodingException;
@@ -46,15 +45,13 @@ public class IdentityServiceResource {
   private AuthenticationManager authenticationManager;
   private UserService userService;
   private AccountService accountService;
-  private HarnessUserGroupService harnessUserGroupService;
 
   @Inject
-  public IdentityServiceResource(AuthenticationManager authenticationManager, UserService userService,
-      AccountService accountService, HarnessUserGroupService harnessUserGroupService) {
+  public IdentityServiceResource(
+      AuthenticationManager authenticationManager, UserService userService, AccountService accountService) {
     this.authenticationManager = authenticationManager;
     this.userService = userService;
     this.accountService = accountService;
-    this.harnessUserGroupService = harnessUserGroupService;
   }
 
   @GET

@@ -62,6 +62,7 @@ public class AuthResponseFilter implements ContainerResponseFilter {
   public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
     GlobalContextManager.unset();
     UserThreadLocal.unset(); // clear user object from thread local
+    HarnessUserThreadLocal.unset(); // clean the isHarnessUser flag from thread local
     invalidateAccountCacheIfNeeded(requestContext);
   }
 
