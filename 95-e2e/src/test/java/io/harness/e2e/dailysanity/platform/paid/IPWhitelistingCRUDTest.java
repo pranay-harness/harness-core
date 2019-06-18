@@ -1,12 +1,12 @@
-package io.harness.functional.ipwhitelisting;
+package io.harness.e2e.dailysanity.platform.paid;
 
 import static io.harness.rule.OwnerRule.SWAMY;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
 
-import io.harness.category.element.FunctionalTests;
-import io.harness.functional.AbstractFunctionalTest;
+import io.harness.category.element.E2ETests;
+import io.harness.e2e.AbstractE2ETest;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.testframework.restutils.IPWhitelistingRestUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -16,10 +16,10 @@ import software.wings.beans.security.access.Whitelist;
 import software.wings.beans.security.access.WhitelistStatus;
 
 @Slf4j
-public class IPWhitelistingCRUD extends AbstractFunctionalTest {
+public class IPWhitelistingCRUDTest extends AbstractE2ETest {
   @Test()
   @Owner(emails = SWAMY, resent = false)
-  @Category(FunctionalTests.class)
+  @Category(E2ETests.class)
   public void testIPWhitelistingCRUD() {
     final String IP_WHITELIST_VAL = "0.0.0.0";
     logger.info("Starting the IPWhitelisting CRUD test");
