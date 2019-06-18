@@ -86,12 +86,12 @@ public class PasswordBasedAuthHandler implements AuthHandler {
   private void updateFailedLoginAttemptCount(User user) {
     int newCountOfFailedLoginAttempts = user.getUserLockoutInfo().getNumberOfFailedLoginAttempts() + 1;
     loginSettingsService.updateUserLockoutInfo(
-        user, authenticationUtils.getPrimaryAccount(user), newCountOfFailedLoginAttempts);
+        user, accountService.get(user.getDefaultAccountId()), newCountOfFailedLoginAttempts);
   }
 
   private AuthenticationResponse getAuthenticationResponse(User user) {
     checkUserLockoutStatus(user);
-    loginSettingsService.updateUserLockoutInfo(user, authenticationUtils.getPrimaryAccount(user), 0);
+    loginSettingsService.updateUserLockoutInfo(user, accountService.get(user.getDefaultAccountId()), 0);
     return new AuthenticationResponse(user);
   }
 

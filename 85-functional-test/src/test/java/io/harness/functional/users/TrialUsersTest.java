@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.SettingAttribute;
@@ -61,6 +62,7 @@ public class TrialUsersTest extends AbstractFunctionalTest {
   @Test()
   @Owner(emails = SWAMY, resent = false)
   @Category(FunctionalTests.class)
+  @Ignore("We have migrated to new API's. Ignoring as per discussion with Swamy and Nataraja")
   public void verifyTrialUserSignup() throws IOException, MessagingException {
     String domainName = "@harness.mailinator.com";
     String emailId = TestUtils.generateUniqueInboxId();
