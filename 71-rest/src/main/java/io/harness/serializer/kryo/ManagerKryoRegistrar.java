@@ -434,6 +434,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricDataValue;
 import software.wings.service.impl.appdynamics.AppdynamicsSetupTestNodeData;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
+import software.wings.service.impl.aws.model.AwsAmiAllPhaseRollbackData;
 import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
 import software.wings.service.impl.aws.model.AwsAmiRequest;
 import software.wings.service.impl.aws.model.AwsAmiRequest.AwsAmiRequestType;
@@ -1271,5 +1272,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(Artifact.Status.class, 7194);
     kryo.register(ArtifactVariable.class, 7195);
     kryo.register(UserLockoutInfo.class, 7196);
+    kryo.register(AwsAmiAllPhaseRollbackData.class, 7197);
   }
 }

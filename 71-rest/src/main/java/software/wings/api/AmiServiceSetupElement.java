@@ -18,9 +18,6 @@ import software.wings.sm.ExecutionContext;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by anubhaw on 12/20/17.
- */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder

@@ -15,12 +15,12 @@ import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.TaskType.AWS_AMI_ASYNC_TASK;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.common.Constants.ASG_COMMAND_NAME;
+import static software.wings.service.impl.aws.model.AwsConstants.PHASE_PARAM;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import com.amazonaws.services.ec2.model.Instance;
 import com.github.reinert.jjschema.Attributes;
@@ -34,10 +34,8 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
-import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AwsAmiDeployStateExecutionData;
 import software.wings.api.ContainerServiceData;
@@ -83,6 +81,7 @@ import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -100,12 +99,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Created by anubhaw on 12/19/17.
- */
 @Slf4j
 public class AwsAmiServiceDeployState extends State {
   @Attributes(title = "Desired Instances (cumulative)") private int instanceCount;
@@ -117,28 +112,22 @@ public class AwsAmiServiceDeployState extends State {
 
   @Attributes(title = "Command") @DefaultValue(ASG_COMMAND_NAME) private String commandName = ASG_COMMAND_NAME;
 
-  @Inject @Transient protected transient AwsHelperService awsHelperService;
-  @Inject @Transient protected transient SettingsService settingsService;
-  @Inject @Transient protected transient ServiceResourceService serviceResourceService;
-  @Inject @Transient protected transient ServiceTemplateService serviceTemplateService;
-  @Inject @Transient protected transient InfrastructureMappingService infrastructureMappingService;
-  @Inject @Transient protected transient ArtifactStreamService artifactStreamService;
-  @Inject @Transient protected transient SecretManager secretManager;
-  @Inject @Transient protected transient EncryptionService encryptionService;
-  @Inject @Transient protected transient ActivityService activityService;
-  @Inject @Transient protected transient DelegateService delegateService;
-  @Inject @Transient protected transient LogService logService;
-  @Inject @Transient private transient HostService hostService;
-  @Inject @Transient private transient AwsUtils awsUtils;
-  @Inject @Transient private transient AwsAsgHelperServiceManager awsAsgHelperServiceManager;
-  @Inject @Named("waitStateResumer") @Transient private ScheduledExecutorService executorService;
-  @Transient @Inject private transient WaitNotifyEngine waitNotifyEngine;
+  @Inject protected transient AwsHelperService awsHelperService;
+  @Inject protected transient SettingsService settingsService;
+  @Inject protected transient ServiceResourceService serviceResourceService;
+  @Inject protected transient ServiceTemplateService serviceTemplateService;
+  @Inject protected transient InfrastructureMappingService infrastructureMappingService;
+  @Inject protected transient ArtifactStreamService artifactStreamService;
+  @Inject protected transient SecretManager secretManager;
+  @Inject protected transient EncryptionService encryptionService;
+  @Inject protected transient ActivityService activityService;
+  @Inject protected transient DelegateService delegateService;
+  @Inject protected transient LogService logService;
+  @Inject protected transient SweepingOutputService sweepingOutputService;
+  @Inject private transient HostService hostService;
+  @Inject private transient AwsUtils awsUtils;
+  @Inject private transient AwsAsgHelperServiceManager awsAsgHelperServiceManager;
 
-  /**
-   * Instantiates a new state.
-   *
-   * @param name the name
-   */
   public AwsAmiServiceDeployState(String name) {
     this(name, StateType.AWS_AMI_SERVICE_DEPLOY.name());
   }
@@ -150,14 +139,7 @@ public class AwsAmiServiceDeployState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     try {
-      Activity activity = crateActivity(context);
-      AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData = prepareStateExecutionData(context, activity);
-      return anExecutionResponse()
-          .withAsync(true)
-          .withStateExecutionData(awsAmiDeployStateExecutionData)
-          .withExecutionStatus(ExecutionStatus.SUCCESS)
-          .addCorrelationIds(activity.getUuid())
-          .build();
+      return executeInternal(context);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -221,8 +203,9 @@ public class AwsAmiServiceDeployState extends State {
     return activityService.save(build);
   }
 
-  protected AwsAmiDeployStateExecutionData prepareStateExecutionData(ExecutionContext context, Activity activity) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+  protected ExecutionResponse executeInternal(ExecutionContext context) {
+    Activity activity = crateActivity(context);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
     AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
     boolean blueGreen = serviceSetupElement.isBlueGreen();
 
@@ -305,7 +288,13 @@ public class AwsAmiServiceDeployState extends State {
         newAsgFinalDesiredCount, newDesiredCapacities, serviceSetupElement.getAutoScalingSteadyStateTimeout(),
         infrastructureMapping.getEnvId(), serviceSetupElement.getMinInstances(), serviceSetupElement.getMaxInstances(),
         serviceSetupElement.getPreDeploymentData(), classicLbs, targetGroupArns, false);
-    return awsAmiDeployStateExecutionData;
+
+    return anExecutionResponse()
+        .withAsync(true)
+        .withStateExecutionData(awsAmiDeployStateExecutionData)
+        .withExecutionStatus(ExecutionStatus.SUCCESS)
+        .addCorrelationIds(activity.getUuid())
+        .build();
   }
 
   private List<AwsAmiResizeData> getNewDesiredCounts(
