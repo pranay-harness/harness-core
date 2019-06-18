@@ -33,7 +33,8 @@ public enum StencilCategory {
   PROVISIONERS(0),
   SCRIPTS,
   SUB_WORKFLOW(100, true),
-  VERIFICATIONS(2);
+  VERIFICATIONS(2),
+  ECS("Ecs", 0);
 
   @Getter boolean hidden;
 
