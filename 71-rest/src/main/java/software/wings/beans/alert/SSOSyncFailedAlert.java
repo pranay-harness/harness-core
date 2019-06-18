@@ -21,7 +21,6 @@ public class SSOSyncFailedAlert implements AlertData {
   @NotNull String accountId;
   @NotNull String ssoId;
   @NotNull String message;
-  @NotNull String errorMessage;
 
   @Override
   public boolean matches(AlertData alertData) {

@@ -79,21 +79,25 @@ public class AccountPasswordExpirationJob implements Job {
       Account account;
       while (userIterator.hasNext()) {
         user = userIterator.next();
-        account = accountService.get(user.getDefaultAccountId());
-        LoginSettings loginSettings = loginSettingsService.getLoginSettings(account.getUuid());
-        PasswordExpirationPolicy passwordExpirationPolicy = loginSettings.getPasswordExpirationPolicy();
+        try {
+          account = accountService.get(user.getDefaultAccountId());
+          LoginSettings loginSettings = loginSettingsService.getLoginSettings(account.getUuid());
+          PasswordExpirationPolicy passwordExpirationPolicy = loginSettings.getPasswordExpirationPolicy();
 
-        // Mails will only be sent if the login mechanism of the account is USER_PASSWORD.
-        if (account.getAuthenticationMechanism() == null
-            || account.getAuthenticationMechanism() == AuthenticationMechanism.USER_PASSWORD) {
-          if (!passwordExpirationPolicy.isEnabled()) {
-            continue;
+          // Mails will only be sent if the login mechanism of the account is USER_PASSWORD.
+          if (account.getAuthenticationMechanism() == null
+              || account.getAuthenticationMechanism() == AuthenticationMechanism.USER_PASSWORD) {
+            if (!passwordExpirationPolicy.isEnabled()) {
+              continue;
+            }
+            checkForPasswordExpiration(passwordExpirationPolicy, user);
+          } else {
+            logger.info(
+                "Skipping AccountPasswordExpirationCheckJob for accountId {} because auth mechanism is not User password",
+                account.getUuid());
           }
-          checkForPasswordExpiration(passwordExpirationPolicy, user);
-        } else {
-          logger.info(
-              "Skipping AccountPasswordExpirationCheckJob for accountId {} because auth mechanism is not User password",
-              account.getUuid());
+        } catch (Exception ex) {
+          logger.error(String.format("CheckAccountPasswordExpiration failed for User: %s", user.getEmail()), ex);
         }
       }
     } catch (Exception ex) {
@@ -102,6 +106,7 @@ public class AccountPasswordExpirationJob implements Job {
   }
 
   private void checkForPasswordExpiration(PasswordExpirationPolicy passwordExpirationPolicy, User user) {
+    logger.info(String.format("AccountPasswordExpirationJob: processing user: %s", user.getEmail()));
     long passwordChangedAt = user.getPasswordChangedAt();
 
     // for someone who has never changed his password, this value will be 0.

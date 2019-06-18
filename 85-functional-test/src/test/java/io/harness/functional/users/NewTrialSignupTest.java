@@ -22,6 +22,7 @@ import io.harness.testframework.framework.utils.TestUtils;
 import io.harness.testframework.restutils.UserRestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.SettingAttribute;
@@ -54,6 +55,7 @@ public class NewTrialSignupTest extends AbstractFunctionalTest {
   @Test()
   @Owner(emails = RAMA, resent = false)
   @Category(FunctionalTests.class)
+  @Ignore("We have migrated to new API's. Ignoring as per discussion with Swamy and Nataraja")
   public void verifyTrialUserSignup() {
     UserInvite invite = constructInvite("password");
     Boolean isTrialInviteDone = urUtil.createNewTrialInvite(invite);

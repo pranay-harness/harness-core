@@ -1186,7 +1186,8 @@ public class UserServiceImpl implements UserService {
       throw new InvalidRequestException("User name/password is not provided", USER);
     }
 
-    //    validatePasswordStrength(userInvite.getPassword(), accountService.get(userInvite.getAccountId()));
+    loginSettingsService.verifyPasswordStrength(
+        accountService.get(userInvite.getAccountId()), userInvite.getPassword());
 
     User existingUser = getUserByEmail(existingInvite.getEmail());
     if (existingUser == null) {
@@ -1576,7 +1577,7 @@ public class UserServiceImpl implements UserService {
     } else if (user.getPasswordChangedAt() > tokenIssuedAt) {
       throw new WingsException(EXPIRED_TOKEN, USER);
     }
-    validatePasswordStrength(email, password);
+    loginSettingsService.verifyPasswordStrength(accountService.get(user.getDefaultAccountId()), password);
     String hashed = hashpw(new String(password), BCrypt.gensalt());
     wingsPersistence.update(user,
         wingsPersistence.createUpdateOperations(User.class)
@@ -1584,23 +1585,6 @@ public class UserServiceImpl implements UserService {
             .set("passwordExpired", false)
             .set("passwordChangedAt", System.currentTimeMillis()));
     executorService.submit(() -> authService.invalidateAllTokensForUser(user.getUuid()));
-  }
-
-  private void validatePasswordStrength(String email, char[] password) {
-    User user = getUserByEmail(email);
-    List<Account> accounts = user.getAccounts();
-    if (accounts.size() == 1) {
-      validatePasswordStrength(password, accounts.get(0));
-    } else {
-      // if not harness user, and is part of multiple accounts, the check is not applicable
-      if (email.endsWith("harness.io")) {
-        Account harnessAccount = getHarnessIoAccountForUser(accounts);
-        // harness users - apply Harness.io account settings.
-        if (harnessAccount != null) {
-          validatePasswordStrength(password, harnessAccount);
-        }
-      }
-    }
   }
 
   private Account getHarnessIoAccountForUser(List<Account> accounts) {
@@ -1611,10 +1595,6 @@ public class UserServiceImpl implements UserService {
       }
     }
     return harnessAccount;
-  }
-
-  private void validatePasswordStrength(char[] password, Account account) {
-    loginSettingsService.verifyPasswordStrength(account, password);
   }
 
   @Override
@@ -1655,7 +1635,7 @@ public class UserServiceImpl implements UserService {
 
   private void sendResetPasswordEmail(User user, String token) {
     try {
-      String resetPasswordUrl = buildAbsoluteUrl("/reset-password/" + token);
+      String resetPasswordUrl = getResetPasswordUrl(token, user);
 
       Map<String, String> templateModel = new HashMap<>();
       templateModel.put("name", user.getName());
@@ -1675,6 +1655,11 @@ public class UserServiceImpl implements UserService {
     } catch (URISyntaxException e) {
       logger.error("Reset password email couldn't be sent", e);
     }
+  }
+
+  private String getResetPasswordUrl(String token, User user) throws URISyntaxException {
+    String accountIdParam = "?accountId=" + user.getDefaultAccountId();
+    return buildAbsoluteUrl("/reset-password/" + token + accountIdParam);
   }
 
   /* (non-Javadoc)
@@ -1798,7 +1783,7 @@ public class UserServiceImpl implements UserService {
   @Override
   public User unlockUser(String email, String accountId) {
     User user = getUserByEmail(email);
-    if (!getPrimaryAccount(user).getUuid().equals(accountId)) {
+    if (!user.getDefaultAccountId().equals(accountId)) {
       logger.error(String.format("Unlocking user: [%s] in account: [%s] failed because of insufficient permission",
                        email, accountId),
           USER);
@@ -2486,7 +2471,7 @@ public class UserServiceImpl implements UserService {
 
   private void sendPasswordExpirationWarningMail(User user, String token, Integer passExpirationDays) {
     try {
-      String resetPasswordUrl = buildAbsoluteUrl("/reset-password/" + token);
+      String resetPasswordUrl = getResetPasswordUrl(token, user);
 
       Map<String, String> templateModel = new HashMap<>();
       templateModel.put("name", user.getName());
@@ -2530,7 +2515,7 @@ public class UserServiceImpl implements UserService {
 
   private void sendPasswordExpirationMail(User user, String token) {
     try {
-      String resetPasswordUrl = buildAbsoluteUrl("/reset-password/" + token);
+      String resetPasswordUrl = getResetPasswordUrl(token, user);
 
       Map<String, String> templateModel = new HashMap<>();
       templateModel.put("name", user.getName());
@@ -2604,7 +2589,7 @@ public class UserServiceImpl implements UserService {
 
   private Account getAccountFromResetPasswordToken(String resetPasswordToken) {
     User user = verifyJWTToken(resetPasswordToken, JWT_CATEGORY.PASSWORD_SECRET);
-    return getPrimaryAccount(user);
+    return accountService.get(user.getDefaultAccountId());
   }
 
   @Override
