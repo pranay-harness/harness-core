@@ -19,11 +19,11 @@ import java.util.Arrays;
 public class StatsStubDataHelper {
   public static QLData getStackedTimeAggregatedData() {
     QLDataPoint dataPoint1 = QLDataPoint.builder()
-                                 .key(QLReference.builder().id("id1").name("name1").type("SERVICE").build())
+                                 .key(QLReference.builder().id("id1").name("name1").type("SERVICEID").build())
                                  .value(Integer.valueOf(100))
                                  .build();
     QLDataPoint dataPoint2 = QLDataPoint.builder()
-                                 .key(QLReference.builder().id("id2").name("name2").type("SERVICE").build())
+                                 .key(QLReference.builder().id("id2").name("name2").type("SERVICEID").build())
                                  .value(Integer.valueOf(200))
                                  .build();
     QLStackedTimeSeriesDataPoint stackedTimeDataPoint1 = QLStackedTimeSeriesDataPoint.builder()
@@ -32,15 +32,15 @@ public class StatsStubDataHelper {
                                                              .build();
 
     QLDataPoint dataPoint3 = QLDataPoint.builder()
-                                 .key(QLReference.builder().id("id3").name("name3").type("SERVICE").build())
+                                 .key(QLReference.builder().id("id3").name("name3").type("SERVICEID").build())
                                  .value(Integer.valueOf(450))
                                  .build();
     QLDataPoint dataPoint4 = QLDataPoint.builder()
-                                 .key(QLReference.builder().id("id4").name("name4").type("SERVICE").build())
+                                 .key(QLReference.builder().id("id4").name("name4").type("SERVICEID").build())
                                  .value(Integer.valueOf(150))
                                  .build();
     QLDataPoint dataPoint5 = QLDataPoint.builder()
-                                 .key(QLReference.builder().id("id5").name("name5").type("SERVICE").build())
+                                 .key(QLReference.builder().id("id5").name("name5").type("SERVICEID").build())
                                  .value(Integer.valueOf(35))
                                  .build();
     QLStackedTimeSeriesDataPoint stackedTimeDataPoint2 = QLStackedTimeSeriesDataPoint.builder()
@@ -56,11 +56,11 @@ public class StatsStubDataHelper {
 
   public static QLData getStackedAggregatedData() {
     QLDataPoint dataPoint1 = QLDataPoint.builder()
-                                 .key(QLReference.builder().id("id1").name("name1").type("SERVICE").build())
+                                 .key(QLReference.builder().id("id1").name("name1").type("SERVICEID").build())
                                  .value(Integer.valueOf(100))
                                  .build();
     QLDataPoint dataPoint2 = QLDataPoint.builder()
-                                 .key(QLReference.builder().id("id2").name("name2").type("SERVICE").build())
+                                 .key(QLReference.builder().id("id2").name("name2").type("SERVICEID").build())
                                  .value(Integer.valueOf(200))
                                  .build();
     QLStackedDataPoint stackedDataPoint1 =
@@ -70,15 +70,15 @@ public class StatsStubDataHelper {
             .build();
 
     QLDataPoint dataPoint3 = QLDataPoint.builder()
-                                 .key(QLReference.builder().id("id3").name("name3").type("SERVICE").build())
+                                 .key(QLReference.builder().id("id3").name("name3").type("SERVICEID").build())
                                  .value(Integer.valueOf(450))
                                  .build();
     QLDataPoint dataPoint4 = QLDataPoint.builder()
-                                 .key(QLReference.builder().id("id4").name("name4").type("SERVICE").build())
+                                 .key(QLReference.builder().id("id4").name("name4").type("SERVICEID").build())
                                  .value(Integer.valueOf(150))
                                  .build();
     QLDataPoint dataPoint5 = QLDataPoint.builder()
-                                 .key(QLReference.builder().id("id5").name("name5").type("SERVICE").build())
+                                 .key(QLReference.builder().id("id5").name("name5").type("SERVICEID").build())
                                  .value(Integer.valueOf(35))
                                  .build();
     QLStackedDataPoint stackedDataPoint2 =
@@ -110,19 +110,19 @@ public class StatsStubDataHelper {
 
   public static QLData getAggregatedData() {
     QLDataPoint dataPoint1 = QLDataPoint.builder()
-                                 .key(QLReference.builder().id("id1").name("name1").type("SERVICE").build())
+                                 .key(QLReference.builder().id("id1").name("name1").type("SERVICEID").build())
                                  .value(100)
                                  .build();
     QLDataPoint dataPoint2 = QLDataPoint.builder()
-                                 .key(QLReference.builder().id("id2").name("name2").type("SERVICE").build())
+                                 .key(QLReference.builder().id("id2").name("name2").type("SERVICEID").build())
                                  .value(200.223)
                                  .build();
     QLDataPoint dataPoint3 = QLDataPoint.builder()
-                                 .key(QLReference.builder().id("id3").name("name3").type("SERVICE").build())
+                                 .key(QLReference.builder().id("id3").name("name3").type("SERVICEID").build())
                                  .value(300L)
                                  .build();
     QLDataPoint dataPoint4 = QLDataPoint.builder()
-                                 .key(QLReference.builder().id("id4").name("name4").type("SERVICE").build())
+                                 .key(QLReference.builder().id("id4").name("name4").type("SERVICEID").build())
                                  .value(400)
                                  .build();
     return QLAggregatedData.builder().dataPoints(Arrays.asList(dataPoint1, dataPoint2, dataPoint3, dataPoint4)).build();
@@ -130,7 +130,7 @@ public class StatsStubDataHelper {
 
   public static QLData getSinglePointData() {
     QLDataPoint dataPoint1 = QLDataPoint.builder()
-                                 .key(QLReference.builder().id("id1").name("name1").type("SERVICE").build())
+                                 .key(QLReference.builder().id("id1").name("name1").type("SERVICEID").build())
                                  .value(Integer.valueOf(100))
                                  .build();
     return QLSinglePointData.builder().dataPoint(dataPoint1).build();
