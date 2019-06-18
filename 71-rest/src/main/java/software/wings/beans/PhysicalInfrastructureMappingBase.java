@@ -34,7 +34,7 @@ public abstract class PhysicalInfrastructureMappingBase extends InfrastructureMa
 
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
         String infraMappingType, String deploymentType, String computeProviderName, String name, List<String> hostNames,
-        String loadBalancer, List<Host> hosts, Map<String, String> blueprints) {
+        String loadBalancer, List<Host> hosts, Map<String, Object> blueprints) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
           computeProviderName, blueprints);
       this.hostNames = hostNames;

@@ -275,7 +275,7 @@ public class AzureInfrastructureMapping extends InfrastructureMapping {
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
         String infraMappingType, String deploymentType, String computeProviderName, String subscriptionId,
-        String resourceGroup, List<AzureTag> tags, Map<String, String> blueprints) {
+        String resourceGroup, List<AzureTag> tags, Map<String, Object> blueprints) {
       super(type, harnessApiVersion, serviceName, infraMappingType, deploymentType, computeProviderType,
           computeProviderName, blueprints);
       this.subscriptionId = subscriptionId;

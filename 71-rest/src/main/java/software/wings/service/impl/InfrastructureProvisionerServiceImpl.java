@@ -95,6 +95,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import javax.validation.Valid;
@@ -501,17 +502,17 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
   @VisibleForTesting
   public Map<String, Object> resolveBlueprints(
-      Map<String, Object> contextMap, Map<String, String> blueprints, String infraMappingName) {
+      Map<String, Object> contextMap, Map<String, Object> blueprints, String infraMappingName) {
     if (isEmpty(blueprints)) {
       throw new InvalidRequestException(
           "Invalid Configuration. Blueprints does not exists for service infra \"" + infraMappingName + "\"");
     }
     Map<String, Object> resolvedBlueprints = new HashMap<>(blueprints.size());
 
-    for (Map.Entry<String, String> blueprint : blueprints.entrySet()) {
+    for (Entry<String, Object> blueprint : blueprints.entrySet()) {
       Object evaluated;
       try {
-        evaluated = evaluator.evaluate(blueprint.getValue(), contextMap);
+        evaluated = resolveBlueprint(blueprint.getValue(), contextMap);
       } catch (JexlException.Variable ex) {
         throw new InvalidRequestException(
             "Unable to resolve blueprint \"" + blueprint.getValue() + "\" from outputs", USER);
@@ -519,6 +520,23 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       resolvedBlueprints.put(blueprint.getKey(), evaluated);
     }
     return resolvedBlueprints;
+  }
+
+  private Object resolveBlueprint(Object toBeResolved, Map<String, Object> contextMap) {
+    Object resolved;
+    if (toBeResolved instanceof String) {
+      resolved = evaluator.evaluate((String) toBeResolved, contextMap);
+    } else if (toBeResolved instanceof Map) {
+      Map<String, Object> toBeResolvedMap = (Map<String, Object>) toBeResolved;
+      resolved = new HashMap<String, Object>();
+      for (Map.Entry<String, Object> toBeResolvedMapEntry : toBeResolvedMap.entrySet()) {
+        Object resolvedEntry = resolveBlueprint(toBeResolvedMapEntry.getValue(), contextMap);
+        ((HashMap) resolved).put(toBeResolvedMapEntry.getKey(), resolvedEntry);
+      }
+    } else {
+      throw new InvalidRequestException("Unknown Blueprint value to be resolved : \"" + toBeResolved + "\"");
+    }
+    return resolved;
   }
 
   @Override

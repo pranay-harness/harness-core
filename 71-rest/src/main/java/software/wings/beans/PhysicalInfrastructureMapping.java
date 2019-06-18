@@ -99,7 +99,7 @@ public class PhysicalInfrastructureMapping extends PhysicalInfrastructureMapping
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
         String infraMappingType, String deploymentType, String computeProviderName, String name, List<String> hostNames,
-        String loadBalancer, String connection, List<Host> hosts, Map<String, String> blueprints) {
+        String loadBalancer, String connection, List<Host> hosts, Map<String, Object> blueprints) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
           computeProviderName, name, hostNames, loadBalancer, hosts, blueprints);
       this.connection = connection;

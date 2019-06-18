@@ -323,7 +323,7 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
         String infraMappingType, String deploymentType, String computeProviderName, String region,
         String autoScalingGroupName, List<String> classicLoadBalancers, List<String> targetGroupArns,
         String hostNameConvention, List<String> stageClassicLoadBalancers, List<String> stageTargetGroupArns,
-        Map<String, String> blueprints) {
+        Map<String, Object> blueprints) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
           computeProviderName, blueprints);
       this.region = region;

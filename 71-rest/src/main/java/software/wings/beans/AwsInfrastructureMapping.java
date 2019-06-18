@@ -1,8 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -20,7 +18,9 @@ import io.harness.exception.WingsException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.annotation.Blueprint;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AwsInstanceFilter.AwsInstanceFilterBuilder;
 import software.wings.beans.AwsInstanceFilter.Tag;
@@ -40,18 +40,19 @@ import java.util.Optional;
  * Created by anubhaw on 1/10/17.
  */
 @JsonTypeName("AWS_SSH")
+@FieldNameConstants(innerTypeName = "AwsInfrastructureMappingKeys")
 public class AwsInfrastructureMapping extends InfrastructureMapping {
   private String restrictionType;
   private String restrictionExpression;
-  private String region;
+  @Blueprint private String region;
   private String hostConnectionAttrs;
   private String loadBalancerId;
   @Transient private String loadBalancerName;
   @Deprecated private String customName;
   private boolean usePublicDns;
   private boolean provisionInstances;
-  private AwsInstanceFilter awsInstanceFilter;
-  private String autoScalingGroupName;
+  @Blueprint private AwsInstanceFilter awsInstanceFilter;
+  @Blueprint private String autoScalingGroupName;
   private boolean setDesiredCapacity;
   private int desiredCapacity;
   private String hostNameConvention;
@@ -214,7 +215,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
         String infraMappingType, String deploymentType, String computeProviderName, String name, String restrictions,
         String expression, String region, String provisionerName, String connectionType, String loadBalancer,
         boolean usePublicDns, boolean provisionInstances, String autoScalingGroup, int desiredCapacity,
-        List<String> vpcs, List<NameValuePair.Yaml> tags, String hostNameConvention, Map<String, String> blueprints) {
+        List<String> vpcs, List<NameValuePair.Yaml> tags, String hostNameConvention, Map<String, Object> blueprints) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
           computeProviderName, blueprints);
       this.restrictions = restrictions;
@@ -230,28 +231,6 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
       this.vpcs = vpcs;
       this.tags = tags;
       this.hostNameConvention = hostNameConvention;
-    }
-  }
-
-  /**
-   * Validate.
-   */
-  public void validate() {
-    if (getProvisionerId() == null) {
-      if (provisionInstances) {
-        if (isEmpty(autoScalingGroupName)) {
-          throw new WingsException(INVALID_ARGUMENT)
-              .addParam("args", "Auto Scaling group must not be empty when provision instances is true.");
-        }
-        if (setDesiredCapacity && desiredCapacity <= 0) {
-          throw new WingsException(INVALID_ARGUMENT).addParam("args", "Desired count must be greater than zero.");
-        }
-      } else {
-        if (awsInstanceFilter == null) {
-          throw new WingsException(INVALID_ARGUMENT)
-              .addParam("args", "Instance filter must not be null when provision instances is false.");
-        }
-      }
     }
   }
 

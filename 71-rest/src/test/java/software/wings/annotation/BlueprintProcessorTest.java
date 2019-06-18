@@ -10,13 +10,14 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class BlueprintProcessorTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testValidateKeys() {
     AwsLambdaInfraStructureMapping awsLambdaInfraStructureMapping = new AwsLambdaInfraStructureMapping();
-    HashMap<String, String> blueprints = new HashMap<>();
+    Map<String, Object> blueprints = new HashMap<>();
     BlueprintProcessor.validateKeys(awsLambdaInfraStructureMapping, blueprints);
     blueprints.put("abc", "def");
     assertThatThrownBy(() -> BlueprintProcessor.validateKeys(awsLambdaInfraStructureMapping, blueprints))

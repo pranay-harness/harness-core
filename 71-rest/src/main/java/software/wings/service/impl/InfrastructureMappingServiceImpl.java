@@ -75,6 +75,7 @@ import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.AwsInfrastructureMapping.AwsInfrastructureMappingKeys;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.AwsLambdaInfraStructureMapping.AwsLambdaInfraStructureMappingKeys;
 import software.wings.beans.AzureConfig;
@@ -247,8 +248,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       return;
     }
 
+    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infraMapping.getAccountId())) {
+      validateProvisionerConfig(infraMapping);
+    }
+
     if (infraMapping instanceof AwsInfrastructureMapping) {
-      ((AwsInfrastructureMapping) infraMapping).validate();
+      validateAwsInfraMapping((AwsInfrastructureMapping) infraMapping);
     }
 
     if (infraMapping instanceof EcsInfrastructureMapping) {
@@ -299,6 +304,17 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (infraMapping instanceof AwsLambdaInfraStructureMapping) {
       validateAwsLambdaInfrastructureMapping((AwsLambdaInfraStructureMapping) infraMapping);
     }
+  }
+
+  @VisibleForTesting
+  public void validateProvisionerConfig(InfrastructureMapping infraMapping) {
+    if (isEmpty(infraMapping.getProvisionerId())) {
+      return;
+    }
+    if (isEmpty(infraMapping.getBlueprints())) {
+      throw new InvalidRequestException("Blueprints can't be empty with Provisioner", USER);
+    }
+    BlueprintProcessor.validateKeys(infraMapping, infraMapping.getBlueprints());
   }
 
   private String fetchReleaseName(InfrastructureMapping infraMapping) {
@@ -516,7 +532,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
       // BLUEPRINT
       if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infrastructureMapping.getAccountId())) {
-        Map<String, String> blueprints = infrastructureMapping.getBlueprints();
+        Map<String, Object> blueprints = infrastructureMapping.getBlueprints();
         if (blueprints == null) {
           fieldsToRemove.add(InfrastructureMappingKeys.blueprints);
         } else {
@@ -713,6 +729,43 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+    }
+  }
+
+  @VisibleForTesting
+  public void validateAwsInfraMapping(AwsInfrastructureMapping infraMapping) {
+    if (infraMapping.getProvisionerId() == null) {
+      if (infraMapping.isProvisionInstances()) {
+        if (isEmpty(infraMapping.getAutoScalingGroupName())) {
+          throw new WingsException(INVALID_ARGUMENT)
+              .addParam("args", "Auto Scaling group must not be empty when provision instances is true.");
+        }
+        if (infraMapping.isSetDesiredCapacity() && infraMapping.getDesiredCapacity() <= 0) {
+          throw new WingsException(INVALID_ARGUMENT).addParam("args", "Desired count must be greater than zero.");
+        }
+      } else {
+        if (infraMapping.getAwsInstanceFilter() == null) {
+          throw new WingsException(INVALID_ARGUMENT)
+              .addParam("args", "Instance filter must not be null when provision instances is false.");
+        }
+      }
+    } else {
+      if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infraMapping.getAccountId())) {
+        if (infraMapping.isProvisionInstances()) {
+          if (infraMapping.getBlueprints().get(AwsInfrastructureMappingKeys.autoScalingGroupName) == null) {
+            throw new InvalidRequestException(
+                "Auto Scaling group Blueprint must not be empty when provision instances is true.", USER);
+          }
+          if (infraMapping.isSetDesiredCapacity() && infraMapping.getDesiredCapacity() <= 0) {
+            throw new WingsException(INVALID_ARGUMENT).addParam("args", "Desired count must be greater than zero.");
+          }
+        } else {
+          if (infraMapping.getBlueprints().get(AwsInfrastructureMappingKeys.awsInstanceFilter) == null) {
+            throw new WingsException(INVALID_ARGUMENT)
+                .addParam("args", "Instance filter Blueprint must not be empty when provision instances is false.");
+          }
+        }
+      }
     }
   }
 
@@ -925,12 +978,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           throw new InvalidRequestException("Blueprints can't be empty with provisioner", USER);
         }
         BlueprintProcessor.validateKeys(lambdaInfraStructureMapping, lambdaInfraStructureMapping.getBlueprints());
-        if (StringUtils.isEmpty(
-                lambdaInfraStructureMapping.getBlueprints().get(AwsLambdaInfraStructureMappingKeys.region))) {
+        if (lambdaInfraStructureMapping.getBlueprints().get(AwsLambdaInfraStructureMappingKeys.region) == null) {
           throw new InvalidRequestException("Blueprint Region is mandatory", USER);
         }
-        if (StringUtils.isEmpty(
-                lambdaInfraStructureMapping.getBlueprints().get(AwsLambdaInfraStructureMappingKeys.role))) {
+        if (lambdaInfraStructureMapping.getBlueprints().get(AwsLambdaInfraStructureMappingKeys.role) == null) {
           throw new InvalidRequestException("Blueprint IAM Role is mandatory", USER);
         }
       }
