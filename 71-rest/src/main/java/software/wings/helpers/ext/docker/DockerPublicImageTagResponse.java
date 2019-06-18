@@ -11,7 +11,7 @@ public class DockerPublicImageTagResponse {
   static class Result {
     @Getter
     static class Image {
-      private int size;
+      private long size;
       private String architecture;
       private String variant;
       private String features;
