@@ -482,4 +482,11 @@ public class Account extends Base {
       this.defaults = defaults;
     }
   }
+
+  public static final class AccountKeys {
+    // Temporary
+    public static final String createdAt = "createdAt";
+    public static final String uuid = "uuid";
+    public static final String name = "name";
+  }
 }
