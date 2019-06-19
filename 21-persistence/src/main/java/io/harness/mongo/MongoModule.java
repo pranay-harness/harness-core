@@ -26,9 +26,6 @@ import java.util.Set;
 
 @Slf4j
 public class MongoModule extends AbstractModule {
-  MongoConfig mongoConfig;
-  Set<Class> collectionClasses;
-
   public static final MongoClientOptions mongoClientOptions =
       MongoClientOptions.builder()
           .retryWrites(true)
@@ -51,45 +48,42 @@ public class MongoModule extends AbstractModule {
     return datastore;
   }
 
-  public MongoModule(MongoConfig mongoConfig, Set<Class> collectionClasses) {
-    this.mongoConfig = mongoConfig;
-    this.collectionClasses = collectionClasses;
-
+  public MongoModule() {
     registerLogger(MorphiaLoggerFactory.class);
   }
 
   @Provides
   @Singleton
-  public Morphia morphia() {
+  public Morphia morphia(@Named("morphiaClasses") Set<Class> classes) {
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
     morphia.getMapper().getOptions().setMapSubPackages(true);
-    morphia.map(collectionClasses);
+    morphia.map(classes);
     return morphia;
   }
 
   @Provides
   @Named("primaryDatastore")
-  public AdvancedDatastore primaryDatastore(Morphia morphia) {
+  public AdvancedDatastore primaryDatastore(MongoConfig mongoConfig, Morphia morphia) {
     MongoClientURI uri = new MongoClientURI(mongoConfig.getUri(), MongoClientOptions.builder(mongoClientOptions));
     MongoClient mongoClient = new MongoClient(uri);
 
     AdvancedDatastore primaryDatastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, uri.getDatabase());
     primaryDatastore.setQueryFactory(new QueryFactory());
 
-    ensureIndex(primaryDatastore, morphia());
+    ensureIndex(primaryDatastore, morphia);
     return primaryDatastore;
   }
 
   @Provides
   @Named("secondaryDatastore")
-  public AdvancedDatastore secondaryDatastore(Morphia morphia) {
-    return primaryDatastore(morphia);
+  public AdvancedDatastore secondaryDatastore(MongoConfig mongoConfig, Morphia morphia) {
+    return primaryDatastore(mongoConfig, morphia);
   }
 
   @Provides
   @Singleton
-  public DistributedLockSvc distributedLockSvc() {
+  public DistributedLockSvc distributedLockSvc(MongoConfig mongoConfig) {
     MongoClientURI uri;
     if (isNotEmpty(mongoConfig.getLocksUri())) {
       uri = new MongoClientURI(mongoConfig.getLocksUri(), MongoClientOptions.builder(mongoClientOptions));

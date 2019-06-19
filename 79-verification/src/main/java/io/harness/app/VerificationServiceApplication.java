@@ -21,8 +21,11 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
+import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
 import com.codahale.metrics.MetricRegistry;
@@ -41,6 +44,7 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.entities.VerificationMorphiaClasses;
 import io.harness.event.model.EventsMorphiaClasses;
+import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.jobs.VerificationJob;
 import io.harness.jobs.VerificationMetricJob;
@@ -54,6 +58,7 @@ import io.harness.maintenance.MaintenanceController;
 import io.harness.managerclient.VerificationManagerClientModule;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.PersistenceMorphiaClasses;
 import io.harness.persistence.HPersistence;
@@ -155,8 +160,6 @@ public class VerificationServiceApplication extends Application<VerificationServ
     logger.info("Entering startup maintenance mode");
     MaintenanceController.forceMaintenance(true);
 
-    MongoModule databaseModule = new MongoModule(configuration.getMongoConnectionFactory(), morphiaClasses);
-
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
                                             .configure()
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
@@ -171,7 +174,21 @@ public class VerificationServiceApplication extends Application<VerificationServ
                                                    }
                                                  }))
                                                  .build(),
-        new ValidationModule(validatorFactory), databaseModule, new VerificationServiceModule(configuration),
+        new ValidationModule(validatorFactory),
+        new ProviderModule() {
+          @Provides
+          @Named("morphiaClasses")
+          Set<Class> classes() {
+            return morphiaClasses;
+          }
+
+          @Provides
+          @Singleton
+          MongoConfig mongoConfig() {
+            return configuration.getMongoConnectionFactory();
+          }
+        },
+        new MongoModule(), new VerificationServiceModule(configuration),
         new VerificationServiceSchedulerModule(configuration),
         new VerificationManagerClientModule(configuration.getManagerUrl()), new MetricRegistryModule(metricRegistry));
 

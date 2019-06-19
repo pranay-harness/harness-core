@@ -4,11 +4,15 @@ import static com.google.common.base.Charsets.UTF_8;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
+import io.harness.govern.ProviderModule;
+import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.PersistenceMorphiaClasses;
 import io.harness.serializer.YamlUtils;
@@ -67,13 +71,20 @@ public class MigratorApplication {
 
     Set<Module> modules = new HashSet<>();
 
-    modules.add(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(MigratorConfiguration.class).toInstance(configuration);
+    modules.add(new ProviderModule() {
+      @Provides
+      @Named("morphiaClasses")
+      Set<Class> classes() {
+        return morphiaClasses;
+      }
+
+      @Provides
+      @Singleton
+      MongoConfig mongoConfig() {
+        return configuration.getMongoConnectionFactory();
       }
     });
-    modules.add(new MongoModule(configuration.getMongoConnectionFactory(), morphiaClasses));
+    modules.add(new MongoModule());
     modules.addAll(new MigratorModule().cumulativeDependencies());
 
     Injector injector = Guice.createInjector(modules);
