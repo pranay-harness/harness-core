@@ -3,6 +3,8 @@ package io.harness.timescaledb;
 import com.google.common.base.Strings;
 import com.google.inject.Singleton;
 
+import com.jayway.jsonpath.internal.Utils;
+import io.harness.timescaledb.TimeScaleDBConfig.TimeScaleDBConfigFields;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.dbcp.BasicDataSource;
@@ -12,6 +14,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Properties;
 
 @Singleton
 @Slf4j
@@ -31,8 +34,20 @@ public class TimeScaleDBServiceImpl implements TimeScaleDBService {
       validDB = false;
       return;
     }
-    try (Connection connection = DriverManager.getConnection(timeScaleDBConfig.getTimescaledbUrl(),
-             timeScaleDBConfig.getTimescaledbUsername(), timeScaleDBConfig.getTimescaledbPassword());
+
+    Properties dbProperties = new Properties();
+    dbProperties.put(TimeScaleDBConfigFields.connectTimeout, String.valueOf(timeScaleDBConfig.getConnectTimeout()));
+    dbProperties.put(TimeScaleDBConfigFields.socketTimeout, String.valueOf(timeScaleDBConfig.getSocketTimeout()));
+    dbProperties.put(
+        TimeScaleDBConfigFields.logUnclosedConnections, String.valueOf(timeScaleDBConfig.isLogUnclosedConnections()));
+    if (!Utils.isEmpty(timeScaleDBConfig.getTimescaledbUsername())) {
+      dbProperties.put("user", timeScaleDBConfig.getTimescaledbUsername());
+    }
+    if (!Utils.isEmpty(timeScaleDBConfig.getTimescaledbPassword())) {
+      dbProperties.put("password", timeScaleDBConfig.getTimescaledbPassword());
+    }
+
+    try (Connection connection = DriverManager.getConnection(timeScaleDBConfig.getTimescaledbUrl(), dbProperties);
          Statement st = connection.createStatement(); ResultSet rs = st.executeQuery("SELECT VERSION()")) {
       if (rs.next()) {
         logger.info(rs.getString(1));
@@ -57,9 +72,22 @@ public class TimeScaleDBServiceImpl implements TimeScaleDBService {
     ds.setUrl(config.getTimescaledbUrl());
     ds.setUsername(config.getTimescaledbUsername());
     ds.setPassword(config.getTimescaledbPassword());
-    ds.setMinIdle(5);
+    ds.setMinIdle(0);
     ds.setMaxIdle(10);
-    ds.setMaxOpenPreparedStatements(5);
+
+    ds.addConnectionProperty(
+        TimeScaleDBConfigFields.connectTimeout, String.valueOf(timeScaleDBConfig.getConnectTimeout()));
+    ds.addConnectionProperty(
+        TimeScaleDBConfigFields.socketTimeout, String.valueOf(timeScaleDBConfig.getSocketTimeout()));
+    ds.addConnectionProperty(
+        TimeScaleDBConfigFields.logUnclosedConnections, String.valueOf(timeScaleDBConfig.isLogUnclosedConnections()));
+    if (!Utils.isEmpty(timeScaleDBConfig.getTimescaledbUsername())) {
+      ds.addConnectionProperty("user", timeScaleDBConfig.getTimescaledbUsername());
+    }
+    if (!Utils.isEmpty(timeScaleDBConfig.getTimescaledbPassword())) {
+      ds.addConnectionProperty("password", timeScaleDBConfig.getTimescaledbPassword());
+    }
+
     Statement statement = ds.getConnection().createStatement();
     statement.execute("CREATE EXTENSION IF NOT EXISTS TIMESCALEDB CASCADE;");
     statement.close();
@@ -75,6 +103,7 @@ public class TimeScaleDBServiceImpl implements TimeScaleDBService {
   public Connection getDBConnection() {
     if (validDB) {
       try {
+        logger.info("Active connections : [{}],Idle connections : [{}]", ds.getNumActive(), ds.getNumIdle());
         return ds.getConnection();
       } catch (SQLException e) {
         logger.error("Failed to get connection", e);
