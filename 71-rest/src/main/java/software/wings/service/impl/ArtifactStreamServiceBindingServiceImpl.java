@@ -16,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamBinding;
+import software.wings.beans.artifact.ArtifactStreamBindingDetails;
+import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -122,7 +124,8 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
   }
 
   @Override
-  public ArtifactStreamBinding update(String appId, String serviceId, ArtifactStreamBinding artifactStreamBinding) {
+  public ArtifactStreamBinding update(
+      String appId, String serviceId, String name, ArtifactStreamBinding artifactStreamBinding) {
     validateArtifactStreamBinding(artifactStreamBinding);
 
     Service service = serviceResourceService.get(appId, serviceId, false);
@@ -135,13 +138,25 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
       throw new InvalidRequestException("Artifact stream binding does not exist", USER);
     }
 
+    // check if artifact variable being updated exists
     ArtifactStreamBinding existingArtifactStreamBinding =
-        artifactStreamBindings.stream()
-            .filter(binding -> binding.getName().equals(artifactStreamBinding.getName()))
-            .findAny()
-            .orElse(null);
+        artifactStreamBindings.stream().filter(binding -> binding.getName().equals(name)).findAny().orElse(null);
     if (existingArtifactStreamBinding == null) {
       throw new InvalidRequestException("Artifact stream binding does not exist", USER);
+    }
+
+    // check if new artifact variable name provided is unique within the service
+    if (!name.equals(artifactStreamBinding.getName())) {
+      ArtifactStreamBinding collidingArtifactStream =
+          artifactStreamBindings.stream()
+              .filter(binding -> binding.getName().equals(artifactStreamBinding.getName()))
+              .findAny()
+              .orElse(null);
+      if (collidingArtifactStream != null) {
+        throw new InvalidRequestException(
+            format("Artifact variable with name [%s] already exists in service", artifactStreamBinding.getName()),
+            USER);
+      }
     }
 
     Set<String> newArtifactStreamIds = new HashSet<>(artifactStreamBinding.getArtifactStreamIds());
@@ -157,7 +172,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
         }
       }
     }
-
+    existingArtifactStreamBinding.setName(artifactStreamBinding.getName());
     existingArtifactStreamBinding.setArtifactStreamIds(artifactStreamBinding.getArtifactStreamIds());
     service.setArtifactStreamBindings(artifactStreamBindings);
     serviceResourceService.updateArtifactStreamBindings(service, artifactStreamBindings);
@@ -165,7 +180,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
   }
 
   @Override
-  public List<ArtifactStreamBinding> list(String appId, String serviceId) {
+  public List<ArtifactStreamBindingDetails> list(String appId, String serviceId) {
     Service service = serviceResourceService.get(appId, serviceId, false);
     if (service == null) {
       throw new InvalidRequestException("Service does not exist", USER);
@@ -174,11 +189,15 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
     if (service.getArtifactStreamBindings() == null) {
       return new ArrayList<>();
     }
-    return service.getArtifactStreamBindings();
+
+    return service.getArtifactStreamBindings()
+        .stream()
+        .map(this ::artifactStreamBindingToDetails)
+        .collect(Collectors.toList());
   }
 
   @Override
-  public ArtifactStreamBinding get(String appId, String serviceId, String name) {
+  public ArtifactStreamBindingDetails get(String appId, String serviceId, String name) {
     Service service = serviceResourceService.get(appId, serviceId, false);
     if (service == null || service.getArtifactStreamBindings() == null) {
       throw new InvalidRequestException("Service does not exist", USER);
@@ -192,7 +211,27 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
     if (artifactStreamBinding == null) {
       throw new InvalidRequestException("Artifact stream binding does not exist", USER);
     }
-    return artifactStreamBinding;
+    return artifactStreamBindingToDetails(artifactStreamBinding);
+  }
+
+  private ArtifactStreamBindingDetails artifactStreamBindingToDetails(ArtifactStreamBinding artifactStreamBinding) {
+    List<ArtifactStreamSummary> artifactStreamSummaries = new ArrayList<>();
+    if (artifactStreamBinding.getArtifactStreamIds() != null) {
+      for (String artifactStreamId : artifactStreamBinding.getArtifactStreamIds()) {
+        ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+        if (artifactStream != null) {
+          artifactStreamSummaries.add(ArtifactStreamSummary.builder()
+                                          .artifactStreamId(artifactStreamId)
+                                          .displayName(artifactStream.getName())
+                                          .build());
+        }
+      }
+    }
+
+    return ArtifactStreamBindingDetails.builder()
+        .name(artifactStreamBinding.getName())
+        .artifactStreams(artifactStreamSummaries)
+        .build();
   }
 
   @Override

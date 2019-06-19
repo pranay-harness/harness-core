@@ -82,6 +82,8 @@ public abstract class ArtifactStream
   private List<Variable> templateVariables = new ArrayList<>();
   private String accountId;
   @SchemaIgnore private List<String> keywords;
+  @Transient private int artifactCount;
+  @Transient private List<ArtifactSummary> artifacts;
 
   public ArtifactStream(String artifactStreamType) {
     this.artifactStreamType = artifactStreamType;

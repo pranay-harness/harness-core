@@ -31,6 +31,10 @@ public interface SettingsService extends OwnedByAccount {
   PageResponse<SettingAttribute> list(
       PageRequest<SettingAttribute> req, String appIdFromRequest, String envIdFromRequest);
 
+  PageResponse<SettingAttribute> list(PageRequest<SettingAttribute> req, String appIdFromRequest,
+      String envIdFromRequest, String accountId, boolean gitSshConfigOnly, boolean withArtifactStreamCount,
+      String artifactStreamSearchString);
+
   List<SettingAttribute> getFilteredSettingAttributes(
       List<SettingAttribute> inputSettingAttributes, String appIdFromRequest, String envIdFromRequest);
 

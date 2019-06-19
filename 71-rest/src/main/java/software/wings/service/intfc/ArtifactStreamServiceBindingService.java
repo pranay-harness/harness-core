@@ -4,6 +4,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamBinding;
+import software.wings.beans.artifact.ArtifactStreamBindingDetails;
 import software.wings.service.intfc.ownership.OwnedByArtifactStream;
 
 import java.util.List;
@@ -55,15 +56,16 @@ public interface ArtifactStreamServiceBindingService extends OwnedByArtifactStre
    *
    * @param appId                 the app id
    * @param serviceId             the service id
+   * @param name                  existing artifact variable name
    * @param artifactStreamBinding the artifact stream binding
    * @return artifact stream binding
    */
   ArtifactStreamBinding update(
-      @NotEmpty String appId, @NotEmpty String serviceId, ArtifactStreamBinding artifactStreamBinding);
+      @NotEmpty String appId, @NotEmpty String serviceId, String name, ArtifactStreamBinding artifactStreamBinding);
 
-  List<ArtifactStreamBinding> list(@NotEmpty String appId, @NotEmpty String serviceId);
+  List<ArtifactStreamBindingDetails> list(@NotEmpty String appId, @NotEmpty String serviceId);
 
-  ArtifactStreamBinding get(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String name);
+  ArtifactStreamBindingDetails get(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String name);
 
   /**
    * List artifact stream ids with bindings to service.

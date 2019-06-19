@@ -66,6 +66,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -102,6 +103,7 @@ public class SettingAttribute extends Base implements NameAccess {
   private List<String> appIds;
   private UsageRestrictions usageRestrictions;
   @Transient private int artifactStreamCount;
+  @Transient private List<ArtifactStreamSummary> artifactStreams;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore @Transient private transient EncryptionType encryptionType;
 

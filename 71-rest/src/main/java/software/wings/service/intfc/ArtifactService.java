@@ -23,7 +23,15 @@ import javax.validation.constraints.NotNull;
  */
 public interface ArtifactService extends OwnedByArtifactStream {
   /**
-   * List.
+   * List artifacts without sorting.
+   *
+   * @param pageRequest  the page request
+   * @return the page response
+   */
+  PageResponse<Artifact> listUnsorted(PageRequest<Artifact> pageRequest);
+
+  /**
+   * List artifacts sorted by build no.
    *
    * @param pageRequest  the page request
    * @return the page response
@@ -31,7 +39,7 @@ public interface ArtifactService extends OwnedByArtifactStream {
   PageResponse<Artifact> listSortByBuildNo(PageRequest<Artifact> pageRequest);
 
   /***
-   * List artifact sort by build nos
+   * List artifacts sorted by build no.
    * @param appId
    * @param serviceId
    * @param pageRequest
@@ -41,7 +49,7 @@ public interface ArtifactService extends OwnedByArtifactStream {
       @NotEmpty String appId, String serviceId, @NotNull PageRequest<Artifact> pageRequest);
 
   /***
-   * List artifact sort by build nos
+   * List artifacts sorted by build no.
    * @param serviceId
    * @param pageRequest
    * @return

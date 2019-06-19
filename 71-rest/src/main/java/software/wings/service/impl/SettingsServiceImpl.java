@@ -2,7 +2,9 @@ package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.beans.SearchFilter.Operator.CONTAINS;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.USAGE_LIMITS_EXCEEDED;
@@ -28,6 +30,7 @@ import static software.wings.common.Constants.DEFAULT_BACKUP_PATH;
 import static software.wings.common.Constants.DEFAULT_RUNTIME_PATH;
 import static software.wings.common.Constants.DEFAULT_STAGING_PATH;
 import static software.wings.common.Constants.DEFAULT_WINDOWS_RUNTIME_PATH;
+import static software.wings.common.Constants.GIT_USER;
 import static software.wings.common.Constants.RUNTIME_PATH;
 import static software.wings.common.Constants.STAGING_PATH;
 import static software.wings.common.Constants.WINDOWS_RUNTIME_PATH;
@@ -46,6 +49,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
+import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.structure.EmptyPredicate;
@@ -74,6 +78,8 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.StringValue;
 import software.wings.beans.ValidationResult;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
+import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -139,21 +145,95 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private EnvironmentService envService;
   @Inject private AuditServiceHelper auditServiceHelper;
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.SettingsService#list(software.wings.dl.PageRequest)
-   */
   @Override
   public PageResponse<SettingAttribute> list(
       PageRequest<SettingAttribute> req, String appIdFromRequest, String envIdFromRequest) {
+    return list(req, appIdFromRequest, envIdFromRequest, null, false, false, null);
+  }
+
+  @Override
+  public PageResponse<SettingAttribute> list(PageRequest<SettingAttribute> req, String appIdFromRequest,
+      String envIdFromRequest, String accountId, boolean gitSshConfigOnly, boolean withArtifactStreamCount,
+      String artifactStreamSearchString) {
     try {
-      PageResponse<SettingAttribute> pageResponse = wingsPersistence.query(SettingAttribute.class, req);
+      PageRequest<SettingAttribute> pageRequest = req.copy();
+      int offset = pageRequest.getStart();
+      int limit = pageRequest.getPageSize();
+
+      pageRequest.setOffset("0");
+      pageRequest.setLimit(String.valueOf(Integer.MAX_VALUE));
+      PageResponse<SettingAttribute> pageResponse = wingsPersistence.query(SettingAttribute.class, pageRequest);
 
       List<SettingAttribute> filteredSettingAttributes =
           getFilteredSettingAttributes(pageResponse.getResponse(), appIdFromRequest, envIdFromRequest);
 
+      if (gitSshConfigOnly) {
+        filteredSettingAttributes =
+            filteredSettingAttributes.stream()
+                .filter(settingAttribute
+                    -> GIT_USER.equals(((HostConnectionAttributes) settingAttribute.getValue()).getUserName()))
+                .collect(Collectors.toList());
+      }
+
+      if (withArtifactStreamCount && isNotEmpty(filteredSettingAttributes)) {
+        String[] settingIds = filteredSettingAttributes.stream().map(SettingAttribute::getUuid).toArray(String[] ::new);
+        PageRequest<ArtifactStream> artifactStreamPageRequest = PageRequestBuilder.aPageRequest().build();
+        artifactStreamPageRequest.addFilter(ArtifactStreamKeys.accountId, EQ, accountId);
+        artifactStreamPageRequest.addFilter(ArtifactStreamKeys.settingId, IN, (Object[]) settingIds);
+        artifactStreamPageRequest.setFieldsIncluded(asList(ArtifactStreamKeys.settingId, ArtifactStreamKeys.name));
+        if (isNotEmpty(artifactStreamSearchString)) {
+          artifactStreamPageRequest.addFilter(ArtifactStreamKeys.name, CONTAINS, artifactStreamSearchString);
+        }
+        PageResponse<ArtifactStream> artifactStreamPageResponse = artifactStreamService.list(artifactStreamPageRequest);
+
+        List<ArtifactStream> artifactStreams = artifactStreamPageResponse.getResponse();
+        if (isEmpty(artifactStreams)) {
+          filteredSettingAttributes = new ArrayList<>();
+        }
+
+        Map<String, List<ArtifactStreamSummary>> settingIdToArtifactStreamSummaries = new HashMap<>();
+        artifactStreams.forEach(artifactStream -> {
+          String settingId = artifactStream.getSettingId();
+          ArtifactStreamSummary artifactStreamSummary = ArtifactStreamSummary.builder()
+                                                            .artifactStreamId(artifactStream.getUuid())
+                                                            .displayName(artifactStream.getName())
+                                                            .build();
+          if (settingIdToArtifactStreamSummaries.containsKey(settingId)) {
+            settingIdToArtifactStreamSummaries.get(settingId).add(artifactStreamSummary);
+          } else {
+            List<ArtifactStreamSummary> artifactStreamSummaries = new ArrayList<>();
+            artifactStreamSummaries.add(artifactStreamSummary);
+            settingIdToArtifactStreamSummaries.put(settingId, artifactStreamSummaries);
+          }
+        });
+
+        List<SettingAttribute> newSettingAttributes = new ArrayList<>();
+        for (SettingAttribute settingAttribute : filteredSettingAttributes) {
+          String settingId = settingAttribute.getUuid();
+          if (settingIdToArtifactStreamSummaries.containsKey(settingId)) {
+            settingAttribute.setArtifactStreamCount(settingIdToArtifactStreamSummaries.get(settingId).size());
+            settingAttribute.setArtifactStreams(settingIdToArtifactStreamSummaries.get(settingId));
+            newSettingAttributes.add(settingAttribute);
+          }
+        }
+
+        filteredSettingAttributes = newSettingAttributes;
+      }
+
+      List<SettingAttribute> resp;
+      int total = filteredSettingAttributes.size();
+      if (total <= offset) {
+        resp = new ArrayList<>();
+      } else {
+        int endIdx = Math.min(offset + limit, total);
+        resp = filteredSettingAttributes.subList(offset, endIdx);
+      }
+
       return aPageResponse()
-          .withResponse(filteredSettingAttributes)
+          .withResponse(resp)
           .withTotal(filteredSettingAttributes.size())
+          .withOffset(req.getOffset())
+          .withLimit(req.getLimit())
           .build();
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
