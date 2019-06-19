@@ -84,6 +84,27 @@ ELB:
       metricType: ERROR
       enabledDefault: true
 
+    - metricName: HTTPCode_Target_2XX_Count
+      displayName: HTTP Target 2XX
+      dimension: LoadBalancerName
+      dimensionDisplay: Load balancer name
+      metricType: ERROR
+      enabledDefault: true
+
+    - metricName: HTTPCode_Target_3XX_Count
+      displayName: HTTP Target 3XX
+      dimension: LoadBalancerName
+      dimensionDisplay: Load balancer name
+      metricType: ERROR
+      enabledDefault: true
+
+    - metricName: HTTPCode_Target_4XX_Count
+      displayName: HTTP Target 4XX
+      dimension: LoadBalancerName
+      dimensionDisplay: Load balancer name
+      metricType: ERROR
+      enabledDefault: true
+
     - metricName: Latency
       displayName: Latency
       dimension: LoadBalancerName
