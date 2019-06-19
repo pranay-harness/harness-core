@@ -215,7 +215,13 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
                 workflowId, workflowExecution.getName(), appId, applicationName);
             usageMetricsEventPublisher.publishDeploymentMetadataEvent(status, manual, accountID, accountName,
                 workflowId, workflowExecution.getName(), appId, applicationName);
-            usageMetricsEventPublisher.publishDeploymentTimeSeriesEvent(accountID, workflowExecution);
+            /**
+             * PL-2326 : Workflow execution did not even start -> was in queued state. In
+             * this case, startTS and endTS are not populated. Ignoring these events.
+             */
+            if (workflowExecution.getStartTs() != null && workflowExecution.getEndTs() != null) {
+              usageMetricsEventPublisher.publishDeploymentTimeSeriesEvent(accountID, workflowExecution);
+            }
           }
         }
         if (!WorkflowType.PIPELINE.equals(context.getWorkflowType())) {
