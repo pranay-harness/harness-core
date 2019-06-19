@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 
 import com.google.inject.Inject;
@@ -9,7 +10,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.AccountAuditFilter;
@@ -42,12 +43,23 @@ public class PreferenceServiceImpl implements PreferenceService {
   @Override
   public Preference save(String accountId, String userId, Preference preference) {
     Preference savedPreference = null;
-    try {
-      savedPreference = wingsPersistence.saveAndGet(Preference.class, preference);
-    } catch (Exception e) {
-      logger.error("Exception while saving preference to DB: ", ExceptionUtils.getMessage(e));
+    Preference existingPreference = getPreferenceByName(accountId, userId, preference.getName());
+    if (existingPreference != null) {
+      throw new InvalidRequestException("Preference with same name exists for user", USER)
+          .addParam("message", "Preference with same name exists for user");
     }
+
+    savedPreference = wingsPersistence.saveAndGet(Preference.class, preference);
     return savedPreference;
+  }
+
+  @Override
+  public Preference getPreferenceByName(String accountId, String userId, String name) {
+    return wingsPersistence.createQuery(Preference.class)
+        .filter(PreferenceKeys.accountId, accountId)
+        .filter(PreferenceKeys.userId, userId)
+        .filter(PreferenceKeys.name, name)
+        .get();
   }
 
   @Override
@@ -129,9 +141,9 @@ public class PreferenceServiceImpl implements PreferenceService {
   @Override
   public Preference update(String accountId, String userId, String preferenceId, Preference preference) {
     // Update preference for given account, user and preference Id
-    DeploymentPreference deployPref = null;
 
     if (preference instanceof DeploymentPreference) {
+      DeploymentPreference deployPref = null;
       deployPref = (DeploymentPreference) preference;
 
       UpdateOperations<Preference> updateOperations = wingsPersistence.createUpdateOperations(Preference.class);
@@ -147,15 +159,39 @@ public class PreferenceServiceImpl implements PreferenceService {
       setUnset(updateOperations, "endTime", deployPref.getEndTime());
       setUnset(updateOperations, "keywords", deployPref.getKeywords());
 
-      wingsPersistence.update(wingsPersistence.createQuery(Preference.class)
-                                  .filter(PreferenceKeys.accountId, accountId)
-                                  .filter(USER_ID_KEY, userId)
-                                  .filter(PreferenceKeys.uuid, preferenceId),
-          updateOperations);
+      update(accountId, userId, preferenceId, updateOperations);
+    } else if (preference instanceof AuditPreference) {
+      AuditPreference auditPreference = (AuditPreference) preference;
+
+      UpdateOperations<Preference> updateOperations = wingsPersistence.createUpdateOperations(Preference.class);
+      // Set fields to update
+      setUnset(updateOperations, AuditPreferenceKeys.name, auditPreference.getName());
+      setUnset(updateOperations, AuditPreferenceKeys.startTime, auditPreference.getStartTime());
+      setUnset(updateOperations, AuditPreferenceKeys.endTime, auditPreference.getEndTime());
+      setUnset(updateOperations, AuditPreferenceKeys.createdByUserIds, auditPreference.getCreatedByUserIds());
+      setUnset(updateOperations, AuditPreferenceKeys.operationTypes, auditPreference.getOperationTypes());
+      setUnset(updateOperations, AuditPreferenceKeys.includeAccountLevelResources,
+          auditPreference.isIncludeAccountLevelResources());
+      setUnset(
+          updateOperations, AuditPreferenceKeys.includeAppLevelResources, auditPreference.isIncludeAppLevelResources());
+      setUnset(updateOperations, AuditPreferenceKeys.accountAuditFilter, auditPreference.getAccountAuditFilter());
+      setUnset(
+          updateOperations, AuditPreferenceKeys.applicationAuditFilter, auditPreference.getApplicationAuditFilter());
+
+      update(accountId, userId, preferenceId, updateOperations);
     }
 
     // Return updated preference
     return wingsPersistence.get(Preference.class, PreferenceKeys.uuid);
+  }
+
+  private void update(
+      String accountId, String userId, String preferenceId, UpdateOperations<Preference> updateOperations) {
+    wingsPersistence.update(wingsPersistence.createQuery(Preference.class)
+                                .filter(PreferenceKeys.accountId, accountId)
+                                .filter(PreferenceKeys.userId, userId)
+                                .filter(PreferenceKeys.uuid, preferenceId),
+        updateOperations);
   }
 
   @Override
