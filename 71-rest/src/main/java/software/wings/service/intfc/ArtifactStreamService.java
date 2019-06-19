@@ -29,6 +29,9 @@ public interface ArtifactStreamService extends OwnedByService {
    */
   PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req);
 
+  PageResponse<ArtifactStream> list(
+      PageRequest<ArtifactStream> req, String accountId, boolean withArtifactCount, String artifactSearchString);
+
   /**
    * Get artifact stream.
    *

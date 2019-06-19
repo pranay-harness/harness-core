@@ -8,7 +8,6 @@ import software.wings.yaml.BaseYaml;
 import java.util.List;
 
 @Data
-@EqualsAndHashCode(callSuper = false)
 public class ArtifactStreamBinding {
   private String name;
   private List<String> artifactStreamIds;

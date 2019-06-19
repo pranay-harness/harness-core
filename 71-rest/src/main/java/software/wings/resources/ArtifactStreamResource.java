@@ -103,10 +103,13 @@ public class ArtifactStreamResource {
   @GET
   @Timed
   @ExceptionMetered
-  public RestResponse<PageResponse<ArtifactStream>> list(
-      @QueryParam("appId") String appId, @BeanParam PageRequest<ArtifactStream> pageRequest) {
+  public RestResponse<PageResponse<ArtifactStream>> list(@QueryParam("appId") String appId,
+      @QueryParam("accountId") String accountId, @QueryParam("withArtifactCount") boolean withArtifactCount,
+      @QueryParam("artifactSearchString") String artifactSearchString,
+      @BeanParam PageRequest<ArtifactStream> pageRequest) {
     pageRequest.addFilter("appId", EQ, appId);
-    return new RestResponse<>(artifactStreamService.list(pageRequest));
+    return new RestResponse<>(
+        artifactStreamService.list(pageRequest, accountId, withArtifactCount, artifactSearchString));
   }
 
   /**

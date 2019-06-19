@@ -22,6 +22,7 @@ import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamBinding;
+import software.wings.beans.artifact.ArtifactStreamBindingDetails;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
@@ -740,7 +741,7 @@ public class ServiceResource {
   @Path("{serviceId}/artifact-stream-bindings")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<ArtifactStreamBinding>> listArtifactStreamBindings(
+  public RestResponse<List<ArtifactStreamBindingDetails>> listArtifactStreamBindings(
       @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
     return new RestResponse<>(artifactStreamServiceBindingService.list(appId, serviceId));
   }
@@ -749,7 +750,7 @@ public class ServiceResource {
   @Path("{serviceId}/artifact-stream-bindings/{name}")
   @Timed
   @ExceptionMetered
-  public RestResponse<ArtifactStreamBinding> getArtifactStreamBinding(
+  public RestResponse<ArtifactStreamBindingDetails> getArtifactStreamBinding(
       @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId, @PathParam("name") String name) {
     return new RestResponse<>(artifactStreamServiceBindingService.get(appId, serviceId, name));
   }
@@ -770,10 +771,11 @@ public class ServiceResource {
   public RestResponse<ArtifactStreamBinding> updateArtifactStreamBinding(@QueryParam("appId") String appId,
       @PathParam("serviceId") String serviceId, @PathParam("name") String name,
       @NotNull ArtifactStreamBinding artifactStreamBinding) {
-    if (name == null || artifactStreamBinding == null || !name.equals(artifactStreamBinding.getName())) {
-      throw new InvalidRequestException("Name in path parameter does not match the body", USER);
+    if (name == null || artifactStreamBinding == null) {
+      throw new InvalidRequestException("Name or artifact stream bindings not provided in request body", USER);
     }
-    return new RestResponse<>(artifactStreamServiceBindingService.update(appId, serviceId, artifactStreamBinding));
+    return new RestResponse<>(
+        artifactStreamServiceBindingService.update(appId, serviceId, name, artifactStreamBinding));
   }
 
   @DELETE

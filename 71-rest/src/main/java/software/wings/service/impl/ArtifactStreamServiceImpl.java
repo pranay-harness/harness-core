@@ -1,7 +1,10 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.beans.SearchFilter.Operator.CONTAINS;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.beans.SearchFilter.Operator.STARTS_WITH;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -9,6 +12,7 @@ import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -33,9 +37,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
+import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.queue.Queue;
@@ -55,10 +61,13 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.Variable;
+import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.Artifact.ArtifactKeys;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.artifact.ArtifactSummary;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
@@ -129,6 +138,88 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Override
   public PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req) {
     return wingsPersistence.query(ArtifactStream.class, req);
+  }
+
+  @Override
+  public PageResponse<ArtifactStream> list(
+      PageRequest<ArtifactStream> req, String accountId, boolean withArtifactCount, String artifactSearchString) {
+    if (!withArtifactCount) {
+      return list(req);
+    }
+
+    try {
+      PageRequest<ArtifactStream> pageRequest = req.copy();
+      int offset = pageRequest.getStart();
+      int limit = pageRequest.getPageSize();
+
+      pageRequest.setOffset("0");
+      pageRequest.setLimit(String.valueOf(Integer.MAX_VALUE));
+      PageResponse<ArtifactStream> pageResponse = wingsPersistence.query(ArtifactStream.class, pageRequest);
+
+      List<ArtifactStream> filteredArtifactStreams = pageResponse.getResponse();
+
+      if (isNotEmpty(filteredArtifactStreams)) {
+        String[] artifactStreamIds =
+            filteredArtifactStreams.stream().map(ArtifactStream::getUuid).toArray(String[] ::new);
+        PageRequest<Artifact> artifactPageRequest = PageRequestBuilder.aPageRequest().build();
+        artifactPageRequest.addFilter(ArtifactKeys.accountId, EQ, accountId);
+        artifactPageRequest.addFilter(ArtifactKeys.artifactStreamId, IN, (Object[]) artifactStreamIds);
+        artifactPageRequest.setFieldsIncluded(asList(ArtifactKeys.artifactStreamId, ArtifactKeys.uiDisplayName));
+        if (isNotEmpty(artifactSearchString)) {
+          artifactPageRequest.addFilter(ArtifactKeys.uiDisplayName, CONTAINS, artifactSearchString);
+        }
+        PageResponse<Artifact> artifactPageResponse = artifactService.listUnsorted(artifactPageRequest);
+
+        List<Artifact> artifacts = artifactPageResponse.getResponse();
+        if (isEmpty(artifacts)) {
+          filteredArtifactStreams = new ArrayList<>();
+        }
+
+        Map<String, List<ArtifactSummary>> artifactStreamIdToArtifactSummaries = new HashMap<>();
+        artifacts.forEach(artifact -> {
+          String artifactStreamId = artifact.getArtifactStreamId();
+          ArtifactSummary artifactSummary =
+              ArtifactSummary.builder().artifactId(artifact.getUuid()).displayName(artifact.getUiDisplayName()).build();
+          if (artifactStreamIdToArtifactSummaries.containsKey(artifactStreamId)) {
+            artifactStreamIdToArtifactSummaries.get(artifactStreamId).add(artifactSummary);
+          } else {
+            List<ArtifactSummary> artifactSummaries = new ArrayList<>();
+            artifactSummaries.add(artifactSummary);
+            artifactStreamIdToArtifactSummaries.put(artifactStreamId, artifactSummaries);
+          }
+        });
+
+        List<ArtifactStream> newArtifactStreams = new ArrayList<>();
+        for (ArtifactStream artifactStream : filteredArtifactStreams) {
+          String artifactStreamId = artifactStream.getUuid();
+          if (artifactStreamIdToArtifactSummaries.containsKey(artifactStreamId)) {
+            artifactStream.setArtifactCount(artifactStreamIdToArtifactSummaries.get(artifactStreamId).size());
+            artifactStream.setArtifacts(artifactStreamIdToArtifactSummaries.get(artifactStreamId));
+            newArtifactStreams.add(artifactStream);
+          }
+        }
+
+        filteredArtifactStreams = newArtifactStreams;
+      }
+
+      List<ArtifactStream> resp;
+      int total = filteredArtifactStreams.size();
+      if (total <= offset) {
+        resp = new ArrayList<>();
+      } else {
+        int endIdx = Math.min(offset + limit, total);
+        resp = filteredArtifactStreams.subList(offset, endIdx);
+      }
+
+      return aPageResponse()
+          .withResponse(resp)
+          .withTotal(filteredArtifactStreams.size())
+          .withOffset(req.getOffset())
+          .withLimit(req.getLimit())
+          .build();
+    } catch (Exception e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
   }
 
   @Override

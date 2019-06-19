@@ -121,6 +121,11 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   @Override
+  public PageResponse<Artifact> listUnsorted(PageRequest<Artifact> pageRequest) {
+    return wingsPersistence.query(Artifact.class, pageRequest);
+  }
+
+  @Override
   public PageResponse<Artifact> listSortByBuildNo(PageRequest<Artifact> pageRequest) {
     List<Artifact> artifacts = new ArrayList<>();
     PageResponse<Artifact> pageResponse = wingsPersistence.query(Artifact.class, pageRequest);

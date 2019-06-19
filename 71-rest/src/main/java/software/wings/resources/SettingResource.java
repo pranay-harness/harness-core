@@ -1,6 +1,5 @@
 package software.wings.resources;
 
-import static io.harness.beans.SearchFilter.Operator.CONTAINS;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -11,7 +10,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.common.Constants.GIT_USER;
 import static software.wings.service.impl.security.SecretManagerImpl.ENCRYPTED_FIELD_MASK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 
@@ -20,7 +18,6 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
-import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
@@ -35,14 +32,12 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.GcpConfig;
-import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.ValidationResult;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.common.BuildDetailsComparator;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
@@ -66,13 +61,10 @@ import software.wings.utils.RepositoryType;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -135,53 +127,8 @@ public class SettingResource {
       pageRequest.addFilter("value.type", EQ, SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES.name());
     }
 
-    PageResponse<SettingAttribute> result = settingsService.list(pageRequest, currentAppId, currentEnvId);
-    if (gitSshConfigOnly) {
-      List<SettingAttribute> filteredResponse =
-          result.stream()
-              .filter(settingAttribute
-                  -> GIT_USER.equals(((HostConnectionAttributes) settingAttribute.getValue()).getUserName()))
-              .collect(Collectors.toList());
-      result.setResponse(filteredResponse);
-    }
-
-    if (withArtifactStreamCount && isNotEmpty(result)) {
-      String[] settingIds = result.stream().map(SettingAttribute::getUuid).toArray(String[] ::new);
-      PageRequest<ArtifactStream> artifactStreamPageRequest = PageRequestBuilder.aPageRequest().build();
-      artifactStreamPageRequest.addFilter(ArtifactStreamKeys.accountId, EQ, accountId);
-      artifactStreamPageRequest.addFilter(ArtifactStreamKeys.settingId, IN, (Object[]) settingIds);
-      artifactStreamPageRequest.setFieldsIncluded(Collections.singletonList(ArtifactStreamKeys.settingId));
-      if (isNotEmpty(artifactStreamSearchString)) {
-        artifactStreamPageRequest.addFilter(ArtifactStreamKeys.keywords, CONTAINS, artifactStreamSearchString);
-      }
-      PageResponse<ArtifactStream> artifactStreamPageResponse = artifactStreamService.list(artifactStreamPageRequest);
-
-      List<ArtifactStream> artifactStreams = artifactStreamPageResponse.getResponse();
-      if (isEmpty(artifactStreams)) {
-        result.setResponse(new ArrayList<>());
-        result.setTotal(0L);
-        return new RestResponse<>(result);
-      }
-
-      Map<String, Integer> settingIdToCount = new HashMap<>();
-      artifactStreams.forEach(artifactStream -> {
-        String settingId = artifactStream.getSettingId();
-        settingIdToCount.put(settingId, settingIdToCount.getOrDefault(settingId, 0) + 1);
-      });
-
-      List<SettingAttribute> newSettingAttributes = new ArrayList<>();
-      for (SettingAttribute settingAttribute : result) {
-        String settingId = settingAttribute.getUuid();
-        if (settingIdToCount.containsKey(settingId)) {
-          settingAttribute.setArtifactStreamCount(settingIdToCount.get(settingId));
-          newSettingAttributes.add(settingAttribute);
-        }
-      }
-
-      result.setResponse(newSettingAttributes);
-      result.setTotal((long) newSettingAttributes.size());
-    }
-
+    PageResponse<SettingAttribute> result = settingsService.list(pageRequest, currentAppId, currentEnvId, accountId,
+        gitSshConfigOnly, withArtifactStreamCount, artifactStreamSearchString);
     result.forEach(this ::maskEncryptedFields);
     return new RestResponse<>(result);
   }
@@ -695,14 +642,17 @@ public class SettingResource {
   @ExceptionMetered
   public RestResponse<PageResponse<ArtifactStream>> listArtifactStreams(@QueryParam("currentAppId") String currentAppId,
       @QueryParam("currentEnvId") String currentEnvId, @QueryParam("accountId") String accountId,
-      @QueryParam("settingId") String settingId, @BeanParam PageRequest<ArtifactStream> pageRequest) {
+      @QueryParam("settingId") String settingId, @QueryParam("withArtifactCount") boolean withArtifactCount,
+      @QueryParam("artifactSearchString") String artifactSearchString,
+      @BeanParam PageRequest<ArtifactStream> pageRequest) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     if (settingAttribute == null || !settingAttribute.getAccountId().equals(accountId)
         || isEmpty(settingsService.getFilteredSettingAttributes(
                Collections.singletonList(settingAttribute), currentAppId, currentEnvId))) {
       throw new InvalidRequestException("Setting attribute does not exist", USER);
     }
-    return new RestResponse<>(artifactStreamService.list(pageRequest));
+    return new RestResponse<>(
+        artifactStreamService.list(pageRequest, accountId, withArtifactCount, artifactSearchString));
   }
 
   /**

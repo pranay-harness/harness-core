@@ -5,7 +5,7 @@ import lombok.Value;
 
 @Value
 @Builder
-public class ArtifactStreamSummary {
-  private String artifactStreamId;
+public class ArtifactSummary {
+  private String artifactId;
   private String displayName;
 }
