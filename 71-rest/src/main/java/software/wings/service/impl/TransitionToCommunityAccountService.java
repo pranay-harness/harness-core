@@ -14,6 +14,8 @@ import com.google.inject.name.Named;
 import com.hazelcast.util.CollectionUtil;
 import io.harness.rest.RestResponse;
 import io.harness.scheduler.PersistentScheduler;
+import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.FeatureViolation;
@@ -22,6 +24,7 @@ import software.wings.beans.User;
 import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
+import software.wings.dl.WingsPersistence;
 import software.wings.licensing.LicenseService;
 import software.wings.licensing.violations.FeatureViolationsService;
 import software.wings.licensing.violations.RestrictedFeature;
@@ -31,6 +34,10 @@ import software.wings.security.GenericEntityFilter;
 import software.wings.security.GenericEntityFilter.FilterType;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.security.authentication.OauthProviderType;
+import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.SSOService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.security.SecretManager;
@@ -41,12 +48,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class TransitionToCommunityAccountService {
   @Inject private LicenseService licenseService;
   @Inject private UserService userService;
   @Inject private UserGroupService userGroupService;
   @Inject private FeatureViolationsService featureViolationsService;
   @Inject private SecretManager secretManager;
+  @Inject private AccountService accountService;
+  @Inject private SSOService ssoService;
+  @Inject private WingsPersistence wingsPersistence;
 
   @Inject @Named("BackgroundJobScheduler") private transient PersistentScheduler jobScheduler;
 
@@ -77,6 +88,18 @@ public class TransitionToCommunityAccountService {
     usersOfAccount.forEach(user
         -> userService.updateUserGroupsOfUser(
             user.getUuid(), Collections.singletonList(adminUserGroup), accountId, false));
+
+    // Set Oauth enabled to true and add all Oauth Providers to the SSO Setting
+    Account account = accountService.get(accountId);
+    if (!account.isOauthEnabled()) {
+      logger.info("OAuth is not currently enabled for account {}. Updating SSO Setting for the account.", accountId);
+      ssoService.uploadOauthConfiguration(accountId, "", Sets.newHashSet(OauthProviderType.values()));
+      logger.info("OAuth setting for accountId {} saved successfully.", accountId);
+
+      logger.info("Enabling OAuth for accountId {}", accountId);
+      ssoService.setAuthenticationMechanism(accountId, AuthenticationMechanism.OAUTH);
+      logger.info("Successfully enabled OAuth for accountId {}", accountId);
+    }
 
     RestResponse<Boolean> result = new RestResponse<>(licenseService.updateAccountLicense(accountId,
         LicenseInfo.builder().accountType(AccountType.COMMUNITY).accountStatus(AccountStatus.ACTIVE).build()));
