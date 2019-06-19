@@ -141,7 +141,7 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY)
+  @Owner(emails = SWAMY, intermittent = true)
   @Category(FunctionalTests.class)
   public void pipelineTest() throws Exception {
     pipelineName = "Pipeline Test - " + System.currentTimeMillis();

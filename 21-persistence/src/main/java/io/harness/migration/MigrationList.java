@@ -13,6 +13,7 @@ public class MigrationList {
           .put(1,
               MigrationJob.builder()
                   .id("test")
+                  .sha("1e547fa017126116601bb7f6acf5a83be4e8d1b6")
                   .metadata(Metadata.builder()
                                 .channel(MongoCollectionMigrationChannel.builder()
                                              .store(HPersistence.DEFAULT_STORE)

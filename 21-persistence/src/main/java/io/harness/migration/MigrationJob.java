@@ -11,6 +11,7 @@ import java.util.Set;
 @Builder
 public class MigrationJob {
   private String id;
+  private String sha;
   enum Allowance { BACKGROUND }
 
   @Value
