@@ -18,8 +18,6 @@ import java.util.List;
 @Singleton
 @Slf4j
 public class DeploymentEventProcessor implements EventProcessor {
-  private PreparedStatement insertPreparedStatement;
-
   /**
    *  EXECUTIONID TEXT NOT NULL,
    * 	STARTTIME TIMESTAMP NOT NULL,
@@ -44,24 +42,15 @@ public class DeploymentEventProcessor implements EventProcessor {
 
   @Override
   public boolean init() {
-    if (timeScaleDBService.isValid()) {
-      try {
-        insertPreparedStatement = timeScaleDBService.getDBConnection().prepareStatement(insert_prepared_statement_sql);
-        return true;
-      } catch (SQLException e) {
-        logger.error("Failed to create a insertPreparedStatement for timeseries database", e);
-        return false;
-      }
-    } else {
-      return true;
-    }
+    return true;
   }
 
   @Override
   public void processEvent(TimeSeriesEventInfo eventInfo) {
-    if (timeScaleDBService.isValid() && insertPreparedStatement != null) {
+    if (timeScaleDBService.isValid()) {
       long startTime = System.currentTimeMillis();
-      try (Connection dbConnection = timeScaleDBService.getDBConnection()) {
+      try (Connection dbConnection = timeScaleDBService.getDBConnection();
+           PreparedStatement insertPreparedStatement = dbConnection.prepareStatement(insert_prepared_statement_sql);) {
         /**
          *  EXECUTIONID TEXT NOT NULL,
          * 	STARTTIME TIMESTAMP NOT NULL,
