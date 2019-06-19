@@ -10,6 +10,11 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
+import software.wings.beans.Preference.PreferenceKeys;
 
 @Data
 @AllArgsConstructor
@@ -20,8 +25,15 @@ import org.mongodb.morphia.annotations.Entity;
 })
 @Entity(value = "preferences")
 @FieldNameConstants(innerTypeName = "PreferenceKeys")
+@Indexes({
+  @Index(options = @IndexOptions(name = "preference_index"), fields = {
+    @Field(PreferenceKeys.accountId), @Field(PreferenceKeys.userId), @Field(PreferenceKeys.name)
+  })
+})
+
 @HarnessExportableEntity
 @EqualsAndHashCode(callSuper = false)
+
 public abstract class Preference extends Base {
   @NotEmpty private String name;
   @NotEmpty private String accountId;
