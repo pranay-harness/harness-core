@@ -5,14 +5,17 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
+import software.wings.annotation.Blueprint;
 
 import java.util.Map;
 
 /**
  * Created by rishi on 5/18/17.
  */
+@FieldNameConstants(innerTypeName = "ContainerInfrastructureMappingKeys")
 public abstract class ContainerInfrastructureMapping extends InfrastructureMapping {
-  @Attributes(title = "Cluster Name") private String clusterName;
+  @Attributes(title = "Cluster Name") @Blueprint private String clusterName;
 
   /**
    * Instantiates a new Infrastructure mapping.

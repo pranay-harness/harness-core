@@ -17,7 +17,18 @@ public class BlueprintProcessor {
       return;
     }
     Set<String> blueprintKeys = new HashSet<>(blueprints.keySet());
-    Class<? extends InfrastructureMapping> aClass = infraStructureMapping.getClass();
+    Class aClass = infraStructureMapping.getClass();
+    forClass(blueprintKeys, aClass);
+    while (aClass.getSuperclass() != InfrastructureMapping.class) {
+      aClass = aClass.getSuperclass();
+      forClass(blueprintKeys, aClass);
+    }
+    if (!blueprintKeys.isEmpty()) {
+      throw new InvalidRequestException("Invalid blueprint keys : " + blueprintKeys.toString());
+    }
+  }
+
+  private static void forClass(Set<String> blueprintKeys, Class aClass) {
     Field[] declaredFields = aClass.getDeclaredFields();
     for (Field field : declaredFields) {
       Annotation[] annotations = field.getAnnotations();
@@ -26,9 +37,6 @@ public class BlueprintProcessor {
           blueprintKeys.remove(field.getName());
         }
       }
-    }
-    if (!blueprintKeys.isEmpty()) {
-      throw new InvalidRequestException("Invalid blueprint keys : " + blueprintKeys.toString());
     }
   }
 }
