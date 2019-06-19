@@ -12,6 +12,7 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
+import software.wings.beans.GitCommit.GitCommitKeys;
 import software.wings.beans.yaml.GitCommandResult;
 import software.wings.yaml.gitSync.YamlChangeSet;
 
@@ -26,9 +27,16 @@ import java.util.List;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "gitCommits", noClassnameStored = true)
-@Indexes(@Index(fields = { @Field("accountId")
-                           , @Field("commitId") },
-    options = @IndexOptions(name = "gitCommitIdx", unique = true, dropDups = true)))
+@Indexes({
+  @Index(fields = { @Field(GitCommitKeys.accountId)
+                    , @Field(GitCommitKeys.commitId) },
+      options = @IndexOptions(name = "gitCommitIdx", unique = true, dropDups = true))
+  ,
+      @Index(fields = {
+        @Field(GitCommitKeys.accountId)
+        , @Field(GitCommitKeys.status), @Field(GitCommitKeys.commitId), @Field(GitCommitKeys.lastUpdatedAt)
+      }, options = @IndexOptions(name = "gitCommitStatusIdx"))
+})
 @HarnessExportableEntity
 @FieldNameConstants(innerTypeName = "GitCommitKeys")
 public class GitCommit extends Base {
@@ -50,5 +58,10 @@ public class GitCommit extends Base {
     GIT_PUSH_FAILED,
     GIT_PULL_FAILED,
     COMMIT_PARSING_FAILED
+  }
+
+  public static final class GitCommitKeys {
+    // Temporary
+    public static final String lastUpdatedAt = "lastUpdatedAt";
   }
 }
