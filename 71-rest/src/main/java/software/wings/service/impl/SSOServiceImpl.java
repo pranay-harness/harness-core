@@ -165,6 +165,10 @@ public class SSOServiceImpl implements SSOService {
       shouldEnableOauth = true;
     }
 
+    if (shouldEnableOauth && null == ssoSettingService.getOauthSettingsByAccountId(accountId)) {
+      throw new InvalidRequestException(
+          String.format("Cannot enable OAuth for accountId %s because OAuthSetting does not exist", accountId));
+    }
     account.setOauthEnabled(shouldEnableOauth);
     if (shouldUpdateAuthMechanism) {
       account.setAuthenticationMechanism(mechanism);
