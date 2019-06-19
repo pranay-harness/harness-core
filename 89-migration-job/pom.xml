@@ -67,14 +67,9 @@
             <artifactId>71-rest</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>75-model-test</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
     </dependencies>
     <build>
-        <finalName>model-gen-tool</finalName>
+        <finalName>migration-job</finalName>
         <plugins>
             <plugin>
                 <groupId>com.github.chrisdchristo</groupId>
