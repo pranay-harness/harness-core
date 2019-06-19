@@ -21,8 +21,11 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
+import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
 import com.codahale.metrics.MetricRegistry;
@@ -48,6 +51,7 @@ import io.harness.event.listener.EventListener;
 import io.harness.event.model.EventsMorphiaClasses;
 import io.harness.event.usagemetrics.EventsModuleHelper;
 import io.harness.exception.WingsException;
+import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
@@ -59,6 +63,7 @@ import io.harness.maintenance.HazelcastListener;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.PersistenceMorphiaClasses;
@@ -239,8 +244,23 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(20, 1000, 500L, TimeUnit.MILLISECONDS));
 
-    MongoModule databaseModule = new MongoModule(configuration.getMongoConnectionFactory(), morphiaClasses);
     List<Module> modules = new ArrayList<>();
+
+    modules.add(new ProviderModule() {
+      @Provides
+      @Named("morphiaClasses")
+      Set<Class> classes() {
+        return morphiaClasses;
+      }
+
+      @Provides
+      @Singleton
+      MongoConfig mongoConfig() {
+        return configuration.getMongoConnectionFactory();
+      }
+    });
+
+    MongoModule databaseModule = new MongoModule();
     modules.add(databaseModule);
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()

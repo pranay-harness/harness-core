@@ -8,6 +8,9 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import com.hazelcast.core.HazelcastInstance;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -16,8 +19,10 @@ import io.dropwizard.setup.Environment;
 import io.harness.event.EventsModule;
 import io.harness.event.model.EventsMorphiaClasses;
 import io.harness.exception.WingsException;
+import io.harness.govern.ProviderModule;
 import io.harness.limits.LimitsMorphiaClasses;
 import io.harness.maintenance.MaintenanceController;
+import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.PersistenceMorphiaClasses;
 import io.harness.persistence.HPersistence;
@@ -88,9 +93,21 @@ public class DataGenApplication extends Application<MainConfiguration> {
 
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(20, 1000, 500L, TimeUnit.MILLISECONDS));
 
-    MongoModule databaseModule = new MongoModule(configuration.getMongoConnectionFactory(), morphiaClasses);
     List<Module> modules = new ArrayList<>();
-    modules.add(databaseModule);
+    modules.add(new ProviderModule() {
+      @Provides
+      @Named("morphiaClasses")
+      Set<Class> classes() {
+        return morphiaClasses;
+      }
+
+      @Provides
+      @Singleton
+      MongoConfig mongoConfig() {
+        return configuration.getMongoConnectionFactory();
+      }
+    });
+    modules.add(new MongoModule());
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
                                             .configure()
