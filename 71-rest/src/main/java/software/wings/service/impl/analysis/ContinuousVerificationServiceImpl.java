@@ -295,21 +295,25 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         results.put(startTimeTs, new LinkedHashMap<>());
       }
 
-      if (!results.get(startTimeTs).containsKey(executionMetaData.getArtifactName())) {
-        results.get(startTimeTs).put(executionMetaData.getArtifactName(), new LinkedHashMap<>());
+      String artifactName = executionMetaData.getArtifactName() == null
+          ? "None-" + executionMetaData.getWorkflowExecutionId()
+          : executionMetaData.getArtifactName();
+
+      if (!results.get(startTimeTs).containsKey(artifactName)) {
+        results.get(startTimeTs).put(artifactName, new LinkedHashMap<>());
       }
 
       String envWorkflowName = executionMetaData.getEnvName() + "/" + executionMetaData.getWorkflowName();
-      if (!results.get(startTimeTs).get(executionMetaData.getArtifactName()).containsKey(envWorkflowName)) {
-        results.get(startTimeTs).get(executionMetaData.getArtifactName()).put(envWorkflowName, new LinkedHashMap<>());
+      if (!results.get(startTimeTs).get(artifactName).containsKey(envWorkflowName)) {
+        results.get(startTimeTs).get(artifactName).put(envWorkflowName, new LinkedHashMap<>());
       }
 
       if (!results.get(startTimeTs)
-               .get(executionMetaData.getArtifactName())
+               .get(artifactName)
                .get(envWorkflowName)
                .containsKey(executionMetaData.getWorkflowExecutionId())) {
         results.get(startTimeTs)
-            .get(executionMetaData.getArtifactName())
+            .get(artifactName)
             .get(envWorkflowName)
             .put(executionMetaData.getWorkflowExecutionId(), new LinkedHashMap<>());
       }
@@ -317,18 +321,18 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       String phaseName = executionMetaData.getPhaseName() == null ? "BASIC" : executionMetaData.getPhaseName();
 
       if (!results.get(startTimeTs)
-               .get(executionMetaData.getArtifactName())
+               .get(artifactName)
                .get(envWorkflowName)
                .get(executionMetaData.getWorkflowExecutionId())
                .containsKey(phaseName)) {
         results.get(startTimeTs)
-            .get(executionMetaData.getArtifactName())
+            .get(artifactName)
             .get(envWorkflowName)
             .get(executionMetaData.getWorkflowExecutionId())
             .put(phaseName, new ArrayList<>());
       }
       results.get(startTimeTs)
-          .get(executionMetaData.getArtifactName())
+          .get(artifactName)
           .get(envWorkflowName)
           .get(executionMetaData.getWorkflowExecutionId())
           .get(phaseName)
