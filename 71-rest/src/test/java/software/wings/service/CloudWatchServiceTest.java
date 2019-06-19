@@ -97,7 +97,7 @@ public class CloudWatchServiceTest extends WingsBaseTest {
     assertEquals("There are 4 lambda metrics in the list", 4, cloudwatchMetrics.get(AwsNameSpace.LAMBDA).size());
     assertEquals("There are 4 ECS metrics in the list", 4, cloudwatchMetrics.get(AwsNameSpace.ECS).size());
     assertEquals("There are 9 EC2 metrics in the list", 9, cloudwatchMetrics.get(AwsNameSpace.EC2).size());
-    assertEquals("There are 10 ELB metrics in the list", 10, cloudwatchMetrics.get(AwsNameSpace.ELB).size());
+    assertEquals("There are 13 ELB metrics in the list", 13, cloudwatchMetrics.get(AwsNameSpace.ELB).size());
   }
 
   @Test
@@ -117,7 +117,7 @@ public class CloudWatchServiceTest extends WingsBaseTest {
     assertFalse("There are no lambda metrics", cloudwatchMetrics.containsKey(AwsNameSpace.LAMBDA));
     assertFalse("There are no EC2 metrics", cloudwatchMetrics.containsKey(AwsNameSpace.EC2));
     assertEquals("There are 4 ECS metrics in the list", 4, cloudwatchMetrics.get(AwsNameSpace.ECS).size());
-    assertEquals("There are 10 ELB metrics in the list", 10, cloudwatchMetrics.get(AwsNameSpace.ELB).size());
+    assertEquals("There are 13 ELB metrics in the list", 13, cloudwatchMetrics.get(AwsNameSpace.ELB).size());
   }
 
   @Test

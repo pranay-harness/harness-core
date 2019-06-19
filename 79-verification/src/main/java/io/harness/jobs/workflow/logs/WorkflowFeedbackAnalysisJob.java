@@ -103,13 +103,13 @@ public class WorkflowFeedbackAnalysisJob implements Job {
             if (EmptyPredicate.isEmpty(feedbackRecordList)) {
               // mark the analysis as feedback complete and move on.
               analysisService.updateAnalysisStatus(LogMLAnalysisRecordKeys.stateExecutionId,
-                  context.getStateExecutionId(), logAnalysisMinute + 1, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
+                  context.getStateExecutionId(), lastLogMLTaskMinute, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
               logger.info(
                   "There are no feedbacks available for account {}, stateExecutionId {}. Bumping analysis to feedback complete for minute {}",
                   context.getAccountId(), context.getStateExecutionId(), logAnalysisMinute);
             } else {
               // we have feedbacks, create the task.
-              new LogMLAnalysisGenerator(context, logAnalysisMinute + 1, false, analysisService, learningEngineService,
+              new LogMLAnalysisGenerator(context, lastLogMLTaskMinute, false, analysisService, learningEngineService,
                   managerClient, managerClientHelper, MLAnalysisType.FEEDBACK_ANALYSIS)
                   .run();
             }
