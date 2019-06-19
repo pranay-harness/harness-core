@@ -71,6 +71,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
   @Inject TimeScaleDBService timeScaleDBService;
   @Inject QLStatsHelper statsHelper;
   private DeploymentTableSchema schema = new DeploymentTableSchema();
+  private static final int MAX_RETRY = 5;
 
   @Override
   protected QLData fetch(String accountId, QLAggregateFunction aggregateFunction, List<QLDeploymentFilter> filters,
@@ -111,33 +112,44 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
   private QLData getData(@NotNull String accountId, QLAggregateFunction aggregateFunction,
       List<QLDeploymentFilter> filters, List<QLDeploymentAggregation> groupBy, QLTimeSeriesAggregation groupByTime) {
     DeploymentStatsQueryMetaData queryData = null;
-    try (Statement statement = timeScaleDBService.getDBConnection().createStatement()) {
-      preValidateInput(groupBy, groupByTime);
-      queryData = formQuery(accountId, aggregateFunction, filters, groupBy, groupByTime);
-      logger.info("Query : [{}]", queryData.getQuery());
+    boolean successful = false;
+    int retryCount = 0;
+    while (!successful && retryCount < MAX_RETRY) {
+      try (Statement statement = timeScaleDBService.getDBConnection().createStatement()) {
+        preValidateInput(groupBy, groupByTime);
+        queryData = formQuery(accountId, aggregateFunction, filters, groupBy, groupByTime);
+        logger.info("Query : [{}]", queryData.getQuery());
 
-      long startTime = System.currentTimeMillis();
-      ResultSet resultSet = statement.executeQuery(queryData.getQuery());
-      long endTime = System.currentTimeMillis();
-      if (endTime - startTime > 2000L) {
-        logger.warn("TIMESCALEDB : query taking [{}] ms, [{}]", endTime - startTime, queryData.getQuery());
+        long startTime = System.currentTimeMillis();
+        ResultSet resultSet = statement.executeQuery(queryData.getQuery());
+        successful = true;
+        long endTime = System.currentTimeMillis();
+        if (endTime - startTime > 2000L) {
+          logger.warn("TIMESCALEDB : query taking [{}] ms, [{}]", endTime - startTime, queryData.getQuery());
+        }
+        switch (queryData.getResultType()) {
+          case SINGLE_POINT:
+            return generateSinglePointData(queryData, resultSet);
+          case TIME_SERIES:
+            return generateTimeSeriesData(queryData, resultSet);
+          case AGGREGATE_DATA:
+            return generateAggregateData(queryData, resultSet);
+          case STACKED_TIME_SERIES:
+            return generateStackedTimeSeriesData(queryData, resultSet);
+          case STACKED_BAR_CHART:
+            return generateStackedBarChartData(queryData, resultSet);
+          default:
+            throw new RuntimeException("Unsupported resultType for type:" + queryData.getResultType());
+        }
+      } catch (SQLException e) {
+        if (retryCount >= MAX_RETRY) {
+          logger.error("Failed to execute query=[{}],accountId=[{}]", queryData.getQuery(), accountId, e);
+        } else {
+          logger.warn("Failed to execute query=[{}],accountId=[{}],retryCount=[{}]", queryData.getQuery(), accountId,
+              retryCount);
+        }
+        retryCount++;
       }
-      switch (queryData.getResultType()) {
-        case SINGLE_POINT:
-          return generateSinglePointData(queryData, resultSet);
-        case TIME_SERIES:
-          return generateTimeSeriesData(queryData, resultSet);
-        case AGGREGATE_DATA:
-          return generateAggregateData(queryData, resultSet);
-        case STACKED_TIME_SERIES:
-          return generateStackedTimeSeriesData(queryData, resultSet);
-        case STACKED_BAR_CHART:
-          return generateStackedBarChartData(queryData, resultSet);
-        default:
-          throw new RuntimeException("Unsupported resultType for type:" + queryData.getResultType());
-      }
-    } catch (SQLException e) {
-      logger.error("Failed to execute query=[{}],accountId=[{}]", queryData.getQuery(), accountId, e);
     }
     return null;
   }
