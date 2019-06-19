@@ -48,6 +48,7 @@ import com.google.inject.Singleton;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.model.Tag;
+import com.amazonaws.services.ecs.model.LaunchType;
 import com.microsoft.azure.management.compute.VirtualMachine;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -83,8 +84,10 @@ import software.wings.beans.AzureInfrastructureMapping;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
+import software.wings.beans.ContainerInfrastructureMapping.ContainerInfrastructureMappingKeys;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
+import software.wings.beans.EcsInfrastructureMapping.EcsInfrastructureMappingKeys;
 import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
@@ -407,6 +410,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       fieldsToRemove.add(InfrastructureMapping.PROVISIONER_ID_KEY);
     }
 
+    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infrastructureMapping.getAccountId())) {
+      if (isNotEmpty(infrastructureMapping.getBlueprints())) {
+        keyValuePairs.put(InfrastructureMappingKeys.blueprints, infrastructureMapping.getBlueprints());
+      } else {
+        fieldsToRemove.add(InfrastructureMappingKeys.blueprints);
+      }
+    }
+
     if (infrastructureMapping instanceof EcsInfrastructureMapping) {
       EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
       validateInfraMapping(ecsInfrastructureMapping, fromYaml);
@@ -699,8 +710,32 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     infraMapping.setName(name);
   }
 
-  private void validateEcsInfraMapping(EcsInfrastructureMapping infraMapping) {
+  @VisibleForTesting
+  public void validateEcsInfraMapping(EcsInfrastructureMapping infraMapping) {
     if (isNotEmpty(infraMapping.getProvisionerId())) {
+      if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infraMapping.getAccountId())) {
+        Map<String, Object> blueprints = infraMapping.getBlueprints();
+        if (blueprints.get(EcsInfrastructureMappingKeys.region) == null) {
+          throw new InvalidRequestException("Region Blueprint is required.");
+        }
+        if (blueprints.get(ContainerInfrastructureMappingKeys.clusterName) == null) {
+          throw new InvalidRequestException("Cluster Name Blueprint is required.");
+        }
+        if (infraMapping.getLaunchType() == LaunchType.FARGATE.toString()) {
+          if (blueprints.get(EcsInfrastructureMappingKeys.executionRole) == null) {
+            throw new InvalidRequestException("executionRole Blueprint is required.");
+          }
+          if (blueprints.get(EcsInfrastructureMappingKeys.vpcId) == null) {
+            throw new InvalidRequestException("vpcId Blueprint is required.");
+          }
+          if (blueprints.get(EcsInfrastructureMappingKeys.securityGroupIds) == null) {
+            throw new InvalidRequestException("securityGroupIds Blueprint is required.");
+          }
+          if (blueprints.get(EcsInfrastructureMappingKeys.subnetIds) == null) {
+            throw new InvalidRequestException("subnetIds Blueprint is required.");
+          }
+        }
+      }
       return;
     }
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());

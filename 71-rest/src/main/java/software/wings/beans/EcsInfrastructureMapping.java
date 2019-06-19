@@ -2,8 +2,11 @@ package software.wings.beans;
 
 import static com.amazonaws.util.StringUtils.isNullOrEmpty;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_ECS_FARGATE;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import com.amazonaws.services.ecs.model.LaunchType;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -16,6 +19,8 @@ import io.harness.exception.WingsException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
+import software.wings.annotation.Blueprint;
 import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.stencils.DefaultValue;
@@ -31,16 +36,18 @@ import java.util.Optional;
  * Created by anubhaw on 1/10/17.
  */
 @JsonTypeName("AWS_ECS")
+@FieldNameConstants(innerTypeName = "EcsInfrastructureMappingKeys")
 public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
   @Attributes(title = "Region")
   @DefaultValue("us-east-1")
   @EnumData(enumDataProvider = AwsRegionDataProvider.class)
+  @Blueprint
   private String region;
-  private String vpcId;
-  private List<String> subnetIds;
-  private List<String> securityGroupIds;
+  @Blueprint private String vpcId;
+  @Blueprint private List<String> subnetIds;
+  @Blueprint private List<String> securityGroupIds;
   private boolean assignPublicIp;
-  private String executionRole;
+  @Blueprint private String executionRole;
   private String launchType;
 
   @SchemaIgnore private String type;
@@ -125,27 +132,64 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
   @Override
   public void applyProvisionerVariables(
       Map<String, Object> map, NodeFilteringType nodeFilteringType, boolean featureFlagEnabled) {
-    switch (nodeFilteringType) {
-      case AWS_ECS_EC2: {
-        applyEcsEc2Variables(map);
-        break;
-      }
-      case AWS_ECS_FARGATE: {
-        applyEcsFargateVariables(map);
-        break;
-      }
-      default: {
-        // Should never happen
-        throw new InvalidRequestException(format("Unidentified: [%s] node filtering type", nodeFilteringType.name()));
+    if (featureFlagEnabled) {
+      applyProvisionerVariables(map);
+    } else {
+      switch (nodeFilteringType) {
+        case AWS_ECS_EC2: {
+          applyEcsEc2Variables(map);
+          break;
+        }
+        case AWS_ECS_FARGATE: {
+          applyEcsFargateVariables(map);
+          break;
+        }
+        default: {
+          // Should never happen
+          throw new InvalidRequestException(format("Unidentified: [%s] node filtering type", nodeFilteringType.name()));
+        }
       }
     }
     ensureSetString(getRegion(), "Region is required");
     ensureSetString(getClusterName(), "Cluster is required");
-    if (AWS_ECS_FARGATE.equals(nodeFilteringType)) {
+    if (AWS_ECS_FARGATE.equals(nodeFilteringType)
+        || (featureFlagEnabled && LaunchType.FARGATE.toString().equals(getLaunchType()))) {
       ensureSetString(getExecutionRole(), "Task execution role is required for Fargate Launch type");
       ensureSetString(getVpcId(), "VpcId is required for Fargate Launch Type");
       ensureSetStringArray(getSecurityGroupIds(), "Security group ids are required for Fargate launch type");
       ensureSetStringArray(getSubnetIds(), "Subnet ids are required for Fargate launch type");
+    }
+  }
+
+  @VisibleForTesting
+  public void applyProvisionerVariables(Map<String, Object> resolvedBlueprints) {
+    if (isNotEmpty(resolvedBlueprints)) {
+      for (Map.Entry<String, Object> resolvedBlueprintEntry : resolvedBlueprints.entrySet()) {
+        Object value = resolvedBlueprintEntry.getValue();
+        switch (resolvedBlueprintEntry.getKey()) {
+          case "region":
+            setRegion((String) value);
+            break;
+          case "clusterName":
+            setClusterName((String) value);
+            break;
+          case "vpcId":
+            setVpcId((String) value);
+            break;
+          case "subnetIds":
+            setSubnetIds(getList(value));
+            break;
+          case "securityGroupIds":
+            setSecurityGroupIds(getList(value));
+            break;
+          case "executionRole":
+            setExecutionRole((String) value);
+            break;
+          default:
+            throw new InvalidRequestException(
+                format("Unknown blueprint field : [%s]", resolvedBlueprintEntry.getKey()));
+        }
+      }
     }
   }
 
