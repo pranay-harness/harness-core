@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.fabric8.utils.Lists;
-import io.harness.exception.WingsException;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
@@ -61,8 +60,8 @@ public class DeploymentEventProcessor implements EventProcessor {
   @Override
   public void processEvent(TimeSeriesEventInfo eventInfo) {
     if (timeScaleDBService.isValid() && insertPreparedStatement != null) {
-      Connection dbConnection = null;
-      try {
+      long startTime = System.currentTimeMillis();
+      try (Connection dbConnection = timeScaleDBService.getDBConnection()) {
         /**
          *  EXECUTIONID TEXT NOT NULL,
          * 	STARTTIME TIMESTAMP NOT NULL,
@@ -80,7 +79,6 @@ public class DeploymentEventProcessor implements EventProcessor {
          * 	DURATION BIGINT NOT NULL,
          * 	ARTIFACTS TEXT[]
          **/
-        dbConnection = timeScaleDBService.getDBConnection();
         insertPreparedStatement.setString(1, eventInfo.getStringData().get(EventProcessor.EXECUTIONID));
         insertPreparedStatement.setTimestamp(2, new Timestamp(eventInfo.getLongData().get(EventProcessor.STARTTIME)));
         insertPreparedStatement.setTimestamp(3, new Timestamp(eventInfo.getLongData().get(EventProcessor.ENDTIME)));
@@ -138,20 +136,10 @@ public class DeploymentEventProcessor implements EventProcessor {
       } catch (SQLException e) {
         logger.error("Failed to save deployment data,[{}]", eventInfo, e);
       } finally {
-        closeConnection(dbConnection);
+        logger.info("Total time=[{}]", System.currentTimeMillis() - startTime);
       }
     } else {
       logger.trace("Not processing data:[{}]", eventInfo);
-    }
-  }
-
-  private void closeConnection(Connection connection) throws WingsException {
-    try {
-      if (connection != null) {
-        connection.close();
-      }
-    } catch (SQLException e) {
-      logger.error("Failed to close connection", e);
     }
   }
 }
