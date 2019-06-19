@@ -75,6 +75,8 @@ import javax.net.ssl.HostnameVerifier;
 @Slf4j
 public class JenkinsImpl implements Jenkins {
   private final String FOLDER_JOB_CLASS_NAME = "com.cloudbees.hudson.plugins.folder.Folder";
+  private final String MULTI_BRANCH_JOB_CLASS_NAME =
+      "org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject";
 
   @Inject private ExecutorService executorService;
   @Inject private TimeLimiter timeLimiter;
@@ -294,7 +296,7 @@ public class JenkinsImpl implements Jenkins {
   private boolean isFolderJob(Job job) {
     // job.get_class().equals(FOLDER_JOB_CLASS_NAME) is to find if the jenkins job is of type folder.
     // (job instanceOf FolderJob) doesn't work
-    return job.get_class().equals(FOLDER_JOB_CLASS_NAME);
+    return job.get_class().equals(FOLDER_JOB_CLASS_NAME) || job.get_class().equals(MULTI_BRANCH_JOB_CLASS_NAME);
   }
 
   /* (non-Javadoc)
