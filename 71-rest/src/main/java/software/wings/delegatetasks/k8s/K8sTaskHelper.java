@@ -14,6 +14,8 @@ import static io.harness.k8s.manifest.ManifestHelper.validateValuesFileContents;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static io.harness.k8s.manifest.ManifestHelper.yaml_file_extension;
 import static io.harness.k8s.manifest.ManifestHelper.yml_file_extension;
+import static io.harness.k8s.model.K8sExpressions.canaryDestinationExpression;
+import static io.harness.k8s.model.K8sExpressions.stableDestinationExpression;
 import static io.harness.k8s.model.Release.Status.Failed;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
@@ -32,8 +34,6 @@ import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
 import static software.wings.delegatetasks.k8s.taskhandler.K8sTrafficSplitTaskHandler.ISTIO_DESTINATION_TEMPLATE;
 import static software.wings.sm.states.k8s.K8sApplyState.SKIP_FILE_FOR_DEPLOY_PLACEHOLDER_TEXT;
-import static software.wings.sm.states.k8s.K8sTrafficSplitState.K8S_CANARY_DESTINATION_PLACEHOLDER;
-import static software.wings.sm.states.k8s.K8sTrafficSplitState.K8S_STABLE_DESTINATION_PLACEHOLDER;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -1204,9 +1204,9 @@ public class K8sTaskHelper {
   }
 
   private String getDestinationYaml(String destination, String host) {
-    if (K8S_CANARY_DESTINATION_PLACEHOLDER.equals(destination)) {
+    if (canaryDestinationExpression.equals(destination)) {
       return generateDestination(host, HarnessLabelValues.trackCanary);
-    } else if (K8S_STABLE_DESTINATION_PLACEHOLDER.equals(destination)) {
+    } else if (stableDestinationExpression.equals(destination)) {
       return generateDestination(host, HarnessLabelValues.trackStable);
     } else {
       return destination;
@@ -1275,9 +1275,9 @@ public class K8sTaskHelper {
       KubernetesConfig kubernetesConfig, ExecutionLogCallback executionLogCallback) throws IOException {
     List<IstioDestinationWeight> istioDestinationWeights = new ArrayList<>();
     istioDestinationWeights.add(
-        IstioDestinationWeight.builder().destination(K8S_STABLE_DESTINATION_PLACEHOLDER).weight("100").build());
+        IstioDestinationWeight.builder().destination(stableDestinationExpression).weight("100").build());
     istioDestinationWeights.add(
-        IstioDestinationWeight.builder().destination(K8S_CANARY_DESTINATION_PLACEHOLDER).weight("0").build());
+        IstioDestinationWeight.builder().destination(canaryDestinationExpression).weight("0").build());
 
     return updateVirtualServiceManifestFilesWithRoutes(
         resources, kubernetesConfig, istioDestinationWeights, executionLogCallback);

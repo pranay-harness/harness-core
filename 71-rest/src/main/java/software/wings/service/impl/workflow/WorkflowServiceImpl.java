@@ -19,8 +19,9 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.govern.Switch.noop;
-import static io.harness.k8s.manifest.ManifestHelper.primaryServiceNameExpression;
-import static io.harness.k8s.manifest.ManifestHelper.stageServiceNameExpression;
+import static io.harness.k8s.model.K8sExpressions.canaryWorkloadExpression;
+import static io.harness.k8s.model.K8sExpressions.primaryServiceNameExpression;
+import static io.harness.k8s.model.K8sExpressions.stageServiceNameExpression;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -839,7 +840,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, VERIFY).build());
 
     Map<String, Object> defaultCanaryDeleteProperties = new HashMap<>();
-    defaultCanaryDeleteProperties.put("resources", "${k8s.canaryWorkload}");
+    defaultCanaryDeleteProperties.put("resources", canaryWorkloadExpression);
     defaultCanaryDeleteProperties.put("instanceUnitType", "COUNT");
 
     phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.WRAP_UP)

@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.exception.ExceptionUtils.getMessage;
+import static io.harness.k8s.model.K8sExpressions.virtualServiceNameExpression;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogLevel.ERROR;
@@ -13,7 +14,6 @@ import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
 import static software.wings.beans.command.K8sDummyCommandUnit.Init;
 import static software.wings.beans.command.K8sDummyCommandUnit.TrafficSplit;
-import static software.wings.sm.states.k8s.K8sTrafficSplitState.K8S_VIRTUAL_SERVICE_PLACEHOLDER;
 
 import com.google.inject.Inject;
 
@@ -99,7 +99,7 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
     try {
       boolean success;
 
-      if (K8S_VIRTUAL_SERVICE_PLACEHOLDER.equals(k8sTrafficSplitTaskParameters.getVirtualServiceName())) {
+      if (virtualServiceNameExpression.equals(k8sTrafficSplitTaskParameters.getVirtualServiceName())) {
         success = initBasedOnDefaultVirtualServiceName(k8sTrafficSplitTaskParameters, executionLogCallback);
       } else {
         success = initBasedOnCustomVirtualServiceName(k8sTrafficSplitTaskParameters, executionLogCallback);

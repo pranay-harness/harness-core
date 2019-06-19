@@ -5,6 +5,10 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.noop;
+import static io.harness.k8s.model.K8sExpressions.canaryDestination;
+import static io.harness.k8s.model.K8sExpressions.canaryWorkload;
+import static io.harness.k8s.model.K8sExpressions.stableDestination;
+import static io.harness.k8s.model.K8sExpressions.virtualServiceName;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.EntityType.ENVIRONMENT;
@@ -27,9 +31,6 @@ import static software.wings.service.impl.workflow.WorkflowServiceHelper.INFRA_T
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.sm.ContextElement.DEPLOYMENT_URL;
-import static software.wings.sm.states.k8s.K8sTrafficSplitState.K8S_CANARY_DESTINATION;
-import static software.wings.sm.states.k8s.K8sTrafficSplitState.K8S_STABLE_DESTINATION;
-import static software.wings.sm.states.k8s.K8sTrafficSplitState.K8S_VIRTUAL_SERVICE;
 
 import com.google.inject.Inject;
 
@@ -215,7 +216,15 @@ public abstract class ExpressionBuilder {
         break;
 
       case K8S_TRAFFIC_SPLIT:
-        expressions.addAll(asList(K8S_CANARY_DESTINATION, K8S_STABLE_DESTINATION, K8S_VIRTUAL_SERVICE));
+        expressions.addAll(asList(canaryDestination, stableDestination, virtualServiceName));
+        break;
+
+      case K8S_SCALE:
+        expressions.add(canaryWorkload);
+        break;
+
+      case K8S_DELETE:
+        expressions.add(canaryWorkload);
         break;
 
       default:

@@ -52,13 +52,6 @@ public class K8sTrafficSplitState extends State {
     super(name, K8S_TRAFFIC_SPLIT.name());
   }
 
-  public static final String K8S_VIRTUAL_SERVICE = "k8s.virtualServiceName";
-  public static final String K8S_VIRTUAL_SERVICE_PLACEHOLDER = "${k8s.virtualServiceName}";
-  public static final String K8S_CANARY_DESTINATION = "k8s.canaryDestination";
-  public static final String K8S_CANARY_DESTINATION_PLACEHOLDER = "${k8s.canaryDestination}";
-  public static final String K8S_STABLE_DESTINATION = "k8s.stableDestination";
-  public static final String K8S_STABLE_DESTINATION_PLACEHOLDER = "${k8s.stableDestination}";
-
   @Trimmed @Getter @Setter @Attributes(title = "Virtual Service Name") private String virtualServiceName;
   @Getter
   @Setter

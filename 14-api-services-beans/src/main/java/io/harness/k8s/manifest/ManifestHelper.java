@@ -37,8 +37,6 @@ public class ManifestHelper {
   public static final String yml_file_extension = ".yml";
   public static final String currentReleaseWorkloadExpression = "${k8s.currentReleaseWorkload}";
   public static final String previousReleaseWorkloadExpression = "${k8s.previousReleaseWorkload}";
-  public static final String primaryServiceNameExpression = "${k8s.primaryServiceName}";
-  public static final String stageServiceNameExpression = "${k8s.stageServiceName}";
 
   private static final String VALUES_EXPRESSION = ".Values";
   public static final int MAX_VALUES_EXPRESSION_RECURSION_DEPTH = 10;
