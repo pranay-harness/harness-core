@@ -186,4 +186,12 @@ public class UserGroup extends Base implements NotificationReceiverInfo {
   public List<String> getEmailAddresses() {
     return null != notificationSettings ? notificationSettings.getEmailAddresses() : Collections.emptyList();
   }
+
+  public static final class UserGroupKeys {
+    // Temporary
+    public static final String createdAt = "createdAt";
+    public static final String uuid = "uuid";
+    public static final String name = "name";
+    public static final String accountId = "accountId";
+  }
 }

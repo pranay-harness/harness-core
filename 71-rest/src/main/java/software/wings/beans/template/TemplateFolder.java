@@ -110,4 +110,13 @@ public class TemplateFolder extends Base implements KeywordsAware, NameAccess {
     keywords.addAll(asList(name, description));
     return keywords;
   }
+
+  public static final class TemplateFolderKeys {
+    // Temporary
+    public static final String createdAt = "createdAt";
+    public static final String uuid = "uuid";
+    public static final String name = "name";
+    public static final String appId = "appId";
+    public static final String accountId = "accountId";
+  }
 }

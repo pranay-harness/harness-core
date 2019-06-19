@@ -16,6 +16,7 @@ import static software.wings.audit.ResourceType.SOURCE_REPO_PROVIDER;
 import static software.wings.audit.ResourceType.TEMPLATE;
 import static software.wings.audit.ResourceType.TEMPLATE_FOLDER;
 import static software.wings.audit.ResourceType.TRIGGER;
+import static software.wings.audit.ResourceType.USER_GROUP;
 import static software.wings.audit.ResourceType.VERIFICATION_PROVIDER;
 import static software.wings.audit.ResourceType.WORKFLOW;
 
@@ -67,7 +68,8 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
 
   private static List<String> accountLevelResource = Arrays.asList(CLOUD_PROVIDER.name(), ARTIFACT_SERVER.name(),
       SOURCE_REPO_PROVIDER.name(), COLLABORATION_PROVIDER.name(), LOAD_BALANCER.name(), VERIFICATION_PROVIDER.name(),
-      SETTING.name(), ENCRYPTED_RECORDS.name(), TEMPLATE.name(), TEMPLATE_FOLDER.name(), CONNECTION_ATTRIBUTES.name());
+      SETTING.name(), ENCRYPTED_RECORDS.name(), TEMPLATE.name(), TEMPLATE_FOLDER.name(), CONNECTION_ATTRIBUTES.name(),
+      USER_GROUP.name());
 
   private static Set<String> resourceTypeSet = new HashSet<>();
 

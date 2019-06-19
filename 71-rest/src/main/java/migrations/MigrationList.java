@@ -82,6 +82,7 @@ import migrations.all.RemoveResizeFromStatefulSetWorkflows;
 import migrations.all.RemoveServiceVariablesFromActivity;
 import migrations.all.RemoveUnusedLogDataRecordMigration;
 import migrations.all.RenameProvisionNodeToInfrastructureNodeWorkflows;
+import migrations.all.ResourceLookupMigration;
 import migrations.all.SecretManagerConfigMigration;
 import migrations.all.SecretTextNameKeyWordsMigration;
 import migrations.all.ServiceAddArtifactStreamIdsMigration;
@@ -250,6 +251,7 @@ public class MigrationList {
         .add(Pair.of(259, OauthEnabledFieldMigration.class))
         .add(Pair.of(260, AddLoginSettingsToAccountMigration.class))
         .add(Pair.of(261, AuditRecordMigration.class))
+        .add(Pair.of(262, ResourceLookupMigration.class))
         .build();
   }
 }

@@ -19,5 +19,6 @@ public enum ResourceType {
   PROVISIONER,
   TRIGGER,
   TEMPLATE,
-  TEMPLATE_FOLDER
+  TEMPLATE_FOLDER,
+  USER_GROUP
 }

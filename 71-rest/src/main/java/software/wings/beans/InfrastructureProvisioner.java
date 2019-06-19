@@ -79,4 +79,13 @@ public abstract class InfrastructureProvisioner extends Base implements NameAcce
       setMappingBlueprints(mappingBlueprints);
     }
   }
+
+  public static final class InfrastructureProvisionerKeys {
+    // Temporary
+    public static final String createdAt = "createdAt";
+    public static final String uuid = "uuid";
+    public static final String name = "name";
+    public static final String appId = "appId";
+    public static final String accountId = "accountId";
+  }
 }
