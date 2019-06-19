@@ -51,6 +51,7 @@ public class SSOServiceImplTest extends WingsBaseTest {
     // UP = USER_PASSWORD, OA = OAUTH
 
     // UP -> UP + OA - enable oauth
+    ssoService.uploadOauthConfiguration(account.getUuid(), "", Sets.newHashSet(OauthProviderType.values()));
     ssoService.setAuthenticationMechanism(account.getUuid(), OAUTH);
     account = accountService.get(account.getUuid());
     assertEquals(USER_PASSWORD, account.getAuthenticationMechanism());
