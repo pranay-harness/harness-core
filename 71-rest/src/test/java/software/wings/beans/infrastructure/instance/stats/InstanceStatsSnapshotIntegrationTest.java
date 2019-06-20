@@ -6,7 +6,6 @@ import static org.junit.Assert.assertNotNull;
 import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
-import io.harness.persistence.ReadPref;
 import lombok.val;
 import org.junit.After;
 import org.junit.Before;
@@ -33,14 +32,14 @@ public class InstanceStatsSnapshotIntegrationTest extends BaseIntegrationTest {
   @Before
   public void ensureIndices() {
     if (!indexesEnsured) {
-      persistence.getDatastore(InstanceStatsSnapshot.class, ReadPref.NORMAL).ensureIndexes(InstanceStatsSnapshot.class);
+      persistence.getDatastore(InstanceStatsSnapshot.class).ensureIndexes(InstanceStatsSnapshot.class);
       indexesEnsured = true;
     }
   }
 
   @After
   public void clearCollection() {
-    val ds = persistence.getDatastore(InstanceStatsSnapshot.class, ReadPref.NORMAL);
+    val ds = persistence.getDatastore(InstanceStatsSnapshot.class);
     ds.delete(ds.createQuery(InstanceStatsSnapshot.class).filter(InstanceStatsSnapshotKeys.accountId, SOME_ACCOUNT_ID));
   }
 

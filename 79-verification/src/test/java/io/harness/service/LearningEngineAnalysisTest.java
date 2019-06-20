@@ -30,7 +30,6 @@ import io.harness.VerificationBaseTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.managerclient.VerificationManagerClientHelper;
-import io.harness.persistence.ReadPref;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
@@ -539,8 +538,7 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testLockCleanup() {
-    DBCollection collection =
-        wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "quartz_verification_locks");
+    DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, "quartz_verification_locks");
     BasicDBObject lockObject = new BasicDBObject();
     lockObject.put(ID_KEY, new ObjectId());
     lockObject.put("type", "t");

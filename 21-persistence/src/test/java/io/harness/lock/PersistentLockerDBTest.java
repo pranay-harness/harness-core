@@ -20,7 +20,6 @@ import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
-import io.harness.persistence.ReadPref;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RealMongo;
 import io.harness.threading.Concurrent;
@@ -41,7 +40,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   @Inject private PersistentLocker persistentLocker;
 
   private DBObject getDbLock(String uuid) {
-    final DBCollection locks = persistence.getCollection(LOCKS_STORE, ReadPref.NORMAL, "locks");
+    final DBCollection locks = persistence.getCollection(LOCKS_STORE, "locks");
     return locks.findOne(new BasicDBObject().append("_id", uuid));
   }
 

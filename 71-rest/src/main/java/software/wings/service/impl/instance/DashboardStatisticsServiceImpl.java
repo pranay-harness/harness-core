@@ -41,7 +41,6 @@ import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
-import io.harness.persistence.ReadPref;
 import io.harness.time.EpochUtils;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -190,7 +189,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   private List<EntitySummaryStats> getEntitySummaryStats(
       String entityIdColumn, String entityNameColumn, String groupByEntityType, Query<Instance> query) {
     List<EntitySummaryStats> entitySummaryStatsList = new ArrayList<>();
-    wingsPersistence.getDatastore(query.getEntityClass(), ReadPref.NORMAL)
+    wingsPersistence.getDatastore(query.getEntityClass())
         .createAggregation(Instance.class)
         .match(query)
         .group(Group.id(grouping(entityIdColumn)), grouping("count", accumulator("$sum", 1)),
@@ -208,7 +207,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
   private long getInstanceCount(Query<Instance> query) {
     AtomicLong totalCount = new AtomicLong();
-    wingsPersistence.getDatastore(query.getEntityClass(), ReadPref.NORMAL)
+    wingsPersistence.getDatastore(query.getEntityClass())
         .createAggregation(Instance.class)
         .match(query)
         .group("_id", grouping("count", accumulator("$sum", 1)))
@@ -219,7 +218,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
   private List<EntitySummaryStats> getEnvironmentTypeSummaryStats(Query<Instance> query) {
     List<EntitySummaryStats> entitySummaryStatsList = Lists.newArrayList();
-    wingsPersistence.getDatastore(query.getEntityClass(), ReadPref.NORMAL)
+    wingsPersistence.getDatastore(query.getEntityClass())
         .createAggregation(Instance.class)
         .match(query)
         .group(Group.id(grouping("envType")), grouping("count", accumulator("$sum", 1)))
@@ -389,7 +388,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     }
 
     List<AggregationInfo> instanceInfoList = new ArrayList<>();
-    wingsPersistence.getDatastore(query.getEntityClass(), ReadPref.NORMAL)
+    wingsPersistence.getDatastore(query.getEntityClass())
         .createAggregation(Instance.class)
         .match(query)
         .group(Group.id(grouping("serviceId"), grouping("envId"), grouping("lastArtifactId")),
@@ -427,7 +426,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     }
 
     List<ServiceAggregationInfo> serviceAggregationInfoList = new ArrayList<>();
-    wingsPersistence.getDatastore(query.getEntityClass(), ReadPref.NORMAL)
+    wingsPersistence.getDatastore(query.getEntityClass())
         .createAggregation(Instance.class)
         .match(query)
         .group(Group.id(grouping("envId"), grouping("lastArtifactId")), grouping("count", accumulator("$sum", 1)),
@@ -463,7 +462,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
     List<ServiceInstanceCount> instanceInfoList = new ArrayList<>();
     AggregationPipeline aggregationPipeline =
-        wingsPersistence.getDatastore(query.getEntityClass(), ReadPref.NORMAL)
+        wingsPersistence.getDatastore(query.getEntityClass())
             .createAggregation(Instance.class)
             .match(query)
             .group(Group.id(grouping("serviceId")), grouping("count", accumulator("$sum", 1)),
@@ -754,7 +753,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     }
 
     List<AggregationInfo> instanceInfoList = new ArrayList<>();
-    wingsPersistence.getDatastore(query.getEntityClass(), ReadPref.NORMAL)
+    wingsPersistence.getDatastore(query.getEntityClass())
         .createAggregation(Instance.class)
         .match(query)
         .group(Group.id(grouping("envId"), grouping("infraMappingId"), grouping("lastArtifactId")),

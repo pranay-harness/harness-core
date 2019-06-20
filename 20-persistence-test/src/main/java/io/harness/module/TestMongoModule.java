@@ -10,20 +10,16 @@ import org.mongodb.morphia.AdvancedDatastore;
 @Slf4j
 public class TestMongoModule extends AbstractModule {
   private AdvancedDatastore primaryDatastore;
-  private AdvancedDatastore secondaryDatastore;
   private DistributedLockSvc distributedLockSvc;
 
-  public TestMongoModule(
-      AdvancedDatastore primaryDatastore, AdvancedDatastore secondaryDatastore, DistributedLockSvc distributedLockSvc) {
+  public TestMongoModule(AdvancedDatastore primaryDatastore, DistributedLockSvc distributedLockSvc) {
     this.primaryDatastore = primaryDatastore;
-    this.secondaryDatastore = secondaryDatastore;
     this.distributedLockSvc = distributedLockSvc;
   }
 
   @Override
   protected void configure() {
     bind(AdvancedDatastore.class).annotatedWith(Names.named("primaryDatastore")).toInstance(primaryDatastore);
-    bind(AdvancedDatastore.class).annotatedWith(Names.named("secondaryDatastore")).toInstance(secondaryDatastore);
     bind(DistributedLockSvc.class).toInstance(distributedLockSvc);
   }
 }

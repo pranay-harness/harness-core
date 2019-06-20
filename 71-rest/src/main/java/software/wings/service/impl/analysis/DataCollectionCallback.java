@@ -11,7 +11,6 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.persistence.ReadPref;
 import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
@@ -131,8 +130,7 @@ public class DataCollectionCallback implements NotifyCallback {
 
   private void deleteDataCollectionCron() {
     logger.info("Data collection failed with stateExecutionId {}, deleting data collection cron", stateExecutionId);
-    DBCollection collection =
-        wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "quartz_verification_jobs");
+    DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, "quartz_verification_jobs");
     BasicDBObject object = new BasicDBObject();
     object.put("keyName", stateExecutionId);
     object.put("keyGroup", stateType.name().toUpperCase() + WORKFLOW_CV_COLLECTION_CRON_GROUP);

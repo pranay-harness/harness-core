@@ -14,7 +14,6 @@ import io.harness.beans.SearchFilter.SearchFilterBuilder;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.data.parser.Parser;
 import io.harness.exception.InvalidRequestException;
-import io.harness.persistence.ReadPref;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.MappedClass;
 import org.mongodb.morphia.mapping.MappedField;
@@ -63,8 +62,6 @@ public class PageRequest<T> {
   @JsonIgnore @Context private ContainerRequestContext requestContext; // TODO: remove UriInfo
 
   @JsonIgnore private boolean isOr;
-
-  @JsonIgnore private ReadPref readPref = ReadPref.NORMAL;
 
   @JsonIgnore private List<Option> options;
   /**
@@ -234,14 +231,6 @@ public class PageRequest<T> {
    */
   public void addFieldsExcluded(String fieldsExcluded) {
     this.fieldsExcluded.add(fieldsExcluded);
-  }
-
-  public ReadPref getReadPref() {
-    return readPref;
-  }
-
-  public void setReadPref(ReadPref readPref) {
-    this.readPref = readPref;
   }
 
   public List<Option> getOptions() {
@@ -427,7 +416,6 @@ public class PageRequest<T> {
     clone.uriInfo = this.uriInfo;
     clone.requestContext = this.requestContext;
     clone.isOr = this.isOr;
-    clone.readPref = this.readPref;
     clone.options = this.options;
     return clone;
   }
@@ -509,7 +497,6 @@ public class PageRequest<T> {
     private List<String> fieldsIncluded = new ArrayList<>();
     private List<String> fieldsExcluded = new ArrayList<>();
     private UriInfo uriInfo;
-    private ReadPref readPref = ReadPref.NORMAL;
 
     private PageRequestBuilder() {}
 
@@ -625,17 +612,6 @@ public class PageRequest<T> {
     }
 
     /**
-     * With Read Pref.
-     *
-     * @param readPref the read pref
-     * @return the builder
-     */
-    public PageRequestBuilder withReadPref(ReadPref readPref) {
-      this.readPref = readPref;
-      return this;
-    }
-
-    /**
      * Builds the.
      *
      * @return the page request
@@ -649,7 +625,6 @@ public class PageRequest<T> {
       pageRequest.setFieldsIncluded(fieldsIncluded);
       pageRequest.setFieldsExcluded(fieldsExcluded);
       pageRequest.setUriInfo(uriInfo);
-      pageRequest.setReadPref(readPref);
       return pageRequest;
     }
   }

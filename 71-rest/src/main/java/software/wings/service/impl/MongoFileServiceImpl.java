@@ -22,7 +22,6 @@ import com.mongodb.client.gridfs.GridFSFindIterable;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import com.mongodb.client.model.Filters;
-import io.harness.persistence.ReadPref;
 import io.harness.stream.BoundedInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
@@ -206,9 +205,8 @@ public class MongoFileServiceImpl implements FileService {
   @Override
   public boolean updateParentEntityIdAndVersion(Class entityClass, String entityId, Integer version, String fileId,
       Map<String, Object> others, FileBucket fileBucket) {
-    DBCollection collection = wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL)
-                                  .getDB()
-                                  .getCollection(fileBucket.representationName() + ".files");
+    DBCollection collection =
+        wingsPersistence.getDatastore(DEFAULT_STORE).getDB().getCollection(fileBucket.representationName() + ".files");
 
     // TODO: creating this index here makes no sense
     collection.createIndex(
@@ -278,7 +276,7 @@ public class MongoFileServiceImpl implements FileService {
   }
 
   GridFSBucket getOrCreateGridFSBucket(String bucketName) {
-    final AdvancedDatastore datastore = wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL);
+    final AdvancedDatastore datastore = wingsPersistence.getDatastore(DEFAULT_STORE);
     return GridFSBuckets.create(datastore.getMongo().getDatabase(datastore.getDB().getName()), bucketName);
   }
 }

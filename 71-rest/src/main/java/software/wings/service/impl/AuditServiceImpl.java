@@ -34,7 +34,6 @@ import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.logging.ExceptionLogger;
 import io.harness.manage.GlobalContextManager;
 import io.harness.persistence.NameAccess;
-import io.harness.persistence.ReadPref;
 import io.harness.persistence.UuidAccess;
 import io.harness.stream.BoundedInputStream;
 import lombok.extern.slf4j.Slf4j;
@@ -286,21 +285,21 @@ public class AuditServiceImpl implements AuditService {
                     .filter(auditHeader -> auditHeader.getResponsePayloadUuid() != null)
                     .map(auditHeader -> new ObjectId(auditHeader.getResponsePayloadUuid()))
                     .collect(toList());
-            wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "audits")
+            wingsPersistence.getCollection(DEFAULT_STORE, "audits")
                 .remove(new BasicDBObject(
                     ID_KEY, new BasicDBObject("$in", auditHeaders.stream().map(AuditHeader::getUuid).toArray())));
 
             if (requestPayloadIds != null) {
-              wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "audits.files")
+              wingsPersistence.getCollection(DEFAULT_STORE, "audits.files")
                   .remove(new BasicDBObject(ID_KEY, new BasicDBObject("$in", requestPayloadIds.toArray())));
-              wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "audits.chunks")
+              wingsPersistence.getCollection(DEFAULT_STORE, "audits.chunks")
                   .remove(new BasicDBObject("files_id", new BasicDBObject("$in", requestPayloadIds.toArray())));
             }
 
             if (responsePayloadIds != null) {
-              wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "audits.files")
+              wingsPersistence.getCollection(DEFAULT_STORE, "audits.files")
                   .remove(new BasicDBObject(ID_KEY, new BasicDBObject("$in", responsePayloadIds.toArray())));
-              wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "audits.chunks")
+              wingsPersistence.getCollection(DEFAULT_STORE, "audits.chunks")
                   .remove(new BasicDBObject("files_id", new BasicDBObject("$in", responsePayloadIds.toArray())));
             }
           } catch (Exception ex) {

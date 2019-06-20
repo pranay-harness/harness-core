@@ -14,7 +14,6 @@ import io.harness.category.element.IntegrationTests;
 import io.harness.limits.ActionType;
 import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.impl.model.StaticLimit;
-import io.harness.persistence.ReadPref;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RepeatRule.Repeat;
 import lombok.val;
@@ -65,7 +64,7 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
   @After
   public void cleanUp() {
     final Query<Application> query = fetchAppsQuery();
-    val ds = persistence.getDatastore(query.getEntityClass(), ReadPref.NORMAL);
+    val ds = persistence.getDatastore(query.getEntityClass());
     ds.delete(query);
     initializeAppCounters.migrate();
   }

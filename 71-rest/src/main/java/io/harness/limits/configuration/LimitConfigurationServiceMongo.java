@@ -14,7 +14,6 @@ import io.harness.limits.defaults.service.DefaultLimitsService;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
 import io.harness.limits.lib.Limit;
-import io.harness.persistence.ReadPref;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.UpdateOptions;
@@ -111,7 +110,7 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
         throw new IllegalArgumentException("Unknown limit type: " + limit.getLimitType());
     }
 
-    Datastore ds = dao.getDatastore(ConfiguredLimit.class, ReadPref.NORMAL);
+    Datastore ds = dao.getDatastore(ConfiguredLimit.class);
 
     UpdateOperations<ConfiguredLimit> updateOp = ds.createUpdateOperations(ConfiguredLimit.class)
                                                      .set("accountId", configuredLimit.getAccountId())

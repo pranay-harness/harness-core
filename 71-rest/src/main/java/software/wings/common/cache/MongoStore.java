@@ -13,7 +13,6 @@ import io.harness.cache.Distributable;
 import io.harness.cache.DistributedStore;
 import io.harness.cache.Nominal;
 import io.harness.cache.Ordinal;
-import io.harness.persistence.ReadPref;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Datastore;
@@ -51,13 +50,11 @@ public class MongoStore implements DistributedStore {
 
   private <T extends Distributable> T get(Long contextValue, long algorithmId, long structureHash, String key) {
     try {
-      final Datastore datastore = wingsPersistence.getDatastore(CacheEntity.class, ReadPref.NORMAL);
+      final Datastore datastore = wingsPersistence.getDatastore(CacheEntity.class);
       final QueryFactory factory = datastore.getQueryFactory();
 
       final Query<CacheEntity> entityQuery =
-          factory
-              .createQuery(
-                  datastore, wingsPersistence.getCollection(CacheEntity.class, ReadPref.NORMAL), CacheEntity.class)
+          factory.createQuery(datastore, wingsPersistence.getCollection(CacheEntity.class), CacheEntity.class)
               .filter(CacheEntityKeys.canonicalKey, canonicalKey(algorithmId, structureHash, key));
 
       if (contextValue != null) {
@@ -87,7 +84,7 @@ public class MongoStore implements DistributedStore {
       contextValue = ((Ordinal) entity).contextOrder();
     }
     try {
-      final Datastore datastore = wingsPersistence.getDatastore(CacheEntity.class, ReadPref.NORMAL);
+      final Datastore datastore = wingsPersistence.getDatastore(CacheEntity.class);
       final UpdateOperations<CacheEntity> updateOperations = datastore.createUpdateOperations(CacheEntity.class);
       updateOperations.set(CacheEntityKeys.contextValue, contextValue);
       updateOperations.set(CacheEntityKeys.canonicalKey, canonicalKey);

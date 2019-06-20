@@ -16,7 +16,6 @@ import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.persistence.HPersistence;
-import io.harness.persistence.ReadPref;
 import io.harness.queue.Queue;
 import io.harness.waiter.WaitQueue.WaitQueueKeys;
 import lombok.extern.slf4j.Slf4j;
@@ -114,10 +113,9 @@ public class WaitNotifyEngine {
                                                         .error(error)
                                                         .build());
 
-      final List<WaitQueue> waitQueues =
-          wingsPersistence.createQuery(WaitQueue.class, ReadPref.CRITICAL, excludeAuthority)
-              .filter(WaitQueueKeys.correlationId, correlationId)
-              .asList();
+      final List<WaitQueue> waitQueues = wingsPersistence.createQuery(WaitQueue.class, excludeAuthority)
+                                             .filter(WaitQueueKeys.correlationId, correlationId)
+                                             .asList();
 
       waitQueues.forEach(waitQueue
           -> notifyQueue.send(aNotifyEvent().waitInstanceId(waitQueue.getWaitInstanceId()).error(error).build()));

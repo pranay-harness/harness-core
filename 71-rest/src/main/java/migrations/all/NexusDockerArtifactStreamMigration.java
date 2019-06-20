@@ -9,7 +9,6 @@ import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
 import io.harness.artifact.ArtifactUtilities;
 import io.harness.persistence.HIterator;
-import io.harness.persistence.ReadPref;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import software.wings.beans.SettingAttribute;
@@ -28,7 +27,7 @@ public class NexusDockerArtifactStreamMigration implements Migration {
 
   @Override
   public void migrate() {
-    final DBCollection collection = wingsPersistence.getCollection(ArtifactStream.class, ReadPref.NORMAL);
+    final DBCollection collection = wingsPersistence.getCollection(ArtifactStream.class);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
     int i = 1;
     logger.info("Migrating Nexus Docker Artifact Streams");

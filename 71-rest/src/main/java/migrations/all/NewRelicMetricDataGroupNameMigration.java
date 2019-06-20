@@ -9,7 +9,6 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
 import io.harness.persistence.HIterator;
-import io.harness.persistence.ReadPref;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import software.wings.dl.WingsPersistence;
@@ -24,7 +23,7 @@ public class NewRelicMetricDataGroupNameMigration implements Migration {
 
   @Override
   public void migrate() {
-    DBCollection collection = wingsPersistence.getCollection(NewRelicMetricDataRecord.class, ReadPref.NORMAL);
+    DBCollection collection = wingsPersistence.getCollection(NewRelicMetricDataRecord.class);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
     int updated = 0;
     int batched = 0;

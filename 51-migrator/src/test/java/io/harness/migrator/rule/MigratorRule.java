@@ -82,7 +82,7 @@ public class MigratorRule implements MethodRule, InjectorRuleMixin, MongoRuleMix
 
     modules.add(new VersionModule());
     modules.add(new TimeModule());
-    modules.add(new TestMongoModule(datastore, datastore, distributedLockSvc));
+    modules.add(new TestMongoModule(datastore, distributedLockSvc));
     return modules;
   }
 

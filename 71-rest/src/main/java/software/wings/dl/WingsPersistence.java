@@ -5,7 +5,6 @@ import io.harness.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.persistence.PersistentEntity;
-import io.harness.persistence.ReadPref;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Base;
 
@@ -28,18 +27,6 @@ public interface WingsPersistence extends HPersistence {
    * @return the t
    */
   <T extends PersistentEntity> T getWithAppId(Class<T> cls, String appId, String id);
-
-  /**
-   * Get t.
-   *
-   * @param <T>      the type parameter
-   * @param cls      the cls
-   * @param appId    the app id
-   * @param id       the id
-   * @param readPref the read pref
-   * @return the t
-   */
-  <T extends PersistentEntity> T getWithAppId(Class<T> cls, String appId, String id, ReadPref readPref);
 
   /**
    * Save and get.

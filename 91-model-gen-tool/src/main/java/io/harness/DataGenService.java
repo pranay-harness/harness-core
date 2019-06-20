@@ -55,7 +55,6 @@ import io.harness.generator.WorkflowGenerator;
 import io.harness.generator.WorkflowGenerator.Workflows;
 import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.mongo.IndexManager;
-import io.harness.persistence.ReadPref;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.seeddata.SampleDataProviderService;
@@ -221,7 +220,7 @@ public class DataGenService {
   }
 
   protected void dropDBAndEnsureIndexes() {
-    wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL).getDB().dropDatabase();
+    wingsPersistence.getDatastore(DEFAULT_STORE).getDB().dropDatabase();
     IndexManager.ensureIndex(primaryDatastore, morphia);
   }
 

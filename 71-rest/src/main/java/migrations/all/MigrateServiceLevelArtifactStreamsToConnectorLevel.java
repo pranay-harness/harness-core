@@ -9,7 +9,6 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
 import io.harness.persistence.HIterator;
-import io.harness.persistence.ReadPref;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import software.wings.beans.Account;
@@ -64,7 +63,7 @@ public class MigrateServiceLevelArtifactStreamsToConnectorLevel implements Migra
       serviceIdToNameMap.put(service.getUuid(), service.getName());
     }
 
-    final DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "artifactStream");
+    final DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, "artifactStream");
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
     int updated = 0;
     boolean found = false;

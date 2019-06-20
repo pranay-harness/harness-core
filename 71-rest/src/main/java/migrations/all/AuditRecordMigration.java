@@ -12,7 +12,6 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
 import io.harness.persistence.HIterator;
-import io.harness.persistence.ReadPref;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.Morphia;
@@ -58,7 +57,7 @@ public class AuditRecordMigration implements Migration {
 
   @Override
   public void migrate() {
-    final DBCollection collection = wingsPersistence.getCollection(AuditHeader.class, ReadPref.NORMAL);
+    final DBCollection collection = wingsPersistence.getCollection(AuditHeader.class);
     migrateGitUserId(collection);
     migrateSettingAttributeType(collection);
   }

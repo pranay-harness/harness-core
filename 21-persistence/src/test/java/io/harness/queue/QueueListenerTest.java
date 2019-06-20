@@ -21,6 +21,7 @@ import io.harness.mongo.MongoQueue;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.Queue.Filter;
 import io.harness.version.VersionInfoManager;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -56,6 +57,11 @@ public class QueueListenerTest extends PersistenceTest {
     on(listener).set("timer", timer);
     on(listener).set("queueController", queueController);
     listener = spy(listener);
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    listener.shutDown();
   }
 
   @Test

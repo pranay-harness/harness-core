@@ -6,7 +6,6 @@ import com.google.inject.Singleton;
 
 import com.mongodb.BasicDBObject;
 import io.harness.persistence.HPersistence;
-import io.harness.persistence.ReadPref;
 import software.wings.dl.WingsPersistence;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 import software.wings.yaml.gitSync.YamlChangeSet.YamlChangeSetKeys;
@@ -35,16 +34,14 @@ public class GitChangeSetRunnableHelper {
       new BasicDBObject("status", new BasicDBObject("$in", new String[] {Status.QUEUED.name()}));
 
   public List<String> getQueuedAccountIdList(WingsPersistence wingsPersistence) {
-    return HPersistence.retry(()
-                                  -> wingsPersistence.getCollection(YamlChangeSet.class, ReadPref.NORMAL)
-                                         .distinct("accountId", notQueuedStatusDBObject));
+    return HPersistence.retry(
+        () -> wingsPersistence.getCollection(YamlChangeSet.class).distinct("accountId", notQueuedStatusDBObject));
   }
 
   private static final BasicDBObject runningStatusDBObject = new BasicDBObject("status", Status.RUNNING.name());
 
   public List<String> getRunningAccountIdList(WingsPersistence wingsPersistence) {
-    return HPersistence.retry(()
-                                  -> wingsPersistence.getCollection(YamlChangeSet.class, ReadPref.NORMAL)
-                                         .distinct("accountId", runningStatusDBObject));
+    return HPersistence.retry(
+        () -> wingsPersistence.getCollection(YamlChangeSet.class).distinct("accountId", runningStatusDBObject));
   }
 }

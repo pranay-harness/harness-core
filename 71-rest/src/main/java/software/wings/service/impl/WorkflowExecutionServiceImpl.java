@@ -28,7 +28,6 @@ import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.excludeValidate;
-import static io.harness.persistence.ReadPref.CRITICAL;
 import static java.lang.String.format;
 import static java.time.Duration.ofDays;
 import static java.util.Arrays.asList;
@@ -2125,7 +2124,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       Map<String, ElementExecutionSummary> serviceSummaryMap, WorkflowExecution workflowExecution) {
     PageRequest<StateExecutionInstance> pageRequest =
         aPageRequest()
-            .withReadPref(CRITICAL)
             .withLimit(UNLIMITED)
             .addFilter(StateExecutionInstanceKeys.appId, EQ, workflowExecution.getAppId())
             .addFilter(StateExecutionInstanceKeys.executionUuid, EQ, workflowExecution.getUuid())
@@ -2579,7 +2577,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public void refreshBuildExecutionSummary(String workflowExecutionId, BuildExecutionSummary buildExecutionSummary) {
-    WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, workflowExecutionId, CRITICAL);
+    WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, workflowExecutionId);
     if (workflowExecution == null) {
       return;
     }

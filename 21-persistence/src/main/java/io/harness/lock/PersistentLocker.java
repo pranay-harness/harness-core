@@ -21,7 +21,6 @@ import io.harness.health.HealthMonitor;
 import io.harness.lock.AcquiredDistributedLock.AcquiredDistributedLockBuilder;
 import io.harness.lock.AcquiredDistributedLock.CloseAction;
 import io.harness.persistence.HPersistence;
-import io.harness.persistence.ReadPref;
 import io.harness.persistence.Store;
 import lombok.extern.slf4j.Slf4j;
 
@@ -138,7 +137,7 @@ public class PersistentLocker implements Locker, HealthMonitor {
     // NOTE: DistributedLockSvc destroy does not work. Also it expects the lock to not be acquired which
     //       is design flow. The only safe moment to destroy lock is, when you currently have it acquired.
     final BasicDBObject filter = new BasicDBObject().append("_id", name);
-    persistence.getCollection(LOCKS_STORE, ReadPref.NORMAL, "locks").remove(filter);
+    persistence.getCollection(LOCKS_STORE, "locks").remove(filter);
     acquiredLock.release();
     throw new WingsException(GENERAL_ERROR, NOBODY)
         .addParam("message", format("Acquired distributed lock %s was destroyed and the lock was broken.", name));

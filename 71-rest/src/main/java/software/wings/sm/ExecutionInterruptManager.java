@@ -50,7 +50,6 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
-import io.harness.persistence.ReadPref;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -243,7 +242,6 @@ public class ExecutionInterruptManager {
               .addFilter("executionUuid", EQ, executionInterrupt.getExecutionUuid())
               .addFilter(StateExecutionInstanceKeys.createdAt, GE, workflowExecution.getCreatedAt())
               .addOrder(StateExecutionInstanceKeys.createdAt, OrderType.DESC)
-              .withReadPref(ReadPref.CRITICAL)
               .build();
 
       PageResponse<StateExecutionInstance> pageResponse =
@@ -290,7 +288,6 @@ public class ExecutionInterruptManager {
 
   private PageResponse<ExecutionInterrupt> listActiveExecutionInterrupts(ExecutionInterrupt executionInterrupt) {
     PageRequest<ExecutionInterrupt> req = aPageRequest()
-                                              .withReadPref(ReadPref.CRITICAL)
                                               .addFilter("appId", EQ, executionInterrupt.getAppId())
                                               .addFilter("executionUuid", EQ, executionInterrupt.getExecutionUuid())
                                               .addFilter("seized", EQ, false)
@@ -309,7 +306,6 @@ public class ExecutionInterruptManager {
   public List<ExecutionInterrupt> checkForExecutionInterrupt(String appId, String executionUuid) {
     PageRequest<ExecutionInterrupt> req =
         aPageRequest()
-            .withReadPref(ReadPref.CRITICAL)
             .addFilter("appId", EQ, appId)
             .addFilter("executionUuid", EQ, executionUuid)
             .addFilter("executionInterruptType", IN, ABORT_ALL, PAUSE_ALL, RESUME_ALL, ROLLBACK)

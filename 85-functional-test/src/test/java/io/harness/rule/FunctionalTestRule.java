@@ -143,7 +143,7 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
     });
     modules.add(new LicenseModule());
     modules.add(new ValidationModule(validatorFactory));
-    modules.add(new TestMongoModule(datastore, datastore, distributedLockSvc));
+    modules.add(new TestMongoModule(datastore, distributedLockSvc));
     modules.addAll(new WingsModule((MainConfiguration) configuration).cumulativeDependencies());
     modules.add(new YamlModule());
     modules.add(new ManagerExecutorModule());

@@ -8,7 +8,6 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
 import io.harness.persistence.HIterator;
-import io.harness.persistence.ReadPref;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import software.wings.beans.Service;
@@ -27,7 +26,7 @@ public class ServiceAddArtifactStreamIdsMigration implements Migration {
   @SuppressWarnings("deprecation")
   public void migrate() {
     logger.info("Add artifactStreamIds to Services");
-    final DBCollection collection = wingsPersistence.getCollection(Service.class, ReadPref.NORMAL);
+    final DBCollection collection = wingsPersistence.getCollection(Service.class);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
     int i = 0;
     int total = 0;

@@ -11,7 +11,6 @@ import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.logging.ExceptionLogger;
-import io.harness.persistence.ReadPref;
 import io.harness.scheduler.PersistentScheduler;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
@@ -58,13 +57,13 @@ public class PersistentLockCleanupJob implements Job {
     final BasicDBObject filter = new BasicDBObject()
                                      .append("lockState", "unlocked")
                                      .append("lastUpdated", new BasicDBObject("$lt", Date.from(date.toInstant())));
-    wingsPersistence.getCollection(LOCKS_STORE, ReadPref.NORMAL, "locks").remove(filter);
+    wingsPersistence.getCollection(LOCKS_STORE, "locks").remove(filter);
   }
 
   public DBCursor queryOldLocks(OffsetDateTime date) {
     final BasicDBObject filter =
         new BasicDBObject().append("lastUpdated", new BasicDBObject("$lt", Date.from(date.toInstant())));
-    return wingsPersistence.getCollection(LOCKS_STORE, ReadPref.NORMAL, "locks").find(filter).limit(1000);
+    return wingsPersistence.getCollection(LOCKS_STORE, "locks").find(filter).limit(1000);
   }
 
   @Override

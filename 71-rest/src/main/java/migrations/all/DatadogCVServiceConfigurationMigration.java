@@ -8,7 +8,6 @@ import com.google.inject.Inject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import io.harness.persistence.ReadPref;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.query.Query;
@@ -29,7 +28,7 @@ public class DatadogCVServiceConfigurationMigration implements Migration {
 
   @Override
   public void migrate() {
-    DBCollection collection = wingsPersistence.getCollection(CVConfiguration.class, ReadPref.NORMAL);
+    DBCollection collection = wingsPersistence.getCollection(CVConfiguration.class);
     UpdateOperations<CVConfiguration> operations = wingsPersistence.createUpdateOperations(CVConfiguration.class);
 
     DBCursor cvConfigurationRecords = collection.find();

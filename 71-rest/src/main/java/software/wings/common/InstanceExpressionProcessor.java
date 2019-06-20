@@ -23,7 +23,6 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
-import io.harness.persistence.ReadPref;
 import io.harness.serializer.MapperUtils;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
@@ -198,7 +197,6 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     }
 
     PageRequest<ServiceInstance> pageRequest = buildPageRequest();
-    pageRequest.setReadPref(ReadPref.CRITICAL);
     PageResponse<ServiceInstance> instances = serviceInstanceService.list(pageRequest);
     return convertToInstanceElements(instances.getResponse());
   }

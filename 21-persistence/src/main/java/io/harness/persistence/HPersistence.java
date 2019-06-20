@@ -44,7 +44,7 @@ public interface HPersistence extends HealthMonitor {
    * @param readPref the readPref
    * @return         the datastore
    */
-  AdvancedDatastore getDatastore(Store store, ReadPref readPref);
+  AdvancedDatastore getDatastore(Store store);
 
   /**
    * Gets the datastore.
@@ -53,8 +53,8 @@ public interface HPersistence extends HealthMonitor {
    * @param readPref the readPref
    * @return         the datastore
    */
-  default AdvancedDatastore getDatastore(PersistentEntity entity, ReadPref readPref) {
-    return getDatastore(entity.getClass(), readPref);
+  default AdvancedDatastore getDatastore(PersistentEntity entity) {
+    return getDatastore(entity.getClass());
   }
 
   Map<Class, Store> getClassStores();
@@ -67,7 +67,7 @@ public interface HPersistence extends HealthMonitor {
    * @return         the datastore
    */
 
-  default AdvancedDatastore getDatastore(Class cls, ReadPref readPref) {
+  default AdvancedDatastore getDatastore(Class cls) {
     return getDatastore(getClassStores().computeIfAbsent(cls, klass -> {
       return Arrays.stream(cls.getDeclaredAnnotations())
           .filter(annotation -> annotation.annotationType().equals(StoreIn.class))
@@ -75,7 +75,7 @@ public interface HPersistence extends HealthMonitor {
           .map(name -> Store.builder().name(name).build())
           .findFirst()
           .orElseGet(() -> DEFAULT_STORE);
-    }), readPref);
+    }));
   }
 
   /**
@@ -86,7 +86,7 @@ public interface HPersistence extends HealthMonitor {
    * @param readPref       the readPref
    * @return               the collection
    */
-  DBCollection getCollection(Store store, ReadPref readPref, String collectionName);
+  DBCollection getCollection(Store store, String collectionName);
 
   /**
    * Gets the collection.
@@ -95,7 +95,7 @@ public interface HPersistence extends HealthMonitor {
    * @param readPref       the readPref
    * @return               the collection
    */
-  DBCollection getCollection(Class cls, ReadPref readPref);
+  DBCollection getCollection(Class cls);
 
   /**
    * Gets the collection.
@@ -121,33 +121,12 @@ public interface HPersistence extends HealthMonitor {
   /**
    * Creates the query.
    *
-   * @param <T>      the generic type
-   * @param cls      the cls
-   * @param readPref the read pref
-   * @return         the query
-   */
-  <T extends PersistentEntity> Query<T> createQuery(Class<T> cls, ReadPref readPref);
-
-  /**
-   * Creates the query.
-   *
    * @param <T>          the generic type
    * @param cls          the cls
    * @param queryChecks  the query checks
    * @return             the query
    */
   <T extends PersistentEntity> Query<T> createQuery(Class<T> cls, Set<QueryChecks> queryChecks);
-
-  /**
-   * Creates the query.
-   *
-   * @param <T>          the generic type
-   * @param cls          the cls
-   * @param readPref     the read pref
-   * @param queryChecks  the query checks
-   * @return             the query
-   */
-  <T extends PersistentEntity> Query<T> createQuery(Class<T> cls, ReadPref readPref, Set<QueryChecks> queryChecks);
 
   /**
    * Creates the update operations.
@@ -205,17 +184,6 @@ public interface HPersistence extends HealthMonitor {
    * @return the t
    */
   <T extends PersistentEntity> T get(Class<T> cls, String id);
-
-  /**
-   * Get returns the entity with id.
-   *
-   * @param <T>      the generic type
-   * @param cls      the cls
-   * @param id       the id
-   * @param readPref the read pref
-   * @return the t
-   */
-  <T extends PersistentEntity> T get(Class<T> cls, String id, ReadPref readPref);
 
   /**
    * Delete.

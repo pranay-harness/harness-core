@@ -16,7 +16,6 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.lock.PersistentLocker;
 import io.harness.persistence.HPersistence;
-import io.harness.persistence.ReadPref;
 import io.harness.queue.QueueListener;
 import io.harness.waiter.WaitInstance.WaitInstanceKeys;
 import io.harness.waiter.WaitQueue.WaitQueueKeys;
@@ -54,7 +53,7 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
   private WaitInstance getWaitInstance(String waitInstanceId, long now) {
     final long limit = now - MAX_CALLBACK_PROCESSING_TIME.toMillis();
 
-    final Query<WaitInstance> waitInstanceQuery = persistence.createQuery(WaitInstance.class, ReadPref.CRITICAL)
+    final Query<WaitInstance> waitInstanceQuery = persistence.createQuery(WaitInstance.class)
                                                       .filter(WaitInstanceKeys.uuid, waitInstanceId)
                                                       .filter(WaitInstanceKeys.status, ExecutionStatus.NEW)
                                                       .field(WaitInstanceKeys.callbackProcessingAt)
@@ -74,7 +73,7 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
 
     String waitInstanceId = message.getWaitInstanceId();
 
-    List<WaitQueue> waitQueues = persistence.createQuery(WaitQueue.class, ReadPref.CRITICAL, excludeAuthority)
+    List<WaitQueue> waitQueues = persistence.createQuery(WaitQueue.class, excludeAuthority)
                                      .filter(WaitQueueKeys.waitInstanceId, waitInstanceId)
                                      .asList();
 
@@ -98,7 +97,7 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
     }
 
     final List<NotifyResponse> notifyResponses =
-        persistence.createQuery(NotifyResponse.class, ReadPref.CRITICAL, excludeAuthority)
+        persistence.createQuery(NotifyResponse.class, excludeAuthority)
             .field(ID_KEY)
             .in(waitQueues.stream().map(WaitQueue::getCorrelationId).collect(toList()))
             .asList();

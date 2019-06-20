@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.limits.checker.rate.UsageBucket.UsageBucketKeys;
-import io.harness.persistence.ReadPref;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,14 +27,14 @@ public class UsageBucketIntegrationTest extends BaseIntegrationTest {
   @Before
   public void ensureIndices() throws Exception {
     if (!indexesEnsured && !IntegrationTestUtils.isManagerRunning(client)) {
-      persistence.getDatastore(UsageBucket.class, ReadPref.NORMAL).ensureIndexes(UsageBucket.class);
+      persistence.getDatastore(UsageBucket.class).ensureIndexes(UsageBucket.class);
       indexesEnsured = true;
     }
   }
 
   @After
   public void cleanUp() throws Exception {
-    persistence.getDatastore(UsageBucket.class, ReadPref.NORMAL)
+    persistence.getDatastore(UsageBucket.class)
         .delete(persistence.createQuery(UsageBucket.class).filter(UsageBucketKeys.key, KEY));
   }
 

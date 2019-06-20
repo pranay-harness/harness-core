@@ -7,7 +7,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
-import io.harness.persistence.ReadPref;
 import io.harness.rest.RestResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -59,7 +58,7 @@ public class StatsCollectorImplIntegrationTest extends BaseIntegrationTest {
     loginAdminUser();
 
     if (!ensureIndices) {
-      Datastore ds = persistence.getDatastore(InstanceStatsSnapshot.class, ReadPref.NORMAL);
+      Datastore ds = persistence.getDatastore(InstanceStatsSnapshot.class);
       this.cleanUp();
       ds.ensureIndexes(InstanceStatsSnapshot.class);
       ensureIndices = true;
@@ -68,7 +67,7 @@ public class StatsCollectorImplIntegrationTest extends BaseIntegrationTest {
 
   @After
   public void cleanUp() {
-    Datastore ds = persistence.getDatastore(Instance.class, ReadPref.NORMAL);
+    Datastore ds = persistence.getDatastore(Instance.class);
     ds.delete(ds.createQuery(Instance.class)
                   .filter(InstanceKeys.accountId, WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID)
                   .filter(InstanceKeys.appName, SOME_APP_NAME));
@@ -79,7 +78,7 @@ public class StatsCollectorImplIntegrationTest extends BaseIntegrationTest {
   @Test
   @Category(IntegrationTests.class)
   public void testCreateStats() throws URISyntaxException {
-    Datastore ds = persistence.getDatastore(Instance.class, ReadPref.NORMAL);
+    Datastore ds = persistence.getDatastore(Instance.class);
 
     Instant start = Instant.now();
     String accountId = WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID;
