@@ -148,7 +148,6 @@ import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
-import software.wings.security.authentication.oauth.OauthClient;
 import software.wings.security.authentication.oauth.OauthUserInfo;
 import software.wings.security.saml.SamlClientService;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -1398,10 +1397,10 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public User signUpUserUsingOauth(OauthUserInfo userInfo, OauthClient oauthClient) {
+  public User signUpUserUsingOauth(OauthUserInfo userInfo, String oauthProviderName) {
     logger.info(String.format("User not found in db. Creating an account for: [%s]", userInfo.getEmail()));
     checkForFreemiumCluster();
-    final User user = createUser(userInfo, oauthClient.getName());
+    User user = createUser(userInfo, oauthProviderName);
     notNullOrEmptyCheck(user.getAccountName(), "Account/Company name");
     notNullOrEmptyCheck(user.getName(), "User's name");
 
@@ -1411,10 +1410,10 @@ public class UserServiceImpl implements UserService {
     Account account = createAccountWithTrialLicense(user);
 
     // For trial user just signed up, it will be assigned to the account admin role.
-    assignUserToAccountAdminGroup(user, account);
+    user = assignUserToAccountAdminGroup(user, account);
 
     String accountId = account.getUuid();
-    createSSOSettingsAndMarkAsDefaultAuthMechanism(accountId, oauthClient);
+    createSSOSettingsAndMarkAsDefaultAuthMechanism(accountId);
 
     //    eventPublishHelper.publishUserRegistrationCompletionEvent(accountId, user);
     return user;
@@ -1446,15 +1445,17 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  private void assignUserToAccountAdminGroup(User user, Account account) {
+  private User assignUserToAccountAdminGroup(User user, Account account) {
     List<UserGroup> accountAdminGroups = getAccountAdminGroup(account.getUuid());
 
     user.setAppId(GLOBAL_APP_ID);
     user.getAccounts().add(account);
     user.setUserGroups(accountAdminGroups);
-    save(user, account.getUuid());
+    user = save(user, account.getUuid());
 
     addUserToUserGroups(account.getUuid(), user, accountAdminGroups, false);
+
+    return user;
   }
 
   private void throwExceptionIfUserIsAlreadyRegistered(final String email) {
@@ -1479,7 +1480,7 @@ public class UserServiceImpl implements UserService {
     return account;
   }
 
-  private void createSSOSettingsAndMarkAsDefaultAuthMechanism(String accountId, OauthClient oauthClient) {
+  private void createSSOSettingsAndMarkAsDefaultAuthMechanism(String accountId) {
     OauthSettings oauthSettings =
         OauthSettings.builder()
             .accountId(accountId)

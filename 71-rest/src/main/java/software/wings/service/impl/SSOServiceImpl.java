@@ -24,7 +24,6 @@ import org.apache.commons.io.IOUtils;
 import org.hibernate.validator.constraints.NotBlank;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapSettings;
@@ -46,7 +45,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.saml.SamlClientService;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SSOService;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.ldap.LdapDelegateService;
@@ -73,7 +71,6 @@ public class SSOServiceImpl implements SSOService {
   @Inject SamlClientService samlClientService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private SecretManager secretManager;
-  @Inject private FeatureFlagService featureFlagService;
   @Inject OauthOptions oauthOptions;
   @Inject private AuthHandler authHandler;
 
@@ -223,9 +220,7 @@ public class SSOServiceImpl implements SSOService {
     }
     OauthSettings oauthSettings = ssoSettingService.getOauthSettingsByAccountId(account.getUuid());
     if (oauthSettings != null) {
-      if (featureFlagService.isEnabled(FeatureName.OAUTH_LOGIN, account.getUuid())) {
-        settings.add(oauthSettings.getPublicSSOSettings());
-      }
+      settings.add(oauthSettings.getPublicSSOSettings());
     }
     return settings;
   }

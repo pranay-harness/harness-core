@@ -1,5 +1,8 @@
 package software.wings.resources;
 
+import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
+import static io.harness.exception.WingsException.USER;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -8,15 +11,18 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.User.UserKeys;
+import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.IdentityServiceAuth;
 import software.wings.security.authentication.AccountSettingsResponse;
 import software.wings.security.authentication.AuthenticationManager;
+import software.wings.security.authentication.oauth.OauthUserInfo;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 
@@ -24,9 +30,11 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -101,5 +109,28 @@ public class IdentityServiceResource {
   @ExceptionMetered
   public RestResponse<AccountSettingsResponse> getAccountSettings(@QueryParam("accountId") String accountId) {
     return new RestResponse<>(accountService.getAuthSettingsByAccountId(accountId));
+  }
+
+  @GET
+  @Path("/user")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<User> getUser() {
+    User user = UserThreadLocal.get();
+    if (user == null) {
+      throw new WingsException(USER_DOES_NOT_EXIST, USER);
+    } else {
+      return new RestResponse<>(user.getPublicUser());
+    }
+  }
+
+  @POST
+  @Path("/oauth/signup-user")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<User> signupOAuthUser(
+      @NotNull OauthUserInfo oauthUserInfo, @QueryParam("provider") String oauthProviderName) {
+    User user = userService.signUpUserUsingOauth(oauthUserInfo, oauthProviderName);
+    return new RestResponse<>(user.getPublicUser());
   }
 }

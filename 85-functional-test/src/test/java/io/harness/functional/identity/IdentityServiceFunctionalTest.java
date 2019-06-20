@@ -17,11 +17,13 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
 import software.wings.beans.User;
+import software.wings.security.AuthenticationFilter;
 import software.wings.security.HarnessUserAccountActions;
 import software.wings.security.SecretManager;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.authentication.AccountSettingsResponse;
 import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.security.authentication.oauth.OauthUserInfo;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -49,7 +51,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
 
   @Test
   @Category(FunctionalTests.class)
-  public void testIdentityServiceClientLoginUserWithApiKey() {
+  public void testIdentityServiceClientLoginUser() {
     String identityServiceToken = generateIdentityServiceToken();
     GenericType<RestResponse<User>> returnType = new GenericType<RestResponse<User>>() {};
     User user = getDataForIdentityService(identityServiceToken, "identity/user/login?email=" + ADMIN_USER, returnType);
@@ -60,7 +62,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
 
   @Test
   @Category(FunctionalTests.class)
-  public void testIdentityServiceClientGetUsersWithApiKey() {
+  public void testIdentityServiceClientListUsers() {
     String identityServiceToken = generateIdentityServiceToken();
     GenericType<RestResponse<List<User>>> returnType = new GenericType<RestResponse<List<User>>>() {};
     List<User> users =
@@ -72,7 +74,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
 
   @Test
   @Category(FunctionalTests.class)
-  public void testIdentityServiceClientGetAccounts() {
+  public void testIdentityServiceClientListAccounts() {
     String identityServiceToken = generateIdentityServiceToken();
     GenericType<RestResponse<List<Account>>> returnType = new GenericType<RestResponse<List<Account>>>() {};
     List<Account> accounts =
@@ -96,6 +98,30 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
     assertThat(accountSettingsResponse.getAllowedDomains()).isNullOrEmpty();
   }
 
+  @Test
+  @Category(FunctionalTests.class)
+  public void testIdentityServiceClientGetPublicUserInfo() {
+    String identityServiceToken = generateIdentityServiceToken();
+    GenericType<RestResponse<User>> returnType = new GenericType<RestResponse<User>>() {};
+    User user = getDataForIdentityService(identityServiceToken, adminUser.getUuid(), "identity/user", returnType);
+    assertThat(user).isNotNull();
+    assertThat(user.getEmail()).isNotNull();
+  }
+
+  @Test
+  @Category(FunctionalTests.class)
+  public void testIdentityServiceClientSignupOauthUser() {
+    String userEmail = "oauth_trial_user_" + System.currentTimeMillis() + "@harness.io";
+    String identityServiceToken = generateIdentityServiceToken();
+    GenericType<RestResponse<User>> returnType = new GenericType<RestResponse<User>>() {};
+    OauthUserInfo userInfo = OauthUserInfo.builder().email(userEmail).name("Oauth User").build();
+    User user =
+        signupOauthUser(identityServiceToken, "identity/oauth/signup-user?provider=GITHUB", userInfo, returnType);
+    assertThat(user).isNotNull();
+    assertThat(user.getEmail()).isEqualTo(userEmail);
+    assertThat(user.getUuid()).isNotEmpty();
+  }
+
   private String generateIdentityServiceToken() {
     try {
       Map<String, String> claims = new HashMap<>();
@@ -114,6 +140,28 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
                                    .contentType(ContentType.JSON)
                                    .get(url)
                                    .as(returnType.getType());
+    return response.getResource();
+  }
+
+  private <T> T getDataForIdentityService(
+      String identityServiceToken, String userId, String url, GenericType<RestResponse<T>> returnType) {
+    RestResponse<T> response = Setup.portal()
+                                   .header(HttpHeaders.AUTHORIZATION, "IdentityService " + identityServiceToken)
+                                   .header(AuthenticationFilter.USER_IDENTITY_HEADER, userId)
+                                   .contentType(ContentType.JSON)
+                                   .get(url)
+                                   .as(returnType.getType());
+    return response.getResource();
+  }
+
+  private User signupOauthUser(
+      String identityServiceToken, String url, OauthUserInfo userInfo, GenericType<RestResponse<User>> returnType) {
+    RestResponse<User> response = Setup.portal()
+                                      .header(HttpHeaders.AUTHORIZATION, "IdentityService " + identityServiceToken)
+                                      .contentType(ContentType.JSON)
+                                      .body(userInfo)
+                                      .post(url)
+                                      .as(returnType.getType());
     return response.getResource();
   }
 }
