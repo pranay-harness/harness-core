@@ -283,3 +283,19 @@ fi
 if [[ -v "TIMESCALEDB_PASSWORD" ]]; then
     sed -i "s|timescaledbPassword:|timescaledbPassword: ${TIMESCALEDB_PASSWORD}|" /opt/harness/config.yml
 fi
+
+if [[ -v "TIMESCALEDB_CONNECT_TIMEOUT" ]]; then
+    sed -i "s|connectTimeout: 10|connectTimeout: ${TIMESCALEDB_CONNECT_TIMEOUT}|" /opt/harness/config.yml
+fi
+
+if [[ -v "TIMESCALEDB_SOCKET_TIMEOUT" ]]; then
+    sed -i "s|socketTimeout: 30|socketTimeout: ${TIMESCALEDB_SOCKET_TIMEOUT}|" /opt/harness/config.yml
+fi
+
+if [[ -v "TIMESCALEDB_LOGUNCLOSED" ]]; then
+    sed -i "s|logUnclosedConnections: false|logUnclosedConnections: ${TIMESCALEDB_LOGUNCLOSED}|" /opt/harness/config.yml
+fi
+
+if [[ -v "TIMESCALEDB_LOGGERLEVEL" ]]; then
+    sed -i "s|loggerLevel: OFF|loggerLevel: ${TIMESCALEDB_LOGGERLEVEL}|" /opt/harness/config.yml
+fi
