@@ -11,6 +11,9 @@ cd dist/migrator ;
 
 cp ../../51-migrator/target/migrator-capsule.jar .
 cp ../../keystore.jks .
+
+cp ../../dockerization/migrator/Dockerfile-migrator-jenkins-k8-gcr ./Dockerfile-gcr
+
 echo ${VERSION} > version.txt
 if [ ! -z ${PURPOSE} ]
 then
