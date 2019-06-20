@@ -103,8 +103,8 @@ public class VerificationStateAnalysisExecutionData extends StateExecutionData {
       if (canaryNewHostNames != null) {
         canaryNewHostNames.removeAll(crypticHostnames);
       }
-      if (canaryNewHostNames != null) {
-        canaryNewHostNames.removeAll(crypticHostnames);
+      if (lastExecutionNodes != null) {
+        lastExecutionNodes.removeAll(crypticHostnames);
       }
     }
 
