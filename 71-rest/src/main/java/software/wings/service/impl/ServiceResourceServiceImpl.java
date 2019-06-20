@@ -1992,16 +1992,16 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public Artifact findPreviousArtifact(String appId, String workflowExecutionId, ContextElement instanceElement) {
-    final Activity activity = wingsPersistence.createQuery(Activity.class)
-                                  .filter(ActivityKeys.appId, appId)
-                                  .filter(ActivityKeys.serviceInstanceId, instanceElement.getUuid())
-                                  .filter(ActivityKeys.status, ExecutionStatus.SUCCESS)
-                                  .field(ActivityKeys.workflowExecutionId)
-                                  .notEqual(workflowExecutionId)
-                                  .field(ActivityKeys.artifactId)
-                                  .exists()
-                                  .order(Sort.descending(ActivityKeys.createdAt))
-                                  .get();
+    Activity activity = wingsPersistence.createQuery(Activity.class)
+                            .filter(ActivityKeys.appId, appId)
+                            .filter(ActivityKeys.serviceInstanceId, instanceElement.getUuid())
+                            .filter(ActivityKeys.status, ExecutionStatus.SUCCESS)
+                            .field(ActivityKeys.workflowExecutionId)
+                            .notEqual(workflowExecutionId)
+                            .field(ActivityKeys.artifactId)
+                            .exists()
+                            .order(Sort.descending(ActivityKeys.createdAt))
+                            .get();
 
     if (activity == null) {
       return null;
