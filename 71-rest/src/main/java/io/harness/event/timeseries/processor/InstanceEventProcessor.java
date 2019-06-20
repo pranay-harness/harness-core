@@ -9,11 +9,6 @@ import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
 @Slf4j
 public class InstanceEventProcessor implements EventProcessor {
   @Override
-  public boolean init() {
-    return false;
-  }
-
-  @Override
   public void processEvent(TimeSeriesEventInfo eventInfo) {
     logger.info(eventInfo.toString());
   }
