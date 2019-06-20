@@ -5,6 +5,7 @@ import io.harness.validation.Create;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.InstanceElement;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.CVFeedbackRecord;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
 import software.wings.service.impl.analysis.FeedbackAction;
@@ -108,4 +109,5 @@ public interface LogAnalysisService {
   Map<FeedbackAction, List<CVFeedbackRecord>> getUserFeedback(String cvConfigId, String stateExecutionId, String appId);
 
   boolean updateAnalysisStatus(String fieldName, String fieldValue, long analysisMinute, LogMLAnalysisStatus status);
+  int getEndTimeForLogAnalysis(AnalysisContext context);
 }

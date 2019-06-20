@@ -973,6 +973,15 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     return logDataRecords == null ? Optional.empty() : Optional.of(logDataRecords);
   }
 
+  @Override
+  public int getEndTimeForLogAnalysis(AnalysisContext context) {
+    if (PER_MINUTE_CV_STATES.contains(context.getStateType())) {
+      return (int) context.getStartDataCollectionMinute() + context.getTimeDuration() - 1;
+    } else {
+      return context.getTimeDuration() - 1;
+    }
+  }
+
   private long getLastProcessedMinute(String stateExecutionId) {
     LogDataRecord logDataRecords = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
                                        .filter(LogDataRecordKeys.stateExecutionId, stateExecutionId)

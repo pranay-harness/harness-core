@@ -681,22 +681,27 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   @Override
   public LogMLAnalysisSummary getAnalysisSummary(String stateExecutionId, String appId, StateType stateType) {
+    LogMLAnalysisRecord recordsForThisExecution =
+        wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
+            .filter(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId)
+            .filter(LogMLAnalysisRecordKeys.analysisStatus, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE)
+            .get();
+
     Query<LogMLAnalysisRecord> analysisRecordQuery =
         wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
             .filter(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId)
+            .order(Sort.descending(LogMLAnalysisRecordKeys.logCollectionMinute))
+            .order(Sort.descending("lastUpdatedAt"));
 
-            .order(Sort.descending(LogMLAnalysisRecordKeys.logCollectionMinute));
-
-    String accountId = appService.getAccountIdByAppId(appId);
-
-    if (isNotEmpty(accountId) && featureFlagService.isEnabled(FeatureName.CV_FEEDBACKS, accountId)) {
+    if (recordsForThisExecution == null) {
+      analysisRecordQuery =
+          analysisRecordQuery.filter(LogMLAnalysisRecordKeys.analysisStatus, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+    } else {
       analysisRecordQuery = analysisRecordQuery.filter(
           LogMLAnalysisRecordKeys.analysisStatus, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
-    } else if (isEmpty(accountId)) {
-      logger.error("Incorrect appId in getAnalysisSummary. AppId {}, StateExecId {}, stateType {}", appId,
-          stateExecutionId, stateType);
-      throw new WingsException("Incorrect appId in getAnalysisSummary");
     }
+
+    String accountId = appService.getAccountIdByAppId(appId);
 
     LogMLAnalysisRecord analysisRecord = analysisRecordQuery.get();
     if (analysisRecord == null) {
@@ -755,6 +760,27 @@ public class AnalysisServiceImpl implements AnalysisService {
                 : "No anomaly found"
         : analysisRecord.getAnalysisSummaryMessage();
 
+    // Update with the feedback clusters
+    if (featureFlagService.isEnabled(FeatureName.CV_FEEDBACKS, accountId)) {
+      List<CVFeedbackRecord> feedbackRecords = getFeedbacks(null, stateExecutionId);
+      Map<CLUSTER_TYPE, Map<Integer, CVFeedbackRecord>> clusterTypeRecordMap = new HashMap<>();
+      feedbackRecords.forEach(cvFeedbackRecord -> {
+        if (cvFeedbackRecord.getStateExecutionId().equals(stateExecutionId)) {
+          CLUSTER_TYPE type = cvFeedbackRecord.getClusterType();
+          if (!clusterTypeRecordMap.containsKey(type)) {
+            clusterTypeRecordMap.put(type, new HashMap<>());
+          }
+
+          clusterTypeRecordMap.get(cvFeedbackRecord.getClusterType())
+              .put(cvFeedbackRecord.getClusterLabel(), cvFeedbackRecord);
+        }
+      });
+
+      updateClustersWithFeedback(clusterTypeRecordMap, CLUSTER_TYPE.CONTROL, analysisSummary.getControlClusters());
+      updateClustersWithFeedback(clusterTypeRecordMap, CLUSTER_TYPE.TEST, analysisSummary.getTestClusters());
+      updateClustersWithFeedback(clusterTypeRecordMap, CLUSTER_TYPE.UNKNOWN, analysisSummary.getUnknownClusters());
+    }
+    //----------------------------
     int unknownClusters = 0;
     int highRiskClusters = 0;
     int mediumRiskCluster = 0;
@@ -802,6 +828,20 @@ public class AnalysisServiceImpl implements AnalysisService {
     return analysisSummary;
   }
 
+  private void updateClustersWithFeedback(Map<CLUSTER_TYPE, Map<Integer, CVFeedbackRecord>> clusterTypeRecordMap,
+      CLUSTER_TYPE type, List<LogMLClusterSummary> clusterList) {
+    if (clusterTypeRecordMap.containsKey(type)) {
+      Map<Integer, CVFeedbackRecord> labelMap = clusterTypeRecordMap.get(type);
+      clusterList.forEach(cluster -> {
+        if (labelMap.containsKey(cluster.getClusterLabel())) {
+          CVFeedbackRecord record = labelMap.get(cluster.getClusterLabel());
+          cluster.setJiraLink(record.getJiraLink());
+          cluster.setPriority(record.getPriority());
+          cluster.setLogMLFeedbackId(record.getUuid());
+        }
+      });
+    }
+  }
   private void populateWorkflowDetails(LogMLAnalysisSummary analysisSummary, AnalysisContext analysisContext) {
     if (analysisSummary == null || analysisContext == null) {
       return;
@@ -1156,6 +1196,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                                                    .control_events(Collections.emptyMap())
                                                    .test_events(Collections.emptyMap())
                                                    .build();
+    analysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
     wingsPersistence.saveIgnoringDuplicateKeys(Lists.newArrayList(analysisRecord));
   }
 
