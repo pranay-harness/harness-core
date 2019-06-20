@@ -17,6 +17,7 @@ public class TimeScaleDBConfig {
   private String timescaledbUsername;
   private String timescaledbPassword;
   int connectTimeout;
-  int socketTimeout = 7200;
-  boolean logUnclosedConnections = true;
+  int socketTimeout;
+  boolean logUnclosedConnections;
+  private String loggerLevel;
 }
