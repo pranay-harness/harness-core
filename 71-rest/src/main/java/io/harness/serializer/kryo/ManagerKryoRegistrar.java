@@ -43,7 +43,6 @@ import software.wings.api.InfraNodeRequest;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.JenkinsExecutionData;
-import software.wings.api.JiraExecutionData;
 import software.wings.api.KubernetesSteadyStateCheckExecutionData;
 import software.wings.api.KubernetesSteadyStateCheckExecutionSummary;
 import software.wings.api.KubernetesSwapServiceSelectorsExecutionData;
@@ -80,6 +79,11 @@ import software.wings.api.ecs.EcsBGSetupData;
 import software.wings.api.ecs.EcsListenerUpdateExecutionSummary;
 import software.wings.api.ecs.EcsListenerUpdateStateExecutionData;
 import software.wings.api.ecs.EcsRoute53WeightUpdateStateExecutionData;
+import software.wings.api.jira.JiraCreateMetaResponse;
+import software.wings.api.jira.JiraExecutionData;
+import software.wings.api.jira.JiraField;
+import software.wings.api.jira.JiraIssueType;
+import software.wings.api.jira.JiraProjectData;
 import software.wings.api.k8s.K8sContextElement;
 import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sExecutionSummary;
@@ -1273,5 +1277,9 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ArtifactVariable.class, 7195);
     kryo.register(UserLockoutInfo.class, 7196);
     kryo.register(AwsAmiAllPhaseRollbackData.class, 7197);
+    kryo.register(JiraProjectData.class, 7198);
+    kryo.register(JiraIssueType.class, 7199);
+    kryo.register(JiraField.class, 7200);
+    kryo.register(JiraCreateMetaResponse.class, 7201);
   }
 }

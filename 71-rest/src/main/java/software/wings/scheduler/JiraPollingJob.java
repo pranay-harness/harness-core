@@ -13,7 +13,7 @@ import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
-import software.wings.api.JiraExecutionData;
+import software.wings.api.jira.JiraExecutionData;
 import software.wings.beans.approval.JiraApprovalParams;
 import software.wings.service.impl.JiraHelperService;
 import software.wings.service.intfc.StateExecutionService;

@@ -16,7 +16,8 @@ import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.json.JSONArray;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.api.JiraExecutionData;
+import software.wings.api.jira.JiraCreateMetaResponse;
+import software.wings.api.jira.JiraExecutionData;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.TaskType;
@@ -212,7 +213,8 @@ public class JiraHelperService {
     }
   }
 
-  public Object getCreateMetadata(String connectorId, String expand, String project, String accountId, String appId) {
+  public JiraCreateMetaResponse getCreateMetadata(
+      String connectorId, String expand, String project, String accountId, String appId) {
     JiraTaskParameters jiraTaskParameters = JiraTaskParameters.builder()
                                                 .accountId(accountId)
                                                 .jiraAction(JiraAction.GET_CREATE_METADATA)
