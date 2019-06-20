@@ -59,7 +59,8 @@ import java.util.Map;
   ,
       @Index(fields = {
         @Field("stateExecutionId")
-        , @Field("analysisStatus"), @Field(value = "logCollectionMinute", type = IndexType.DESC)
+        , @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("analysisStatus"),
+            @Field(value = "lastUpdatedAt", type = IndexType.DESC)
       }, options = @IndexOptions(name = "analysisSummaryIdx")), @Index(fields = {
         @Field("stateExecutionId"), @Field(value = "logCollectionMinute", type = IndexType.DESC)
       }, options = @IndexOptions(name = "stateIdx")), @Index(fields = {
@@ -68,7 +69,9 @@ import java.util.Map;
         @Field("cvConfigId")
         , @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("deprecated"),
             @Field(value = "lastUpdatedAt", type = IndexType.DESC),
-      }, options = @IndexOptions(name = "cvConfigLogCollectionMinLastUpdatedIdx"))
+      }, options = @IndexOptions(name = "cvConfigLogCollectionMinLastUpdatedIdx")), @Index(fields = {
+        @Field("stateExecutionId"), @Field("analysisStatus")
+      }, options = @IndexOptions(name = "stateExecStatusIdx"))
 })
 @Data
 @NoArgsConstructor

@@ -87,7 +87,7 @@ public class WorkflowFeedbackAnalysisJob implements Job {
         logAnalysisMinute = analysisService.getLastWorkflowAnalysisMinute(
             context.getAppId(), context.getStateExecutionId(), LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
 
-        if (logAnalysisMinute < context.getTimeDuration() - 1) {
+        if (logAnalysisMinute < analysisService.getEndTimeForLogAnalysis(context)) {
           // we still need to create new tasks.
           long lastLogMLTaskMinute = analysisService.getLastWorkflowAnalysisMinute(
               context.getAppId(), context.getStateExecutionId(), LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
