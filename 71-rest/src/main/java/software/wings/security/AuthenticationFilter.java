@@ -108,7 +108,10 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     if (isAuthenticatedByIdentitySvc(containerRequestContext)) {
       String identityServiceToken =
           substringAfter(containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION), IDENTITY_SERVICE_PREFIX);
-      secretManager.verifyJWTToken(identityServiceToken, JWT_CATEGORY.IDENTITY_SERVICE_SECRET);
+      HarnessUserAccountActions harnessUserAccountActions = secretManager.getHarnessUserAccountActions(
+          secretManager.verifyJWTToken(identityServiceToken, JWT_CATEGORY.IDENTITY_SERVICE_SECRET));
+      HarnessUserThreadLocal.set(harnessUserAccountActions);
+
       String userId = containerRequestContext.getHeaderString(USER_IDENTITY_HEADER);
       User user = userService.getUserFromCacheOrDB(userId);
       if (user != null) {
