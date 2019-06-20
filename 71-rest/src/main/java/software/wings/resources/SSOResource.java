@@ -6,7 +6,9 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.Data;
@@ -25,7 +27,10 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.security.authentication.LoginTypeResponse;
+import software.wings.security.authentication.LoginTypeResponse.LoginTypeResponseBuilder;
 import software.wings.security.authentication.SSOConfig;
+import software.wings.security.saml.SamlClientService;
 import software.wings.service.intfc.SSOService;
 
 import java.io.InputStream;
@@ -52,10 +57,12 @@ import javax.ws.rs.core.MediaType;
 @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
 public class SSOResource {
   private SSOService ssoService;
+  private SamlClientService samlClientService;
 
   @Inject
-  public SSOResource(SSOService ssoService) {
+  public SSOResource(SSOService ssoService, SamlClientService samlClientService) {
     this.ssoService = ssoService;
+    this.samlClientService = samlClientService;
   }
 
   @POST
@@ -280,6 +287,7 @@ public class SSOResource {
     Collection<LdapGroupResponse> groups = ssoService.searchGroupsByName(ldapId, query);
     return new RestResponse<>(groups);
   }
+
   @Data
   public static class LDAPTestAuthenticationRequest {
     @NotBlank String email;
@@ -293,5 +301,25 @@ public class SSOResource {
     logger.info("Received request to delete SSO violations for accountId={} and targetAccountType={}", accountId,
         targetAccountType);
     return new RestResponse<>(ssoService.deleteSSOSettingsForAccount(accountId, targetAccountType));
+  }
+
+  /**
+   * Returns redirect response to SAML authentication provider if SAML credentials exist for user
+   * throws error if called when SAML account does not exist
+   * Note: User is extracted inside generateTestSamlRequest function
+   *
+   * @param accountId - Currently active account of user
+   * @return RestResponse - contains redirect request to SAML auth provider
+   */
+  @GET
+  @Path("saml-login-test")
+  public RestResponse<LoginTypeResponse> getSamlLoginTest(@QueryParam("accountId") @NotBlank String accountId) {
+    LoginTypeResponseBuilder builder = LoginTypeResponse.builder();
+    try {
+      return new RestResponse<>(builder.authenticationMechanism(AuthenticationMechanism.SAML).build());
+    } catch (Exception e) {
+      logger.warn(String.format("Failed to create SAML redirect response for accountId=[%s]", accountId), e);
+      throw new WingsException(ErrorCode.INVALID_SAML_CONFIGURATION);
+    }
   }
 }

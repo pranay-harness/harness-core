@@ -70,6 +70,9 @@ public class AuthenticationManager {
   @Inject private LicenseService licenseService;
   @Inject private MainConfiguration mainConfiguration;
 
+  private static final String LOGIN_ERROR_CODE_INVALIDSSO = "#/login?errorCode=LOGIN_ERROR_CODE_INVALIDSSO";
+  private static final String LOGIN_ERROR_CODE_SAMLTESTSUCCESS = "#/login?errorCode=samltestsuccess";
+
   public AuthHandler getAuthHandler(AuthenticationMechanism mechanism) {
     switch (mechanism) {
       case SAML:
@@ -364,11 +367,22 @@ public class AuthenticationManager {
       params.put("apiurl", encodedApiUrl);
       URI redirectUrl = authenticationUtils.buildAbsoluteUrl("/saml.html", params);
       return Response.seeOther(redirectUrl).build();
+    } catch (WingsException e) {
+      if (e.getCode() == ErrorCode.SAML_TEST_SUCCESS_MECHANISM_NOT_ENABLED) {
+        URI redirectUrl = new URI(getBaseUrl() + LOGIN_ERROR_CODE_SAMLTESTSUCCESS);
+        return Response.seeOther(redirectUrl).build();
+      } else {
+        return generateInvalidSSOResponse(e);
+      }
     } catch (Exception e) {
-      logger.warn("Failed to login via saml", e);
-      URI redirectUrl = new URI(getBaseUrl() + "#/login?errorCode=invalidsso");
-      return Response.seeOther(redirectUrl).build();
+      return generateInvalidSSOResponse(e);
     }
+  }
+
+  private Response generateInvalidSSOResponse(Exception e) throws URISyntaxException {
+    logger.warn("Failed to login via saml", e);
+    URI redirectUrl = new URI(getBaseUrl() + LOGIN_ERROR_CODE_INVALIDSSO);
+    return Response.seeOther(redirectUrl).build();
   }
 
   public String extractToken(String authorizationHeader, String prefix) {
@@ -408,7 +422,7 @@ public class AuthenticationManager {
       return Response.seeOther(redirectUrl).build();
     } catch (Exception e) {
       logger.warn("Failed to login via oauth", e);
-      URI redirectUrl = new URI(getBaseUrl() + "#/login?errorCode=invalidsso");
+      URI redirectUrl = new URI(getBaseUrl() + LOGIN_ERROR_CODE_INVALIDSSO);
       return Response.seeOther(redirectUrl).build();
     }
   }
