@@ -10,13 +10,11 @@ import com.hazelcast.util.Preconditions;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter;
-import io.harness.exception.WingsException;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -27,7 +25,8 @@ import java.util.Map;
 @Slf4j
 public class VerificationEventProcessor {
   @Inject private ContinuousVerificationService continuousVerificationService;
-  private PreparedStatement insertPreparedStatement;
+
+  private static final int MAX_RETRY_COUNT = 5;
 
   /**
    ACCOUNT_ID TEXT NOT NULL,
@@ -52,20 +51,6 @@ public class VerificationEventProcessor {
 
   @Inject private TimeScaleDBService timeScaleDBService;
 
-  public boolean init() {
-    if (timeScaleDBService.isValid()) {
-      try {
-        insertPreparedStatement = timeScaleDBService.getDBConnection().prepareStatement(insert_prepared_statement_sql);
-        return true;
-      } catch (SQLException e) {
-        logger.error("Failed to create a insertPreparedStatement for timeseries database", e);
-        return false;
-      }
-    } else {
-      return true;
-    }
-  }
-
   public void processEvent(Map<String, String> properties) {
     if (timeScaleDBService.isValid()) {
       Preconditions.checkNotNull(properties.get("accountId"));
@@ -81,50 +66,47 @@ public class VerificationEventProcessor {
           continuousVerificationService.getCVDeploymentData(cvPageRequest);
 
       if (!isEmpty(cvExecutionMetaDataList)) {
-        init();
         boolean rolledback = Boolean.valueOf(properties.get("rollback"));
-
-        for (ContinuousVerificationExecutionMetaData cvExecutionMetaData : cvExecutionMetaDataList) {
-          Connection dbConnection = null;
-          try {
-            dbConnection = timeScaleDBService.getDBConnection();
-            insertPreparedStatement.setString(1, cvExecutionMetaData.getAccountId());
-            insertPreparedStatement.setString(2, cvExecutionMetaData.getAppId());
-            insertPreparedStatement.setString(3, cvExecutionMetaData.getServiceId());
-            insertPreparedStatement.setString(4, cvExecutionMetaData.getWorkflowId());
-            insertPreparedStatement.setString(5, cvExecutionMetaData.getWorkflowExecutionId());
-            insertPreparedStatement.setString(6, cvExecutionMetaData.getStateExecutionId());
-            insertPreparedStatement.setString(7, "");
-            insertPreparedStatement.setString(8, cvExecutionMetaData.getStateType().getName());
-            insertPreparedStatement.setString(11, cvExecutionMetaData.getExecutionStatus().name());
-            insertPreparedStatement.setBoolean(12, false);
-            insertPreparedStatement.setBoolean(13, !cvExecutionMetaData.isNoData());
-            insertPreparedStatement.setBoolean(
-                14, rolledback && cvExecutionMetaData.getExecutionStatus() == ExecutionStatus.FAILED);
-
-            insertPreparedStatement.setTimestamp(9, new Timestamp(System.currentTimeMillis()));
-            insertPreparedStatement.setTimestamp(10, new Timestamp(System.currentTimeMillis()));
-
-            insertPreparedStatement.execute();
+        boolean successfulInsert = false;
+        int retryCount = 0;
+        long startTime = System.currentTimeMillis();
+        while (!successfulInsert && retryCount < MAX_RETRY_COUNT) {
+          try (PreparedStatement insertPreparedStatement =
+                   timeScaleDBService.getDBConnection().prepareStatement(insert_prepared_statement_sql)) {
+            for (ContinuousVerificationExecutionMetaData cvExecutionMetaData : cvExecutionMetaDataList) {
+              insertPreparedStatement.setString(1, cvExecutionMetaData.getAccountId());
+              insertPreparedStatement.setString(2, cvExecutionMetaData.getAppId());
+              insertPreparedStatement.setString(3, cvExecutionMetaData.getServiceId());
+              insertPreparedStatement.setString(4, cvExecutionMetaData.getWorkflowId());
+              insertPreparedStatement.setString(5, cvExecutionMetaData.getWorkflowExecutionId());
+              insertPreparedStatement.setString(6, cvExecutionMetaData.getStateExecutionId());
+              insertPreparedStatement.setString(7, "");
+              insertPreparedStatement.setString(8, cvExecutionMetaData.getStateType().getName());
+              insertPreparedStatement.setString(11, cvExecutionMetaData.getExecutionStatus().name());
+              insertPreparedStatement.setBoolean(12, false);
+              insertPreparedStatement.setBoolean(13, !cvExecutionMetaData.isNoData());
+              insertPreparedStatement.setBoolean(
+                  14, rolledback && cvExecutionMetaData.getExecutionStatus() == ExecutionStatus.FAILED);
+              insertPreparedStatement.setTimestamp(9, new Timestamp(System.currentTimeMillis()));
+              insertPreparedStatement.setTimestamp(10, new Timestamp(System.currentTimeMillis()));
+              insertPreparedStatement.addBatch();
+            }
+            insertPreparedStatement.executeBatch();
+            successfulInsert = true;
           } catch (SQLException e) {
-            logger.error("Failed to save verification data,[{}]", properties, e);
+            if (retryCount >= MAX_RETRY_COUNT) {
+              logger.error("Failed to save deployment data,[{}]", properties, e);
+            } else {
+              logger.info("Failed to save deployment data,[{}],retryCount=[{}]", properties, retryCount);
+            }
+            retryCount++;
           } finally {
-            closeConnection(dbConnection);
+            logger.info("Total time=[{}],retryCount=[{}]", System.currentTimeMillis() - startTime, retryCount);
           }
         }
       }
     } else {
       logger.trace("Not processing data:[{}]", properties);
-    }
-  }
-
-  private void closeConnection(Connection connection) throws WingsException {
-    try {
-      if (connection != null) {
-        connection.close();
-      }
-    } catch (SQLException e) {
-      logger.error("Failed to close connection", e);
     }
   }
 }

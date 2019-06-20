@@ -29,13 +29,6 @@ public class TimeSeriesHandler implements EventHandler {
     registerForEvents(eventListener);
   }
 
-  @Inject
-  private void init() {
-    deploymentEventProcessor.init();
-    instanceEventProcessor.init();
-    verificationEventProcessor.init();
-  }
-
   private void registerForEvents(EventListener eventListener) {
     eventListener.registerEventHandler(this, Sets.newHashSet(DEPLOYMENT_EVENT, INSTANCE_EVENT, DEPLOYMENT_VERIFIED));
   }

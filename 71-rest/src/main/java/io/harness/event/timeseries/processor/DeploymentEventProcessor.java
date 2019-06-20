@@ -42,11 +42,6 @@ public class DeploymentEventProcessor implements EventProcessor {
   @Inject private TimeScaleDBService timeScaleDBService;
 
   @Override
-  public boolean init() {
-    return true;
-  }
-
-  @Override
   public void processEvent(TimeSeriesEventInfo eventInfo) {
     if (timeScaleDBService.isValid()) {
       long startTime = System.currentTimeMillis();

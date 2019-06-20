@@ -37,7 +37,5 @@ public interface EventProcessor<T extends PersistentEntity> {
   String DURATION = "DURATION";
   String ARTIFACT_LIST = "ARTIFACT_LIST";
 
-  boolean init();
-
   void processEvent(TimeSeriesEventInfo eventInfo);
 }
