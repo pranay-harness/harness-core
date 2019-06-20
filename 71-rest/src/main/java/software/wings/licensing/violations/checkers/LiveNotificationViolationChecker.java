@@ -54,7 +54,6 @@ public class LiveNotificationViolationChecker implements FeatureViolationChecker
   public List<FeatureViolation> getViolationsForCommunityAccount(String accountId) {
     List<FeatureViolation> featureViolationList = null;
     List<Usage> usages = new ImmutableList.Builder<Usage>()
-                             .addAll(getSlackUsages(accountId))
                              .addAll(getJiraUsages(accountId))
                              .addAll(getSnowUsages(accountId))
                              .addAll(getPagerDutyUsages(accountId))
@@ -72,15 +71,6 @@ public class LiveNotificationViolationChecker implements FeatureViolationChecker
     return getUserGroups(accountId)
         .stream()
         .filter(LiveNotificationViolationChecker::hasPagerDuty)
-        .map(LiveNotificationViolationChecker::asUsage)
-        .collect(Collectors.toList());
-  }
-
-  // Get usages of Slack under user groups
-  private List<Usage> getSlackUsages(String accountId) {
-    return getUserGroups(accountId)
-        .stream()
-        .filter(LiveNotificationViolationChecker::hasSlack)
         .map(LiveNotificationViolationChecker::asUsage)
         .collect(Collectors.toList());
   }
@@ -105,11 +95,6 @@ public class LiveNotificationViolationChecker implements FeatureViolationChecker
   // gets usages of Service Now state under workflows
   private List<Usage> getSnowUsages(String accountId) {
     return getWorkflowViolationUsages(getAllWorkflowsByAccountId(accountId), IS_SNOW_STATE_PRESENT);
-  }
-
-  private static boolean hasSlack(UserGroup userGroup) {
-    return userGroup.getNotificationSettings() != null && userGroup.getNotificationSettings().getSlackConfig() != null
-        && !EmptyPredicate.isEmpty(userGroup.getNotificationSettings().getSlackConfig().getOutgoingWebhookUrl());
   }
 
   private static boolean hasPagerDuty(UserGroup userGroup) {

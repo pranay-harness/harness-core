@@ -28,7 +28,7 @@ public class UserGroupBasedDispatcherTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void dispatch_shouldSkipSlackForCommunity() {
+  public void dispatch_shouldNotSkipSlackForCommunity() {
     String accountId = "some-account-id";
     Notification notification = FailureNotification.Builder.aFailureNotification()
                                     .withNotificationTemplateId("some-template-id")
@@ -51,10 +51,10 @@ public class UserGroupBasedDispatcherTest extends WingsBaseTest {
     Mockito.verify(slackMessageDispatcher).dispatch(notifications, slackConfig);
     Mockito.verify(emailDispatcher).dispatch(notifications, emails);
 
-    // verify slack message is NOT sent
+    // verify slack message is sent for Community
     Mockito.when(accountService.isCommunityAccount(accountId)).thenReturn(true);
+
     userGroupDispatcher.dispatch(notifications, userGroup);
-    Mockito.verifyNoMoreInteractions(slackMessageDispatcher);
     Mockito.verify(emailDispatcher, Mockito.times(2)).dispatch(notifications, emails);
   }
 }

@@ -69,13 +69,6 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
       }
     }
 
-    boolean isCommunityAccount = accountService.isCommunityAccount(accountId);
-    if (isCommunityAccount) {
-      log.info("{} - Slack and Pager duty Configuration will be ignored since it's a community account. accountId={}",
-          randLogId, accountId);
-      return;
-    }
-
     if (null != userGroup.getSlackConfig()) {
       try {
         log.info("{} - Trying to send slack message. slack configuration: {}", randLogId, userGroup.getSlackConfig());
@@ -83,6 +76,13 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
       } catch (Exception e) {
         log.error("{} - Error sending slack message. Slack Config: {}", randLogId, userGroup.getSlackConfig(), e);
       }
+    }
+
+    boolean isCommunityAccount = accountService.isCommunityAccount(accountId);
+    if (isCommunityAccount) {
+      log.info("{} - Pager duty Configuration will be ignored since it's a community account. accountId={}", randLogId,
+          accountId);
+      return;
     }
 
     if (EmptyPredicate.isNotEmpty(userGroup.getPagerDutyIntegrationKey())) {
