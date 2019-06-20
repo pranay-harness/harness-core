@@ -880,8 +880,8 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                                                 .addOrder(WorkflowExecutionKeys.createdAt, OrderType.DESC)
                                                 .withLimit("10");
     if (accountService.isCommunityAccount(accountId)) {
-      pageRequestBuilder.addFilter(
-          WorkflowExecutionKeys.startTs, GE, EpochUtils.calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(7, "UTC"));
+      pageRequestBuilder.addFilter(WorkflowExecutionKeys.startTs, GE,
+          EpochUtils.calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(30, "UTC"));
     }
     PageRequest<WorkflowExecution> pageRequest = pageRequestBuilder.build();
 
