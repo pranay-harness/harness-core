@@ -20,7 +20,7 @@ import java.util.List;
 public class AuditPreference extends Preference {
   String startTime;
   String endTime;
-  String duration;
+  Integer lastNDays;
   // userIds who initiated action captured by audit records
   List<String> createdByUserIds;
   List<String> operationTypes;
