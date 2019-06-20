@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import static io.harness.beans.SearchFilter.Operator.EQ;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -9,6 +11,7 @@ import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.beans.ResourceLookup;
+import software.wings.beans.ResourceLookup.ResourceLookupKeys;
 import software.wings.service.intfc.ResourceLookupService;
 
 import java.util.List;
@@ -41,6 +44,7 @@ public class ResourceLookupResource {
   @Produces("application/json")
   public RestResponse<PageResponse<ResourceLookup>> list(
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<ResourceLookup> pageRequest) {
+    pageRequest.addFilter(ResourceLookupKeys.accountId, EQ, accountId);
     return new RestResponse<>(resourceLookupService.list(pageRequest));
   }
 
