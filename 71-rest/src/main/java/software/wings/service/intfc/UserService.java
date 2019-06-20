@@ -23,7 +23,6 @@ import software.wings.security.SecretManager;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
-import software.wings.security.authentication.oauth.OauthClient;
 import software.wings.security.authentication.oauth.OauthUserInfo;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
@@ -335,10 +334,10 @@ public interface UserService extends OwnedByAccount {
    * and will set up as the default login mechanism.
    *
    * @param userInfo The user to be signed up for a free trial
-   * @param oauthClient The oauthClient being used for the signup process.
+   * @param oauthProviderName The oauthClient being used for the signup process.
    * @return the new User
    */
-  User signUpUserUsingOauth(OauthUserInfo userInfo, OauthClient oauthClient);
+  User signUpUserUsingOauth(OauthUserInfo userInfo, String oauthProviderName);
 
   /**
    * Complete the trial user signup and signin. Both the trial account and the account admin user will be created

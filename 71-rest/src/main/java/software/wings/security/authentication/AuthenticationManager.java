@@ -28,7 +28,6 @@ import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AuthToken;
-import software.wings.beans.FeatureName;
 import software.wings.beans.User;
 import software.wings.licensing.LicenseService;
 import software.wings.security.SecretManager.JWT_CATEGORY;
@@ -386,16 +385,13 @@ public class AuthenticationManager {
 
   public Response oauth2CallbackUrl(String... credentials) throws URISyntaxException {
     try {
-      if (!featureFlagService.isEnabled(FeatureName.OAUTH_LOGIN, null)) {
-        throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED);
-      }
       User user;
       AuthenticationResponse authenticationResponse = oauthBasedAuthHandler.authenticate(credentials);
 
       if (null == authenticationResponse.getUser()) {
         OauthAuthenticationResponse oauthAuthenticationResponse = (OauthAuthenticationResponse) authenticationResponse;
         user = userService.signUpUserUsingOauth(
-            oauthAuthenticationResponse.getOauthUserInfo(), oauthAuthenticationResponse.getOauthClient());
+            oauthAuthenticationResponse.getOauthUserInfo(), oauthAuthenticationResponse.getOauthClient().getName());
       } else {
         user = authenticationResponse.getUser();
       }

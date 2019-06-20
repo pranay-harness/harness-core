@@ -28,8 +28,10 @@ import software.wings.beans.Account;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionCredential.ExecutionType;
 import software.wings.beans.SSHExecutionCredential;
+import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
+import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
 
 import java.io.IOException;
@@ -40,6 +42,8 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   protected static final String ADMIN_USER = "admin@harness.io";
 
   protected static String bearerToken;
+  protected static User adminUser;
+
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
   @Rule public FunctionalTestRule rule = new FunctionalTestRule(lifecycleRule.getClosingFactory());
   @Inject DataLoaderRegistryHelper dataLoaderRegistryHelper;
@@ -65,6 +69,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   //  @Inject OwnerManager ownerManager;
   @Inject private AccountSetupService accountSetupService;
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private UserService userService;
 
   @Getter static Account account;
 
@@ -72,7 +77,8 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   public void testSetup() throws IOException {
     account = accountSetupService.ensureAccount();
     delegateExecutor.ensureDelegate(account, AbstractFunctionalTest.class);
-    bearerToken = Setup.getAuthToken(ADMIN_USER, "admin");
+    adminUser = Setup.loginUser(ADMIN_USER, "admin");
+    bearerToken = adminUser.getToken();
     logger.info("Basic setup completed");
   }
 

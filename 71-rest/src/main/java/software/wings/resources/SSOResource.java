@@ -6,9 +6,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.Data;
@@ -16,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotBlank;
-import software.wings.beans.FeatureName;
 import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapTestResponse;
@@ -29,7 +26,6 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.SSOConfig;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SSOService;
 
 import java.io.InputStream;
@@ -56,12 +52,10 @@ import javax.ws.rs.core.MediaType;
 @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
 public class SSOResource {
   private SSOService ssoService;
-  private FeatureFlagService featureFlagService;
 
   @Inject
-  public SSOResource(SSOService ssoService, FeatureFlagService featureFlagService) {
+  public SSOResource(SSOService ssoService) {
     this.ssoService = ssoService;
-    this.featureFlagService = featureFlagService;
   }
 
   @POST
@@ -84,9 +78,6 @@ public class SSOResource {
   @ExceptionMetered
   public RestResponse<SSOConfig> uploadOathSettings(
       @QueryParam("accountId") String accountId, OauthSettings oauthSettings) {
-    if (!featureFlagService.isEnabled(FeatureName.OAUTH_LOGIN, accountId)) {
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED);
-    }
     return new RestResponse<>(
         ssoService.uploadOauthConfiguration(accountId, oauthSettings.getFilter(), oauthSettings.getAllowedProviders()));
   }
@@ -104,9 +95,6 @@ public class SSOResource {
   @Consumes(MediaType.APPLICATION_JSON)
   public RestResponse<OauthSettings> updateOathSettings(
       @QueryParam("accountId") String accountId, OauthSettings oauthSettings) {
-    if (!featureFlagService.isEnabled(FeatureName.OAUTH_LOGIN, accountId)) {
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED);
-    }
     return new RestResponse<>(
         ssoService.updateOauthSettings(accountId, oauthSettings.getFilter(), oauthSettings.getAllowedProviders()));
   }
@@ -181,9 +169,6 @@ public class SSOResource {
   @Timed
   @ExceptionMetered
   public RestResponse<SSOConfig> enableOauthAuthMechanism(@QueryParam("accountId") String accountId) {
-    if (!featureFlagService.isEnabled(FeatureName.OAUTH_LOGIN, accountId)) {
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED);
-    }
     return new RestResponse<>(ssoService.setAuthenticationMechanism(accountId, AuthenticationMechanism.OAUTH));
   }
 
@@ -201,7 +186,7 @@ public class SSOResource {
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   @ExceptionMetered
   public RestResponse<SSOConfig> getAccountAccessManagementSettings(@PathParam("accountId") String accountId) {
-    return new RestResponse<SSOConfig>(ssoService.getAccountAccessManagementSettings(accountId));
+    return new RestResponse<>(ssoService.getAccountAccessManagementSettings(accountId));
   }
 
   @POST

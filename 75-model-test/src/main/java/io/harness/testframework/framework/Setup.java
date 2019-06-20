@@ -33,7 +33,7 @@ public class Setup {
     return given().spec(rqProvider.useMailinatorSpec(secret));
   }
 
-  public static String getAuthToken(String email, String password) {
+  public static User loginUser(String email, String password) {
     String basicAuthValue =
         "Basic " + encodeBase64String(String.format("%s:%s", email, password).getBytes(StandardCharsets.UTF_8));
     GenericType<RestResponse<User>> genericType = new GenericType<RestResponse<User>>() {};
@@ -42,7 +42,11 @@ public class Setup {
     assertNotNull(userRestResponse);
     User user = userRestResponse.getResource();
     assertNotNull(user);
-    return user.getToken();
+    return user;
+  }
+
+  public static String getAuthToken(String email, String password) {
+    return loginUser(email, password).getToken();
   }
 
   public static String getAuthTokenForAccount(String accountId, String email, String password) {
