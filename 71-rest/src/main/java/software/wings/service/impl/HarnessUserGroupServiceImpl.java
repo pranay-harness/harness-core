@@ -65,13 +65,17 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
     if (featureFlagService.isGlobalEnabled(FeatureName.GLOBAL_HARNESS_USER_GROUP)) {
       // If it's called by identity service, thread local should have been populated
       HarnessUserAccountActions harnessUserAccountActions = HarnessUserThreadLocal.get();
+      logger.info("Got account actions {} for account {} from context", harnessUserAccountActions, accountId);
       if (harnessUserAccountActions != null) {
+        if (harnessUserAccountActions.isApplyToAllAccounts()) {
+          actionSet.addAll(harnessUserAccountActions.getActions());
+        }
         Set<Action> actionSetFromAccountActions = harnessUserAccountActions.getAccountActions().get(accountId);
-        logger.info("Got account actions {} for account {} from context", actionSetFromAccountActions, accountId);
         if (actionSetFromAccountActions != null) {
           actionSet.addAll(actionSetFromAccountActions);
         }
       }
+      logger.info("Got allowed actions {} for account {} from context", actionSet, accountId);
     } else {
       Query<HarnessUserGroup> query = wingsPersistence.createQuery(HarnessUserGroup.class, excludeAuthority);
       query.filter("memberIds", userId);
@@ -84,6 +88,7 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
         }
       });
     }
+
     return actionSet;
   }
 
@@ -95,9 +100,9 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
     if (featureFlagService.isGlobalEnabled(FeatureName.GLOBAL_HARNESS_USER_GROUP)) {
       // If it's called by identity service, thread local should have been populated
       HarnessUserAccountActions harnessUserAccountActions = HarnessUserThreadLocal.get();
+      logger.info("Got account actions {} for user {} from context", harnessUserAccountActions, userId);
       if (harnessUserAccountActions != null) {
         applyToAllAccounts = harnessUserAccountActions.isApplyToAllAccounts();
-        logger.info("Got user {}'s apply-for-all-account flag value from context: {}", userId, applyToAllAccounts);
         if (!applyToAllAccounts) {
           Set<String> accountsFromHarnessUserAccountActions = harnessUserAccountActions.getAccountActions().keySet();
           if (isNotEmpty(accountsFromHarnessUserAccountActions)) {
