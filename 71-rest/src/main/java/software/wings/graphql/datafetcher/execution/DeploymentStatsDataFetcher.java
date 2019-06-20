@@ -54,6 +54,7 @@ import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentAgg
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentFilter;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentFilterType;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -115,7 +116,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
     boolean successful = false;
     int retryCount = 0;
     while (!successful && retryCount < MAX_RETRY) {
-      try (Statement statement = timeScaleDBService.getDBConnection().createStatement()) {
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           Statement statement = connection.createStatement()) {
         preValidateInput(groupBy, groupByTime);
         queryData = formQuery(accountId, aggregateFunction, filters, groupBy, groupByTime);
         logger.info("Query : [{}]", queryData.getQuery());

@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -71,8 +72,8 @@ public class VerificationEventProcessor {
         int retryCount = 0;
         long startTime = System.currentTimeMillis();
         while (!successfulInsert && retryCount < MAX_RETRY_COUNT) {
-          try (PreparedStatement insertPreparedStatement =
-                   timeScaleDBService.getDBConnection().prepareStatement(insert_prepared_statement_sql)) {
+          try (Connection connection = timeScaleDBService.getDBConnection();
+               PreparedStatement insertPreparedStatement = connection.prepareStatement(insert_prepared_statement_sql)) {
             for (ContinuousVerificationExecutionMetaData cvExecutionMetaData : cvExecutionMetaDataList) {
               insertPreparedStatement.setString(1, cvExecutionMetaData.getAccountId());
               insertPreparedStatement.setString(2, cvExecutionMetaData.getAppId());
