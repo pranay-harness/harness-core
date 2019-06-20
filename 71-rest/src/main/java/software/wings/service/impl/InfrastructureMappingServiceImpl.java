@@ -92,6 +92,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
+import software.wings.beans.GcpKubernetesInfrastructureMapping.GcpKubernetesInfrastructureMappingKeys;
 import software.wings.beans.HostValidationRequest;
 import software.wings.beans.HostValidationResponse;
 import software.wings.beans.InfrastructureMapping;
@@ -804,8 +805,18 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
   }
 
-  private void validateGcpInfraMapping(GcpKubernetesInfrastructureMapping infraMapping) {
+  @VisibleForTesting
+  public void validateGcpInfraMapping(GcpKubernetesInfrastructureMapping infraMapping) {
     if (isNotEmpty(infraMapping.getProvisionerId())) {
+      if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infraMapping.getAccountId())) {
+        Map<String, Object> blueprints = infraMapping.getBlueprints();
+        if (blueprints.get(ContainerInfrastructureMappingKeys.clusterName) == null) {
+          throw new InvalidRequestException("Cluster name can't be empty");
+        }
+        if (blueprints.get(GcpKubernetesInfrastructureMappingKeys.namespace) == null) {
+          throw new InvalidRequestException("Namespace can't be empty");
+        }
+      }
       return;
     }
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());

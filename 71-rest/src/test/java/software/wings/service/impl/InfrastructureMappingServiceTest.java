@@ -1135,4 +1135,29 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
       assertTrue(ExceptionUtils.getMessage(ex).contains("Desired count "));
     }
   }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateGcpInfraMapping() {
+    GcpKubernetesInfrastructureMapping infrastructureMapping = new GcpKubernetesInfrastructureMapping();
+    InfrastructureMappingServiceImpl infrastructureMappingService =
+        (InfrastructureMappingServiceImpl) this.infrastructureMappingService;
+    doReturn(true).when(featureFlagService).isEnabled(any(), any());
+
+    infrastructureMapping.setProvisionerId("p123");
+    Map<String, Object> blueprints = new HashMap<>();
+    infrastructureMapping.setBlueprints(blueprints);
+    blueprints.put("clusterName", "fad");
+    blueprints.put("namespace", "fad");
+    infrastructureMappingService.validateGcpInfraMapping(infrastructureMapping);
+
+    blueprints.remove("clusterName");
+    Assertions.assertThatThrownBy(() -> infrastructureMappingService.validateGcpInfraMapping(infrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+
+    blueprints.put("clusterName", "fad");
+    blueprints.remove("namespace");
+    Assertions.assertThatThrownBy(() -> infrastructureMappingService.validateGcpInfraMapping(infrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+  }
 }
