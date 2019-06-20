@@ -50,6 +50,15 @@ public class SSORestUtils {
         .getStatusCode();
   }
 
+  public static Integer getLdapSettings(String accountId, String bearerToken) {
+    return Setup.portal()
+        .auth()
+        .oauth2(bearerToken)
+        .queryParam("accountId", accountId)
+        .get("/sso/ldap/settings")
+        .getStatusCode();
+  }
+
   public static Integer addSAMLSettings(String accountId, String bearerToken, String name, String fileName) {
     File file = new File(fileName);
     return Setup.portal()

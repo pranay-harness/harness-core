@@ -25,6 +25,16 @@ public class UserGroupRestUtils {
     return userGroups.getResource();
   }
 
+  public static UserGroup getUserGroup(Account account, String bearerToken, String userGroupId) {
+    RestResponse<UserGroup> userGroup = Setup.portal()
+                                            .auth()
+                                            .oauth2(bearerToken)
+                                            .queryParam("accountId", account.getUuid())
+                                            .get("/userGroups/" + userGroupId)
+                                            .as(new GenericType<RestResponse<PageResponse<UserGroup>>>() {}.getType());
+    return userGroup.getResource();
+  }
+
   public static UserGroup createUserGroup(Account account, String bearerToken, JsonObject jsonObject) {
     RestResponse<UserGroup> userGroups = Setup.portal()
                                              .auth()
