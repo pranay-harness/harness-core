@@ -21,7 +21,6 @@ import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.persistence.HIterator;
-import io.harness.persistence.ReadPref;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.Morphia;
@@ -372,7 +371,7 @@ public class ResourceLookupMigration implements Migration {
   }
 
   private void bulkSaveResourceLookupRecords() {
-    final DBCollection collection = wingsPersistence.getCollection(ResourceLookup.class, ReadPref.NORMAL);
+    final DBCollection collection = wingsPersistence.getCollection(ResourceLookup.class);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
     int i = 1;
 

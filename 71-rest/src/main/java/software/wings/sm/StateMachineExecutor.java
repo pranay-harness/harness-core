@@ -26,7 +26,6 @@ import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.STATE_NOT_FOR_TYPE;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.govern.Switch.unhandled;
-import static io.harness.persistence.ReadPref.CRITICAL;
 import static io.harness.threading.Morpheus.quietSleep;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -330,11 +329,7 @@ public class StateMachineExecutor implements StateInspectionListener {
    */
   public boolean startQueuedExecution(String appId, String executionUuid) {
     PageResponse<StateExecutionInstance> pageResponse = wingsPersistence.query(StateExecutionInstance.class,
-        aPageRequest()
-            .withReadPref(CRITICAL)
-            .addFilter("appId", EQ, appId)
-            .addFilter("executionUuid", EQ, executionUuid)
-            .build());
+        aPageRequest().addFilter("appId", EQ, appId).addFilter("executionUuid", EQ, executionUuid).build());
 
     if (pageResponse == null || pageResponse.size() != 1 || pageResponse.get(0) == null
         || !(pageResponse.get(0).getStatus() == QUEUED || pageResponse.get(0).getStatus() == NEW)) {
@@ -1215,8 +1210,8 @@ public class StateMachineExecutor implements StateInspectionListener {
    * @param workflowExecutionInterrupt the workflow execution event
    */
   public void handleInterrupt(ExecutionInterrupt workflowExecutionInterrupt) {
-    WorkflowExecution workflowExecution = wingsPersistence.getWithAppId(WorkflowExecution.class,
-        workflowExecutionInterrupt.getAppId(), workflowExecutionInterrupt.getExecutionUuid(), CRITICAL);
+    WorkflowExecution workflowExecution = wingsPersistence.getWithAppId(
+        WorkflowExecution.class, workflowExecutionInterrupt.getAppId(), workflowExecutionInterrupt.getExecutionUuid());
 
     final ExecutionInterruptType type = workflowExecutionInterrupt.getExecutionInterruptType();
     switch (type) {
@@ -1512,7 +1507,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   private StateExecutionInstance getStateExecutionInstance(
       String appId, String executionUuid, String stateExecutionInstanceId) {
     // TODO: convert this not to use Query directly after default createdAt sorting is taken off
-    Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class, CRITICAL)
+    Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
                                               .filter(ID_KEY, stateExecutionInstanceId)
                                               .filter(StateExecutionInstanceKeys.appId, appId);
     if (executionUuid != null) {

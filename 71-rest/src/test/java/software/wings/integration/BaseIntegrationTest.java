@@ -31,7 +31,6 @@ import com.nimbusds.jose.crypto.DirectEncrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.persistence.ReadPref;
 import io.harness.rest.RestResponse;
 import io.harness.scm.ScmSecret;
 import io.harness.serializer.JsonSubtypeResolver;
@@ -212,8 +211,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
   }
 
   protected void deleteAllDocuments(List<Class> classes) {
-    classes.forEach(
-        cls -> wingsPersistence.getDatastore(cls, ReadPref.NORMAL).delete(wingsPersistence.createQuery(cls)));
+    classes.forEach(cls -> wingsPersistence.getDatastore(cls).delete(wingsPersistence.createQuery(cls)));
   }
 
   protected Application createApp(String appName) {

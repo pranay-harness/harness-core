@@ -17,7 +17,6 @@ import com.mongodb.BasicDBObject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
-import io.harness.persistence.ReadPref;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotBlank;
 import software.wings.beans.EntityType;
@@ -253,7 +252,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     conditions.add(new BasicDBObject(HarnessTagLinkKeys.key, key));
     andQuery.put("$and", conditions);
 
-    return wingsPersistence.getCollection(HarnessTagLink.class, ReadPref.NORMAL).findOne(andQuery) != null;
+    return wingsPersistence.getCollection(HarnessTagLink.class).findOne(andQuery) != null;
   }
 
   private Set<String> getInUseValues(String accountId, String key) {
@@ -263,7 +262,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     conditions.add(new BasicDBObject(HarnessTagLinkKeys.key, key));
     andQuery.put("$and", conditions);
 
-    return new HashSet<>(wingsPersistence.getCollection(HarnessTagLink.class, ReadPref.NORMAL)
-                             .distinct(HarnessTagLinkKeys.value, andQuery));
+    return new HashSet<>(
+        wingsPersistence.getCollection(HarnessTagLink.class).distinct(HarnessTagLinkKeys.value, andQuery));
   }
 }

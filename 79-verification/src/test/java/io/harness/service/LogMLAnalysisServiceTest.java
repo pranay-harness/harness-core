@@ -25,7 +25,6 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.metrics.HarnessMetricRegistry;
-import io.harness.persistence.ReadPref;
 import io.harness.rest.RestResponse;
 import io.harness.rule.RealMongo;
 import io.harness.serializer.JsonUtils;
@@ -1518,7 +1517,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     int analysisMinute = 1234567;
 
     createLETaskForBackoffTest(analysisMinute, 8);
-    Datastore datastore = wingsPersistence.getDatastore(LearningEngineAnalysisTask.class, ReadPref.NORMAL);
+    Datastore datastore = wingsPersistence.getDatastore(LearningEngineAnalysisTask.class);
 
     Query<LearningEngineAnalysisTask> taskQuery =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)

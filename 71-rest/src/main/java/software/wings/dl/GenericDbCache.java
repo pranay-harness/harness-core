@@ -8,7 +8,6 @@ import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.persistence.ReadPref;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.service.intfc.AccountService;
@@ -23,27 +22,28 @@ import java.util.concurrent.TimeUnit;
 public class GenericDbCache {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
-  private LoadingCache<String, Object> cache =
-      CacheBuilder.newBuilder()
-          .maximumSize(10000)
-          .expireAfterWrite(1, TimeUnit.MINUTES)
-          .build(new CacheLoader<String, Object>() {
-            @Override
-            public Object load(String key) throws Exception {
-              int idx = key.lastIndexOf('~');
-              String className = key.substring(0, idx);
-              String uuid = key.substring(idx + 1);
+  private LoadingCache<String, Object> cache = CacheBuilder.newBuilder()
+                                                   .maximumSize(10000)
+                                                   .expireAfterWrite(1, TimeUnit.MINUTES)
+                                                   .build(new CacheLoader<String, Object>() {
+                                                     @Override
+                                                     public Object load(String key) throws Exception {
+                                                       int idx = key.lastIndexOf('~');
+                                                       String className = key.substring(0, idx);
+                                                       String uuid = key.substring(idx + 1);
 
-              // TODO We need to define a generic way of calling the service.get(),
-              // for that we need a locator class that maps entityClassName and service class.
-              // This special handling is needed since the accountService.get() also decrypts the license info.
-              if (Account.class.getCanonicalName().equals(className)) {
-                return accountService.get(uuid);
-              }
-              final Class<?> aClass = Class.forName(className);
-              return wingsPersistence.getDatastore(aClass, ReadPref.NORMAL).get(aClass, uuid);
-            }
-          });
+                                                       // TODO We need to define a generic way of calling the
+                                                       // service.get(), for that we need a locator class that maps
+                                                       // entityClassName and service class. This special handling is
+                                                       // needed since the accountService.get() also decrypts the
+                                                       // license info.
+                                                       if (Account.class.getCanonicalName().equals(className)) {
+                                                         return accountService.get(uuid);
+                                                       }
+                                                       final Class<?> aClass = Class.forName(className);
+                                                       return wingsPersistence.getDatastore(aClass).get(aClass, uuid);
+                                                     }
+                                                   });
 
   /**
    * Put.

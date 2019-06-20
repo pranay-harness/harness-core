@@ -6,7 +6,6 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
 import io.harness.persistence.HIterator;
-import io.harness.persistence.ReadPref;
 import io.harness.waiter.WaitQueue;
 import io.harness.waiter.WaitQueue.WaitQueueKeys;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +23,7 @@ public class AddValidUntilToWaitQueue implements Migration {
 
   @Override
   public void migrate() {
-    final DBCollection collection = wingsPersistence.getCollection(WaitQueue.class, ReadPref.NORMAL);
+    final DBCollection collection = wingsPersistence.getCollection(WaitQueue.class);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
 
     int i = 1;

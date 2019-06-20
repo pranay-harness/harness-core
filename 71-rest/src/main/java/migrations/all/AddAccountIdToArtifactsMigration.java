@@ -8,7 +8,6 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.WriteResult;
 import io.harness.persistence.HIterator;
-import io.harness.persistence.ReadPref;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import software.wings.beans.Application;
@@ -22,7 +21,7 @@ public class AddAccountIdToArtifactsMigration implements Migration {
   @Override
   @SuppressWarnings("deprecation")
   public void migrate() {
-    final DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "artifacts");
+    final DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, "artifacts");
     logger.info("Adding accountId to Artifacts");
     try (HIterator<Application> applicationHIterator =
              new HIterator<>(wingsPersistence.createQuery(Application.class).fetch())) {

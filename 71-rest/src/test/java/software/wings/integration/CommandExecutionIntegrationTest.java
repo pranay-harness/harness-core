@@ -28,7 +28,6 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
-import io.harness.persistence.ReadPref;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -133,7 +132,7 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
    */
   @Before
   public void setUp() throws Exception {
-    wingsPersistence.getCollection(AppContainer.class, ReadPref.NORMAL).drop();
+    wingsPersistence.getCollection(AppContainer.class).drop();
     String uuid = fileService.saveFile(anArtifactFile().withName("app").build(),
         new ByteArrayInputStream("echo 'hello world'".getBytes(StandardCharsets.UTF_8)), ARTIFACTS);
     ArtifactFile artifactFile = anArtifactFile().withFileUuid(uuid).withName("service").build();

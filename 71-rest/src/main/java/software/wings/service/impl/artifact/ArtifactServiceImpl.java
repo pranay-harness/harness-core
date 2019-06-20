@@ -45,7 +45,6 @@ import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
-import io.harness.persistence.ReadPref;
 import io.harness.queue.Queue;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.validation.Create;
@@ -406,7 +405,7 @@ public class ArtifactServiceImpl implements ArtifactService {
       }
     }
     if (isNotEmpty(artifactIds)) {
-      wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "artifacts")
+      wingsPersistence.getCollection(DEFAULT_STORE, "artifacts")
           .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactIds.toArray())));
     }
     if (isNotEmpty(artifactIdsWithFiles)) {
@@ -441,7 +440,7 @@ public class ArtifactServiceImpl implements ArtifactService {
       }
     }
     if (isNotEmpty(artifactIds)) {
-      wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "artifacts")
+      wingsPersistence.getCollection(DEFAULT_STORE, "artifacts")
           .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactIds.toArray())));
     }
     if (isNotEmpty(artifactIdsWithFiles)) {
@@ -624,7 +623,7 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   private void deleteArtifacts(Object[] artifactIds, List<String> artifactFileIds) {
     logger.info("Deleting artifactIds of artifacts {}", artifactIds);
-    wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "artifacts")
+    wingsPersistence.getCollection(DEFAULT_STORE, "artifacts")
         .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactIds)));
     if (isNotEmpty(artifactFileIds)) {
       for (String fileId : artifactFileIds) {

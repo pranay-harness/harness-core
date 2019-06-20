@@ -11,7 +11,6 @@ import com.mongodb.WriteConcern;
 import com.mongodb.client.model.DBCollectionFindOptions;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentEntity;
-import io.harness.persistence.ReadPref;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.dl.WingsPersistence;
@@ -35,9 +34,8 @@ public class WingsMongoExportImport {
    */
   public List<String> exportRecords(DBObject filter, String collectionName) {
     final List<String> records = new ArrayList<>();
-    DBCollection collection = wingsPersistence.getDatastore(HPersistence.DEFAULT_STORE, ReadPref.NORMAL)
-                                  .getDB()
-                                  .getCollection(collectionName);
+    DBCollection collection =
+        wingsPersistence.getDatastore(HPersistence.DEFAULT_STORE).getDB().getCollection(collectionName);
 
     DBCursor cursor = collection.find(filter, new DBCollectionFindOptions().batchSize(BATCH_SIZE));
     while (cursor.hasNext()) {
@@ -57,9 +55,8 @@ public class WingsMongoExportImport {
    * @param  mode one of the supported import mode such as DRY_RUN/UPSERT etc.
    */
   public ImportStatus importRecords(String collectionName, List<String> records, ImportMode mode) {
-    DBCollection collection = wingsPersistence.getDatastore(HPersistence.DEFAULT_STORE, ReadPref.NORMAL)
-                                  .getDB()
-                                  .getCollection(collectionName);
+    DBCollection collection =
+        wingsPersistence.getDatastore(HPersistence.DEFAULT_STORE).getDB().getCollection(collectionName);
 
     int totalRecords = records.size();
     int importedRecords = 0;

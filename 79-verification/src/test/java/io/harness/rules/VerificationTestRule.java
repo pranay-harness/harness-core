@@ -44,7 +44,7 @@ public class VerificationTestRule extends WingsRule {
 
   @Override
   protected List<Module> getRequiredModules(Configuration configuration, DistributedLockSvc distributedLockSvc) {
-    return Lists.newArrayList(new TestMongoModule(datastore, datastore, distributedLockSvc),
+    return Lists.newArrayList(new TestMongoModule(datastore, distributedLockSvc),
         new VerificationServiceModule((VerificationServiceConfiguration) configuration), new VerificationTestModule(),
         new VerificationServiceSchedulerModule((VerificationServiceConfiguration) configuration));
   }

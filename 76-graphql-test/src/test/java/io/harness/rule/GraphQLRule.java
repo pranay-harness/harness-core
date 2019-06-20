@@ -119,7 +119,7 @@ public class GraphQLRule
     List<Module> modules = new ArrayList();
     modules.add(VersionModule.getInstance());
     modules.addAll(TimeModule.getInstance().cumulativeDependencies());
-    modules.add(new TestMongoModule(datastore, datastore, distributedLockSvc));
+    modules.add(new TestMongoModule(datastore, distributedLockSvc));
 
     MainConfiguration configuration = getConfiguration("graphQL");
 

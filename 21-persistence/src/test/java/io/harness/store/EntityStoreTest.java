@@ -10,7 +10,6 @@ import io.harness.annotation.StoreIn;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentEntity;
-import io.harness.persistence.ReadPref;
 import io.harness.persistence.Store;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -29,7 +28,7 @@ public class EntityStoreTest extends PersistenceTest {
   public void testGetDatastore() {
     Set<Class> classes = ImmutableSet.<Class>of();
     persistence.register(Store.builder().name("foo").build(), "mongodb://localhost:27017/dummy", classes);
-    final AdvancedDatastore datastore = persistence.getDatastore(Dummy.class, ReadPref.CRITICAL);
+    final AdvancedDatastore datastore = persistence.getDatastore(Dummy.class);
     assertThat(datastore.getDB().getName()).isEqualTo("dummy");
   }
 }

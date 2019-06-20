@@ -6,7 +6,6 @@ import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
 
-import io.harness.persistence.ReadPref;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import software.wings.dl.WingsPersistence;
@@ -21,7 +20,7 @@ public class DropOldCollectionMigration implements Migration {
              "containerDeploymentQueue", "entityUpdateListQueue", "history", "metricSummary", "newRelicMetricNames",
              "splunkAnalysisRecords", "splunkLogs")) {
       try {
-        wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, collection).drop();
+        wingsPersistence.getCollection(DEFAULT_STORE, collection).drop();
       } catch (RuntimeException ex) {
         logger.error(format("Drop collection %s error", collection), ex);
       }

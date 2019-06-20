@@ -11,7 +11,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
-import io.harness.persistence.ReadPref;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.query.FieldEnd;
@@ -86,7 +85,7 @@ public class InstanceStatsDataFetcher extends AbstractStatsDataFetcher<QLAggrega
         String function = getAggregateFunction(aggregateFunction);
         List<QLDataPoint> dataPoints = new ArrayList<>();
 
-        wingsPersistence.getDatastore(Instance.class, ReadPref.NORMAL)
+        wingsPersistence.getDatastore(Instance.class)
             .createAggregation(Instance.class)
             .match(query)
             .group(Group.id(grouping(entityIdColumn)), grouping("count", accumulator(function, 1)),
@@ -109,7 +108,7 @@ public class InstanceStatsDataFetcher extends AbstractStatsDataFetcher<QLAggrega
         String function = getAggregateFunction(aggregateFunction);
 
         List<TwoLevelAggregatedData> aggregatedDataList = new ArrayList<>();
-        wingsPersistence.getDatastore(query.getEntityClass(), ReadPref.NORMAL)
+        wingsPersistence.getDatastore(query.getEntityClass())
             .createAggregation(Instance.class)
             .match(query)
             .group(Group.id(grouping(entityIdColumn), grouping(secondLevelEntityIdColumn)),

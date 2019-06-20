@@ -7,7 +7,6 @@ import com.deftlabs.lock.mongo.DistributedLock;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.mongodb.BasicDBObject;
 import io.harness.persistence.HPersistence;
-import io.harness.persistence.ReadPref;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -76,7 +75,7 @@ public class AcquiredDistributedLock implements AcquiredLock {
         case DESTROY:
           String name = lock.getName();
           final BasicDBObject filter = new BasicDBObject().append("_id", name);
-          persistence.getCollection(LOCKS_STORE, ReadPref.NORMAL, "locks").remove(filter);
+          persistence.getCollection(LOCKS_STORE, "locks").remove(filter);
           break;
         case RELEASE:
           lock.unlock();

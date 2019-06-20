@@ -7,7 +7,6 @@ import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.allChecks;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.persistence.ReadPref.NORMAL;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -34,7 +33,6 @@ import io.harness.persistence.HIterator;
 import io.harness.persistence.HQuery;
 import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.persistence.PersistentEntity;
-import io.harness.persistence.ReadPref;
 import io.harness.persistence.UuidAware;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.security.encryption.EncryptionType;
@@ -80,22 +78,15 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
    * Creates a new object for wings mongo persistence.
    *
    * @param primaryDatastore   primary datastore for critical reads and writes.
-   * @param secondaryDatastore replica of primary for non critical reads.
    */
   @Inject
-  public WingsMongoPersistence(@Named("primaryDatastore") AdvancedDatastore primaryDatastore,
-      @Named("secondaryDatastore") AdvancedDatastore secondaryDatastore) {
-    super(primaryDatastore, secondaryDatastore);
+  public WingsMongoPersistence(@Named("primaryDatastore") AdvancedDatastore primaryDatastore) {
+    super(primaryDatastore);
   }
 
   @Override
   public <T extends PersistentEntity> T getWithAppId(Class<T> cls, String appId, String id) {
-    return getWithAppId(cls, appId, id, NORMAL);
-  }
-
-  @Override
-  public <T extends PersistentEntity> T getWithAppId(Class<T> cls, String appId, String id, ReadPref readPref) {
-    return createQuery(cls, readPref).filter("appId", appId).filter(ID_KEY, id).get();
+    return createQuery(cls).filter("appId", appId).filter(ID_KEY, id).get();
   }
 
   @Override
@@ -121,7 +112,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   @Override
   public <T extends Base> T saveAndGet(Class<T> cls, T object) {
     Object id = save(object);
-    Query<T> query = createQuery(cls, ReadPref.CRITICAL).filter(ID_KEY, id);
+    Query<T> query = createQuery(cls).filter(ID_KEY, id);
     if (object.getShardKeys() != null) {
       object.getShardKeys().keySet().forEach(key -> query.filter(key, object.getShardKeys().get(key)));
     }
@@ -144,7 +135,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   @Override
   public <T extends PersistentEntity> void updateFields(
       Class<T> cls, String entityId, Map<String, Object> keyValuePairs, Set<String> fieldsToRemove) {
-    final AdvancedDatastore datastore = getDatastore(cls, ReadPref.NORMAL);
+    final AdvancedDatastore datastore = getDatastore(cls);
 
     Query<T> query = datastore.createQuery(cls).filter(ID_KEY, entityId);
     UpdateOperations<T> operations = datastore.createUpdateOperations(cls);
@@ -228,7 +219,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   @Override
   public <T extends PersistentEntity> boolean delete(Class<T> cls, String uuid) {
     if (cls.equals(SettingAttribute.class) || EncryptableSetting.class.isAssignableFrom(cls)) {
-      final AdvancedDatastore datastore = getDatastore(cls, ReadPref.NORMAL);
+      final AdvancedDatastore datastore = getDatastore(cls);
       Query<T> query = createQuery(cls, excludeAuthority).filter(ID_KEY, uuid);
       return delete(query);
     }
@@ -238,16 +229,13 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
 
   @Override
   public <T extends PersistentEntity> boolean delete(String accountId, Class<T> cls, String uuid) {
-    Query<T> query = getDatastore(DEFAULT_STORE, ReadPref.NORMAL)
-                         .createQuery(cls)
-                         .filter(ID_KEY, uuid)
-                         .filter("accountId", accountId);
+    Query<T> query = getDatastore(DEFAULT_STORE).createQuery(cls).filter(ID_KEY, uuid).filter("accountId", accountId);
     return delete(query);
   }
 
   @Override
   public <T extends PersistentEntity> boolean delete(Class<T> cls, String appId, String uuid) {
-    Query<T> query = getDatastore(cls, ReadPref.NORMAL).createQuery(cls).filter(ID_KEY, uuid).filter("appId", appId);
+    Query<T> query = getDatastore(cls).createQuery(cls).filter(ID_KEY, uuid).filter("appId", appId);
     return delete(query);
   }
 
@@ -283,7 +271,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
     if (!authFilters(req, cls)) {
       return aPageResponse().withTotal(0).build();
     }
-    AdvancedDatastore advancedDatastore = getDatastore(cls, req.getReadPref());
+    AdvancedDatastore advancedDatastore = getDatastore(cls);
     Query<T> query = advancedDatastore.createQuery(cls);
 
     ((HQuery) query).setQueryChecks(queryChecks);
@@ -607,7 +595,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
       String uuid = ((UuidAware) entity).getUuid();
       if (isNotBlank(uuid)
           && (SettingAttribute.class.isInstance(entity) || EncryptableSetting.class.isInstance(entity))) {
-        savedObject = getDatastore(entity, ReadPref.NORMAL).get((Class<T>) entity.getClass(), uuid);
+        savedObject = getDatastore(entity).get((Class<T>) entity.getClass(), uuid);
       }
     }
     Object toEncrypt = entity;
@@ -640,7 +628,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
       return;
     }
 
-    Object toDelete = getDatastore(entity, ReadPref.NORMAL).get(entity.getClass(), uuid);
+    Object toDelete = getDatastore(entity).get(entity.getClass(), uuid);
     if (toDelete == null) {
       return;
     }

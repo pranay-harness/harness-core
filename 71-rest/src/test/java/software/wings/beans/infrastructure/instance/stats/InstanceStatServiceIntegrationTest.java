@@ -8,7 +8,6 @@ import static org.junit.Assert.assertTrue;
 import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
-import io.harness.persistence.ReadPref;
 import lombok.val;
 import org.junit.After;
 import org.junit.Before;
@@ -44,14 +43,14 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   @Before
   public void ensureIndices() throws URISyntaxException {
     if (!indexesEnsured && !IntegrationTestUtils.isManagerRunning(client)) {
-      persistence.getDatastore(InstanceStatsSnapshot.class, ReadPref.NORMAL).ensureIndexes(InstanceStatsSnapshot.class);
+      persistence.getDatastore(InstanceStatsSnapshot.class).ensureIndexes(InstanceStatsSnapshot.class);
       indexesEnsured = true;
     }
   }
 
   @After
   public void clearCollection() {
-    val ds = persistence.getDatastore(InstanceStatsSnapshot.class, ReadPref.NORMAL);
+    val ds = persistence.getDatastore(InstanceStatsSnapshot.class);
     ds.delete(fetchQuery());
   }
 
@@ -59,7 +58,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   @Category(IntegrationTests.class)
   public void testSave() {
     val stats = sampleSnapshot();
-    val ds = persistence.getDatastore(InstanceStatsSnapshot.class, ReadPref.NORMAL);
+    val ds = persistence.getDatastore(InstanceStatsSnapshot.class);
     val initialCount = ds.getCount(fetchQuery());
 
     val saved = statService.save(stats);

@@ -8,7 +8,6 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
 import io.harness.persistence.HIterator;
-import io.harness.persistence.ReadPref;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.Key;
@@ -59,7 +58,7 @@ public class AddAccountIdToAppEntities implements Migration {
   }
 
   private <T extends Base> void bulkSetAccountId(String accountId, Class<T> clazz, Set<String> appIdSet) {
-    final DBCollection collection = wingsPersistence.getCollection(clazz, ReadPref.NORMAL);
+    final DBCollection collection = wingsPersistence.getCollection(clazz);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
 
     int i = 1;

@@ -6,7 +6,6 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
 import io.harness.persistence.HIterator;
-import io.harness.persistence.ReadPref;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import software.wings.beans.Log;
@@ -22,7 +21,7 @@ public class AddValidUntilToCommandLog implements Migration {
 
   @Override
   public void migrate() {
-    final DBCollection collection = wingsPersistence.getCollection(Log.class, ReadPref.NORMAL);
+    final DBCollection collection = wingsPersistence.getCollection(Log.class);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
 
     int i = 1;

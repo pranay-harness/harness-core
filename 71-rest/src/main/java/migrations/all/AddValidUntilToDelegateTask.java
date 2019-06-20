@@ -8,7 +8,6 @@ import com.mongodb.DBCollection;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.persistence.HIterator;
-import io.harness.persistence.ReadPref;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import software.wings.dl.WingsPersistence;
@@ -23,7 +22,7 @@ public class AddValidUntilToDelegateTask implements Migration {
 
   @Override
   public void migrate() {
-    final DBCollection collection = wingsPersistence.getCollection(DelegateTask.class, ReadPref.NORMAL);
+    final DBCollection collection = wingsPersistence.getCollection(DelegateTask.class);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
 
     int i = 1;

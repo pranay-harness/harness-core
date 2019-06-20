@@ -19,7 +19,6 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.category.element.IntegrationTests;
-import io.harness.persistence.ReadPref;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.stream.BoundedInputStream;
 import org.junit.Before;
@@ -137,7 +136,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     Arrays
         .asList(Application.class, Environment.class, Host.class, ConfigFile.class, ServiceTemplate.class,
             Service.class, SettingAttribute.class)
-        .forEach(aClass -> wingsPersistence.getCollection(aClass, ReadPref.NORMAL).drop());
+        .forEach(aClass -> wingsPersistence.getCollection(aClass).drop());
 
     String accountId = wingsPersistence.save(anAccount().withCompanyName(HARNESS_NAME).build());
 

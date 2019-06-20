@@ -8,7 +8,6 @@ import com.google.inject.Inject;
 
 import io.harness.manage.GlobalContextManager;
 import io.harness.persistence.HPersistence;
-import io.harness.persistence.ReadPref;
 import io.harness.queue.Queuable;
 import io.harness.queue.Queuable.QueuableKeys;
 import io.harness.queue.Queue;
@@ -89,7 +88,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
   }
 
   private T getUnderLock(long endTime, Duration poll) {
-    final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
+    final AdvancedDatastore datastore = persistence.getDatastore(klass);
 
     while (true) {
       final Date now = new Date();
@@ -151,7 +150,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
   // This API is used only for testing, we do not need index for the running field. If you start using the
   // API in production, please consider adding such.
   public long count(final Filter filter) {
-    final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
+    final AdvancedDatastore datastore = persistence.getDatastore(klass);
 
     switch (filter) {
       case ALL:
@@ -195,7 +194,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
     payload.setGlobalContext(GlobalContextManager.getGlobalContext());
     payload.setVersion(versionInfoManager.getVersionInfo().getVersion());
 
-    final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
+    final AdvancedDatastore datastore = persistence.getDatastore(klass);
     HPersistence.retry(() -> datastore.save(payload));
   }
 
@@ -206,7 +205,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
 
   @Override
   public String name() {
-    return persistence.getCollection(klass, ReadPref.CRITICAL).getName();
+    return persistence.getCollection(klass).getName();
   }
 
   /**
@@ -220,7 +219,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
   }
 
   private Query<T> createQuery() {
-    final Query<T> query = persistence.createQuery(klass, ReadPref.CRITICAL);
+    final Query<T> query = persistence.createQuery(klass);
     if (filterWithVersion) {
       query.filter(QueuableKeys.version, versionInfoManager.getVersionInfo().getVersion());
     }

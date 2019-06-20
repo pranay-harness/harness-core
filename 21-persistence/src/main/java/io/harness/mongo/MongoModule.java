@@ -16,7 +16,6 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import io.harness.logging.MorphiaLoggerFactory;
-import io.harness.persistence.ReadPref;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -37,8 +36,7 @@ public class MongoModule extends AbstractModule {
           .connectionsPerHost(300)
           .build();
 
-  public static AdvancedDatastore createDatastore(
-      Morphia morphia, String uri, Set<Class> collectionClasses, ReadPref readPref) {
+  public static AdvancedDatastore createDatastore(Morphia morphia, String uri, Set<Class> collectionClasses) {
     MongoClientURI clientUri = new MongoClientURI(uri, MongoClientOptions.builder(mongoClientOptions));
     MongoClient mongoClient = new MongoClient(clientUri);
 
@@ -73,12 +71,6 @@ public class MongoModule extends AbstractModule {
 
     ensureIndex(primaryDatastore, morphia);
     return primaryDatastore;
-  }
-
-  @Provides
-  @Named("secondaryDatastore")
-  public AdvancedDatastore secondaryDatastore(MongoConfig mongoConfig, Morphia morphia) {
-    return primaryDatastore(mongoConfig, morphia);
   }
 
   @Provides

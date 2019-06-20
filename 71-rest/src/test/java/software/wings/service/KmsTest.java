@@ -42,7 +42,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
-import io.harness.persistence.ReadPref;
 import io.harness.persistence.UuidAware;
 import io.harness.queue.Queue;
 import io.harness.queue.TimerScheduledExecutorService;
@@ -1925,8 +1924,7 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(kmsConfig.getSecretKey(), savedKmsConfig.getSecretKey());
     assertEquals(kmsConfig.getKmsArn(), savedKmsConfig.getKmsArn());
 
-    KmsConfig encryptedKms =
-        wingsPersistence.getDatastore(KmsConfig.class, ReadPref.NORMAL).createQuery(KmsConfig.class).get();
+    KmsConfig encryptedKms = wingsPersistence.getDatastore(KmsConfig.class).createQuery(KmsConfig.class).get();
 
     assertNotEquals(encryptedKms.getAccessKey(), savedKmsConfig.getAccessKey());
     assertNotEquals(encryptedKms.getSecretKey(), savedKmsConfig.getSecretKey());

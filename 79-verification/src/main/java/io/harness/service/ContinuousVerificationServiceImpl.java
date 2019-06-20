@@ -44,7 +44,6 @@ import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.metrics.HarnessMetricRegistry;
-import io.harness.persistence.ReadPref;
 import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
@@ -1165,8 +1164,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
   @Override
   public void cleanupStuckLocks() {
-    DBCollection collection =
-        wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "quartz_verification_locks");
+    DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, "quartz_verification_locks");
     DBCursor lockDataRecords = collection.find();
 
     logger.info("will go through " + lockDataRecords.size() + " records");

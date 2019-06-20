@@ -14,7 +14,6 @@ import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
 import io.harness.limits.lib.LimitChecker;
-import io.harness.persistence.ReadPref;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Assert;
@@ -45,19 +44,19 @@ public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
   public void init() throws Exception {
     this.cleanUp();
     if (!indexesEnsured && !IntegrationTestUtils.isManagerRunning(client)) {
-      dao.getDatastore(Counter.class, ReadPref.NORMAL).ensureIndexes(Counter.class);
-      dao.getDatastore(ConfiguredLimit.class, ReadPref.NORMAL).ensureIndexes(ConfiguredLimit.class);
+      dao.getDatastore(Counter.class).ensureIndexes(Counter.class);
+      dao.getDatastore(ConfiguredLimit.class).ensureIndexes(ConfiguredLimit.class);
       indexesEnsured = true;
     }
   }
 
   @After
   public void cleanUp() {
-    Datastore clds = dao.getDatastore(ConfiguredLimit.class, ReadPref.NORMAL);
+    Datastore clds = dao.getDatastore(ConfiguredLimit.class);
     clds.delete(clds.createQuery(ConfiguredLimit.class)
                     .filter(ConfiguredLimitKeys.accountId, CREATE_APP_ACTION.getAccountId()));
 
-    Datastore cds = dao.getDatastore(Counter.class, ReadPref.NORMAL);
+    Datastore cds = dao.getDatastore(Counter.class);
     cds.delete(cds.createQuery(Counter.class).filter(CounterKeys.key, CREATE_APP_ACTION.key()));
   }
 

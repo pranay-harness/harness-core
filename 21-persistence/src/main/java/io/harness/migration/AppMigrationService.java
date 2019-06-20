@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.persistence.HPersistence;
-import io.harness.persistence.ReadPref;
 import io.harness.persistence.Store;
 import io.harness.threading.Poller;
 
@@ -30,7 +29,7 @@ public class AppMigrationService {
 
   public boolean initIfFirstTime() {
     final Set<String> collectionNames =
-        persistence.getDatastore(MigrationJobInstance.class, ReadPref.NORMAL).getDB().getCollectionNames();
+        persistence.getDatastore(MigrationJobInstance.class).getDB().getCollectionNames();
 
     if (collectionNames.contains(MigrationJobInstance.COLLECTION_NAME)) {
       return false;

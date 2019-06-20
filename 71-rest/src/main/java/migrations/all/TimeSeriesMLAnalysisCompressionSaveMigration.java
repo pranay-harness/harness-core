@@ -10,7 +10,6 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
 import io.harness.persistence.HIterator;
-import io.harness.persistence.ReadPref;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import software.wings.dl.WingsPersistence;
@@ -24,7 +23,7 @@ public class TimeSeriesMLAnalysisCompressionSaveMigration implements Migration {
 
   @Override
   public void migrate() {
-    final DBCollection collection = wingsPersistence.getCollection(TimeSeriesMLAnalysisRecord.class, ReadPref.NORMAL);
+    final DBCollection collection = wingsPersistence.getCollection(TimeSeriesMLAnalysisRecord.class);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
     int batched = 0;
     int processed = 0;

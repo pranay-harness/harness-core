@@ -14,7 +14,6 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.persistence.ReadPref;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Id;
@@ -86,7 +85,7 @@ public class UsageMetricsHelper {
     Map<String, Integer> instanceCountMap = new HashMap<>();
     Query<Instance> query = wingsPersistence.createQuery(Instance.class);
     query.criteria("isDeleted").equal(false);
-    wingsPersistence.getDatastore(Instance.class, ReadPref.NORMAL)
+    wingsPersistence.getDatastore(Instance.class)
         .createAggregation(Instance.class)
         .match(query)
         .project(projection("accountId"))

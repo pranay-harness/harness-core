@@ -8,7 +8,6 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
-import io.harness.persistence.ReadPref;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -66,6 +65,6 @@ public class RoleRefreshUtils extends WingsBaseTest {
   }
 
   private void dropRolesCollection() {
-    wingsPersistence.getCollection(Role.class, ReadPref.NORMAL).drop();
+    wingsPersistence.getCollection(Role.class).drop();
   }
 }

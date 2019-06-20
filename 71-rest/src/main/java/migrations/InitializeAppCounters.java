@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.Counter;
-import io.harness.persistence.ReadPref;
 import org.mongodb.morphia.Datastore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +29,7 @@ public class InitializeAppCounters implements Migration {
   @Override
   public void migrate() {
     log.info("Initializing Counters");
-    Datastore ds = wingsPersistence.getDatastore(Counter.class, ReadPref.NORMAL);
+    Datastore ds = wingsPersistence.getDatastore(Counter.class);
 
     try {
       List<Account> accounts = accountService.listAllAccounts();

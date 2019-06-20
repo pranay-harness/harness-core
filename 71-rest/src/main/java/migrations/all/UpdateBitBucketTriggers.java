@@ -8,7 +8,6 @@ import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import io.harness.persistence.ReadPref;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import software.wings.beans.trigger.Trigger;
@@ -29,7 +28,7 @@ public class UpdateBitBucketTriggers implements Migration {
   }
 
   private void migratePushEvents() {
-    final DBCollection collection = wingsPersistence.getCollection(Trigger.class, ReadPref.NORMAL);
+    final DBCollection collection = wingsPersistence.getCollection(Trigger.class);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
     int processedDocsCount = 1;
 
@@ -39,7 +38,7 @@ public class UpdateBitBucketTriggers implements Migration {
     DBObject bitBucketPushRequestFilter = new BasicDBObject();
     bitBucketPushRequestFilter.put("$and", Arrays.asList(bitbucketFilter, pushRequestFilter));
 
-    DBCursor triggers = wingsPersistence.getCollection(Trigger.class, ReadPref.NORMAL).find(bitBucketPushRequestFilter);
+    DBCursor triggers = wingsPersistence.getCollection(Trigger.class).find(bitBucketPushRequestFilter);
 
     try {
       BasicDBList basicDBList = new BasicDBList();
@@ -76,7 +75,7 @@ public class UpdateBitBucketTriggers implements Migration {
   }
 
   private void migratePullRequestEvents() {
-    final DBCollection collection = wingsPersistence.getCollection(Trigger.class, ReadPref.NORMAL);
+    final DBCollection collection = wingsPersistence.getCollection(Trigger.class);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
 
     int processedDocsCount = 1;
@@ -87,7 +86,7 @@ public class UpdateBitBucketTriggers implements Migration {
     DBObject bitBucketPullRequestFilter = new BasicDBObject();
     bitBucketPullRequestFilter.put("$and", Arrays.asList(bitbucketFilter, pullRequestFilter));
 
-    DBCursor triggers = wingsPersistence.getCollection(Trigger.class, ReadPref.NORMAL).find(bitBucketPullRequestFilter);
+    DBCursor triggers = wingsPersistence.getCollection(Trigger.class).find(bitBucketPullRequestFilter);
 
     try {
       BasicDBList basicDBList = new BasicDBList();
