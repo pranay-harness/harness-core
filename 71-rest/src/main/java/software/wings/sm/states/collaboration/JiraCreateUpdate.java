@@ -20,7 +20,7 @@ import io.harness.expression.ExpressionEvaluator;
 import lombok.Getter;
 import lombok.Setter;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.api.JiraExecutionData;
+import software.wings.api.jira.JiraExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;

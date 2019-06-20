@@ -18,7 +18,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
-import software.wings.api.JiraExecutionData;
+import software.wings.api.jira.JiraExecutionData;
 import software.wings.beans.jira.JiraTaskParameters;
 import software.wings.delegatetasks.jira.JiraAction;
 import software.wings.dl.WingsPersistence;

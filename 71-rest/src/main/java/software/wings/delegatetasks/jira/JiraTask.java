@@ -28,7 +28,8 @@ import net.sf.json.JSONObject;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
-import software.wings.api.JiraExecutionData;
+import software.wings.api.jira.JiraCreateMetaResponse;
+import software.wings.api.jira.JiraExecutionData;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.jira.JiraCustomFieldValue;
@@ -164,9 +165,11 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
       JSON response = jiraClient.getRestClient().get(uri);
 
+      JiraCreateMetaResponse jiraCreateMetaResponse = new JiraCreateMetaResponse((JSONObject) response);
+
       return JiraExecutionData.builder()
           .executionStatus(ExecutionStatus.SUCCESS)
-          .createMetadata((JSONObject) response)
+          .createMetadata(jiraCreateMetaResponse)
           .build();
     } catch (URISyntaxException | RestException | IOException | JiraException | RuntimeException e) {
       String errorMessage = "Failed to fetch issue metadata from Jira server.";

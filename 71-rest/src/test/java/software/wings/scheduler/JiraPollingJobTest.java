@@ -23,7 +23,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.api.JiraExecutionData;
+import software.wings.api.jira.JiraExecutionData;
 import software.wings.beans.approval.JiraApprovalParams;
 import software.wings.rules.SetupScheduler;
 import software.wings.service.impl.JiraHelperService;

@@ -6,6 +6,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.api.jira.JiraCreateMetaResponse;
 import software.wings.service.impl.JiraHelperService;
 
 import javax.ws.rs.GET;
@@ -78,7 +79,7 @@ public class JiraSettingResource {
   @Path("{connectorId}/createmeta")
   @Timed
   @ExceptionMetered
-  public RestResponse getCreateMetadata(@QueryParam("appId") String appId,
+  public RestResponse<JiraCreateMetaResponse> getCreateMetadata(@QueryParam("appId") String appId,
       @QueryParam("accountId") @NotEmpty String accountId, @PathParam("connectorId") String connectorId,
       @QueryParam("expand") String expand, @QueryParam("project") String project) {
     return new RestResponse<>(jiraHelperService.getCreateMetadata(connectorId, expand, project, accountId, appId));

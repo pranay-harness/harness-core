@@ -1,4 +1,4 @@
-package software.wings.api;
+package software.wings.api.jira;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ResponseData;
@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import software.wings.api.ExecutionDataValue;
 import software.wings.delegatetasks.jira.JiraAction;
 import software.wings.sm.StateExecutionData;
 
@@ -28,7 +29,7 @@ public class JiraExecutionData extends StateExecutionData implements ResponseDat
   private JSONArray projects;
   private JSONObject fields;
   private JSONArray statuses;
-  private JSONObject createMetadata;
+  private JiraCreateMetaResponse createMetadata;
 
   private String currentStatus;
 
