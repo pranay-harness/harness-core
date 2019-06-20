@@ -32,6 +32,7 @@ import software.wings.service.intfc.AppService;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Singleton
@@ -250,12 +251,7 @@ public class AuditPreferenceHelper {
     auditHeaderPageRequest.setLimit(limit);
     auditHeaderPageRequest.addFilter(AuditHeaderKeys.accountId, EQ, auditPreference.getAccountId());
 
-    if (isNotBlank(auditPreference.getStartTime()) && isNotBlank(auditPreference.getEndTime())) {
-      auditHeaderPageRequest.addFilter(
-          AuditHeaderKeys.createdAt, Operator.GE, Long.parseLong(auditPreference.getStartTime()));
-      auditHeaderPageRequest.addFilter(
-          AuditHeaderKeys.createdAt, Operator.LT, Long.parseLong(auditPreference.getEndTime()));
-    }
+    setCreatedAtFilter(auditHeaderPageRequest, auditPreference);
 
     if (isNotEmpty(auditPreference.getCreatedByUserIds())) {
       List<String> userIds = auditPreference.getCreatedByUserIds();
@@ -263,6 +259,21 @@ public class AuditPreferenceHelper {
     }
 
     auditHeaderPageRequest.addOrder(AuditHeaderKeys.createdAt, OrderType.DESC);
+  }
+
+  private void setCreatedAtFilter(PageRequest<AuditHeader> auditHeaderPageRequest, AuditPreference auditPreference) {
+    Integer lastNDays = auditPreference.getLastNDays();
+    if (lastNDays != null && lastNDays.intValue() > 0) {
+      long startTime = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(lastNDays.longValue());
+      auditHeaderPageRequest.addFilter(AuditHeaderKeys.createdAt, Operator.GE, startTime);
+
+    } else if (isNotBlank(auditPreference.getStartTime()) && isNotBlank(auditPreference.getEndTime())) {
+      long startTime = Long.parseLong(auditPreference.getStartTime());
+      long endTime = Long.parseLong(auditPreference.getEndTime());
+
+      auditHeaderPageRequest.addFilter(AuditHeaderKeys.createdAt, Operator.GE, startTime);
+      auditHeaderPageRequest.addFilter(AuditHeaderKeys.createdAt, Operator.LT, endTime);
+    }
   }
 
   private boolean hasOnlyAccountLevelResourceCriteria(AuditPreference auditPreference) {
