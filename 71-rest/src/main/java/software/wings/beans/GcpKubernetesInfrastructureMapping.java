@@ -12,6 +12,8 @@ import io.harness.exception.InvalidRequestException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
+import software.wings.annotation.Blueprint;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.utils.Utils;
 
@@ -24,8 +26,9 @@ import java.util.Optional;
 @JsonTypeName("GCP_KUBERNETES")
 @Data
 @EqualsAndHashCode(callSuper = true)
+@FieldNameConstants(innerTypeName = "GcpKubernetesInfrastructureMappingKeys")
 public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureMapping {
-  @Attributes(title = "Namespace") private String namespace;
+  @Attributes(title = "Namespace") @Blueprint private String namespace;
   @Trimmed private String releaseName;
 
   /**
