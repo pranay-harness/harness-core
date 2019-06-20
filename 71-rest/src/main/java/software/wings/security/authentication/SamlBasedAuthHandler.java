@@ -57,6 +57,12 @@ public class SamlBasedAuthHandler implements AuthHandler {
       }
       SamlSettings samlSettings = ssoSettingService.getSamlSettingsByAccountId(account.getUuid());
 
+      // Occurs when SAML settings are being tested before being enabled
+      if (account.getAuthenticationMechanism() != AuthenticationMechanism.SAML) {
+        logger.info("SAML test login successful for user: [{}]", user.getEmail());
+        throw new WingsException(ErrorCode.SAML_TEST_SUCCESS_MECHANISM_NOT_ENABLED);
+      }
+
       if (Objects.nonNull(samlSettings) && samlSettings.isAuthorizationEnabled()) {
         List<String> userGroups = getUserGroupsForIdpUrl(idpUrl, samlResponseString);
         SamlUserAuthorization samlUserAuthorization =

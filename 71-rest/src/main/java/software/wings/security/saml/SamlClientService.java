@@ -18,6 +18,7 @@ import software.wings.beans.User;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.AuthenticationUtils;
+import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.intfc.SSOSettingService;
 
 import java.io.ByteArrayInputStream;
@@ -35,6 +36,7 @@ import java.util.zip.DeflaterOutputStream;
 public class SamlClientService {
   public static final String SAML_REQUEST_URI_KEY = "SAMLRequest";
   @Inject AuthenticationUtils authenticationUtils;
+  @Inject AccountServiceImpl accountServiceImpl;
   @Inject SSOSettingService ssoSettingService;
   private static final String GOOGLE_HOST = "accounts.google.com";
   private static final String AZURE_HOST = "login.microsoftonline.com";
@@ -74,19 +76,35 @@ public class SamlClientService {
   public SSORequest generateSamlRequest(User user) {
     Account primaryAccount = authenticationUtils.getPrimaryAccount(user);
     if (primaryAccount.getAuthenticationMechanism().equals(AuthenticationMechanism.SAML)) {
-      SSORequest SSORequest = new SSORequest();
-      try {
-        SamlClient samlClient = getSamlClientFromAccount(primaryAccount);
-        URIBuilder redirectionUri = new URIBuilder(samlClient.getIdentityProviderUrl());
-        redirectionUri.addParameter(SAML_REQUEST_URI_KEY, encodeParamaeters(samlClient.getSamlRequest()));
-        SSORequest.setIdpRedirectUrl(redirectionUri.toString());
-        return SSORequest;
-      } catch (SamlException | URISyntaxException | IOException e) {
-        throw new WingsException("Generating Saml request failed for user: [%s]", e);
-      }
+      return generateSamlRequestFromAccount(primaryAccount);
     }
 
     throw new WingsException(ErrorCode.INVALID_AUTHENTICATION_MECHANISM, USER);
+  }
+
+  public SSORequest generateTestSamlRequest(String accountId) {
+    Account account = accountServiceImpl.get(accountId);
+    return generateSamlRequestFromAccount(account);
+  }
+
+  /**
+   * To be used generateSamlRequest and generateSamlRequest for common functionality
+   * @param account account passed from previous functions
+   * @return SSORequest for redirection to SSO provider
+   * @throws Exception error while creating request
+   */
+  private SSORequest generateSamlRequestFromAccount(Account account) {
+    SSORequest ssoRequest = new SSORequest();
+    try {
+      SamlClient samlClient = getSamlClientFromAccount(account);
+      URIBuilder redirectionUri = new URIBuilder(samlClient.getIdentityProviderUrl());
+      redirectionUri.addParameter(SAML_REQUEST_URI_KEY, encodeParamaeters(samlClient.getSamlRequest()));
+      ssoRequest.setIdpRedirectUrl(redirectionUri.toString());
+      return ssoRequest;
+    } catch (SamlException | URISyntaxException | IOException e) {
+      String accountId = account.getUuid();
+      throw new WingsException(String.format("Generating Saml request failed for account: [%s]", accountId), e);
+    }
   }
 
   public String encodeParamaeters(String encodedXmlParam) throws IOException {

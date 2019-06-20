@@ -17,6 +17,7 @@ import com.coveo.saml.SamlClient;
 import com.coveo.saml.SamlException;
 import com.coveo.saml.SamlResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
@@ -268,6 +269,45 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
 
     try {
       authHandler.validateUser(user, "AC1");
+    } catch (Exception e) {
+      fail(e.getMessage());
+    }
+  }
+
+  /**
+   * Tests if ErrorCode.SAML_TEST_SUCCESS_MECHANISM_NOT_ENABLED is thrown when SAML is authenticated without enabling it
+   * @throws IOException
+   * @throws SamlException
+   */
+  @Test
+  @Category(UnitTests.class)
+  public void testAuthenticationWithSamlNotEnabled() throws IOException, SamlException {
+    User user = new User();
+    Account account = new Account();
+    account.setUuid("AC1");
+    user.setAccounts(Arrays.asList(account));
+
+    String samlResponseString =
+        IOUtils.toString(getClass().getResourceAsStream("/SamlResponse.txt"), Charset.defaultCharset());
+    account.setAuthenticationMechanism(AuthenticationMechanism.OAUTH);
+    when(authenticationUtils.getUser(anyString())).thenReturn(user);
+    when(authenticationUtils.getPrimaryAccount(any(User.class))).thenReturn(account);
+    SamlResponse samlResponse = mock(SamlResponse.class);
+    when(samlResponse.getNameID()).thenReturn("rushabh@harness.io");
+    SamlClient samlClient = mock(SamlClient.class);
+    final SamlSettings samlSettings = mock(SamlSettings.class);
+    when(samlSettings.getAccountId()).thenReturn("AC1");
+    List<SamlSettings> samlSettingsList = Arrays.asList(samlSettings);
+    doReturn(samlSettingsList.iterator()).when(samlClientService).getSamlSettingsFromOrigin(anyString());
+    doReturn(samlClient).when(samlClientService).getSamlClient(samlSettings);
+    when(samlClient.decodeAndValidateSamlResponse(anyString())).thenReturn(samlResponse);
+
+    doNothing().when(samlUserGroupSync).syncUserGroup(any(SamlUserAuthorization.class), anyString(), anyString());
+    doReturn(true).when(samlSettings).isAuthorizationEnabled();
+    try {
+      authHandler.authenticate(oktaIdpUrl, samlResponseString);
+    } catch (WingsException e) {
+      assertThat(e.getCode()).isEqualTo(ErrorCode.SAML_TEST_SUCCESS_MECHANISM_NOT_ENABLED);
     } catch (Exception e) {
       fail(e.getMessage());
     }
