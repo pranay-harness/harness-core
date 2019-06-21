@@ -38,7 +38,6 @@ import static software.wings.beans.command.CommandExecutionContext.Builder.aComm
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
-import static software.wings.common.Constants.WINDOWS_RUNTIME_PATH;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
@@ -111,7 +110,6 @@ import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.command.TailFilePatternEntry;
 import software.wings.beans.infrastructure.Host;
-import software.wings.common.Constants;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.intfc.ActivityService;
@@ -208,7 +206,9 @@ public class CommandStateTest extends WingsBaseTest {
   private static WorkflowStandardParams workflowStandardParams =
       aWorkflowStandardParams().withAppId(APP_ID).withEnvId(ENV_ID).build();
   private static final SimpleWorkflowParam SIMPLE_WORKFLOW_PARAM = aSimpleWorkflowParam().build();
-  public static final PhaseElement PHASE_ELEMENT = aPhaseElement().withInfraMappingId(INFRA_MAPPING_ID).build();
+  private static final PhaseElement PHASE_ELEMENT = aPhaseElement().withInfraMappingId(INFRA_MAPPING_ID).build();
+  private static final String PHASE_PARAM = "PHASE_PARAM";
+  private static final String WINDOWS_RUNTIME_PATH = "WINDOWS_RUNTIME_PATH";
 
   private AbstractCommandUnit commandUnit =
       anExecCommandUnit().withName(COMMAND_UNIT_NAME).withCommandString("rm -f $HOME/jetty").build();
@@ -278,7 +278,7 @@ public class CommandStateTest extends WingsBaseTest {
     workflowStandardParams.setCurrentUser(EmbeddedUser.builder().name("test").email("test@harness.io").build());
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
     when(context.getContextElementList(ContextElementType.PARAM)).thenReturn(singletonList(SIMPLE_WORKFLOW_PARAM));
-    when(context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM)).thenReturn(PHASE_ELEMENT);
+    when(context.getContextElement(ContextElementType.PARAM, PHASE_PARAM)).thenReturn(PHASE_ELEMENT);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(aPhysicalInfrastructureMapping()
                         .withAppId(APP_ID)
@@ -382,7 +382,7 @@ public class CommandStateTest extends WingsBaseTest {
 
     verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
     verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);
-    verify(context, times(1)).getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    verify(context, times(1)).getContextElement(ContextElementType.PARAM, PHASE_PARAM);
     verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
     verify(context, times(1)).getServiceVariables();
     verify(context, times(1)).getSafeDisplayServiceVariables();
@@ -496,7 +496,7 @@ public class CommandStateTest extends WingsBaseTest {
 
     verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
     verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);
-    verify(context, times(1)).getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    verify(context, times(1)).getContextElement(ContextElementType.PARAM, PHASE_PARAM);
     verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
     verify(context, times(5)).renderExpression(anyString());
     verify(context, times(1)).getServiceVariables();
@@ -684,7 +684,8 @@ public class CommandStateTest extends WingsBaseTest {
             .addCommandUnits(
                 aCommand().addCommandUnits(anExecCommandUnit().withCommandString("${var2}").build()).build())
             .build();
-    CommandState.renderCommandString(command, context, commandStateExecutionData, null);
+    Artifact artifact = null;
+    CommandState.renderCommandString(command, context, commandStateExecutionData, artifact);
     verify(context, times(1))
         .renderExpression(
             "${var1}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
@@ -705,7 +706,8 @@ public class CommandStateTest extends WingsBaseTest {
                                                                        .withPattern("${serviceVariable.filepattern}")
                                                                        .build()))
                                           .build();
-    CommandState.renderTailFilePattern(context, commandStateExecutionData, null, execCommandUnit);
+    Artifact artifact = null;
+    CommandState.renderTailFilePattern(context, commandStateExecutionData, artifact, execCommandUnit);
     verify(context, times(1))
         .renderExpression("${serviceVariable.testfile}",
             StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
@@ -730,7 +732,8 @@ public class CommandStateTest extends WingsBaseTest {
             .addCommandUnits(
                 aCommand().addCommandUnits(anExecCommandUnit().withCommandString("${var2}").build()).build())
             .build();
-    CommandState.renderCommandString(command, context, commandStateExecutionData, null);
+    Artifact artifact = null;
+    CommandState.renderCommandString(command, context, commandStateExecutionData, artifact);
     verify(context, times(1))
         .renderExpression(
             "${var1}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
@@ -757,7 +760,8 @@ public class CommandStateTest extends WingsBaseTest {
                                  .addCommandUnits(anExecCommandUnit().withCommandString("${var2}").build())
                                  .build())
             .build();
-    CommandState.renderCommandString(command, context, commandStateExecutionData, null);
+    Artifact artifact = null;
+    CommandState.renderCommandString(command, context, commandStateExecutionData, artifact);
     verify(context, times(1))
         .renderExpression(
             "${var1}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());

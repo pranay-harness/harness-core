@@ -1,19 +1,18 @@
 package software.wings.beans.command;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
 import com.google.common.collect.Maps;
+import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.WingsException;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.utils.Validator;
 
 import java.util.Map;
 public class InitPowerShellCommandUnit extends AbstractCommandUnit {
+  @Inject @Transient private transient CommandUnitHelper commandUnitHelper;
   public static final transient String INIT_POWERSHELL_UNIT_NAME = "Initialize";
 
   @JsonIgnore @SchemaIgnore @Transient private Command command;
@@ -49,18 +48,7 @@ public class InitPowerShellCommandUnit extends AbstractCommandUnit {
     Validator.notNullCheck("Service Variables", context.getServiceVariables());
     envVariables.putAll(context.getServiceVariables());
 
-    if (isNotEmpty(context.getArtifactFiles())) {
-      String name = context.getArtifactFiles().get(0).getName();
-      if (isNotEmpty(name)) {
-        envVariables.put("ARTIFACT_FILE_NAME", name);
-      }
-    } else if (context.getMetadata() != null) {
-      String value = context.getMetadata().get(ArtifactMetadataKeys.artifactFileName);
-      if (isNotEmpty(value)) {
-        envVariables.put("ARTIFACT_FILE_NAME", value);
-      }
-    }
-
+    commandUnitHelper.addArtifactFileNameToEnv(envVariables, context);
     Validator.notNullCheck("Safe Display Service Variables", context.getSafeDisplayServiceVariables());
     safeDisplayEnvVariables.putAll(context.getSafeDisplayServiceVariables());
 

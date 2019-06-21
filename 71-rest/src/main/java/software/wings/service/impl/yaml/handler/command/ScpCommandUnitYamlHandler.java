@@ -35,6 +35,7 @@ public class ScpCommandUnitYamlHandler extends SshCommandUnitYamlHandler<Yaml, S
     yaml.setDestinationDirectoryPath(bean.getDestinationDirectoryPath());
     String fileCategory = Utils.getStringFromEnum(bean.getFileCategory());
     yaml.setSource(fileCategory);
+    yaml.setArtifactVariableName(bean.getArtifactVariableName());
     return yaml;
   }
 
@@ -44,6 +45,7 @@ public class ScpCommandUnitYamlHandler extends SshCommandUnitYamlHandler<Yaml, S
     scpCommandUnit.setDestinationDirectoryPath(yaml.getDestinationDirectoryPath());
     ScpFileCategory scpFileCategory = Utils.getEnumFromString(ScpFileCategory.class, yaml.getSource());
     scpCommandUnit.setFileCategory(scpFileCategory);
+    scpCommandUnit.setArtifactVariableName(yaml.getArtifactVariableName());
     return scpCommandUnit;
   }
 
@@ -54,6 +56,7 @@ public class ScpCommandUnitYamlHandler extends SshCommandUnitYamlHandler<Yaml, S
     scpCommandUnit.setDestinationDirectoryPath(scpYaml.getDestinationDirectoryPath());
     ScpFileCategory scpFileCategory = Utils.getEnumFromString(ScpFileCategory.class, scpYaml.getSource());
     scpCommandUnit.setFileCategory(scpFileCategory);
+    scpCommandUnit.setArtifactVariableName(scpYaml.getArtifactVariableName());
     return scpCommandUnit;
   }
 
@@ -63,6 +66,7 @@ public class ScpCommandUnitYamlHandler extends SshCommandUnitYamlHandler<Yaml, S
     Yaml yaml = changeContext.getYaml();
     nodeProperties.put(YamlConstants.NODE_PROPERTY_FILE_CATEGORY, yaml.getSource());
     nodeProperties.put(YamlConstants.NODE_PROPERTY_DESTINATION_DIR_PATH, yaml.getDestinationDirectoryPath());
+    nodeProperties.put(YamlConstants.NODE_PROPERTY_ARTIFACT_VARIABLE_NAME, yaml.getArtifactVariableName());
     return nodeProperties;
   }
 }

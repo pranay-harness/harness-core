@@ -1,6 +1,8 @@
 package software.wings.beans.command;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
@@ -23,6 +25,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Log.LogLevel;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.delegatetasks.DelegateLogService;
@@ -49,6 +52,7 @@ public class ScpCommandUnit extends SshCommandUnit {
   private ScpFileCategory fileCategory;
 
   @Attributes(title = "Destination Path") @DefaultValue("$WINGS_RUNTIME_PATH") private String destinationDirectoryPath;
+  @Attributes(title = "Artifact Variable") @DefaultValue("artifact") private String artifactVariableName;
 
   /**
    * Instantiates a new Scp command unit.
@@ -60,12 +64,28 @@ public class ScpCommandUnit extends SshCommandUnit {
   @Override
   protected CommandExecutionStatus executeInternal(ShellCommandExecutionContext context) {
     List<Pair<String, String>> fileIds = Lists.newArrayList();
+    Artifact artifact = null;
     FileBucket fileBucket;
     switch (fileCategory) {
       case ARTIFACTS:
         fileBucket = FileBucket.ARTIFACTS;
+        ArtifactStreamAttributes artifactStreamAttributes = null;
+        if (context.isMultiArtifact()) {
+          Map<String, Artifact> multiArtifactMap = context.getMultiArtifactMap();
+          Map<String, ArtifactStreamAttributes> artifactStreamAttributesMap = context.getArtifactStreamAttributesMap();
+          artifact = multiArtifactMap.get(artifactVariableName);
+          if (artifact != null) {
+            artifactStreamAttributes = artifactStreamAttributesMap.get(artifact.getUuid());
+            if (artifactStreamAttributes == null) {
+              throw new InvalidRequestException(
+                  format("ArtifactStreamAttributes not found for artifact: %s", artifactVariableName));
+            }
+          }
+        } else {
+          artifactStreamAttributes = context.getArtifactStreamAttributes();
+        }
         // TODO: remove artifactStreamType check once code path added for all artifact stream types.
-        final ArtifactStreamAttributes artifactStreamAttributes = context.getArtifactStreamAttributes();
+
         final String artifactStreamType = artifactStreamAttributes.getArtifactStreamType();
         if (artifactStreamAttributes.isMetadataOnly()) {
           if (artifactStreamType.equalsIgnoreCase(ArtifactStreamType.AMAZON_S3.name())) {
@@ -92,7 +112,17 @@ public class ScpCommandUnit extends SshCommandUnit {
             throw new InvalidRequestException("Copy Artifact is not supported for Custom Repository artifacts");
           }
         } else {
-          context.getArtifactFiles().forEach(artifactFile -> fileIds.add(Pair.of(artifactFile.getFileUuid(), null)));
+          if (context.isMultiArtifact()) {
+            if (artifact != null && isNotEmpty(artifact.getArtifactFiles())) {
+              artifact.getArtifactFiles().forEach(
+                  artifactFile -> fileIds.add(Pair.of(artifactFile.getFileUuid(), null)));
+            } else {
+              throw new InvalidRequestException(
+                  format("No artifact files to copy for artifact %s", artifactVariableName));
+            }
+          } else {
+            context.getArtifactFiles().forEach(artifactFile -> fileIds.add(Pair.of(artifactFile.getFileUuid(), null)));
+          }
         }
         break;
       case APPLICATION_STACK:
@@ -173,6 +203,14 @@ public class ScpCommandUnit extends SshCommandUnit {
     this.destinationDirectoryPath = destinationDirectoryPath;
   }
 
+  public String getArtifactVariableName() {
+    return artifactVariableName;
+  }
+
+  public void setArtifactVariableName(String artifactVariableName) {
+    this.artifactVariableName = artifactVariableName;
+  }
+
   @Override
   public int hashCode() {
     return Objects.hash(fileCategory, destinationDirectoryPath);
@@ -238,6 +276,7 @@ public class ScpCommandUnit extends SshCommandUnit {
     private CommandUnitType commandUnitType;
     private CommandExecutionStatus commandExecutionStatus;
     private boolean artifactNeeded;
+    private String artifactVariableName;
 
     private Builder() {}
 
@@ -316,6 +355,11 @@ public class ScpCommandUnit extends SshCommandUnit {
       return this;
     }
 
+    public Builder withArtifactVaraiableName(String artifactVaraiableName) {
+      this.artifactVariableName = artifactVaraiableName;
+      return this;
+    }
+
     /**
      * But builder.
      *
@@ -328,7 +372,8 @@ public class ScpCommandUnit extends SshCommandUnit {
           .withName(name)
           .withCommandUnitType(commandUnitType)
           .withExecutionResult(commandExecutionStatus)
-          .withArtifactNeeded(artifactNeeded);
+          .withArtifactNeeded(artifactNeeded)
+          .withArtifactVaraiableName(artifactVariableName);
     }
 
     /**
@@ -344,6 +389,7 @@ public class ScpCommandUnit extends SshCommandUnit {
       scpCommandUnit.setCommandUnitType(commandUnitType);
       scpCommandUnit.setCommandExecutionStatus(commandExecutionStatus);
       scpCommandUnit.setArtifactNeeded(artifactNeeded);
+      scpCommandUnit.setArtifactVariableName(artifactVariableName);
       return scpCommandUnit;
     }
   }
@@ -366,16 +412,19 @@ public class ScpCommandUnit extends SshCommandUnit {
     // maps to fileCategory
     private String source;
     private String destinationDirectoryPath;
+    private String artifactVariableName;
 
     public Yaml() {
       super(CommandUnitType.SCP.name());
     }
 
     @lombok.Builder
-    public Yaml(String name, String deploymentType, String source, String destinationDirectoryPath) {
+    public Yaml(String name, String deploymentType, String source, String destinationDirectoryPath,
+        String artifactVariableName) {
       super(name, CommandUnitType.SCP.name(), deploymentType);
       this.source = source;
       this.destinationDirectoryPath = destinationDirectoryPath;
+      this.artifactVariableName = artifactVariableName;
     }
   }
 }
