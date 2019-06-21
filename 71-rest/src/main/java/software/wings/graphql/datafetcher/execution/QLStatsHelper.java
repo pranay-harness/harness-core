@@ -1,15 +1,5 @@
 package software.wings.graphql.datafetcher.execution;
 
-import static software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.DeploymentMetaDataFields.APPID;
-import static software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.DeploymentMetaDataFields.CLOUDPROVIDERID;
-import static software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.DeploymentMetaDataFields.ENVID;
-import static software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.DeploymentMetaDataFields.PIPELINEID;
-import static software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.DeploymentMetaDataFields.SERVICEID;
-import static software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.DeploymentMetaDataFields.STATUS;
-import static software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.DeploymentMetaDataFields.TRIGGEREDBY;
-import static software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.DeploymentMetaDataFields.TRIGGERID;
-import static software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.DeploymentMetaDataFields.WORKFLOWID;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -38,9 +28,9 @@ public class QLStatsHelper {
         return getSettingsAttributeName(entityId);
       case STATUS:
         return entityId;
-      case TRIGGERID:
+      case TRIGGER_ID:
         return getTriggerName(entityId);
-      case TRIGGEREDBY:
+      case TRIGGERED_BY:
         return getUserName(entityId);
       case PIPELINEID:
         return getPipelineName(entityId);
