@@ -1,0 +1,4 @@
+extend type Query {
+  #Get deployment stats.
+  applicationStats: SinglePointData @dataFetcher(name: applicationStats)
+}

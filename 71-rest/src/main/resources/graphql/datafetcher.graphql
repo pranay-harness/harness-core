@@ -1,6 +1,7 @@
 enum DataFetcherEnum {
   application
   applicationConnection
+  applicationStats
   artifact
   cloudProvider
   cloudProviderConnection
