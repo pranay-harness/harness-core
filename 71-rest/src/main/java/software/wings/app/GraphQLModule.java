@@ -23,6 +23,7 @@ import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInf
 import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
 import software.wings.graphql.datafetcher.application.ApplicationConnectionDataFetcher;
 import software.wings.graphql.datafetcher.application.ApplicationDataFetcher;
+import software.wings.graphql.datafetcher.application.ApplicationStatsDataFetcher;
 import software.wings.graphql.datafetcher.application.batch.ApplicationBatchDataFetcher;
 import software.wings.graphql.datafetcher.application.batch.ApplicationBatchDataLoader;
 import software.wings.graphql.datafetcher.artifact.ArtifactDataFetcher;
@@ -115,31 +116,32 @@ public class GraphQLModule extends AbstractModule {
   }
 
   private void bindDataFetchers() {
+    bindDataFetcherWithAnnotation(ApplicationBatchDataFetcher.class);
     bindDataFetcherWithAnnotation(ApplicationConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(ApplicationDataFetcher.class);
+    bindDataFetcherWithAnnotation(ApplicationStatsDataFetcher.class);
+    bindDataFetcherWithAnnotation(ArtifactDataFetcher.class);
+    bindDataFetcherWithAnnotation(CloudProviderConnectionDataFetcher.class);
+    bindDataFetcherWithAnnotation(CloudProviderDataFetcher.class);
+    bindDataFetcherWithAnnotation(ConnectorConnectionDataFetcher.class);
+    bindDataFetcherWithAnnotation(ConnectorDataFetcher.class);
+    bindDataFetcherWithAnnotation(DeploymentStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(EnvironmentConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(EnvironmentDataFetcher.class);
     bindDataFetcherWithAnnotation(ExecutionConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(ExecutionDataFetcher.class);
-    bindDataFetcherWithAnnotation(InstanceCountDataFetcher.class);
     bindDataFetcherWithAnnotation(InstanceConnectionDataFetcher.class);
+    bindDataFetcherWithAnnotation(InstanceCountDataFetcher.class);
+    bindDataFetcherWithAnnotation(InstanceStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(OutcomeConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(PipelineConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(PipelineDataFetcher.class);
     bindDataFetcherWithAnnotation(ServiceConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(ServiceDataFetcher.class);
+    bindDataFetcherWithAnnotation(TriggerConnectionDataFetcher.class);
+    bindDataFetcherWithAnnotation(TriggerDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowDataFetcher.class);
-    bindDataFetcherWithAnnotation(ApplicationBatchDataFetcher.class);
-    bindDataFetcherWithAnnotation(CloudProviderDataFetcher.class);
-    bindDataFetcherWithAnnotation(CloudProviderConnectionDataFetcher.class);
-    bindDataFetcherWithAnnotation(ArtifactDataFetcher.class);
-    bindDataFetcherWithAnnotation(DeploymentStatsDataFetcher.class);
-    bindDataFetcherWithAnnotation(InstanceStatsDataFetcher.class);
-    bindDataFetcherWithAnnotation(TriggerDataFetcher.class);
-    bindDataFetcherWithAnnotation(TriggerConnectionDataFetcher.class);
-    bindDataFetcherWithAnnotation(ConnectorConnectionDataFetcher.class);
-    bindDataFetcherWithAnnotation(ConnectorDataFetcher.class);
   }
 
   @NotNull
