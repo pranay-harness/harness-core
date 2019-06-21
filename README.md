@@ -338,4 +338,4 @@ The admin username and password are in BaseIntegrationTest.java.
 
 ### Troubleshooting
 
-https://github.com/wings-software/portal/wiki/Troubleshooting-running-java-process 
+https://github.com/wings-software/portal/wiki/Troubleshooting-running-java-process
