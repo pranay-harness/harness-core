@@ -59,6 +59,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.command.CommandUnitHelper;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.InitSshCommandUnit;
@@ -278,6 +279,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   public void shouldExecuteInitCommand() throws IOException {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
     InitSshCommandUnit commandUnit = new InitSshCommandUnit();
+    on(commandUnit).set("commandUnitHelper", new CommandUnitHelper());
     Command command =
         aCommand()
             .withCommandUnits(asList(commandUnit,
@@ -322,6 +324,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   public void shouldExecuteInitCommandV2() {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
     InitSshCommandUnitV2 commandUnit = new InitSshCommandUnitV2();
+    on(commandUnit).set("commandUnitHelper", new CommandUnitHelper());
     Command command =
         aCommand()
             .withCommandUnits(asList(commandUnit,
@@ -351,6 +354,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   public void shouldExecuteInitCommandWithNestedUnits() throws IOException {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
     InitSshCommandUnit commandUnit = new InitSshCommandUnit();
+    on(commandUnit).set("commandUnitHelper", new CommandUnitHelper());
     Command command =
         aCommand()
             .withCommandUnits(asList(commandUnit,
@@ -406,6 +410,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   public void shouldExecuteInitCommandV2WithNestedUnits() {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
     InitSshCommandUnitV2 commandUnit = new InitSshCommandUnitV2();
+    on(commandUnit).set("commandUnitHelper", new CommandUnitHelper());
     Command command =
         aCommand()
             .withCommandUnits(asList(commandUnit,

@@ -99,7 +99,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     InfrastructureMapping infrastructureMapping = null;
     String serviceIdExpression = null;
     String infraMappingIdExpression = null;
-    List<TemplateExpression> templateExpressions = getTemplateExpressions();
+    List<TemplateExpression> templateExpressions = this.getTemplateExpressions();
     if (templateExpressions != null) {
       for (TemplateExpression templateExpression : templateExpressions) {
         String fieldName = templateExpression.getFieldName();
@@ -211,35 +211,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
       phaseElementBuilder.withServiceElement(serviceElement);
     }
 
-    if (isRollback() && workflowStandardParams.getWorkflowElement() != null
-        && workflowStandardParams.getWorkflowElement().getLastGoodDeploymentUuid() != null) {
-      WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(
-          workflowStandardParams.getAppId(), workflowStandardParams.getWorkflowElement().getLastGoodDeploymentUuid());
-
-      if (workflowExecution == null) {
-        logger.error("ERROR: Last Good Deployment ID is not found - lastGoodDeploymentUuid: {}",
-            workflowStandardParams.getWorkflowElement().getLastGoodDeploymentUuid());
-        throw new InvalidRequestException("Last Good Deployment ID is not found");
-      }
-      if (workflowExecution.getExecutionArgs() != null && workflowExecution.getExecutionArgs().getArtifacts() != null) {
-        String rollbackArtifactId = null;
-        if (service != null) {
-          for (Artifact artifact : workflowExecution.getExecutionArgs().getArtifacts()) {
-            if (isNotEmpty(service.getArtifactStreamIds())
-                && service.getArtifactStreamIds().contains(artifact.getArtifactStreamId())) {
-              rollbackArtifactId = artifact.getUuid();
-              break;
-            }
-          }
-        }
-
-        if (rollbackArtifactId == null) {
-          // This can happen in case of build workflow
-          rollbackArtifactId = workflowExecution.getExecutionArgs().getArtifacts().get(0).getUuid();
-        }
-        phaseElementBuilder.withRollbackArtifactId(rollbackArtifactId);
-      }
-    }
+    String accountId = context.getAccountId();
 
     if (infrastructureMapping != null) {
       DeploymentType deploymentType =
@@ -256,37 +228,56 @@ public class PhaseSubWorkflow extends SubWorkflowState {
       phaseElementBuilder.withVariableOverrides(getVariableOverrides());
     }
 
-    final PhaseElement phaseElement = phaseElementBuilder.build();
+    PhaseElement phaseElement = phaseElementBuilder.build();
 
     spawningInstance.getContextElements().push(phaseElement);
     spawningInstance.setContextElement(phaseElement);
 
-    String accountId;
-    if (service != null) {
-      accountId = context.getAccountId();
+    if (service != null && !isRollback()) {
       if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-        // TODO: why are we adding phaseName here? how to handle phase name change?
-        String phaseExecutionId =
-            context.getWorkflowExecutionId() + phaseElement.getUuid() + phaseElement.getPhaseName();
-        // go over all artifact variables of service
-        // throw exception if variable does not exist in service
-        List<ArtifactVariable> artifactVariables = workflowStandardParams.getWorkflowElement().getArtifactVariables();
-        if (isNotEmpty(artifactVariables)) {
+        WorkflowExecution workflowExecution =
+            workflowExecutionService.getWorkflowExecution(workflowStandardParams.getAppId(),
+                context.getWorkflowExecutionId()); // TODO: performance issue -filter query to get only execution args
+                                                   // and artifacts
+        saveArtifactsFromVariables(
+            context, workflowStandardParams, stateExecutionInstance, service, phaseElement, workflowExecution);
+      }
+    }
+
+    if (isRollback() && workflowStandardParams.getWorkflowElement() != null) {
+      // if last successful deployment found, save it in sweeping output
+      if (workflowStandardParams.getWorkflowElement().getLastGoodDeploymentUuid() != null) {
+        WorkflowExecution workflowExecution =
+            workflowExecutionService.getWorkflowExecution(workflowStandardParams.getAppId(),
+                workflowStandardParams.getWorkflowElement()
+                    .getLastGoodDeploymentUuid()); // //TODO: performance issue -filter query to get only execution args
+                                                   // and artifacts
+
+        if (workflowExecution == null) {
+          logger.error("ERROR: Last Good Deployment ID is not found - lastGoodDeploymentUuid: {}",
+              workflowStandardParams.getWorkflowElement().getLastGoodDeploymentUuid());
+          throw new InvalidRequestException("Last Good Deployment ID is not found");
+        }
+        if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+          saveArtifactsFromVariablesForRollback(context, workflowStandardParams, stateExecutionInstance, service,
+              phaseElement, accountId, workflowExecution);
+        } else {
+          phaseElementBuilder.withRollbackArtifactId(findRollbackArtifactId(service, workflowExecution));
+        }
+      } else {
+        // save current artifacts in sweeping output
+        if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+          String phaseExecutionId =
+              context.getWorkflowExecutionId() + phaseElement.getUuid() + phaseElement.getPhaseName();
+          List<ArtifactVariable> artifactVariables = workflowStandardParams.getWorkflowElement().getArtifactVariables();
+          WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(
+              workflowStandardParams.getAppId(), context.getWorkflowExecutionId());
           for (ArtifactVariable artifactVariable : artifactVariables) {
             if (artifactVariable.getEntityType().equals(EntityType.SERVICE)) {
               if (artifactVariable.getEntityId().equals(service.getUuid())) {
-                Artifact artifact = artifactService.get(accountId, artifactVariable.getValue());
-                if (artifact != null) {
-                  sweepingOutputService.save(SweepingOutputServiceImpl
-                                                 .prepareSweepingOutputBuilder(stateExecutionInstance.getAppId(), null,
-                                                     null, phaseExecutionId, null, SweepingOutput.Scope.PHASE)
-                                                 .name(artifactVariable.getName())
-                                                 .output(KryoUtils.asDeflatedBytes(artifact))
-                                                 .build());
-                }
-              } else {
-                throw new WingsException(format(
-                    "Artifact Variable %s not defined in service %s", artifactVariable.getName(), service.getName()));
+                Artifact artifact = getArtifactByUuid(workflowExecution.getArtifacts(), artifactVariable.getValue());
+                saveArtifactToSweepingOutput(
+                    stateExecutionInstance.getAppId(), phaseExecutionId, artifactVariable, artifact);
               }
             }
           }
@@ -294,6 +285,118 @@ public class PhaseSubWorkflow extends SubWorkflowState {
       }
     }
     return spawningInstance;
+  }
+
+  private void saveArtifactToSweepingOutput(
+      String appId, String phaseExecutionId, ArtifactVariable artifactVariable, Artifact artifact) {
+    if (artifact != null) {
+      sweepingOutputService.save(
+          SweepingOutputServiceImpl
+              .prepareSweepingOutputBuilder(appId, null, null, phaseExecutionId, null, SweepingOutput.Scope.PHASE)
+              .name(artifactVariable.getName())
+              .output(KryoUtils.asDeflatedBytes(artifact))
+              .build());
+    }
+  }
+
+  private String findRollbackArtifactId(Service service, WorkflowExecution workflowExecution) {
+    String rollbackArtifactId = null;
+    if (workflowExecution.getExecutionArgs() != null && workflowExecution.getExecutionArgs().getArtifacts() != null) {
+      if (service != null) {
+        for (Artifact artifact : workflowExecution.getExecutionArgs().getArtifacts()) {
+          if (isNotEmpty(service.getArtifactStreamIds())
+              && service.getArtifactStreamIds().contains(artifact.getArtifactStreamId())) {
+            rollbackArtifactId = artifact.getUuid();
+            break;
+          }
+        }
+      }
+      if (rollbackArtifactId == null) {
+        // This can happen in case of build workflow
+        rollbackArtifactId = workflowExecution.getExecutionArgs().getArtifacts().get(0).getUuid();
+      }
+    }
+    return rollbackArtifactId;
+  }
+
+  private void saveArtifactsFromVariables(ExecutionContext context, WorkflowStandardParams workflowStandardParams,
+      StateExecutionInstance stateExecutionInstance, Service service, PhaseElement phaseElement,
+      WorkflowExecution workflowExecution) {
+    // TODO: why are we adding phaseName here? how to handle phase name change?
+    String phaseExecutionId = context.getWorkflowExecutionId() + phaseElement.getUuid() + phaseElement.getPhaseName();
+    // go over all artifact variables of service
+    // throw exception if variable does not exist in service
+    List<ArtifactVariable> artifactVariables = workflowStandardParams.getWorkflowElement().getArtifactVariables();
+    if (isNotEmpty(artifactVariables)) {
+      for (ArtifactVariable artifactVariable : artifactVariables) {
+        if (artifactVariable.getEntityType().equals(EntityType.SERVICE)) {
+          if (artifactVariable.getEntityId().equals(service.getUuid())) {
+            //            Artifact artifact = artifactService.get(accountId, artifactVariable.getValue());
+            Artifact artifact = getArtifactByUuid(workflowExecution.getArtifacts(), artifactVariable.getValue());
+            saveArtifactToSweepingOutput(
+                stateExecutionInstance.getAppId(), phaseExecutionId, artifactVariable, artifact);
+          } else {
+            throw new WingsException(format(
+                "Artifact Variable %s not defined in service %s", artifactVariable.getName(), service.getName()));
+          }
+        }
+      }
+    }
+  }
+
+  private Artifact getArtifactByUuid(List<Artifact> artifacts, String artifactId) {
+    if (artifactId == null) {
+      return null;
+    }
+    if (isNotEmpty(artifacts)) {
+      for (Artifact artifact : artifacts) {
+        if (artifact.getUuid().equals(artifactId)) {
+          return artifact;
+        }
+      }
+    }
+    return null;
+  }
+
+  private void saveArtifactsFromVariablesForRollback(ExecutionContext context,
+      WorkflowStandardParams workflowStandardParams, StateExecutionInstance stateExecutionInstance, Service service,
+      PhaseElement phaseElement, String accountId, WorkflowExecution lastSuccessfulWorkflowExecution) {
+    String phaseExecutionId = context.getWorkflowExecutionId() + phaseElement.getUuid() + phaseElement.getPhaseName();
+    // go over all artifact variables of service
+    // throw exception if variable does not exist in service
+    List<ArtifactVariable> artifactVariables = workflowStandardParams.getWorkflowElement().getArtifactVariables();
+    List<ArtifactVariable> previousArtifactVariables = null;
+    if (lastSuccessfulWorkflowExecution.getExecutionArgs() != null
+        && lastSuccessfulWorkflowExecution.getExecutionArgs().getArtifacts() != null) {
+      previousArtifactVariables = lastSuccessfulWorkflowExecution.getExecutionArgs().getArtifactVariables();
+    }
+    if (isNotEmpty(artifactVariables) && isNotEmpty(previousArtifactVariables)) {
+      for (ArtifactVariable artifactVariable : artifactVariables) {
+        if (artifactVariable.getEntityType().equals(EntityType.SERVICE)) {
+          if (artifactVariable.getEntityId().equals(service.getUuid())) {
+            String artifactId = getArtifactIdFromPreviousArtifactVariables(artifactVariable, previousArtifactVariables);
+            //            Artifact artifact = artifactService.get(accountId, artifactVariable.getValue());
+            Artifact artifact = getArtifactByUuid(lastSuccessfulWorkflowExecution.getArtifacts(), artifactId);
+            saveArtifactToSweepingOutput(
+                stateExecutionInstance.getAppId(), phaseExecutionId, artifactVariable, artifact);
+          } else {
+            throw new WingsException(format(
+                "Artifact Variable %s not defined in service %s", artifactVariable.getName(), service.getName()));
+          }
+        }
+      }
+    }
+  }
+
+  private String getArtifactIdFromPreviousArtifactVariables(
+      ArtifactVariable artifactVariable, List<ArtifactVariable> artifactVariables) {
+    for (ArtifactVariable variable : artifactVariables) {
+      if (variable.getName().equals(artifactVariable.getName())
+          && variable.getEntityId().equals(artifactVariable.getEntityId())) {
+        return variable.getValue();
+      }
+    }
+    return null;
   }
 
   @Override

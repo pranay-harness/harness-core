@@ -11,6 +11,7 @@ import software.wings.beans.AppContainer;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.infrastructure.Host;
@@ -66,6 +67,13 @@ public class CommandExecutionContext {
   private boolean executeOnDelegate;
   private boolean shortValidationTimeout;
 
+  // new fields for multi artifact
+  private Map<String, Artifact> multiArtifactMap;
+  private Map<String, ArtifactStreamAttributes> artifactStreamAttributesMap;
+  private boolean multiArtifact;
+  private Map<String, List<EncryptedDataDetail>> artifactServerEncryptedDataDetailsMap;
+  private String artifactFileName;
+
   public CommandExecutionContext() {}
 
   /**
@@ -110,6 +118,11 @@ public class CommandExecutionContext {
     this.inlineSshCommand = other.inlineSshCommand;
     this.executeOnDelegate = other.executeOnDelegate;
     this.shortValidationTimeout = other.shortValidationTimeout;
+    this.artifactStreamAttributesMap = other.artifactStreamAttributesMap;
+    this.multiArtifactMap = other.multiArtifactMap;
+    this.multiArtifact = other.multiArtifact;
+    this.artifactServerEncryptedDataDetailsMap = other.artifactServerEncryptedDataDetailsMap;
+    this.artifactFileName = other.artifactFileName;
   }
 
   /**
@@ -198,6 +211,13 @@ public class CommandExecutionContext {
     private boolean inlineSshCommand;
     private boolean executeOnDelegate;
     private boolean shortValidationTimeout;
+
+    // new fields for multi artifact
+    private Map<String, Artifact> multiArtifactMap;
+    private Map<String, ArtifactStreamAttributes> artifactStreamAttributesMap;
+    private boolean multiArtifact;
+    private Map<String, List<EncryptedDataDetail>> artifactServerEncryptedDataDetailsMap;
+    private String artifactFileName;
 
     private Builder() {}
 
@@ -392,6 +412,32 @@ public class CommandExecutionContext {
       return this;
     }
 
+    public Builder withArtifactStreamAttributesMap(Map<String, ArtifactStreamAttributes> artifactStreamAttributesMap) {
+      this.artifactStreamAttributesMap = artifactStreamAttributesMap;
+      return this;
+    }
+
+    public Builder withMultiArtifactMap(Map<String, Artifact> multiArtifactMap) {
+      this.multiArtifactMap = multiArtifactMap;
+      return this;
+    }
+
+    public Builder withMultiArtifact(boolean multiArtifact) {
+      this.multiArtifact = multiArtifact;
+      return this;
+    }
+
+    public Builder withArtifactServerEncryptedDataDetailsMap(
+        Map<String, List<EncryptedDataDetail>> artifactServerEncryptedDataDetailsMap) {
+      this.artifactServerEncryptedDataDetailsMap = artifactServerEncryptedDataDetailsMap;
+      return this;
+    }
+
+    public Builder withArtifactFileName(String artifactFileName) {
+      this.artifactFileName = artifactFileName;
+      return this;
+    }
+
     public Builder but() {
       return aCommandExecutionContext()
           .withAccountId(accountId)
@@ -430,7 +476,12 @@ public class CommandExecutionContext {
           .withArtifactServerEncryptedDataDetails(artifactServerEncryptedDataDetails)
           .withInlineSshCommand(inlineSshCommand)
           .withExecuteOnDelegate(executeOnDelegate)
-          .withShortValidationTimeout(shortValidationTimeout);
+          .withShortValidationTimeout(shortValidationTimeout)
+          .withArtifactStreamAttributesMap(artifactStreamAttributesMap)
+          .withMultiArtifactMap(multiArtifactMap)
+          .withMultiArtifact(multiArtifact)
+          .withArtifactServerEncryptedDataDetailsMap(artifactServerEncryptedDataDetailsMap)
+          .withArtifactFileName(artifactFileName);
     }
 
     public CommandExecutionContext build() {
@@ -472,6 +523,11 @@ public class CommandExecutionContext {
       commandExecutionContext.setInlineSshCommand(inlineSshCommand);
       commandExecutionContext.setExecuteOnDelegate(executeOnDelegate);
       commandExecutionContext.setShortValidationTimeout(shortValidationTimeout);
+      commandExecutionContext.setArtifactStreamAttributesMap(artifactStreamAttributesMap);
+      commandExecutionContext.setMultiArtifactMap(multiArtifactMap);
+      commandExecutionContext.setMultiArtifact(multiArtifact);
+      commandExecutionContext.setArtifactServerEncryptedDataDetailsMap(artifactServerEncryptedDataDetailsMap);
+      commandExecutionContext.setArtifactFileName(artifactFileName);
       return commandExecutionContext;
     }
   }

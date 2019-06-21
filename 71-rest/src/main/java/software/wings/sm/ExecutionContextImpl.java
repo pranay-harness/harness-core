@@ -26,6 +26,7 @@ import io.harness.expression.LateBindingMap;
 import io.harness.expression.LateBindingValue;
 import io.harness.expression.SecretString;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.serializer.KryoUtils;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ import org.mongodb.morphia.Key;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceArtifactElement;
 import software.wings.beans.Application;
+import software.wings.beans.ArtifactVariable;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
@@ -266,6 +268,33 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     } else {
       return workflowStandardParams.getArtifactForService(serviceId);
     }
+  }
+
+  @Override
+  public Map<String, Artifact> getArtifactsForService(String serviceId) {
+    Map<String, Artifact> map = new HashMap<>();
+    WorkflowStandardParams workflowStandardParams = getContextElement(ContextElementType.STANDARD);
+    List<ArtifactVariable> artifactVariables = workflowStandardParams.getWorkflowElement().getArtifactVariables();
+    if (isNotEmpty(artifactVariables)) {
+      for (ArtifactVariable artifactVariable : artifactVariables) {
+        SweepingOutput sweepingOutputInput =
+            this.prepareSweepingOutputBuilder(Scope.PHASE).name(artifactVariable.getName()).build();
+        SweepingOutput result = sweepingOutputService.find(sweepingOutputInput.getAppId(),
+            sweepingOutputInput.getName(), sweepingOutputInput.getPipelineExecutionId(),
+            sweepingOutputInput.getWorkflowExecutionId(), sweepingOutputInput.getPhaseExecutionId(), null);
+
+        if (result == null) {
+          return null;
+        }
+        Artifact artifact = (Artifact) KryoUtils.asInflatedObject(result.getOutput());
+
+        // todo: throw error if null?
+        if (artifact != null) {
+          map.put(artifactVariable.getName(), artifact);
+        }
+      }
+    }
+    return map;
   }
 
   @Override
@@ -684,6 +713,9 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     if (stateExecutionContext.getArtifact() != null) {
       map = copyIfNeeded(map);
       addArtifactToContext(artifactStreamService, getApp().getAccountId(), map, stateExecutionContext.getArtifact());
+    }
+    if (stateExecutionContext.getArtifactFileName() != null) {
+      map.put(ARTIFACT_FILE_NAME_VARIABLE, stateExecutionContext.getArtifactFileName());
     }
     return map;
   }

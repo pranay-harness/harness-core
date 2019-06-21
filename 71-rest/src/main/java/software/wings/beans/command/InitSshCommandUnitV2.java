@@ -9,6 +9,7 @@ import static software.wings.utils.Utils.escapifyString;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -20,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.utils.Validator;
 
 import java.io.IOException;
@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Properties;
 @Slf4j
 public class InitSshCommandUnitV2 extends SshCommandUnit {
+  @Inject @Transient private transient CommandUnitHelper commandUnitHelper;
   /**
    * The constant INITIALIZE_UNIT.
    */
@@ -99,17 +100,8 @@ public class InitSshCommandUnitV2 extends SshCommandUnit {
     envVariables.put("WINGS_STAGING_PATH", context.getStagingPath());
     envVariables.put("WINGS_RUNTIME_PATH", context.getRuntimePath());
     envVariables.put("WINGS_BACKUP_PATH", context.getBackupPath());
-    if (isNotEmpty(context.getArtifactFiles())) {
-      String name = context.getArtifactFiles().get(0).getName();
-      if (isNotEmpty(name)) {
-        envVariables.put("ARTIFACT_FILE_NAME", name);
-      }
-    } else if (context.getMetadata() != null) {
-      String value = context.getMetadata().get(ArtifactMetadataKeys.artifactFileName);
-      if (isNotEmpty(value)) {
-        envVariables.put("ARTIFACT_FILE_NAME", value);
-      }
-    }
+
+    commandUnitHelper.addArtifactFileNameToEnv(envVariables, context);
 
     Validator.notNullCheck("Safe Display Service Variables", context.getSafeDisplayServiceVariables());
     for (Map.Entry<String, String> entry : context.getSafeDisplayServiceVariables().entrySet()) {

@@ -28,7 +28,9 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SftpConfig;
 import software.wings.beans.SmbConfig;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.delegatetasks.DelegateLogService;
@@ -37,6 +39,7 @@ import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.SftpHelperService;
 import software.wings.service.impl.SmbHelperService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.stencils.DefaultValue;
 
 import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
@@ -65,6 +68,16 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
   @Inject private SftpHelperService sftpHelperService;
   private static Map<String, String> bucketRegions = new HashMap<>();
 
+  @DefaultValue("artifact") private String artifactVariableName;
+
+  public String getArtifactVariableName() {
+    return artifactVariableName;
+  }
+
+  public void setArtifactVariableName(String artifactVariableName) {
+    this.artifactVariableName = artifactVariableName;
+  }
+
   /**
    * Instantiates a new Download Artifact command unit.
    */
@@ -85,30 +98,61 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
       saveExecutionLog(context, ERROR, "Artifact Download Directory cannot be null or empty");
       throw new InvalidRequestException("Artifact Download Directory cannot be null or empty", USER);
     }
+    List<EncryptedDataDetail> encryptionDetails;
+    ArtifactStreamAttributes artifactStreamAttributes;
+    Map<String, String> metadata;
+    if (context.isMultiArtifact()) {
+      Map<String, Artifact> multiArtifactMap = context.getMultiArtifactMap();
+      Map<String, ArtifactStreamAttributes> artifactStreamAttributesMap = context.getArtifactStreamAttributesMap();
+      Map<String, List<EncryptedDataDetail>> encryptedDataDetailsMap =
+          context.getArtifactServerEncryptedDataDetailsMap();
+      Artifact artifact = multiArtifactMap.get(artifactVariableName);
+      if (artifact == null) {
+        throw new InvalidRequestException(
+            format("Artifact corresponding to artifact variable [%s] not found", artifactVariableName), USER);
+      }
+      artifactStreamAttributes = artifactStreamAttributesMap.get(artifact.getUuid());
+      if (artifactStreamAttributes == null) {
+        throw new InvalidRequestException(
+            format(
+                "Artifact Stream Attributes corresponding to artifact variable [%s] not found", artifactVariableName),
+            USER);
+      }
+      metadata = artifactStreamAttributes.getMetadata();
+      encryptionDetails = encryptedDataDetailsMap.get(artifact.getUuid());
+    } else {
+      artifactStreamAttributes = context.getArtifactStreamAttributes();
+      encryptionDetails = context.getArtifactServerEncryptedDataDetails();
+      metadata = context.getMetadata();
+    }
+    if (artifactStreamAttributes == null) {
+      throw new InvalidRequestException(
+          format("Failed to get artifact stream attributes for artifact [%s]", artifactVariableName), USER);
+    }
     ArtifactStreamType artifactStreamType =
-        ArtifactStreamType.valueOf(context.getArtifactStreamAttributes().getArtifactStreamType());
+        ArtifactStreamType.valueOf(artifactStreamAttributes.getArtifactStreamType());
     String command;
     switch (artifactStreamType) {
       case AMAZON_S3:
-        command = constructCommandStringForAmazonS3(context);
+        command = constructCommandStringForAmazonS3(artifactStreamAttributes, encryptionDetails, metadata);
         logger.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         saveExecutionLog(
             context, INFO, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         return context.executeCommandString(command, false);
       case ARTIFACTORY:
-        command = constructCommandStringForArtifactory(context);
+        command = constructCommandStringForArtifactory(artifactStreamAttributes, encryptionDetails, metadata);
         logger.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         saveExecutionLog(
             context, INFO, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         return context.executeCommandString(command, false);
       case SMB:
-        command = constructCommandStringForSMB(context);
+        command = constructCommandStringForSMB(artifactStreamAttributes, encryptionDetails, metadata);
         logger.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         saveExecutionLog(
             context, INFO, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         return context.executeCommandString(command, false);
       case SFTP:
-        command = constructCommandStringForSFTP(context);
+        command = constructCommandStringForSFTP(artifactStreamAttributes, encryptionDetails, metadata);
         logger.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         saveExecutionLog(
             context, INFO, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
@@ -150,20 +194,23 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName("DOWNLOAD_ARTIFACT")
   public static class Yaml extends ExecCommandUnit.AbstractYaml {
+    private String artifactVariableName;
+
     public Yaml() {
       super(CommandUnitType.DOWNLOAD_ARTIFACT.name());
     }
 
     @lombok.Builder
     public Yaml(String name, String deploymentType, String workingDirectory, String scriptType, String command,
-        List<TailFilePatternEntry.Yaml> filePatternEntryList) {
+        List<TailFilePatternEntry.Yaml> filePatternEntryList, String artifactVariableName) {
       super(name, CommandUnitType.DOWNLOAD_ARTIFACT.name(), deploymentType, workingDirectory, scriptType, command,
           filePatternEntryList);
+      this.artifactVariableName = artifactVariableName;
     }
   }
 
-  private String constructCommandStringForAmazonS3(ShellCommandExecutionContext context) {
-    Map<String, String> metadata = context.getMetadata();
+  private String constructCommandStringForAmazonS3(ArtifactStreamAttributes artifactStreamAttributes,
+      List<EncryptedDataDetail> encryptionDetails, Map<String, String> metadata) {
     String date = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.RFC_1123_DATE_TIME);
     String bucketName = metadata.get(ArtifactMetadataKeys.bucketName);
     String artifactPath = metadata.get(ArtifactMetadataKeys.artifactPath);
@@ -173,12 +220,12 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
       artifactFileName = artifactFileName.substring(lastIndexOfSlash + 1);
       logger.info("Got filename: " + artifactFileName);
     }
-    AwsConfig awsConfig = (AwsConfig) context.getArtifactStreamAttributes().getServerSetting().getValue();
-    List<EncryptedDataDetail> encryptionDetails = context.getArtifactServerEncryptedDataDetails();
+
+    AwsConfig awsConfig = (AwsConfig) artifactStreamAttributes.getServerSetting().getValue();
     String region = awsHelperService.getBucketRegion(awsConfig, encryptionDetails, bucketName);
     String hostName = getAmazonS3HostName(bucketName);
     String url = getAmazonS3Url(bucketName, region, artifactPath);
-    String authorizationHeader = getAmazonS3AuthorizationHeader(context, date);
+    String authorizationHeader = getAmazonS3AuthorizationHeader(date, awsConfig, encryptionDetails, metadata);
     String command;
     switch (this.getScriptType()) {
       case POWERSHELL:
@@ -201,11 +248,9 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     return command;
   }
 
-  private String getAmazonS3AuthorizationHeader(ShellCommandExecutionContext context, String date) {
-    AwsConfig awsConfig = (AwsConfig) context.getArtifactStreamAttributes().getServerSetting().getValue();
-    List<EncryptedDataDetail> encryptionDetails = context.getArtifactServerEncryptedDataDetails();
+  private String getAmazonS3AuthorizationHeader(
+      String date, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, Map<String, String> metadata) {
     encryptionService.decrypt(awsConfig, encryptionDetails);
-    Map<String, String> metadata = context.getMetadata();
     String AWSAccessKeyId = awsConfig.getAccessKey();
     String AWSSecretAccessKey = String.valueOf(awsConfig.getSecretKey());
 
@@ -269,12 +314,11 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     bucketRegions.put("sa-east-1", "-sa-east-1");
   }
 
-  private String constructCommandStringForSMB(ShellCommandExecutionContext context) {
-    Map<String, String> metadata = context.getMetadata();
+  private String constructCommandStringForSMB(ArtifactStreamAttributes artifactStreamAttributes,
+      List<EncryptedDataDetail> encryptionDetails, Map<String, String> metadata) {
     String artifactFileName = metadata.get(ArtifactMetadataKeys.artifactFileName);
     String artifactPath = metadata.get(ArtifactMetadataKeys.artifactPath);
-    SmbConfig smbConfig = (SmbConfig) context.getArtifactStreamAttributes().getServerSetting().getValue();
-    List<EncryptedDataDetail> encryptionDetails = context.getArtifactServerEncryptedDataDetails();
+    SmbConfig smbConfig = (SmbConfig) artifactStreamAttributes.getServerSetting().getValue();
     encryptionService.decrypt(smbConfig, encryptionDetails);
     String command;
     switch (this.getScriptType()) {
@@ -302,11 +346,10 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     return artifactPath.substring(0, artifactPath.lastIndexOf(artifactFileName));
   }
 
-  private String constructCommandStringForSFTP(ShellCommandExecutionContext context) {
-    Map<String, String> metadata = context.getMetadata();
+  private String constructCommandStringForSFTP(ArtifactStreamAttributes artifactStreamAttributes,
+      List<EncryptedDataDetail> encryptionDetails, Map<String, String> metadata) {
     String artifactPath = metadata.get(ArtifactMetadataKeys.artifactPath);
-    SftpConfig sftpConfig = (SftpConfig) context.getArtifactStreamAttributes().getServerSetting().getValue();
-    List<EncryptedDataDetail> encryptionDetails = context.getArtifactServerEncryptedDataDetails();
+    SftpConfig sftpConfig = (SftpConfig) artifactStreamAttributes.getServerSetting().getValue();
     encryptionService.decrypt(sftpConfig, encryptionDetails);
     String command;
     switch (this.getScriptType()) {
@@ -365,17 +408,15 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     return command;
   }
 
-  private String constructCommandStringForArtifactory(ShellCommandExecutionContext context) {
-    Map<String, String> metadata = context.getMetadata();
+  private String constructCommandStringForArtifactory(ArtifactStreamAttributes artifactStreamAttributes,
+      List<EncryptedDataDetail> encryptionDetails, Map<String, String> metadata) {
     String artifactFileName = metadata.get(ArtifactMetadataKeys.artifactFileName);
     int lastIndexOfSlash = artifactFileName.lastIndexOf('/');
     if (lastIndexOfSlash > 0) {
       artifactFileName = artifactFileName.substring(lastIndexOfSlash + 1);
       logger.info("Got filename: " + artifactFileName);
     }
-    ArtifactoryConfig artifactoryConfig =
-        (ArtifactoryConfig) context.getArtifactStreamAttributes().getServerSetting().getValue();
-    List<EncryptedDataDetail> encryptionDetails = context.getArtifactServerEncryptedDataDetails();
+    ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) artifactStreamAttributes.getServerSetting().getValue();
     encryptionService.decrypt(artifactoryConfig, encryptionDetails);
     String authHeader = null;
     if (artifactoryConfig.hasCredentials()) {
@@ -428,6 +469,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     private ScriptType scriptType;
     private String name;
     private CommandUnitType commandUnitType;
+    private String artifactVariableName;
 
     private Builder() {}
 
@@ -485,6 +527,17 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     }
 
     /**
+     * With command unit type builder.
+     *
+     * @param artifactVariableName the artifact variable name
+     * @return the builder
+     */
+    public Builder withArtifactVariableName(String artifactVariableName) {
+      this.artifactVariableName = artifactVariableName;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -494,13 +547,14 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
           .withCommandPath(commandPath)
           .withScriptType(scriptType)
           .withName(name)
-          .withCommandUnitType(commandUnitType);
+          .withCommandUnitType(commandUnitType)
+          .withArtifactVariableName(artifactVariableName);
     }
 
     /**
-     * Build scp command unit.
+     * Build download artifact command unit.
      *
-     * @return the scp command unit
+     * @return the download artifact command unit
      */
     public DownloadArtifactCommandUnit build() {
       DownloadArtifactCommandUnit downloadArtifactCommandUnit = new DownloadArtifactCommandUnit();
@@ -508,6 +562,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
       downloadArtifactCommandUnit.setCommandPath(commandPath);
       downloadArtifactCommandUnit.setName(name);
       downloadArtifactCommandUnit.setCommandUnitType(commandUnitType);
+      downloadArtifactCommandUnit.setArtifactVariableName(artifactVariableName);
       return downloadArtifactCommandUnit;
     }
   }
