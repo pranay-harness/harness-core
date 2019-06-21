@@ -11,8 +11,11 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
+import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LicenseInfo;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.VaultConfig;
 import software.wings.rules.WingsRule;
 import software.wings.security.encryption.EncryptedData;
@@ -21,6 +24,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.UUID;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
@@ -122,5 +126,32 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
     licenseInfo.setLicenseUnits(100);
     licenseInfo.setExpireAfterDays(15);
     return licenseInfo;
+  }
+
+  protected AppDynamicsConfig getAppDynamicsConfig(String accountId, String password) {
+    return getAppDynamicsConfig(accountId, password, null);
+  }
+
+  protected AppDynamicsConfig getAppDynamicsConfig(String accountId, String password, String encryptedPassword) {
+    char[] passwordChars = password == null ? null : password.toCharArray();
+    return AppDynamicsConfig.builder()
+        .accountId(accountId)
+        .controllerUrl(UUID.randomUUID().toString())
+        .username(UUID.randomUUID().toString())
+        .password(passwordChars)
+        .encryptedPassword(encryptedPassword)
+        .accountname(UUID.randomUUID().toString())
+        .build();
+  }
+
+  protected SettingAttribute getSettingAttribute(AppDynamicsConfig appDynamicsConfig) {
+    return SettingAttribute.Builder.aSettingAttribute()
+        .withAccountId(appDynamicsConfig.getAccountId())
+        .withValue(appDynamicsConfig)
+        .withAppId(UUID.randomUUID().toString())
+        .withCategory(SettingCategory.CONNECTOR)
+        .withEnvId(UUID.randomUUID().toString())
+        .withName(UUID.randomUUID().toString())
+        .build();
   }
 }

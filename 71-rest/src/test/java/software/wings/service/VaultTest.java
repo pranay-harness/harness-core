@@ -30,6 +30,7 @@ import io.harness.exception.WingsException;
 import io.harness.queue.Queue;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.rule.RealMongo;
+import io.harness.rule.RepeatRule.Repeat;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
@@ -66,7 +67,6 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.OverrideType;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
 import software.wings.beans.VaultConfig;
@@ -627,22 +627,9 @@ public class VaultTest extends WingsBaseTest {
     char[] decryptedValue = vaultService.decrypt(encryptedData, accountId, vaultConfig);
     assertNull(decryptedValue);
 
-    final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                    .accountId(accountId)
-                                                    .controllerUrl(UUID.randomUUID().toString())
-                                                    .username(UUID.randomUUID().toString())
-                                                    .password(password.toCharArray())
-                                                    .accountname(UUID.randomUUID().toString())
-                                                    .build();
-
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(accountId)
-                                            .withValue(appDynamicsConfig)
-                                            .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(SettingCategory.CONNECTOR)
-                                            .withEnvId(UUID.randomUUID().toString())
-                                            .withName(UUID.randomUUID().toString())
-                                            .build();
+    String randomPassword = UUID.randomUUID().toString();
+    final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, randomPassword);
+    SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
@@ -662,27 +649,13 @@ public class VaultTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void vaultEncryptionWhileSaving() throws IOException, IllegalAccessException {
+  public void vaultEncryptionWhileSaving() throws IllegalAccessException {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
+
     String password = UUID.randomUUID().toString();
-
-    final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                    .accountId(accountId)
-                                                    .controllerUrl(UUID.randomUUID().toString())
-                                                    .username(UUID.randomUUID().toString())
-                                                    .password(password.toCharArray())
-                                                    .accountname(UUID.randomUUID().toString())
-                                                    .build();
-
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(accountId)
-                                            .withValue(appDynamicsConfig)
-                                            .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(SettingCategory.CONNECTOR)
-                                            .withEnvId(UUID.randomUUID().toString())
-                                            .withName(UUID.randomUUID().toString())
-                                            .build();
+    final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+    SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
@@ -727,22 +700,8 @@ public class VaultTest extends WingsBaseTest {
     List<SettingAttribute> settingAttributes = new ArrayList<>();
     for (int i = 0; i < numOfSettingAttributes; i++) {
       String password = "password" + i;
-      final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                      .accountId(accountId)
-                                                      .controllerUrl(UUID.randomUUID().toString())
-                                                      .username(UUID.randomUUID().toString())
-                                                      .password(password.toCharArray())
-                                                      .accountname(UUID.randomUUID().toString())
-                                                      .build();
-
-      SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                              .withAccountId(accountId)
-                                              .withValue(appDynamicsConfig)
-                                              .withAppId(UUID.randomUUID().toString())
-                                              .withCategory(SettingCategory.CONNECTOR)
-                                              .withEnvId(UUID.randomUUID().toString())
-                                              .withName(UUID.randomUUID().toString())
-                                              .build();
+      final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+      SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
       settingAttributes.add(settingAttribute);
     }
@@ -773,26 +732,13 @@ public class VaultTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void vaultEncryptionUpdateObject() throws IOException, IllegalAccessException {
+  public void vaultEncryptionUpdateObject() throws IllegalAccessException {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
-    final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                    .accountId(accountId)
-                                                    .controllerUrl(UUID.randomUUID().toString())
-                                                    .username(UUID.randomUUID().toString())
-                                                    .password(UUID.randomUUID().toString().toCharArray())
-                                                    .accountname(UUID.randomUUID().toString())
-                                                    .build();
-
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(accountId)
-                                            .withValue(appDynamicsConfig)
-                                            .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(SettingCategory.CONNECTOR)
-                                            .withEnvId(UUID.randomUUID().toString())
-                                            .withName(UUID.randomUUID().toString())
-                                            .build();
+    String password = UUID.randomUUID().toString();
+    final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+    SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
@@ -864,26 +810,13 @@ public class VaultTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void vaultEncryptionUpdateFieldSettingAttribute() throws IOException, IllegalAccessException {
+  public void vaultEncryptionUpdateFieldSettingAttribute() throws IllegalAccessException {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
-    final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                    .accountId(accountId)
-                                                    .controllerUrl(UUID.randomUUID().toString())
-                                                    .username(UUID.randomUUID().toString())
-                                                    .password(UUID.randomUUID().toString().toCharArray())
-                                                    .accountname(UUID.randomUUID().toString())
-                                                    .build();
-
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(accountId)
-                                            .withValue(appDynamicsConfig)
-                                            .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(SettingCategory.CONNECTOR)
-                                            .withEnvId(UUID.randomUUID().toString())
-                                            .withName(UUID.randomUUID().toString())
-                                            .build();
+    String password = UUID.randomUUID().toString();
+    final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+    SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
@@ -1016,7 +949,7 @@ public class VaultTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   @RealMongo
-  public void vaultEncryptionSaveServiceVariable() throws IOException, IllegalAccessException {
+  public void vaultEncryptionSaveServiceVariable() throws IllegalAccessException {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
@@ -1122,22 +1055,9 @@ public class VaultTest extends WingsBaseTest {
     int numOfSettingAttributes = 5;
     List<SettingAttribute> settingAttributes = new ArrayList<>();
     for (int i = 0; i < numOfSettingAttributes; i++) {
-      final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                      .accountId(accountId)
-                                                      .controllerUrl(UUID.randomUUID().toString())
-                                                      .username(UUID.randomUUID().toString())
-                                                      .password(UUID.randomUUID().toString().toCharArray())
-                                                      .accountname(UUID.randomUUID().toString())
-                                                      .build();
-
-      SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                              .withAccountId(accountId)
-                                              .withValue(appDynamicsConfig)
-                                              .withAppId(UUID.randomUUID().toString())
-                                              .withCategory(SettingCategory.CONNECTOR)
-                                              .withEnvId(UUID.randomUUID().toString())
-                                              .withName(UUID.randomUUID().toString())
-                                              .build();
+      String password = UUID.randomUUID().toString();
+      final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+      SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
       wingsPersistence.save(settingAttribute);
       settingAttributes.add(settingAttribute);
@@ -1162,22 +1082,9 @@ public class VaultTest extends WingsBaseTest {
     int numOfSettingAttributes = 5;
     List<SettingAttribute> settingAttributes = new ArrayList<>();
     for (int i = 0; i < numOfSettingAttributes; i++) {
-      final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                      .accountId(accountId)
-                                                      .controllerUrl(UUID.randomUUID().toString())
-                                                      .username(UUID.randomUUID().toString())
-                                                      .password(UUID.randomUUID().toString().toCharArray())
-                                                      .accountname(UUID.randomUUID().toString())
-                                                      .build();
-
-      SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                              .withAccountId(accountId)
-                                              .withValue(appDynamicsConfig)
-                                              .withAppId(UUID.randomUUID().toString())
-                                              .withCategory(SettingCategory.CONNECTOR)
-                                              .withEnvId(UUID.randomUUID().toString())
-                                              .withName(UUID.randomUUID().toString())
-                                              .build();
+      String password = UUID.randomUUID().toString();
+      final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+      SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
       wingsPersistence.save(settingAttribute);
       settingAttributes.add(settingAttribute);
@@ -1207,8 +1114,9 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
-  public void transitionVault() throws IOException, InterruptedException, IllegalAccessException {
+  public void transitionVault() throws InterruptedException, IllegalAccessException {
     Thread listenerThread = startTransitionListener();
     try {
       VaultConfig fromConfig = getVaultConfig(VAULT_TOKEN);
@@ -1218,22 +1126,8 @@ public class VaultTest extends WingsBaseTest {
       Map<String, SettingAttribute> encryptedEntities = new HashMap<>();
       for (int i = 0; i < numOfSettingAttributes; i++) {
         String password = UUID.randomUUID().toString();
-        final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                        .accountId(accountId)
-                                                        .controllerUrl(UUID.randomUUID().toString())
-                                                        .username(UUID.randomUUID().toString())
-                                                        .password(password.toCharArray())
-                                                        .accountname(UUID.randomUUID().toString())
-                                                        .build();
-
-        SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                                .withAccountId(accountId)
-                                                .withValue(appDynamicsConfig)
-                                                .withAppId(UUID.randomUUID().toString())
-                                                .withCategory(SettingCategory.CONNECTOR)
-                                                .withEnvId(UUID.randomUUID().toString())
-                                                .withName(UUID.randomUUID().toString())
-                                                .build();
+        final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+        SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
         wingsPersistence.save(settingAttribute);
         appDynamicsConfig.setPassword(null);
@@ -1288,8 +1182,9 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
-  public void transitionAndDeleteVault() throws IOException, InterruptedException, IllegalAccessException {
+  public void transitionAndDeleteVault() throws InterruptedException, IllegalAccessException {
     Thread listenerThread = startTransitionListener();
     try {
       VaultConfig fromConfig = getVaultConfig(VAULT_TOKEN);
@@ -1299,22 +1194,8 @@ public class VaultTest extends WingsBaseTest {
       Map<String, SettingAttribute> encryptedEntities = new HashMap<>();
       for (int i = 0; i < numOfSettingAttributes; i++) {
         String password = UUID.randomUUID().toString();
-        final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                        .accountId(accountId)
-                                                        .controllerUrl(UUID.randomUUID().toString())
-                                                        .username(UUID.randomUUID().toString())
-                                                        .password(password.toCharArray())
-                                                        .accountname(UUID.randomUUID().toString())
-                                                        .build();
-
-        SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                                .withAccountId(accountId)
-                                                .withValue(appDynamicsConfig)
-                                                .withAppId(UUID.randomUUID().toString())
-                                                .withCategory(SettingCategory.CONNECTOR)
-                                                .withEnvId(UUID.randomUUID().toString())
-                                                .withName(UUID.randomUUID().toString())
-                                                .build();
+        final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+        SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
         wingsPersistence.save(settingAttribute);
         appDynamicsConfig.setPassword(null);
@@ -1364,7 +1245,7 @@ public class VaultTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void transitionFromKmsToVault() throws IOException, InterruptedException, IllegalAccessException {
+  public void transitionFromKmsToVault() throws InterruptedException, IllegalAccessException {
     if (isKmsEnabled) {
       return;
     }
@@ -1378,22 +1259,8 @@ public class VaultTest extends WingsBaseTest {
       Map<String, SettingAttribute> encryptedEntities = new HashMap<>();
       for (int i = 0; i < numOfSettingAttributes; i++) {
         String password = UUID.randomUUID().toString();
-        final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                        .accountId(accountId)
-                                                        .controllerUrl(UUID.randomUUID().toString())
-                                                        .username(UUID.randomUUID().toString())
-                                                        .password(password.toCharArray())
-                                                        .accountname(UUID.randomUUID().toString())
-                                                        .build();
-
-        SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                                .withAccountId(accountId)
-                                                .withValue(appDynamicsConfig)
-                                                .withAppId(UUID.randomUUID().toString())
-                                                .withCategory(SettingCategory.CONNECTOR)
-                                                .withEnvId(UUID.randomUUID().toString())
-                                                .withName(UUID.randomUUID().toString())
-                                                .build();
+        final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+        SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
         wingsPersistence.save(settingAttribute);
         appDynamicsConfig.setPassword(null);
@@ -1453,7 +1320,7 @@ public class VaultTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   @RealMongo
-  public void saveConfigFileWithEncryption() throws IOException, InterruptedException, IllegalAccessException {
+  public void saveConfigFileWithEncryption() throws IOException, IllegalAccessException {
     final long seed = System.currentTimeMillis();
     logger.info("seed: " + seed);
     Random r = new Random(seed);
@@ -1560,22 +1427,9 @@ public class VaultTest extends WingsBaseTest {
     int numOfSettingAttributes = 5;
     String password = "password";
     Set<String> attributeIds = new HashSet<>();
-    AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                              .accountId(accountId)
-                                              .controllerUrl(UUID.randomUUID().toString())
-                                              .username(UUID.randomUUID().toString())
-                                              .password(password.toCharArray())
-                                              .accountname(UUID.randomUUID().toString())
-                                              .build();
+    AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+    SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(accountId)
-                                            .withValue(appDynamicsConfig)
-                                            .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(SettingCategory.CONNECTOR)
-                                            .withEnvId(UUID.randomUUID().toString())
-                                            .withName(UUID.randomUUID().toString())
-                                            .build();
     attributeIds.add(wingsPersistence.save(settingAttribute));
 
     // yamlRef will be an URL format like: "hashicorpvault://vaultManagerName/harness/APP_DYNAMICS/...#value" for Vault
@@ -1586,23 +1440,8 @@ public class VaultTest extends WingsBaseTest {
     assertTrue(yamlRef.contains("#value"));
 
     for (int i = 1; i < numOfSettingAttributes; i++) {
-      appDynamicsConfig = AppDynamicsConfig.builder()
-                              .accountId(accountId)
-                              .controllerUrl(UUID.randomUUID().toString())
-                              .username(UUID.randomUUID().toString())
-                              .password(null)
-                              .encryptedPassword(yamlRef)
-                              .accountname(UUID.randomUUID().toString())
-                              .build();
-
-      settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                             .withAccountId(accountId)
-                             .withValue(appDynamicsConfig)
-                             .withAppId(UUID.randomUUID().toString())
-                             .withCategory(SettingCategory.CONNECTOR)
-                             .withEnvId(UUID.randomUUID().toString())
-                             .withName(UUID.randomUUID().toString())
-                             .build();
+      appDynamicsConfig = getAppDynamicsConfig(accountId, null, yamlRef);
+      settingAttribute = getSettingAttribute(appDynamicsConfig);
 
       attributeIds.add(wingsPersistence.save(settingAttribute));
     }

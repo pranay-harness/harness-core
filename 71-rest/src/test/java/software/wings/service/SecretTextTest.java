@@ -627,7 +627,7 @@ public class SecretTextTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void multipleVariableReference() throws IOException, IllegalAccessException {
+  public void multipleVariableReference() {
     String secretName = generateUuid();
     String secretValue = generateUuid();
     String secretId =
@@ -735,7 +735,7 @@ public class SecretTextTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void deleteSecret() throws IOException, IllegalAccessException {
+  public void deleteSecret() {
     String secretName = generateUuid();
     String secretValue = generateUuid();
     String secretId =
@@ -825,7 +825,7 @@ public class SecretTextTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void listSecrets() throws IOException, IllegalAccessException {
+  public void listSecrets() {
     int numOfSecrets = 3;
     int numOfVariable = 4;
     int numOfAccess = 3;
