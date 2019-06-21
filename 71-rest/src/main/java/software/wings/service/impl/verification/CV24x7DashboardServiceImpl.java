@@ -360,6 +360,31 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
       analysisSummaryMsg = totalAnomalies == 1 ? totalAnomalies + " anomalous cluster found"
                                                : totalAnomalies + " anomalous clusters found";
     }
+    long analysisEndMin = TimeUnit.MILLISECONDS.toMinutes(endTime);
+
+    if (featureFlagService.isEnabled(FeatureName.CV_FEEDBACKS, cvConfiguration.getAccountId())) {
+      List<CVFeedbackRecord> feedbackRecords = analysisService.getFeedbacks(cvConfigId, null);
+      Map<CLUSTER_TYPE, Map<Integer, CVFeedbackRecord>> clusterTypeRecordMap = new HashMap<>();
+      feedbackRecords.forEach(cvFeedbackRecord -> {
+        if (isNotEmpty(cvFeedbackRecord.getCvConfigId()) && cvFeedbackRecord.getCvConfigId().equals(cvConfigId)
+            && cvFeedbackRecord.getAnalysisMinute() == analysisEndMin) {
+          CLUSTER_TYPE type = cvFeedbackRecord.getClusterType();
+          if (!clusterTypeRecordMap.containsKey(type)) {
+            clusterTypeRecordMap.put(type, new HashMap<>());
+          }
+
+          clusterTypeRecordMap.get(cvFeedbackRecord.getClusterType())
+              .put(cvFeedbackRecord.getClusterLabel(), cvFeedbackRecord);
+        }
+      });
+
+      analysisService.updateClustersWithFeedback(
+          clusterTypeRecordMap, CLUSTER_TYPE.CONTROL, analysisSummary.getControlClusters());
+      analysisService.updateClustersWithFeedback(
+          clusterTypeRecordMap, CLUSTER_TYPE.TEST, analysisSummary.getTestClusters());
+      analysisService.updateClustersWithFeedback(
+          clusterTypeRecordMap, CLUSTER_TYPE.UNKNOWN, analysisSummary.getUnknownClusters());
+    }
 
     analysisSummary.setRiskLevel(riskLevel);
     analysisSummary.setAnalysisSummaryMessage(analysisSummaryMsg);

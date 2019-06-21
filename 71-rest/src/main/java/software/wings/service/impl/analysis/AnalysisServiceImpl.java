@@ -765,7 +765,8 @@ public class AnalysisServiceImpl implements AnalysisService {
       List<CVFeedbackRecord> feedbackRecords = getFeedbacks(null, stateExecutionId);
       Map<CLUSTER_TYPE, Map<Integer, CVFeedbackRecord>> clusterTypeRecordMap = new HashMap<>();
       feedbackRecords.forEach(cvFeedbackRecord -> {
-        if (cvFeedbackRecord.getStateExecutionId().equals(stateExecutionId)) {
+        if (isNotEmpty(cvFeedbackRecord.getStateExecutionId())
+            && cvFeedbackRecord.getStateExecutionId().equals(stateExecutionId)) {
           CLUSTER_TYPE type = cvFeedbackRecord.getClusterType();
           if (!clusterTypeRecordMap.containsKey(type)) {
             clusterTypeRecordMap.put(type, new HashMap<>());
@@ -828,7 +829,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     return analysisSummary;
   }
 
-  private void updateClustersWithFeedback(Map<CLUSTER_TYPE, Map<Integer, CVFeedbackRecord>> clusterTypeRecordMap,
+  public void updateClustersWithFeedback(Map<CLUSTER_TYPE, Map<Integer, CVFeedbackRecord>> clusterTypeRecordMap,
       CLUSTER_TYPE type, List<LogMLClusterSummary> clusterList) {
     if (clusterTypeRecordMap.containsKey(type)) {
       Map<Integer, CVFeedbackRecord> labelMap = clusterTypeRecordMap.get(type);
