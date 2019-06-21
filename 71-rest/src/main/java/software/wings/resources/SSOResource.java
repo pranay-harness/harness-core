@@ -316,6 +316,7 @@ public class SSOResource {
   public RestResponse<LoginTypeResponse> getSamlLoginTest(@QueryParam("accountId") @NotBlank String accountId) {
     LoginTypeResponseBuilder builder = LoginTypeResponse.builder();
     try {
+      builder.SSORequest(samlClientService.generateTestSamlRequest(accountId));
       return new RestResponse<>(builder.authenticationMechanism(AuthenticationMechanism.SAML).build());
     } catch (Exception e) {
       logger.warn(String.format("Failed to create SAML redirect response for accountId=[%s]", accountId), e);
