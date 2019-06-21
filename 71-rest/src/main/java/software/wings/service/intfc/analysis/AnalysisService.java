@@ -83,4 +83,6 @@ public interface AnalysisService {
   Map<FeedbackAction, List<FeedbackAction>> getNextFeedbackActions();
   String createCollaborationFeedbackTicket(String accountId, String appId, String cvConfigId, String stateExecutionId,
       CVCollaborationProviderParameters cvJiraParameters);
+  void updateClustersWithFeedback(Map<CLUSTER_TYPE, Map<Integer, CVFeedbackRecord>> clusterTypeRecordMap,
+      CLUSTER_TYPE type, List<LogMLClusterSummary> clusterList);
 }
