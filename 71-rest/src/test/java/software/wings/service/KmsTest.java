@@ -288,7 +288,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void validateConfig() throws IOException {
+  public void validateConfig() {
     KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setAccountId(accountId);
     kmsConfig.setAccessKey("invalidKey");
@@ -303,7 +303,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void getKmsConfigForAccount() throws IOException {
+  public void getKmsConfigForAccount() {
     KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setAccountId(accountId);
 
@@ -319,7 +319,7 @@ public class KmsTest extends WingsBaseTest {
   @Test
   @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
-  public void saveAndEditConfig() throws IOException {
+  public void saveAndEditConfig() {
     String name = UUID.randomUUID().toString();
     KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setName(name);
@@ -364,7 +364,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void localNullEncryption() throws Exception {
+  public void localNullEncryption() {
     final char[] keyToEncrypt = null;
     final EncryptedData encryptedData = kmsService.encrypt(keyToEncrypt, null, null);
     assertNull(encryptedData.getEncryptedValue());
@@ -376,7 +376,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void localEncryption() throws Exception {
+  public void localEncryption() {
     final String keyToEncrypt = UUID.randomUUID().toString();
     final EncryptedData encryptedData = kmsService.encrypt(keyToEncrypt.toCharArray(), null, null);
     assertNotEquals(keyToEncrypt, new String(encryptedData.getEncryptedValue()));
@@ -387,7 +387,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void kmsNullEncryption() throws Exception {
+  public void kmsNullEncryption() {
     final KmsConfig kmsConfig = getKmsConfig();
     final char[] keyToEncrypt = null;
     final EncryptedData encryptedData = kmsService.encrypt(keyToEncrypt, UUID.randomUUID().toString(), kmsConfig);
@@ -400,7 +400,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void kmsEncryption() throws Exception {
+  public void kmsEncryption() {
     final KmsConfig kmsConfig = getKmsConfig();
     final String keyToEncrypt = UUID.randomUUID().toString();
     final EncryptedData encryptedData =
@@ -415,22 +415,8 @@ public class KmsTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void localEncryptionWhileSaving() {
     String password = UUID.randomUUID().toString();
-    final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                    .accountId(UUID.randomUUID().toString())
-                                                    .controllerUrl(UUID.randomUUID().toString())
-                                                    .username(UUID.randomUUID().toString())
-                                                    .password(password.toCharArray())
-                                                    .accountname(UUID.randomUUID().toString())
-                                                    .build();
-
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(appDynamicsConfig.getAccountId())
-                                            .withValue(appDynamicsConfig)
-                                            .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(SettingCategory.CONNECTOR)
-                                            .withEnvId(UUID.randomUUID().toString())
-                                            .withName(UUID.randomUUID().toString())
-                                            .build();
+    final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+    SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     appDynamicsConfig.setPassword(password.toCharArray());
@@ -484,22 +470,8 @@ public class KmsTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void kmsEncryptionWhileSavingFeatureDisabled() {
     String password = UUID.randomUUID().toString();
-    final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                    .accountId(accountId)
-                                                    .controllerUrl(UUID.randomUUID().toString())
-                                                    .username(UUID.randomUUID().toString())
-                                                    .password(password.toCharArray())
-                                                    .accountname(UUID.randomUUID().toString())
-                                                    .build();
-
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(appDynamicsConfig.getAccountId())
-                                            .withValue(appDynamicsConfig)
-                                            .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(SettingCategory.CONNECTOR)
-                                            .withEnvId(UUID.randomUUID().toString())
-                                            .withName(UUID.randomUUID().toString())
-                                            .build();
+    final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+    SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
@@ -518,27 +490,13 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void enableKmsAfterSaving() throws IOException {
+  public void enableKmsAfterSaving() {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
     String password = UUID.randomUUID().toString();
-    final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                    .accountId(accountId)
-                                                    .controllerUrl(UUID.randomUUID().toString())
-                                                    .username(UUID.randomUUID().toString())
-                                                    .password(password.toCharArray())
-                                                    .accountname(UUID.randomUUID().toString())
-                                                    .build();
-
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(accountId)
-                                            .withValue(appDynamicsConfig)
-                                            .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(SettingCategory.CONNECTOR)
-                                            .withEnvId(UUID.randomUUID().toString())
-                                            .withName(UUID.randomUUID().toString())
-                                            .build();
+    final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+    SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
@@ -552,26 +510,13 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void kmsEncryptionWhileSaving() throws IOException, IllegalAccessException {
+  public void kmsEncryptionWhileSaving() throws IllegalAccessException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
-    final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                    .accountId(accountId)
-                                                    .controllerUrl(UUID.randomUUID().toString())
-                                                    .username(UUID.randomUUID().toString())
-                                                    .password(UUID.randomUUID().toString().toCharArray())
-                                                    .accountname(UUID.randomUUID().toString())
-                                                    .build();
-
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(accountId)
-                                            .withValue(appDynamicsConfig)
-                                            .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(SettingCategory.CONNECTOR)
-                                            .withEnvId(UUID.randomUUID().toString())
-                                            .withName(UUID.randomUUID().toString())
-                                            .build();
+    String password = UUID.randomUUID().toString();
+    final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+    SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
@@ -709,26 +654,13 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void secretUsageLog() throws IOException {
+  public void secretUsageLog() {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
-    final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                    .accountId(accountId)
-                                                    .controllerUrl(UUID.randomUUID().toString())
-                                                    .username(UUID.randomUUID().toString())
-                                                    .password(UUID.randomUUID().toString().toCharArray())
-                                                    .accountname(UUID.randomUUID().toString())
-                                                    .build();
-
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(accountId)
-                                            .withValue(appDynamicsConfig)
-                                            .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(SettingCategory.CONNECTOR)
-                                            .withEnvId(UUID.randomUUID().toString())
-                                            .withName(UUID.randomUUID().toString())
-                                            .build();
+    String password = UUID.randomUUID().toString();
+    final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+    SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
@@ -750,7 +682,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void kmsEncryptionSaveMultiple() throws IOException {
+  public void kmsEncryptionSaveMultiple() {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
@@ -759,22 +691,8 @@ public class KmsTest extends WingsBaseTest {
 
     for (int i = 0; i < numOfSettingAttributes; i++) {
       String password = "password" + i;
-      final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                      .accountId(accountId)
-                                                      .controllerUrl(UUID.randomUUID().toString())
-                                                      .username(UUID.randomUUID().toString())
-                                                      .password(password.toCharArray())
-                                                      .accountname(UUID.randomUUID().toString())
-                                                      .build();
-
-      SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                              .withAccountId(accountId)
-                                              .withValue(appDynamicsConfig)
-                                              .withAppId(UUID.randomUUID().toString())
-                                              .withCategory(SettingCategory.CONNECTOR)
-                                              .withEnvId(UUID.randomUUID().toString())
-                                              .withName(UUID.randomUUID().toString())
-                                              .build();
+      final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+      SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
       settingAttributes.add(settingAttribute);
     }
@@ -806,7 +724,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testNumOfEncryptedValue() throws IOException {
+  public void testNumOfEncryptedValue() {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveGlobalKmsConfig(accountId, kmsConfig);
 
@@ -814,22 +732,8 @@ public class KmsTest extends WingsBaseTest {
     List<SettingAttribute> settingAttributes = new ArrayList<>();
     for (int i = 0; i < numOfSettingAttributes1; i++) {
       String password = "password" + i;
-      final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                      .accountId(accountId)
-                                                      .controllerUrl(UUID.randomUUID().toString())
-                                                      .username(UUID.randomUUID().toString())
-                                                      .password(password.toCharArray())
-                                                      .accountname(UUID.randomUUID().toString())
-                                                      .build();
-
-      SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                              .withAccountId(accountId)
-                                              .withValue(appDynamicsConfig)
-                                              .withAppId(UUID.randomUUID().toString())
-                                              .withCategory(SettingCategory.CONNECTOR)
-                                              .withEnvId(UUID.randomUUID().toString())
-                                              .withName(UUID.randomUUID().toString())
-                                              .build();
+      final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+      SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
       settingAttributes.add(settingAttribute);
     }
@@ -841,22 +745,8 @@ public class KmsTest extends WingsBaseTest {
     settingAttributes.clear();
     for (int i = 0; i < numOfSettingAttributes2; i++) {
       String password = "password" + i;
-      final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                      .accountId(accountId2)
-                                                      .controllerUrl(UUID.randomUUID().toString())
-                                                      .username(UUID.randomUUID().toString())
-                                                      .password(password.toCharArray())
-                                                      .accountname(UUID.randomUUID().toString())
-                                                      .build();
-
-      SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                              .withAccountId(accountId2)
-                                              .withValue(appDynamicsConfig)
-                                              .withAppId(UUID.randomUUID().toString())
-                                              .withCategory(SettingCategory.CONNECTOR)
-                                              .withEnvId(UUID.randomUUID().toString())
-                                              .withName(UUID.randomUUID().toString())
-                                              .build();
+      final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId2, password);
+      SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
       settingAttributes.add(settingAttribute);
     }
@@ -865,32 +755,19 @@ public class KmsTest extends WingsBaseTest {
     List<SecretManagerConfig> encryptionConfigs =
         secretManagementResource.listEncryptionConfig(accountId).getResource();
     assertEquals(1, encryptionConfigs.size());
-    assertEquals(numOfSettingAttributes1, ((KmsConfig) encryptionConfigs.get(0)).getNumOfEncryptedValue());
+    assertEquals(numOfSettingAttributes1, encryptionConfigs.get(0).getNumOfEncryptedValue());
 
     encryptionConfigs = secretManagementResource.listEncryptionConfig(accountId2).getResource();
     assertEquals(1, encryptionConfigs.size());
-    assertEquals(numOfSettingAttributes2, ((KmsConfig) encryptionConfigs.get(0)).getNumOfEncryptedValue());
+    assertEquals(numOfSettingAttributes2, encryptionConfigs.get(0).getNumOfEncryptedValue());
   }
 
   @Test
   @Category(UnitTests.class)
-  public void noKmsEncryptionUpdateObject() throws IOException, IllegalAccessException {
-    final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                    .accountId(accountId)
-                                                    .controllerUrl(UUID.randomUUID().toString())
-                                                    .username(UUID.randomUUID().toString())
-                                                    .password(UUID.randomUUID().toString().toCharArray())
-                                                    .accountname(UUID.randomUUID().toString())
-                                                    .build();
-
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(accountId)
-                                            .withValue(appDynamicsConfig)
-                                            .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(SettingCategory.CONNECTOR)
-                                            .withEnvId(UUID.randomUUID().toString())
-                                            .withName(UUID.randomUUID().toString())
-                                            .build();
+  public void noKmsEncryptionUpdateObject() throws IllegalAccessException {
+    String password = UUID.randomUUID().toString();
+    final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+    SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
@@ -919,13 +796,7 @@ public class KmsTest extends WingsBaseTest {
     verifyChangeLogs(savedAttributeId, savedAttribute, user1);
 
     final String newPassWord = UUID.randomUUID().toString();
-    final AppDynamicsConfig newAppDynamicsConfig = AppDynamicsConfig.builder()
-                                                       .accountId(accountId)
-                                                       .controllerUrl(UUID.randomUUID().toString())
-                                                       .username(UUID.randomUUID().toString())
-                                                       .password(newPassWord.toCharArray())
-                                                       .accountname(UUID.randomUUID().toString())
-                                                       .build();
+    final AppDynamicsConfig newAppDynamicsConfig = getAppDynamicsConfig(accountId, newPassWord);
 
     String updatedAppId = UUID.randomUUID().toString();
     String updatedName = UUID.randomUUID().toString();
@@ -1006,7 +877,7 @@ public class KmsTest extends WingsBaseTest {
   @Test
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
-  public void noKmsEncryptionUpdateServiceVariable() throws IOException, IllegalAccessException {
+  public void noKmsEncryptionUpdateServiceVariable() {
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
     String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null, null);
@@ -1079,26 +950,13 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void kmsEncryptionUpdateObject() throws IOException, IllegalAccessException {
+  public void kmsEncryptionUpdateObject() throws IllegalAccessException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
-    final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                    .accountId(accountId)
-                                                    .controllerUrl(UUID.randomUUID().toString())
-                                                    .username(UUID.randomUUID().toString())
-                                                    .password(UUID.randomUUID().toString().toCharArray())
-                                                    .accountname(UUID.randomUUID().toString())
-                                                    .build();
-
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(accountId)
-                                            .withValue(appDynamicsConfig)
-                                            .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(SettingCategory.CONNECTOR)
-                                            .withEnvId(UUID.randomUUID().toString())
-                                            .withName(UUID.randomUUID().toString())
-                                            .build();
+    String password = UUID.randomUUID().toString();
+    final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+    SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
@@ -1166,26 +1024,13 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void kmsEncryptionUpdateFieldSettingAttribute() throws IOException, IllegalAccessException {
+  public void kmsEncryptionUpdateFieldSettingAttribute() throws IllegalAccessException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
-    final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                    .accountId(accountId)
-                                                    .controllerUrl(UUID.randomUUID().toString())
-                                                    .username(UUID.randomUUID().toString())
-                                                    .password(UUID.randomUUID().toString().toCharArray())
-                                                    .accountname(UUID.randomUUID().toString())
-                                                    .build();
-
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(accountId)
-                                            .withValue(appDynamicsConfig)
-                                            .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(SettingCategory.CONNECTOR)
-                                            .withEnvId(UUID.randomUUID().toString())
-                                            .withName(UUID.randomUUID().toString())
-                                            .build();
+    String password = UUID.randomUUID().toString();
+    final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+    SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
@@ -1311,23 +1156,10 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void updateSettingAttributeAfterKmsEnabled() throws IOException, IllegalAccessException {
-    final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                    .accountId(accountId)
-                                                    .controllerUrl(UUID.randomUUID().toString())
-                                                    .username(UUID.randomUUID().toString())
-                                                    .password(UUID.randomUUID().toString().toCharArray())
-                                                    .accountname(UUID.randomUUID().toString())
-                                                    .build();
-
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(accountId)
-                                            .withValue(appDynamicsConfig)
-                                            .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(SettingCategory.CONNECTOR)
-                                            .withEnvId(UUID.randomUUID().toString())
-                                            .withName(UUID.randomUUID().toString())
-                                            .build();
+  public void updateSettingAttributeAfterKmsEnabled() {
+    String password = UUID.randomUUID().toString();
+    final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+    SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
@@ -1380,7 +1212,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void saveServiceVariableNoKMS() throws IOException {
+  public void saveServiceVariableNoKMS() {
     String value = UUID.randomUUID().toString();
     final ServiceVariable serviceVariable = ServiceVariable.builder()
                                                 .templateId(UUID.randomUUID().toString())
@@ -1435,7 +1267,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void saveServiceVariableNoEncryption() throws IOException {
+  public void saveServiceVariableNoEncryption() {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
@@ -1567,7 +1399,7 @@ public class KmsTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   @RealMongo
-  public void kmsEncryptionSaveServiceVariable() throws IOException, IllegalAccessException {
+  public void kmsEncryptionSaveServiceVariable() throws IllegalAccessException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
@@ -1657,7 +1489,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void kmsEncryptionSaveServiceVariableTemplate() throws IOException {
+  public void kmsEncryptionSaveServiceVariableTemplate() {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
@@ -1699,7 +1531,7 @@ public class KmsTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   @RealMongo
-  public void kmsEncryptionUpdateServiceVariable() throws IOException {
+  public void kmsEncryptionUpdateServiceVariable() {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
@@ -1771,22 +1603,9 @@ public class KmsTest extends WingsBaseTest {
     int numOfSettingAttributes = 5;
     List<SettingAttribute> settingAttributes = new ArrayList<>();
     for (int i = 0; i < numOfSettingAttributes; i++) {
-      final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                      .accountId(accountId)
-                                                      .controllerUrl(UUID.randomUUID().toString())
-                                                      .username(UUID.randomUUID().toString())
-                                                      .password(UUID.randomUUID().toString().toCharArray())
-                                                      .accountname(UUID.randomUUID().toString())
-                                                      .build();
-
-      SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                              .withAccountId(accountId)
-                                              .withValue(appDynamicsConfig)
-                                              .withAppId(UUID.randomUUID().toString())
-                                              .withCategory(SettingCategory.CONNECTOR)
-                                              .withEnvId(UUID.randomUUID().toString())
-                                              .withName(UUID.randomUUID().toString())
-                                              .build();
+      String password = UUID.randomUUID().toString();
+      final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+      SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
       wingsPersistence.save(settingAttribute);
       settingAttributes.add(settingAttribute);
@@ -1805,29 +1624,16 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void kmsEncryptionDeleteSettingAttributeQueryUuid() throws IOException {
+  public void kmsEncryptionDeleteSettingAttributeQueryUuid() {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
     int numOfSettingAttributes = 5;
     List<SettingAttribute> settingAttributes = new ArrayList<>();
     for (int i = 0; i < numOfSettingAttributes; i++) {
-      final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                      .accountId(accountId)
-                                                      .controllerUrl(UUID.randomUUID().toString())
-                                                      .username(UUID.randomUUID().toString())
-                                                      .password(UUID.randomUUID().toString().toCharArray())
-                                                      .accountname(UUID.randomUUID().toString())
-                                                      .build();
-
-      SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                              .withAccountId(accountId)
-                                              .withValue(appDynamicsConfig)
-                                              .withAppId(UUID.randomUUID().toString())
-                                              .withCategory(SettingCategory.CONNECTOR)
-                                              .withEnvId(UUID.randomUUID().toString())
-                                              .withName(UUID.randomUUID().toString())
-                                              .build();
+      String password = UUID.randomUUID().toString();
+      final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+      SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
       wingsPersistence.save(settingAttribute);
       settingAttributes.add(settingAttribute);
@@ -1860,29 +1666,16 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void kmsEncryptionDeleteSettingAttributeQuery() throws IOException {
+  public void kmsEncryptionDeleteSettingAttributeQuery() {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
     int numOfSettingAttributes = 5;
     List<SettingAttribute> settingAttributes = new ArrayList<>();
     for (int i = 0; i < numOfSettingAttributes; i++) {
-      final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                      .accountId(accountId)
-                                                      .controllerUrl(UUID.randomUUID().toString())
-                                                      .username(UUID.randomUUID().toString())
-                                                      .password(UUID.randomUUID().toString().toCharArray())
-                                                      .accountname(UUID.randomUUID().toString())
-                                                      .build();
-
-      SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                              .withAccountId(accountId)
-                                              .withValue(appDynamicsConfig)
-                                              .withAppId(UUID.randomUUID().toString())
-                                              .withCategory(SettingCategory.CONNECTOR)
-                                              .withEnvId(UUID.randomUUID().toString())
-                                              .withName(UUID.randomUUID().toString())
-                                              .build();
+      String password = UUID.randomUUID().toString();
+      final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+      SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
       wingsPersistence.save(settingAttribute);
       settingAttributes.add(settingAttribute);
@@ -1910,7 +1703,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void kmsEncryptionSaveGlobalConfig() throws IOException {
+  public void kmsEncryptionSaveGlobalConfig() {
     KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(GLOBAL_ACCOUNT_ID, kmsConfig);
     assertEquals(1, wingsPersistence.createQuery(KmsConfig.class).count());
@@ -1940,22 +1733,9 @@ public class KmsTest extends WingsBaseTest {
     int numOfSettingAttributes = 5;
     List<SettingAttribute> settingAttributes = new ArrayList<>();
     for (int i = 0; i < numOfSettingAttributes; i++) {
-      final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                      .accountId(accountId)
-                                                      .controllerUrl(UUID.randomUUID().toString())
-                                                      .username(UUID.randomUUID().toString())
-                                                      .password(UUID.randomUUID().toString().toCharArray())
-                                                      .accountname(UUID.randomUUID().toString())
-                                                      .build();
-
-      SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                              .withAccountId(accountId)
-                                              .withValue(appDynamicsConfig)
-                                              .withAppId(UUID.randomUUID().toString())
-                                              .withCategory(SettingCategory.CONNECTOR)
-                                              .withEnvId(UUID.randomUUID().toString())
-                                              .withName(UUID.randomUUID().toString())
-                                              .build();
+      String password = UUID.randomUUID().toString();
+      final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+      SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
       wingsPersistence.save(settingAttribute);
       appDynamicsConfig.setPassword(null);
@@ -2002,7 +1782,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void listKmsConfigMultiple() throws IOException {
+  public void listKmsConfigMultiple() {
     KmsConfig kmsConfig1 = getKmsConfig();
     kmsConfig1.setDefault(true);
     kmsConfig1.setName(UUID.randomUUID().toString());
@@ -2089,7 +1869,7 @@ public class KmsTest extends WingsBaseTest {
   @Test
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
-  public void listKmsGlobalDefault() throws IOException {
+  public void listKmsGlobalDefault() {
     KmsConfig globalKmsConfig = getKmsConfig();
     globalKmsConfig.setName("Global config");
 
@@ -2152,7 +1932,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void listKmsConfigOrder() throws IOException {
+  public void listKmsConfigOrder() {
     int numOfKms = 10;
     for (int i = 1; i <= numOfKms; i++) {
       KmsConfig kmsConfig = getKmsConfig();
@@ -2179,7 +1959,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void listKmsConfigHasDefault() throws IOException {
+  public void listKmsConfigHasDefault() {
     KmsConfig globalKmsConfig = getKmsConfig();
     globalKmsConfig.setDefault(false);
     globalKmsConfig.setName("global-kms-config");
@@ -2255,7 +2035,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void listKmsConfig() throws IOException {
+  public void listKmsConfig() {
     KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
     kmsConfig = getKmsConfig();
@@ -2316,7 +2096,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void transitionKms() throws IOException, InterruptedException, IllegalAccessException {
+  public void transitionKms() throws InterruptedException, IllegalAccessException {
     Thread listenerThread = startTransitionListener();
     try {
       KmsConfig fromConfig = getKmsConfig();
@@ -2326,22 +2106,8 @@ public class KmsTest extends WingsBaseTest {
       Map<String, SettingAttribute> encryptedEntities = new HashMap<>();
       for (int i = 0; i < numOfSettingAttributes; i++) {
         String password = UUID.randomUUID().toString();
-        final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                        .accountId(accountId)
-                                                        .controllerUrl(UUID.randomUUID().toString())
-                                                        .username(UUID.randomUUID().toString())
-                                                        .password(password.toCharArray())
-                                                        .accountname(UUID.randomUUID().toString())
-                                                        .build();
-
-        SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                                .withAccountId(accountId)
-                                                .withValue(appDynamicsConfig)
-                                                .withAppId(UUID.randomUUID().toString())
-                                                .withCategory(SettingCategory.CONNECTOR)
-                                                .withEnvId(UUID.randomUUID().toString())
-                                                .withName(UUID.randomUUID().toString())
-                                                .build();
+        final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+        SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
         wingsPersistence.save(settingAttribute);
         appDynamicsConfig.setPassword(null);
@@ -2397,7 +2163,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void transitionAndDeleteKms() throws IOException, InterruptedException, IllegalAccessException {
+  public void transitionAndDeleteKms() throws InterruptedException, IllegalAccessException {
     Thread listenerThread = startTransitionListener();
     try {
       KmsConfig fromConfig = getKmsConfig();
@@ -2407,22 +2173,8 @@ public class KmsTest extends WingsBaseTest {
       Map<String, SettingAttribute> encryptedEntities = new HashMap<>();
       for (int i = 0; i < numOfSettingAttributes; i++) {
         String password = UUID.randomUUID().toString();
-        final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                        .accountId(accountId)
-                                                        .controllerUrl(UUID.randomUUID().toString())
-                                                        .username(UUID.randomUUID().toString())
-                                                        .password(password.toCharArray())
-                                                        .accountname(UUID.randomUUID().toString())
-                                                        .build();
-
-        SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                                .withAccountId(accountId)
-                                                .withValue(appDynamicsConfig)
-                                                .withAppId(UUID.randomUUID().toString())
-                                                .withCategory(SettingCategory.CONNECTOR)
-                                                .withEnvId(UUID.randomUUID().toString())
-                                                .withName(UUID.randomUUID().toString())
-                                                .build();
+        final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+        SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
         wingsPersistence.save(settingAttribute);
         appDynamicsConfig.setPassword(password.toCharArray());
@@ -2541,7 +2293,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void saveAwsConfig() throws IOException, InterruptedException {
+  public void saveAwsConfig() {
     KmsConfig fromConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, fromConfig);
 
@@ -2681,7 +2433,7 @@ public class KmsTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   @RealMongo
-  public void saveConfigFileNoEncryption() throws IOException, InterruptedException {
+  public void saveConfigFileNoEncryption() throws IOException {
     final long seed = System.currentTimeMillis();
     logger.info("seed: " + seed);
     Random r = new Random(seed);
@@ -2731,7 +2483,7 @@ public class KmsTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   @RealMongo
-  public void saveConfigFileWithEncryption() throws IOException, InterruptedException, IllegalAccessException {
+  public void saveConfigFileWithEncryption() throws IOException, IllegalAccessException {
     final long seed = System.currentTimeMillis();
     logger.info("seed: " + seed);
     Random r = new Random(seed);
@@ -2978,48 +2730,20 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void reuseYamlPasswordNoEncryption() throws IOException, IllegalAccessException {
+  public void reuseYamlPasswordNoEncryption() throws IllegalAccessException {
     int numOfSettingAttributes = 5;
     String password = "password";
     Set<String> attributeIds = new HashSet<>();
-    AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                              .accountId(accountId)
-                                              .controllerUrl(UUID.randomUUID().toString())
-                                              .username(UUID.randomUUID().toString())
-                                              .password(password.toCharArray())
-                                              .accountname(UUID.randomUUID().toString())
-                                              .build();
+    AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+    SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(accountId)
-                                            .withValue(appDynamicsConfig)
-                                            .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(SettingCategory.CONNECTOR)
-                                            .withEnvId(UUID.randomUUID().toString())
-                                            .withName(UUID.randomUUID().toString())
-                                            .build();
     attributeIds.add(wingsPersistence.save(settingAttribute));
 
     String yamlRef = secretManager.getEncryptedYamlRef(appDynamicsConfig);
 
     for (int i = 1; i < numOfSettingAttributes; i++) {
-      appDynamicsConfig = AppDynamicsConfig.builder()
-                              .accountId(accountId)
-                              .controllerUrl(UUID.randomUUID().toString())
-                              .username(UUID.randomUUID().toString())
-                              .password(null)
-                              .encryptedPassword(yamlRef)
-                              .accountname(UUID.randomUUID().toString())
-                              .build();
-
-      settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                             .withAccountId(accountId)
-                             .withValue(appDynamicsConfig)
-                             .withAppId(UUID.randomUUID().toString())
-                             .withCategory(SettingCategory.CONNECTOR)
-                             .withEnvId(UUID.randomUUID().toString())
-                             .withName(UUID.randomUUID().toString())
-                             .build();
+      appDynamicsConfig = getAppDynamicsConfig(accountId, null, yamlRef);
+      settingAttribute = getSettingAttribute(appDynamicsConfig);
 
       attributeIds.add(wingsPersistence.save(settingAttribute));
     }
@@ -3082,50 +2806,22 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void reuseYamlPasswordKmsEncryption() throws IOException, IllegalAccessException {
+  public void reuseYamlPasswordKmsEncryption() throws IllegalAccessException {
     KmsConfig fromConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, fromConfig);
 
     int numOfSettingAttributes = 5;
     String password = "password";
     Set<String> attributeIds = new HashSet<>();
-    AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                              .accountId(accountId)
-                                              .controllerUrl(UUID.randomUUID().toString())
-                                              .username(UUID.randomUUID().toString())
-                                              .password(password.toCharArray())
-                                              .accountname(UUID.randomUUID().toString())
-                                              .build();
+    AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+    SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(accountId)
-                                            .withValue(appDynamicsConfig)
-                                            .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(SettingCategory.CONNECTOR)
-                                            .withEnvId(UUID.randomUUID().toString())
-                                            .withName(UUID.randomUUID().toString())
-                                            .build();
     attributeIds.add(wingsPersistence.save(settingAttribute));
 
     String yamlRef = secretManager.getEncryptedYamlRef(appDynamicsConfig);
     for (int i = 1; i < numOfSettingAttributes; i++) {
-      appDynamicsConfig = AppDynamicsConfig.builder()
-                              .accountId(accountId)
-                              .controllerUrl(UUID.randomUUID().toString())
-                              .username(UUID.randomUUID().toString())
-                              .password(null)
-                              .encryptedPassword(yamlRef)
-                              .accountname(UUID.randomUUID().toString())
-                              .build();
-
-      settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                             .withAccountId(accountId)
-                             .withValue(appDynamicsConfig)
-                             .withAppId(UUID.randomUUID().toString())
-                             .withCategory(SettingCategory.CONNECTOR)
-                             .withEnvId(UUID.randomUUID().toString())
-                             .withName(UUID.randomUUID().toString())
-                             .build();
+      appDynamicsConfig = getAppDynamicsConfig(accountId, null, yamlRef);
+      settingAttribute = getSettingAttribute(appDynamicsConfig);
 
       attributeIds.add(wingsPersistence.save(settingAttribute));
     }
@@ -3188,28 +2884,15 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void reuseYamlPasswordNewEntityKmsEncryption() throws IOException, IllegalAccessException {
+  public void reuseYamlPasswordNewEntityKmsEncryption() throws IllegalAccessException {
     KmsConfig fromConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, fromConfig);
 
     String password = "password";
     Set<String> attributeIds = new HashSet<>();
-    AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                              .accountId(accountId)
-                                              .controllerUrl(UUID.randomUUID().toString())
-                                              .username(UUID.randomUUID().toString())
-                                              .password(password.toCharArray())
-                                              .accountname(UUID.randomUUID().toString())
-                                              .build();
+    AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+    SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
 
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(accountId)
-                                            .withValue(appDynamicsConfig)
-                                            .withAppId(UUID.randomUUID().toString())
-                                            .withCategory(SettingCategory.CONNECTOR)
-                                            .withEnvId(UUID.randomUUID().toString())
-                                            .withName(UUID.randomUUID().toString())
-                                            .build();
     attributeIds.add(wingsPersistence.save(settingAttribute));
     List<EncryptedData> encryptedDataList = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
                                                 .filter("type", SettingVariableTypes.APP_DYNAMICS)
@@ -3218,22 +2901,10 @@ public class KmsTest extends WingsBaseTest {
 
     String yamlRef = secretManager.getEncryptedYamlRef(appDynamicsConfig);
 
-    appDynamicsConfig = AppDynamicsConfig.builder()
-                            .accountId(accountId)
-                            .controllerUrl(UUID.randomUUID().toString())
-                            .username(UUID.randomUUID().toString())
-                            .encryptedPassword(yamlRef)
-                            .password(UUID.randomUUID().toString().toCharArray())
-                            .accountname(UUID.randomUUID().toString())
-                            .build();
-    settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                           .withAccountId(accountId)
-                           .withValue(appDynamicsConfig)
-                           .withAppId(UUID.randomUUID().toString())
-                           .withCategory(SettingCategory.CONNECTOR)
-                           .withEnvId(UUID.randomUUID().toString())
-                           .withName(UUID.randomUUID().toString())
-                           .build();
+    String randomPassword = UUID.randomUUID().toString();
+    appDynamicsConfig = getAppDynamicsConfig(accountId, randomPassword, yamlRef);
+    settingAttribute = getSettingAttribute(appDynamicsConfig);
+
     SettingAttribute attributeCopy = settingsService.save(settingAttribute);
     encryptedDataList = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
                             .filter("type", SettingVariableTypes.APP_DYNAMICS)
@@ -3248,7 +2919,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void getUsageLogs() throws IOException, IllegalAccessException {
+  public void getUsageLogs() throws IllegalAccessException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
@@ -3298,22 +2969,9 @@ public class KmsTest extends WingsBaseTest {
             .getResource();
     assertEquals(3, usageLogs.size());
 
-    final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                    .accountId(accountId)
-                                                    .controllerUrl(UUID.randomUUID().toString())
-                                                    .username(UUID.randomUUID().toString())
-                                                    .password(UUID.randomUUID().toString().toCharArray())
-                                                    .accountname(UUID.randomUUID().toString())
-                                                    .build();
-
-    SettingAttribute appDAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                         .withAccountId(appDynamicsConfig.getAccountId())
-                                         .withValue(appDynamicsConfig)
-                                         .withAppId(UUID.randomUUID().toString())
-                                         .withCategory(SettingCategory.CONNECTOR)
-                                         .withEnvId(UUID.randomUUID().toString())
-                                         .withName(UUID.randomUUID().toString())
-                                         .build();
+    String password = UUID.randomUUID().toString();
+    final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+    SettingAttribute appDAttribute = getSettingAttribute(appDynamicsConfig);
 
     String appDAttributeId = wingsPersistence.save(appDAttribute);
     usageLogs = (List<SecretUsageLog>) secretManagementResource
@@ -3342,22 +3000,9 @@ public class KmsTest extends WingsBaseTest {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
-    final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
-                                                    .accountId(accountId)
-                                                    .controllerUrl(UUID.randomUUID().toString())
-                                                    .username(UUID.randomUUID().toString())
-                                                    .password(UUID.randomUUID().toString().toCharArray())
-                                                    .accountname(UUID.randomUUID().toString())
-                                                    .build();
-
-    SettingAttribute appDAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                         .withAccountId(appDynamicsConfig.getAccountId())
-                                         .withValue(appDynamicsConfig)
-                                         .withAppId(UUID.randomUUID().toString())
-                                         .withCategory(SettingCategory.CONNECTOR)
-                                         .withEnvId(UUID.randomUUID().toString())
-                                         .withName(UUID.randomUUID().toString())
-                                         .build();
+    String password = UUID.randomUUID().toString();
+    final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
+    SettingAttribute appDAttribute = getSettingAttribute(appDynamicsConfig);
 
     String appDAttributeId = wingsPersistence.save(appDAttribute);
     int numOfUpdates = 13;
