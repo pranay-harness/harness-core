@@ -9,7 +9,6 @@ import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.event.model.EventConstants.ENVIRONMENT_ID;
@@ -20,6 +19,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_EXPIRED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_NEEDED_NOTIFICATION;
@@ -52,7 +52,9 @@ import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.NotificationGroup;
+import software.wings.beans.InformationNotification;
+import software.wings.beans.NotificationRule;
+import software.wings.beans.NotificationRule.NotificationRuleBuilder;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.ApprovalNeededAlert;
@@ -65,7 +67,6 @@ import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandType;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
-import software.wings.helpers.ext.mail.EmailData;
 import software.wings.scheduler.JiraPollingJob;
 import software.wings.scheduler.ServiceNowApprovalJob;
 import software.wings.security.UserThreadLocal;
@@ -74,8 +75,8 @@ import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ApprovalPolingService;
-import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.NotificationDispatcherService;
+import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
@@ -108,7 +109,7 @@ public class ApprovalState extends State {
   @Inject private NotificationSetupService notificationSetupService;
   @Inject private NotificationMessageResolver notificationMessageResolver;
   @Inject private NotificationDispatcherService notificationDispatcherService;
-  @Inject private EmailNotificationService emailNotificationService;
+  @Inject private NotificationService notificationService;
   @Inject private UserGroupService userGroupService;
   @Inject private UserService userService;
   @Inject private JiraHelperService jiraHelperService;
@@ -181,7 +182,8 @@ public class ApprovalState extends State {
     executionData.setAppId(app.getAppId());
     if (approvalStateType == null) {
       executionData.setApprovalStateType(USER_GROUP);
-      return executeUserGroupApproval(userGroups, app.getAccountId(), placeholderValues, approvalId, executionData);
+      return executeUserGroupApproval(
+          userGroups, app.getAccountId(), placeholderValues, approvalId, executionData, app.getUuid());
     }
     switch (approvalStateType) {
       case JIRA:
@@ -189,7 +191,8 @@ public class ApprovalState extends State {
       case SERVICENOW:
         return executeServiceNowApproval(context, executionData, approvalId);
       case USER_GROUP:
-        return executeUserGroupApproval(userGroups, app.getAccountId(), placeholderValues, approvalId, executionData);
+        return executeUserGroupApproval(
+            userGroups, app.getAccountId(), placeholderValues, approvalId, executionData, app.getUuid());
       case SHELL_SCRIPT:
         return executeShellScriptApproval(context, app.getAccountId(), app.getUuid(), approvalId,
             approvalStateParams.getShellScriptApprovalParams(), executionData);
@@ -469,9 +472,10 @@ public class ApprovalState extends State {
   }
 
   private ExecutionResponse executeUserGroupApproval(List<String> userGroups, String accountId,
-      Map<String, String> placeholderValues, String approvalId, ApprovalStateExecutionData executionData) {
+      Map<String, String> placeholderValues, String approvalId, ApprovalStateExecutionData executionData,
+      String appId) {
     executionData.setUserGroups(userGroups);
-    sendEmailToUserGroupMembers(userGroups, accountId, APPROVAL_NEEDED_NOTIFICATION, placeholderValues);
+    sendNotificationForUserGroupApproval(userGroups, appId, accountId, APPROVAL_NEEDED_NOTIFICATION, placeholderValues);
     return anExecutionResponse()
         .withAsync(true)
         .withExecutionStatus(PAUSED)
@@ -591,7 +595,8 @@ public class ApprovalState extends State {
       ExecutionContext context, ApprovalStateExecutionData executionData,
       ApprovalStateExecutionData approvalNotifyResponse) {
     Application app = context.getApp();
-    sendEmailToUserGroupMembers(userGroups, app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues);
+    sendNotificationForUserGroupApproval(
+        userGroups, app.getUuid(), app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues);
     return anExecutionResponse()
         .withStateExecutionData(executionData)
         .withExecutionStatus(approvalNotifyResponse.getStatus())
@@ -650,7 +655,8 @@ public class ApprovalState extends State {
 
     context.getStateExecutionData().setErrorMsg(errorMsg);
     if (approvalStateType == null) {
-      sendEmailToUserGroupMembers(userGroups, app.getAccountId(), notificationMessageType, placeholderValues);
+      sendNotificationForUserGroupApproval(
+          userGroups, app.getUuid(), app.getAccountId(), notificationMessageType, placeholderValues);
       return;
     }
     switch (approvalStateType) {
@@ -661,7 +667,8 @@ public class ApprovalState extends State {
         handleAbortEventServiceNow(context);
         return;
       case USER_GROUP:
-        sendEmailToUserGroupMembers(userGroups, app.getAccountId(), notificationMessageType, placeholderValues);
+        sendNotificationForUserGroupApproval(
+            userGroups, app.getUuid(), app.getAccountId(), notificationMessageType, placeholderValues);
         return;
       case SHELL_SCRIPT:
         handleAbortScriptApproval(context);
@@ -669,6 +676,20 @@ public class ApprovalState extends State {
       default:
         throw new WingsException("Invalid ApprovalStateType : neither JIRA nor USER_GROUP");
     }
+  }
+
+  private void sendNotificationForUserGroupApproval(List<String> approvalUserGroups, String appId, String accountId,
+      NotificationMessageType notificationMessageType, Map<String, String> placeHolderValues) {
+    NotificationRule rule = NotificationRuleBuilder.aNotificationRule().withUserGroupIds(approvalUserGroups).build();
+
+    InformationNotification notification = anInformationNotification()
+                                               .withAppId(appId)
+                                               .withAccountId(accountId)
+                                               .withNotificationTemplateId(notificationMessageType.name())
+                                               .withNotificationTemplateVariables(placeHolderValues)
+                                               .build();
+
+    notificationService.sendNotificationAsync(notification, Collections.singletonList(rule));
   }
 
   private void handleAbortScriptApproval(ExecutionContext context) {
@@ -738,49 +759,6 @@ public class ApprovalState extends State {
   private Map<String, String> getPlaceholderValues(ExecutionContext context, String timeout) {
     return notificationMessageResolver.getPlaceholderValues(
         context, "", 0, 0, timeout, "", "", EXPIRED, ApprovalNeeded);
-  }
-
-  private void sendEmailToUserGroupMembers(List<String> userGroups, String accountId,
-      NotificationMessageType notificationMessageType, Map<String, String> placeHolderValues) {
-    List<String> userEmailAddress = getUserGroupMemberEmailAddresses(accountId, userGroups);
-    if (isEmpty(userEmailAddress)) {
-      return;
-    }
-
-    List<String> excludeEmailAddress = getNotificationGroupMemberEmailAddresses(accountId);
-    userEmailAddress.removeAll(excludeEmailAddress);
-    if (isEmpty(userEmailAddress)) {
-      return;
-    }
-
-    EmailData emailData =
-        notificationDispatcherService.obtainEmailData(notificationMessageType.toString(), placeHolderValues);
-    if (isEmpty(emailData.getBody()) || isEmpty(emailData.getSubject())) {
-      return;
-    }
-
-    emailData.setAccountId(accountId);
-    emailData.setCc(Collections.emptyList());
-    emailData.setTo(userEmailAddress);
-    emailNotificationService.sendAsync(emailData);
-  }
-
-  private List<String> getNotificationGroupMemberEmailAddresses(String accountId) {
-    List<NotificationGroup> notificationGroups = notificationSetupService.listDefaultNotificationGroup(accountId);
-    return notificationSetupService.getUserEmailAddressFromNotificationGroups(accountId, notificationGroups);
-  }
-
-  private List<String> getUserGroupMemberEmailAddresses(String accountId, List<String> userGroups) {
-    if (isEmpty(userGroups)) {
-      return asList();
-    }
-
-    List<String> userGroupMembers = userGroupService.fetchUserGroupsMemberIds(accountId, userGroups);
-    if (isEmpty(userGroupMembers)) {
-      return asList();
-    }
-
-    return userService.fetchUserEmailAddressesFromUserIds(userGroupMembers);
   }
 
   private void populateApprovalAlert(ApprovalNeededAlert approvalNeededAlert, ExecutionContext context) {
