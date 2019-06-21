@@ -87,10 +87,12 @@ public class WorkflowFeedbackAnalysisJob implements Job {
         logAnalysisMinute = analysisService.getLastWorkflowAnalysisMinute(
             context.getAppId(), context.getStateExecutionId(), LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
 
-        if (logAnalysisMinute < analysisService.getEndTimeForLogAnalysis(context)) {
+        long lastLogMLTaskMinute = analysisService.getLastWorkflowAnalysisMinute(
+            context.getAppId(), context.getStateExecutionId(), LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+
+        if (!shouldFinishExecution(context, logAnalysisMinute, lastLogMLTaskMinute)) {
           // we still need to create new tasks.
-          long lastLogMLTaskMinute = analysisService.getLastWorkflowAnalysisMinute(
-              context.getAppId(), context.getStateExecutionId(), LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+
           if (lastLogMLTaskMinute == logAnalysisMinute) {
             logger.info("We are upto date Log feedback tasks for {}. Moving on", context.getStateExecutionId());
           } else {
@@ -150,6 +152,22 @@ public class WorkflowFeedbackAnalysisJob implements Job {
       }
 
       return -1L;
+    }
+
+    private boolean shouldFinishExecution(AnalysisContext context, long currentFeedbackMin, long maxLEAnalysisMin) {
+      boolean shouldFinishAnalysis = false;
+      if (currentFeedbackMin >= analysisService.getEndTimeForLogAnalysis(context)) {
+        shouldFinishAnalysis = true;
+      } else {
+        if (analysisService.isProcessingComplete(context.getQuery(), context.getAppId(), context.getStateExecutionId(),
+                context.getStateType(), context.getTimeDuration(), context.getStartDataCollectionMinute(),
+                context.getAccountId())) {
+          if (currentFeedbackMin == maxLEAnalysisMin) {
+            shouldFinishAnalysis = true;
+          }
+        }
+      }
+      return shouldFinishAnalysis;
     }
   }
 }
