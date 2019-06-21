@@ -10,6 +10,7 @@ import com.healthmarketscience.sqlbuilder.FunctionCall;
 import com.healthmarketscience.sqlbuilder.InCondition;
 import com.healthmarketscience.sqlbuilder.OrderObject.Dir;
 import com.healthmarketscience.sqlbuilder.SelectQuery;
+import com.healthmarketscience.sqlbuilder.UnaryCondition;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import io.fabric8.utils.Lists;
 import io.harness.data.structure.EmptyPredicate;
@@ -216,6 +217,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
       for (DeploymentMetaDataFields field : queryData.getFieldNames()) {
         switch (field.getDataType()) {
           case INTEGER:
+          case LONG:
             dataPointBuilder.value(resultSet.getInt(field.getFieldName()));
             break;
           case STRING:
@@ -349,9 +351,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
       fieldNames.add(DeploymentMetaDataFields.COUNT);
     } else if (aggregateFunction.getAggregateValue().equals(QLDeploymentFilterType.Duration.name())) {
       FunctionCall functionCall = getFunctionCall(aggregateFunction);
-      selectQuery.addCustomColumns(
-          Converter.toColumnSqlObject(functionCall.addCustomParams(DeploymentMetaDataFields.DURATION.getFieldName()),
-              DeploymentMetaDataFields.DURATION.getFieldName()));
+      selectQuery.addCustomColumns(Converter.toColumnSqlObject(
+          functionCall.addColumnParams(schema.getDuration()), DeploymentMetaDataFields.DURATION.getFieldName()));
       fieldNames.add(DeploymentMetaDataFields.DURATION);
     }
     selectQuery.addCustomFromTable(schema.getDeploymentTable());
@@ -665,6 +666,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
     selectQuery.addColumns(groupBy);
     selectQuery.addGroupings(groupBy);
     fieldNames.add(DeploymentMetaDataFields.valueOf(groupBy.getName()));
+    selectQuery.addCondition(UnaryCondition.isNotNull(groupBy));
     groupByFields.add(DeploymentMetaDataFields.valueOf(groupBy.getName()));
   }
 
