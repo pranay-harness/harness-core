@@ -217,7 +217,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
     if (!skipAuth) {
       if (accountLevelPermissions) {
-        authorizeAccountPermission(userRequestContext, requiredPermissionAttributes);
+        authHandler.authorizeAccountPermission(userRequestContext, requiredPermissionAttributes);
       } else {
         // Handle delete and update methods
         String entityId = getEntityIdFromRequest(requiredPermissionAttributes, pathParameters, queryParameters);
@@ -233,35 +233,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         }
       }
     }
-  }
-
-  public void authorizeAccountPermission(
-      UserRequestContext userRequestContext, List<PermissionAttribute> requiredPermissionAttributes) {
-    UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
-    if (userPermissionInfo == null) {
-      throw new InvalidRequestException("User not authorized", USER);
-    }
-
-    AccountPermissionSummary accountPermissionSummary = userPermissionInfo.getAccountPermissionSummary();
-    if (accountPermissionSummary == null) {
-      throw new InvalidRequestException("User not authorized", USER);
-    }
-
-    Set<PermissionType> accountPermissions = accountPermissionSummary.getPermissions();
-    if (accountPermissions == null) {
-      throw new InvalidRequestException("User not authorized", USER);
-    }
-
-    if (isAuthorized(requiredPermissionAttributes, accountPermissions)) {
-      return;
-    } else {
-      throw new InvalidRequestException("User not authorized", USER);
-    }
-  }
-
-  private boolean isAuthorized(List<PermissionAttribute> permissionAttributes, Set<PermissionType> accountPermissions) {
-    return permissionAttributes.stream().anyMatch(
-        permissionAttribute -> accountPermissions.contains(permissionAttribute.getPermissionType()));
   }
 
   public boolean isAccountLevelPermissions(List<PermissionAttribute> permissionAttributes) {

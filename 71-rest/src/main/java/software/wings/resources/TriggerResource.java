@@ -1,6 +1,11 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.ACCESS_DENIED;
+import static io.harness.exception.WingsException.USER;
+import static java.util.Arrays.asList;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.google.inject.Inject;
@@ -10,17 +15,32 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
+import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.Pipeline;
+import software.wings.beans.Variable;
 import software.wings.beans.WebHookToken;
+import software.wings.beans.Workflow;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookParameters;
 import software.wings.beans.trigger.WebhookSource;
+import software.wings.expression.ManagerExpressionEvaluator;
+import software.wings.security.PermissionAttribute;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
+import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.TriggerService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.Validator;
 
+import java.util.List;
 import java.util.Map;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -40,13 +60,23 @@ import javax.ws.rs.QueryParam;
 @Path("/triggers")
 @Produces("application/json")
 @Consumes("application/json")
+@Slf4j
 @Scope(APPLICATION)
 public class TriggerResource {
   private TriggerService triggerService;
+  private AuthHandler authHandler;
+  private AuthService authService;
+  private WorkflowService workflowService;
+  private PipelineService pipelineService;
 
   @Inject
-  public TriggerResource(TriggerService triggerService) {
+  public TriggerResource(TriggerService triggerService, AuthHandler authHandler, AuthService authService,
+      WorkflowService workflowService, PipelineService pipelineService) {
     this.triggerService = triggerService;
+    this.authHandler = authHandler;
+    this.authService = authService;
+    this.workflowService = workflowService;
+    this.pipelineService = pipelineService;
   }
 
   /**
@@ -91,10 +121,61 @@ public class TriggerResource {
   public RestResponse<Trigger> save(@QueryParam("appId") String appId, Trigger trigger) {
     Validator.notNullCheck("trigger", trigger);
     trigger.setAppId(appId);
+    authorize(trigger);
     if (trigger.getUuid() != null) {
+      Trigger existingTrigger = triggerService.get(appId, trigger.getUuid());
+      if (existingTrigger == null) {
+        throw new WingsException("Invalid Trigger Id", USER);
+      }
+
+      authorize(existingTrigger);
+      authorize(trigger);
       return new RestResponse(triggerService.update(trigger));
     }
+
     return new RestResponse<>(triggerService.save(trigger));
+  }
+
+  private void authorize(Trigger trigger) {
+    PermissionAttribute permissionAttribute = new PermissionAttribute(PermissionType.DEPLOYMENT, Action.EXECUTE);
+    List<PermissionAttribute> permissionAttributeList = asList(permissionAttribute);
+    WorkflowType workflowType = trigger.getWorkflowType();
+    String appId = trigger.getAppId();
+    authHandler.authorize(permissionAttributeList, asList(appId), trigger.getWorkflowId());
+    List<Variable> variables;
+    if (WorkflowType.PIPELINE.equals(workflowType)) {
+      Pipeline pipeline = pipelineService.readPipeline(appId, trigger.getWorkflowId(), true);
+      variables = pipeline.getPipelineVariables();
+    } else if (WorkflowType.ORCHESTRATION.equals(workflowType)) {
+      authHandler.authorize(permissionAttributeList, asList(appId), trigger.getWorkflowId());
+      Workflow workflow = workflowService.readWorkflow(appId, trigger.getWorkflowId());
+      variables = workflow.getOrchestrationWorkflow().getUserVariables();
+    } else {
+      logger.error("WorkflowType {} not supported", workflowType);
+      throw new WingsException(ACCESS_DENIED, USER);
+    }
+
+    String templatizedEnvVariableName = WorkflowServiceTemplateHelper.getTemplatizedEnvVariableName(variables);
+
+    if (isNotEmpty(templatizedEnvVariableName)) {
+      Map<String, String> workflowVariables = trigger.getWorkflowVariables();
+      if (isEmpty(workflowVariables)) {
+        throw new WingsException(ACCESS_DENIED, USER);
+      }
+
+      String environment = workflowVariables.get(templatizedEnvVariableName);
+      if (isEmpty(environment)) {
+        throw new WingsException(ACCESS_DENIED, USER);
+      }
+
+      if (ManagerExpressionEvaluator.matchesVariablePattern(environment)) {
+        PermissionAttribute acctMgmtPermission =
+            new PermissionAttribute(PermissionType.ACCOUNT_MANAGEMENT, Action.READ);
+        authHandler.authorizeAccountPermission(asList(acctMgmtPermission));
+      } else {
+        authService.checkIfUserAllowedToDeployToEnv(appId, environment);
+      }
+    }
   }
 
   /**
@@ -113,6 +194,7 @@ public class TriggerResource {
       @QueryParam("appId") String appId, @PathParam("triggerId") String triggerId, Trigger trigger) {
     trigger.setUuid(triggerId);
     trigger.setAppId(appId);
+    authorize(trigger);
     return new RestResponse<>(triggerService.update(trigger));
   }
 
@@ -128,7 +210,11 @@ public class TriggerResource {
   @Timed
   @ExceptionMetered
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("triggerId") String triggerId) {
-    triggerService.delete(appId, triggerId);
+    Trigger trigger = triggerService.get(appId, triggerId);
+    if (trigger != null) {
+      authorize(trigger);
+      triggerService.delete(appId, triggerId);
+    }
     return new RestResponse<>();
   }
 
@@ -181,14 +267,5 @@ public class TriggerResource {
   @ExceptionMetered
   public RestResponse<WebhookEventType> listWebhookEventTypes(@QueryParam("appId") String appId) {
     return new RestResponse<>();
-  }
-
-  @GET
-  @Path("execution")
-  @Timed
-  @ExceptionMetered
-  public RestResponse triggerExecution(
-      @QueryParam("appId") String appId, @QueryParam("infraMappingId") String infraMappingId) {
-    return new RestResponse(triggerService.triggerExecutionByServiceInfra(appId, infraMappingId));
   }
 }

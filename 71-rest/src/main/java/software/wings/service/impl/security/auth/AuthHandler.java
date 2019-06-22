@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
 import static java.util.Arrays.asList;
 import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
@@ -37,6 +38,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -1478,5 +1480,45 @@ public class AuthHandler {
       UserGroup nonProdSupportUserGroup = buildNonProdSupportUserGroup(account.getUuid());
       userGroupService.save(nonProdSupportUserGroup);
     }
+  }
+
+  public void authorizeAccountPermission(List<PermissionAttribute> requiredPermissionAttributes) {
+    User user = UserThreadLocal.get();
+    if (user != null) {
+      UserRequestContext userRequestContext = user.getUserRequestContext();
+      // UserRequestContext is null if rbac enabled is false
+      if (userRequestContext != null) {
+        authorizeAccountPermission(userRequestContext, requiredPermissionAttributes);
+      }
+    }
+  }
+
+  public void authorizeAccountPermission(
+      UserRequestContext userRequestContext, List<PermissionAttribute> requiredPermissionAttributes) {
+    UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
+    if (userPermissionInfo == null) {
+      throw new InvalidRequestException("User not authorized", USER);
+    }
+
+    AccountPermissionSummary accountPermissionSummary = userPermissionInfo.getAccountPermissionSummary();
+    if (accountPermissionSummary == null) {
+      throw new InvalidRequestException("User not authorized", USER);
+    }
+
+    Set<PermissionType> accountPermissions = accountPermissionSummary.getPermissions();
+    if (accountPermissions == null) {
+      throw new InvalidRequestException("User not authorized", USER);
+    }
+
+    if (isAuthorized(requiredPermissionAttributes, accountPermissions)) {
+      return;
+    } else {
+      throw new InvalidRequestException("User not authorized", USER);
+    }
+  }
+
+  private boolean isAuthorized(List<PermissionAttribute> permissionAttributes, Set<PermissionType> accountPermissions) {
+    return permissionAttributes.stream().anyMatch(
+        permissionAttribute -> accountPermissions.contains(permissionAttribute.getPermissionType()));
   }
 }

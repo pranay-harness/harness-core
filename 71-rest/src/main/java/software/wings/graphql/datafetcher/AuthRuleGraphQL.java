@@ -177,7 +177,7 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
     UserThreadLocal.set(user);
 
     if (isAccountLevelPermissions) {
-      authRuleFilter.authorizeAccountPermission(userRequestContext, permissionAttributes);
+      authHandler.authorizeAccountPermission(userRequestContext, permissionAttributes);
     } else {
       String parameterName = getParameterName(permissionAttribute);
       String entityId = (String) dataFetcher.getArgumentValue(environment, parameterName);
