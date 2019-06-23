@@ -8,5 +8,6 @@ public class GraphQLConstants {
 
   // Error messages
   public static final String FEATURE_NOT_ENABLED = FeatureName.GRAPHQL + " feature not enabled";
+  public static final String RATE_LIMIT_REACHED = FeatureName.GRAPHQL + " API rate limit reached for account = %s";
   public static final String INVALID_API_KEY = "Invalid Api Key";
 }
