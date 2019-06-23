@@ -1988,7 +1988,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                   .timeout(TimeUnit.MINUTES.toMillis(30))
                   .build())
         .envId(envId)
-
+        .correlationId(waitId)
         .build();
   }
 
