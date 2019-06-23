@@ -311,6 +311,10 @@
             <artifactId>java-object-diff</artifactId>
         </dependency>
         <dependency>
+            <groupId>es.moki.ratelimitj</groupId>
+            <artifactId>ratelimitj-inmemory</artifactId>
+        </dependency>
+        <dependency>
             <groupId>info.jerrinot</groupId>
             <artifactId>subzero-core</artifactId>
         </dependency>

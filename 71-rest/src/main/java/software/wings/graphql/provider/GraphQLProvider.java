@@ -20,6 +20,7 @@ import software.wings.graphql.scalar.GraphQLDateTimeScalar;
 import software.wings.graphql.scalar.LongScalar;
 import software.wings.graphql.scalar.NumberScalar;
 import software.wings.graphql.schema.TypeResolverManager;
+import software.wings.service.intfc.FeatureFlagService;
 
 import java.io.IOException;
 import java.net.URL;
@@ -28,12 +29,14 @@ import java.util.regex.Pattern;
 
 @Singleton
 public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
-  private static final String GRAPHQL_SCHEMA_DIRECTORY_PATH = "graphql/";
+  private static final String GRAPHQL_SCHEMA_PROD_DIRECTORY_PATH = "graphql/prod/";
+  private static final String GRAPHQL_SCHEMA_DEV_DIRECTORY_PATH = "graphql/dev/";
   private static final Pattern GRAPHQL_FILE_PATTERN = Pattern.compile(".*\\.graphql$");
 
   private GraphQL graphQL;
   @Inject private TypeResolverManager typeResolverManager;
   @Inject private DataFetcherDirective dataFetcherDirective;
+  @Inject FeatureFlagService featureFlagService;
 
   @Inject
   public void init() {
@@ -44,9 +47,11 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
     SchemaParser schemaParser = new SchemaParser();
     TypeDefinitionRegistry typeDefinitionRegistry = new TypeDefinitionRegistry();
 
-    Reflections reflections = new Reflections(GRAPHQL_SCHEMA_DIRECTORY_PATH, new ResourcesScanner());
-    reflections.getResources(GRAPHQL_FILE_PATTERN)
-        .forEach(resource -> typeDefinitionRegistry.merge(schemaParser.parse(loadSchemaFile(resource))));
+    loadSchemaForEnv(GRAPHQL_SCHEMA_PROD_DIRECTORY_PATH, typeDefinitionRegistry, schemaParser);
+
+    // if (featureFlagService.isEnabled(FeatureName.GRAPHQL_DEV, null)) {
+    loadSchemaForEnv(GRAPHQL_SCHEMA_DEV_DIRECTORY_PATH, typeDefinitionRegistry, schemaParser);
+    //}
 
     RuntimeWiring runtimeWiring = buildRuntimeWiring();
 
@@ -63,6 +68,13 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
                   .instrumentation(dispatcherInstrumentation)
                   .instrumentation(new QueryDepthInstrumentation())
                   .build();
+  }
+
+  private void loadSchemaForEnv(
+      String schemaPathForEnv, TypeDefinitionRegistry typeDefinitionRegistry, SchemaParser schemaParser) {
+    Reflections reflections = new Reflections(schemaPathForEnv, new ResourcesScanner());
+    reflections.getResources(GRAPHQL_FILE_PATTERN)
+        .forEach(resource -> typeDefinitionRegistry.merge(schemaParser.parse(loadSchemaFile(resource))));
   }
 
   private RuntimeWiring buildRuntimeWiring() {

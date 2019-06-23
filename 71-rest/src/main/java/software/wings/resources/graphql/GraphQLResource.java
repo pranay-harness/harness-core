@@ -6,6 +6,9 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import es.moki.ratelimitj.core.limiter.request.RequestLimitRule;
+import es.moki.ratelimitj.core.limiter.request.RequestRateLimiter;
+import es.moki.ratelimitj.inmemory.request.InMemorySlidingWindowRequestRateLimiter;
 import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.ExecutionResultImpl;
@@ -28,6 +31,8 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.FeatureFlagService;
 
+import java.time.Duration;
+import java.util.Collections;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -45,12 +50,14 @@ import javax.ws.rs.core.MediaType;
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class GraphQLResource {
+  private static final long RATE_LIMIT_QUERY_PER_MINUTE = 100;
+  private static final long RATE_LIMIT_DURATION_IN_MINUTE = 1;
+  RequestRateLimiter requestRateLimiter;
   GraphQL graphQL;
   FeatureFlagService featureFlagService;
   ApiKeyService apiKeyService;
   AuthHandler authHandler;
   AccountService accountService;
-
   DataLoaderRegistryHelper dataLoaderRegistryHelper;
 
   @Inject
@@ -64,6 +71,8 @@ public class GraphQLResource {
     this.authHandler = authHandler;
     this.dataLoaderRegistryHelper = dataLoaderRegistryHelper;
     this.accountService = accountService;
+    requestRateLimiter = new InMemorySlidingWindowRequestRateLimiter(Collections.singleton(
+        RequestLimitRule.of(Duration.ofMinutes(RATE_LIMIT_DURATION_IN_MINUTE), RATE_LIMIT_QUERY_PER_MINUTE)));
   }
 
   @POST
@@ -93,6 +102,12 @@ public class GraphQLResource {
     if (apiKey == null || (accountId = apiKeyService.getAccountIdFromApiKey(apiKey)) == null) {
       logger.info(GraphQLConstants.INVALID_API_KEY);
       return getExecutionResultWithError(GraphQLConstants.INVALID_API_KEY).toSpecification();
+    }
+
+    boolean isOverRateLimit = requestRateLimiter.overLimitWhenIncremented(accountId);
+    if (isOverRateLimit) {
+      String rateLiteErrorMsg = String.format(GraphQLConstants.RATE_LIMIT_REACHED, accountId);
+      return getExecutionResultWithError(rateLiteErrorMsg).toSpecification();
     }
 
     if (!featureFlagService.isEnabled(FeatureName.GRAPHQL, null) || accountService.isCommunityAccount(accountId)) {
