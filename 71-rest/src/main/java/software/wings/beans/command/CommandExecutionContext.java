@@ -1,12 +1,21 @@
 package software.wings.beans.command;
 
+import static io.harness.govern.Switch.unhandled;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.command.CommandExecutionData;
+import io.harness.delegate.task.mixin.AwsRegionCapabilityGenerator;
+import io.harness.delegate.task.mixin.IgnoreValidationCapabilityGenerator;
+import io.harness.delegate.task.mixin.SSHConnectionExecutionCapabilityGenerator;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import lombok.Data;
+import software.wings.api.DeploymentType;
 import software.wings.beans.AppContainer;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.SettingAttribute;
@@ -16,8 +25,10 @@ import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.infrastructure.Host;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
+import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +39,7 @@ import java.util.Map.Entry;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
-public class CommandExecutionContext {
+public class CommandExecutionContext implements ExecutionCapabilityDemander {
   private String accountId;
   private String envId;
   private Host host;
@@ -171,6 +182,42 @@ public class CommandExecutionContext {
         .workingDirectory(commandPath)
         .environment(envVariables == null ? Collections.emptyMap() : envVariables)
         .build();
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    String region = null;
+    DeploymentType dType = DeploymentType.valueOf(getDeploymentType());
+    switch (dType) {
+      case KUBERNETES:
+      case WINRM:
+        return CapabilityHelper.generateDelegateCapabilities(cloudProviderSetting.getValue(), cloudProviderCredentials);
+      case SSH:
+        if (isExecuteOnDelegate()) {
+          return Arrays.asList(IgnoreValidationCapabilityGenerator.buildIgnoreValidationCapability());
+        } else {
+          String hostName = getHost().getPublicDns();
+          return Arrays.asList(
+              SSHConnectionExecutionCapabilityGenerator.buildSSHConnectionExecutionCapability(hostName));
+        }
+      case ECS:
+        if (containerSetupParams != null) {
+          region = ((EcsSetupParams) containerSetupParams).getRegion();
+        } else if (containerResizeParams != null) {
+          region = ((EcsResizeParams) containerResizeParams).getRegion();
+        }
+        return Arrays.asList(AwsRegionCapabilityGenerator.buildAwsRegionCapability(region));
+      case AWS_CODEDEPLOY:
+        region = codeDeployParams != null ? codeDeployParams.getRegion() : null;
+        return Arrays.asList(AwsRegionCapabilityGenerator.buildAwsRegionCapability(region));
+      case AMI:
+      case AWS_LAMBDA:
+        return Arrays.asList(IgnoreValidationCapabilityGenerator.buildIgnoreValidationCapability());
+      default:
+        unhandled(deploymentType);
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+            .addParam("args", "deploymentType is not handled: " + dType.name());
+    }
   }
 
   public static final class Builder {

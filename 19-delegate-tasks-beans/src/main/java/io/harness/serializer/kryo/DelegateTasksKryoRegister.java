@@ -7,11 +7,12 @@ import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.executioncapability.AwsRegionCapability;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
-import io.harness.delegate.beans.executioncapability.SSHConnectionExecutionCapability;
-import io.harness.delegate.beans.executioncapability.WinRMExecutionCapability;
+import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
+import io.harness.delegate.beans.executioncapability.TcpBasedExecutionCapability;
 import io.harness.delegate.command.CommandExecutionData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -39,8 +40,9 @@ public class DelegateTasksKryoRegister implements KryoRegistrar {
     kryo.register(CapabilityType.class, 19004);
     kryo.register(DelegateMetaInfo.class, 5372);
     kryo.register(DelegateTaskNotifyResponseData.class, 5373);
-    kryo.register(SSHConnectionExecutionCapability.class, 19005);
-    kryo.register(WinRMExecutionCapability.class, 19006);
     kryo.register(ProcessExecutorCapability.class, 19007);
+    kryo.register(AwsRegionCapability.class, 19008);
+    kryo.register(SocketConnectivityExecutionCapability.class, 19009);
+    kryo.register(TcpBasedExecutionCapability.class, 19010);
   }
 }

@@ -30,7 +30,7 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.ArtifactServerYaml;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @JsonTypeName("GIT")
@@ -64,9 +64,11 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     if (!keyAuth) {
-      return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(repoUrl));
-    } else if (keyAuth && isNotBlank(sshSettingId)) {
-      return Arrays.asList(SSHConnectionExecutionCapabilityGenerator.buildSSHConnectionExecutionCapability(repoUrl));
+      return Collections.singletonList(
+          HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(repoUrl));
+    } else if (isNotBlank(sshSettingId)) {
+      return Collections.singletonList(
+          SSHConnectionExecutionCapabilityGenerator.buildSSHConnectionExecutionCapability(repoUrl));
     } else {
       logger.error("This Should Not Happen");
       return null;

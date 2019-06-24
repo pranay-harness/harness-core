@@ -12,6 +12,7 @@ import io.harness.beans.DelegateTask;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.ExecutionCredential;
+import software.wings.beans.HostValidationTaskParameters;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.infrastructure.Host;
@@ -44,9 +45,9 @@ public class HostValidationValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<DelegateConnectionResult> validate() {
-    Object[] parameters = getParameters();
-    return validateHosts((List<String>) parameters[2], (SettingAttribute) parameters[3],
-        (List<EncryptedDataDetail>) parameters[4], (ExecutionCredential) parameters[5]);
+    HostValidationTaskParameters parameters = (HostValidationTaskParameters) getParameters()[0];
+    return validateHosts(parameters.getHostNames(), parameters.getConnectionSetting(),
+        parameters.getEncryptionDetails(), parameters.getExecutionCredential());
   }
 
   private List<DelegateConnectionResult> validateHosts(List<String> hostNames, SettingAttribute connectionSetting,

@@ -20,7 +20,7 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.ArtifactServerYaml;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @JsonTypeName("SMB")
@@ -64,7 +64,8 @@ public class SmbConfig extends SettingValue implements EncryptableSetting {
    */
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Arrays.asList(SSHConnectionExecutionCapabilityGenerator.buildSSHConnectionExecutionCapability(smbUrl));
+    return Collections.singletonList(
+        SSHConnectionExecutionCapabilityGenerator.buildSSHConnectionExecutionCapability(smbUrl));
   }
 
   @Data
