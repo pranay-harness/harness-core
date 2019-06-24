@@ -139,7 +139,12 @@ public class ServiceVariable extends Base implements EncryptableSetting {
     /**
      * Encrypted text type.
      */
-    ENCRYPTED_TEXT;
+    ENCRYPTED_TEXT,
+
+    /**
+     * Artifact type.
+     */
+    ARTIFACT;
 
     private boolean settingAttribute;
 

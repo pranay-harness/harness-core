@@ -10,7 +10,6 @@ import static io.harness.exception.WingsException.USER;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.delegation.ShellScriptParameters.CommandUnit;
-import static software.wings.beans.template.TemplateHelper.convertToVariableMap;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
@@ -54,6 +53,7 @@ import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.beans.delegation.ShellScriptParameters.ShellScriptParametersBuilder;
+import software.wings.beans.template.TemplateUtils;
 import software.wings.common.Constants;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -93,6 +93,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
   @Inject @Transient private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
   @Inject @Transient private SweepingOutputService sweepingOutputService;
+  @Inject @Transient private TemplateUtils templateUtils;
 
   @Getter @Setter @Attributes(title = "Execute on Delegate") private boolean executeOnDelegate;
 
@@ -228,9 +229,11 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   }
 
   private ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
+    ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     ScriptStateExecutionData scriptStateExecutionData =
         ScriptStateExecutionData.builder().activityId(activityId).build();
-    scriptStateExecutionData.setTemplateVariable(convertToVariableMap(getTemplateVariables()));
+    scriptStateExecutionData.setTemplateVariable(
+        templateUtils.processTemplateVariables(context, getTemplateVariables()));
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
 
@@ -242,8 +245,6 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
     String appId = workflowStandardParams == null ? null : workflowStandardParams.getAppId();
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infrastructureMappingId);
     String serviceTemplateId = infrastructureMapping == null ? null : infrastructureMapping.getServiceTemplateId();
-
-    ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
 
     String username = null;
     String keyPath = null;

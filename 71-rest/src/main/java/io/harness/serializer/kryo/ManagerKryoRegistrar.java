@@ -187,6 +187,7 @@ import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.CleanupPowerShellCommandUnit;
 import software.wings.beans.command.CleanupSshCommandUnit;
@@ -1281,5 +1282,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(JiraIssueType.class, 7199);
     kryo.register(JiraField.class, 7200);
     kryo.register(JiraCreateMetaResponse.class, 7201);
+    kryo.register(ArtifactStreamSummary.class, 7202);
   }
 }

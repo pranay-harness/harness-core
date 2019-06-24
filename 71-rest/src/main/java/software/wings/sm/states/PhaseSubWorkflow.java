@@ -379,6 +379,8 @@ public class PhaseSubWorkflow extends SubWorkflowState {
             Artifact artifact = getArtifactByUuid(lastSuccessfulWorkflowExecution.getArtifacts(), artifactId);
             saveArtifactToSweepingOutput(
                 stateExecutionInstance.getAppId(), phaseExecutionId, artifactVariable, artifact);
+            // todo: save workflow level artifacts overridden by this service at phase level to access artifact like
+            // artifact1.buildNo
           } else {
             throw new WingsException(format(
                 "Artifact Variable %s not defined in service %s", artifactVariable.getName(), service.getName()));
