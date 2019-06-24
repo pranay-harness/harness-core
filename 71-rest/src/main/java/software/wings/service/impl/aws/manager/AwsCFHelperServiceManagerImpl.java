@@ -16,6 +16,9 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.waiter.ErrorNotifyResponseData;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.CloudFormationSourceType;
+import software.wings.beans.GitConfig;
+import software.wings.beans.GitFileConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -28,6 +31,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.aws.manager.AwsCFHelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.utils.GitUtils;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -38,6 +42,7 @@ public class AwsCFHelperServiceManagerImpl implements AwsCFHelperServiceManager 
   @Inject private DelegateService delegateService;
   @Inject private SettingsService settingService;
   @Inject private SecretManager secretManager;
+  @Inject private GitUtils gitUtils;
 
   private AwsConfig getAwsConfig(String awsConfigId) {
     SettingAttribute attribute = settingService.get(awsConfigId);
@@ -48,11 +53,16 @@ public class AwsCFHelperServiceManagerImpl implements AwsCFHelperServiceManager 
   }
 
   @Override
-  public List<AwsCFTemplateParamsData> getParamsData(
-      String type, String data, String awsConfigId, String region, String appId) {
+  public List<AwsCFTemplateParamsData> getParamsData(String type, String data, String awsConfigId, String region,
+      String appId, String sourceRepoSettingId, String sourceRepoBranch, String templatePath) {
     AwsConfig awsConfig = getAwsConfig(awsConfigId);
     List<EncryptedDataDetail> details =
         secretManager.getEncryptionDetails(awsConfig, isNotEmpty(appId) ? appId : GLOBAL_APP_ID, null);
+    GitConfig gitConfig = null;
+    if (type.equalsIgnoreCase(CloudFormationSourceType.GIT.name())) {
+      gitConfig = gitUtils.getGitConfig(sourceRepoSettingId);
+      gitConfig.setBranch(sourceRepoBranch);
+    }
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsCFGetTemplateParamsRequest.builder()
             .awsConfig(awsConfig)
@@ -60,6 +70,14 @@ public class AwsCFHelperServiceManagerImpl implements AwsCFHelperServiceManager 
             .region(region)
             .data(data)
             .type(type)
+            .gitConfig(gitConfig)
+            .gitFileConfig(GitFileConfig.builder()
+                               .connectorId(sourceRepoSettingId)
+                               .branch(sourceRepoBranch)
+                               .filePath(templatePath)
+                               .build())
+            .sourceRepoEncryptionDetails(
+                gitConfig != null ? secretManager.getEncryptionDetails(gitConfig, appId, null) : null)
             .build(),
         appId);
     return ((AwsCFGetTemplateParamsResponse) response).getParameters();

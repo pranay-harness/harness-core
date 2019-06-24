@@ -5,6 +5,6 @@ import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
 import java.util.List;
 
 public interface AwsCFHelperServiceManager {
-  List<AwsCFTemplateParamsData> getParamsData(
-      String type, String data, String awsConfigId, String region, String appId);
+  List<AwsCFTemplateParamsData> getParamsData(String type, String data, String awsConfigId, String region, String appId,
+      String scmSettingId, String sourceRepoBranch, String templatePath);
 }

@@ -47,6 +47,7 @@ import software.wings.api.DeploymentType;
 import software.wings.api.TerraformExecutionData;
 import software.wings.beans.BlueprintProperty;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
+import software.wings.beans.CloudFormationSourceType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
@@ -541,9 +542,17 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   }
 
   @Override
-  public List<AwsCFTemplateParamsData> getCFTemplateParamKeys(
-      String type, String region, String awsConfigId, String data, String appId) {
-    return awsCFHelperServiceManager.getParamsData(type, data, awsConfigId, region, appId);
+  public List<AwsCFTemplateParamsData> getCFTemplateParamKeys(String type, String region, String awsConfigId,
+      String data, String appId, String sourceRepoSettingId, String sourceRepoBranch, String cfDirectory) {
+    if (type.equalsIgnoreCase(CloudFormationSourceType.GIT.name())) {
+      if (isEmpty(sourceRepoSettingId) || isEmpty(sourceRepoBranch)) {
+        throw new InvalidRequestException("Empty Fields Connector Id or Source Branch");
+      }
+    } else if (isEmpty(data)) {
+      throw new InvalidRequestException("Empty Data Field, Template body or Template url");
+    }
+    return awsCFHelperServiceManager.getParamsData(
+        type, data, awsConfigId, region, appId, sourceRepoSettingId, sourceRepoBranch, cfDirectory);
   }
 
   @Override

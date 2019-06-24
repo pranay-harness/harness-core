@@ -43,8 +43,8 @@ public class AwsCFHelperServiceDelegateImplTest extends WingsBaseTest {
                  new ParameterDeclaration().withParameterKey("k2").withParameterType("t2").withDefaultValue("d2")))
         .when(mockClient)
         .getTemplateSummary(any());
-    List<AwsCFTemplateParamsData> paramsData =
-        awsCFHelperServiceDelegate.getParamsData(AwsConfig.builder().build(), emptyList(), "us-east-1", "url", "body");
+    List<AwsCFTemplateParamsData> paramsData = awsCFHelperServiceDelegate.getParamsData(
+        AwsConfig.builder().build(), emptyList(), "us-east-1", "url", "body", null, null, null);
     assertThat(paramsData).isNotNull();
     assertThat(paramsData.size()).isEqualTo(2);
     verifyParamsData(paramsData.get(0), "k1", "t1", "d1");

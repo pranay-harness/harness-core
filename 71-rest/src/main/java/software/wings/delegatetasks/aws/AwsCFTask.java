@@ -4,6 +4,7 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 
 import com.google.inject.Inject;
 
+import groovy.util.logging.Slf4j;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@Slf4j
 public class AwsCFTask extends AbstractDelegateRunnableTask {
   @Inject private AwsCFHelperServiceDelegate awsCFHelperServiceDelegate;
 
@@ -46,7 +48,8 @@ public class AwsCFTask extends AbstractDelegateRunnableTask {
           AwsCFGetTemplateParamsRequest paramsRequest = (AwsCFGetTemplateParamsRequest) request;
           List<AwsCFTemplateParamsData> paramsData = awsCFHelperServiceDelegate.getParamsData(
               paramsRequest.getAwsConfig(), paramsRequest.getEncryptionDetails(), paramsRequest.getRegion(),
-              paramsRequest.getData(), paramsRequest.getType());
+              paramsRequest.getData(), paramsRequest.getType(), paramsRequest.getGitFileConfig(),
+              paramsRequest.getGitConfig(), paramsRequest.getSourceRepoEncryptionDetails());
           return AwsCFGetTemplateParamsResponse.builder().executionStatus(SUCCESS).parameters(paramsData).build();
         }
         default: {

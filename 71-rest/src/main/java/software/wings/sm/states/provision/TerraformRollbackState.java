@@ -6,6 +6,8 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STATE;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
+import com.google.inject.Inject;
+
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.ResponseData;
 import lombok.Getter;
@@ -30,6 +32,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
+import software.wings.utils.GitUtils;
 
 import java.util.Iterator;
 import java.util.List;
@@ -41,6 +44,7 @@ import java.util.Map.Entry;
 @Slf4j
 public class TerraformRollbackState extends TerraformProvisionState {
   private TerraformCommand rollbackCommand;
+  @Inject private GitUtils gitUtils;
 
   /**
    * Instantiates a new state.
@@ -102,7 +106,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
     }
 
     final String fileId = fileService.getLatestFileId(entityId, TERRAFORM_STATE);
-    final GitConfig gitConfig = getGitConfig(configParameter.getSourceRepoSettingId());
+    final GitConfig gitConfig = gitUtils.getGitConfig(configParameter.getSourceRepoSettingId());
     if (StringUtils.isNotEmpty(configParameter.getSourceRepoReference())) {
       gitConfig.setReference(configParameter.getSourceRepoReference());
       String branch = context.renderExpression(terraformProvisioner.getSourceRepoBranch());

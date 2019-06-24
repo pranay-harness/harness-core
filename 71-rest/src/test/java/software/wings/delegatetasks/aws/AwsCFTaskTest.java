@@ -4,6 +4,7 @@ import static io.harness.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 
@@ -39,6 +40,7 @@ public class AwsCFTaskTest extends WingsBaseTest {
   public void testRun() {
     AwsCFRequest request = AwsCFGetTemplateParamsRequest.builder().build();
     task.run(new Object[] {request});
-    verify(mockAwsCFHelperServiceDelegate).getParamsData(any(), anyList(), anyString(), anyString(), anyString());
+    verify(mockAwsCFHelperServiceDelegate)
+        .getParamsData(any(), anyList(), anyString(), anyString(), anyString(), anyObject(), anyObject(), anyList());
   }
 }
