@@ -67,7 +67,7 @@ public class AuthenticationFilterTest {
   @Before
   public void setUp() {
     authenticationFilter = new AuthenticationFilter(userService, authService, auditService, auditHelper, apiKeyService,
-        thirdPartyApiKeyService, rateLimitingService, secretManager, configuration);
+        thirdPartyApiKeyService, rateLimitingService, secretManager);
     authenticationFilter = spy(authenticationFilter);
     when(context.getSecurityContext()).thenReturn(securityContext);
     when(securityContext.isSecure()).thenReturn(true);
@@ -79,7 +79,6 @@ public class AuthenticationFilterTest {
   @Category(UnitTests.class)
   public void testAuthenticationFilterTestOptions() throws IOException {
     when(context.getMethod()).thenReturn(HttpMethod.OPTIONS);
-    doReturn(false).when(authenticationFilter).publicAPI();
     authenticationFilter.filter(context);
     assertThat(context.getSecurityContext().isSecure()).isTrue();
 
