@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.ServiceVariable.Type.TEXT;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
@@ -36,12 +37,14 @@ import software.wings.api.ServiceArtifactElement;
 import software.wings.beans.Application;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.DeploymentExecutionContext;
+import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.FeatureName;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
+import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
 import software.wings.common.VariableProcessor;
@@ -275,19 +278,27 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     Map<String, Artifact> map = new HashMap<>();
     WorkflowStandardParams workflowStandardParams = getContextElement(ContextElementType.STANDARD);
     List<ArtifactVariable> artifactVariables = workflowStandardParams.getWorkflowElement().getArtifactVariables();
+    Map<String, Object> workflowVariables = getWorkflowVariables();
+    Artifact artifact = null;
     if (isNotEmpty(artifactVariables)) {
       for (ArtifactVariable artifactVariable : artifactVariables) {
-        SweepingOutput sweepingOutputInput =
-            this.prepareSweepingOutputBuilder(Scope.PHASE).name(artifactVariable.getName()).build();
-        SweepingOutput result = sweepingOutputService.find(sweepingOutputInput.getAppId(),
-            sweepingOutputInput.getName(), sweepingOutputInput.getPipelineExecutionId(),
-            sweepingOutputInput.getWorkflowExecutionId(), sweepingOutputInput.getPhaseExecutionId(), null);
+        if (SERVICE.equals(artifactVariable.getEntityType())) {
+          SweepingOutput sweepingOutputInput =
+              this.prepareSweepingOutputBuilder(Scope.PHASE).name(artifactVariable.getName()).build();
+          SweepingOutput result = sweepingOutputService.find(sweepingOutputInput.getAppId(),
+              sweepingOutputInput.getName(), sweepingOutputInput.getPipelineExecutionId(),
+              sweepingOutputInput.getWorkflowExecutionId(), sweepingOutputInput.getPhaseExecutionId(), null);
 
-        if (result == null) {
-          return null;
+          if (result == null) {
+            return null;
+          }
+          artifact = (Artifact) KryoUtils.asInflatedObject(result.getOutput());
+
+        } else if (EntityType.WORKFLOW.equals(artifactVariable.getEntityType())) {
+          if (isNotEmpty(workflowVariables)) {
+            artifact = (Artifact) workflowVariables.get(artifactVariable.getName());
+          }
         }
-        Artifact artifact = (Artifact) KryoUtils.asInflatedObject(result.getOutput());
-
         // todo: throw error if null?
         if (artifact != null) {
           map.put(artifactVariable.getName(), artifact);
@@ -295,6 +306,18 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       }
     }
     return map;
+  }
+
+  private Map<String, Object> getWorkflowVariables() {
+    SweepingOutput sweepingOutputInput = this.prepareSweepingOutputBuilder(Scope.WORKFLOW).name("artifacts").build();
+    SweepingOutput result = sweepingOutputService.find(sweepingOutputInput.getAppId(), sweepingOutputInput.getName(),
+        sweepingOutputInput.getPipelineExecutionId(), sweepingOutputInput.getWorkflowExecutionId(),
+        sweepingOutputInput.getPhaseExecutionId(), null);
+
+    if (result == null) {
+      return null;
+    }
+    return (Map<String, Object>) KryoUtils.asInflatedObject(result.getOutput());
   }
 
   @Override
@@ -797,11 +820,13 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     Map<String, Object> variables = new HashMap<>();
     if (isNotEmpty(serviceVariables)) {
       serviceVariables.forEach(serviceVariable -> {
-        String name = renderExpression(serviceVariable.getName());
-        if (serviceVariable.isDecrypted()) {
-          variables.put(name, SecretString.builder().value(new String(serviceVariable.getValue())).build());
-        } else {
-          variables.put(name, renderExpression(new String(serviceVariable.getValue())));
+        if (!Type.ARTIFACT.equals(serviceVariable.getType())) {
+          String name = renderExpression(serviceVariable.getName());
+          if (serviceVariable.isDecrypted()) {
+            variables.put(name, SecretString.builder().value(new String(serviceVariable.getValue())).build());
+          } else {
+            variables.put(name, renderExpression(new String(serviceVariable.getValue())));
+          }
         }
       });
     }

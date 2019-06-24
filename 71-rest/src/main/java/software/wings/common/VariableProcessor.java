@@ -4,6 +4,7 @@
 
 package software.wings.common;
 
+import static software.wings.beans.ServiceVariable.Type.ARTIFACT;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
 
 import com.google.inject.Inject;
@@ -22,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * The type Variable processor.
@@ -54,8 +56,10 @@ public class VariableProcessor {
       InstanceElement instance = (InstanceElement) instanceElement.get();
       List<ServiceVariable> serviceSettingMap = serviceTemplateService.computeServiceVariables(standardParam.getAppId(),
           standardParam.getEnvId(), instance.getServiceTemplateElement().getUuid(), workflowExecutionId, OBTAIN_VALUE);
-      serviceSettingMap.forEach(
-          serviceVariable -> variables.put(serviceVariable.getName(), new String(serviceVariable.getValue())));
+      variables = serviceSettingMap.stream()
+                      .filter(serviceVariable -> !ARTIFACT.equals(serviceVariable.getType()))
+                      .collect(Collectors.toMap(ServiceVariable::getName,
+                          serviceVariable -> new String(serviceVariable.getValue()), (a, b) -> b));
     }
 
     return variables;

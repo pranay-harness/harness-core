@@ -992,9 +992,8 @@ public class CommandState extends State {
       if (commandUnit instanceof ScpCommandUnit) {
         ScpCommandUnit scpCommandUnit = (ScpCommandUnit) commandUnit;
         if (isNotEmpty(scpCommandUnit.getDestinationDirectoryPath())) {
-          StateExecutionContextBuilder stateExecutionContextBuilder = StateExecutionContext.builder()
-                                                                          .stateExecutionData(commandStateExecutionData)
-                                                                          .multiArtifacts(multiArtifacts);
+          StateExecutionContextBuilder stateExecutionContextBuilder =
+              StateExecutionContext.builder().stateExecutionData(commandStateExecutionData);
           if (artifactFileName != null) {
             stateExecutionContextBuilder.artifactFileName(artifactFileName);
           }
@@ -1008,9 +1007,8 @@ public class CommandState extends State {
       }
       ExecCommandUnit execCommandUnit = (ExecCommandUnit) commandUnit;
       if (isNotEmpty(execCommandUnit.getCommandPath())) {
-        StateExecutionContextBuilder stateExecutionContextBuilder = StateExecutionContext.builder()
-                                                                        .stateExecutionData(commandStateExecutionData)
-                                                                        .multiArtifacts(multiArtifacts);
+        StateExecutionContextBuilder stateExecutionContextBuilder =
+            StateExecutionContext.builder().stateExecutionData(commandStateExecutionData);
         if (artifactFileName != null) {
           stateExecutionContextBuilder.artifactFileName(artifactFileName);
         }
@@ -1018,9 +1016,8 @@ public class CommandState extends State {
             context.renderExpression(execCommandUnit.getCommandPath(), stateExecutionContextBuilder.build()));
       }
       if (isNotEmpty(execCommandUnit.getCommandString())) {
-        StateExecutionContextBuilder stateExecutionContextBuilder = StateExecutionContext.builder()
-                                                                        .stateExecutionData(commandStateExecutionData)
-                                                                        .multiArtifacts(multiArtifacts);
+        StateExecutionContextBuilder stateExecutionContextBuilder =
+            StateExecutionContext.builder().stateExecutionData(commandStateExecutionData);
         execCommandUnit.setCommandString(
             context.renderExpression(execCommandUnit.getCommandString(), stateExecutionContextBuilder.build()));
       }
@@ -1036,17 +1033,11 @@ public class CommandState extends State {
     for (TailFilePatternEntry filePatternEntry : filePatternEntries) {
       if (isNotEmpty(filePatternEntry.getFilePath())) {
         filePatternEntry.setFilePath(context.renderExpression(filePatternEntry.getFilePath(),
-            StateExecutionContext.builder()
-                .stateExecutionData(commandStateExecutionData)
-                .multiArtifacts(multiArtifacts)
-                .build()));
+            StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build()));
       }
       if (isNotEmpty(filePatternEntry.getPattern())) {
         filePatternEntry.setPattern(context.renderExpression(filePatternEntry.getPattern(),
-            StateExecutionContext.builder()
-                .stateExecutionData(commandStateExecutionData)
-                .multiArtifacts(multiArtifacts)
-                .build()));
+            StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build()));
       }
     }
     execCommandUnit.setTailPatterns(filePatternEntries);
