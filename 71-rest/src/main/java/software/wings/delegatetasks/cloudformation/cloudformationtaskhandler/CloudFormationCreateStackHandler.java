@@ -6,6 +6,7 @@ import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toMap;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.cloudformation.model.CreateStackRequest;
@@ -19,6 +20,7 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.exception.ExceptionUtils;
 import lombok.NoArgsConstructor;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.GitOperationContext;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest;
@@ -30,6 +32,7 @@ import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateSt
 import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo;
 import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo.ExistingStackInfoBuilder;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.utils.GitUtilsDelegate;
 
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +41,8 @@ import java.util.stream.Collectors;
 @Singleton
 @NoArgsConstructor
 public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskHandler {
+  @Inject private GitUtilsDelegate gitUtilsDelegate;
+
   protected CloudFormationCommandExecutionResponse executeInternal(CloudFormationCommandRequest request,
       List<EncryptedDataDetail> details, ExecutionLogCallback executionLogCallback) {
     AwsConfig awsConfig = request.getAwsConfig();
@@ -73,6 +78,19 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
                 .collect(Collectors.toList()));
       }
       switch (updateRequest.getCreateType()) {
+        case CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_GIT: {
+          executionLogCallback.saveExecutionLog(format("Fetching template from git url: %s, "
+                  + "branch: %s, templatePath: %s, commitId: %s [ ignored branch if commitId is "
+                  + "set ]",
+              updateRequest.getGitConfig().getRepoUrl(), updateRequest.getGitConfig().getBranch(),
+              updateRequest.getGitFileConfig().getFilePath(), updateRequest.getGitFileConfig().getCommitId()));
+          setRequestDataFromGit(updateRequest);
+          updateStackRequest.withTemplateBody(updateRequest.getData());
+          setCapabilitiesOnRequest(updateRequest.getAwsConfig(), updateRequest.getRegion(), updateRequest.getData(),
+              "body", updateStackRequest);
+          updateStackAndWaitWithEvents(updateRequest, updateStackRequest, builder, stack, executionLogCallback);
+          break;
+        }
         case CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY: {
           executionLogCallback.saveExecutionLog("# Using Template Body to Update Stack");
           updateStackRequest.withTemplateBody(updateRequest.getData());
@@ -105,6 +123,15 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
     return builder.build();
   }
 
+  private void setRequestDataFromGit(CloudFormationCreateStackRequest request) {
+    GitOperationContext gitOperationContext = gitUtilsDelegate.cloneRepo(
+        request.getGitConfig(), request.getGitFileConfig(), request.getSourceRepoEncryptionDetails());
+    String templatePathRepo =
+        gitUtilsDelegate.resolveScriptDirectory(gitOperationContext, request.getGitFileConfig().getFilePath());
+    request.setData(gitUtilsDelegate.getRequestDataFromFile(templatePathRepo));
+    request.setCreateType(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY);
+  }
+
   private CloudFormationCommandExecutionResponse createStack(
       CloudFormationCreateStackRequest createRequest, ExecutionLogCallback executionLogCallback) {
     CloudFormationCommandExecutionResponseBuilder builder = CloudFormationCommandExecutionResponse.builder();
@@ -126,6 +153,19 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
                 .collect(Collectors.toList()));
       }
       switch (createRequest.getCreateType()) {
+        case CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_GIT: {
+          executionLogCallback.saveExecutionLog(format("Fetching template from git url: %s, "
+                  + "branch: %s, templatePath: %s, commitId: %s [ ingored branch if commitId is "
+                  + "set ] ",
+              createRequest.getGitConfig().getRepoUrl(), createRequest.getGitConfig().getBranch(),
+              createRequest.getGitFileConfig().getFilePath(), createRequest.getGitFileConfig().getCommitId()));
+          setRequestDataFromGit(createRequest);
+          createStackRequest.withTemplateBody(createRequest.getData());
+          setCapabilitiesOnRequest(createRequest.getAwsConfig(), createRequest.getRegion(), createRequest.getData(),
+              "body", createStackRequest);
+          createStackAndWaitWithEvents(createRequest, createStackRequest, builder, executionLogCallback);
+          break;
+        }
         case CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY: {
           executionLogCallback.saveExecutionLog("# Using Template Body to create Stack");
           createStackRequest.withTemplateBody(createRequest.getData());
@@ -143,6 +183,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           createStackAndWaitWithEvents(createRequest, createStackRequest, builder, executionLogCallback);
           break;
         }
+
         default: {
           String errorMessage = format("Unsupported stack create type: %s", createRequest.getCreateType());
           executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);

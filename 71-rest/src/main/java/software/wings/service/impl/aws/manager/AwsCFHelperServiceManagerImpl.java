@@ -31,7 +31,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.aws.manager.AwsCFHelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.utils.GitUtils;
+import software.wings.utils.GitUtilsManager;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -42,7 +42,7 @@ public class AwsCFHelperServiceManagerImpl implements AwsCFHelperServiceManager 
   @Inject private DelegateService delegateService;
   @Inject private SettingsService settingService;
   @Inject private SecretManager secretManager;
-  @Inject private GitUtils gitUtils;
+  @Inject private GitUtilsManager gitUtilsManager;
 
   private AwsConfig getAwsConfig(String awsConfigId) {
     SettingAttribute attribute = settingService.get(awsConfigId);
@@ -54,14 +54,18 @@ public class AwsCFHelperServiceManagerImpl implements AwsCFHelperServiceManager 
 
   @Override
   public List<AwsCFTemplateParamsData> getParamsData(String type, String data, String awsConfigId, String region,
-      String appId, String sourceRepoSettingId, String sourceRepoBranch, String templatePath) {
+      String appId, String sourceRepoSettingId, String sourceRepoBranch, String templatePath, String commitId,
+      Boolean useBranch) {
     AwsConfig awsConfig = getAwsConfig(awsConfigId);
     List<EncryptedDataDetail> details =
         secretManager.getEncryptionDetails(awsConfig, isNotEmpty(appId) ? appId : GLOBAL_APP_ID, null);
     GitConfig gitConfig = null;
     if (type.equalsIgnoreCase(CloudFormationSourceType.GIT.name())) {
-      gitConfig = gitUtils.getGitConfig(sourceRepoSettingId);
-      gitConfig.setBranch(sourceRepoBranch);
+      gitConfig = gitUtilsManager.getGitConfig(sourceRepoSettingId);
+      if (isNotEmpty(sourceRepoBranch)) {
+        gitConfig.setBranch(sourceRepoBranch);
+      }
+      gitConfig.setReference(commitId);
     }
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsCFGetTemplateParamsRequest.builder()
@@ -75,6 +79,8 @@ public class AwsCFHelperServiceManagerImpl implements AwsCFHelperServiceManager 
                                .connectorId(sourceRepoSettingId)
                                .branch(sourceRepoBranch)
                                .filePath(templatePath)
+                               .commitId(commitId)
+                               .useBranch(useBranch)
                                .build())
             .sourceRepoEncryptionDetails(
                 gitConfig != null ? secretManager.getEncryptionDetails(gitConfig, appId, null) : null)

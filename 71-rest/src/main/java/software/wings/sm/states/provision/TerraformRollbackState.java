@@ -32,7 +32,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
-import software.wings.utils.GitUtils;
+import software.wings.utils.GitUtilsManager;
 
 import java.util.Iterator;
 import java.util.List;
@@ -44,7 +44,8 @@ import java.util.Map.Entry;
 @Slf4j
 public class TerraformRollbackState extends TerraformProvisionState {
   private TerraformCommand rollbackCommand;
-  @Inject private GitUtils gitUtils;
+
+  @Inject private GitUtilsManager gitUtilsManager;
 
   /**
    * Instantiates a new state.
@@ -106,7 +107,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
     }
 
     final String fileId = fileService.getLatestFileId(entityId, TERRAFORM_STATE);
-    final GitConfig gitConfig = gitUtils.getGitConfig(configParameter.getSourceRepoSettingId());
+    final GitConfig gitConfig = gitUtilsManager.getGitConfig(configParameter.getSourceRepoSettingId());
     if (StringUtils.isNotEmpty(configParameter.getSourceRepoReference())) {
       gitConfig.setReference(configParameter.getSourceRepoReference());
       String branch = context.renderExpression(terraformProvisioner.getSourceRepoBranch());

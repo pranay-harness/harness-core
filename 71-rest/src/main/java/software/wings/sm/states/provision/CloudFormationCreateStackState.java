@@ -23,6 +23,7 @@ import software.wings.api.cloudformation.CloudFormationOutputInfoElement;
 import software.wings.api.cloudformation.CloudFormationRollbackInfoElement;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
+import software.wings.beans.GitConfig;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest.CloudFormationCommandType;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCreateStackRequest;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCreateStackRequest.CloudFormationCreateStackRequestBuilder;
@@ -33,6 +34,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateType;
+import software.wings.utils.GitUtilsManager;
 
 import java.util.Arrays;
 import java.util.List;
@@ -41,6 +43,7 @@ import java.util.Map;
 public class CloudFormationCreateStackState extends CloudFormationState {
   private static final String COMMAND_UNIT = "Create Stack";
   @Inject private transient AppService appService;
+  @Inject private GitUtilsManager gitUtilsManager;
 
   public CloudFormationCreateStackState(String name) {
     super(name, StateType.CLOUD_FORMATION_CREATE_STACK.name());
@@ -68,6 +71,19 @@ public class CloudFormationCreateStackState extends CloudFormationState {
       ensureNonEmptyStringField(templateBody, "Template Body");
       String renderedTemplate = executionContext.renderExpression(templateBody);
       builder.createType(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY).data(renderedTemplate);
+    } else if (provisioner.provisionByGit()) {
+      String sourceRepoSettingId = provisioner.getGitFileConfig().getConnectorId();
+      GitConfig gitConfig = gitUtilsManager.getGitConfig(sourceRepoSettingId);
+      String branch = provisioner.getGitFileConfig().getBranch();
+      ensureNonEmptyStringField(sourceRepoSettingId, "sourceRepoSettingId");
+      if (isNotEmpty(branch)) {
+        gitConfig.setBranch(branch);
+      }
+      gitConfig.setReference(provisioner.getGitFileConfig().getCommitId());
+      builder.createType(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_GIT)
+          .gitFileConfig(provisioner.getGitFileConfig())
+          .encryptedDataDetails(secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null))
+          .gitConfig(gitConfig);
     } else {
       throw new WingsException("Create type is not set on cloud provisioner");
     }

@@ -543,16 +543,17 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
   @Override
   public List<AwsCFTemplateParamsData> getCFTemplateParamKeys(String type, String region, String awsConfigId,
-      String data, String appId, String sourceRepoSettingId, String sourceRepoBranch, String cfDirectory) {
+      String data, String appId, String sourceRepoSettingId, String sourceRepoBranch, String templatePath,
+      String commitId, Boolean useBranch) {
     if (type.equalsIgnoreCase(CloudFormationSourceType.GIT.name())) {
-      if (isEmpty(sourceRepoSettingId) || isEmpty(sourceRepoBranch)) {
-        throw new InvalidRequestException("Empty Fields Connector Id or Source Branch");
+      if (isEmpty(sourceRepoSettingId) || (isEmpty(sourceRepoBranch) && isEmpty(commitId))) {
+        throw new InvalidRequestException("Empty Fields Connector Id or both Branch and commitID");
       }
     } else if (isEmpty(data)) {
       throw new InvalidRequestException("Empty Data Field, Template body or Template url");
     }
-    return awsCFHelperServiceManager.getParamsData(
-        type, data, awsConfigId, region, appId, sourceRepoSettingId, sourceRepoBranch, cfDirectory);
+    return awsCFHelperServiceManager.getParamsData(type, data, awsConfigId, region, appId, sourceRepoSettingId,
+        sourceRepoBranch, templatePath, commitId, useBranch);
   }
 
   @Override
