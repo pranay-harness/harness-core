@@ -87,6 +87,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
+import software.wings.beans.AwsAmiInfrastructureMapping;
+import software.wings.beans.AwsAmiInfrastructureMapping.AwsAmiInfrastructureMappingKeys;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInfrastructureMapping.AwsInfrastructureMappingKeys;
@@ -1159,5 +1161,32 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     blueprints.remove("namespace");
     Assertions.assertThatThrownBy(() -> infrastructureMappingService.validateGcpInfraMapping(infrastructureMapping))
         .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateAwsAmiInfrastructureMapping() {
+    AwsAmiInfrastructureMapping infrastructureMapping = new AwsAmiInfrastructureMapping();
+    InfrastructureMappingServiceImpl infrastructureMappingService =
+        (InfrastructureMappingServiceImpl) this.infrastructureMappingService;
+    doReturn(true).when(featureFlagService).isEnabled(any(), any());
+
+    infrastructureMapping.setProvisionerId("p123");
+    Map<String, Object> blueprints = new HashMap<>();
+    infrastructureMapping.setBlueprints(blueprints);
+    blueprints.put(AwsAmiInfrastructureMappingKeys.region, "fad");
+    blueprints.put(AwsAmiInfrastructureMappingKeys.autoScalingGroupName, "fad");
+    infrastructureMappingService.validateAwsAmiInfrastructureMapping(infrastructureMapping);
+
+    blueprints.remove(AwsAmiInfrastructureMappingKeys.region);
+    Assertions
+        .assertThatThrownBy(
+            () -> infrastructureMappingService.validateAwsAmiInfrastructureMapping(infrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+
+    blueprints.put(AwsAmiInfrastructureMappingKeys.region, "fad");
+    blueprints.remove(AwsAmiInfrastructureMappingKeys.autoScalingGroupName);
+    Assertions.assertThatThrownBy(
+        () -> infrastructureMappingService.validateAwsAmiInfrastructureMapping(infrastructureMapping));
   }
 }

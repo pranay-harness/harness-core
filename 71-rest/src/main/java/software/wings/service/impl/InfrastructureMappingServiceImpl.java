@@ -74,6 +74,7 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
+import software.wings.beans.AwsAmiInfrastructureMapping.AwsAmiInfrastructureMappingKeys;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInfrastructureMapping.AwsInfrastructureMappingKeys;
@@ -307,6 +308,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (infraMapping instanceof AwsLambdaInfraStructureMapping) {
       validateAwsLambdaInfrastructureMapping((AwsLambdaInfraStructureMapping) infraMapping);
+    }
+
+    if (infraMapping instanceof AwsAmiInfrastructureMapping) {
+      validateAwsAmiInfrastructureMapping((AwsAmiInfrastructureMapping) infraMapping);
     }
   }
 
@@ -604,6 +609,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       }
     } else if (infrastructureMapping instanceof AwsAmiInfrastructureMapping) {
       AwsAmiInfrastructureMapping awsAmiInfrastructureMapping = (AwsAmiInfrastructureMapping) infrastructureMapping;
+      validateAwsAmiInfrastructureMapping(awsAmiInfrastructureMapping);
       if (awsAmiInfrastructureMapping.getRegion() != null) {
         keyValuePairs.put("region", awsAmiInfrastructureMapping.getRegion());
       } else {
@@ -1038,6 +1044,20 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
     if (StringUtils.isEmpty(lambdaInfraStructureMapping.getRole())) {
       throw new InvalidRequestException("IAM Role is mandatory");
+    }
+  }
+
+  @VisibleForTesting
+  public void validateAwsAmiInfrastructureMapping(AwsAmiInfrastructureMapping infrastructureMapping) {
+    if (isNotEmpty(infrastructureMapping.getProvisionerId())
+        && featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infrastructureMapping.getAccountId())) {
+      Map<String, Object> blueprints = infrastructureMapping.getBlueprints();
+      if (blueprints.get(AwsAmiInfrastructureMappingKeys.region) == null) {
+        throw new InvalidRequestException("Region blueprint is mandatory");
+      }
+      if (blueprints.get(AwsAmiInfrastructureMappingKeys.autoScalingGroupName) == null) {
+        throw new InvalidRequestException("Auto Scaling Group blueprint is mandatory");
+      }
     }
   }
 
