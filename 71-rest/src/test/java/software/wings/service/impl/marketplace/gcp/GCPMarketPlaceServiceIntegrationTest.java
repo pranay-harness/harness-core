@@ -1,0 +1,130 @@
+package software.wings.service.impl.marketplace.gcp;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import com.google.inject.Inject;
+
+import io.harness.category.element.IntegrationTests;
+import lombok.val;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mongodb.morphia.query.Query;
+import software.wings.beans.EntityType;
+import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
+import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot.InstanceStatsSnapshotKeys;
+import software.wings.beans.marketplace.gcp.GCPUsageReport;
+import software.wings.beans.marketplace.gcp.GCPUsageReport.GCPUsageReportKeys;
+import software.wings.dl.WingsPersistence;
+import software.wings.integration.BaseIntegrationTest;
+import software.wings.service.impl.instance.stats.InstanceStatServiceImpl;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
+
+public class GCPMarketPlaceServiceIntegrationTest extends BaseIntegrationTest {
+  @Inject private GCPUsageReportServiceImpl gcpUsageReportService;
+  @Inject private GCPMarketPlaceServiceImpl gcpMarketPlaceService;
+  @Inject private InstanceStatServiceImpl statService;
+  @Inject private WingsPersistence persistence;
+  private boolean indexesEnsured;
+
+  // namespacing accountId so that other tests are not impacted by this
+  private static final String SOME_ACCOUNT_ID =
+      "gcp-mkt-account-id-" + GCPMarketPlaceServiceIntegrationTest.class.getSimpleName();
+
+  private static final String SOME_CONSUMER_ID =
+      "gcp-mkt-consumer-id-" + GCPMarketPlaceServiceIntegrationTest.class.getSimpleName();
+
+  @Before
+  public void ensureIndices() {
+    if (!indexesEnsured) {
+      persistence.getDatastore(GCPUsageReport.class).ensureIndexes(GCPUsageReport.class);
+      persistence.getDatastore(InstanceStatsSnapshot.class).ensureIndexes(InstanceStatsSnapshot.class);
+      indexesEnsured = true;
+    }
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public void testGCPUsageReport() {
+    val currentTime = Instant.now();
+    val startTime = currentTime.truncatedTo(ChronoUnit.MINUTES);
+    val endTime = currentTime.plus(3, ChronoUnit.DAYS);
+    val usageReportStartTime = startTime.minus(1, ChronoUnit.MINUTES);
+    val usageReportEndTime = startTime.plusSeconds(1);
+    val gcpUsageReport = getSampleGCPUsageReport(usageReportStartTime, usageReportEndTime);
+
+    gcpUsageReportService.create(gcpUsageReport);
+
+    val statsToSave = generateInstanceStatsSnapshot(startTime, endTime);
+
+    statsToSave.forEach(it -> {
+      val saved = statService.save(it);
+      assertTrue("instance stats should be saved", saved);
+    });
+
+    gcpMarketPlaceService.createUsageReport(SOME_ACCOUNT_ID);
+
+    val reportEndTime = startTime.plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
+
+    val gcpUsageReports = gcpUsageReportService.fetchGCPUsageReport(SOME_ACCOUNT_ID, startTime, reportEndTime);
+    val savedGCPUsageReport = gcpUsageReports.get(0);
+
+    assertEquals(savedGCPUsageReport.getStartTimestamp(), usageReportEndTime);
+    assertEquals(savedGCPUsageReport.getEndTimestamp(), reportEndTime);
+
+    val nextReportStartTime = reportEndTime;
+    val nextReportEndTime = nextReportStartTime.plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
+    val nextGCPUsageReports =
+        gcpUsageReportService.fetchGCPUsageReport(SOME_ACCOUNT_ID, nextReportStartTime, nextReportEndTime);
+    val nextSavedGCPUsageReport = nextGCPUsageReports.get(0);
+
+    assertEquals(nextSavedGCPUsageReport.getStartTimestamp(), nextReportStartTime);
+    assertEquals(nextSavedGCPUsageReport.getEndTimestamp(), nextReportEndTime);
+  }
+
+  private GCPUsageReport getSampleGCPUsageReport(Instant startTime, Instant endTime) {
+    return new GCPUsageReport(SOME_ACCOUNT_ID, SOME_CONSUMER_ID, startTime, endTime, 5);
+  }
+
+  private List<InstanceStatsSnapshot> generateInstanceStatsSnapshot(Instant startTime, Instant endTime) {
+    List<InstanceStatsSnapshot> instanceStatsSnapshots = new ArrayList<>();
+    while (startTime.toEpochMilli() < endTime.toEpochMilli()) {
+      instanceStatsSnapshots.add(sampleSnapshot(startTime));
+      startTime = startTime.plus(60, ChronoUnit.MINUTES);
+    }
+    return instanceStatsSnapshots;
+  }
+
+  private InstanceStatsSnapshot sampleSnapshot(Instant instant) {
+    int total = ThreadLocalRandom.current().nextInt(101, 150);
+    int count = ThreadLocalRandom.current().nextInt(10, 100);
+
+    val appAggregates = Arrays.asList(
+        new InstanceStatsSnapshot.AggregateCount(EntityType.APPLICATION, "some-app", "some-app-id", count),
+        new InstanceStatsSnapshot.AggregateCount(EntityType.APPLICATION, "other-app", "other-app-id", total - count));
+
+    return new InstanceStatsSnapshot(instant, SOME_ACCOUNT_ID, appAggregates);
+  }
+
+  @After
+  public void clearCollection() {
+    val ds = persistence.getDatastore(GCPUsageReport.class);
+    ds.delete(ds.createQuery(GCPUsageReport.class).filter(GCPUsageReportKeys.accountId, SOME_ACCOUNT_ID));
+
+    val dsInstanceStatsSnapshot = persistence.getDatastore(InstanceStatsSnapshot.class);
+    dsInstanceStatsSnapshot.delete(fetchQuery());
+  }
+
+  private Query<InstanceStatsSnapshot> fetchQuery() {
+    return persistence.createQuery(InstanceStatsSnapshot.class)
+        .filter(InstanceStatsSnapshotKeys.accountId, SOME_ACCOUNT_ID);
+  }
+}
