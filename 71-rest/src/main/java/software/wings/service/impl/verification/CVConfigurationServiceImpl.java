@@ -298,6 +298,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), CloudWatchCVServiceConfiguration.class);
         break;
       case SUMO:
+      case DATA_DOG_LOG:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), LogsCVConfiguration.class);
         break;
       case STACK_DRIVER:
@@ -682,6 +683,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       case ELK:
       case BUG_SNAG:
       case STACK_DRIVER:
+      case DATA_DOG_LOG:
         return;
 
       default:
