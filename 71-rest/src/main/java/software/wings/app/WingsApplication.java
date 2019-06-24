@@ -460,16 +460,9 @@ public class WingsApplication extends Application<MainConfiguration> {
   private void registerCorsFilter(MainConfiguration configuration, Environment environment) {
     FilterRegistration.Dynamic cors = environment.servlets().addFilter("CORS", CrossOriginFilter.class);
     String allowedOrigins = configuration.getPortal().getUrl();
-    String env = System.getenv("ENV");
-    if (isNotEmpty(env) && env.equalsIgnoreCase("free")) {
-      allowedOrigins = "*";
-      logger.info("Allowing all origins");
-    } else {
-      if (!configuration.getPortal().getAllowedOrigins().isEmpty()) {
-        allowedOrigins = configuration.getPortal().getAllowedOrigins();
-      }
+    if (!configuration.getPortal().getAllowedOrigins().isEmpty()) {
+      allowedOrigins = configuration.getPortal().getAllowedOrigins();
     }
-
     cors.setInitParameters(of("allowedOrigins", allowedOrigins, "allowedHeaders",
         "X-Requested-With,Content-Type,Accept,Origin,Authorization,X-api-key", "allowedMethods",
         "OPTIONS,GET,PUT,POST,DELETE,HEAD", "preflightMaxAge", "86400"));
