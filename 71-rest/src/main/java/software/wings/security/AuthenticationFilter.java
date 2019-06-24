@@ -20,6 +20,9 @@ import io.harness.context.GlobalContext;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.manage.GlobalContextManager;
+import lombok.extern.slf4j.Slf4j;
+import software.wings.app.DeployMode;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
@@ -50,6 +53,7 @@ import javax.ws.rs.core.Response;
 
 @Singleton
 @Priority(AUTHENTICATION)
+@Slf4j
 public class AuthenticationFilter implements ContainerRequestFilter {
   @VisibleForTesting public static final String API_KEY_HEADER = "X-Api-Key";
   @VisibleForTesting public static final String HARNESS_API_KEY_HEADER = "X-Harness-Api-Key";
@@ -66,11 +70,13 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   private AuditHelper auditHelper;
   private ExternalApiRateLimitingService rateLimitingService;
   private SecretManager secretManager;
+  private MainConfiguration configuration;
 
   @Inject
   public AuthenticationFilter(UserService userService, AuthService authService, AuditService auditService,
       AuditHelper auditHelper, ApiKeyService apiKeyService, HarnessApiKeyService harnessApiKeyService,
-      ExternalApiRateLimitingService rateLimitingService, SecretManager secretManager) {
+      ExternalApiRateLimitingService rateLimitingService, SecretManager secretManager,
+      MainConfiguration configuration) {
     this.userService = userService;
     this.authService = authService;
     this.auditService = auditService;
@@ -79,6 +85,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     this.harnessApiKeyService = harnessApiKeyService;
     this.rateLimitingService = rateLimitingService;
     this.secretManager = secretManager;
+    this.configuration = configuration;
   }
 
   @Override
@@ -212,10 +219,17 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   }
 
   protected boolean authenticationExemptedRequests(ContainerRequestContext requestContext) {
-    return requestContext.getMethod().equals(OPTIONS) || publicAPI()
+    boolean isExemptedRequest = requestContext.getMethod().equals(OPTIONS) || publicAPI()
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/version")
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/swagger")
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/swagger.json");
+    if (isExemptedRequest && publicAPI() && !DeployMode.isOnPrem(configuration.getDeployMode().name())
+        && requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("new-trial")) {
+      String origin = requestContext.getHeaderString("Origin");
+      logger.info("Origin for new-trial request is: {}", origin);
+    }
+
+    return isExemptedRequest;
   }
 
   protected boolean publicAPI() {
