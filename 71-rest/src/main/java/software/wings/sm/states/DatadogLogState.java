@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.VerificationConstants.DATA_DOG_DEFAULT_HOSTNAME;
 import static software.wings.common.VerificationConstants.DATA_DOG_KUBERNETES_HOSTNAME;
+import static software.wings.utils.Misc.replaceDotWithUnicode;
 
 import com.github.reinert.jjschema.Attributes;
 import lombok.extern.slf4j.Slf4j;
@@ -134,7 +135,7 @@ public class DatadogLogState extends AbstractLogAnalysisState {
     }
 
     String eventsUrl = datadogConfig.getUrl() + DatadogConfig.logAnalysisUrl;
-    logDefinition.put(eventsUrl, responseMappers);
+    logDefinition.put(replaceDotWithUnicode(eventsUrl), responseMappers);
     return logDefinition;
   }
 
