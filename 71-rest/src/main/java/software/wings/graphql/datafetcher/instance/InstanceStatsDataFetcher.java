@@ -7,27 +7,18 @@ import static org.mongodb.morphia.aggregation.Projection.projection;
 import static org.mongodb.morphia.query.Sort.ascending;
 import static org.mongodb.morphia.query.Sort.descending;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.infrastructure.instance.Instance;
-import software.wings.beans.instance.dashboard.EntitySummary;
-import software.wings.dl.WingsPersistence;
-import software.wings.graphql.datafetcher.AbstractStatsDataFetcher;
+import software.wings.graphql.datafetcher.RealTimeStatsDataFetcher;
 import software.wings.graphql.schema.type.aggregation.QLAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLAggregatedData;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
-import software.wings.graphql.schema.type.aggregation.QLReference;
-import software.wings.graphql.schema.type.aggregation.QLSinglePointData;
-import software.wings.graphql.schema.type.aggregation.QLStackedData;
-import software.wings.graphql.schema.type.aggregation.QLStackedDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLStringFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceAggregation;
@@ -39,10 +30,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-public class InstanceStatsDataFetcher extends AbstractStatsDataFetcher<QLAggregateFunction, QLInstanceFilter,
+public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggregateFunction, QLInstanceFilter,
     QLInstanceAggregation, QLTimeSeriesAggregation> {
-  @Inject private WingsPersistence wingsPersistence;
-
   @Override
   protected QLData fetch(String accountId, QLAggregateFunction aggregateFunction, List<QLInstanceFilter> filters,
       List<QLInstanceAggregation> groupBy, QLTimeSeriesAggregation groupByTime) {
@@ -130,43 +119,8 @@ public class InstanceStatsDataFetcher extends AbstractStatsDataFetcher<QLAggrega
       }
 
     } else {
-      long count = query.count();
-      return QLSinglePointData.builder().dataPoint(QLDataPoint.builder().value(count).build()).build();
+      return getSingleDataPointData(query);
     }
-  }
-
-  private QLStackedData getStackedData(
-      List<TwoLevelAggregatedData> aggregatedDataList, String firstLevelType, String secondLevelType) {
-    QLStackedDataPoint prevStackedDataPoint = null;
-    List<QLStackedDataPoint> stackedDataPointList = new ArrayList<>();
-    for (TwoLevelAggregatedData aggregatedData : aggregatedDataList) {
-      EntitySummary firstLevelInfo = aggregatedData.getFirstLevelInfo();
-      EntitySummary secondLevelInfo = aggregatedData.getSecondLevelInfo();
-      QLReference secondLevelRef = QLReference.builder()
-                                       .type(secondLevelType)
-                                       .name(secondLevelInfo.getName())
-                                       .id(secondLevelInfo.getId())
-                                       .build();
-      QLDataPoint secondLevelDataPoint =
-          QLDataPoint.builder().key(secondLevelRef).value(aggregatedData.getCount()).build();
-
-      boolean sameAsPrevious =
-          prevStackedDataPoint != null && prevStackedDataPoint.getKey().getId().equals(firstLevelInfo.getId());
-      if (sameAsPrevious) {
-        prevStackedDataPoint.getValues().add(secondLevelDataPoint);
-      } else {
-        QLReference firstLevelRef = QLReference.builder()
-                                        .type(firstLevelType)
-                                        .name(firstLevelInfo.getName())
-                                        .id(firstLevelInfo.getId())
-                                        .build();
-        prevStackedDataPoint =
-            QLStackedDataPoint.builder().key(firstLevelRef).values(Lists.newArrayList(secondLevelDataPoint)).build();
-        stackedDataPointList.add(prevStackedDataPoint);
-      }
-    }
-
-    return QLStackedData.builder().dataPoints(stackedDataPointList).build();
   }
 
   private String getFieldName(QLInstanceFilterType filterType) {

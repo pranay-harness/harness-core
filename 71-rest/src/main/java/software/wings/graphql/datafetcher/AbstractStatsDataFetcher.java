@@ -118,7 +118,7 @@ public abstract class AbstractStatsDataFetcher<A, F, G, T> implements DataFetche
     return accountId;
   }
 
-  protected void setStringFilter(FieldEnd<? extends Query<Instance>> field, QLStringFilter stringFilter) {
+  protected void setStringFilter(FieldEnd<? extends Query<?>> field, QLStringFilter stringFilter) {
     if (stringFilter == null) {
       throw new WingsException("Filter is null");
     }

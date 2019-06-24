@@ -1,0 +1,19 @@
+enum ServiceFilterType {
+  Application
+  Service
+}
+
+enum ServiceAggregation {
+  Application
+  ArtifactType
+}
+
+input ServiceFilter {
+  type: ServiceFilterType
+  stringFilter: StringFilter
+}
+
+extend type Query {
+  # Get service stats.
+  serviceStats(filters: [ServiceFilter], groupBy: [ServiceAggregation]): Data @dataFetcher(name: serviceStats)
+}
