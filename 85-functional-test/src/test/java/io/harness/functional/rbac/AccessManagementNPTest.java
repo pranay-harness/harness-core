@@ -10,6 +10,7 @@ import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.testframework.framework.Setup;
+import io.harness.testframework.framework.utils.AccessManagementUtils;
 import io.harness.testframework.framework.utils.SSOUtils;
 import io.harness.testframework.framework.utils.UserGroupUtils;
 import io.harness.testframework.framework.utils.UserUtils;
@@ -64,41 +65,8 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
                    .get("/userGroups")
                    .getStatusCode()
         == HttpStatus.SC_BAD_REQUEST);
-    logger.info("List user groups failed with Bad request as expected");
-    logger.info("List the SSO Settings using ReadOnly permission");
-    logger.info("The below statement fails for the bug - PL-2335. Disabling it to avoid failures");
-
-    /*assertTrue(Setup.portal()
-        .auth()
-        .oauth2(roBearerToken)
-        .queryParam("accountId", getAccount().getUuid())
-        .get("/sso/access-management/" + getAccount().getUuid()).getStatusCode() == HttpStatus.SC_BAD_REQUEST);
-    logger.info("List SSO settings failed with Bad request as expected");*/
-
-    logger.info("List the APIKeys using ReadOnly permission");
-
-    assertTrue(Setup.portal()
-                   .auth()
-                   .oauth2(roBearerToken)
-                   .queryParam("accountId", getAccount().getUuid())
-                   .get("/api-keys")
-                   .getStatusCode()
-        == HttpStatus.SC_BAD_REQUEST);
-
-    logger.info("List APIKeys failed with Bad request as expected");
-
-    logger.info("List the IPWhitelists using ReadOnly permission");
-    assertTrue(Setup.portal()
-                   .auth()
-                   .oauth2(roBearerToken)
-                   .queryParam("accountId", getAccount().getUuid())
-                   .get("/whitelist")
-                   .getStatusCode()
-        == HttpStatus.SC_BAD_REQUEST);
-    logger.info("List IPWhitelists failed with Bad request as expected");
-
-    Setup.signOut(readOnlyUser.getUuid(), roBearerToken);
-    logger.info("Readonly user logout successful");
+    AccessManagementUtils.runNoAccessTest(getAccount(), roBearerToken, readOnlyUser.getUuid());
+    logger.info("Tests completed");
   }
 
   @Test
@@ -111,6 +79,9 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
 
     User readOnlyUser = UserUtils.getUser(bearerToken, getAccount().getUuid(), READ_ONLY_USER);
     UserGroup userGroup = UserGroupUtils.getUserGroup(getAccount(), bearerToken, "Account Administrator");
+    List<String> userIdsToAdd = new ArrayList<>();
+    userIdsToAdd.add(readOnlyUser.getUuid());
+
     ApiKeyEntry apiKeyEntry = ApiKeyEntry.builder().build();
     List<String> userGroupIds = new ArrayList<>();
     userGroupIds.add(userGroup.getUuid());

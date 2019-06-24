@@ -1,5 +1,6 @@
 package io.harness.testframework.restutils;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import io.harness.beans.PageResponse;
@@ -9,7 +10,9 @@ import io.restassured.mapper.ObjectMapperType;
 import software.wings.beans.Account;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.LdapGroupResponse;
+import software.wings.security.PermissionAttribute.PermissionType;
 
+import java.util.Iterator;
 import java.util.List;
 import javax.ws.rs.core.GenericType;
 
@@ -44,6 +47,47 @@ public class UserGroupRestUtils {
                                              .post("/userGroups")
                                              .as(new GenericType<RestResponse<UserGroup>>() {}.getType());
     return userGroups.getResource();
+  }
+
+  public static Integer updateMembers(Account account, String bearerToken, UserGroup userGroup) {
+    JsonArray jsonArray = new JsonArray();
+    JsonObject jObj;
+    JsonObject masterObj = new JsonObject();
+    for (int i = 0; i < userGroup.getMemberIds().size(); i++) {
+      jObj = new JsonObject();
+      jObj.addProperty("uuid", userGroup.getMemberIds().get(i));
+      jsonArray.add(jObj);
+    }
+
+    masterObj.add("members", jsonArray);
+
+    return Setup.portal()
+        .auth()
+        .oauth2(bearerToken)
+        .queryParam("accountId", account.getUuid())
+        .body(masterObj, ObjectMapperType.GSON)
+        .put("/userGroups/" + userGroup.getUuid() + "/members")
+        .statusCode();
+  }
+
+  public static Integer updateAccountPermissions(Account account, String bearerToken, UserGroup userGroup) {
+    JsonArray jsonArray = new JsonArray();
+    JsonObject jObj = new JsonObject();
+    JsonObject masterObj = new JsonObject();
+    Iterator<PermissionType> accountPermission = userGroup.getAccountPermissions().getPermissions().iterator();
+    while (accountPermission.hasNext()) {
+      jsonArray.add(accountPermission.next().toString());
+    }
+    jObj.add("permissions", jsonArray);
+    masterObj.add("accountPermissions", jObj);
+
+    return Setup.portal()
+        .auth()
+        .oauth2(bearerToken)
+        .queryParam("accountId", account.getUuid())
+        .body(masterObj, ObjectMapperType.GSON)
+        .put("/userGroups/" + userGroup.getUuid() + "/permissions")
+        .statusCode();
   }
 
   public static UserGroup updateNotificationSettings(Account account, String bearerToken, UserGroup userGroup) {
