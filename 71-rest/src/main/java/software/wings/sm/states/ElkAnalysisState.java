@@ -240,8 +240,8 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
       throw new WingsException("No elk setting with id: " + finalAnalysisServerConfigId + " found");
     }
 
-    elkAnalysisService.validateQuery(context.getAccountId(), context.getAppId(), finalAnalysisServerConfigId, query,
-        finalIndices, context.getStateExecutionInstanceId());
+    elkAnalysisService.validateQuery(context.getAccountId(), context.getAppId(), finalAnalysisServerConfigId,
+        getRenderedQuery(), finalIndices, context.getStateExecutionInstanceId());
 
     final ElkConfig elkConfig = (ElkConfig) settingAttribute.getValue();
 

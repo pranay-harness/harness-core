@@ -395,6 +395,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     testNodes.keySet().forEach(testNode -> controlNodes.remove(testNode));
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
+    renderedQuery = context.renderExpression(query);
 
     String accountId = this.appService.get(context.getAppId()).getAccountId();
     String hostNameField = getHostnameField(context);
@@ -410,7 +411,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .analysisType(MLAnalysisType.LOG_ML)
             .controlNodes(controlNodes)
             .testNodes(testNodes)
-            .query(query)
+            .query(getRenderedQuery())
             .isSSL(this.configuration.isSslEnabled())
             .appPort(this.configuration.getApplicationPort())
             .comparisonStrategy(getComparisonStrategy())
