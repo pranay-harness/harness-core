@@ -33,6 +33,7 @@ import software.wings.graphql.datafetcher.connector.ConnectorConnectionDataFetch
 import software.wings.graphql.datafetcher.connector.ConnectorDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentConnectionDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentDataFetcher;
+import software.wings.graphql.datafetcher.environment.EnvironmentStatsDataFetcher;
 import software.wings.graphql.datafetcher.execution.DeploymentStatsDataFetcher;
 import software.wings.graphql.datafetcher.execution.ExecutionConnectionDataFetcher;
 import software.wings.graphql.datafetcher.execution.ExecutionDataFetcher;
@@ -53,6 +54,7 @@ import software.wings.graphql.datafetcher.pipeline.PipelineConnectionDataFetcher
 import software.wings.graphql.datafetcher.pipeline.PipelineDataFetcher;
 import software.wings.graphql.datafetcher.service.ServiceConnectionDataFetcher;
 import software.wings.graphql.datafetcher.service.ServiceDataFetcher;
+import software.wings.graphql.datafetcher.service.ServiceStatsDataFetcher;
 import software.wings.graphql.datafetcher.trigger.TriggerConnectionDataFetcher;
 import software.wings.graphql.datafetcher.trigger.TriggerDataFetcher;
 import software.wings.graphql.datafetcher.workflow.WorkflowConnectionDataFetcher;
@@ -128,6 +130,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(DeploymentStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(EnvironmentConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(EnvironmentDataFetcher.class);
+    bindDataFetcherWithAnnotation(EnvironmentStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(ExecutionConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(ExecutionDataFetcher.class);
     bindDataFetcherWithAnnotation(InstanceConnectionDataFetcher.class);
@@ -138,6 +141,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(PipelineDataFetcher.class);
     bindDataFetcherWithAnnotation(ServiceConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(ServiceDataFetcher.class);
+    bindDataFetcherWithAnnotation(ServiceStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(TriggerConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(TriggerDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowConnectionDataFetcher.class);

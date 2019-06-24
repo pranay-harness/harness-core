@@ -6,6 +6,7 @@ enum DataFetcherEnum {
   cloudProvider
   cloudProviderConnection
   environment
+  environmentStats
   environmentConnection
   execution
   executionConnection
@@ -16,6 +17,7 @@ enum DataFetcherEnum {
   pipelineConnection
   service
   serviceConnection
+  serviceStats
   trigger
   triggerConnection
   workflow
