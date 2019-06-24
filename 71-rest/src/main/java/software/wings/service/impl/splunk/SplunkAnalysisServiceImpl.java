@@ -58,7 +58,8 @@ public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements Sp
         delegateProxyFactory.get(SplunkDelegateService.class, taskContext)
             .getLogResults((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails,
                 setupTestNodeData.getQuery(), setupTestNodeData.getHostNameField(), null,
-                setupTestNodeData.getFromTime(), setupTestNodeData.getToTime(), apiCallLog, 0);
+                setupTestNodeData.getFromTime(), setupTestNodeData.getToTime(), apiCallLog, 0,
+                setupTestNodeData.isAdvancedQuery());
     if (isEmpty(responseWithoutHost)) {
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
@@ -71,7 +72,8 @@ public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements Sp
         delegateProxyFactory.get(SplunkDelegateService.class, taskContext)
             .getLogResults((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails,
                 setupTestNodeData.getQuery(), setupTestNodeData.getHostNameField(), hostName,
-                setupTestNodeData.getFromTime(), setupTestNodeData.getToTime(), apiCallLog, 0);
+                setupTestNodeData.getFromTime(), setupTestNodeData.getToTime(), apiCallLog, 0,
+                setupTestNodeData.isAdvancedQuery());
 
     return VerificationNodeDataSetupResponse.builder()
         .providerReachable(true)

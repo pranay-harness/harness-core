@@ -96,7 +96,6 @@ import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionInstance;
-import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateType;
 import software.wings.utils.Misc;
 import software.wings.verification.CVConfiguration;
@@ -390,12 +389,10 @@ public class AnalysisServiceImpl implements AnalysisService {
       feedbackRecord.setEnvId(cvConfiguration.getEnvId());
       feedbackRecord.setCvConfigId(cvConfigId);
     } else if (isNotEmpty(stateExecutionId)) {
-      PageRequest<StateExecutionInstance> stateExecutionInstancePageRequest =
-          PageRequestBuilder.aPageRequest()
-              .addFilter(StateExecutionInstanceKeys.uuid, Operator.EQ, stateExecutionId)
-              .build();
       List<StateExecutionInstance> stateExecutionInstances =
-          stateExecutionService.list(stateExecutionInstancePageRequest).getResponse();
+          wingsPersistence.createQuery(StateExecutionInstance.class, excludeAuthority)
+              .filter("uuid", stateExecutionId)
+              .asList();
       if (isNotEmpty(stateExecutionInstances) && stateExecutionInstances.size() == 1) {
         StateExecutionInstance stateExecutionInstance = stateExecutionInstances.get(0);
         feedbackRecord.setStateExecutionId(stateExecutionId);
@@ -477,12 +474,11 @@ public class AnalysisServiceImpl implements AnalysisService {
       envId = cvConfiguration.getEnvId();
 
     } else if (isNotEmpty(stateExecutionId)) {
-      PageRequest<StateExecutionInstance> stateExecutionInstancePageRequest =
-          PageRequestBuilder.aPageRequest()
-              .addFilter(StateExecutionInstanceKeys.uuid, Operator.EQ, stateExecutionId)
-              .build();
       List<StateExecutionInstance> stateExecutionInstances =
-          stateExecutionService.list(stateExecutionInstancePageRequest).getResponse();
+          wingsPersistence.createQuery(StateExecutionInstance.class, excludeAuthority)
+              .filter("uuid", stateExecutionId)
+              .asList();
+
       if (isNotEmpty(stateExecutionInstances) && stateExecutionInstances.size() == 1) {
         StateExecutionInstance instance = stateExecutionInstances.get(0);
         serviceId = getServiceIdFromStateExecutionInstance(instance);

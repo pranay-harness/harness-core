@@ -1,6 +1,7 @@
 package software.wings.integration.verification;
 
 import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 import com.google.inject.Inject;
 
@@ -64,5 +65,36 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
     method.setAccessible(true);
     Object r = method.invoke(splunkDelegateService, config);
     assertTrue(((Service) r).getToken().startsWith("Basic"));
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public void splunkLogQueryCustomHostFieldTest()
+      throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    String expectedQuery =
+        "search testQuery myHostNameField = harness.test.host.name | bin _time span=1m | cluster t=0.9999 showcount=t labelonly=t| table _time, _raw,cluster_label, myHostNameField | stats latest(_raw) as _raw count as cluster_count by _time,cluster_label,myHostNameField";
+    Method method = splunkDelegateService.getClass().getDeclaredMethod(
+        "getQuery", String.class, String.class, String.class, boolean.class);
+    method.setAccessible(true);
+
+    Object r = method.invoke(splunkDelegateService, "testQuery", "myHostNameField", "harness.test.host.name", false);
+    String formedQuery = (String) r;
+    assertEquals(expectedQuery, formedQuery);
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public void splunkLogQuerAdvancedQueryTest()
+      throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    String advancedQuery = "my advanced test query";
+    String expectedQuery = advancedQuery
+        + " myHostNameField = harness.test.host.name | bin _time span=1m | cluster t=0.9999 showcount=t labelonly=t| table _time, _raw,cluster_label, myHostNameField | stats latest(_raw) as _raw count as cluster_count by _time,cluster_label,myHostNameField";
+    Method method = splunkDelegateService.getClass().getDeclaredMethod(
+        "getQuery", String.class, String.class, String.class, boolean.class);
+    method.setAccessible(true);
+
+    Object r = method.invoke(splunkDelegateService, advancedQuery, "myHostNameField", "harness.test.host.name", true);
+    String formedQuery = (String) r;
+    assertEquals(expectedQuery, formedQuery);
   }
 }
