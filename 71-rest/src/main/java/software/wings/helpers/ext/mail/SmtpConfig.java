@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
+import io.harness.delegate.task.mixin.SocketConnectivityCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -76,8 +76,8 @@ public class SmtpConfig extends SettingValue implements EncryptableSetting {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Arrays.asList(ProcessExecutorCapabilityGenerator.buildProcessExecutorCapability(
-        "SMTP", Arrays.asList("nc", "-z", "-G5", host, Integer.toString(port))));
+    return Arrays.asList(
+        SocketConnectivityCapabilityGenerator.buildSocketConnectivityCapability(host, String.valueOf(port)));
   }
 
   @Data

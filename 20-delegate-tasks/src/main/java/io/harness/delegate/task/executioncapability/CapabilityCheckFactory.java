@@ -1,8 +1,11 @@
 package io.harness.delegate.task.executioncapability;
 
 import static io.harness.delegate.beans.executioncapability.CapabilityType.ALWAYS_TRUE;
-import static io.harness.delegate.beans.executioncapability.CapabilityType.NETCAT;
+import static io.harness.delegate.beans.executioncapability.CapabilityType.AWS_REGION;
+import static io.harness.delegate.beans.executioncapability.CapabilityType.HTTP;
 import static io.harness.delegate.beans.executioncapability.CapabilityType.PROCESS_EXECUTOR;
+import static io.harness.delegate.beans.executioncapability.CapabilityType.SOCKET;
+import static io.harness.delegate.beans.executioncapability.CapabilityType.SYSTEM_ENV;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -11,13 +14,16 @@ import io.harness.delegate.beans.executioncapability.CapabilityType;
 
 @Singleton
 public class CapabilityCheckFactory {
-  @Inject NetCatCapabilityCheck netCatCapabilityCheck;
+  @Inject SocketConnectivityCapabilityCheck socketConnectivityCapabilityCheck;
   @Inject IgnoreValidationCapabilityCheck ignoreValidationCapabilityCheck;
   @Inject ProcessExecutorCapabilityCheck processExecutorCapabilityCheck;
+  @Inject AwsRegionCapabilityCheck awsRegionCapabilityCheck;
+  @Inject SystemEnvCapabilityCheck systemEnvCapabilityCheck;
+  @Inject HttpConnectionExecutionCapabilityCheck httpConnectionExecutionCapabilityCheck;
 
   public CapabilityCheck obtainCapabilityCheck(CapabilityType capabilityCheckType) {
-    if (NETCAT.equals(capabilityCheckType)) {
-      return netCatCapabilityCheck;
+    if (SOCKET.equals(capabilityCheckType)) {
+      return socketConnectivityCapabilityCheck;
     }
 
     if (ALWAYS_TRUE.equals(capabilityCheckType)) {
@@ -26,6 +32,18 @@ public class CapabilityCheckFactory {
 
     if (PROCESS_EXECUTOR.equals(capabilityCheckType)) {
       return processExecutorCapabilityCheck;
+    }
+
+    if (AWS_REGION.equals(capabilityCheckType)) {
+      return awsRegionCapabilityCheck;
+    }
+
+    if (SYSTEM_ENV.equals(capabilityCheckType)) {
+      return systemEnvCapabilityCheck;
+    }
+
+    if (HTTP.equals(capabilityCheckType)) {
+      return httpConnectionExecutionCapabilityCheck;
     }
 
     return null;

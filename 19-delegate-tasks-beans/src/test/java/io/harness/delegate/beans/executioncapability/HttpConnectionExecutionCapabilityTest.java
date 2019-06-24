@@ -8,8 +8,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.util.List;
-
 public class HttpConnectionExecutionCapabilityTest {
   public static final String HOST_NAME = "SOME_HOST";
   private static final String PORT_HTTP = "80";
@@ -17,8 +15,9 @@ public class HttpConnectionExecutionCapabilityTest {
   private static final String SCHEME_HTTPS = "HTTPS";
   private static final String SCHEME_HTTP = "HTTP";
 
-  private static final String URL_HTTP = SCHEME_HTTP + "://" + HOST_NAME;
-  private static final String URL_HTTPS = SCHEME_HTTPS + "://" + HOST_NAME;
+  private static final String URL_HTTP = SCHEME_HTTP + "://" + HOST_NAME + ":" + PORT_HTTP;
+  private static final String URL_HTTPS = SCHEME_HTTPS + "://" + HOST_NAME + ":" + PORT_HTTPS;
+  ;
 
   private HttpConnectionExecutionCapability httpConnectionExecutionCapability;
   private HttpConnectionExecutionCapability httpsConnectionExecutionCapability;
@@ -36,20 +35,6 @@ public class HttpConnectionExecutionCapabilityTest {
   public void tearDown() throws Exception {
     httpConnectionExecutionCapability = null;
     httpsConnectionExecutionCapability = null;
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  public void processExecutorArguments() {
-    List<String> execArgs = httpConnectionExecutionCapability.processExecutorArguments();
-    assertEquals(execArgs.size(), 5);
-    assertEquals(execArgs.get(3), HOST_NAME);
-    assertEquals(execArgs.get(4), PORT_HTTP);
-
-    execArgs = httpsConnectionExecutionCapability.processExecutorArguments();
-    assertEquals(execArgs.size(), 5);
-    assertEquals(execArgs.get(3), HOST_NAME);
-    assertEquals(execArgs.get(4), PORT_HTTPS);
   }
 
   @Test

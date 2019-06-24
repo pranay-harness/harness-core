@@ -7,7 +7,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.SSHConnectionExecutionCapabilityGenerator;
-import io.harness.delegate.task.mixin.WinRMExecutionCapabilityGenerator;
+import io.harness.delegate.task.mixin.SocketConnectivityCapabilityGenerator;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.expression.Expression;
 import lombok.Builder;
@@ -25,7 +25,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.ShellScriptState;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -162,11 +162,15 @@ public class ShellScriptParameters implements TaskParameters, ExecutionCapabilit
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    if (executeOnDelegate) {
+      return containerServiceParams.fetchRequiredExecutionCapabilities();
+    }
     switch (connectionType) {
       case SSH:
-        return Arrays.asList(SSHConnectionExecutionCapabilityGenerator.buildSSHConnectionExecutionCapability(host));
+        return Collections.singletonList(
+            SSHConnectionExecutionCapabilityGenerator.buildSSHConnectionExecutionCapability(host));
       case WINRM:
-        return Arrays.asList(WinRMExecutionCapabilityGenerator.buildWinRMExecutionCapability(
+        return Collections.singletonList(SocketConnectivityCapabilityGenerator.buildSocketConnectivityCapability(
             host, Integer.toString(winrmConnectionAttributes.getPort())));
       default:
         unhandled(connectionType);

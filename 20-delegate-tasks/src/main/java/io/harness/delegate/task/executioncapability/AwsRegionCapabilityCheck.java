@@ -1,0 +1,42 @@
+package io.harness.delegate.task.executioncapability;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
+import com.amazonaws.regions.Regions;
+import io.harness.delegate.beans.executioncapability.AwsRegionCapability;
+import io.harness.delegate.beans.executioncapability.CapabilityResponse;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import lombok.extern.slf4j.Slf4j;
+
+import java.io.File;
+
+@Slf4j
+public class AwsRegionCapabilityCheck implements CapabilityCheck {
+  @Override
+  public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
+    AwsRegionCapability awsRegionCapability = (AwsRegionCapability) delegateCapability;
+    String region = awsRegionCapability.getRegion();
+    boolean valid = region == null || checkIfSameRegion(region) || isLocalDev();
+    return CapabilityResponse.builder().delegateCapability(awsRegionCapability).validated(valid).build();
+  }
+
+  private boolean checkIfSameRegion(String region) {
+    com.amazonaws.regions.Region regionForContainer = Regions.getCurrentRegion();
+    if (regionForContainer != null) {
+      return regionForContainer.getName().equals(region);
+    }
+    // When delegate is running as fargate task, rely on ENV variable: AWS_REGION
+    String currentRegion = System.getenv("AWS_REGION");
+    logger.info("ECS Current Region Value from ENV var {AWS_REGION}: " + currentRegion);
+    if (isNotBlank(currentRegion)) {
+      return currentRegion.equals(region);
+    }
+
+    logger.info("Failed in ECS validation, failed to fetch current region");
+    return false;
+  }
+
+  private static boolean isLocalDev() {
+    return !new File("start.sh").exists();
+  }
+}

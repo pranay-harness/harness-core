@@ -20,7 +20,7 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.ArtifactServerYaml;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @JsonTypeName("SFTP")
@@ -58,7 +58,8 @@ public class SftpConfig extends SettingValue implements EncryptableSetting {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Arrays.asList(SSHConnectionExecutionCapabilityGenerator.buildSSHConnectionExecutionCapability(sftpUrl));
+    return Collections.singletonList(
+        SSHConnectionExecutionCapabilityGenerator.buildSSHConnectionExecutionCapability(sftpUrl));
   }
 
   @Data

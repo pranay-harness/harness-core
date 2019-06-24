@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
@@ -31,7 +30,7 @@ import java.util.List;
 @Builder
 @ToString(exclude = {"password"})
 @EqualsAndHashCode(callSuper = false)
-public class ServiceNowConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
+public class ServiceNowConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Base URL", required = true) @NotEmpty private String baseUrl;
 
   @Attributes(title = "Username", required = true) @NotEmpty private String username;

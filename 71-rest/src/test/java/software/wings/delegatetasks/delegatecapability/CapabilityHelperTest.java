@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.Set;
 
 public class CapabilityHelperTest extends WingsBaseTest {
+  public static final String HTTP_PORT = "80";
+  public static final String HTTPS_PORT = "443";
   public static final String HTTP_VAUTL_URL = "http://vautl.com";
   public static final String GOOGLE_COM = "http://google.com";
   public static final String US_EAST_2 = "us-east-2";
@@ -48,8 +50,8 @@ public class CapabilityHelperTest extends WingsBaseTest {
     assertEquals(2, task.getExecutionCapabilities().size());
 
     Set<String> criterias = new HashSet<>();
-    criterias.add(HTTP_VAUTL_URL);
-    criterias.add(GOOGLE_COM);
+    criterias.add(HTTP_VAUTL_URL + ":" + HTTP_PORT);
+    criterias.add(GOOGLE_COM + ":" + HTTP_PORT);
 
     task.getExecutionCapabilities().forEach(
         executionCapability -> assertTrue(criterias.contains(executionCapability.fetchCapabilityBasis())));
@@ -71,8 +73,8 @@ public class CapabilityHelperTest extends WingsBaseTest {
     assertEquals(2, task.getExecutionCapabilities().size());
 
     Set<String> criterias = new HashSet<>();
-    criterias.add(AWS_KMS_URL);
-    criterias.add(GOOGLE_COM);
+    criterias.add(AWS_KMS_URL + ":" + HTTPS_PORT);
+    criterias.add(GOOGLE_COM + ":" + HTTP_PORT);
 
     task.getExecutionCapabilities().forEach(
         executionCapability -> assertTrue(criterias.contains(executionCapability.fetchCapabilityBasis())));

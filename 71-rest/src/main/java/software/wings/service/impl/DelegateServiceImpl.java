@@ -76,9 +76,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.delegate.beans.executioncapability.ConnectivityCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.CapabilityUtils;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
@@ -130,11 +128,11 @@ import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.DelegateTaskResponse.ResponseCode;
 import software.wings.beans.Event.Type;
+import software.wings.beans.ExecutionCredential;
 import software.wings.beans.FileMetadata;
-import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.HostValidationTaskParameters;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
-import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DelegateProfileErrorAlert;
 import software.wings.beans.alert.DelegatesDownAlert;
@@ -147,6 +145,7 @@ import software.wings.expression.ManagerPreExecutionExpressionEvaluator;
 import software.wings.expression.SecretFunctor;
 import software.wings.expression.SecretManagerFunctor;
 import software.wings.licensing.LicenseService;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.infra.InfraDownloadService;
@@ -163,7 +162,6 @@ import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.settings.SettingValue;
 import software.wings.utils.Misc;
 
 import java.io.ByteArrayOutputStream;
@@ -180,7 +178,6 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -1440,11 +1437,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     addMergedParamsForCapabilityCheck(task);
 
     DelegatePackage delegatePackage = getDelegataePackageWithEncryptionConfig(task, task.getDelegateId());
-    Collection<EncryptionConfig> encryptionConfigs =
-        (delegatePackage == null || isEmpty(delegatePackage.getEncryptionConfigs()))
-        ? EMPTY_LIST
-        : delegatePackage.getEncryptionConfigs().values();
-    CapabilityHelper.embedCapabilitiesInDelegateTask(task, encryptionConfigs);
+    CapabilityHelper.embedCapabilitiesInDelegateTask(task,
+        delegatePackage == null || isEmpty(delegatePackage.getEncryptionConfigs())
+            ? EMPTY_LIST
+            : delegatePackage.getEncryptionConfigs().values());
 
     if (isNotEmpty(task.getExecutionCapabilities())) {
       logger.info(CapabilityHelper.generateLogStringWithCapabilitiesGenerated(task));
@@ -1459,19 +1455,15 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     Object[] params = task.getData().getParameters();
     if (type == HOST_VALIDATION) {
       // the host is in params[2] and port in params[3]
-      List<String> hosts = (List<String>) params[2];
-      SettingValue settingValue = ((SettingAttribute) params[3]).getValue();
-      int port = 22;
-      if (settingValue instanceof WinRmConnectionAttributes) {
-        port = ((WinRmConnectionAttributes) settingValue).getPort();
-      } else if (settingValue instanceof HostConnectionAttributes) {
-        port = ((HostConnectionAttributes) settingValue).getSshPort();
-      }
-      final int portf = port;
-      List<Object> newParams = new ArrayList<>(Arrays.asList(params));
-      List<ExecutionCapabilityDemander> capabilityDemanders =
-          hosts.stream().map(host -> new ConnectivityCapabilityDemander(host, portf)).collect(toList());
-      newParams.addAll(capabilityDemanders);
+
+      HostValidationTaskParameters hostValidationTaskParameters =
+          HostValidationTaskParameters.builder()
+              .hostNames((List<String>) params[2])
+              .connectionSetting((SettingAttribute) params[3])
+              .encryptionDetails((List<EncryptedDataDetail>) params[4])
+              .executionCredential((ExecutionCredential) params[5])
+              .build();
+      List<Object> newParams = new ArrayList<>(Arrays.asList(hostValidationTaskParameters));
       task.getData().setParameters(newParams.toArray());
     }
   }

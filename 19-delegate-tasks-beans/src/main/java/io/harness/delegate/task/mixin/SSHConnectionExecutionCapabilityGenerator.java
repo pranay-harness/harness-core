@@ -1,5 +1,6 @@
 package io.harness.delegate.task.mixin;
-import io.harness.delegate.beans.executioncapability.SSHConnectionExecutionCapability;
+
+import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
 import io.harness.expression.DummySubstitutor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -9,24 +10,34 @@ import java.util.regex.Pattern;
 
 @Slf4j
 public class SSHConnectionExecutionCapabilityGenerator {
-  public static SSHConnectionExecutionCapability buildSSHConnectionExecutionCapability(String urlString) {
+  public static SocketConnectivityExecutionCapability buildSSHConnectionExecutionCapability(String urlString) {
     try {
       SSHUriParser sshUriParser = SSHUriParser.parse(DummySubstitutor.substitute(urlString));
 
       if (sshUriParser != null) {
-        return SSHConnectionExecutionCapability.builder()
+        return SocketConnectivityExecutionCapability.builder()
             .scheme(sshUriParser.getScheme())
             .hostName(sshUriParser.getHost())
             .port(sshUriParser.getPort())
             .url(urlString)
             .build();
       } else {
-        return SSHConnectionExecutionCapability.builder().url(urlString).scheme(null).port(null).hostName(null).build();
+        return SocketConnectivityExecutionCapability.builder()
+            .url(urlString)
+            .scheme(null)
+            .port(null)
+            .hostName(null)
+            .build();
       }
     } catch (Exception e) {
       logger.warn("conversion to java.net.URI failed for url: " + urlString);
       // This is falling back to existing approach, where we test for entire URL
-      return SSHConnectionExecutionCapability.builder().url(urlString).scheme(null).port(null).hostName(null).build();
+      return SocketConnectivityExecutionCapability.builder()
+          .url(urlString)
+          .scheme(null)
+          .port(null)
+          .hostName(null)
+          .build();
     }
   }
 

@@ -1,11 +1,11 @@
 package software.wings.helpers.ext.external.comm;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -46,9 +46,6 @@ public class EmailRequest extends CollaborationProviderRequest {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    List<String> processExecutorArgs =
-        Arrays.asList("nc", "-z", "-G5", smtpConfig.getHost(), Integer.toString(smtpConfig.getPort()));
-    return Arrays.asList(ProcessExecutorCapabilityGenerator.buildProcessExecutorCapability(
-        getCommunicationType().name(), processExecutorArgs));
+    return CapabilityHelper.generateDelegateCapabilities(smtpConfig, encryptionDetails);
   }
 }

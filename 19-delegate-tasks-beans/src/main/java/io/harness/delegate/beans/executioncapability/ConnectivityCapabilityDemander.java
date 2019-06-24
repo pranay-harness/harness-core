@@ -13,6 +13,7 @@ public class ConnectivityCapabilityDemander implements ExecutionCapabilityDemand
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return singletonList(new TcpConnectivityExecutionCapability(host, port));
+    return singletonList(
+        SocketConnectivityExecutionCapability.builder().hostName(host).port(String.valueOf(port)).build());
   }
 }
