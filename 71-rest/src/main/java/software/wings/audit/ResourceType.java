@@ -20,5 +20,6 @@ public enum ResourceType {
   TRIGGER,
   TEMPLATE,
   TEMPLATE_FOLDER,
-  USER_GROUP
+  USER_GROUP,
+  GOVERNANCE
 }
