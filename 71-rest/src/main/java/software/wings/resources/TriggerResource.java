@@ -121,22 +121,21 @@ public class TriggerResource {
   public RestResponse<Trigger> save(@QueryParam("appId") String appId, Trigger trigger) {
     Validator.notNullCheck("trigger", trigger);
     trigger.setAppId(appId);
-    authorize(trigger);
     if (trigger.getUuid() != null) {
       Trigger existingTrigger = triggerService.get(appId, trigger.getUuid());
       if (existingTrigger == null) {
         throw new WingsException("Invalid Trigger Id", USER);
       }
-
-      authorize(existingTrigger);
-      authorize(trigger);
+      authorize(existingTrigger, true);
+      authorize(trigger, false);
       return new RestResponse(triggerService.update(trigger));
     }
 
+    authorize(trigger, false);
     return new RestResponse<>(triggerService.save(trigger));
   }
 
-  private void authorize(Trigger trigger) {
+  private void authorize(Trigger trigger, boolean existing) {
     PermissionAttribute permissionAttribute = new PermissionAttribute(PermissionType.DEPLOYMENT, Action.EXECUTE);
     List<PermissionAttribute> permissionAttributeList = asList(permissionAttribute);
     WorkflowType workflowType = trigger.getWorkflowType();
@@ -147,7 +146,6 @@ public class TriggerResource {
       Pipeline pipeline = pipelineService.readPipeline(appId, trigger.getWorkflowId(), true);
       variables = pipeline.getPipelineVariables();
     } else if (WorkflowType.ORCHESTRATION.equals(workflowType)) {
-      authHandler.authorize(permissionAttributeList, asList(appId), trigger.getWorkflowId());
       Workflow workflow = workflowService.readWorkflow(appId, trigger.getWorkflowId());
       variables = workflow.getOrchestrationWorkflow().getUserVariables();
     } else {
@@ -165,7 +163,11 @@ public class TriggerResource {
 
       String environment = workflowVariables.get(templatizedEnvVariableName);
       if (isEmpty(environment)) {
-        throw new WingsException(ACCESS_DENIED, USER);
+        if (existing) {
+          return;
+        } else {
+          throw new WingsException(ACCESS_DENIED, USER);
+        }
       }
 
       if (ManagerExpressionEvaluator.matchesVariablePattern(environment)) {
@@ -194,7 +196,12 @@ public class TriggerResource {
       @QueryParam("appId") String appId, @PathParam("triggerId") String triggerId, Trigger trigger) {
     trigger.setUuid(triggerId);
     trigger.setAppId(appId);
-    authorize(trigger);
+    Trigger existingTrigger = triggerService.get(appId, trigger.getUuid());
+    if (existingTrigger == null) {
+      throw new WingsException("Trigger doesn't exist", USER);
+    }
+    authorize(existingTrigger, true);
+    authorize(trigger, false);
     return new RestResponse<>(triggerService.update(trigger));
   }
 
@@ -212,7 +219,7 @@ public class TriggerResource {
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("triggerId") String triggerId) {
     Trigger trigger = triggerService.get(appId, triggerId);
     if (trigger != null) {
-      authorize(trigger);
+      authorize(trigger, true);
       triggerService.delete(appId, triggerId);
     }
     return new RestResponse<>();
