@@ -834,7 +834,7 @@ public class K8sTaskHelper {
       }
 
       if (id.getName().length() > maxNameLength) {
-        maxNameLength = id.getKind().length();
+        maxNameLength = id.getName().length();
       }
     }
 
