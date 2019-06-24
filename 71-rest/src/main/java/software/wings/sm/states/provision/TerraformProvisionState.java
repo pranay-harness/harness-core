@@ -82,7 +82,7 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ManagerExecutionLogCallback;
-import software.wings.utils.GitUtils;
+import software.wings.utils.GitUtilsManager;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -115,7 +115,7 @@ public abstract class TerraformProvisionState extends State {
   @Inject protected transient InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject private transient SettingsService settingsService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
-  @Inject private transient GitUtils gitUtils;
+  @Inject private transient GitUtilsManager gitUtilsManager;
 
   @Inject private transient ServiceVariableService serviceVariableService;
   @Inject private transient EncryptionService encryptionService;
@@ -419,7 +419,7 @@ public abstract class TerraformProvisionState extends State {
     String workspace = context.renderExpression(element.getWorkspace());
     String entityId = generateEntityId(context, workspace);
     String fileId = fileService.getLatestFileId(entityId, TERRAFORM_STATE);
-    GitConfig gitConfig = gitUtils.getGitConfig(element.getSourceRepoSettingId());
+    GitConfig gitConfig = gitUtilsManager.getGitConfig(element.getSourceRepoSettingId());
     if (isNotEmpty(element.getSourceRepoReference())) {
       gitConfig.setReference(element.getSourceRepoReference());
       String branch = context.renderExpression(terraformProvisioner.getSourceRepoBranch());
@@ -506,7 +506,7 @@ public abstract class TerraformProvisionState extends State {
 
   private ExecutionResponse executeInternalRegular(ExecutionContext context, String activityId) {
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
-    GitConfig gitConfig = gitUtils.getGitConfig(terraformProvisioner.getSourceRepoSettingId());
+    GitConfig gitConfig = gitUtilsManager.getGitConfig(terraformProvisioner.getSourceRepoSettingId());
     String branch = context.renderExpression(terraformProvisioner.getSourceRepoBranch());
     if (isNotEmpty(branch)) {
       gitConfig.setBranch(branch);

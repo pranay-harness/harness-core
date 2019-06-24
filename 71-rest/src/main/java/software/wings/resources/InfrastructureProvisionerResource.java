@@ -140,10 +140,11 @@ public class InfrastructureProvisionerResource {
   public RestResponse<List<AwsCFTemplateParamsData>> getParamsKeys(@QueryParam("type") @NotEmpty String type,
       @QueryParam("region") @NotEmpty String region, @QueryParam("awsConfigId") @NotEmpty String awsConfigId,
       @QueryParam("appId") @NotEmpty String appId, String data,
-      @QueryParam("sourceRepoSettingId") String sourceRepoSettingId, @QueryParam("path") String cfDirectory,
-      @QueryParam("branch") String sourceRepoBranch) {
-    return new RestResponse<>(infrastructureProvisionerService.getCFTemplateParamKeys(
-        type, region, awsConfigId, data, appId, sourceRepoSettingId, sourceRepoBranch, cfDirectory));
+      @QueryParam("sourceRepoSettingId") String sourceRepoSettingId, @QueryParam("path") String templatePath,
+      @QueryParam("commitId") String commitId, @QueryParam("branch") String sourceRepoBranch,
+      @QueryParam("useBranch") Boolean useBranch) {
+    return new RestResponse<>(infrastructureProvisionerService.getCFTemplateParamKeys(type, region, awsConfigId, data,
+        appId, sourceRepoSettingId, sourceRepoBranch, templatePath, commitId, useBranch));
   }
 
   @DELETE

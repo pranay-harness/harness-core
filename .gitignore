@@ -49,4 +49,3 @@ delegate_sequence_config
 **/*.tfstate.backup
 **/tfplan
 **/*.lock.info
-71-rest/migrator*.log
