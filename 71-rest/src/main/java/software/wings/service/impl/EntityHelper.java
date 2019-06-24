@@ -31,6 +31,7 @@ import io.harness.persistence.UuidAccess;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.audit.EntityAuditRecord.EntityAuditRecordBuilder;
+import software.wings.audit.ResourceType;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.ConfigFile;
@@ -58,6 +59,7 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
+import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
@@ -437,6 +439,15 @@ public class EntityHelper {
       affectedResourceType = EntityType.ENVIRONMENT.name();
       affectedResourceOperation =
           getAffectedResourceOperation(EntityType.ENVIRONMENT, affectedResourceId, affectedResourceName);
+    } else if (entity instanceof GovernanceConfig) {
+      GovernanceConfig governanceConfig = (GovernanceConfig) entity;
+      entityType = ResourceType.GOVERNANCE.name();
+      entityName = ResourceType.GOVERNANCE.name();
+      appId = Application.GLOBAL_APP_ID;
+      affectedResourceId = governanceConfig.getUuid();
+      affectedResourceName = ResourceType.GOVERNANCE.name();
+      affectedResourceType = ResourceType.GOVERNANCE.name();
+      affectedResourceOperation = type.name();
     } else {
       logger.error(format("Unhandled class for auditing: [%s]", entity.getClass().getSimpleName()));
       entityType = format("Object of class: [%s]", entity.getClass().getSimpleName());
