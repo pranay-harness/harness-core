@@ -6,6 +6,8 @@ import io.harness.testframework.framework.Setup;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import software.wings.beans.Account;
+import software.wings.beans.User;
+import software.wings.beans.UserInvite;
 
 @Slf4j
 public class AccessManagementUtils {
@@ -44,6 +46,20 @@ public class AccessManagementUtils {
     logger.info("List IPWhitelists failed with Bad request as expected");
 
     Setup.signOut(readOnlyUserid, roBearerToken);
+    logger.info("Readonly user logout successful");
+  }
+
+  public static void runUserPostFailTest(
+      Account account, String bearerToken, String userName, String email, String password) {
+    logger.info("Starting with the ReadOnly Test");
+    User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), userName);
+    logger.info("Logging in as a ReadOnly user");
+    String roBearerToken = Setup.getAuthToken(userName, password);
+    UserInvite invite = UserUtils.createUserInvite(account, email);
+    logger.info("Attempting to create a user without permission");
+    assertTrue(UserUtils.doesInviteFail(invite, account, roBearerToken, HttpStatus.SC_BAD_REQUEST));
+    logger.info("User Creation Denied Successfully");
+    Setup.signOut(readOnlyUser.getUuid(), roBearerToken);
     logger.info("Readonly user logout successful");
   }
 }

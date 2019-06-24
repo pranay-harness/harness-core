@@ -14,6 +14,8 @@ import io.harness.testframework.framework.utils.UserUtils;
 import io.harness.testframework.restutils.UserGroupRestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.User;
@@ -25,17 +27,22 @@ import java.util.List;
 
 @Slf4j
 public class AccessManagementROTest extends AbstractFunctionalTest {
-  final String READ_ONLY_USER = "rbac1@harness.io";
+  final String RBAC_USER = "rbac1@harness.io";
   String readOnlyUserid;
   UserGroup userGroup;
+
+  @Before
+  public void rbacSetup() {
+    logger.info("Running RBAC setup");
+    createUserGroup();
+  }
 
   @Test
   @Owner(emails = SWAMY, resent = false)
   @Category(FunctionalTests.class)
   public void accessManagementNoPermissionTestForList() {
-    createUserGroup();
     logger.info("Logging in as a ReadOnly user");
-    String roBearerToken = Setup.getAuthToken(READ_ONLY_USER, "rbac1");
+    String roBearerToken = Setup.getAuthToken(RBAC_USER, "rbac1");
     logger.info("List the users using ReadOnly permission");
     assertTrue(Setup.portal()
                    .auth()
@@ -54,13 +61,21 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
                    .getStatusCode()
         == HttpStatus.SC_OK);
     AccessManagementUtils.runNoAccessTest(getAccount(), roBearerToken, readOnlyUserid);
-    deleteMembers();
-    logger.info("Members deleted");
+  }
+
+  @Test
+  @Owner(emails = SWAMY, resent = false)
+  @Category(FunctionalTests.class)
+  public void amNoPermissionToPostForUser() {
+    final String READ_ONLY_USER = "rbac1@harness.io";
+    String email = "testemail@harness.mailinator.com";
+    String password = "rbac1";
+    AccessManagementUtils.runUserPostFailTest(getAccount(), bearerToken, READ_ONLY_USER, email, password);
   }
 
   private void createUserGroup() {
     logger.info("Starting with the ReadOnly Test");
-    User readOnlyUser = UserUtils.getUser(bearerToken, getAccount().getUuid(), READ_ONLY_USER);
+    User readOnlyUser = UserUtils.getUser(bearerToken, getAccount().getUuid(), RBAC_USER);
     assertNotNull(readOnlyUser);
     readOnlyUserid = readOnlyUser.getUuid();
     List<String> userIds = new ArrayList<>();
@@ -76,5 +91,12 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
     assertTrue(UserGroupRestUtils.updateMembers(getAccount(), bearerToken, userGroup) == HttpStatus.SC_OK);
     userGroup = UserGroupUtils.getUserGroup(getAccount(), bearerToken, userGroup.getName());
     assertTrue(userGroup.getMemberIds() == null || userGroup.getMemberIds().size() == 0);
+  }
+
+  @After
+  public void rbacCleanup() {
+    logger.info("Running RBAC cleanup");
+    deleteMembers();
+    UserGroupRestUtils.deleteUserGroup(getAccount(), bearerToken, userGroup.getUuid());
   }
 }
