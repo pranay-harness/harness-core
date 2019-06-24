@@ -11,6 +11,8 @@ import io.harness.testframework.framework.email.mailinator.MailinatorMetaMessage
 import io.harness.testframework.restutils.HTMLUtils;
 import io.harness.testframework.restutils.MailinatorRestUtils;
 import io.harness.testframework.restutils.UserRestUtils;
+import io.restassured.http.ContentType;
+import io.restassured.mapper.ObjectMapperType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
@@ -19,6 +21,7 @@ import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import javax.mail.MessagingException;
 
@@ -119,5 +122,28 @@ public class UserUtils {
     assertTrue(messageDetails.getAdditionalProperties().get("status").toString().equals("ok"));
     logger.info("All validation completed");
     logger.info("All validation for reset also done");
+  }
+
+  public static UserInvite createUserInvite(Account account, String emailId) {
+    UserInvite invite = new UserInvite();
+    invite.setAccountId(account.getUuid());
+    List<String> emailList = new ArrayList<>();
+    emailList.add(emailId);
+    invite.setEmails(emailList);
+    invite.setName(emailId.replace("@harness.mailinator.com", ""));
+    invite.setAppId(account.getAppId());
+    return invite;
+  }
+
+  public static boolean doesInviteFail(UserInvite invite, Account account, String bearerToken, int status) {
+    return Setup.portal()
+               .auth()
+               .oauth2(bearerToken)
+               .queryParam("accountId", account.getUuid())
+               .body(invite, ObjectMapperType.GSON)
+               .contentType(ContentType.JSON)
+               .post("/users/invites")
+               .getStatusCode()
+        == status;
   }
 }

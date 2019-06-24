@@ -17,7 +17,6 @@ import io.harness.testframework.framework.utils.UserUtils;
 import io.harness.testframework.restutils.ApiKeysRestUtils;
 import io.harness.testframework.restutils.IPWhitelistingRestUtils;
 import io.harness.testframework.restutils.SSORestUtils;
-import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import junit.framework.TestCase;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +25,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.User;
-import software.wings.beans.UserInvite;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.access.Whitelist;
 import software.wings.beans.security.access.WhitelistStatus;
@@ -155,37 +153,9 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForUser() {
     final String READ_ONLY_USER = "readonlyuser@harness.io";
-    logger.info("Starting with the ReadOnly Test");
-
-    User readOnlyUser = UserUtils.getUser(bearerToken, getAccount().getUuid(), READ_ONLY_USER);
-
-    logger.info("Logging in as a ReadOnly user");
-    String roBearerToken = Setup.getAuthToken(READ_ONLY_USER, "readonlyuser");
     String email = "testemail@harness.mailinator.com";
-    UserInvite invite = new UserInvite();
-    invite.setAccountId(getAccount().getUuid());
-    List<String> emailList = new ArrayList<>();
-    emailList.add(email);
-    invite.setEmails(emailList);
-    invite.setName(email.replace("@harness.mailinator.com", ""));
-    invite.setAppId(getAccount().getAppId());
-
-    logger.info("Attempting to create a user without permission");
-
-    assertTrue(Setup.portal()
-                   .auth()
-                   .oauth2(roBearerToken)
-                   .queryParam("accountId", getAccount().getUuid())
-                   .body(invite, ObjectMapperType.GSON)
-                   .contentType(ContentType.JSON)
-                   .post("/users/invites")
-                   .getStatusCode()
-        == HttpStatus.SC_BAD_REQUEST);
-
-    logger.info("User Creation Denied Successfully");
-
-    Setup.signOut(readOnlyUser.getUuid(), roBearerToken);
-    logger.info("Readonly user logout successful");
+    String password = "readonlyuser";
+    AccessManagementUtils.runUserPostFailTest(getAccount(), bearerToken, READ_ONLY_USER, email, password);
   }
 
   @Test
@@ -194,18 +164,14 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
   public void amNoPermissionToPostForUserGroup() {
     final String READ_ONLY_USER = "readonlyuser@harness.io";
     logger.info("Starting with the ReadOnly Test");
-
     User readOnlyUser = UserUtils.getUser(bearerToken, getAccount().getUuid(), READ_ONLY_USER);
-
     logger.info("Logging in as a ReadOnly user");
     String roBearerToken = Setup.getAuthToken(READ_ONLY_USER, "readonlyuser");
-
     logger.info("Creating a new user group without permission. It should fail");
     JsonObject groupInfoAsJson = new JsonObject();
     String name = "UserGroup - " + System.currentTimeMillis();
     groupInfoAsJson.addProperty("name", name);
     groupInfoAsJson.addProperty("description", "Test Description - " + System.currentTimeMillis());
-
     assertTrue(Setup.portal()
                    .auth()
                    .oauth2(roBearerToken)
@@ -214,7 +180,6 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
                    .post("/userGroups")
                    .getStatusCode()
         == HttpStatus.SC_BAD_REQUEST);
-
     logger.info("Group creation denied successfully.");
     Setup.signOut(readOnlyUser.getUuid(), roBearerToken);
     logger.info("Readonly user logout successful");
