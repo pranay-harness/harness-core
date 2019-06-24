@@ -58,7 +58,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       encryptionService.decrypt(splunkConfig, encryptedDataDetails);
       logger.info("Validating splunk, url {}, for user {} ", splunkConfig.getSplunkUrl(), splunkConfig.getUsername());
       Service splunkService = initSplunkService(splunkConfig, encryptedDataDetails);
-      createSearchJob(splunkService, getQuery("*exception*", null, null),
+      createSearchJob(splunkService, getQuery("*exception*", null, null, false),
           System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(5), System.currentTimeMillis());
       return true;
     } catch (Exception exception) {
@@ -105,9 +105,9 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
   @Override
   public List<LogElement> getLogResults(SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails,
       String basicQuery, String hostNameField, String host, long startTime, long endTime,
-      ThirdPartyApiCallLog apiCallLog, int logCollectionMinute) {
+      ThirdPartyApiCallLog apiCallLog, int logCollectionMinute, boolean isAdvancedQuery) {
     Service splunkService = initSplunkService(splunkConfig, encryptedDataDetails);
-    String query = getQuery(basicQuery, hostNameField, host);
+    String query = getQuery(basicQuery, hostNameField, host, isAdvancedQuery);
 
     apiCallLog.setTitle("Fetch request to " + splunkConfig.getSplunkUrl());
     apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
@@ -208,14 +208,14 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
     }
   }
 
-  private String getQuery(String query, String hostNameField, String host) {
-    String searchQuery = "search " + query + " ";
+  private String getQuery(String query, String hostNameField, String host, boolean isAdvancedQuery) {
+    String searchQuery = isAdvancedQuery ? query + " " : "search " + query + " ";
     if (!isEmpty(host)) {
       searchQuery += hostNameField + " = " + host;
     }
     searchQuery += " | bin _time span=1m | cluster t=0.9999 showcount=t labelonly=t"
-        + "| table _time, _raw,cluster_label, host | "
-        + "stats latest(_raw) as _raw count as cluster_count by _time,cluster_label,host";
+        + "| table _time, _raw,cluster_label, " + hostNameField + " | "
+        + "stats latest(_raw) as _raw count as cluster_count by _time,cluster_label," + hostNameField;
 
     return searchQuery;
   }

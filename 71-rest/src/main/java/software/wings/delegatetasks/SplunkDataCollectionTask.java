@@ -200,7 +200,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
       ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
       return splunkDelegateService.getLogResults(dataCollectionInfo.getSplunkConfig(),
           dataCollectionInfo.getEncryptedDataDetails(), query, dataCollectionInfo.getHostnameField(), host, startTime,
-          endTime, apiCallLog, logCollectionMinute);
+          endTime, apiCallLog, logCollectionMinute, dataCollectionInfo.isAdvancedQuery());
     }
   }
 }

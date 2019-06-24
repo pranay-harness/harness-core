@@ -44,6 +44,8 @@ import java.util.concurrent.TimeUnit;
 public class SplunkV2State extends AbstractLogAnalysisState {
   @Attributes(required = true, title = "Splunk Server") private String analysisServerConfigId;
 
+  private boolean isAdvancedQuery;
+
   public SplunkV2State(String name) {
     super(name, StateType.SPLUNKV2.getType());
   }
@@ -105,6 +107,16 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     this.hostnameTemplate = hostnameTemplate;
   }
 
+  @DefaultValue("false")
+  @Attributes(required = false, title = "Is this an advanced splunk query")
+  public boolean isAdvancedQuery() {
+    return isAdvancedQuery;
+  }
+
+  public void setAdvancedQuery(boolean advancedQuery) {
+    this.isAdvancedQuery = advancedQuery;
+  }
+
   @Override
   protected String triggerAnalysisDataCollection(
       ExecutionContext context, VerificationStateAnalysisExecutionData executionData, Set<String> hosts) {
@@ -139,6 +151,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
               .hosts(hostBatch)
               .encryptedDataDetails(secretManager.getEncryptionDetails(
                   splunkConfig, context.getAppId(), context.getWorkflowExecutionId()))
+              .isAdvancedQuery(isAdvancedQuery)
               .build();
 
       String waitId = generateUuid();
