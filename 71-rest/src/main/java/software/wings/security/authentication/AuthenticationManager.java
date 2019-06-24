@@ -214,6 +214,9 @@ public class AuthenticationManager {
     // Null check just in case identity service might accidentally forwarded wrong user to this cluster.
     if (user == null) {
       logger.info("User {} doesn't exist in this manager cluster", email);
+    } else if (user.isDisabled()) {
+      logger.info("User {} is disabled in this manager cluster, login is not allowed.", email);
+      throw new WingsException(USER_DISABLED, USER);
     } else {
       if (user.isTwoFactorAuthenticationEnabled()) {
         user = generate2faJWTToken(user);
