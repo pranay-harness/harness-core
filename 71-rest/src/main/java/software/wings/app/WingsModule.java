@@ -230,6 +230,9 @@ import software.wings.service.impl.instance.stats.InstanceStatServiceImpl;
 import software.wings.service.impl.instance.stats.collector.StatsCollectorImpl;
 import software.wings.service.impl.instance.sync.ContainerSync;
 import software.wings.service.impl.instance.sync.ContainerSyncImpl;
+import software.wings.service.impl.marketplace.gcp.GCPBillingPollingServiceImpl;
+import software.wings.service.impl.marketplace.gcp.GCPMarketPlaceServiceImpl;
+import software.wings.service.impl.marketplace.gcp.GCPUsageReportServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicServiceImpl;
 import software.wings.service.impl.notifications.NotificationDispatcher;
 import software.wings.service.impl.notifications.NotificationGroupBasedDispatcher;
@@ -398,6 +401,9 @@ import software.wings.service.intfc.instance.stats.InstanceStatService;
 import software.wings.service.intfc.instance.stats.collector.StatsCollector;
 import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import software.wings.service.intfc.limits.LimitVicinityHandler;
+import software.wings.service.intfc.marketplace.gcp.GCPBillingPollingService;
+import software.wings.service.intfc.marketplace.gcp.GCPMarketPlaceService;
+import software.wings.service.intfc.marketplace.gcp.GCPUsageReportService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.pagerduty.PagerDutyService;
 import software.wings.service.intfc.personalization.PersonalizationService;
@@ -719,6 +725,9 @@ public class WingsModule extends DependencyModule {
     // Start of deployment trigger dependencies
     bind(DeploymentTriggerService.class).to(DeploymentTriggerServiceImpl.class);
     bind(TriggerExecutionService.class).to(TriggerExecutionServiceImpl.class);
+    bind(GCPUsageReportService.class).to(GCPUsageReportServiceImpl.class);
+    bind(GCPBillingPollingService.class).to(GCPBillingPollingServiceImpl.class);
+    bind(GCPMarketPlaceService.class).to(GCPMarketPlaceServiceImpl.class);
     MapBinder<String, TriggerProcessor> triggerProcessorMapBinder =
         MapBinder.newMapBinder(binder(), String.class, TriggerProcessor.class);
 
