@@ -7,12 +7,25 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.utils.IndexType;
+import software.wings.beans.EntityYamlRecord.EntityYamlRecordKeys;
 
 @Value
 @Builder
 @Entity(value = "entityYamlRecord", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "EntityYamlRecordKeys")
+@Indexes({
+  @Index(options = @IndexOptions(name = "index_1"), fields = {
+    @Field(EntityYamlRecordKeys.accountId)
+    , @Field(EntityYamlRecordKeys.entityId), @Field(EntityYamlRecordKeys.entityType),
+        @Field(value = EntityYamlRecordKeys.createdAt, type = IndexType.DESC)
+  })
+})
 public class EntityYamlRecord implements PersistentEntity, UuidAccess, CreatedAtAccess {
   @Id private String uuid;
   private String accountId;
