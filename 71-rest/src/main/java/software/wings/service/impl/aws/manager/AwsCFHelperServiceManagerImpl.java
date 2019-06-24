@@ -59,13 +59,21 @@ public class AwsCFHelperServiceManagerImpl implements AwsCFHelperServiceManager 
     AwsConfig awsConfig = getAwsConfig(awsConfigId);
     List<EncryptedDataDetail> details =
         secretManager.getEncryptionDetails(awsConfig, isNotEmpty(appId) ? appId : GLOBAL_APP_ID, null);
-    GitConfig gitConfig = null;
+    GitConfig gitConfig = GitConfig.builder().build();
+    GitFileConfig gitFileConfig = GitFileConfig.builder().build();
     if (type.equalsIgnoreCase(CloudFormationSourceType.GIT.name())) {
       gitConfig = gitUtilsManager.getGitConfig(sourceRepoSettingId);
+      gitFileConfig.setConnectorId(sourceRepoSettingId);
+      gitFileConfig.setUseBranch(useBranch);
+      gitFileConfig.setFilePath(templatePath);
       if (isNotEmpty(sourceRepoBranch)) {
         gitConfig.setBranch(sourceRepoBranch);
+        gitFileConfig.setBranch(sourceRepoBranch);
       }
-      gitConfig.setReference(commitId);
+      if (isNotEmpty(commitId)) {
+        gitConfig.setReference(commitId);
+        gitFileConfig.setCommitId(commitId);
+      }
     }
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsCFGetTemplateParamsRequest.builder()
@@ -75,13 +83,7 @@ public class AwsCFHelperServiceManagerImpl implements AwsCFHelperServiceManager 
             .data(data)
             .type(type)
             .gitConfig(gitConfig)
-            .gitFileConfig(GitFileConfig.builder()
-                               .connectorId(sourceRepoSettingId)
-                               .branch(sourceRepoBranch)
-                               .filePath(templatePath)
-                               .commitId(commitId)
-                               .useBranch(useBranch)
-                               .build())
+            .gitFileConfig(gitFileConfig)
             .sourceRepoEncryptionDetails(
                 gitConfig != null ? secretManager.getEncryptionDetails(gitConfig, appId, null) : null)
             .build(),
