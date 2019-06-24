@@ -53,7 +53,6 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.PhaseStep;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandType;
@@ -83,7 +82,7 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ManagerExecutionLogCallback;
-import software.wings.utils.Validator;
+import software.wings.utils.GitUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -116,6 +115,7 @@ public abstract class TerraformProvisionState extends State {
   @Inject protected transient InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject private transient SettingsService settingsService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
+  @Inject private transient GitUtils gitUtils;
 
   @Inject private transient ServiceVariableService serviceVariableService;
   @Inject private transient EncryptionService encryptionService;
@@ -387,18 +387,6 @@ public abstract class TerraformProvisionState extends State {
     return validVariables;
   }
 
-  protected GitConfig getGitConfig(String sourceRepoSettingId) {
-    SettingAttribute gitSettingAttribute = settingsService.get(sourceRepoSettingId);
-    Validator.notNullCheck("Git connector not found", gitSettingAttribute);
-    if (!(gitSettingAttribute.getValue() instanceof GitConfig)) {
-      throw new InvalidRequestException("Invalid Git Repo");
-    }
-
-    GitConfig gitConfig = (GitConfig) gitSettingAttribute.getValue();
-    gitConfigHelperService.setSshKeySettingAttributeIfNeeded(gitConfig);
-    return gitConfig;
-  }
-
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     if (inheritApprovedPlan) {
       return executeInternalInherited(context, activityId);
@@ -431,7 +419,7 @@ public abstract class TerraformProvisionState extends State {
     String workspace = context.renderExpression(element.getWorkspace());
     String entityId = generateEntityId(context, workspace);
     String fileId = fileService.getLatestFileId(entityId, TERRAFORM_STATE);
-    GitConfig gitConfig = getGitConfig(element.getSourceRepoSettingId());
+    GitConfig gitConfig = gitUtils.getGitConfig(element.getSourceRepoSettingId());
     if (isNotEmpty(element.getSourceRepoReference())) {
       gitConfig.setReference(element.getSourceRepoReference());
       String branch = context.renderExpression(terraformProvisioner.getSourceRepoBranch());
@@ -518,7 +506,7 @@ public abstract class TerraformProvisionState extends State {
 
   private ExecutionResponse executeInternalRegular(ExecutionContext context, String activityId) {
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
-    GitConfig gitConfig = getGitConfig(terraformProvisioner.getSourceRepoSettingId());
+    GitConfig gitConfig = gitUtils.getGitConfig(terraformProvisioner.getSourceRepoSettingId());
     String branch = context.renderExpression(terraformProvisioner.getSourceRepoBranch());
     if (isNotEmpty(branch)) {
       gitConfig.setBranch(branch);

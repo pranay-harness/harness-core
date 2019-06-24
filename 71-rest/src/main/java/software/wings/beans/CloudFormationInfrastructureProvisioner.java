@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static software.wings.beans.CloudFormationSourceType.GIT;
 import static software.wings.beans.CloudFormationSourceType.TEMPLATE_BODY;
 import static software.wings.beans.CloudFormationSourceType.TEMPLATE_URL;
 import static software.wings.beans.InfrastructureProvisionerType.CLOUD_FORMATION;
@@ -25,6 +26,7 @@ public class CloudFormationInfrastructureProvisioner extends InfrastructureProvi
   @NotEmpty private String sourceType;
   private String templateBody;
   private String templateFilePath;
+  private GitFileConfig gitFileConfig;
 
   public boolean provisionByBody() {
     return TEMPLATE_BODY.name().equals(sourceType);
@@ -32,17 +34,21 @@ public class CloudFormationInfrastructureProvisioner extends InfrastructureProvi
   public boolean provisionByUrl() {
     return TEMPLATE_URL.name().equals(sourceType);
   }
+  public boolean provisionByGit() {
+    return GIT.name().equals(sourceType);
+  }
 
   @Builder
   private CloudFormationInfrastructureProvisioner(String uuid, String appId, String name, String awsConfigId,
-      String sourceType, String templateBody, String templateFilePath, List<NameValuePair> variables,
-      List<InfrastructureMappingBlueprint> mappingBlueprints, String accountId, String provisionerTemplateData,
-      String stackName, String description, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, String entityYamlPath) {
+      String sourceType, String templateBody, String templateFilePath, GitFileConfig gitFileConfig,
+      List<NameValuePair> variables, List<InfrastructureMappingBlueprint> mappingBlueprints, String accountId,
+      String provisionerTemplateData, String stackName, String description, EmbeddedUser createdBy, long createdAt,
+      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath) {
     super(name, description, CLOUD_FORMATION.name(), variables, mappingBlueprints, accountId, uuid, appId, createdBy,
         createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     setSourceType(sourceType);
     setTemplateBody(templateBody);
+    setGitFileConfig(gitFileConfig);
     setTemplateFilePath(templateFilePath);
   }
 
@@ -65,16 +71,19 @@ public class CloudFormationInfrastructureProvisioner extends InfrastructureProvi
     private String sourceType;
     private String templateBody;
     private String templateFilePath;
+    private GitFileConfig gitFileConfig;
 
+    // TODO: check usage of yaml constructor
     @Builder
     public Yaml(String type, String harnessApiVersion, String name, String description,
         String infrastructureProvisionerType, List<NameValuePair.Yaml> variables,
         List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints, String sourceType, String templateBody,
-        String templateFilePath) {
+        String templateFilePath, GitFileConfig gitFileConfig) {
       super(type, harnessApiVersion, name, description, infrastructureProvisionerType, variables, mappingBlueprints);
       this.sourceType = sourceType;
       this.templateBody = templateBody;
       this.templateFilePath = templateFilePath;
+      this.gitFileConfig = gitFileConfig;
     }
   }
 }
