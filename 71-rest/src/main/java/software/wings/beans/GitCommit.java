@@ -12,6 +12,7 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.GitCommit.GitCommitKeys;
 import software.wings.beans.yaml.GitCommandResult;
 import software.wings.yaml.gitSync.YamlChangeSet;
@@ -34,8 +35,8 @@ import java.util.List;
   ,
       @Index(fields = {
         @Field(GitCommitKeys.accountId)
-        , @Field(GitCommitKeys.status), @Field(GitCommitKeys.commitId), @Field(GitCommitKeys.lastUpdatedAt)
-      }, options = @IndexOptions(name = "gitCommitStatusIdx"))
+        , @Field(GitCommitKeys.status), @Field(value = GitCommitKeys.lastUpdatedAt, type = IndexType.DESC)
+      }, options = @IndexOptions(name = "gitCommitStatusLastUpdatedIdx"))
 })
 @HarnessExportableEntity
 @FieldNameConstants(innerTypeName = "GitCommitKeys")
