@@ -14,6 +14,7 @@ import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
+import software.wings.beans.FeatureName;
 import software.wings.graphql.directive.DataFetcherDirective;
 import software.wings.graphql.instrumentation.QueryDepthInstrumentation;
 import software.wings.graphql.scalar.GraphQLDateTimeScalar;
@@ -49,9 +50,9 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
 
     loadSchemaForEnv(GRAPHQL_SCHEMA_PROD_DIRECTORY_PATH, typeDefinitionRegistry, schemaParser);
 
-    // if (featureFlagService.isEnabled(FeatureName.GRAPHQL_DEV, null)) {
-    loadSchemaForEnv(GRAPHQL_SCHEMA_DEV_DIRECTORY_PATH, typeDefinitionRegistry, schemaParser);
-    //}
+    if (featureFlagService.isEnabled(FeatureName.GRAPHQL_DEV, null)) {
+      loadSchemaForEnv(GRAPHQL_SCHEMA_DEV_DIRECTORY_PATH, typeDefinitionRegistry, schemaParser);
+    }
 
     RuntimeWiring runtimeWiring = buildRuntimeWiring();
 
