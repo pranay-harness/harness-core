@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.k8s.manifest.ManifestHelper.getWorkloads;
@@ -172,8 +173,12 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     }
 
     for (KubernetesResource kubernetesResource : managedWorkloads) {
-      k8sPods.addAll(k8sTaskHelper.getPodDetails(
-          kubernetesConfig, kubernetesResource.getResourceId().getNamespace(), releaseName));
+      List<K8sPod> podDetails =
+          k8sTaskHelper.getPodDetails(kubernetesConfig, kubernetesResource.getResourceId().getNamespace(), releaseName);
+
+      if (isNotEmpty(podDetails)) {
+        k8sPods.addAll(podDetails);
+      }
     }
 
     return k8sPods;
