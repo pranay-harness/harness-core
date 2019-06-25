@@ -318,7 +318,7 @@ public class SettingValidationService {
 
   private void validateAwsConfig(SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails) {
     AwsConfig value = (AwsConfig) settingAttribute.getValue();
-    if (value.isUseEc2IamCredentials()) {
+    if (value.isUseEc2IamCredentials() && !value.isAssumeCrossAccountRole()) {
       if (isEmpty(value.getTag())) {
         throw new InvalidRequestException("When creating an Aws cloud provider with Ec2 Iam role. Please "
                 + "give a tag",

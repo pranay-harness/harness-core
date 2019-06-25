@@ -79,10 +79,9 @@ import java.util.Map.Entry;
 public class AwsLambdaHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsLambdaHelperServiceDelegate {
   @VisibleForTesting
-  public AWSLambdaClient getAmazonLambdaClient(
-      String region, String accessKey, char[] secretKey, boolean useEc2IamCredentials) {
+  public AWSLambdaClient getAmazonLambdaClient(String region, AwsConfig awsConfig) {
     AWSLambdaClientBuilder builder = AWSLambdaClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, useEc2IamCredentials, accessKey, secretKey);
+    attachCredentials(builder, awsConfig);
     return (AWSLambdaClient) builder.build();
   }
 
@@ -92,8 +91,7 @@ public class AwsLambdaHelperServiceDelegateImpl
       AwsConfig awsConfig = request.getAwsConfig();
       List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AWSLambdaClient lambdaClient = getAmazonLambdaClient(
-          request.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+      AWSLambdaClient lambdaClient = getAmazonLambdaClient(request.getRegion(), awsConfig);
       InvokeRequest invokeRequest = new InvokeRequest()
                                         .withFunctionName(request.getFunctionName())
                                         .withQualifier(request.getQualifier())
@@ -134,8 +132,7 @@ public class AwsLambdaHelperServiceDelegateImpl
       AwsConfig awsConfig = request.getAwsConfig();
       List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AWSLambdaClient lambdaClient = getAmazonLambdaClient(
-          request.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+      AWSLambdaClient lambdaClient = getAmazonLambdaClient(request.getRegion(), awsConfig);
       AwsLambdaFunctionResponseBuilder response = AwsLambdaFunctionResponse.builder();
       List<String> lambdaFunctions = new ArrayList<>();
       lambdaClient.listFunctions().getFunctions().forEach(
@@ -158,8 +155,7 @@ public class AwsLambdaHelperServiceDelegateImpl
       responseBuilder.region(request.getRegion());
       List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AWSLambdaClient lambdaClient = getAmazonLambdaClient(
-          request.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+      AWSLambdaClient lambdaClient = getAmazonLambdaClient(request.getRegion(), awsConfig);
       String roleArn = request.getRoleArn();
       List<String> evaluatedAliases = request.getEvaluatedAliases();
       Map<String, String> serviceVariables = request.getServiceVariables();

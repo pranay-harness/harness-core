@@ -25,10 +25,9 @@ import java.util.List;
 public class AwsServiceDiscoveryHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsServiceDiscoveryHelperServiceDelegate {
   @VisibleForTesting
-  AWSServiceDiscovery getAmazonServiceDiscoveryClient(
-      String region, String accessKey, char[] secretKey, boolean useEc2IamCredentials) {
+  AWSServiceDiscovery getAmazonServiceDiscoveryClient(String region, AwsConfig awsConfig) {
     AWSServiceDiscoveryClientBuilder builder = AWSServiceDiscoveryClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, useEc2IamCredentials, accessKey, secretKey);
+    attachCredentials(builder, awsConfig);
     return builder.build();
   }
 
@@ -37,8 +36,7 @@ public class AwsServiceDiscoveryHelperServiceDelegateImpl
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String serviceId) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AWSServiceDiscovery client = getAmazonServiceDiscoveryClient(
-          region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+      AWSServiceDiscovery client = getAmazonServiceDiscoveryClient(region, awsConfig);
       GetServiceResult getServiceResult = client.getService(new GetServiceRequest().withId(serviceId));
       if (getServiceResult == null || getServiceResult.getService() == null) {
         return "";

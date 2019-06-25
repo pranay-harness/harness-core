@@ -48,10 +48,9 @@ public class AwsCodeDeployHelperServiceDelegateImpl
   @Inject private AwsEc2HelperServiceDelegate awsEc2HelperServiceDelegate;
 
   @VisibleForTesting
-  AmazonCodeDeployClient getAmazonCodeDeployClient(
-      Regions region, String accessKey, char[] secretKey, boolean useEc2IamCredentials) {
+  AmazonCodeDeployClient getAmazonCodeDeployClient(Regions region, AwsConfig awsConfig) {
     AmazonCodeDeployClientBuilder builder = AmazonCodeDeployClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, useEc2IamCredentials, accessKey, secretKey);
+    attachCredentials(builder, awsConfig);
     return (AmazonCodeDeployClient) builder.build();
   }
 
@@ -66,9 +65,8 @@ public class AwsCodeDeployHelperServiceDelegateImpl
       ListApplicationsRequest listApplicationsRequest;
       do {
         listApplicationsRequest = new ListApplicationsRequest().withNextToken(nextToken);
-        listApplicationsResult = getAmazonCodeDeployClient(Regions.fromName(region), awsConfig.getAccessKey(),
-            awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials())
-                                     .listApplications(listApplicationsRequest);
+        listApplicationsResult =
+            getAmazonCodeDeployClient(Regions.fromName(region), awsConfig).listApplications(listApplicationsRequest);
         applications.addAll(listApplicationsResult.getApplications());
         nextToken = listApplicationsResult.getNextToken();
       } while (nextToken != null);
@@ -92,8 +90,7 @@ public class AwsCodeDeployHelperServiceDelegateImpl
       ListDeploymentConfigsRequest listDeploymentConfigsRequest;
       do {
         listDeploymentConfigsRequest = new ListDeploymentConfigsRequest().withNextToken(nextToken);
-        listDeploymentConfigsResult = getAmazonCodeDeployClient(Regions.fromName(region), awsConfig.getAccessKey(),
-            awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials())
+        listDeploymentConfigsResult = getAmazonCodeDeployClient(Regions.fromName(region), awsConfig)
                                           .listDeploymentConfigs(listDeploymentConfigsRequest);
         deploymentConfigurations.addAll(listDeploymentConfigsResult.getDeploymentConfigsList());
         nextToken = listDeploymentConfigsResult.getNextToken();
@@ -119,8 +116,7 @@ public class AwsCodeDeployHelperServiceDelegateImpl
       do {
         listDeploymentGroupsRequest =
             new ListDeploymentGroupsRequest().withNextToken(nextToken).withApplicationName(appName);
-        listDeploymentGroupsResult = getAmazonCodeDeployClient(Regions.fromName(region), awsConfig.getAccessKey(),
-            awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials())
+        listDeploymentGroupsResult = getAmazonCodeDeployClient(Regions.fromName(region), awsConfig)
                                          .listDeploymentGroups(listDeploymentGroupsRequest);
         deploymentGroups.addAll(listDeploymentGroupsResult.getDeploymentGroups());
         nextToken = listDeploymentGroupsResult.getNextToken();
@@ -143,8 +139,7 @@ public class AwsCodeDeployHelperServiceDelegateImpl
       List<String> instanceIds = new ArrayList<>();
       ListDeploymentInstancesRequest listDeploymentInstancesRequest;
       ListDeploymentInstancesResult listDeploymentInstancesResult;
-      AmazonCodeDeployClient amazonCodeDeployClient = getAmazonCodeDeployClient(Regions.fromName(region),
-          awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+      AmazonCodeDeployClient amazonCodeDeployClient = getAmazonCodeDeployClient(Regions.fromName(region), awsConfig);
       do {
         listDeploymentInstancesRequest = new ListDeploymentInstancesRequest()
                                              .withNextToken(nextToken)
@@ -182,9 +177,8 @@ public class AwsCodeDeployHelperServiceDelegateImpl
       encryptionService.decrypt(awsConfig, encryptedDataDetails);
       GetDeploymentGroupRequest getDeploymentGroupRequest =
           new GetDeploymentGroupRequest().withApplicationName(appName).withDeploymentGroupName(deploymentGroupName);
-      GetDeploymentGroupResult getDeploymentGroupResult = getAmazonCodeDeployClient(Regions.fromName(region),
-          awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials())
-                                                              .getDeploymentGroup(getDeploymentGroupRequest);
+      GetDeploymentGroupResult getDeploymentGroupResult =
+          getAmazonCodeDeployClient(Regions.fromName(region), awsConfig).getDeploymentGroup(getDeploymentGroupRequest);
       DeploymentGroupInfo deploymentGroupInfo = getDeploymentGroupResult.getDeploymentGroupInfo();
       RevisionLocation revisionLocation = deploymentGroupInfo.getTargetRevision();
       if (revisionLocation == null || revisionLocation.getS3Location() == null) {

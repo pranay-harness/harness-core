@@ -31,9 +31,9 @@ import java.util.List;
 public class AwsEcsHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsEcsHelperServiceDelegate {
   @VisibleForTesting
-  AmazonECSClient getAmazonEcsClient(String region, String accessKey, char[] secretKey, boolean useEc2IamCredentials) {
+  AmazonECSClient getAmazonEcsClient(String region, AwsConfig awsConfig) {
     AmazonECSClientBuilder builder = AmazonECSClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, useEc2IamCredentials, accessKey, secretKey);
+    attachCredentials(builder, awsConfig);
     return (AmazonECSClient) builder.build();
   }
 
@@ -49,9 +49,7 @@ public class AwsEcsHelperServiceDelegateImpl
       String nextToken = null;
       do {
         ListClustersRequest listClustersRequest = new ListClustersRequest().withNextToken(nextToken);
-        ListClustersResult listClustersResult = getAmazonEcsClient(
-            region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials())
-                                                    .listClusters(listClustersRequest);
+        ListClustersResult listClustersResult = getAmazonEcsClient(region, awsConfig).listClusters(listClustersRequest);
         result.addAll(listClustersResult.getClusterArns().stream().map(this ::getIdFromArn).collect(toList()));
         nextToken = listClustersResult.getNextToken();
       } while (nextToken != null);
@@ -69,8 +67,7 @@ public class AwsEcsHelperServiceDelegateImpl
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String cluster) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AmazonECSClient client = getAmazonEcsClient(
-          region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+      AmazonECSClient client = getAmazonEcsClient(region, awsConfig);
       List<String> serviceArns = newArrayList();
       String nextToken = null;
       do {

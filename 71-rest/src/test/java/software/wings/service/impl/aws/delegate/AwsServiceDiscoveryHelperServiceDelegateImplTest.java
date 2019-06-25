@@ -3,7 +3,6 @@ package software.wings.service.impl.aws.delegate;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -35,7 +34,7 @@ public class AwsServiceDiscoveryHelperServiceDelegateImplTest extends WingsBaseT
     AWSServiceDiscovery mockClient = mock(AWSServiceDiscovery.class);
     doReturn(mockClient)
         .when(awsServiceDiscoveryHelperServiceDelegate)
-        .getAmazonServiceDiscoveryClient(anyString(), anyString(), any(), anyBoolean());
+        .getAmazonServiceDiscoveryClient(anyString(), any());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new GetServiceResult().withService(
                  new Service().withDnsConfig(new DnsConfig().withNamespaceId("namespaceId")).withName("serviceName")))

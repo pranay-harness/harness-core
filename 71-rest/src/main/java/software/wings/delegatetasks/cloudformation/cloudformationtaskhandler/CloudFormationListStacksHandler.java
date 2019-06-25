@@ -40,8 +40,7 @@ public class CloudFormationListStacksHandler extends CloudFormationCommandTaskHa
         describeStacksRequest.withStackName(stackId);
       }
       executionLogCallback.saveExecutionLog("Sending list stacks call to Aws");
-      List<Stack> stacks = awsHelperService.getAllStacks(request.getRegion(), awsConfig.getAccessKey(),
-          awsConfig.getSecretKey(), describeStacksRequest, awsConfig.isUseEc2IamCredentials());
+      List<Stack> stacks = awsHelperService.getAllStacks(request.getRegion(), describeStacksRequest, awsConfig);
       executionLogCallback.saveExecutionLog("Completed list stacks call to Aws");
       List<StackSummaryInfo> summaryInfos = Collections.emptyList();
       if (isNotEmpty(stacks)) {

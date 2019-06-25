@@ -82,20 +82,19 @@ public class AwsElbHelperServiceDelegateImpl
 
   @VisibleForTesting
   com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient getClassicElbClient(
-      Regions region, String accessKey, char[] secretKey, boolean useEc2IamCredentials) {
+      Regions region, AwsConfig awsConfig) {
     AmazonElasticLoadBalancingClientBuilder builder =
         AmazonElasticLoadBalancingClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, useEc2IamCredentials, accessKey, secretKey);
+    attachCredentials(builder, awsConfig);
     return (com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient) builder.build();
   }
 
   @VisibleForTesting
-  AmazonElasticLoadBalancingClient getAmazonElasticLoadBalancingClientV2(
-      Regions region, String accessKey, char[] secretKey, boolean useEc2IamCredentials) {
+  AmazonElasticLoadBalancingClient getAmazonElasticLoadBalancingClientV2(Regions region, AwsConfig awsConfig) {
     com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClientBuilder builder =
         com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClientBuilder.standard().withRegion(
             region);
-    attachCredentials(builder, useEc2IamCredentials, accessKey, secretKey);
+    attachCredentials(builder, awsConfig);
     return (AmazonElasticLoadBalancingClient) builder.build();
   }
 
@@ -112,8 +111,7 @@ public class AwsElbHelperServiceDelegateImpl
                 .withPageSize(400)
                 .withMarker(nextMarker);
         com.amazonaws.services.elasticloadbalancing.model.DescribeLoadBalancersResult describeLoadBalancersResult =
-            getClassicElbClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey(),
-                awsConfig.isUseEc2IamCredentials())
+            getClassicElbClient(Regions.fromName(region), awsConfig)
                 .describeLoadBalancers(describeLoadBalancersRequest);
         result.addAll(describeLoadBalancersResult.getLoadBalancerDescriptions()
                           .stream()
@@ -156,8 +154,7 @@ public class AwsElbHelperServiceDelegateImpl
       String nextMarker = null;
       do {
         AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-            getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig.getAccessKey(),
-                awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+            getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
         DescribeLoadBalancersRequest describeLoadBalancersRequest =
             new DescribeLoadBalancersRequest().withMarker(nextMarker).withPageSize(400);
         DescribeLoadBalancersResult describeLoadBalancersResult =
@@ -189,8 +186,7 @@ public class AwsElbHelperServiceDelegateImpl
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-          getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig.getAccessKey(),
-              awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+          getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
       String loadBalancerArn = null;
       if (isNotBlank(loadBalancerName)) {
         DescribeLoadBalancersRequest request = new DescribeLoadBalancersRequest();
@@ -229,8 +225,7 @@ public class AwsElbHelperServiceDelegateImpl
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-          getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig.getAccessKey(),
-              awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+          getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
       DescribeTargetGroupsRequest describeTargetGroupsRequest =
           new DescribeTargetGroupsRequest().withTargetGroupArns(targetGroupArn);
       DescribeTargetGroupsResult describeTargetGroupsResult =
@@ -254,8 +249,7 @@ public class AwsElbHelperServiceDelegateImpl
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-          getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig.getAccessKey(),
-              awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+          getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
       DescribeTargetGroupsRequest describeTargetGroupsRequest =
           new DescribeTargetGroupsRequest().withNames(targetGroupName);
       DescribeTargetGroupsResult describeTargetGroupsResult =
@@ -283,8 +277,7 @@ public class AwsElbHelperServiceDelegateImpl
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-          getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig.getAccessKey(),
-              awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+          getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
       DescribeLoadBalancersRequest describeLoadBalancersRequest =
           new DescribeLoadBalancersRequest().withNames(loadBalancerName);
       DescribeLoadBalancersResult describeLoadBalancersResult =
@@ -309,8 +302,7 @@ public class AwsElbHelperServiceDelegateImpl
     try {
       timeLimiter.callWithTimeout(() -> {
         com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-            getClassicElbClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey(),
-                awsConfig.isUseEc2IamCredentials());
+            getClassicElbClient(Regions.fromName(region), awsConfig);
         List<String> instanceIds =
             awsAsgHelperServiceDelegate.listAutoScalingGroupInstanceIds(awsConfig, encryptionDetails, region, asgName);
         while (true) {
@@ -359,8 +351,7 @@ public class AwsElbHelperServiceDelegateImpl
     try {
       timeLimiter.callWithTimeout(() -> {
         com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-            getClassicElbClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey(),
-                awsConfig.isUseEc2IamCredentials());
+            getClassicElbClient(Regions.fromName(region), awsConfig);
         List<String> instanceIds =
             awsAsgHelperServiceDelegate.listAutoScalingGroupInstanceIds(awsConfig, encryptionDetails, region, asgName);
         while (true) {
@@ -412,8 +403,7 @@ public class AwsElbHelperServiceDelegateImpl
     try {
       timeLimiter.callWithTimeout(() -> {
         AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-            getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig.getAccessKey(),
-                awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+            getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
         List<String> instanceIds =
             awsAsgHelperServiceDelegate.listAutoScalingGroupInstanceIds(awsConfig, encryptionDetails, region, asgName);
         while (true) {
@@ -463,8 +453,7 @@ public class AwsElbHelperServiceDelegateImpl
     try {
       timeLimiter.callWithTimeout(() -> {
         AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-            getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig.getAccessKey(),
-                awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+            getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
         List<String> instanceIds =
             awsAsgHelperServiceDelegate.listAutoScalingGroupInstanceIds(awsConfig, encryptionDetails, region, asgName);
         while (true) {
@@ -515,8 +504,7 @@ public class AwsElbHelperServiceDelegateImpl
     encryptionService.decrypt(awsConfig, encryptionDetails);
 
     AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
-        getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig.getAccessKey(),
-            awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+        getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
     DescribeLoadBalancersRequest request = new DescribeLoadBalancersRequest().withNames(loadBalancerName);
 
     DescribeLoadBalancersResult result = amazonElasticLoadBalancingClient.describeLoadBalancers(request);
@@ -528,8 +516,7 @@ public class AwsElbHelperServiceDelegateImpl
 
     String elbArn = result.getLoadBalancers().get(0).getLoadBalancerArn();
 
-    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region),
-        awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
 
     DescribeListenersResult listenerResult =
         client.describeListeners(new DescribeListenersRequest().withLoadBalancerArn(elbArn));
@@ -555,12 +542,9 @@ public class AwsElbHelperServiceDelegateImpl
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String listenerArn) {
     encryptionService.decrypt(awsConfig, encryptionDetails);
 
-    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region),
-        awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
-
+    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
     DescribeListenersResult listenerResult =
         client.describeListeners(new DescribeListenersRequest().withListenerArns(listenerArn));
-
     if (EmptyPredicate.isEmpty(listenerResult.getListeners())) {
       throw new WingsException(
           ErrorCode.INVALID_ARGUMENT, "Invalid ListenerArn. Listener could not be found", WingsException.USER)
@@ -580,8 +564,8 @@ public class AwsElbHelperServiceDelegateImpl
             .addParam("message", "TargetGroupArn to be cloned from can not be empty");
       }
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AmazonElasticLoadBalancingClient client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region),
-          awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+      AmazonElasticLoadBalancingClient client =
+          getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
       DescribeTargetGroupsRequest describeTargetGroupsRequest =
           new DescribeTargetGroupsRequest().withTargetGroupArns(targetGroupArn);
       DescribeTargetGroupsResult describeTargetGroupsResult = client.describeTargetGroups(describeTargetGroupsRequest);
@@ -636,8 +620,7 @@ public class AwsElbHelperServiceDelegateImpl
 
     encryptionService.decrypt(awsConfig, encryptionDetails);
 
-    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region),
-        awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
 
     CreateListenerResult result = client.createListener(createListenerRequest);
     return result.getListeners().get(0);
@@ -648,22 +631,16 @@ public class AwsElbHelperServiceDelegateImpl
       String prodListenerArn, String stageListenerArn, String region) {
     encryptionService.decrypt(awsConfig, encryptionDetails);
 
-    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region),
-        awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
-
+    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
     DescribeListenersResult prodListenerResult =
         client.describeListeners(new DescribeListenersRequest().withListenerArns(prodListenerArn));
-
     DescribeListenersResult stageListenerResult =
         client.describeListeners(new DescribeListenersRequest().withListenerArns(stageListenerArn));
-
     Listener prodListener = prodListenerResult.getListeners().get(0);
     Listener stageListener = stageListenerResult.getListeners().get(0);
-
     client.modifyListener(new ModifyListenerRequest()
                               .withListenerArn(prodListener.getListenerArn())
                               .withDefaultActions(stageListener.getDefaultActions()));
-
     client.modifyListener(new ModifyListenerRequest()
                               .withListenerArn(stageListener.getListenerArn())
                               .withDefaultActions(prodListener.getDefaultActions()));
@@ -672,8 +649,7 @@ public class AwsElbHelperServiceDelegateImpl
   @Override
   public DescribeListenersResult describeListenerResult(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String listenerArn, String region) {
-    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region),
-        awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
     return client.describeListeners(new DescribeListenersRequest().withListenerArns(listenerArn));
   }
 }

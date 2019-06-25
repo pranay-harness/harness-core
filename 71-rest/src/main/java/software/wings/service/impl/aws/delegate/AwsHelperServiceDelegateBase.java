@@ -9,9 +9,11 @@ import com.google.inject.Inject;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.EC2ContainerCredentialsProviderWrapper;
+import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.autoscaling.model.AmazonAutoScalingException;
 import com.amazonaws.services.autoscaling.model.TagDescription;
@@ -23,26 +25,46 @@ import com.amazonaws.services.ecs.model.AmazonECSException;
 import com.amazonaws.services.ecs.model.ClientException;
 import com.amazonaws.services.ecs.model.ClusterNotFoundException;
 import com.amazonaws.services.ecs.model.ServiceNotFoundException;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.service.intfc.security.EncryptionService;
+
+import java.util.UUID;
 
 @Slf4j
 class AwsHelperServiceDelegateBase {
   @VisibleForTesting static final String HARNESS_AUTOSCALING_GROUP_TAG = "HARNESS_REVISION";
   @Inject protected EncryptionService encryptionService;
 
-  protected void attachCredentials(
-      AwsClientBuilder builder, boolean useEc2IamCredentials, String accessKey, char[] secretKey) {
-    if (useEc2IamCredentials) {
+  protected void attachCredentials(AwsClientBuilder builder, AwsConfig awsConfig) {
+    AWSCredentialsProvider credentialsProvider;
+    if (awsConfig.isUseEc2IamCredentials()) {
       logger.info("Instantiating EC2ContainerCredentialsProviderWrapper");
-      builder.withCredentials(new EC2ContainerCredentialsProviderWrapper());
+      credentialsProvider = new EC2ContainerCredentialsProviderWrapper();
     } else {
-      builder.withCredentials(
-          new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))));
+      credentialsProvider = new AWSStaticCredentialsProvider(
+          new BasicAWSCredentials(awsConfig.getAccessKey(), new String(awsConfig.getSecretKey())));
     }
+    if (awsConfig.isAssumeCrossAccountRole() && awsConfig.getCrossAccountAttributes() != null) {
+      // For the security token service we default to us-east-1.
+      AWSSecurityTokenService securityTokenService = AWSSecurityTokenServiceClientBuilder.standard()
+                                                         .withRegion("us-east-1")
+                                                         .withCredentials(credentialsProvider)
+                                                         .build();
+      AwsCrossAccountAttributes crossAccountAttributes = awsConfig.getCrossAccountAttributes();
+      credentialsProvider = new STSAssumeRoleSessionCredentialsProvider
+                                .Builder(crossAccountAttributes.getCrossAccountRoleArn(), UUID.randomUUID().toString())
+                                .withStsClient(securityTokenService)
+                                .withExternalId(crossAccountAttributes.getExternalId())
+                                .build();
+    }
+    builder.withCredentials(credentialsProvider);
   }
 
   protected void handleAmazonClientException(AmazonClientException amazonClientException) {

@@ -34,8 +34,7 @@ public abstract class CloudFormationCommandTaskHandler {
   protected static final String stackNamePrefix = "HarnessStack-";
 
   public Optional<Stack> getIfStackExists(String customStackName, String suffix, AwsConfig awsConfig, String region) {
-    List<Stack> stacks = awsHelperService.getAllStacks(region, awsConfig.getAccessKey(), awsConfig.getSecretKey(),
-        new DescribeStacksRequest(), awsConfig.isUseEc2IamCredentials());
+    List<Stack> stacks = awsHelperService.getAllStacks(region, new DescribeStacksRequest(), awsConfig);
     if (isEmpty(stacks)) {
       return Optional.empty();
     }
@@ -85,9 +84,8 @@ public abstract class CloudFormationCommandTaskHandler {
   }
 
   private List<StackEvent> getStackEvents(CloudFormationCommandRequest request, Stack stack) {
-    return awsHelperService.getAllStackEvents(request.getRegion(), request.getAwsConfig().getAccessKey(),
-        request.getAwsConfig().getSecretKey(), new DescribeStackEventsRequest().withStackName(stack.getStackName()),
-        request.getAwsConfig().isUseEc2IamCredentials());
+    return awsHelperService.getAllStackEvents(request.getRegion(),
+        new DescribeStackEventsRequest().withStackName(stack.getStackName()), request.getAwsConfig());
   }
 
   private String getStatusReason(String reason) {

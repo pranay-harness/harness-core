@@ -106,6 +106,7 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.ApprovalDetails.Action;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureKubernetesCluster;
@@ -1283,5 +1284,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(JiraField.class, 7200);
     kryo.register(JiraCreateMetaResponse.class, 7201);
     kryo.register(ArtifactStreamSummary.class, 7202);
+    kryo.register(AwsCrossAccountAttributes.class, 7203);
   }
 }

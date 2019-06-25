@@ -29,10 +29,9 @@ import java.util.List;
 public class AwsRoute53HelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsRoute53HelperServiceDelegate {
   @VisibleForTesting
-  AmazonRoute53 getAmazonRoute53Client(
-      String region, String accessKey, char[] secretKey, boolean useEc2IamCredentials) {
+  AmazonRoute53 getAmazonRoute53Client(String region, AwsConfig awsConfig) {
     AmazonRoute53ClientBuilder builder = AmazonRoute53ClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, useEc2IamCredentials, accessKey, secretKey);
+    attachCredentials(builder, awsConfig);
     return builder.build();
   }
 
@@ -41,8 +40,7 @@ public class AwsRoute53HelperServiceDelegateImpl
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AmazonRoute53 client = getAmazonRoute53Client(
-          region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+      AmazonRoute53 client = getAmazonRoute53Client(region, awsConfig);
       ListHostedZonesResult listHostedZonesResult = client.listHostedZones();
       List<HostedZone> hostedZones = listHostedZonesResult.getHostedZones();
       if (isNotEmpty(hostedZones)) {
@@ -65,8 +63,7 @@ public class AwsRoute53HelperServiceDelegateImpl
       int greenServiceWeight, String greenServiceRecord, int ttl) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AmazonRoute53 client = getAmazonRoute53Client(
-          region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+      AmazonRoute53 client = getAmazonRoute53Client(region, awsConfig);
       ChangeResourceRecordSetsRequest changeResourceRecordSetsRequest =
           new ChangeResourceRecordSetsRequest()
               .withHostedZoneId(parentRecordHostedZoneId)
