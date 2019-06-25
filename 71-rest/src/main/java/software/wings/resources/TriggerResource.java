@@ -154,20 +154,22 @@ public class TriggerResource {
     }
 
     String templatizedEnvVariableName = WorkflowServiceTemplateHelper.getTemplatizedEnvVariableName(variables);
-
     if (isNotEmpty(templatizedEnvVariableName)) {
       Map<String, String> workflowVariables = trigger.getWorkflowVariables();
       if (isEmpty(workflowVariables)) {
-        throw new WingsException(ACCESS_DENIED, USER);
+        if (existing) {
+          return;
+        }
+        throw new WingsException("Environment is templatized. Workflow Variables are empty", USER);
       }
 
       String environment = workflowVariables.get(templatizedEnvVariableName);
       if (isEmpty(environment)) {
         if (existing) {
           return;
-        } else {
-          throw new WingsException(ACCESS_DENIED, USER);
         }
+        throw new WingsException(
+            "Environment is templatized. However, there is no corresponding mapping associated in the trigger", USER);
       }
 
       if (ManagerExpressionEvaluator.matchesVariablePattern(environment)) {
