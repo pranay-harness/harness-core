@@ -40,6 +40,7 @@ public class CloudFormationInfrastructureProvisionerYamlHandler
     yaml.setSourceType(bean.getSourceType());
     yaml.setTemplateBody(bean.getTemplateBody());
     yaml.setTemplateFilePath(bean.getTemplateFilePath());
+    yaml.setGitFileConfig(bean.getGitFileConfig());
     return yaml;
   }
 
@@ -75,6 +76,7 @@ public class CloudFormationInfrastructureProvisionerYamlHandler
     bean.setTemplateFilePath(yaml.getTemplateFilePath());
     bean.setTemplateBody(yaml.getTemplateBody());
     bean.setSourceType(yaml.getSourceType());
+    bean.setGitFileConfig(yaml.getGitFileConfig());
   }
 
   @Override
