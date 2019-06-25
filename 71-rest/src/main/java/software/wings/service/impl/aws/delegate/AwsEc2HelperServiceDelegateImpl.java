@@ -50,9 +50,9 @@ import java.util.Set;
 public class AwsEc2HelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsEc2HelperServiceDelegate {
   @VisibleForTesting
-  AmazonEC2Client getAmazonEc2Client(String region, String accessKey, char[] secretKey, boolean useEc2IamCredentials) {
+  AmazonEC2Client getAmazonEc2Client(String region, AwsConfig awsConfig) {
     AmazonEC2ClientBuilder builder = AmazonEC2ClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, useEc2IamCredentials, accessKey, secretKey);
+    attachCredentials(builder, awsConfig);
     return (AmazonEC2Client) builder.build();
   }
 
@@ -60,9 +60,7 @@ public class AwsEc2HelperServiceDelegateImpl
   public boolean validateAwsAccountCredential(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      getAmazonEc2Client(Regions.US_EAST_1.getName(), awsConfig.getAccessKey(), awsConfig.getSecretKey(),
-          awsConfig.isUseEc2IamCredentials())
-          .describeRegions();
+      getAmazonEc2Client(Regions.US_EAST_1.getName(), awsConfig).describeRegions();
     } catch (AmazonEC2Exception amazonEC2Exception) {
       if (amazonEC2Exception.getStatusCode() == 401) {
         return false;
@@ -78,8 +76,7 @@ public class AwsEc2HelperServiceDelegateImpl
   public List<String> listRegions(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(Regions.US_EAST_1.getName(), awsConfig.getAccessKey(),
-          awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(Regions.US_EAST_1.getName(), awsConfig);
       return amazonEC2Client.describeRegions().getRegions().stream().map(Region::getRegionName).collect(toList());
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -93,8 +90,7 @@ public class AwsEc2HelperServiceDelegateImpl
   public List<String> listVPCs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(
-          region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig);
       return amazonEC2Client
           .describeVpcs(new DescribeVpcsRequest().withFilters(new Filter("state").withValues("available")))
           .getVpcs()
@@ -114,8 +110,7 @@ public class AwsEc2HelperServiceDelegateImpl
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<String> vpcIds) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(
-          region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig);
       List<Filter> filters = new ArrayList<>();
       if (isNotEmpty(vpcIds)) {
         filters.add(new Filter("vpc-id", vpcIds));
@@ -142,8 +137,7 @@ public class AwsEc2HelperServiceDelegateImpl
       encryptionService.decrypt(awsConfig, encryptionDetails);
       String nextToken = null;
       do {
-        AmazonEC2Client amazonEC2Client = getAmazonEc2Client(
-            region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+        AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig);
         List<Filter> filters = new ArrayList<>();
         if (isNotEmpty(vpcIds)) {
           filters.add(new Filter("vpc-id", vpcIds));
@@ -170,8 +164,7 @@ public class AwsEc2HelperServiceDelegateImpl
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       do {
-        AmazonEC2Client amazonEC2Client = getAmazonEc2Client(
-            region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+        AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig);
         DescribeTagsResult describeTagsResult =
             amazonEC2Client.describeTags(new DescribeTagsRequest()
                                              .withNextToken(nextToken)
@@ -198,9 +191,8 @@ public class AwsEc2HelperServiceDelegateImpl
       do {
         DescribeInstancesRequest describeInstancesRequest =
             new DescribeInstancesRequest().withNextToken(nextToken).withFilters(filters);
-        DescribeInstancesResult describeInstancesResult = getAmazonEc2Client(
-            region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials())
-                                                              .describeInstances(describeInstancesRequest);
+        DescribeInstancesResult describeInstancesResult =
+            getAmazonEc2Client(region, awsConfig).describeInstances(describeInstancesRequest);
         result.addAll(getInstanceList(describeInstancesResult));
         nextToken = describeInstancesResult.getNextToken();
       } while (nextToken != null);
@@ -226,9 +218,8 @@ public class AwsEc2HelperServiceDelegateImpl
       do {
         DescribeInstancesRequest describeInstancesRequest =
             new DescribeInstancesRequest().withNextToken(nextToken).withInstanceIds(instanceIds);
-        DescribeInstancesResult describeInstancesResult = getAmazonEc2Client(
-            region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials())
-                                                              .describeInstances(describeInstancesRequest);
+        DescribeInstancesResult describeInstancesResult =
+            getAmazonEc2Client(region, awsConfig).describeInstances(describeInstancesRequest);
         result.addAll(getInstanceList(describeInstancesResult));
         nextToken = describeInstancesResult.getNextToken();
       } while (nextToken != null);
@@ -249,8 +240,7 @@ public class AwsEc2HelperServiceDelegateImpl
         return emptySet();
       }
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(
-          region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig);
       DescribeImagesRequest request = new DescribeImagesRequest().withImageIds(amiId);
       DescribeImagesResult result = amazonEC2Client.describeImages(request);
       List<Image> images = result.getImages();

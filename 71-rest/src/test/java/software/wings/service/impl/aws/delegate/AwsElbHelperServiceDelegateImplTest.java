@@ -4,7 +4,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -48,9 +47,7 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
   public void testListClassicLoadBalancers() {
     com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient mockClassicClient =
         mock(com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient.class);
-    doReturn(mockClassicClient)
-        .when(awsElbHelperServiceDelegate)
-        .getClassicElbClient(any(), anyString(), any(), anyBoolean());
+    doReturn(mockClassicClient).when(awsElbHelperServiceDelegate).getClassicElbClient(any(), any());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new com.amazonaws.services.elasticloadbalancing.model.DescribeLoadBalancersResult()
                  .withLoadBalancerDescriptions(new LoadBalancerDescription().withLoadBalancerName("lb1"),
@@ -69,9 +66,7 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testListApplicationLoadBalancers() {
     AmazonElasticLoadBalancingClient mockV2Client = mock(AmazonElasticLoadBalancingClient.class);
-    doReturn(mockV2Client)
-        .when(awsElbHelperServiceDelegate)
-        .getAmazonElasticLoadBalancingClientV2(any(), anyString(), any(), anyBoolean());
+    doReturn(mockV2Client).when(awsElbHelperServiceDelegate).getAmazonElasticLoadBalancingClientV2(any(), any());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new DescribeLoadBalancersResult().withLoadBalancers(
                  new LoadBalancer().withLoadBalancerName("lb1").withType("application"),
@@ -91,9 +86,7 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testListEleasticLoadBalancers() {
     AmazonElasticLoadBalancingClient mockV2Client = mock(AmazonElasticLoadBalancingClient.class);
-    doReturn(mockV2Client)
-        .when(awsElbHelperServiceDelegate)
-        .getAmazonElasticLoadBalancingClientV2(any(), anyString(), any(), anyBoolean());
+    doReturn(mockV2Client).when(awsElbHelperServiceDelegate).getAmazonElasticLoadBalancingClientV2(any(), any());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new DescribeLoadBalancersResult().withLoadBalancers(
                  new LoadBalancer().withLoadBalancerName("lb1").withType("application"),
@@ -114,9 +107,7 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testListNetworkLoadBalancers() {
     AmazonElasticLoadBalancingClient mockv2Client = mock(AmazonElasticLoadBalancingClient.class);
-    doReturn(mockv2Client)
-        .when(awsElbHelperServiceDelegate)
-        .getAmazonElasticLoadBalancingClientV2(any(), anyString(), any(), anyBoolean());
+    doReturn(mockv2Client).when(awsElbHelperServiceDelegate).getAmazonElasticLoadBalancingClientV2(any(), any());
     doReturn(new DescribeLoadBalancersResult().withLoadBalancers(
                  new LoadBalancer().withLoadBalancerName("lb1").withType("application"),
                  new LoadBalancer().withLoadBalancerName("lb2").withType("application"),
@@ -135,9 +126,7 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testListTargetGroupsForAlb() {
     AmazonElasticLoadBalancingClient mockV2Client = mock(AmazonElasticLoadBalancingClient.class);
-    doReturn(mockV2Client)
-        .when(awsElbHelperServiceDelegate)
-        .getAmazonElasticLoadBalancingClientV2(any(), anyString(), any(), anyBoolean());
+    doReturn(mockV2Client).when(awsElbHelperServiceDelegate).getAmazonElasticLoadBalancingClientV2(any(), any());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new DescribeTargetGroupsResult().withTargetGroups(
                  new TargetGroup().withTargetGroupArn("a1").withTargetGroupName("n1"),
@@ -245,9 +234,7 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testCloneTargetGroup() {
     AmazonElasticLoadBalancingClient mockV2Client = mock(AmazonElasticLoadBalancingClient.class);
-    doReturn(mockV2Client)
-        .when(awsElbHelperServiceDelegate)
-        .getAmazonElasticLoadBalancingClientV2(any(), anyString(), any(), anyBoolean());
+    doReturn(mockV2Client).when(awsElbHelperServiceDelegate).getAmazonElasticLoadBalancingClientV2(any(), any());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new DescribeTargetGroupsResult().withTargetGroups(new TargetGroup().withTargetType("ip").withPort(80)))
         .when(mockV2Client)

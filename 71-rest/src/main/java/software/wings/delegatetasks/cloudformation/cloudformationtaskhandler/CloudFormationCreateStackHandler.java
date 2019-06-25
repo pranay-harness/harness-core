@@ -204,9 +204,8 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
     executionLogCallback.saveExecutionLog(
         format("# Calling Aws API to Create stack: %s", createStackRequest.getStackName()));
     long stackEventsTs = System.currentTimeMillis();
-    CreateStackResult result = awsHelperService.createStack(createRequest.getRegion(),
-        createRequest.getAwsConfig().getAccessKey(), createRequest.getAwsConfig().getSecretKey(), createStackRequest,
-        createRequest.getAwsConfig().isUseEc2IamCredentials());
+    CreateStackResult result =
+        awsHelperService.createStack(createRequest.getRegion(), createStackRequest, createRequest.getAwsConfig());
     executionLogCallback.saveExecutionLog(format(
         "# Create Stack request submitted for stack: %s. Now polling for status.", createStackRequest.getStackName()));
     int timeOutMs = createRequest.getTimeoutInMs() > 0 ? createRequest.getTimeoutInMs() : DEFAULT_TIMEOUT_MS;
@@ -214,9 +213,8 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
     String errorMsg;
     while (System.currentTimeMillis() < endTime) {
       DescribeStacksRequest describeStacksRequest = new DescribeStacksRequest().withStackName(result.getStackId());
-      List<Stack> stacks = awsHelperService.getAllStacks(createRequest.getRegion(),
-          createRequest.getAwsConfig().getAccessKey(), createRequest.getAwsConfig().getSecretKey(),
-          describeStacksRequest, createRequest.getAwsConfig().isUseEc2IamCredentials());
+      List<Stack> stacks =
+          awsHelperService.getAllStacks(createRequest.getRegion(), describeStacksRequest, createRequest.getAwsConfig());
       if (stacks.size() < 1) {
         String errorMessage = "# Error: received empty stack list from AWS";
         executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
@@ -288,8 +286,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
     executionLogCallback.saveExecutionLog(
         format("# Calling Aws API to Update stack: %s", originalStack.getStackName()));
     long stackEventsTs = System.currentTimeMillis();
-    awsHelperService.updateStack(request.getRegion(), request.getAwsConfig().getAccessKey(),
-        request.getAwsConfig().getSecretKey(), updateStackRequest, request.getAwsConfig().isUseEc2IamCredentials());
+    awsHelperService.updateStack(request.getRegion(), updateStackRequest, request.getAwsConfig());
     executionLogCallback.saveExecutionLog(
         format("# Update Stack Request submitted for stack: %s. Now polling for status", originalStack.getStackName()));
     int timeOutMs = request.getTimeoutInMs() > 0 ? request.getTimeoutInMs() : DEFAULT_TIMEOUT_MS;
@@ -297,9 +294,8 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
     while (System.currentTimeMillis() < endTime) {
       DescribeStacksRequest describeStacksRequest =
           new DescribeStacksRequest().withStackName(originalStack.getStackId());
-      List<Stack> stacks = awsHelperService.getAllStacks(request.getRegion(), request.getAwsConfig().getAccessKey(),
-          request.getAwsConfig().getSecretKey(), describeStacksRequest,
-          request.getAwsConfig().isUseEc2IamCredentials());
+      List<Stack> stacks =
+          awsHelperService.getAllStacks(request.getRegion(), describeStacksRequest, request.getAwsConfig());
       if (stacks.size() < 1) {
         String errorMessage = "# Error: received empty stack list from AWS";
         executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);

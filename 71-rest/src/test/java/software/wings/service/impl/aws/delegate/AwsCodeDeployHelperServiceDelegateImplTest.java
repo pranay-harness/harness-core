@@ -3,7 +3,6 @@ package software.wings.service.impl.aws.delegate;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -46,9 +45,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testListApplications() {
     AmazonCodeDeployClient mockClient = mock(AmazonCodeDeployClient.class);
-    doReturn(mockClient)
-        .when(awsCodeDeployHelperServiceDelegate)
-        .getAmazonCodeDeployClient(any(), anyString(), any(), anyBoolean());
+    doReturn(mockClient).when(awsCodeDeployHelperServiceDelegate).getAmazonCodeDeployClient(any(), any());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new ListApplicationsResult().withApplications("app1", "app2")).when(mockClient).listApplications(any());
     List<String> applications =
@@ -63,9 +60,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testListDeploymentConfiguration() {
     AmazonCodeDeployClient mockClient = mock(AmazonCodeDeployClient.class);
-    doReturn(mockClient)
-        .when(awsCodeDeployHelperServiceDelegate)
-        .getAmazonCodeDeployClient(any(), anyString(), any(), anyBoolean());
+    doReturn(mockClient).when(awsCodeDeployHelperServiceDelegate).getAmazonCodeDeployClient(any(), any());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new ListDeploymentConfigsResult().withDeploymentConfigsList("c1", "c2"))
         .when(mockClient)
@@ -82,9 +77,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testListDeploymentGroups() {
     AmazonCodeDeployClient mockClient = mock(AmazonCodeDeployClient.class);
-    doReturn(mockClient)
-        .when(awsCodeDeployHelperServiceDelegate)
-        .getAmazonCodeDeployClient(any(), anyString(), any(), anyBoolean());
+    doReturn(mockClient).when(awsCodeDeployHelperServiceDelegate).getAmazonCodeDeployClient(any(), any());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new ListDeploymentGroupsResult().withDeploymentGroups("g1", "g2"))
         .when(mockClient)
@@ -101,9 +94,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testlListDeploymentInstances() {
     AmazonCodeDeployClient mockClient = mock(AmazonCodeDeployClient.class);
-    doReturn(mockClient)
-        .when(awsCodeDeployHelperServiceDelegate)
-        .getAmazonCodeDeployClient(any(), anyString(), any(), anyBoolean());
+    doReturn(mockClient).when(awsCodeDeployHelperServiceDelegate).getAmazonCodeDeployClient(any(), any());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new ListDeploymentInstancesResult().withInstancesList("i1", "i2"))
         .when(mockClient)
@@ -122,9 +113,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testListAppRevision() {
     AmazonCodeDeployClient mockClient = mock(AmazonCodeDeployClient.class);
-    doReturn(mockClient)
-        .when(awsCodeDeployHelperServiceDelegate)
-        .getAmazonCodeDeployClient(any(), anyString(), any(), anyBoolean());
+    doReturn(mockClient).when(awsCodeDeployHelperServiceDelegate).getAmazonCodeDeployClient(any(), any());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new GetDeploymentGroupResult().withDeploymentGroupInfo(
                  new DeploymentGroupInfo().withTargetRevision(new RevisionLocation().withS3Location(

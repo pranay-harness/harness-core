@@ -7,9 +7,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -77,7 +75,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
     String stackId = "STACK_ID";
     doReturn(singletonList(new Stack().withStackId(stackId).withStackName(customStackName)))
         .when(mockAwsHelperService)
-        .getAllStacks(anyString(), anyString(), any(), any(), anyBoolean());
+        .getAllStacks(anyString(), any(), any());
     Optional<Stack> stack =
         createStackHandler.getIfStackExists(customStackName, "foo", AwsConfig.builder().build(), "us-east-1");
     assertTrue(stack.isPresent());
@@ -109,9 +107,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
         new CreateStackRequest().withStackName("HarnessStack-" + stackNameSuffix).withTemplateBody(templateBody);
     String stackId = "Stack Id 00";
     CreateStackResult createStackResult = new CreateStackResult().withStackId(stackId);
-    doReturn(createStackResult)
-        .when(mockAwsHelperService)
-        .createStack(anyString(), anyString(), any(), any(), anyBoolean());
+    doReturn(createStackResult).when(mockAwsHelperService).createStack(anyString(), any(), any());
     List<Stack> createProgressList = singletonList(new Stack().withStackStatus("CREATE_IN_PROGRESS"));
     List<Stack> createCompleteList =
         singletonList(new Stack()
@@ -123,7 +119,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
         .doReturn(createProgressList)
         .doReturn(createCompleteList)
         .when(mockAwsHelperService)
-        .getAllStacks(anyString(), anyString(), any(), any(), anyBoolean());
+        .getAllStacks(anyString(), any(), any());
 
     CloudFormationCommandExecutionResponse response = createStackHandler.execute(request, null);
     assertNotNull(response);
@@ -177,7 +173,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
         .doReturn(updateProgressList)
         .doReturn(updateCompleteList)
         .when(mockAwsHelperService)
-        .getAllStacks(anyString(), anyString(), any(), any(), anyBoolean());
+        .getAllStacks(anyString(), any(), any());
     doReturn("Body").when(mockAwsCFHelperServiceDelegate).getStackBody(any(), anyString(), anyString());
 
     CloudFormationCommandExecutionResponse response = createStackHandler.execute(request, null);
@@ -223,11 +219,11 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
         .doReturn(deleteInProgressList)
         .doReturn(deleteCompleteList)
         .when(mockAwsHelperService)
-        .getAllStacks(anyString(), anyString(), any(), any(), anyBoolean());
+        .getAllStacks(anyString(), any(), any());
     CloudFormationCommandExecutionResponse response = deleteStackHandler.execute(request, null);
     assertNotNull(response);
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
-    verify(mockAwsHelperService).deleteStack(anyString(), anyString(), any(), any(), anyBoolean());
+    verify(mockAwsHelperService).deleteStack(anyString(), any(), any());
   }
 
   @Test
@@ -257,9 +253,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
             .withStackName("sName2")
             .withStackStatus("sStatus2")
             .withStackStatusReason("sReason2"));
-    doReturn(stacks)
-        .when(mockAwsHelperService)
-        .getAllStacks(anyString(), anyString(), any(), eq(describeStacksRequest), anyBoolean());
+    doReturn(stacks).when(mockAwsHelperService).getAllStacks(anyString(), any(), any());
     CloudFormationCommandExecutionResponse response = listStacksHandler.execute(request, null);
     assertNotNull(response);
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());

@@ -3,9 +3,7 @@ package software.wings.service.impl.aws.delegate;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
@@ -35,9 +33,7 @@ public class AwsIamHelperServiceDelegateImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testListIAMRoles() {
     AmazonIdentityManagementClient mockClient = mock(AmazonIdentityManagementClient.class);
-    doReturn(mockClient)
-        .when(awsIamHelperServiceDelegate)
-        .getAmazonIdentityManagementClient(anyString(), any(), anyBoolean());
+    doReturn(mockClient).when(awsIamHelperServiceDelegate).getAmazonIdentityManagementClient(any());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new ListRolesResult().withRoles(
                  new Role().withArn("a1").withRoleName("n1"), new Role().withArn("a2").withRoleName("n2")))
@@ -54,9 +50,7 @@ public class AwsIamHelperServiceDelegateImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testListIamInstanceRoles() {
     AmazonIdentityManagementClient mockClient = mock(AmazonIdentityManagementClient.class);
-    doReturn(mockClient)
-        .when(awsIamHelperServiceDelegate)
-        .getAmazonIdentityManagementClient(anyString(), any(), anyBoolean());
+    doReturn(mockClient).when(awsIamHelperServiceDelegate).getAmazonIdentityManagementClient(any());
     doReturn(
         new ListInstanceProfilesResult().withInstanceProfiles(new InstanceProfile().withInstanceProfileName("name1"),
             new InstanceProfile().withInstanceProfileName("name2")))

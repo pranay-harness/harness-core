@@ -30,11 +30,10 @@ import java.util.Map;
 public class AwsIamHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsIamHelperServiceDelegate {
   @VisibleForTesting
-  AmazonIdentityManagementClient getAmazonIdentityManagementClient(
-      String accessKey, char[] secretKey, boolean useEc2IamCredentials) {
+  AmazonIdentityManagementClient getAmazonIdentityManagementClient(AwsConfig awsConfig) {
     AmazonIdentityManagementClientBuilder builder =
         AmazonIdentityManagementClient.builder().withRegion(Regions.US_EAST_1);
-    attachCredentials(builder, useEc2IamCredentials, accessKey, secretKey);
+    attachCredentials(builder, awsConfig);
     return (AmazonIdentityManagementClient) builder.build();
   }
 
@@ -45,8 +44,7 @@ public class AwsIamHelperServiceDelegateImpl
       String nextMarker = null;
       encryptionService.decrypt(awsConfig, encryptionDetails);
       do {
-        AmazonIdentityManagementClient amazonIdentityManagementClient = getAmazonIdentityManagementClient(
-            awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+        AmazonIdentityManagementClient amazonIdentityManagementClient = getAmazonIdentityManagementClient(awsConfig);
         ListRolesRequest listRolesRequest = new ListRolesRequest().withMaxItems(400).withMarker(nextMarker);
         ListRolesResult listRolesResult = amazonIdentityManagementClient.listRoles(listRolesRequest);
         listRolesResult.getRoles().forEach(role -> result.put(role.getArn(), role.getRoleName()));
@@ -71,9 +69,8 @@ public class AwsIamHelperServiceDelegateImpl
       encryptionService.decrypt(awsConfig, encryptionDetails);
       do {
         listInstanceProfilesRequest = new ListInstanceProfilesRequest().withMarker(nextMarker);
-        listInstanceProfilesResult = getAmazonIdentityManagementClient(
-            awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials())
-                                         .listInstanceProfiles(listInstanceProfilesRequest);
+        listInstanceProfilesResult =
+            getAmazonIdentityManagementClient(awsConfig).listInstanceProfiles(listInstanceProfilesRequest);
         result.addAll(listInstanceProfilesResult.getInstanceProfiles()
                           .stream()
                           .map(InstanceProfile::getInstanceProfileName)

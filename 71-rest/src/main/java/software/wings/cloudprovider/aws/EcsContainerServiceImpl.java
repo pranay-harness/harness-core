@@ -105,8 +105,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
    * Create cluster.
    */
   public void createCluster() {
-    awsHelperService.createStack("us-east-1", "AKIAJLEKM45P4PO5QUFQ",
-        "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray(),
+    awsHelperService.createStack("us-east-1",
         new CreateStackRequest()
             .withStackName("EC2ContainerService-demo")
             .withTemplateBody("AWSTemplateFormatVersion: '2010-09-09'\n"
@@ -428,17 +427,22 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                     .withParameterValue("us-east-1e,us-east-1c,us-east-1d,us-east-1a"),
                 new Parameter().withParameterKey("VpcCidr").withParameterValue("10.0.0.0/16"),
                 new Parameter().withParameterKey("VpcId").withParameterValue("vpc-84a9bfe0")),
-        false);
+        AwsConfig.builder()
+            .accessKey("AKIAJLEKM45P4PO5QUFQ")
+            .secretKey("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".toCharArray())
+            .build());
 
     Stack stack;
-    while (!"CREATE_COMPLETE".equals(
-        (stack = awsHelperService
-                     .describeStacks("us-east-1", "AKIAJLEKM45P4PO5QUFQ",
-                         "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray(),
-                         new DescribeStacksRequest().withStackName("EC2ContainerService-test2"), false)
-                     .getStacks()
-                     .get(0))
-            .getStackStatus())) {
+    while (!"CREATE_COMPLETE".equals((
+        stack = awsHelperService
+                    .describeStacks("us-east-1", new DescribeStacksRequest().withStackName("EC2ContainerService-test2"),
+                        AwsConfig.builder()
+                            .accessKey("AKIAJLEKM45P4PO5QUFQ")
+                            .secretKey("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".toCharArray())
+                            .build())
+                    .getStacks()
+                    .get(0))
+                                         .getStackStatus())) {
       sleep(ofSeconds(1));
     }
 
@@ -449,8 +453,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
    * Destroy cluster.
    */
   public void destroyCluster() {
-    awsHelperService.createStack("us-east-1", "AKIAJLEKM45P4PO5QUFQ",
-        "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray(),
+    awsHelperService.createStack("us-east-1",
         new CreateStackRequest()
             .withStackName("EC2ContainerService-test2")
             .withTemplateBody("AWSTemplateFormatVersion: '2010-09-09'\n"
@@ -772,17 +775,22 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                     .withParameterValue("us-east-1e,us-east-1c,us-east-1d,us-east-1a"),
                 new Parameter().withParameterKey("VpcCidr").withParameterValue("10.0.0.0/16"),
                 new Parameter().withParameterKey("VpcId").withParameterValue("vpc-84a9bfe0")),
-        false);
+        AwsConfig.builder()
+            .accessKey("AKIAJLEKM45P4PO5QUFQ")
+            .secretKey("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".toCharArray())
+            .build());
 
     Stack stack;
-    while (!"CREATE_COMPLETE".equals(
-        (stack = awsHelperService
-                     .describeStacks("us-east-1", "AKIAJLEKM45P4PO5QUFQ",
-                         "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray(),
-                         new DescribeStacksRequest().withStackName("EC2ContainerService-test2"), false)
-                     .getStacks()
-                     .get(0))
-            .getStackStatus())) {
+    while (!"CREATE_COMPLETE".equals((
+        stack = awsHelperService
+                    .describeStacks("us-east-1", new DescribeStacksRequest().withStackName("EC2ContainerService-test2"),
+                        AwsConfig.builder()
+                            .accessKey("AKIAJLEKM45P4PO5QUFQ")
+                            .secretKey("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".toCharArray())
+                            .build())
+                    .getStacks()
+                    .get(0))
+                                         .getStackStatus())) {
       sleep(ofSeconds(1));
     }
 

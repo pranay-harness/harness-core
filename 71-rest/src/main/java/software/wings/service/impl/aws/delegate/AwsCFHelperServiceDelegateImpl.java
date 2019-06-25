@@ -38,10 +38,9 @@ public class AwsCFHelperServiceDelegateImpl extends AwsHelperServiceDelegateBase
   @Inject private GitUtilsDelegate gitUtilsDelegate;
 
   @VisibleForTesting
-  AmazonCloudFormationClient getAmazonCloudFormationClient(
-      Regions region, String accessKey, char[] secretKey, boolean useEc2IamCredentials) {
+  AmazonCloudFormationClient getAmazonCloudFormationClient(Regions region, AwsConfig awsConfig) {
     AmazonCloudFormationClientBuilder builder = AmazonCloudFormationClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, useEc2IamCredentials, accessKey, secretKey);
+    attachCredentials(builder, awsConfig);
     return (AmazonCloudFormationClient) builder.build();
   }
 
@@ -51,8 +50,7 @@ public class AwsCFHelperServiceDelegateImpl extends AwsHelperServiceDelegateBase
       List<EncryptedDataDetail> sourceRepoEncryptedDetail) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AmazonCloudFormationClient client = getAmazonCloudFormationClient(Regions.fromName(region),
-          awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+      AmazonCloudFormationClient client = getAmazonCloudFormationClient(Regions.fromName(region), awsConfig);
       GetTemplateSummaryRequest request = new GetTemplateSummaryRequest();
       if ("s3".equalsIgnoreCase(type)) {
         request.withTemplateURL(data);
@@ -88,8 +86,7 @@ public class AwsCFHelperServiceDelegateImpl extends AwsHelperServiceDelegateBase
   @Override
   public String getStackBody(AwsConfig awsConfig, String region, String stackId) {
     try {
-      AmazonCloudFormationClient client = getAmazonCloudFormationClient(Regions.fromName(region),
-          awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+      AmazonCloudFormationClient client = getAmazonCloudFormationClient(Regions.fromName(region), awsConfig);
       GetTemplateRequest getTemplateRequest = new GetTemplateRequest().withStackName(stackId);
       GetTemplateResult getTemplateResult = client.getTemplate(getTemplateRequest);
       return getTemplateResult.getTemplateBody();
@@ -104,8 +101,7 @@ public class AwsCFHelperServiceDelegateImpl extends AwsHelperServiceDelegateBase
   @Override
   public List<String> getCapabilities(AwsConfig awsConfig, String region, String data, String type) {
     try {
-      AmazonCloudFormationClient client = getAmazonCloudFormationClient(Regions.fromName(region),
-          awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+      AmazonCloudFormationClient client = getAmazonCloudFormationClient(Regions.fromName(region), awsConfig);
       GetTemplateSummaryRequest request = new GetTemplateSummaryRequest();
       if ("s3".equalsIgnoreCase(type)) {
         request.withTemplateURL(data);
