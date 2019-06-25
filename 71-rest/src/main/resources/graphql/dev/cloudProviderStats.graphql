@@ -1,0 +1,21 @@
+enum CloudProviderFilterType {
+  CloudProvider
+  Type
+  CreatedAt
+}
+
+enum CloudProviderAggregation {
+  Type
+}
+
+input CloudProviderFilter {
+  type: CloudProviderFilterType
+  stringFilter: StringFilter
+  numberFilter: NumberFilter
+}
+
+extend type Query {
+  # Get CloudProvider stats.
+  cloudProviderStats(filters: [CloudProviderFilter], groupBy: [CloudProviderAggregation]): Data
+    @dataFetcher(name: cloudProviderStats)
+}

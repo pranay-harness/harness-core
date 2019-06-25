@@ -13,10 +13,12 @@ import io.harness.validation.Update;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
+import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
 import javax.validation.constraints.NotNull;
 
+@Entity(value = "dashboardSettings", noClassnameStored = true)
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "keys")

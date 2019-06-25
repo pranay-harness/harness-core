@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.google.common.collect.ImmutableSet;
 
+import io.harness.dashboard.DashboardSettings;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.security.encryption.EncryptedRecord;
@@ -193,7 +194,8 @@ public class ManagerMorphiaClasses {
       NotificationRulesStatus.class, AwsSecretsManagerConfig.class, ApprovalPollingJobEntity.class, HarnessTag.class,
       HarnessTagLink.class, CVFeedbackRecord.class, SecretManagerConfig.class, VaultLegacyConfig.class,
       KmsLegacyConfig.class, AwsSecretsManagerLegacyConfig.class, LocalEncryptionConfig.class, ResourceLookup.class,
-      LoginSettings.class, GCPUsageReport.class, GCPBillingJobEntity.class, InfrastructureDefinition.class);
+      LoginSettings.class, GCPUsageReport.class, GCPBillingJobEntity.class, DashboardSettings.class,
+      InfrastructureDefinition.class);
 
   public static final Set<Class> dependentClasses =
       ImmutableSet.<Class>of(EncryptionConfig.class, EncryptedRecord.class, ExecutionCapabilityDemander.class);

@@ -1,4 +1,4 @@
-package software.wings.graphql.schema.type.aggregation.deployment;
+package software.wings.graphql.schema.type.aggregation.cloudprovider;
 
 import lombok.Builder;
 import lombok.Value;
@@ -10,8 +10,8 @@ import software.wings.graphql.schema.type.aggregation.QLStringFilterType;
 
 @Value
 @Builder
-public class QLDeploymentFilter implements QLStringFilterType, QLNumberFilterType {
-  private QLDeploymentFilterType type;
+public class QLCloudProviderFilter implements QLStringFilterType, QLNumberFilterType {
+  private QLCloudProviderFilterType type;
   private QLStringFilter stringFilter;
   private QLNumberFilter numberFilter;
 
