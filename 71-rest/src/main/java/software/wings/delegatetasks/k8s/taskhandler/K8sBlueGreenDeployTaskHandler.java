@@ -215,7 +215,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
               "\nNo workload found in the Manifests. Can't do Blue/Green Deployment.", ERROR, FAILURE);
         } else {
           executionLogCallback.saveExecutionLog(
-              "\nMore than one workloads found in the Manifests. Only one can be managed. Others should be marked with annotation "
+              "\nMore than one workloads found in the Manifests. Blue/Green deploy supports only one workload. Others should be marked with annotation "
                   + HarnessAnnotations.directApply + ": true",
               ERROR, FAILURE);
         }
