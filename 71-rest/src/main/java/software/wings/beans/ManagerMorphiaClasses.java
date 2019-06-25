@@ -77,6 +77,7 @@ import software.wings.beans.trigger.TriggerExecution;
 import software.wings.collect.CollectEvent;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.helpers.ext.mail.EmailData;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.prune.PruneEvent;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
@@ -192,7 +193,7 @@ public class ManagerMorphiaClasses {
       NotificationRulesStatus.class, AwsSecretsManagerConfig.class, ApprovalPollingJobEntity.class, HarnessTag.class,
       HarnessTagLink.class, CVFeedbackRecord.class, SecretManagerConfig.class, VaultLegacyConfig.class,
       KmsLegacyConfig.class, AwsSecretsManagerLegacyConfig.class, LocalEncryptionConfig.class, ResourceLookup.class,
-      LoginSettings.class, GCPUsageReport.class, GCPBillingJobEntity.class);
+      LoginSettings.class, GCPUsageReport.class, GCPBillingJobEntity.class, InfrastructureDefinition.class);
 
   public static final Set<Class> dependentClasses =
       ImmutableSet.<Class>of(EncryptionConfig.class, EncryptedRecord.class, ExecutionCapabilityDemander.class);
