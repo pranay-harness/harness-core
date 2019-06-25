@@ -255,8 +255,7 @@ public class HelmDeployState extends State {
     List<String> helmValueOverridesYamlFilesEvaluated = getValuesYamlOverrides(
         context, containerServiceParams, appId, imageDetails, infrastructureMapping, appManifestMap);
 
-    // TODO: this fix makes the previous behavior more obvious. We should review why we are overriding the value here
-    steadyStateTimeout = DEFAULT_STEADY_STATE_TIMEOUT;
+    steadyStateTimeout = steadyStateTimeout > 0 ? steadyStateTimeout : DEFAULT_STEADY_STATE_TIMEOUT;
 
     HelmInstallCommandRequestBuilder helmInstallCommandRequestBuilder =
         HelmInstallCommandRequest.builder()
