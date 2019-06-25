@@ -16,6 +16,13 @@ else
   echo "Using runtime directory ${runtime_dir}"
 fi
 
+if command -v getenforce &> /dev/null; then
+   if getenforce | grep -q Enforcing; then
+       echo "SE Linux is enabled, please disable or set to permissive mode."
+       exit 1
+   fi
+fi
+
 mkdir -p $runtime_dir
 
 
