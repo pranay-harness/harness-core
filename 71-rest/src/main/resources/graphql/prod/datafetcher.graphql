@@ -5,6 +5,7 @@ enum DataFetcherEnum {
   artifact
   cloudProvider
   cloudProviderConnection
+  cloudProviderStats
   environment
   environmentStats
   environmentConnection
