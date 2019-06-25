@@ -42,6 +42,8 @@ public interface ServiceVariableService extends OwnedByService {
    */
   @ValidationGroups(Create.class) ServiceVariable save(@Valid ServiceVariable serviceVariable);
 
+  ServiceVariable saveWithChecks(@NotEmpty String appId, ServiceVariable serviceVariable);
+
   /**
    * Get service variable.
    *
@@ -69,6 +71,9 @@ public interface ServiceVariableService extends OwnedByService {
    */
   @ValidationGroups(Update.class) ServiceVariable update(@Valid ServiceVariable serviceVariable);
 
+  ServiceVariable updateWithChecks(
+      @NotEmpty String appId, @NotEmpty String serviceVariableId, ServiceVariable serviceVariable);
+
   /**
    * Delete.
    *
@@ -76,6 +81,8 @@ public interface ServiceVariableService extends OwnedByService {
    * @param settingId the setting id
    */
   void delete(@NotEmpty String appId, @NotEmpty String settingId);
+
+  void deleteWithChecks(@NotEmpty String appId, @NotEmpty String settingId);
 
   enum EncryptedFieldMode {
     OBTAIN_VALUE,

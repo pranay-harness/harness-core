@@ -74,7 +74,7 @@ public class Service extends Base implements KeywordsAware, NameAccess {
   private boolean isK8sV2;
   @Indexed private String accountId;
   @Indexed private List<String> artifactStreamIds;
-  private List<ArtifactStreamBinding> artifactStreamBindings;
+  @Transient private List<ArtifactStreamBinding> artifactStreamBindings;
 
   @Builder
   public Service(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
@@ -83,7 +83,7 @@ public class Service extends Base implements KeywordsAware, NameAccess {
       long version, AppContainer appContainer, List<ConfigFile> configFiles, List<ServiceVariable> serviceVariables,
       List<ArtifactStream> artifactStreams, List<ServiceCommand> serviceCommands, Activity lastDeploymentActivity,
       Activity lastProdDeploymentActivity, Setup setup, boolean isK8sV2, String accountId,
-      List<String> artifactStreamIds, List<ArtifactStreamBinding> artifactStreamBindings) {
+      List<String> artifactStreamIds) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
@@ -104,7 +104,6 @@ public class Service extends Base implements KeywordsAware, NameAccess {
     this.isK8sV2 = isK8sV2;
     this.accountId = accountId;
     this.artifactStreamIds = artifactStreamIds;
-    this.artifactStreamBindings = artifactStreamBindings;
   }
 
   // TODO: check what to do with artifactStreamIds and artifactStreamBindings
@@ -143,12 +142,10 @@ public class Service extends Base implements KeywordsAware, NameAccess {
     private String configMapYaml;
     private String applicationStack;
     private List<NameValuePair.Yaml> configVariables = new ArrayList<>();
-    private List<ArtifactStreamBinding.Yaml> artifactStreamBindings = new ArrayList<>();
 
     @lombok.Builder
     public Yaml(String harnessApiVersion, String description, String artifactType, String deploymentType,
-        String configMapYaml, String applicationStack, List<NameValuePair.Yaml> configVariables,
-        List<ArtifactStreamBinding.Yaml> artifactStreamBindings) {
+        String configMapYaml, String applicationStack, List<NameValuePair.Yaml> configVariables) {
       super(EntityType.SERVICE.name(), harnessApiVersion);
       this.description = description;
       this.artifactType = artifactType;
@@ -156,7 +153,6 @@ public class Service extends Base implements KeywordsAware, NameAccess {
       this.configMapYaml = configMapYaml;
       this.applicationStack = applicationStack;
       this.configVariables = configVariables;
-      this.artifactStreamBindings = artifactStreamBindings;
     }
   }
 

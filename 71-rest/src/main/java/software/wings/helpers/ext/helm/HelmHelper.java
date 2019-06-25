@@ -11,10 +11,12 @@ import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.expression.ExpressionEvaluator;
 import org.apache.commons.io.LineIterator;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.Set;
 
 @Singleton
 public class HelmHelper {
@@ -68,5 +70,16 @@ public class HelmHelper {
     return checkStringPresentInHelmValueYaml(helmValueYamlFile, HELM_DOCKER_IMAGE_NAME_PLACEHOLDER)
         || checkStringPresentInHelmValueYaml(helmValueYamlFile, HELM_DOCKER_IMAGE_TAG_PLACEHOLDER)
         || checkStringPresentInHelmValueYaml(helmValueYamlFile, "${artifact.");
+  }
+
+  public static void updateArtifactVariableNamesReferencedInValuesYaml(
+      String helmValueYamlFile, Set<String> serviceArtifactVariableNames, Set<String> workflowVariableNames) {
+    ExpressionEvaluator.updateServiceArtifactVariableNames(helmValueYamlFile, serviceArtifactVariableNames);
+    ExpressionEvaluator.updateWorkflowVariableNames(helmValueYamlFile, workflowVariableNames);
+    if (!serviceArtifactVariableNames.contains("artifact")
+        && (checkStringPresentInHelmValueYaml(helmValueYamlFile, HELM_DOCKER_IMAGE_NAME_PLACEHOLDER)
+               || checkStringPresentInHelmValueYaml(helmValueYamlFile, HELM_DOCKER_IMAGE_TAG_PLACEHOLDER))) {
+      serviceArtifactVariableNames.add("artifact");
+    }
   }
 }

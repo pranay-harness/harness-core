@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -9,23 +10,27 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.EntityType;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceVariable;
+import software.wings.beans.ServiceVariable.ServiceVariableKeys;
+import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamBinding;
-import software.wings.beans.artifact.ArtifactStreamBindingDetails;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceVariableService;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -35,38 +40,175 @@ import javax.validation.executable.ValidateOnExecution;
 public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamServiceBindingService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private ServiceVariableService serviceVariableService;
 
   @Override
-  public ArtifactStreamBinding create(String appId, String serviceId, ArtifactStreamBinding artifactStreamBinding) {
-    validateArtifactStreamBinding(artifactStreamBinding);
-
-    Service service = serviceResourceService.get(appId, serviceId, false);
+  public ArtifactStreamBinding create(
+      @NotEmpty String appId, @NotEmpty String serviceId, ArtifactStreamBinding artifactStreamBinding) {
+    // TODO: ASR: add validations for artifact streams - types, permissions, etc.
+    Service service = serviceResourceService.get(appId, serviceId);
     if (service == null) {
       throw new InvalidRequestException("Service does not exist", USER);
     }
 
-    List<ArtifactStreamBinding> artifactStreamBindings = service.getArtifactStreamBindings();
-    if (isEmpty(artifactStreamBindings)) {
-      artifactStreamBindings = new ArrayList<>();
-    } else if (artifactStreamBindings.stream().anyMatch(
-                   binding -> binding.getName().equals(artifactStreamBinding.getName()))) {
+    ArtifactStreamBinding existingArtifactStreamBinding =
+        getInternal(appId, serviceId, artifactStreamBinding.getName());
+    if (existingArtifactStreamBinding != null) {
       throw new InvalidRequestException("Artifact stream binding already exists", USER);
     }
 
-    List<String> artifactStreamIds = artifactStreamBinding.getArtifactStreamIds();
-    if (!isEmpty(artifactStreamIds)) {
-      for (String artifactStreamId : artifactStreamIds) {
-        ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
-        if (artifactStream == null) {
-          throw new InvalidRequestException(format("Artifact stream (%s) does not exist", artifactStreamId), USER);
+    List<String> allowedList = new ArrayList<>();
+    if (artifactStreamBinding.getArtifactStreams() != null) {
+      for (ArtifactStreamSummary streamSummary : artifactStreamBinding.getArtifactStreams()) {
+        if (streamSummary != null && streamSummary.getArtifactStreamId() != null
+            && !allowedList.contains(streamSummary.getArtifactStreamId())) {
+          allowedList.add(streamSummary.getArtifactStreamId());
         }
       }
     }
 
-    artifactStreamBindings.add(artifactStreamBinding);
-    service.setArtifactStreamBindings(artifactStreamBindings);
-    serviceResourceService.updateArtifactStreamBindings(service, artifactStreamBindings);
+    ServiceVariable variable = ServiceVariable.builder()
+                                   .name(artifactStreamBinding.getName())
+                                   .type(Type.ARTIFACT)
+                                   .entityType(EntityType.SERVICE)
+                                   .entityId(serviceId)
+                                   .allowedList(allowedList)
+                                   .build();
+    serviceVariableService.saveWithChecks(appId, variable);
     return artifactStreamBinding;
+  }
+
+  @Override
+  public ArtifactStreamBinding update(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String name,
+      ArtifactStreamBinding artifactStreamBinding) {
+    // TODO: ASR: add validations for artifact streams - types, permissions, etc.
+    Service service = serviceResourceService.get(appId, serviceId);
+    if (service == null) {
+      throw new InvalidRequestException("Service does not exist", USER);
+    }
+
+    // check if artifact variable being updated exists
+    List<ServiceVariable> variables = getServiceVariablesByName(appId, serviceId, name);
+    if (isEmpty(variables)) {
+      throw new InvalidRequestException("Artifact stream binding does not exist", USER);
+    }
+
+    // check if new artifact variable name provided is unique within the service
+    if (!name.equals(artifactStreamBinding.getName())) {
+      List<ServiceVariable> collidingVariables =
+          getServiceVariablesByName(appId, serviceId, artifactStreamBinding.getName());
+      if (isNotEmpty(collidingVariables)) {
+        throw new InvalidRequestException(
+            format("Artifact variable with name [%s] already exists in service", artifactStreamBinding.getName()),
+            USER);
+      }
+    }
+
+    List<String> allowedList = new ArrayList<>();
+    if (artifactStreamBinding.getArtifactStreams() != null) {
+      for (ArtifactStreamSummary streamSummary : artifactStreamBinding.getArtifactStreams()) {
+        if (streamSummary != null && streamSummary.getArtifactStreamId() != null
+            && !allowedList.contains(streamSummary.getArtifactStreamId())) {
+          allowedList.add(streamSummary.getArtifactStreamId());
+        }
+      }
+    }
+
+    ServiceVariable variable = variables.get(0);
+    variable.setName(artifactStreamBinding.getName());
+    variable.setAllowedList(allowedList);
+    serviceVariableService.updateWithChecks(appId, variable.getUuid(), variable);
+    return artifactStreamBinding;
+  }
+
+  @Override
+  public void delete(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String name) {
+    Service service = serviceResourceService.get(appId, serviceId);
+    if (service == null) {
+      throw new InvalidRequestException("Service does not exist", USER);
+    }
+
+    List<ServiceVariable> variables = getServiceVariablesByName(appId, serviceId, name);
+    if (isEmpty(variables)) {
+      throw new InvalidRequestException("Artifact stream binding does not exist", USER);
+    }
+
+    serviceVariableService.deleteWithChecks(appId, variables.get(0).getUuid());
+  }
+
+  @Override
+  public List<ArtifactStreamBinding> list(@NotEmpty String appId, @NotEmpty String serviceId) {
+    List<ServiceVariable> variables = getServiceVariables(appId, serviceId);
+    return variables.stream()
+        .map(variable -> {
+          List<ArtifactStreamSummary> artifactStreams = new ArrayList<>();
+          if (variable.getAllowedList() != null) {
+            for (String artifactStreamId : variable.getAllowedList()) {
+              ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+              if (artifactStream == null) {
+                continue;
+              }
+
+              artifactStreams.add(ArtifactStreamSummary.fromArtifactStream(artifactStream));
+            }
+          }
+
+          return ArtifactStreamBinding.builder().name(variable.getName()).artifactStreams(artifactStreams).build();
+        })
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public ArtifactStreamBinding get(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String name) {
+    ArtifactStreamBinding variable = getInternal(appId, serviceId, name);
+    if (variable == null) {
+      throw new InvalidRequestException("Artifact stream binding does not exist", USER);
+    }
+
+    return variable;
+  }
+
+  private ArtifactStreamBinding getInternal(String appId, String serviceId, String name) {
+    List<ServiceVariable> variables = getServiceVariablesByName(appId, serviceId, name);
+    if (isEmpty(variables)) {
+      return null;
+    }
+
+    ServiceVariable variable = variables.get(0);
+    List<ArtifactStreamSummary> artifactStreams = new ArrayList<>();
+    if (variable.getAllowedList() != null) {
+      for (String artifactStreamId : variable.getAllowedList()) {
+        ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+        if (artifactStream == null) {
+          continue;
+        }
+
+        artifactStreams.add(ArtifactStreamSummary.fromArtifactStream(artifactStream));
+      }
+    }
+
+    return ArtifactStreamBinding.builder().name(variable.getName()).artifactStreams(artifactStreams).build();
+  }
+
+  @Override
+  public List<ServiceVariable> getServiceVariables(String appId, String serviceId) {
+    return serviceVariableService.list(aPageRequest()
+                                           .addFilter(ServiceVariableKeys.appId, Operator.EQ, appId)
+                                           .addFilter(ServiceVariableKeys.entityType, Operator.EQ, EntityType.SERVICE)
+                                           .addFilter(ServiceVariableKeys.entityId, Operator.EQ, serviceId)
+                                           .addFilter(ServiceVariableKeys.type, Operator.EQ, Type.ARTIFACT)
+                                           .build());
+  }
+
+  @Override
+  public List<ServiceVariable> getServiceVariablesByName(String appId, String serviceId, String name) {
+    return serviceVariableService.list(aPageRequest()
+                                           .addFilter(ServiceVariableKeys.appId, Operator.EQ, appId)
+                                           .addFilter(ServiceVariableKeys.entityType, Operator.EQ, EntityType.SERVICE)
+                                           .addFilter(ServiceVariableKeys.entityId, Operator.EQ, serviceId)
+                                           .addFilter(ServiceVariableKeys.type, Operator.EQ, Type.ARTIFACT)
+                                           .addFilter(ServiceVariableKeys.name, Operator.EQ, name)
+                                           .build());
   }
 
   @Override
@@ -96,24 +238,6 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
   }
 
   @Override
-  public boolean delete(String appId, String serviceId, String name) {
-    Service service = serviceResourceService.get(appId, serviceId, false);
-    if (service == null) {
-      throw new InvalidRequestException("Service does not exist", USER);
-    }
-
-    List<ArtifactStreamBinding> artifactStreamBindings = service.getArtifactStreamBindings();
-    boolean removed = artifactStreamBindings.removeIf(binding -> binding.getName().equals(name));
-    if (!removed) {
-      return false;
-    }
-
-    service.setArtifactStreamBindings(artifactStreamBindings);
-    serviceResourceService.updateArtifactStreamBindings(service, artifactStreamBindings);
-    return true;
-  }
-
-  @Override
   public boolean deleteOld(String appId, String serviceId, String artifactStreamId) {
     Service service = serviceResourceService.get(appId, serviceId, false);
     if (service == null) {
@@ -121,117 +245,6 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
     }
 
     return deleteOld(service, artifactStreamId);
-  }
-
-  @Override
-  public ArtifactStreamBinding update(
-      String appId, String serviceId, String name, ArtifactStreamBinding artifactStreamBinding) {
-    validateArtifactStreamBinding(artifactStreamBinding);
-
-    Service service = serviceResourceService.get(appId, serviceId, false);
-    if (service == null) {
-      throw new InvalidRequestException("Service does not exist", USER);
-    }
-
-    List<ArtifactStreamBinding> artifactStreamBindings = service.getArtifactStreamBindings();
-    if (isEmpty(artifactStreamBindings)) {
-      throw new InvalidRequestException("Artifact stream binding does not exist", USER);
-    }
-
-    // check if artifact variable being updated exists
-    ArtifactStreamBinding existingArtifactStreamBinding =
-        artifactStreamBindings.stream().filter(binding -> binding.getName().equals(name)).findAny().orElse(null);
-    if (existingArtifactStreamBinding == null) {
-      throw new InvalidRequestException("Artifact stream binding does not exist", USER);
-    }
-
-    // check if new artifact variable name provided is unique within the service
-    if (!name.equals(artifactStreamBinding.getName())) {
-      ArtifactStreamBinding collidingArtifactStream =
-          artifactStreamBindings.stream()
-              .filter(binding -> binding.getName().equals(artifactStreamBinding.getName()))
-              .findAny()
-              .orElse(null);
-      if (collidingArtifactStream != null) {
-        throw new InvalidRequestException(
-            format("Artifact variable with name [%s] already exists in service", artifactStreamBinding.getName()),
-            USER);
-      }
-    }
-
-    Set<String> newArtifactStreamIds = new HashSet<>(artifactStreamBinding.getArtifactStreamIds());
-    if (isNotEmpty(existingArtifactStreamBinding.getArtifactStreamIds())) {
-      newArtifactStreamIds.removeAll(existingArtifactStreamBinding.getArtifactStreamIds());
-    }
-
-    if (!isEmpty(newArtifactStreamIds)) {
-      for (String artifactStreamId : newArtifactStreamIds) {
-        ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
-        if (artifactStream == null) {
-          throw new InvalidRequestException(format("Artifact stream (%s) does not exist", artifactStreamId), USER);
-        }
-      }
-    }
-    existingArtifactStreamBinding.setName(artifactStreamBinding.getName());
-    existingArtifactStreamBinding.setArtifactStreamIds(artifactStreamBinding.getArtifactStreamIds());
-    service.setArtifactStreamBindings(artifactStreamBindings);
-    serviceResourceService.updateArtifactStreamBindings(service, artifactStreamBindings);
-    return artifactStreamBinding;
-  }
-
-  @Override
-  public List<ArtifactStreamBindingDetails> list(String appId, String serviceId) {
-    Service service = serviceResourceService.get(appId, serviceId, false);
-    if (service == null) {
-      throw new InvalidRequestException("Service does not exist", USER);
-    }
-
-    if (service.getArtifactStreamBindings() == null) {
-      return new ArrayList<>();
-    }
-
-    return service.getArtifactStreamBindings()
-        .stream()
-        .map(this ::artifactStreamBindingToDetails)
-        .collect(Collectors.toList());
-  }
-
-  @Override
-  public ArtifactStreamBindingDetails get(String appId, String serviceId, String name) {
-    Service service = serviceResourceService.get(appId, serviceId, false);
-    if (service == null || service.getArtifactStreamBindings() == null) {
-      throw new InvalidRequestException("Service does not exist", USER);
-    }
-
-    ArtifactStreamBinding artifactStreamBinding = service.getArtifactStreamBindings()
-                                                      .stream()
-                                                      .filter(binding -> binding.getName().equals(name))
-                                                      .findFirst()
-                                                      .orElse(null);
-    if (artifactStreamBinding == null) {
-      throw new InvalidRequestException("Artifact stream binding does not exist", USER);
-    }
-    return artifactStreamBindingToDetails(artifactStreamBinding);
-  }
-
-  private ArtifactStreamBindingDetails artifactStreamBindingToDetails(ArtifactStreamBinding artifactStreamBinding) {
-    List<ArtifactStreamSummary> artifactStreamSummaries = new ArrayList<>();
-    if (artifactStreamBinding.getArtifactStreamIds() != null) {
-      for (String artifactStreamId : artifactStreamBinding.getArtifactStreamIds()) {
-        ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
-        if (artifactStream != null) {
-          artifactStreamSummaries.add(ArtifactStreamSummary.builder()
-                                          .artifactStreamId(artifactStreamId)
-                                          .displayName(artifactStream.getName())
-                                          .build());
-        }
-      }
-    }
-
-    return ArtifactStreamBindingDetails.builder()
-        .name(artifactStreamBinding.getName())
-        .artifactStreams(artifactStreamSummaries)
-        .build();
   }
 
   @Override
@@ -351,15 +364,5 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
 
     serviceResourceService.updateArtifactStreamIds(service, artifactStreamIds);
     return true;
-  }
-
-  private void validateArtifactStreamBinding(ArtifactStreamBinding artifactStreamBinding) {
-    if (artifactStreamBinding == null) {
-      throw new InvalidRequestException("Artifact stream binding cannot be null", USER);
-    }
-    artifactStreamBinding.setName(artifactStreamBinding.getName().trim());
-    if (isEmpty(artifactStreamBinding.getName())) {
-      throw new InvalidRequestException("Artifact stream binding name cannot be empty", USER);
-    }
   }
 }

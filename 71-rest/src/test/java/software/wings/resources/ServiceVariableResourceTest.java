@@ -71,6 +71,7 @@ public class ServiceVariableResourceTest {
                                                               .build();
   static {
     when(VARIABLE_SERVICE.save(anyObject())).then(AdditionalAnswers.returnsFirstArg());
+    when(VARIABLE_SERVICE.saveWithChecks(anyString(), anyObject())).then(AdditionalAnswers.returnsSecondArg());
     when(APP_SERVICE.get(anyString())).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
     try {
       FieldUtils.writeField(VARIABLE_RESOURCE, "serviceVariablesService", VARIABLE_SERVICE, true);
@@ -116,14 +117,14 @@ public class ServiceVariableResourceTest {
   @Test
   @Category(UnitTests.class)
   public void shouldSaveServiceVariable() throws Exception {
-    when(VARIABLE_SERVICE.save(any(ServiceVariable.class))).thenReturn(SERVICE_VARIABLE);
+    when(VARIABLE_SERVICE.saveWithChecks(anyString(), any(ServiceVariable.class))).thenReturn(SERVICE_VARIABLE);
     RestResponse<ServiceVariable> restResponse =
         RESOURCES.client()
             .target(format("/service-variables/?appId=%s", APP_ID))
             .request()
             .post(entity(SERVICE_VARIABLE, APPLICATION_JSON), new GenericType<RestResponse<ServiceVariable>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(ServiceVariable.class);
-    verify(VARIABLE_SERVICE).save(SERVICE_VARIABLE);
+    verify(VARIABLE_SERVICE).saveWithChecks(APP_ID, SERVICE_VARIABLE);
   }
 
   /**
@@ -152,14 +153,15 @@ public class ServiceVariableResourceTest {
   @Test
   @Category(UnitTests.class)
   public void shouldUpdateServiceVariable() throws Exception {
-    when(VARIABLE_SERVICE.update(any(ServiceVariable.class))).thenReturn(SERVICE_VARIABLE);
+    when(VARIABLE_SERVICE.updateWithChecks(anyString(), anyString(), any(ServiceVariable.class)))
+        .thenReturn(SERVICE_VARIABLE);
     RestResponse<ServiceVariable> restResponse =
         RESOURCES.client()
             .target(format("/service-variables/%s?appId=%s", WingsTestConstants.SERVICE_VARIABLE_ID, APP_ID))
             .request()
             .put(entity(SERVICE_VARIABLE, APPLICATION_JSON), new GenericType<RestResponse<ServiceVariable>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(ServiceVariable.class);
-    verify(VARIABLE_SERVICE).update(SERVICE_VARIABLE);
+    verify(VARIABLE_SERVICE).updateWithChecks(APP_ID, WingsTestConstants.SERVICE_VARIABLE_ID, SERVICE_VARIABLE);
   }
 
   /**
@@ -170,14 +172,13 @@ public class ServiceVariableResourceTest {
   @Test
   @Category(UnitTests.class)
   public void shouldDeleteServiceVariable() throws Exception {
-    when(VARIABLE_SERVICE.get("APP_ID_1", WingsTestConstants.SERVICE_VARIABLE_ID, MASKED)).thenReturn(SERVICE_VARIABLE);
     Response restResponse =
         RESOURCES.client()
             .target(format("/service-variables/%s?appId=%s", WingsTestConstants.SERVICE_VARIABLE_ID, "APP_ID_1"))
             .request()
             .delete();
     assertThat(restResponse.getStatus()).isEqualTo(200);
-    verify(VARIABLE_SERVICE).delete("APP_ID_1", WingsTestConstants.SERVICE_VARIABLE_ID);
+    verify(VARIABLE_SERVICE).deleteWithChecks("APP_ID_1", WingsTestConstants.SERVICE_VARIABLE_ID);
   }
 
   /**

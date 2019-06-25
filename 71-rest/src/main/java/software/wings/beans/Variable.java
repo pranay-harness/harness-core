@@ -37,6 +37,21 @@ public class Variable {
 
   private VariableType type = VariableType.TEXT;
 
+  public Variable() {}
+
+  public Variable(String name, String description, boolean mandatory, String value, boolean fixed, String allowedValues,
+      List<String> allowedList, Map<String, Object> metadata, VariableType type) {
+    this.name = name;
+    this.description = description;
+    this.mandatory = mandatory;
+    this.value = value;
+    this.fixed = fixed;
+    this.allowedValues = allowedValues;
+    this.allowedList = allowedList;
+    this.metadata = metadata;
+    this.type = type;
+  }
+
   public Variable cloneInternal() {
     return aVariable()
         .name(name)

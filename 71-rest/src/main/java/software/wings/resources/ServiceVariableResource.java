@@ -1,11 +1,5 @@
 package software.wings.resources;
 
-import static io.harness.expression.SecretString.SECRET_MASK;
-import static java.util.Arrays.asList;
-import static software.wings.beans.EntityType.ENVIRONMENT;
-import static software.wings.beans.EntityType.SERVICE;
-import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 
 import com.google.inject.Inject;
@@ -14,23 +8,16 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
-import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
-import software.wings.security.PermissionAttribute;
-import software.wings.security.PermissionAttribute.Action;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
-import software.wings.utils.Validator;
 
-import java.util.List;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -80,62 +67,7 @@ public class ServiceVariableResource {
   @Timed
   @ExceptionMetered
   public RestResponse<ServiceVariable> save(@QueryParam("appId") String appId, ServiceVariable serviceVariable) {
-    serviceVariable.setAppId(appId);
-    serviceVariable.setAccountId(appService.get(appId).getAccountId());
-
-    checkUserPermissions(serviceVariable);
-
-    // TODO:: revisit. for environment envId can be specific
-    String envId =
-        serviceVariable.getEntityType().equals(SERVICE) || serviceVariable.getEntityType().equals(ENVIRONMENT)
-        ? GLOBAL_ENV_ID
-        : serviceTemplateService.get(serviceVariable.getAppId(), serviceVariable.getTemplateId()).getEnvId();
-    serviceVariable.setEnvId(envId);
-    ServiceVariable savedServiceVariable = serviceVariablesService.save(serviceVariable);
-    if (savedServiceVariable.getType().equals(ENCRYPTED_TEXT)) {
-      serviceVariable.setValue(SECRET_MASK.toCharArray());
-    }
-    if (savedServiceVariable.getOverriddenServiceVariable() != null
-        && savedServiceVariable.getOverriddenServiceVariable().getType().equals(ENCRYPTED_TEXT)) {
-      savedServiceVariable.getOverriddenServiceVariable().setValue(SECRET_MASK.toCharArray());
-    }
-    return new RestResponse<>(savedServiceVariable);
-  }
-
-  private void checkUserPermissions(ServiceVariable serviceVariable) throws WingsException {
-    Validator.notNullCheck("Service variable null", serviceVariable, WingsException.USER);
-
-    Validator.notNullCheck("Unknown entity type for service variable " + serviceVariable.getName(),
-        serviceVariable.getEntityType(), WingsException.USER);
-
-    List<PermissionAttribute> permissionAttributeList;
-    String entityId;
-    PermissionType permissionType;
-    switch (serviceVariable.getEntityType()) {
-      case SERVICE:
-        entityId = serviceVariable.getEntityId();
-        permissionType = PermissionType.SERVICE;
-        break;
-
-      case SERVICE_TEMPLATE:
-        ServiceTemplate serviceTemplate =
-            serviceTemplateService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());
-        entityId = serviceTemplate.getEnvId();
-        permissionType = PermissionType.ENV;
-        break;
-
-      case ENVIRONMENT:
-        entityId = serviceVariable.getEntityId();
-        permissionType = PermissionType.ENV;
-        break;
-
-      default:
-        throw new WingsException("Unknown entity type for service variable " + serviceVariable.getEntityType());
-    }
-
-    PermissionAttribute permissionAttribute = new PermissionAttribute(permissionType, Action.UPDATE);
-    permissionAttributeList = asList(permissionAttribute);
-    authHandler.authorize(permissionAttributeList, asList(serviceVariable.getAppId()), entityId);
+    return new RestResponse<>(serviceVariablesService.saveWithChecks(appId, serviceVariable));
   }
 
   /**
@@ -169,20 +101,7 @@ public class ServiceVariableResource {
   @ExceptionMetered
   public RestResponse update(@QueryParam("appId") String appId,
       @PathParam("serviceVariableId") String serviceVariableId, ServiceVariable serviceVariable) {
-    serviceVariable.setUuid(serviceVariableId);
-    serviceVariable.setAppId(appId);
-
-    checkUserPermissions(serviceVariable);
-
-    ServiceVariable savedServiceVariable = serviceVariablesService.update(serviceVariable);
-    if (savedServiceVariable.getType().equals(ENCRYPTED_TEXT)) {
-      serviceVariable.setValue(SECRET_MASK.toCharArray());
-    }
-    if (savedServiceVariable.getOverriddenServiceVariable() != null
-        && savedServiceVariable.getOverriddenServiceVariable().getType().equals(ENCRYPTED_TEXT)) {
-      savedServiceVariable.getOverriddenServiceVariable().setValue(SECRET_MASK.toCharArray());
-    }
-    return new RestResponse<>(savedServiceVariable);
+    return new RestResponse<>(serviceVariablesService.updateWithChecks(appId, serviceVariableId, serviceVariable));
   }
 
   /**
@@ -198,11 +117,7 @@ public class ServiceVariableResource {
   @ExceptionMetered
   public RestResponse delete(
       @QueryParam("appId") String appId, @PathParam("serviceVariableId") String serviceVariableId) {
-    ServiceVariable serviceVariable = serviceVariablesService.get(appId, serviceVariableId, MASKED);
-
-    checkUserPermissions(serviceVariable);
-
-    serviceVariablesService.delete(appId, serviceVariableId);
+    serviceVariablesService.deleteWithChecks(appId, serviceVariableId);
     return new RestResponse();
   }
 

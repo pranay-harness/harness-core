@@ -169,7 +169,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
           artifactPageRequest.addFilter(ArtifactKeys.uiDisplayName, CONTAINS, artifactSearchString);
         }
         PageResponse<Artifact> artifactPageResponse = artifactService.listUnsorted(artifactPageRequest);
-
         List<Artifact> artifacts = artifactPageResponse.getResponse();
         if (isEmpty(artifacts)) {
           filteredArtifactStreams = new ArrayList<>();
@@ -810,8 +809,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                  .project(ServiceKeys.artifactStreamIds, true)
                                  .asList();
 
-    Map<String, String> artifactStreamIdToName =
-        artifactStreams.stream().collect(toMap(ArtifactStream::getUuid, ArtifactStream::getName));
+    Map<String, ArtifactStream> artifactStreamMap =
+        artifactStreams.stream().collect(toMap(ArtifactStream::getUuid, Function.identity()));
     List<ArtifactStreamSummary> artifactStreamSummaries = new ArrayList<>();
     for (Service service : services) {
       List<String> artifactStreamIds = service.getArtifactStreamIds();
@@ -820,14 +819,16 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       }
 
       String serviceName = service.getName();
-      artifactStreamSummaries.addAll(
-          artifactStreamIds.stream()
-              .map(artifactStreamId
-                  -> ArtifactStreamSummary.builder()
-                         .artifactStreamId(artifactStreamId)
-                         .displayName(artifactStreamIdToName.get(artifactStreamId) + " (" + serviceName + ")")
-                         .build())
-              .collect(Collectors.toList()));
+      artifactStreamSummaries.addAll(artifactStreamIds.stream()
+                                         .map(artifactStreamId -> {
+                                           ArtifactStream artifactStream = artifactStreamMap.get(artifactStreamId);
+                                           return ArtifactStreamSummary.builder()
+                                               .artifactStreamId(artifactStreamId)
+                                               .settingId(artifactStream.getSettingId())
+                                               .displayName(artifactStream.getName() + " (" + serviceName + ")")
+                                               .build();
+                                         })
+                                         .collect(Collectors.toList()));
     }
 
     return artifactStreamSummaries;

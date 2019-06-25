@@ -10,6 +10,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.shell.ScriptType;
+import io.harness.expression.ExpressionEvaluator;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -20,6 +21,7 @@ import software.wings.stencils.DefaultValue;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Created by anubhaw on 5/25/16.
@@ -49,10 +51,23 @@ public class ExecCommandUnit extends SshCommandUnit {
   @Override
   @SchemaIgnore
   public boolean isArtifactNeeded() {
+    // TODO: ASR: update this method
     if (isEmpty(commandString)) {
       return false;
     }
     return commandString.contains("${artifact.") || commandString.contains("${ARTIFACT_FILE_NAME}");
+  }
+
+  @SchemaIgnore
+  @Override
+  public void updateServiceArtifactVariableNames(Set<String> serviceArtifactVariableNames) {
+    ExpressionEvaluator.updateServiceArtifactVariableNames(commandString, serviceArtifactVariableNames);
+  }
+
+  @SchemaIgnore
+  @Override
+  public void updateWorkflowVariableNames(Set<String> workflowVariableNames) {
+    ExpressionEvaluator.updateWorkflowVariableNames(commandString, workflowVariableNames);
   }
 
   @Override

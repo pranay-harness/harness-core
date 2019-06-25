@@ -108,7 +108,6 @@ import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
-import software.wings.beans.artifact.ArtifactStreamBinding;
 import software.wings.beans.command.AmiCommandUnit;
 import software.wings.beans.command.AwsLambdaCommandUnit;
 import software.wings.beans.command.CodeDeployCommandUnit;
@@ -144,6 +143,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
@@ -180,6 +180,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -253,6 +254,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private LimitCheckerFactory limitCheckerFactory;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   @Inject private Queue<PruneEvent> pruneQueue;
   @Inject private ApplicationManifestUtils applicationManifestUtils;
@@ -270,6 +272,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
     if (withBuildSource) {
       setArtifactStreams(services);
+      setArtifactStreamBindings(services);
     }
     return pageResponse;
   }
@@ -649,12 +652,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           artifactStreamIds = new ArrayList<>();
         }
         updateOperations.set("artifactStreamIds", artifactStreamIds);
-
-        List<ArtifactStreamBinding> artifactStreamBindings = service.getArtifactStreamBindings();
-        if (artifactStreamBindings == null) {
-          artifactStreamBindings = new ArrayList<>();
-        }
-        updateOperations.set("artifactStreamBindings", artifactStreamBindings);
       }
     }
 
@@ -686,28 +683,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     UpdateOperations<Service> updateOperations =
         wingsPersistence.createUpdateOperations(Service.class).set(ServiceKeys.artifactStreamIds, artifactStreamIds);
-
-    wingsPersistence.update(savedService, updateOperations);
-    Service updatedService = get(service.getAppId(), service.getUuid(), false);
-
-    String accountId = appService.getAccountIdByAppId(service.getAppId());
-    yamlPushService.pushYamlChangeSet(
-        accountId, savedService, updatedService, Type.UPDATE, service.isSyncFromGit(), false);
-
-    return updatedService;
-  }
-
-  @Override
-  public Service updateArtifactStreamBindings(Service service, List<ArtifactStreamBinding> artifactStreamBindings) {
-    if (artifactStreamBindings == null) {
-      artifactStreamBindings = new ArrayList<>();
-    }
-
-    Service savedService = get(service.getAppId(), service.getUuid(), false);
-    notNullCheck("Service", savedService);
-
-    UpdateOperations<Service> updateOperations = wingsPersistence.createUpdateOperations(Service.class)
-                                                     .set(ServiceKeys.artifactStreamBindings, artifactStreamBindings);
 
     wingsPersistence.update(savedService, updateOperations);
     Service updatedService = get(service.getAppId(), service.getUuid(), false);
@@ -760,6 +735,16 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     service.setServiceVariables(
         serviceVariableService.getServiceVariablesForEntity(appId, service.getUuid(), OBTAIN_VALUE));
     service.setServiceCommands(getServiceCommands(appId, service.getUuid()));
+  }
+
+  private void setArtifactStreamBindings(List<Service> services) {
+    if (isEmpty(services)) {
+      return;
+    }
+
+    services.forEach(service
+        -> service.setArtifactStreamBindings(
+            artifactStreamServiceBindingService.list(service.getAppId(), service.getUuid())));
   }
 
   @Override
@@ -2021,7 +2006,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return false;
   }
 
-  public void setArtifactStreams(List<Service> services) {
+  private void setArtifactStreams(List<Service> services) {
     services.forEach(
         service -> service.setArtifactStreams(artifactStreamService.listByIds(service.getArtifactStreamIds())));
   }
@@ -2103,6 +2088,20 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     return false;
+  }
+
+  @Override
+  public void updateArtifactVariableNamesForHelm(String appId, String serviceTemplateId,
+      Set<String> serviceArtifactVariableNames, Set<String> workflowVariableNames) {
+    List<String> valueOverridesYamlFiles = applicationManifestUtils.getHelmValuesYamlFiles(appId, serviceTemplateId);
+    if (isEmpty(valueOverridesYamlFiles)) {
+      return;
+    }
+
+    for (String valueYamlFile : valueOverridesYamlFiles) {
+      HelmHelper.updateArtifactVariableNamesReferencedInValuesYaml(
+          valueYamlFile, serviceArtifactVariableNames, workflowVariableNames);
+    }
   }
 
   private void createDefaultK8sManifests(Service service, boolean createdFromGit) {

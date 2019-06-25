@@ -36,6 +36,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Created by peeyushaggarwal on 5/31/16.
@@ -356,12 +357,24 @@ public class Command extends Base implements CommandUnit {
   @SchemaIgnore
   @Override
   public boolean isArtifactNeeded() {
-    return commandUnits.stream().filter(CommandUnit::isArtifactNeeded).findFirst().isPresent();
+    return commandUnits.stream().anyMatch(CommandUnit::isArtifactNeeded);
   }
 
   @Override
   public void setArtifactNeeded(boolean artifactNeeded) {
     this.artifactNeeded = artifactNeeded;
+  }
+
+  @SchemaIgnore
+  @Override
+  public void updateServiceArtifactVariableNames(Set<String> serviceArtifactVariableNames) {
+    commandUnits.forEach(commandUnit -> commandUnit.updateServiceArtifactVariableNames(serviceArtifactVariableNames));
+  }
+
+  @SchemaIgnore
+  @Override
+  public void updateWorkflowVariableNames(Set<String> workflowVariableNames) {
+    commandUnits.forEach(commandUnit -> commandUnit.updateWorkflowVariableNames(workflowVariableNames));
   }
 
   @Override

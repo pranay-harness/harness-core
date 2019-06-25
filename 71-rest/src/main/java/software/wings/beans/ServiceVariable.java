@@ -91,6 +91,9 @@ public class ServiceVariable extends Base implements EncryptableSetting {
 
   private Type type;
 
+  // TODO: ASR: IMP: this field is used for service variables of type artifact and are not yet handled in YAML
+  private List<String> allowedList;
+
   @SchemaIgnore private String encryptedValue;
 
   @SchemaIgnore @Transient private String secretTextName;
@@ -140,7 +143,6 @@ public class ServiceVariable extends Base implements EncryptableSetting {
      * Encrypted text type.
      */
     ENCRYPTED_TEXT,
-
     /**
      * Artifact type.
      */

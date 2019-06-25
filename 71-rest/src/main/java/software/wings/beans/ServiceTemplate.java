@@ -617,4 +617,9 @@ public class ServiceTemplate extends Base {
       return serviceTemplate;
     }
   }
+
+  public static final class ServiceTemplateKeys {
+    // Temporary
+    public static final String appId = "appId";
+  }
 }

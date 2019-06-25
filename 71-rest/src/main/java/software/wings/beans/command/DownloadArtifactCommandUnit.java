@@ -51,6 +51,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -90,6 +91,16 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
   @SchemaIgnore
   public boolean isArtifactNeeded() {
     return true;
+  }
+
+  @SchemaIgnore
+  @Override
+  public void updateServiceArtifactVariableNames(Set<String> serviceArtifactVariableNames) {
+    if (isEmpty(artifactVariableName)) {
+      serviceArtifactVariableNames.add("artifact");
+    } else {
+      serviceArtifactVariableNames.add(artifactVariableName);
+    }
   }
 
   @Override
