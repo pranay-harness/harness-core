@@ -10,7 +10,7 @@ import static io.harness.expression.SecretString.SECRET_MASK;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.Base.APP_ID_KEY;
+import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
@@ -45,14 +45,20 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.ServiceVariableKeys;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.PermissionAttribute;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
+import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -78,6 +84,8 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Inject private ExecutorService executorService;
   @Inject private YamlPushService yamlPushService;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private AuthHandler authHandler;
 
   @Override
   public PageResponse<ServiceVariable> list(PageRequest<ServiceVariable> request) {
@@ -100,6 +108,30 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   public ServiceVariable save(@Valid ServiceVariable serviceVariable) {
     checkValidEncryptedReference(serviceVariable);
     return save(serviceVariable, false);
+  }
+
+  @Override
+  public ServiceVariable saveWithChecks(@NotEmpty String appId, ServiceVariable serviceVariable) {
+    serviceVariable.setAppId(appId);
+    serviceVariable.setAccountId(appService.get(appId).getAccountId());
+
+    checkUserPermissions(serviceVariable);
+
+    // TODO:: revisit. for environment envId can be specific
+    String envId =
+        serviceVariable.getEntityType().equals(SERVICE) || serviceVariable.getEntityType().equals(ENVIRONMENT)
+        ? GLOBAL_ENV_ID
+        : serviceTemplateService.get(serviceVariable.getAppId(), serviceVariable.getTemplateId()).getEnvId();
+    serviceVariable.setEnvId(envId);
+    ServiceVariable savedServiceVariable = save(serviceVariable);
+    if (savedServiceVariable.getType().equals(ENCRYPTED_TEXT)) {
+      serviceVariable.setValue(SECRET_MASK.toCharArray());
+    }
+    if (savedServiceVariable.getOverriddenServiceVariable() != null
+        && savedServiceVariable.getOverriddenServiceVariable().getType().equals(ENCRYPTED_TEXT)) {
+      savedServiceVariable.getOverriddenServiceVariable().setValue(SECRET_MASK.toCharArray());
+    }
+    return savedServiceVariable;
   }
 
   @Override
@@ -149,11 +181,33 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   }
 
   @Override
+  public ServiceVariable updateWithChecks(
+      @NotEmpty String appId, @NotEmpty String serviceVariableId, ServiceVariable serviceVariable) {
+    serviceVariable.setUuid(serviceVariableId);
+    serviceVariable.setAppId(appId);
+
+    checkUserPermissions(serviceVariable);
+
+    ServiceVariable savedServiceVariable = update(serviceVariable);
+    if (savedServiceVariable.getType().equals(ENCRYPTED_TEXT)) {
+      serviceVariable.setValue(SECRET_MASK.toCharArray());
+    }
+    if (savedServiceVariable.getOverriddenServiceVariable() != null
+        && savedServiceVariable.getOverriddenServiceVariable().getType().equals(ENCRYPTED_TEXT)) {
+      savedServiceVariable.getOverriddenServiceVariable().setValue(SECRET_MASK.toCharArray());
+    }
+    return savedServiceVariable;
+  }
+
+  @Override
   public ServiceVariable update(@Valid ServiceVariable serviceVariable, boolean syncFromGit) {
     checkValidEncryptedReference(serviceVariable);
     ServiceVariable savedServiceVariable = get(serviceVariable.getAppId(), serviceVariable.getUuid());
-    executorService.submit(
-        () -> removeSearchTagsIfNecessary(savedServiceVariable, String.valueOf(serviceVariable.getValue())));
+    // variables with type ARTIFACT have null value
+    if (isNotEmpty(serviceVariable.getValue())) {
+      executorService.submit(
+          () -> removeSearchTagsIfNecessary(savedServiceVariable, String.valueOf(serviceVariable.getValue())));
+    }
     notNullCheck("Service variable", savedServiceVariable);
     if (serviceVariable.getName() != null) {
       if (savedServiceVariable.getName() != null && !savedServiceVariable.getName().equals(serviceVariable.getName())) {
@@ -168,6 +222,15 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     if (serviceVariable.getType() != null) {
       updateMap.put(ServiceVariableKeys.type, serviceVariable.getType());
     }
+
+    // TODO: ASR: optimize this to only update in case of change
+    // TODO: ASR: what to do in case of YAML?
+    List<String> allowedList = serviceVariable.getAllowedList();
+    if (allowedList == null) {
+      allowedList = new ArrayList<>();
+    }
+    updateMap.put(ServiceVariableKeys.allowedList, allowedList);
+
     if (isNotEmpty(updateMap)) {
       wingsPersistence.updateFields(ServiceVariable.class, serviceVariable.getUuid(), updateMap);
       ServiceVariable updatedServiceVariable = get(serviceVariable.getAppId(), serviceVariable.getUuid());
@@ -178,7 +241,10 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
       String accountId = appService.getAccountIdByAppId(serviceVariable.getAppId());
       yamlPushService.pushYamlChangeSet(
           accountId, serviceVariable, updatedServiceVariable, Event.Type.UPDATE, syncFromGit, false);
-      serviceVariable.setEncryptedValue(String.valueOf(serviceVariable.getValue()));
+      // variables with type ARTIFACT have null value
+      if (isNotEmpty(serviceVariable.getValue())) {
+        serviceVariable.setEncryptedValue(String.valueOf(serviceVariable.getValue()));
+      }
       executorService.submit(() -> addAndSaveSearchTags(serviceVariable));
       return updatedServiceVariable;
     }
@@ -191,6 +257,13 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   }
 
   @Override
+  public void deleteWithChecks(@NotEmpty String appId, @NotEmpty String serviceVariableId) {
+    ServiceVariable serviceVariable = get(appId, serviceVariableId, MASKED);
+    checkUserPermissions(serviceVariable);
+    delete(appId, serviceVariableId);
+  }
+
+  @Override
   public void delete(@NotEmpty String appId, @NotEmpty String settingId, boolean syncFromGit) {
     ServiceVariable serviceVariable = get(appId, settingId);
     if (serviceVariable == null) {
@@ -200,14 +273,15 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     executorService.submit(() -> removeSearchTagsIfNecessary(serviceVariable, null));
     Query<ServiceVariable> query = wingsPersistence.createQuery(ServiceVariable.class)
                                        .filter(ServiceVariableKeys.parentServiceVariableId, settingId)
-                                       .filter(APP_ID_KEY, appId);
+                                       .filter(ServiceVariableKeys.appId, appId);
     List<ServiceVariable> modified = query.asList();
     UpdateOperations<ServiceVariable> updateOperations = wingsPersistence.createUpdateOperations(ServiceVariable.class)
                                                              .unset(ServiceVariableKeys.parentServiceVariableId);
     wingsPersistence.update(query, updateOperations);
 
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(ServiceVariable.class).filter(APP_ID_KEY, appId).filter(ID_KEY, settingId));
+    wingsPersistence.delete(wingsPersistence.createQuery(ServiceVariable.class)
+                                .filter(ServiceVariableKeys.appId, appId)
+                                .filter(ID_KEY, settingId));
 
     // Type.UPDATE is intentionally passed. Don't change this.
     String accountId = appService.getAccountIdByAppId(serviceVariable.getAppId());
@@ -442,5 +516,41 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
             .addParam("args", "No secret text with given name exists. Please select one from the drop down.");
       }
     }
+  }
+
+  private void checkUserPermissions(ServiceVariable serviceVariable) throws WingsException {
+    Validator.notNullCheck("Service variable null", serviceVariable, WingsException.USER);
+
+    Validator.notNullCheck("Unknown entity type for service variable " + serviceVariable.getName(),
+        serviceVariable.getEntityType(), WingsException.USER);
+
+    List<PermissionAttribute> permissionAttributeList;
+    String entityId;
+    PermissionType permissionType;
+    switch (serviceVariable.getEntityType()) {
+      case SERVICE:
+        entityId = serviceVariable.getEntityId();
+        permissionType = PermissionType.SERVICE;
+        break;
+
+      case SERVICE_TEMPLATE:
+        ServiceTemplate serviceTemplate =
+            serviceTemplateService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());
+        entityId = serviceTemplate.getEnvId();
+        permissionType = PermissionType.ENV;
+        break;
+
+      case ENVIRONMENT:
+        entityId = serviceVariable.getEntityId();
+        permissionType = PermissionType.ENV;
+        break;
+
+      default:
+        throw new WingsException("Unknown entity type for service variable " + serviceVariable.getEntityType());
+    }
+
+    PermissionAttribute permissionAttribute = new PermissionAttribute(permissionType, Action.UPDATE);
+    permissionAttributeList = asList(permissionAttribute);
+    authHandler.authorize(permissionAttributeList, asList(serviceVariable.getAppId()), entityId);
   }
 }

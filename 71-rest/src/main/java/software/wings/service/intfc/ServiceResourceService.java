@@ -16,7 +16,6 @@ import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.Artifact;
-import software.wings.beans.artifact.ArtifactStreamBinding;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
@@ -30,6 +29,7 @@ import software.wings.sm.ContextElement;
 import software.wings.stencils.Stencil;
 
 import java.util.List;
+import java.util.Set;
 import javax.validation.Valid;
 
 /**
@@ -96,9 +96,6 @@ public interface ServiceResourceService extends OwnedByApplication {
 
   @ValidationGroups(Update.class)
   Service updateArtifactStreamIds(@Valid Service service, List<String> artifactStreamIds);
-
-  @ValidationGroups(Update.class)
-  Service updateArtifactStreamBindings(@Valid Service service, List<ArtifactStreamBinding> artifactStreamBindings);
 
   /**
    * Gets the.
@@ -464,6 +461,9 @@ public interface ServiceResourceService extends OwnedByApplication {
       @NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName);
 
   boolean checkArtifactNeededForHelm(String appId, String serviceTemplateId);
+
+  void updateArtifactVariableNamesForHelm(String appId, String serviceTemplateId,
+      Set<String> serviceArtifactVariableNames, Set<String> workflowVariableNames);
 
   void deleteByYamlGit(String appId, String serviceId, boolean syncFromGit);
 

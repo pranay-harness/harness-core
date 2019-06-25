@@ -10,6 +10,7 @@ import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -19,6 +20,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.govern.Switch.noop;
+import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.model.K8sExpressions.canaryWorkloadExpression;
 import static io.harness.k8s.model.K8sExpressions.primaryServiceNameExpression;
 import static io.harness.k8s.model.K8sExpressions.stageServiceNameExpression;
@@ -26,8 +28,10 @@ import static io.harness.mongo.MongoUtils.setUnset;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Stream.concat;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
@@ -55,12 +59,14 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 import static software.wings.common.Constants.K8S_CANARY_PHASE_NAME;
 import static software.wings.common.Constants.K8S_PRIMARY_PHASE_NAME;
 import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_SETUP;
 import static software.wings.sm.StateType.AWS_CODEDEPLOY_STATE;
 import static software.wings.sm.StateType.AWS_LAMBDA_STATE;
 import static software.wings.sm.StateType.CLOUD_FORMATION_CREATE_STACK;
+import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.ECS_DAEMON_SERVICE_SETUP;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
@@ -101,6 +107,7 @@ import io.harness.exception.ExplanationException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
@@ -125,12 +132,14 @@ import software.wings.api.InstanceElement;
 import software.wings.app.StaticConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
+import software.wings.beans.ArtifactVariable;
 import software.wings.beans.BuildWorkflow;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CustomOrchestrationWorkflow;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
+import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
@@ -149,9 +158,13 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.RepairActionCode;
 import software.wings.beans.RoleType;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceTemplate;
+import software.wings.beans.ServiceTemplate.ServiceTemplateKeys;
+import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
+import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.beans.WorkflowCategorySteps;
@@ -161,6 +174,8 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowStepMeta;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.KubernetesContainerTask;
@@ -182,6 +197,7 @@ import software.wings.service.impl.ServiceClassLocator;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -190,6 +206,8 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.UserGroupService;
@@ -228,7 +246,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
@@ -277,6 +297,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private AccountService accountService;
   @Inject private AppService appService;
   @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private EntityUpdateService entityUpdateService;
   @Inject private EntityVersionService entityVersionService;
   @Inject private EnvironmentService environmentService;
@@ -301,6 +322,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private YamlPushService yamlPushService;
   @Inject private TemplateService templateService;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private ServiceVariableService serviceVariableService;
+  @Inject private ServiceTemplateService serviceTemplateService;
 
   @Inject private Queue<PruneEvent> pruneQueue;
 
@@ -2055,7 +2078,36 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (artifactRequiredServiceIds == null) {
         artifactRequiredServiceIds = new ArrayList<>();
       }
-      fetchArtifactNeededServiceIds(appId, workflow, workflowVariables, artifactRequiredServiceIds);
+
+      String accountId = appService.getAccountIdByAppId(appId);
+      if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+        List<ArtifactVariable> artifactVariables = new ArrayList<>();
+        fetchArtifactNeededServiceIds(
+            appId, workflow, workflowVariables, artifactRequiredServiceIds, artifactVariables);
+        deploymentMetadataBuilder.artifactVariables(artifactVariables);
+
+        // Update artifact variables with display info and artifact stream summaries
+        if (isNotEmpty(artifactVariables)) {
+          for (ArtifactVariable artifactVariable : artifactVariables) {
+            artifactVariable.setDisplayInfo(getDisplayInfo(appId, workflow, artifactVariable));
+
+            if (isEmpty(artifactVariable.getAllowedList())) {
+              continue;
+            }
+
+            List<ArtifactStream> artifactStreams = artifactStreamService.listByIds(artifactVariable.getAllowedList());
+            if (isEmpty(artifactStreams)) {
+              continue;
+            }
+
+            artifactVariable.setArtifactStreamSummaries(
+                artifactStreams.stream().map(ArtifactStreamSummary::fromArtifactStream).collect(Collectors.toList()));
+          }
+        }
+      } else {
+        fetchArtifactNeededServiceIds(appId, workflow, workflowVariables, artifactRequiredServiceIds);
+      }
+
       deploymentMetadataBuilder.artifactRequiredServiceIds(artifactRequiredServiceIds);
     }
     if (includeList.contains(Include.DEPLOYMENT_TYPE)) {
@@ -2076,6 +2128,78 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     return deploymentMetadataBuilder.build();
+  }
+
+  private Map<String, List<String>> getDisplayInfo(String appId, Workflow workflow, ArtifactVariable artifactVariable) {
+    Map<String, List<String>> displayInfo = new HashMap<>();
+    Environment environment;
+    Service service;
+    switch (artifactVariable.getEntityType()) {
+      case SERVICE:
+        service = serviceResourceService.get(appId, artifactVariable.getEntityId());
+        if (service == null) {
+          return displayInfo;
+        }
+        updateDisplayInfoMap(displayInfo, "services", service.getName());
+        break;
+      case ENVIRONMENT:
+        updateDisplayInfoForArtifactVariableOverrides(appId, workflow, artifactVariable, displayInfo);
+        environment = environmentService.get(appId, artifactVariable.getEntityId());
+        if (environment == null) {
+          return displayInfo;
+        }
+        updateDisplayInfoMap(displayInfo, "environments", environment.getName());
+        break;
+      case WORKFLOW:
+        updateDisplayInfoForArtifactVariableOverrides(appId, workflow, artifactVariable, displayInfo);
+        if (workflow == null) {
+          return displayInfo;
+        }
+        updateDisplayInfoMap(displayInfo, "workflows", workflow.getName());
+        break;
+      default:
+        unhandled(artifactVariable.getEntityType());
+    }
+
+    return displayInfo;
+  }
+
+  private void updateDisplayInfoMap(Map<String, List<String>> displayInfo, String key, String value) {
+    List<String> values = displayInfo.getOrDefault(key, null);
+    if (values == null) {
+      values = new ArrayList<>();
+      displayInfo.put(key, values);
+    }
+
+    if (!values.contains(value)) {
+      values.add(value);
+    }
+  }
+
+  private void mergeDisplayInfoMaps(Map<String, List<String>> displayInfo, Map<String, List<String>> newDisplayInfo) {
+    for (Entry<String, List<String>> entry : newDisplayInfo.entrySet()) {
+      List<String> newValues = entry.getValue();
+      if (!displayInfo.containsKey(entry.getKey())) {
+        displayInfo.put(entry.getKey(), newValues);
+        continue;
+      }
+
+      List<String> values = displayInfo.get(entry.getKey());
+      for (String value : newValues) {
+        if (!values.contains(value)) {
+          values.add(value);
+        }
+      }
+    }
+  }
+
+  private void updateDisplayInfoForArtifactVariableOverrides(
+      String appId, Workflow workflow, ArtifactVariable artifactVariable, Map<String, List<String>> displayInfo) {
+    if (isNotEmpty(artifactVariable.getOverriddenArtifactVariables())) {
+      List<ArtifactVariable> overriddenArtifactVariables = artifactVariable.getOverriddenArtifactVariables();
+      overriddenArtifactVariables.forEach(
+          artifactVariable1 -> mergeDisplayInfoMaps(displayInfo, getDisplayInfo(appId, workflow, artifactVariable1)));
+    }
   }
 
   @Override
@@ -2213,7 +2337,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         }
       }
 
-      if ("COMMAND".equals(step.getType())) {
+      if (COMMAND.name().equals(step.getType())) {
         if (step.getTemplateUuid() != null) {
           Command command = (Command) templateService.constructEntityFromTemplate(
               step.getTemplateUuid(), step.getTemplateVersion(), EntityType.COMMAND);
@@ -2296,6 +2420,355 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
   }
 
+  private void fetchArtifactNeededServiceIds(String appId, Workflow workflow, Map<String, String> workflowVariablesMap,
+      List<String> artifactNeededServiceIds, List<ArtifactVariable> artifactVariables) {
+    notNullCheck("Workflow does not exist", workflow, USER);
+    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    notNullCheck("Orchestration workflow not associated", orchestrationWorkflow, USER);
+
+    if (!(orchestrationWorkflow instanceof CanaryOrchestrationWorkflow)) {
+      // early return if not a CanaryOrchestrationWorkflow
+      return;
+    }
+
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
+
+    // map of serviceId to artifact variables used in the workflow
+    Map<String, Set<String>> serviceArtifactVariableNamesMap = new HashMap<>();
+
+    // set of workflow artifact variables used in the workflow
+    Set<String> workflowVariableNames = new HashSet<>();
+
+    // process PreDeploymentSteps
+    // TODO: ASR: IMP: what serviceId to take?
+    updateArtifactVariableNames(appId, "", canaryOrchestrationWorkflow.getPreDeploymentSteps(), null, null,
+        serviceArtifactVariableNamesMap, workflowVariableNames);
+
+    // process WorkflowPhases
+    for (WorkflowPhase phase : canaryOrchestrationWorkflow.getWorkflowPhases()) {
+      updateArtifactVariableNames(
+          appId, phase, workflowVariablesMap, serviceArtifactVariableNamesMap, workflowVariableNames);
+    }
+
+    boolean requiresArtifact = serviceArtifactVariableNamesMap.size() + workflowVariableNames.size() > 0;
+
+    // process RollbackWorkflowPhases
+    for (WorkflowPhase phase : canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().values()) {
+      updateArtifactVariableNames(
+          appId, phase, workflowVariablesMap, serviceArtifactVariableNamesMap, workflowVariableNames);
+    }
+
+    if (!requiresArtifact && (serviceArtifactVariableNamesMap.size() + workflowVariableNames.size() > 0)) {
+      logger.warn(
+          "Phase Steps do not need artifact. However, Rollback steps needed artifact for the workflow {} of the app {}",
+          workflow.getUuid(), appId);
+    }
+
+    serviceArtifactVariableNamesMap = serviceArtifactVariableNamesMap.entrySet()
+                                          .stream()
+                                          .filter(entry -> isNotEmpty(entry.getKey()) && isNotEmpty(entry.getValue()))
+                                          .collect(toMap(Entry::getKey, Entry::getValue));
+
+    // NOTE: current overriding behaviour order:
+    // 1. ArtifactVariables defined as ServiceVariables at Service level - with allowed list = artifactStreamIds
+    // 2. ServiceVariable overrides for all services defined at Environment level - with allowed list =
+    //    artifactStreamIds
+    // 3. ServiceVariable overrides for service templates defined at Environment level - with allowed list =
+    //    artifactStreamIds
+    // 4. Workflow Variables defined at Workflow level with type ARTIFACT and same name as one of the above
+    //    ServiceVariable - with allowed list = artifactStreamIds
+
+    // compute artifact variables associated to a service with overrides at env level
+    // overriding behaviours 1, 2 and 3 covered here
+    Map<String, List<ServiceVariable>> serviceVariablesMap =
+        computeServiceVariables(appId, workflow.getEnvId(), serviceArtifactVariableNamesMap.keySet());
+
+    // loop over serviceIds and add artifact variables used based on the above computed service variables
+    for (Entry<String, Set<String>> entry : serviceArtifactVariableNamesMap.entrySet()) {
+      String serviceId = entry.getKey();
+      Set<String> serviceArtifactVariableNames = entry.getValue();
+
+      List<ServiceVariable> serviceVariables = serviceVariablesMap.getOrDefault(serviceId, null);
+      if (serviceVariables == null) {
+        continue;
+      }
+
+      Map<String, ServiceVariable> variableNames =
+          serviceVariables.stream().collect(Collectors.toMap(ServiceVariable::getName, Function.identity()));
+      int count = 0;
+      for (String variableName : serviceArtifactVariableNames) {
+        if (!variableNames.containsKey(variableName)) {
+          continue;
+        }
+
+        ServiceVariable serviceVariable = variableNames.get(variableName);
+        List<ArtifactVariable> overriddenArtifactVariables = new ArrayList<>();
+        if (serviceVariable.getOverriddenServiceVariable() != null
+            && !serviceVariable.getEntityType().equals(EntityType.ENVIRONMENT)) {
+          ServiceVariable overriddenServiceVariable = serviceVariable.getOverriddenServiceVariable();
+          overriddenArtifactVariables.add(ArtifactVariable.builder()
+                                              .type(VariableType.ARTIFACT)
+                                              .name(variableName)
+                                              .entityType(overriddenServiceVariable.getEntityType())
+                                              .entityId(overriddenServiceVariable.getEntityId())
+                                              .allowedList(overriddenServiceVariable.getAllowedList())
+                                              .build());
+        }
+
+        EntityType entityType = serviceVariable.getEntityType();
+        String entityId = serviceVariable.getEntityId();
+        if (entityType.equals(EntityType.SERVICE_TEMPLATE)) {
+          entityType = EntityType.ENVIRONMENT;
+          entityId = serviceVariable.getEnvId();
+        }
+
+        ArtifactVariable artifactVariable = ArtifactVariable.builder()
+                                                .type(VariableType.ARTIFACT)
+                                                .name(variableName)
+                                                .entityType(entityType)
+                                                .entityId(entityId)
+                                                .allowedList(serviceVariable.getAllowedList())
+                                                .overriddenArtifactVariables(overriddenArtifactVariables)
+                                                .build();
+
+        artifactVariables.add(artifactVariable);
+        count++;
+      }
+
+      if (count > 0) {
+        artifactNeededServiceIds.add(serviceId);
+      }
+    }
+
+    // list of variables defined at the workflow variable with type ARTIFACT
+    List<Variable> workflowVariables = canaryOrchestrationWorkflow.getUserVariables();
+    Map<String, Variable> workflowArtifactVariableNamesMap =
+        workflowVariables.stream()
+            .filter(variable -> variable.getType().equals(VariableType.ARTIFACT))
+            .collect(Collectors.toMap(Variable::getName, Function.identity()));
+
+    workflowVariableNames = workflowVariableNames.stream()
+                                .filter(workflowArtifactVariableNamesMap::containsKey)
+                                .collect(Collectors.toSet());
+
+    // copy over all the service variables as well as they might have been overridden by workflow variables
+    // overriding behaviour 4 (defined above in the NOTE) covered here
+    workflowVariableNames.addAll(serviceArtifactVariableNamesMap.values()
+                                     .stream()
+                                     .flatMap(Set::stream)
+                                     .filter(workflowArtifactVariableNamesMap::containsKey)
+                                     .collect(Collectors.toSet()));
+
+    String workflowId = workflow.getUuid();
+    for (String variableName : workflowVariableNames) {
+      Variable variable = workflowArtifactVariableNamesMap.get(variableName);
+
+      // override artifact variables with the same name and store them in the new artifact variable
+      // overriding behaviour 4 (defined above in the NOTE) covered here
+      List<ArtifactVariable> overriddenArtifactVariables =
+          artifactVariables.stream()
+              .filter(artifactVariable -> artifactVariable.getName().equals(variableName))
+              .collect(Collectors.toList());
+      if (isNotEmpty(overriddenArtifactVariables)) {
+        artifactVariables.removeIf(artifactVariable -> artifactVariable.getName().equals(variableName));
+      }
+
+      artifactVariables.add(ArtifactVariable.builder()
+                                .type(VariableType.ARTIFACT)
+                                .name(variableName)
+                                .entityType(WORKFLOW)
+                                .entityId(workflowId)
+                                .allowedList(variable.getAllowedList())
+                                .overriddenArtifactVariables(overriddenArtifactVariables)
+                                .build());
+    }
+  }
+
+  public Map<String, List<ServiceVariable>> computeServiceVariables(
+      String appId, String envId, Set<String> serviceIds) {
+    if (isEmpty(serviceIds)) {
+      return new HashMap<>();
+    }
+
+    List<ServiceVariable> allServiceVariables =
+        serviceVariableService.getServiceVariablesForEntity(appId, envId, OBTAIN_VALUE);
+    if (allServiceVariables == null) {
+      allServiceVariables = new ArrayList<>();
+    }
+
+    // serviceTemplates with list of service variables defined at service level and service template overrides defined
+    // at the env level
+    List<ServiceTemplate> serviceTemplates =
+        serviceTemplateService.list(aPageRequest()
+                                        .addFilter(ServiceTemplateKeys.appId, EQ, appId)
+                                        .addFilter(ServiceTemplateKeys.envId, EQ, envId)
+                                        .addFilter(ServiceTemplateKeys.serviceId, IN, serviceIds.toArray())
+                                        .build(),
+            true, OBTAIN_VALUE);
+
+    Map<String, ServiceTemplate> serviceTemplateMap = new HashMap<>();
+    for (ServiceTemplate serviceTemplate : serviceTemplates) {
+      serviceTemplateMap.put(serviceTemplate.getServiceId(), serviceTemplate);
+    }
+
+    Map<String, List<ServiceVariable>> serviceVariablesMap = new HashMap<>();
+    for (String serviceId : serviceIds) {
+      List<ServiceVariable> serviceVariables = null;
+      List<ServiceVariable> templateServiceVariables = null;
+      ServiceTemplate serviceTemplate = serviceTemplateMap.getOrDefault(serviceId, null);
+      if (serviceTemplate != null) {
+        serviceVariables = serviceTemplate.getServiceVariables();
+        templateServiceVariables = serviceTemplate.getServiceVariablesOverrides();
+      }
+
+      if (serviceVariables == null) {
+        serviceVariables = new ArrayList<>();
+      }
+      if (templateServiceVariables == null) {
+        templateServiceVariables = new ArrayList<>();
+      }
+
+      serviceVariablesMap.put(serviceId,
+          overrideServiceVariables(
+              overrideServiceVariables(serviceVariables, allServiceVariables), templateServiceVariables));
+    }
+
+    return serviceVariablesMap;
+  }
+
+  private List<ServiceVariable> overrideServiceVariables(
+      List<ServiceVariable> existingServiceVariables, List<ServiceVariable> newServiceVariables) {
+    // append newServiceVariables to existingServiceVariables overwriting any variables with same names
+    if (existingServiceVariables == null) {
+      existingServiceVariables = new ArrayList<>();
+    }
+    List<ServiceVariable> mergedServiceVariables = existingServiceVariables;
+    if (isNotEmpty(newServiceVariables)) {
+      mergedServiceVariables = concat(newServiceVariables.stream(), existingServiceVariables.stream())
+                                   .filter(new TreeSet<>(comparing(ServiceVariable::getName))::add)
+                                   .collect(toList());
+    }
+
+    return mergedServiceVariables;
+  }
+
+  private void updateArtifactVariableNames(String appId, WorkflowPhase workflowPhase,
+      Map<String, String> workflowVariablesMap, Map<String, Set<String>> serviceArtifactVariableNamesMap,
+      Set<String> workflowVariableNames) {
+    if (workflowPhase == null || workflowPhase.getPhaseSteps() == null) {
+      return;
+    }
+
+    String serviceId = null;
+    if (workflowPhase.checkServiceTemplatized()) {
+      String serviceTemplatizedName = workflowPhase.fetchServiceTemplatizedName();
+      if (serviceTemplatizedName != null) {
+        serviceId = isEmpty(workflowVariablesMap) ? null : workflowVariablesMap.get(serviceTemplatizedName);
+      }
+    } else {
+      serviceId = workflowPhase.getServiceId();
+    }
+
+    if (serviceId == null) {
+      // TODO: ASR: IMP: what serviceId to take?
+      serviceId = "";
+    }
+
+    for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
+      if (phaseStep.getSteps() == null) {
+        continue;
+      }
+      updateArtifactVariableNames(appId, serviceId, phaseStep, workflowPhase, workflowVariablesMap,
+          serviceArtifactVariableNamesMap, workflowVariableNames);
+    }
+  }
+
+  private void updateArtifactVariableNames(String appId, String serviceId, PhaseStep phaseStep,
+      WorkflowPhase workflowPhase, Map<String, String> workflowVariables,
+      Map<String, Set<String>> serviceArtifactVariableNamesMap, Set<String> workflowVariableNames) {
+    Set<String> serviceArtifactVariableNames;
+    if (serviceArtifactVariableNamesMap.containsKey(serviceId)) {
+      serviceArtifactVariableNames = serviceArtifactVariableNamesMap.get(serviceId);
+    } else {
+      serviceArtifactVariableNames = new HashSet<>();
+      serviceArtifactVariableNamesMap.put(serviceId, serviceArtifactVariableNames);
+    }
+
+    for (GraphNode step : phaseStep.getSteps()) {
+      if (step.getTemplateUuid() != null) {
+        if (isNotEmpty(step.getTemplateVariables())) {
+          List<String> values = step.getTemplateVariables()
+                                    .stream()
+                                    .filter(variable -> isNotEmpty(variable.getValue()))
+                                    .map(Variable::getValue)
+                                    .collect(toList());
+          if (isNotEmpty(values)) {
+            updateArtifactVariablesNeeded(serviceArtifactVariableNames, workflowVariableNames, values.toArray());
+          }
+        }
+      }
+
+      if (COMMAND.name().equals(step.getType())) {
+        if (step.getTemplateUuid() != null) {
+          Command command = (Command) templateService.constructEntityFromTemplate(
+              step.getTemplateUuid(), step.getTemplateVersion(), EntityType.COMMAND);
+          if (command != null) {
+            command.updateServiceArtifactVariableNames(serviceArtifactVariableNames);
+            command.updateWorkflowVariableNames(workflowVariableNames);
+          }
+        }
+        if (serviceId != null) {
+          boolean serviceExists = serviceResourceService.exists(appId, serviceId);
+          if (serviceExists) {
+            ServiceCommand serviceCommand = serviceResourceService.getCommandByName(
+                appId, serviceId, (String) step.getProperties().get("commandName"));
+            if (serviceCommand != null && serviceCommand.getCommand() != null) {
+              serviceCommand.getCommand().updateServiceArtifactVariableNames(serviceArtifactVariableNames);
+              serviceCommand.getCommand().updateWorkflowVariableNames(workflowVariableNames);
+            }
+          }
+        }
+      } else if (HTTP.name().equals(step.getType())) {
+        updateArtifactVariablesNeeded(serviceArtifactVariableNames, workflowVariableNames,
+            step.getProperties().get("url"), step.getProperties().get("body"), step.getProperties().get("assertion"));
+      } else if (SHELL_SCRIPT.name().equals(step.getType())) {
+        updateArtifactVariablesNeeded(
+            serviceArtifactVariableNames, workflowVariableNames, step.getProperties().get("scriptString"));
+      } else if (CLOUD_FORMATION_CREATE_STACK.name().equals(step.getType())) {
+        List<Map> variables = (List<Map>) step.getProperties().get("variables");
+        if (variables != null) {
+          List<String> values = (List<String>) variables.stream()
+                                    .flatMap(element -> element.values().stream())
+                                    .collect(Collectors.toList());
+          updateArtifactVariablesNeeded(serviceArtifactVariableNames, workflowVariableNames, values.toArray());
+        }
+      } else if (kubernetesArtifactNeededStateTypes.contains(step.getType())
+          || ecsArtifactNeededStateTypes.contains(step.getType())
+          || amiArtifactNeededStateTypes.contains(step.getType())
+          || codeDeployArtifactNeededStateTypes.contains(step.getType())
+          || awsLambdaArtifactNeededStateTypes.contains(step.getType())
+          || pcfArtifactNeededStateTypes.contains(step.getType())) {
+        updateDefaultArtifactVariablesNeeded(serviceArtifactVariableNames);
+      } else if (workflowPhase != null && HELM.equals(workflowPhase.getDeploymentType())
+          && StateType.HELM_DEPLOY.name().equals(step.getType())) {
+        String infraMappingId = getInfraMappingId(workflowPhase, workflowVariables);
+        if (isNotEmpty(infraMappingId) && !matchesVariablePattern(infraMappingId)) {
+          InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
+          if (infrastructureMapping != null) {
+            serviceResourceService.updateArtifactVariableNamesForHelm(appId,
+                infrastructureMapping.getServiceTemplateId(), serviceArtifactVariableNames, workflowVariableNames);
+          }
+        }
+      } else if (workflowPhase != null && k8sV2ArtifactNeededStateTypes.contains(step.getType())) {
+        String infraMappingId = getInfraMappingId(workflowPhase, workflowVariables);
+        if (isNotEmpty(infraMappingId) && !matchesVariablePattern(infraMappingId)) {
+          k8sStateHelper.updateManifestsArtifactVariableNames(
+              appId, infraMappingId, serviceArtifactVariableNames, workflowVariableNames);
+        }
+      }
+    }
+  }
+
   private String getInfraMappingId(WorkflowPhase workflowPhase, Map<String, String> workflowVariables) {
     String infraMappingId = null;
     if (workflowPhase.checkInfraTemplatized()) {
@@ -2312,6 +2785,23 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private boolean isArtifactNeeded(Object... args) {
     return Arrays.stream(args).anyMatch(arg
         -> arg != null && (((String) arg).contains("${artifact.") || ((String) arg).contains("${ARTIFACT_FILE_NAME}")));
+  }
+
+  private void updateArtifactVariablesNeeded(
+      Set<String> serviceArtifactVariableNames, Set<String> workflowVariableNames, Object... args) {
+    for (Object arg : args) {
+      if (!(arg instanceof String)) {
+        continue;
+      }
+
+      String str = (String) arg;
+      ExpressionEvaluator.updateServiceArtifactVariableNames(str, serviceArtifactVariableNames);
+      ExpressionEvaluator.updateWorkflowVariableNames(str, workflowVariableNames);
+    }
+  }
+
+  private void updateDefaultArtifactVariablesNeeded(Set<String> serviceArtifactVariableNames) {
+    serviceArtifactVariableNames.add("artifact");
   }
 
   private boolean isDynamicInfrastructure(String appId, String infrastructureMappingId) {
@@ -2568,10 +3058,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           appService.getAppsByAccountId(accountId).stream().map(app -> app.getAppId()).collect(toList());
 
       if (!appsIds.isEmpty()) {
-        workflows = listWorkflows(aPageRequest()
-                                      .withLimit(PageRequest.UNLIMITED)
-                                      .addFilter(APP_ID_KEY, Operator.IN, appsIds.toArray())
-                                      .build())
+        workflows = listWorkflows(
+            aPageRequest().withLimit(PageRequest.UNLIMITED).addFilter(APP_ID_KEY, IN, appsIds.toArray()).build())
                         .getResponse();
       }
     } else {

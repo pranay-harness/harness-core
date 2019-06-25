@@ -277,6 +277,39 @@ public class K8sStateHelper {
     return false;
   }
 
+  public void updateManifestsArtifactVariableNames(String appId, String infraMappingId,
+      Set<String> serviceArtifactVariableNames, Set<String> workflowVariableNames) {
+    InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, infraMappingId);
+    if (infraMapping == null) {
+      throw new InvalidRequestException(
+          format("Infra mapping not found for appId %s infraMappingId %s", appId, infraMappingId));
+    }
+
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getK8sManifestByServiceId(appId, infraMapping.getServiceId());
+    updateManifestFileVariableNames(applicationManifest, serviceArtifactVariableNames, workflowVariableNames);
+
+    applicationManifest = applicationManifestService.getByEnvId(appId, infraMapping.getEnvId(), AppManifestKind.VALUES);
+    updateManifestFileVariableNames(applicationManifest, serviceArtifactVariableNames, workflowVariableNames);
+
+    applicationManifest = applicationManifestService.getByEnvAndServiceId(
+        appId, infraMapping.getEnvId(), infraMapping.getServiceId(), AppManifestKind.VALUES);
+    updateManifestFileVariableNames(applicationManifest, serviceArtifactVariableNames, workflowVariableNames);
+  }
+
+  private void updateManifestFileVariableNames(ApplicationManifest applicationManifest,
+      Set<String> serviceArtifactVariableNames, Set<String> workflowVariableNames) {
+    if (applicationManifest != null && StoreType.Local.equals(applicationManifest.getStoreType())) {
+      ManifestFile manifestFile =
+          applicationManifestService.getManifestFileByFileName(applicationManifest.getUuid(), values_filename);
+      if (manifestFile != null) {
+        String content = manifestFile.getFileContent();
+        ExpressionEvaluator.updateServiceArtifactVariableNames(content, serviceArtifactVariableNames);
+        ExpressionEvaluator.updateWorkflowVariableNames(content, workflowVariableNames);
+      }
+    }
+  }
+
   public List<String> getRenderedValuesFiles(
       Map<K8sValuesLocation, ApplicationManifest> appManifestMap, ExecutionContext context) {
     Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();

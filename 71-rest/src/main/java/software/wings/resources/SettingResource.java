@@ -645,11 +645,13 @@ public class SettingResource {
       @QueryParam("settingId") String settingId, @QueryParam("withArtifactCount") boolean withArtifactCount,
       @QueryParam("artifactSearchString") String artifactSearchString,
       @BeanParam PageRequest<ArtifactStream> pageRequest) {
-    SettingAttribute settingAttribute = settingsService.get(settingId);
-    if (settingAttribute == null || !settingAttribute.getAccountId().equals(accountId)
-        || isEmpty(settingsService.getFilteredSettingAttributes(
-               Collections.singletonList(settingAttribute), currentAppId, currentEnvId))) {
-      throw new InvalidRequestException("Setting attribute does not exist", USER);
+    if (settingId != null) {
+      SettingAttribute settingAttribute = settingsService.get(settingId);
+      if (settingAttribute == null || !settingAttribute.getAccountId().equals(accountId)
+          || isEmpty(settingsService.getFilteredSettingAttributes(
+                 Collections.singletonList(settingAttribute), currentAppId, currentEnvId))) {
+        throw new InvalidRequestException("Setting attribute does not exist", USER);
+      }
     }
     return new RestResponse<>(
         artifactStreamService.list(pageRequest, accountId, withArtifactCount, artifactSearchString));

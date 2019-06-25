@@ -22,7 +22,6 @@ import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamBinding;
-import software.wings.beans.artifact.ArtifactStreamBindingDetails;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
@@ -741,7 +740,7 @@ public class ServiceResource {
   @Path("{serviceId}/artifact-stream-bindings")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<ArtifactStreamBindingDetails>> listArtifactStreamBindings(
+  public RestResponse<List<ArtifactStreamBinding>> listArtifactStreamBindings(
       @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
     return new RestResponse<>(artifactStreamServiceBindingService.list(appId, serviceId));
   }
@@ -750,7 +749,7 @@ public class ServiceResource {
   @Path("{serviceId}/artifact-stream-bindings/{name}")
   @Timed
   @ExceptionMetered
-  public RestResponse<ArtifactStreamBindingDetails> getArtifactStreamBinding(
+  public RestResponse<ArtifactStreamBinding> getArtifactStreamBinding(
       @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId, @PathParam("name") String name) {
     return new RestResponse<>(artifactStreamServiceBindingService.get(appId, serviceId, name));
   }

@@ -13,11 +13,13 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+import static software.wings.beans.ServiceVariable.Type.ARTIFACT;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.beans.ServiceVariable.Type.TEXT;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_NAME;
@@ -56,6 +58,7 @@ import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -367,7 +370,28 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     serviceVariableService.update(variable);
     verify(wingsPersistence)
         .updateFields(ServiceVariable.class, SERVICE_VARIABLE_ID,
-            ImmutableMap.of("type", TEXT, "value", SERVICE_VARIABLE.getValue()));
+            ImmutableMap.of("type", TEXT, "value", SERVICE_VARIABLE.getValue(), "allowedList", new ArrayList<>()));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldUpdateAllowedList() {
+    List<String> allowedList = new ArrayList<>();
+    allowedList.add(ARTIFACT_STREAM_ID);
+    ServiceVariable variable = ServiceVariable.builder()
+                                   .name(SERVICE_VARIABLE_NAME)
+                                   .type(ARTIFACT)
+                                   .entityType(EntityType.SERVICE_TEMPLATE)
+                                   .allowedList(allowedList)
+                                   .build();
+    variable.setAppId(APP_ID);
+    variable.setUuid(SERVICE_VARIABLE_ID);
+
+    when(wingsPersistence.getWithAppId(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
+    serviceVariableService.update(variable);
+    verify(wingsPersistence)
+        .updateFields(
+            ServiceVariable.class, SERVICE_VARIABLE_ID, ImmutableMap.of("type", ARTIFACT, "allowedList", allowedList));
   }
 
   /**

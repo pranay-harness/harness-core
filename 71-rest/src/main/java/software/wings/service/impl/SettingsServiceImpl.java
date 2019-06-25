@@ -185,7 +185,6 @@ public class SettingsServiceImpl implements SettingsService {
           artifactStreamPageRequest.addFilter(ArtifactStreamKeys.name, CONTAINS, artifactStreamSearchString);
         }
         PageResponse<ArtifactStream> artifactStreamPageResponse = artifactStreamService.list(artifactStreamPageRequest);
-
         List<ArtifactStream> artifactStreams = artifactStreamPageResponse.getResponse();
         if (isEmpty(artifactStreams)) {
           filteredSettingAttributes = new ArrayList<>();
@@ -194,10 +193,7 @@ public class SettingsServiceImpl implements SettingsService {
         Map<String, List<ArtifactStreamSummary>> settingIdToArtifactStreamSummaries = new HashMap<>();
         artifactStreams.forEach(artifactStream -> {
           String settingId = artifactStream.getSettingId();
-          ArtifactStreamSummary artifactStreamSummary = ArtifactStreamSummary.builder()
-                                                            .artifactStreamId(artifactStream.getUuid())
-                                                            .displayName(artifactStream.getName())
-                                                            .build();
+          ArtifactStreamSummary artifactStreamSummary = ArtifactStreamSummary.fromArtifactStream(artifactStream);
           if (settingIdToArtifactStreamSummaries.containsKey(settingId)) {
             settingIdToArtifactStreamSummaries.get(settingId).add(artifactStreamSummary);
           } else {

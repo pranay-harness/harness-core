@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,6 +29,8 @@ import java.util.regex.Pattern;
 public class ExpressionEvaluator {
   public static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^{}]*}");
   public static final Pattern variableNamePattern = Pattern.compile("^[-_a-zA-Z][-_\\w]*$");
+  private static final Pattern serviceArtifactVariablePattern = Pattern.compile("\\$\\{artifacts\\.([^.{}]+)\\.");
+  private static final Pattern workflowVariablePattern = Pattern.compile("\\$\\{workflow\\.variables\\.([^.}]+)}");
 
   public static final int EXPANSION_LIMIT = 256 * 1024; // 256 KB
   private static final int EXPANSION_MULTIPLIER_LIMIT = 10;
@@ -193,6 +196,25 @@ public class ExpressionEvaluator {
       return false;
     }
     return ExpressionEvaluator.wingsVariablePattern.matcher(expression).find();
+  }
+
+  public static void updateServiceArtifactVariableNames(String str, Set<String> serviceArtifactVariableNames) {
+    // TODO: ASR: IMP: ARTIFACT_FILE_NAME behaved differently for multi artifact
+    if (str.contains("${artifact.") || str.contains("${ARTIFACT_FILE_NAME}")) {
+      serviceArtifactVariableNames.add("artifact");
+    }
+
+    Matcher matcher = serviceArtifactVariablePattern.matcher(str);
+    while (matcher.find()) {
+      serviceArtifactVariableNames.add(matcher.group(1));
+    }
+  }
+
+  public static void updateWorkflowVariableNames(String str, Set<String> workflowVariableNames) {
+    Matcher matcher = workflowVariablePattern.matcher(str);
+    while (matcher.find()) {
+      workflowVariableNames.add(matcher.group(1));
+    }
   }
 
   private JexlContext prepareContext(Map<String, Object> context, String defaultObjectPrefix) {

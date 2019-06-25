@@ -17,6 +17,7 @@ import software.wings.yaml.command.CommandRefYaml;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by anubhaw on 5/25/16.
@@ -114,6 +115,18 @@ public abstract class AbstractCommandUnit implements CommandUnit {
   public boolean isArtifactNeeded() {
     return artifactNeeded;
   }
+
+  @SchemaIgnore
+  @Override
+  public void updateServiceArtifactVariableNames(Set<String> serviceArtifactVariableNames) {
+    if (isArtifactNeeded()) {
+      serviceArtifactVariableNames.add("artifact");
+    }
+  }
+
+  @SchemaIgnore
+  @Override
+  public void updateWorkflowVariableNames(Set<String> workflowVariableNames) {}
 
   /**
    * Sets artifact needed.

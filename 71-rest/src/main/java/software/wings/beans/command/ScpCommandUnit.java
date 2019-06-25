@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static java.lang.String.format;
@@ -38,6 +39,7 @@ import software.wings.utils.ArtifactType;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -164,6 +166,18 @@ public class ScpCommandUnit extends SshCommandUnit {
   @Override
   public boolean isArtifactNeeded() {
     return fileCategory != null && fileCategory.equals(ARTIFACTS);
+  }
+
+  @SchemaIgnore
+  @Override
+  public void updateServiceArtifactVariableNames(Set<String> serviceArtifactVariableNames) {
+    if (isArtifactNeeded()) {
+      if (isEmpty(artifactVariableName)) {
+        serviceArtifactVariableNames.add("artifact");
+      } else {
+        serviceArtifactVariableNames.add(artifactVariableName);
+      }
+    }
   }
 
   /**

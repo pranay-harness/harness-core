@@ -8,6 +8,7 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import software.wings.beans.Variable;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by peeyushaggarwal on 11/14/16.
@@ -64,6 +65,7 @@ public interface CommandUnit {
    */
   @SchemaIgnore void setName(String name);
 
+  // TODO: ASR: Check where this function is being used
   /**
    * Is artifact needed boolean.
    *
@@ -77,6 +79,16 @@ public interface CommandUnit {
    * @param artifactNeeded the artifact needed
    */
   void setArtifactNeeded(boolean artifactNeeded);
+
+  /**
+   * Updates the artifact variable names used associated with a service.
+   */
+  @SchemaIgnore void updateServiceArtifactVariableNames(Set<String> serviceArtifactVariableNames);
+
+  /**
+   * Updates the workflow variable names used.
+   */
+  @SchemaIgnore void updateWorkflowVariableNames(Set<String> workflowVariableNames);
 
   /**
    * Gets deployment type.

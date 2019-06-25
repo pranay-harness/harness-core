@@ -1218,12 +1218,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     logger.info("Created workflow execution {}", workflowExecution.getUuid());
 
-    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, app.getAccountId())) {
-      if (workflowExecution.getWorkflowType().equals(ORCHESTRATION)) {
-        multiArtifactWorkflowExecutionServiceHelper.saveArtifactVariablesInSweepingOutput(
-            executionArgs, workflowExecution, workflowExecution.getWorkflowId(), app.getAccountId());
-      }
-    }
+    //    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, app.getAccountId())) {
+    //      if (workflowExecution.getWorkflowType().equals(ORCHESTRATION)) {
+    //        multiArtifactWorkflowExecutionServiceHelper.saveArtifactVariablesInSweepingOutput(
+    //            executionArgs, workflowExecution, workflowExecution.getWorkflowId(), app.getAccountId());
+    //      }
+    //    }
     updateWorkflowElement(workflowExecution, stdParams, workflow, app.getAccountId());
 
     LinkedList<ContextElement> elements = new LinkedList<>();
@@ -2554,6 +2554,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
   }
 
+  @Override
   public List<Artifact> getArtifactsCollected(String appId, String executionUuid) {
     List<StateExecutionInstance> allStateExecutionInstances =
         wingsPersistence.createQuery(StateExecutionInstance.class)
@@ -2935,6 +2936,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     wingsPersistence.update(updatedQuery, updateOps);
   }
 
+  @Override
   public StateMachine obtainStateMachine(WorkflowExecution workflowExecution) {
     if (workflowExecution.getStateMachine() != null) {
       return workflowExecution.getStateMachine();
@@ -2979,6 +2981,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return wingsPersistence.query(WorkflowExecution.class, pageRequest);
   }
 
+  @Override
   public String getApplicationIdByExecutionId(String executionId) {
     return wingsPersistence.createQuery(WorkflowExecution.class)
         .filter(WorkflowExecutionKeys.uuid, executionId)
