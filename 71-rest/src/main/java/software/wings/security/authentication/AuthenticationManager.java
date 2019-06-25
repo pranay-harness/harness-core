@@ -140,9 +140,10 @@ public class AuthenticationManager {
     }
     // It is assumed that an on-prem deployment has exactly 1 account
     // as discussed with Vikas and Jesse
-    Account primaryAccount = accounts.get(0);
-    User user = userService.getUsersOfAccount(primaryAccount.getUuid()).get(0);
-    return getLoginTypeResponse(urlDecode(user.getEmail()), primaryAccount.getUuid());
+    Account account = accountService.getOnPremAccount().orElseThrow(
+        () -> new InvalidRequestException("No Account found in the database"));
+    User user = userService.getUsersOfAccount(account.getUuid()).get(0);
+    return getLoginTypeResponse(urlDecode(user.getEmail()), account.getUuid());
   }
 
   public LoginTypeResponse getLoginTypeResponse(String userName, String accountId) {

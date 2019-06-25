@@ -28,6 +28,7 @@ import static software.wings.utils.Misc.generateSecretKey;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -484,6 +485,12 @@ public class AccountServiceImpl implements AccountService {
     Account updatedAccount = wingsPersistence.get(Account.class, account.getUuid());
     licenseService.decryptLicenseInfo(updatedAccount, false);
     return updatedAccount;
+  }
+
+  @Override
+  public Optional<Account> getOnPremAccount() {
+    List<Account> accounts = listAccounts(Sets.newHashSet(GLOBAL_ACCOUNT_ID));
+    return isNotEmpty(accounts) ? Optional.of(accounts.get(0)) : Optional.empty();
   }
 
   @Override

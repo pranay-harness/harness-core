@@ -119,4 +119,6 @@ public interface AccountService {
   Account updateWhitelistedDomains(String accountId, Set<String> whitelistedDomains);
 
   AccountSettingsResponse getAuthSettingsByAccountId(String accountId);
+
+  Optional<Account> getOnPremAccount();
 }
