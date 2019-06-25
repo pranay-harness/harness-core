@@ -2,10 +2,12 @@ package software.wings.service.impl.trigger;
 
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_COMMIT_ID;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_PULL_BRANCH_REF;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_PUSH_BRANCH_REF;
+import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_REFS_CHANGED_REF;
 import static software.wings.beans.trigger.WebhookParameters.GH_PULL_REF_BRANCH;
 import static software.wings.beans.trigger.WebhookParameters.GH_PUSH_HEAD_COMMIT_ID;
 import static software.wings.beans.trigger.WebhookParameters.GH_PUSH_REF_BRANCH;
@@ -96,6 +98,9 @@ public class WebhookEventUtils {
           switch (bitBucketEventType) {
             case PUSH:
               return expressionEvaluator.substitute(BIT_BUCKET_PUSH_BRANCH_REF, payload);
+            case REFS_CHANGED:
+              return expressionEvaluator.substitute(BIT_BUCKET_REFS_CHANGED_REF, payload);
+
             case PULL_REQUEST_CREATED:
             case PULL_REQUEST_UPDATED:
             case PULL_REQUEST_APPROVED:
@@ -206,6 +211,48 @@ public class WebhookEventUtils {
         return payload.get("action") == null ? null : payload.get("action").toString();
       default:
         return null;
+    }
+  }
+
+  public void validatePushEvent(WebhookSource webhookSource, HttpHeaders httpHeaders) {
+    try {
+      switch (webhookSource) {
+        case GITHUB: {
+          GitHubEventType gitHubEventType = getGitHubEventType(httpHeaders);
+          if (GitHubEventType.PUSH.equals(gitHubEventType)) {
+            return;
+          }
+
+          throw new InvalidRequestException(format("Push event expected. Found %s event", gitHubEventType));
+        }
+
+        case GITLAB: {
+          GitLabEventType gitLabEventType = getGitLabEventType(httpHeaders);
+          if (GitLabEventType.PUSH.equals(gitLabEventType)) {
+            return;
+          }
+
+          throw new InvalidRequestException(format("Push event expected. Found %s event", gitLabEventType));
+        }
+
+        case BITBUCKET: {
+          BitBucketEventType bitBucketEventType = getBitBucketEventType(httpHeaders);
+
+          if (BitBucketEventType.PUSH.equals(bitBucketEventType)
+              || BitBucketEventType.REFS_CHANGED.equals(bitBucketEventType)) {
+            return;
+          }
+
+          throw new InvalidRequestException(format("Push event expected. Found %s event", bitBucketEventType));
+        }
+
+        default:
+          unhandled(webhookSource);
+          throw new InvalidRequestException(format("Unhandled webhook source %s", webhookSource));
+      }
+    } catch (Exception ex) {
+      logger.warn(format("Failed to validate push event for %s with headers %s", webhookSource, httpHeaders));
+      throw ex;
     }
   }
 }

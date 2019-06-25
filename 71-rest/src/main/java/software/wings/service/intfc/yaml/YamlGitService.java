@@ -94,7 +94,7 @@ public interface YamlGitService {
    */
   boolean handleChangeSet(List<YamlChangeSet> yamlChangeSet, String accountId);
 
-  void processWebhookPost(String accountId, String webhookToken, String yamlWebHookPayload, HttpHeaders headers);
+  String processWebhookPost(String accountId, String webhookToken, String yamlWebHookPayload, HttpHeaders headers);
 
   /**
    * Is commit already processed boolean.

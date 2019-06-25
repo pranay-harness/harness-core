@@ -8,6 +8,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -27,9 +28,6 @@ import static software.wings.beans.yaml.YamlConstants.NOTIFICATION_GROUPS_FOLDER
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.VERIFICATION_PROVIDERS_FOLDER;
-import static software.wings.service.impl.WebHookServiceImpl.X_BIT_BUCKET_EVENT;
-import static software.wings.service.impl.WebHookServiceImpl.X_GIT_HUB_EVENT;
-import static software.wings.service.impl.WebHookServiceImpl.X_GIT_LAB_EVENT;
 import static software.wings.utils.Validator.notNullCheck;
 import static software.wings.yaml.gitSync.YamlGitConfig.BRANCH_NAME_KEY;
 import static software.wings.yaml.gitSync.YamlGitConfig.GIT_CONNECTOR_ID_KEY;
@@ -47,6 +45,7 @@ import io.harness.beans.SortOrder.OrderType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
@@ -70,6 +69,7 @@ import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.GitConnectionErrorAlert;
 import software.wings.beans.alert.GitSyncErrorAlert;
+import software.wings.beans.trigger.WebhookSource;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitCommand.GitCommandType;
@@ -83,6 +83,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.YamlProcessingException;
 import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.trigger.WebhookEventUtils;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
@@ -149,6 +150,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Inject private AppService appService;
   @Inject private YamlGitService yamlGitSyncService;
   @Inject YamlHelper yamlHelper;
+  @Inject private WebhookEventUtils webhookEventUtils;
 
   /**
    * Gets the yaml git sync info by entityId
@@ -603,97 +605,88 @@ public class YamlGitServiceImpl implements YamlGitService {
       if (!folderYamlTypes.stream().anyMatch(
               yamlType -> Pattern.compile(yamlType.getPathExpression()).matcher(filePath).matches())) {
         throw new WingsException(
-            "Invalid entity name, entity can not contain / in the name. Caused invalid file path: " + filePath,
-            WingsException.USER);
+            "Invalid entity name, entity can not contain / in the name. Caused invalid file path: " + filePath, USER);
       }
     }
   }
 
   @Override
-  public void processWebhookPost(
+  public String processWebhookPost(
       String accountId, String webhookToken, String yamlWebHookPayload, HttpHeaders headers) {
-    try {
-      List<SettingAttribute> settingAttributes =
-          wingsPersistence.createQuery(SettingAttribute.class)
-              .filter(ACCOUNT_ID_KEY, accountId)
-              .filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.GIT.name())
-              .asList();
+    List<SettingAttribute> settingAttributes =
+        wingsPersistence.createQuery(SettingAttribute.class)
+            .filter(ACCOUNT_ID_KEY, accountId)
+            .filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.GIT.name())
+            .asList();
 
-      if (isEmpty(settingAttributes)) {
-        logger.warn(new StringBuilder(128)
-                        .append(GIT_YAML_LOG_PREFIX)
-                        .append("Invalid git webhook request [{")
-                        .append(webhookToken)
-                        .append("}], AccountId: ")
-                        .append(accountId)
-                        .toString());
-        return;
-      }
-
-      String gitConnectorId = null;
-      for (SettingAttribute settingAttribute : settingAttributes) {
-        SettingValue settingValue = settingAttribute.getValue();
-
-        if (settingValue instanceof GitConfig && webhookToken.equals(((GitConfig) settingValue).getWebhookToken())) {
-          gitConnectorId = settingAttribute.getUuid();
-          break;
-        }
-      }
-
-      if (isEmpty(gitConnectorId)) {
-        logger.warn(GIT_YAML_LOG_PREFIX + "Could not obtain valid git connector for webhook token " + webhookToken);
-        return;
-      }
-
-      String branchName = obtainBranchFromPayload(yamlWebHookPayload, headers);
-      if (isEmpty(branchName)) {
-        logger.warn(GIT_YAML_LOG_PREFIX
-                + "Could not obtain valid branch from yaml webhook payload for git webhook request [{}]",
-            webhookToken);
-        return;
-      }
-
-      List<YamlGitConfig> yamlGitConfigs = wingsPersistence.createQuery(YamlGitConfig.class)
-                                               .filter(ACCOUNT_ID_KEY, accountId)
-                                               .filter(GIT_CONNECTOR_ID_KEY, gitConnectorId)
-                                               .filter(BRANCH_NAME_KEY, branchName)
-                                               .asList();
-      if (isEmpty(yamlGitConfigs)) {
-        logger.warn(GIT_YAML_LOG_PREFIX + "Could not obtain valid git configuration for webhook token " + webhookToken);
-        return;
-      }
-
-      YamlGitConfig yamlGitConfig = yamlGitConfigs.get(0);
-      List<String> yamlGitConfigIds = yamlGitConfigs.stream().map(YamlGitConfig::getUuid).collect(toList());
-      GitCommit gitCommit = fetchLastProcessedGitCommitId(accountId, yamlGitConfigIds);
-
-      String processedCommit = gitCommit == null ? null : gitCommit.getCommitId();
-
-      String waitId = generateUuid();
-      GitConfig gitConfig = getGitConfig(yamlGitConfig);
-      DelegateTask delegateTask = DelegateTask.builder()
-                                      .async(true)
-                                      .accountId(accountId)
-                                      .appId(GLOBAL_APP_ID)
-                                      .waitId(waitId)
-                                      .data(TaskData.builder()
-                                                .taskType(TaskType.GIT_COMMAND.name())
-                                                .parameters(new Object[] {GitCommandType.DIFF, gitConfig,
-                                                    secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null),
-                                                    GitDiffRequest.builder()
-                                                        .lastProcessedCommitId(processedCommit)
-                                                        .yamlGitConfig(yamlGitConfig)
-                                                        .build()})
-                                                .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                                                .build())
-                                      .build();
-
-      waitNotifyEngine.waitForAll(new GitCommandCallback(accountId, null, GitCommandType.DIFF), waitId);
-      delegateService.queueTask(delegateTask);
-
-    } catch (Exception ex) {
-      logger.error(GIT_YAML_LOG_PREFIX + "Error while processing git webhook post", ex);
+    if (isEmpty(settingAttributes)) {
+      logger.info(GIT_YAML_LOG_PREFIX + "Git connector not found with accountId" + accountId);
+      throw new InvalidRequestException("Git connector not found with webhook token " + webhookToken, USER);
     }
+
+    String gitConnectorId = null;
+    for (SettingAttribute settingAttribute : settingAttributes) {
+      SettingValue settingValue = settingAttribute.getValue();
+
+      if (settingValue instanceof GitConfig && webhookToken.equals(((GitConfig) settingValue).getWebhookToken())) {
+        gitConnectorId = settingAttribute.getUuid();
+        break;
+      }
+    }
+
+    if (isEmpty(gitConnectorId)) {
+      throw new InvalidRequestException("Git connector not found with webhook token " + webhookToken, USER);
+    }
+
+    String branchName = obtainBranchFromPayload(yamlWebHookPayload, headers);
+    if (isEmpty(branchName)) {
+      logger.info(
+          format(GIT_YAML_LOG_PREFIX + "Branch not found. webhookToken: %s, yamlWebHookPayload: %s, headers: %s",
+              webhookToken, yamlWebHookPayload, headers));
+      throw new InvalidRequestException("Branch not found from webhook payload", USER);
+    }
+
+    List<YamlGitConfig> yamlGitConfigs = wingsPersistence.createQuery(YamlGitConfig.class)
+                                             .filter(ACCOUNT_ID_KEY, accountId)
+                                             .filter(GIT_CONNECTOR_ID_KEY, gitConnectorId)
+                                             .filter(BRANCH_NAME_KEY, branchName)
+                                             .asList();
+    if (isEmpty(yamlGitConfigs)) {
+      logger.info(format(GIT_YAML_LOG_PREFIX
+              + "Git sync configuration not found with branch %s, gitConnectorId %s, webhookToken %s, webhookPayload %s",
+          branchName, gitConnectorId, webhookToken, yamlWebHookPayload));
+      throw new InvalidRequestException("Git sync configuration not found with branch " + branchName, USER);
+    }
+
+    YamlGitConfig yamlGitConfig = yamlGitConfigs.get(0);
+    List<String> yamlGitConfigIds = yamlGitConfigs.stream().map(YamlGitConfig::getUuid).collect(toList());
+    GitCommit gitCommit = fetchLastProcessedGitCommitId(accountId, yamlGitConfigIds);
+
+    String processedCommit = gitCommit == null ? null : gitCommit.getCommitId();
+
+    String waitId = generateUuid();
+    GitConfig gitConfig = getGitConfig(yamlGitConfig);
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .async(true)
+                                    .accountId(accountId)
+                                    .appId(GLOBAL_APP_ID)
+                                    .waitId(waitId)
+                                    .data(TaskData.builder()
+                                              .taskType(TaskType.GIT_COMMAND.name())
+                                              .parameters(new Object[] {GitCommandType.DIFF, gitConfig,
+                                                  secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null),
+                                                  GitDiffRequest.builder()
+                                                      .lastProcessedCommitId(processedCommit)
+                                                      .yamlGitConfig(yamlGitConfig)
+                                                      .build()})
+                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                              .build())
+                                    .build();
+
+    waitNotifyEngine.waitForAll(new GitCommandCallback(accountId, null, GitCommandType.DIFF), waitId);
+    delegateService.queueTask(delegateTask);
+
+    return "Successfuly queued webhook request for processing";
   }
 
   @Override
@@ -961,31 +954,18 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   private String obtainBranchFromPayload(String yamlWebHookPayload, HttpHeaders headers) {
-    try {
-      if (headers == null) {
-        return null;
-      }
-
-      Map<String, Object> map = JsonUtils.asObject(yamlWebHookPayload, new TypeReference<Map<String, Object>>() {});
-
-      if ((headers.getHeaderString(X_GIT_HUB_EVENT) != null) || (headers.getHeaderString(X_GIT_LAB_EVENT) != null)) {
-        String ref = (String) map.get("ref");
-        int lastIndex = ref.lastIndexOf('/');
-        if (lastIndex != -1) {
-          return ref.substring(lastIndex + 1);
-        }
-      } else if (headers.getHeaderString(X_BIT_BUCKET_EVENT) != null) {
-        ArrayList arrayList = (ArrayList) ((LinkedHashMap) map.get("push")).get("changes");
-        return (String) ((LinkedHashMap) (((LinkedHashMap) (arrayList.get(0))).get("new"))).get("name");
-      } else {
-        logger.info(format(GIT_YAML_LOG_PREFIX + "Unsupported webhook token header %s", headers));
-      }
-
-      return "";
-    } catch (Exception e) {
-      logger.info(format(GIT_YAML_LOG_PREFIX + "Failed to obtain branch from payload %s ", yamlWebHookPayload) + e);
+    if (headers == null) {
+      logger.info("Empty header found");
       return null;
     }
+
+    WebhookSource webhookSource = webhookEventUtils.obtainWebhookSource(headers);
+    webhookEventUtils.validatePushEvent(webhookSource, headers);
+
+    Map<String, Object> payLoadMap =
+        JsonUtils.asObject(yamlWebHookPayload, new TypeReference<Map<String, Object>>() {});
+
+    return webhookEventUtils.obtainBranchName(webhookSource, headers, payLoadMap);
   }
   @Override
   public void asyncFullSyncForEntireAccount(String accountId) {
