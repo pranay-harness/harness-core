@@ -74,6 +74,68 @@ function setupDelegateJars(){
     echo "1.0.${WATCHER_VERSION} jobs/deploy-prod-watcher/${WATCHER_VERSION}/watcher.jar" > watcherprod.txt
     mv watcherprod.txt ${STORAGE_DIR}/wingswatchers
 
+    for platform in linux darwin; do
+
+      for version in v1.13.2; do
+
+        echo "Copying kubectl ${version} binaries for ${platform}"
+
+        sudo mkdir -p ${STORAGE_DIR}/harness-download/kubernetes-release/release/${version}/bin/${platform}/amd64/
+
+        curl  -s -L -o kubectl https://app.harness.io/storage/harness-download/kubernetes-release/release/${version}/bin/${platform}/amd64/kubectl
+
+        echo $(ls -sh kubectl  | cut -d ' ' -f1)
+
+        sudo cp kubectl ${STORAGE_DIR}/harness-download/kubernetes-release/release/${version}/bin/${platform}/amd64/
+
+      done
+
+
+      for version in v0.2 v0.3; do
+
+        echo "Copying go-template  ${version} binaries for ${platform}"
+
+        sudo mkdir -p ${STORAGE_DIR}/harness-download/snapshot-go-template/release/${version}/bin/${platform}/amd64/
+
+        curl  -s -L -o go-template https://app.harness.io/storage/harness-download/snapshot-go-template/release/${version}/bin/${platform}/amd64/go-template
+
+        echo $(ls -sh go-template  | cut -d ' ' -f1)
+
+        sudo cp go-template ${STORAGE_DIR}/harness-download/snapshot-go-template/release/${version}/bin/${platform}/amd64/
+
+      done
+
+
+      for version in v2.13.1; do
+
+        echo "Copying helm ${version} binaries for ${platform}"
+
+        sudo mkdir -p ${STORAGE_DIR}/harness-download/harness-helm/release/${version}/bin/${platform}/amd64/
+
+        curl  -s -L -o helm https://app.harness.io/storage/harness-download/harness-helm/release/${version}/bin/${platform}/amd64/helm
+
+        echo $(ls -sh helm  | cut -d ' ' -f1)
+
+        sudo cp helm ${STORAGE_DIR}/harness-download/harness-helm/release/${version}/bin/${platform}/amd64/
+
+      done
+
+
+      for version in v0.8.2; do
+
+        echo "Copying chartmuseum ${version} binaries for ${platform}"
+
+        sudo mkdir -p ${STORAGE_DIR}/harness-download/harness-chartmuseum/release/${version}/bin/${platform}/amd64/
+
+        curl  -s -L -o chartmuseum https://app.harness.io/storage/harness-download/harness-chartmuseum/release/${version}/bin/${platform}/amd64/chartmuseum
+
+        echo $(ls -sh chartmuseum  | cut -d ' ' -f1)
+
+        sudo cp chartmuseum ${STORAGE_DIR}/harness-download/harness-chartmuseum/release/${version}/bin/${platform}/amd64/
+
+      done
+
+    done
 }
 
 
