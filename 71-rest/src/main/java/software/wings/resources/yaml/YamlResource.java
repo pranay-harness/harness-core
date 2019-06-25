@@ -912,8 +912,8 @@ public class YamlResource {
   public RestResponse webhookCatcher(@QueryParam("accountId") String accountId,
       @PathParam("entityToken") String entityToken, String yamlWebHookPayload, @Context HttpHeaders httpHeaders) {
     notNullCheck("webhook token", entityToken);
-    yamlGitService.processWebhookPost(accountId, entityToken, yamlWebHookPayload, httpHeaders);
-    return new RestResponse();
+    return new RestResponse<>(
+        yamlGitService.processWebhookPost(accountId, entityToken, yamlWebHookPayload, httpHeaders));
   }
 
   /**

@@ -45,6 +45,7 @@ public enum WebhookSource {
     BUILD_STATUS_CREATED("Build Status Created", "repo:commit_status_created"),
     BUILD_STATUS_UPDATED("Build Status Updated", "repo:commit_status_updated"),
     PUSH("Push", "repo:push"),
+    REFS_CHANGED("Refs Changed", "repo:refs_changed"),
 
     ISSUE_CREATED("Issue Created", "issue:created"),
     ISSUE_UPDATED("Issue Updated", "issue:updated"),
