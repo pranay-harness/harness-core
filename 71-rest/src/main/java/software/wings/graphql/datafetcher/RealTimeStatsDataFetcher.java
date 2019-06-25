@@ -107,8 +107,7 @@ public abstract class RealTimeStatsDataFetcher<A, F, G, T> extends AbstractStats
 
   @NotNull
   protected Query populateFilters(String accountId, List<? extends QLFilterType> filters, Class entityClass) {
-    Query query = wingsPersistence.createQuery(entityClass);
-    query.filter(SettingAttributeKeys.accountId, accountId);
+    Query query = populateAccountFilter(accountId, entityClass);
 
     if (isNotEmpty(filters)) {
       filters.forEach(filter -> {
@@ -129,6 +128,13 @@ public abstract class RealTimeStatsDataFetcher<A, F, G, T> extends AbstractStats
         }
       });
     }
+    return query;
+  }
+
+  @NotNull
+  protected Query populateAccountFilter(String accountId, Class entityClass) {
+    Query query = wingsPersistence.createQuery(entityClass);
+    query.filter(SettingAttributeKeys.accountId, accountId);
     return query;
   }
 
