@@ -596,8 +596,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     if (savedLogsCVConfiguration.getBaselineStartMinute() != updatedLogsCVConfiguration.getBaselineStartMinute()
         || savedLogsCVConfiguration.getBaselineEndMinute() != updatedLogsCVConfiguration.getBaselineEndMinute()) {
       logger.info("recalibrating baseline from {}, to {}", savedLogsCVConfiguration, updatedLogsCVConfiguration);
-      resetBaseline(
+      String newCVConfigId = resetBaseline(
           savedLogsCVConfiguration.getAppId(), savedLogsCVConfiguration.getUuid(), updatedLogsCVConfiguration);
+      savedLogsCVConfiguration.setUuid(newCVConfigId);
     }
   }
 
