@@ -6,13 +6,18 @@ enum DataFetcherEnum {
   cloudProvider
   cloudProviderConnection
   cloudProviderStats
+  connector
+  connectorConnection
+  connectorStats
+  deploymentStats
   environment
-  environmentStats
   environmentConnection
+  environmentStats
   execution
   executionConnection
   instanceConnection
   instanceCount
+  instanceStats
   outcomeConnection
   pipeline
   pipelineConnection
@@ -23,8 +28,4 @@ enum DataFetcherEnum {
   triggerConnection
   workflow
   workflowConnection
-  deploymentStats
-  instanceStats
-  connector
-  connectorConnection
 }
