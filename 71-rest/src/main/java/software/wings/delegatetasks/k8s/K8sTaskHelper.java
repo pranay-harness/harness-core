@@ -62,6 +62,7 @@ import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.kubectl.RolloutHistoryCommand;
 import io.harness.k8s.kubectl.RolloutStatusCommand;
 import io.harness.k8s.manifest.ManifestHelper;
+import io.harness.k8s.model.HarnessAnnotations;
 import io.harness.k8s.model.HarnessLabelValues;
 import io.harness.k8s.model.HarnessLabels;
 import io.harness.k8s.model.K8sContainer;
@@ -1251,7 +1252,8 @@ public class K8sTaskHelper {
     }
 
     if (destinationRuleResources.size() > 1) {
-      String msg = "More than 1 DestinationRule found";
+      String msg = "More than one DestinationRule found. Only one DestinationRule can be marked with annotation "
+          + HarnessAnnotations.managed + ": true";
       executionLogCallback.saveExecutionLog(msg + "\n", ERROR, FAILURE);
       throw new WingsException(msg, USER);
     }
@@ -1298,7 +1300,8 @@ public class K8sTaskHelper {
     }
 
     if (virtualServiceResources.size() > 1) {
-      String msg = "More than 1 VirtualService found";
+      String msg = "\nMore than one VirtualService found. Only one VirtualService can be marked with annotation "
+          + HarnessAnnotations.managed + ": true";
       executionLogCallback.saveExecutionLog(msg + "\n", ERROR, FAILURE);
       throw new WingsException(msg, USER);
     }

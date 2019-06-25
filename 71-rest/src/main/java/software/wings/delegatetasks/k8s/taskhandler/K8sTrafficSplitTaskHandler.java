@@ -20,6 +20,7 @@ import com.google.inject.Inject;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.k8s.model.HarnessAnnotations;
 import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
@@ -42,8 +43,9 @@ import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.k8s.response.K8sTrafficSplitResponse;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 @NoArgsConstructor
 @Slf4j
@@ -128,6 +130,7 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
 
   private boolean initBasedOnDefaultVirtualServiceName(K8sTrafficSplitTaskParameters k8sTrafficSplitTaskParameters,
       ExecutionLogCallback executionLogCallback) throws IOException {
+    executionLogCallback.saveExecutionLog("Evaluating expression " + virtualServiceNameExpression);
     executionLogCallback.saveExecutionLog(
         color("\nRelease name: " + k8sTrafficSplitTaskParameters.getReleaseName(), White, Bold));
 
@@ -145,27 +148,33 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
 
     List<KubernetesResourceId> resources = release.getResources();
     if (isEmpty(resources)) {
-      executionLogCallback.saveExecutionLog("\nNo resources found");
+      executionLogCallback.saveExecutionLog("\nNo resources found in release history");
       executionLogCallback.saveExecutionLog("\nDone.", INFO, SUCCESS);
       return true;
     }
 
-    List<KubernetesResourceId> virtualServiceResources =
-        resources.stream()
-            .filter(kubernetesResourceId -> Kind.VirtualService.name().equals(kubernetesResourceId.getKind()))
-            .collect(Collectors.toList());
+    List<KubernetesResourceId> virtualServiceResourceIds = getManagedVirtualServiceResources(resources);
 
-    if (virtualServiceResources.size() != 1) {
-      if (virtualServiceResources.isEmpty()) {
-        executionLogCallback.saveExecutionLog("\nNo VirtualService found", ERROR, FAILURE);
-      } else if (virtualServiceResources.size() > 1) {
-        executionLogCallback.saveExecutionLog("\nMore than one VirtualService found", ERROR, FAILURE);
+    if (virtualServiceResourceIds.size() != 1) {
+      executionLogCallback.saveExecutionLog(
+          "Error evaluating expression " + virtualServiceNameExpression, ERROR, FAILURE);
+
+      if (virtualServiceResourceIds.isEmpty()) {
+        executionLogCallback.saveExecutionLog(
+            "\nNo managed VirtualService found. Atleast one VirtualService should be present and marked with annotation "
+                + HarnessAnnotations.managed + ": true",
+            ERROR, FAILURE);
+      } else if (virtualServiceResourceIds.size() > 1) {
+        executionLogCallback.saveExecutionLog(
+            "\nMore than one VirtualService found.  Only one VirtualService can be marked with annotation "
+                + HarnessAnnotations.managed + ": true",
+            ERROR, FAILURE);
       }
 
       return false;
     }
 
-    return findVirtualServiceByName(virtualServiceResources.get(0).getName(), executionLogCallback);
+    return findVirtualServiceByName(virtualServiceResourceIds.get(0).getName(), executionLogCallback);
   }
 
   private boolean apply(
@@ -225,5 +234,24 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
         executionLogCallback.saveExecutionLog("weight: " + ruleWithWeight.getWeight() + "\n");
       }
     }
+  }
+
+  private List<KubernetesResourceId> getManagedVirtualServiceResources(List<KubernetesResourceId> resourceIds) {
+    List<KubernetesResourceId> managedVirtualServices = new ArrayList<>();
+
+    for (KubernetesResourceId resourceId : resourceIds) {
+      if (Kind.VirtualService.name().equals(resourceId.getKind())) {
+        VirtualService virtualService =
+            kubernetesContainerService.getIstioVirtualService(kubernetesConfig, emptyList(), resourceId.getName());
+
+        Map<String, String> annotations = virtualService.getMetadata().getAnnotations();
+        if (annotations.containsKey(HarnessAnnotations.managed)
+            && annotations.get(HarnessAnnotations.managed).equalsIgnoreCase("true")) {
+          managedVirtualServices.add(resourceId);
+        }
+      }
+    }
+
+    return managedVirtualServices;
   }
 }
