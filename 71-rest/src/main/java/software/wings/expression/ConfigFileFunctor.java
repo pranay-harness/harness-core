@@ -2,6 +2,7 @@ package software.wings.expression;
 
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.exception.FunctorException;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.ExpressionFunctor;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,8 @@ import java.nio.charset.Charset;
 @Builder
 @Slf4j
 public class ConfigFileFunctor implements ExpressionFunctor {
+  static final int MAX_CONFIG_FILE_SIZE = ExpressionEvaluator.EXPANSION_LIMIT;
+
   private ServiceTemplateService serviceTemplateService;
   private ConfigService configService;
   private String appId;
@@ -48,6 +51,10 @@ public class ConfigFileFunctor implements ExpressionFunctor {
         configFile.getRelativeFilePath(), configFile.isEncrypted(), configFile.getEncryptedFileId(),
         configFile.getUuid());
 
-    return configService.getFileContent(appId, configFile);
+    byte[] contents = configService.getFileContent(appId, configFile);
+    if (contents.length > MAX_CONFIG_FILE_SIZE) {
+      throw new FunctorException("Too large config file " + relativeFilePath);
+    }
+    return contents;
   }
 }

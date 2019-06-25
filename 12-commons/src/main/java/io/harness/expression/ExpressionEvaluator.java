@@ -29,9 +29,9 @@ public class ExpressionEvaluator {
   public static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^{}]*}");
   public static final Pattern variableNamePattern = Pattern.compile("^[-_a-zA-Z][-_\\w]*$");
 
-  private static int EXPANSION_LIMIT = 100 * 1024;
-  private static int EXPANSION_MULTIPLIER_LIMIT = 10;
-  private static int DEPTH_LIMIT = 10;
+  public static final int EXPANSION_LIMIT = 256 * 1024; // 256 KB
+  private static final int EXPANSION_MULTIPLIER_LIMIT = 10;
+  private static final int DEPTH_LIMIT = 10;
 
   private Map<String, Object> expressionFunctorMap = new HashMap<>();
 
@@ -195,7 +195,7 @@ public class ExpressionEvaluator {
     return ExpressionEvaluator.wingsVariablePattern.matcher(expression).find();
   }
 
-  protected JexlContext prepareContext(Map<String, Object> context, String defaultObjectPrefix) {
+  private JexlContext prepareContext(Map<String, Object> context, String defaultObjectPrefix) {
     final HashMap<String, Object> map = new HashMap<>(context);
     map.putAll(expressionFunctorMap);
     return LateBindingContext.builder()
