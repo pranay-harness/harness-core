@@ -1,0 +1,18 @@
+enum TriggerFilterType {
+  Trigger
+  Application
+}
+
+enum TriggerAggregation {
+  Application
+}
+
+input TriggerFilter {
+  type: TriggerFilterType
+  stringFilter: StringFilter
+}
+
+extend type Query {
+  # Get Trigger stats.
+  triggerStats(filters: [TriggerFilter], groupBy: [TriggerAggregation]): Data @dataFetcher(name: triggerStats)
+}

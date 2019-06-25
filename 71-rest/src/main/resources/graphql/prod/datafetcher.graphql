@@ -26,6 +26,7 @@ enum DataFetcherEnum {
   serviceStats
   trigger
   triggerConnection
+  triggerStats
   workflow
   workflowConnection
 }
