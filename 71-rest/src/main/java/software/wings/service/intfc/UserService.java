@@ -18,6 +18,7 @@ import software.wings.beans.UserInvite;
 import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.beans.loginSettings.PasswordSource;
 import software.wings.beans.loginSettings.PasswordStrengthViolations;
+import software.wings.beans.marketplace.MarketPlaceType;
 import software.wings.beans.security.UserGroup;
 import software.wings.security.SecretManager;
 import software.wings.security.UserPermissionInfo;
@@ -326,7 +327,7 @@ public interface UserService extends OwnedByAccount {
    */
   UserInvite completeTrialSignup(User user, UserInvite userInvite);
 
-  User completeMarketPlaceSignup(User user, UserInvite userInvite);
+  User completeMarketPlaceSignup(User user, UserInvite userInvite, MarketPlaceType marketPlaceType);
 
   /**
    * Complete the trial user signup using oauth. Both the trial account and the account admin user will be created

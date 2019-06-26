@@ -119,6 +119,7 @@ import software.wings.service.impl.AssignDelegateServiceImpl;
 import software.wings.service.impl.AuditServiceImpl;
 import software.wings.service.impl.AwsHelperResourceServiceImpl;
 import software.wings.service.impl.AwsInfrastructureProvider;
+import software.wings.service.impl.AwsMarketPlaceApiHandlerImpl;
 import software.wings.service.impl.AzureInfrastructureProvider;
 import software.wings.service.impl.AzureResourceServiceImpl;
 import software.wings.service.impl.BambooBuildServiceImpl;
@@ -152,7 +153,6 @@ import software.wings.service.impl.InfrastructureMappingServiceImpl;
 import software.wings.service.impl.InfrastructureProvisionerServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.LogServiceImpl;
-import software.wings.service.impl.MarketPlaceServiceImpl;
 import software.wings.service.impl.MigrationServiceImpl;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.NotificationDispatcherServiceImpl;
@@ -230,9 +230,6 @@ import software.wings.service.impl.instance.stats.InstanceStatServiceImpl;
 import software.wings.service.impl.instance.stats.collector.StatsCollectorImpl;
 import software.wings.service.impl.instance.sync.ContainerSync;
 import software.wings.service.impl.instance.sync.ContainerSyncImpl;
-import software.wings.service.impl.marketplace.gcp.GCPBillingPollingServiceImpl;
-import software.wings.service.impl.marketplace.gcp.GCPMarketPlaceServiceImpl;
-import software.wings.service.impl.marketplace.gcp.GCPUsageReportServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicServiceImpl;
 import software.wings.service.impl.notifications.NotificationDispatcher;
 import software.wings.service.impl.notifications.NotificationGroupBasedDispatcher;
@@ -295,6 +292,7 @@ import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AwsHelperResourceService;
+import software.wings.service.intfc.AwsMarketPlaceApiHandler;
 import software.wings.service.intfc.AzureResourceService;
 import software.wings.service.intfc.BambooBuildService;
 import software.wings.service.intfc.BarrierService;
@@ -331,7 +329,6 @@ import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.LogService;
-import software.wings.service.intfc.MarketPlaceService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.NexusBuildService;
@@ -401,9 +398,6 @@ import software.wings.service.intfc.instance.stats.InstanceStatService;
 import software.wings.service.intfc.instance.stats.collector.StatsCollector;
 import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import software.wings.service.intfc.limits.LimitVicinityHandler;
-import software.wings.service.intfc.marketplace.gcp.GCPBillingPollingService;
-import software.wings.service.intfc.marketplace.gcp.GCPMarketPlaceService;
-import software.wings.service.intfc.marketplace.gcp.GCPUsageReportService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.pagerduty.PagerDutyService;
 import software.wings.service.intfc.personalization.PersonalizationService;
@@ -716,7 +710,7 @@ public class WingsModule extends DependencyModule {
     bind(PermitService.class).to(PermitServiceImpl.class);
 
     bind(GovernanceConfigService.class).to(GovernanceConfigServiceImpl.class);
-    bind(MarketPlaceService.class).to(MarketPlaceServiceImpl.class);
+    bind(AwsMarketPlaceApiHandler.class).to(AwsMarketPlaceApiHandlerImpl.class);
     bind(AlertVisibilityChecker.class).to(AlertVisibilityCheckerImpl.class);
 
     bind(ServiceNowService.class).to(ServiceNowServiceImpl.class);
@@ -725,9 +719,7 @@ public class WingsModule extends DependencyModule {
     // Start of deployment trigger dependencies
     bind(DeploymentTriggerService.class).to(DeploymentTriggerServiceImpl.class);
     bind(TriggerExecutionService.class).to(TriggerExecutionServiceImpl.class);
-    bind(GCPUsageReportService.class).to(GCPUsageReportServiceImpl.class);
-    bind(GCPBillingPollingService.class).to(GCPBillingPollingServiceImpl.class);
-    bind(GCPMarketPlaceService.class).to(GCPMarketPlaceServiceImpl.class);
+
     MapBinder<String, TriggerProcessor> triggerProcessorMapBinder =
         MapBinder.newMapBinder(binder(), String.class, TriggerProcessor.class);
 

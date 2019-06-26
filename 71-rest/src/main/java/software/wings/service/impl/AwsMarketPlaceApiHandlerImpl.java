@@ -32,7 +32,7 @@ import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.security.authentication.MarketPlaceConfig;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.MarketPlaceService;
+import software.wings.service.intfc.AwsMarketPlaceApiHandler;
 import software.wings.service.intfc.UserService;
 
 import java.io.UnsupportedEncodingException;
@@ -49,7 +49,7 @@ import javax.ws.rs.core.Response;
 
 @Singleton
 @Slf4j
-public class MarketPlaceServiceImpl implements MarketPlaceService {
+public class AwsMarketPlaceApiHandlerImpl implements AwsMarketPlaceApiHandler {
   @Inject private AccountService accountService;
   @Inject private UserService userService;
   @Inject private MainConfiguration configuration;

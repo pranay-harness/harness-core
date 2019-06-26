@@ -210,6 +210,9 @@ public class AccountServiceImpl implements AccountService {
     // Validate if account/company name is valid.
     validateAccount(account);
 
+    account.setCompanyName(account.getCompanyName().trim());
+    account.setAccountName(account.getAccountName().trim());
+
     if (isEmpty(account.getUuid())) {
       logger.info("Creating a new account '{}'.", account.getAccountName());
       account.setUuid(UUIDGenerator.generateUuid());

@@ -31,6 +31,7 @@ public class MarketPlace
 
   @Indexed(options = @IndexOptions(unique = true)) private String customerIdentificationCode;
 
+  // harness account Id
   private String accountId;
 
   private String token;

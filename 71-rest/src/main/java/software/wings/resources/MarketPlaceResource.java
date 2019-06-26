@@ -4,9 +4,10 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.marketplace.gcp.GcpMarketPlaceApiHandler;
 import io.swagger.annotations.Api;
 import software.wings.security.annotations.PublicApi;
-import software.wings.service.intfc.MarketPlaceService;
+import software.wings.service.intfc.AwsMarketPlaceApiHandler;
 
 import java.net.URISyntaxException;
 import javax.servlet.http.HttpServletRequest;
@@ -18,12 +19,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 @Api("mktplace")
 @Path("/mktplace")
 @Produces(MediaType.APPLICATION_JSON)
 public class MarketPlaceResource {
-  @Inject MarketPlaceService marketPlaceService;
+  @Inject AwsMarketPlaceApiHandler awsMarketPlaceApiHandler;
+  @Inject private GcpMarketPlaceApiHandler gcpMarketPlaceApiHandler;
 
   @Path("aws-signup")
   @POST
@@ -34,6 +37,16 @@ public class MarketPlaceResource {
   @ExceptionMetered
   public javax.ws.rs.core.Response awsMarketLogin(@FormParam(value = "x-amzn-marketplace-token") String token,
       @Context HttpServletRequest request, @Context HttpServletResponse response) throws URISyntaxException {
-    return marketPlaceService.processAWSMarktPlaceOrder(token);
+    return awsMarketPlaceApiHandler.processAWSMarktPlaceOrder(token);
+  }
+
+  @POST
+  @Path("/gcp-signup")
+  @Produces(MediaType.TEXT_HTML)
+  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+  @PublicApi
+  public Response gcpSignUp(@FormParam(value = "x-gcp-marketplace-token") String token,
+      @Context HttpServletRequest request, @Context HttpServletResponse response) {
+    return gcpMarketPlaceApiHandler.signUp(token);
   }
 }

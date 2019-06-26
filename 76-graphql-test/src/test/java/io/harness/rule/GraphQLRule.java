@@ -38,6 +38,7 @@ import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.AuthModule;
 import software.wings.app.CacheModule;
 import software.wings.app.FeatureViolationsModule;
+import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.GraphQLModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
@@ -150,6 +151,7 @@ public class GraphQLRule
     modules.add(new GraphQLModule());
     modules.add(new AuthModule());
     modules.add(new SSOModule());
+    modules.add(new GcpMarketplaceIntegrationModule());
     return modules;
   }
 

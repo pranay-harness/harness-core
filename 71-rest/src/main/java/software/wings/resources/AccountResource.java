@@ -13,6 +13,7 @@ import io.harness.account.ProvisionStep;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.eraro.ResponseMessage;
+import io.harness.marketplace.gcp.GcpMarketPlaceApiHandler;
 import io.harness.rest.RestResponse;
 import io.harness.rest.RestResponse.Builder;
 import io.swagger.annotations.Api;
@@ -43,9 +44,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -53,7 +58,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 @Api("account")
 @Path("/account")
@@ -66,6 +73,7 @@ public class AccountResource {
   @Inject private AccountPermissionUtils accountPermissionUtils;
   @Inject private FeatureViolationsService featureViolationsService;
   @Inject private TransitionToCommunityAccountService transitionToCommunityAccountService;
+  @Inject private GcpMarketPlaceApiHandler gcpMarketPlaceApiHandler;
 
   @GET
   @Path("{accountId}/status")
@@ -326,5 +334,15 @@ public class AccountResource {
   public RestResponse<Account> updateWhitelistedDomains(
       @PathParam("accountId") @NotEmpty String accountId, @Body Set<String> whitelistedDomains) {
     return new RestResponse<>(accountService.updateWhitelistedDomains(accountId, whitelistedDomains));
+  }
+
+  @POST
+  @Path("/gcp")
+  @Produces(MediaType.TEXT_HTML)
+  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+  @PublicApi
+  public Response gcpSignUp(@FormParam(value = "x-gcp-marketplace-token") String token,
+      @Context HttpServletRequest request, @Context HttpServletResponse response) {
+    return gcpMarketPlaceApiHandler.signUp(token);
   }
 }

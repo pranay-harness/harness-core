@@ -37,6 +37,7 @@ import software.wings.app.AuthModule;
 import software.wings.app.CacheModule;
 import software.wings.app.DeployMode;
 import software.wings.app.FeatureViolationsModule;
+import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.GuiceObjectFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
@@ -136,6 +137,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
     modules.add(new EventsModule(configuration));
     modules.add(new FeatureViolationsModule());
     modules.add(new SSOModule());
+    modules.add(new GcpMarketplaceIntegrationModule());
     modules.add(new AuthModule());
 
     Injector injector = Guice.createInjector(modules);

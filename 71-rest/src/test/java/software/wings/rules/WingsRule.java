@@ -55,6 +55,7 @@ import software.wings.WingsTestModule;
 import software.wings.app.AuthModule;
 import software.wings.app.CacheModule;
 import software.wings.app.FeatureViolationsModule;
+import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.LicenseModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
@@ -301,6 +302,8 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
     modules.add(new FeatureViolationsModule());
     modules.add(new SSOModule());
     modules.add(new AuthModule());
+    modules.add(new GcpMarketplaceIntegrationModule());
+
     return modules;
   }
 
