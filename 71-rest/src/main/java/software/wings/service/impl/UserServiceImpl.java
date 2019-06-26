@@ -324,7 +324,6 @@ public class UserServiceImpl implements UserService {
       // HAR-7250: If the user invite was not completed. Resend the verification/invitation email.
       sendVerificationEmail(userInviteInDB, url, params);
     }
-
     return true;
   }
 
