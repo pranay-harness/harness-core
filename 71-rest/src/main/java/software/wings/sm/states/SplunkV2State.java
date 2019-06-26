@@ -113,7 +113,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     return isAdvancedQuery;
   }
 
-  public void setAdvancedQuery(boolean advancedQuery) {
+  public void setIsAdvancedQuery(boolean advancedQuery) {
     this.isAdvancedQuery = advancedQuery;
   }
 
