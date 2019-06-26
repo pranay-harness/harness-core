@@ -79,6 +79,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AuthServiceImpl;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
@@ -128,6 +129,7 @@ public class SecureResourceTest {
   private static CacheManager cacheManager = mock(CacheManager.class);
 
   private static AppService appService = mock(AppService.class);
+  private static ApiKeyService apiKeyService = mock(ApiKeyService.class);
   private static UserService userService = mock(UserService.class);
   private static WorkflowService workflowService = mock(WorkflowService.class);
   private static UserGroupService userGroupService = mock(UserGroupService.class);
@@ -148,8 +150,8 @@ public class SecureResourceTest {
       learningEngineService, authHandler, featureFlagService, harnessUserGroupService, secretManager,
       usageMetricsEventPublisher, whitelistService, ssoSettingService, appService);
 
-  private static AuthRuleFilter authRuleFilter =
-      new AuthRuleFilter(authService, authHandler, appService, userService, whitelistService, harnessUserGroupService);
+  private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(
+      authService, authHandler, appService, userService, apiKeyService, whitelistService, harnessUserGroupService);
 
   Cache<String, User> cache = Mockito.mock(Cache.class);
   Cache<String, UserPermissionInfo> cachePermissionInfo = Mockito.mock(Cache.class);

@@ -21,11 +21,13 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.FeatureName;
+import software.wings.beans.User;
 import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
 import software.wings.graphql.provider.QueryLanguageProvider;
 import software.wings.graphql.utils.GraphQLConstants;
 import software.wings.security.UserPermissionInfo;
-import software.wings.security.annotations.PublicApi;
+import software.wings.security.UserThreadLocal;
+import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ApiKeyService;
@@ -45,7 +47,7 @@ import javax.ws.rs.core.MediaType;
 @Api("/graphql")
 @Path("/graphql")
 @Produces("application/json")
-@PublicApi
+@ExternalFacingApiAuth
 @Singleton
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -99,9 +101,18 @@ public class GraphQLResource {
 
   private Map<String, Object> executeInternal(String apiKey, GraphQLQuery graphQLQuery) {
     String accountId;
+    boolean hasUserContext = false;
+    UserPermissionInfo userPermissionInfo = null;
     if (apiKey == null || (accountId = apiKeyService.getAccountIdFromApiKey(apiKey)) == null) {
-      logger.info(GraphQLConstants.INVALID_API_KEY);
-      return getExecutionResultWithError(GraphQLConstants.INVALID_API_KEY).toSpecification();
+      User user = UserThreadLocal.get();
+      if (user != null) {
+        accountId = user.getUserRequestContext().getAccountId();
+        userPermissionInfo = user.getUserRequestContext().getUserPermissionInfo();
+        hasUserContext = true;
+      } else {
+        logger.info(GraphQLConstants.INVALID_API_KEY);
+        return getExecutionResultWithError(GraphQLConstants.INVALID_API_KEY).toSpecification();
+      }
     }
 
     boolean isOverRateLimit = requestRateLimiter.overLimitWhenIncremented(accountId);
@@ -117,13 +128,16 @@ public class GraphQLResource {
 
     ExecutionResult executionResult;
     try {
-      ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(apiKey, accountId, true);
-      if (apiKeyEntry == null) {
-        executionResult = getExecutionResultWithError(GraphQLConstants.INVALID_API_KEY);
-      } else {
-        UserPermissionInfo userPermissionInfo =
-            authHandler.getUserPermissionInfo(accountId, apiKeyEntry.getUserGroups());
+      if (hasUserContext && userPermissionInfo != null) {
         executionResult = graphQL.execute(getExecutionInput(userPermissionInfo, accountId, graphQLQuery));
+      } else {
+        ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(apiKey, accountId, true);
+        if (apiKeyEntry == null) {
+          executionResult = getExecutionResultWithError(GraphQLConstants.INVALID_API_KEY);
+        } else {
+          userPermissionInfo = authHandler.getUserPermissionInfo(accountId, apiKeyEntry.getUserGroups());
+          executionResult = graphQL.execute(getExecutionInput(userPermissionInfo, accountId, graphQLQuery));
+        }
       }
     } catch (Exception ex) {
       String errorMsg = String.format(

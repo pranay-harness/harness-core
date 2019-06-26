@@ -16,7 +16,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class ExternalApiRateLimitingServiceImpl implements ExternalApiRateLimitingService {
   private static final Duration CACHE_EXPIRATION = Duration.ofMinutes(2);
-  private static final double MAX_QPM_PER_MANAGER = 20;
+  private static final double MAX_QPM_PER_MANAGER = 50;
   private static final LoadingCache<String, RateLimiter> limiters =
       CacheBuilder.newBuilder()
           .expireAfterAccess(CACHE_EXPIRATION.toMillis(), TimeUnit.MILLISECONDS)
