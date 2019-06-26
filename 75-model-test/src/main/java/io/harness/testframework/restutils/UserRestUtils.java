@@ -63,6 +63,9 @@ public class UserRestUtils {
   public static void resetPasswordWith(String token, String password) throws UnsupportedEncodingException {
     UserResource.UpdatePasswordRequest updatePasswordRequest = new UserResource.UpdatePasswordRequest();
     updatePasswordRequest.setPassword(password);
+    if (token.contains("?accountId")) {
+      token = token.substring(0, token.indexOf("?accountId"));
+    }
     Setup.portal()
         .pathParams("token", token)
         .body(updatePasswordRequest, ObjectMapperType.GSON)
