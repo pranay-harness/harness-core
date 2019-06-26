@@ -334,7 +334,7 @@ The admin username and password are in BaseIntegrationTest.java.
 
 ### Python
 
-* Refer to the readme under python/splunk_intelligence 
+* Refer to the readme under python/splunk_intelligence
 
 ### Troubleshooting
 
