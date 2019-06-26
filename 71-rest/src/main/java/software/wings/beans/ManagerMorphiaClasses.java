@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 
 import io.harness.dashboard.DashboardSettings;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.marketplace.gcp.events.GcpMarketplaceEvent;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionConfig;
@@ -195,7 +196,7 @@ public class ManagerMorphiaClasses {
       HarnessTagLink.class, CVFeedbackRecord.class, SecretManagerConfig.class, VaultLegacyConfig.class,
       KmsLegacyConfig.class, AwsSecretsManagerLegacyConfig.class, LocalEncryptionConfig.class, ResourceLookup.class,
       LoginSettings.class, GCPUsageReport.class, GCPBillingJobEntity.class, DashboardSettings.class,
-      InfrastructureDefinition.class);
+      InfrastructureDefinition.class, GcpMarketplaceEvent.class);
 
   public static final Set<Class> dependentClasses =
       ImmutableSet.<Class>of(EncryptionConfig.class, EncryptedRecord.class, ExecutionCapabilityDemander.class);

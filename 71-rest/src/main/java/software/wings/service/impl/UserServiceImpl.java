@@ -85,6 +85,7 @@ import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.limits.configuration.LimitConfigurationService;
+import io.harness.marketplace.gcp.procurement.GcpProcurementService;
 import io.harness.persistence.UuidAware;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -124,6 +125,8 @@ import software.wings.beans.loginSettings.PasswordSource;
 import software.wings.beans.loginSettings.PasswordStrengthViolations;
 import software.wings.beans.loginSettings.UserLockoutInfo;
 import software.wings.beans.marketplace.MarketPlaceConstants;
+import software.wings.beans.marketplace.MarketPlaceType;
+import software.wings.beans.marketplace.gcp.GCPBillingJobEntity;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.UserGroup;
@@ -161,6 +164,7 @@ import software.wings.service.intfc.SSOService;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.marketplace.gcp.GCPBillingPollingService;
 import software.wings.utils.CacheManager;
 
 import java.io.BufferedReader;
@@ -171,6 +175,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -235,6 +241,8 @@ public class UserServiceImpl implements UserService {
   @Inject private SSOService ssoService;
   @Inject private LoginSettingsService loginSettingsService;
   @Inject private LimitConfigurationService limits;
+  @Inject private GCPBillingPollingService gcpBillingPollingService;
+  @Inject private GcpProcurementService gcpProcurementService;
 
   private volatile Set<String> blacklistedDomains = new HashSet<>();
 
@@ -1241,12 +1249,12 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public User completeMarketPlaceSignup(User user, UserInvite userInvite) {
-    userInvite = marketPlaceSignup(user, userInvite);
+  public User completeMarketPlaceSignup(User user, UserInvite userInvite, MarketPlaceType marketPlaceType) {
+    userInvite = marketPlaceSignup(user, userInvite, marketPlaceType);
     return authenticationManager.defaultLogin(userInvite.getEmail(), String.valueOf(userInvite.getPassword()));
   }
 
-  private UserInvite marketPlaceSignup(User user, UserInvite userInvite) {
+  private UserInvite marketPlaceSignup(User user, UserInvite userInvite, MarketPlaceType marketPlaceType) {
     validateUser(user);
 
     UserInvite existingInvite = wingsPersistence.get(UserInvite.class, userInvite.getUuid());
@@ -1300,18 +1308,24 @@ public class UserServiceImpl implements UserService {
                           .build();
 
     account = setupAccount(account);
-
     String accountId = account.getUuid();
-
     List<UserGroup> accountAdminGroups = getAccountAdminGroup(accountId);
-
     completeUserInviteForSignup(userInvite, accountId);
 
     marketPlace.setAccountId(accountId);
-
     wingsPersistence.save(marketPlace);
-
     saveUserAndUserGroups(user, email, account, accountAdminGroups);
+
+    boolean isGcpMarketPlace = MarketPlaceType.GCP == marketPlaceType;
+    if (isGcpMarketPlace) {
+      // 1. Create billing scheduler entry
+      final Instant nextIteration = Instant.now().truncatedTo(ChronoUnit.DAYS).plus(25, ChronoUnit.HOURS);
+      gcpBillingPollingService.create(new GCPBillingJobEntity(accountId, nextIteration.toEpochMilli()));
+
+      // 2. approve call to GCP
+      //      gcpProcurementService.approve(marketPlace);
+      //      gcpProcurementService.approveRequestedEntitlement(marketPlace);
+    }
 
     return userInvite;
   }

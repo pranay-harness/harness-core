@@ -122,7 +122,7 @@ import software.wings.security.SecretManager;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.AuthenticationMechanism;
-import software.wings.service.impl.MarketPlaceServiceImpl;
+import software.wings.service.impl.AwsMarketPlaceApiHandlerImpl;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.impl.UserServiceLimitChecker;
 import software.wings.service.intfc.AccountService;
@@ -205,7 +205,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Captor private ArgumentCaptor<User> userArgumentCaptor;
   @Captor private ArgumentCaptor<PageRequest<User>> pageRequestArgumentCaptor;
   @Inject @InjectMocks SecretManager secretManager;
-  @Inject @InjectMocks private MarketPlaceServiceImpl marketPlaceService;
+  @Inject @InjectMocks private AwsMarketPlaceApiHandlerImpl marketPlaceService;
   /**
    * Sets mocks.
    */
@@ -257,7 +257,7 @@ public class UserServiceTest extends WingsBaseTest {
                          .build();
 
     try {
-      userService.completeMarketPlaceSignup(savedUser, testInvite);
+      userService.completeMarketPlaceSignup(savedUser, testInvite, MarketPlaceType.AWS);
       fail();
     } catch (WingsException e) {
       log().info("Expected error " + e.getCode());
@@ -267,7 +267,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(UserInvite.class, USER_INVITE_ID)).thenReturn(testInvite);
     when(userService.getUserByEmail(USER_EMAIL)).thenReturn(savedUser);
     try {
-      userService.completeMarketPlaceSignup(savedUser, testInvite);
+      userService.completeMarketPlaceSignup(savedUser, testInvite, MarketPlaceType.AWS);
       fail();
     } catch (WingsException e) {
       log().info("Expected error " + e.getCode());
@@ -276,7 +276,7 @@ public class UserServiceTest extends WingsBaseTest {
 
     when(userService.getUserByEmail(USER_EMAIL)).thenReturn(null);
     try {
-      userService.completeMarketPlaceSignup(savedUser, testInvite);
+      userService.completeMarketPlaceSignup(savedUser, testInvite, MarketPlaceType.AWS);
       fail();
     } catch (WingsException e) {
       log().info("Expected error " + e.getCode());
@@ -286,7 +286,7 @@ public class UserServiceTest extends WingsBaseTest {
     testInvite.setMarketPlaceToken("fakeToken");
 
     try {
-      userService.completeMarketPlaceSignup(savedUser, testInvite);
+      userService.completeMarketPlaceSignup(savedUser, testInvite, MarketPlaceType.AWS);
       fail();
     } catch (WingsException e) {
       log().info("Expected error " + e.getCode());
@@ -306,7 +306,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(MarketPlace.class, "TESTUUID")).thenReturn(marketPlace);
     when(userGroupService.list(anyString(), any(PageRequest.class), anyBoolean())).thenReturn(aPageResponse().build());
     when(authenticationManager.defaultLogin(USER_EMAIL, "TestPassword")).thenReturn(savedUser);
-    User user = userService.completeMarketPlaceSignup(savedUser, testInvite);
+    User user = userService.completeMarketPlaceSignup(savedUser, testInvite, MarketPlaceType.AWS);
     assertThat(user).isEqualTo(savedUser);
   }
 

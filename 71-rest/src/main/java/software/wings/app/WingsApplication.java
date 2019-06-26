@@ -30,6 +30,7 @@ import com.google.inject.name.Names;
 
 import com.codahale.metrics.MetricRegistry;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
 import com.hazelcast.core.HazelcastInstance;
 import com.palominolabs.metrics.guice.MetricsInstrumentationModule;
@@ -61,6 +62,7 @@ import io.harness.lock.ManageDistributedLockSvc;
 import io.harness.lock.PersistentLocker;
 import io.harness.maintenance.HazelcastListener;
 import io.harness.maintenance.MaintenanceController;
+import io.harness.marketplace.gcp.GcpMarketplaceSubscriberService;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.mongo.MongoConfig;
@@ -226,14 +228,16 @@ public class WingsApplication extends Application<MainConfiguration> {
       }
     });
     bootstrap.addBundle(new FileAssetsBundle("/.well-known"));
-    bootstrap.getObjectMapper().addMixIn(AssetsConfiguration.class, AssetsConfigurationMixin.class);
-    bootstrap.getObjectMapper().setSubtypeResolver(
-        new JsonSubtypeResolver(bootstrap.getObjectMapper().getSubtypeResolver()));
-    bootstrap.getObjectMapper().setConfig(
-        bootstrap.getObjectMapper().getSerializationConfig().withView(JsonViews.Public.class));
+    configureObjectMapper(bootstrap.getObjectMapper());
     bootstrap.setMetricRegistry(metricRegistry);
 
     logger.info("bootstrapping done.");
+  }
+
+  public static void configureObjectMapper(final ObjectMapper mapper) {
+    mapper.addMixIn(AssetsConfiguration.class, AssetsConfigurationMixin.class);
+    mapper.setSubtypeResolver(new JsonSubtypeResolver(mapper.getSubtypeResolver()));
+    mapper.setConfig(mapper.getSerializationConfig().withView(JsonViews.Public.class));
   }
 
   @Override
@@ -305,6 +309,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new FeatureViolationsModule());
     modules.add(new SSOModule());
     modules.add(new AuthModule());
+    modules.add(new GcpMarketplaceIntegrationModule());
 
     Injector injector = Guice.createInjector(modules);
 
@@ -488,6 +493,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.lifecycle().manage(injector.getInstance(ConfigurationController.class));
     environment.lifecycle().manage(injector.getInstance(TimerScheduledExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
+    environment.lifecycle().manage(injector.getInstance(GcpMarketplaceSubscriberService.class));
     environment.lifecycle().manage((Managed) injector.getInstance(ExecutorService.class));
   }
 

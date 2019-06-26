@@ -43,6 +43,7 @@ import org.mongodb.morphia.Morphia;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.AuthModule;
 import software.wings.app.FeatureViolationsModule;
+import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.GraphQLModule;
 import software.wings.app.LicenseModule;
 import software.wings.app.MainConfiguration;
@@ -155,6 +156,7 @@ public class LocalPortalTestRule implements MethodRule, MongoRuleMixin, Injector
     modules.add(new FeatureViolationsModule());
     modules.add(new SSOModule());
     modules.add(new AuthModule());
+    modules.add(new GcpMarketplaceIntegrationModule());
     return modules;
   }
 

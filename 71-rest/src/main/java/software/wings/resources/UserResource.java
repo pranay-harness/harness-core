@@ -43,6 +43,7 @@ import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.beans.loginSettings.PasswordSource;
+import software.wings.beans.marketplace.MarketPlaceType;
 import software.wings.beans.security.UserGroup;
 import software.wings.scheduler.AccountPasswordExpirationJob;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -1008,8 +1009,12 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   public RestResponse<User> completeMarketPlaceInvite(@QueryParam("account") @NotEmpty String accountName,
-      @QueryParam("company") @NotEmpty String companyName, @PathParam("inviteId") @NotEmpty String inviteId,
+      @QueryParam("company") @NotEmpty String companyName,
+      @QueryParam("marketPlaceType") MarketPlaceType marketPlaceType, @PathParam("inviteId") @NotEmpty String inviteId,
       @NotNull UserInvite userInvite) {
+    // only AWS / GCP marketplaces are supported
+    logger.info("Marketplace Signup. Email: {}, marketPlaceType= {}", userInvite.getEmail(), marketPlaceType);
+
     userInvite.setUuid(inviteId);
     User user = User.Builder.anUser()
                     .withEmail(userInvite.getEmail())
@@ -1018,7 +1023,9 @@ public class UserResource {
                     .withAccountName(accountName)
                     .withCompanyName(companyName)
                     .build();
-    return new RestResponse<User>(userService.completeMarketPlaceSignup(user, userInvite));
+
+    User savedUser = userService.completeMarketPlaceSignup(user, userInvite, marketPlaceType);
+    return new RestResponse<>(savedUser);
   }
 
   @PublicApi
