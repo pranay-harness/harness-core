@@ -171,7 +171,7 @@ public class AuthenticationManager {
       SSORequest ssoRequest;
       switch (authenticationMechanism) {
         case USER_PASSWORD:
-          if (!user.isEmailVerified()) {
+          if (!user.isEmailVerified() && !DeployMode.isOnPrem(mainConfiguration.getDeployMode().getDeployedAs())) {
             // HAR-7984: Return 401 http code if user email not verified yet.
             throw new WingsException(EMAIL_NOT_VERIFIED, USER);
           }
