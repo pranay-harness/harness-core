@@ -33,4 +33,8 @@ public class SplunkSetupTestNodeData extends SetupTestNodeData {
     this.hostNameField = hostNameField;
     this.isAdvancedQuery = isAdvancedQuery;
   }
+
+  public void setIsAdvancedQuery(boolean isAdvancedQuery) {
+    this.isAdvancedQuery = isAdvancedQuery;
+  }
 }
