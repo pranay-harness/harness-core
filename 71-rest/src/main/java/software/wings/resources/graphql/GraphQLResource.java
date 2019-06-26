@@ -110,7 +110,7 @@ public class GraphQLResource {
       return getExecutionResultWithError(rateLiteErrorMsg).toSpecification();
     }
 
-    if (!featureFlagService.isEnabled(FeatureName.GRAPHQL, null) || accountService.isCommunityAccount(accountId)) {
+    if (!featureFlagService.isEnabled(FeatureName.GRAPHQL, accountId) || accountService.isCommunityAccount(accountId)) {
       logger.info(GraphQLConstants.FEATURE_NOT_ENABLED);
       return getExecutionResultWithError(GraphQLConstants.FEATURE_NOT_ENABLED).toSpecification();
     }
