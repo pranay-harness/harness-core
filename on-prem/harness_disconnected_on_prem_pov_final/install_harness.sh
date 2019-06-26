@@ -292,7 +292,7 @@ function setupUI(){
    echo "################################Setting up UI ################################"
    ui_version=$(getProperty "version.properties" "UI_VERSION")
    UI_PORT=$(getProperty "config_template/ui/ui.properties" "ui_port")
-   docker run -d --name harness_ui -p $UI_PORT:80 --rm -e API_URL="$LOAD_BALANCER_URL" harness/ui:$ui_version
+   docker run -d --name harness_ui -p $UI_PORT:80 --rm -e API_URL="$LOAD_BALANCER_URL" -e HARNESS_ENABLE_EXTERNAL_SCRIPTS_PLACEHOLDER=false harness/ui:$ui_version
 
    if [[ $(checkDockerImageRunning "harness_ui") -eq 1 ]]; then
       echo "Harness UI is not running"
