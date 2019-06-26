@@ -69,6 +69,8 @@ import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.dl.exportimport.WingsMongoExportImport;
+import software.wings.graphql.utils.nameservice.NameService;
+import software.wings.graphql.utils.nameservice.NameServiceImpl;
 import software.wings.helpers.ext.ami.AmiService;
 import software.wings.helpers.ext.ami.AmiServiceImpl;
 import software.wings.helpers.ext.azure.AcrService;
@@ -754,6 +756,7 @@ public class WingsModule extends DependencyModule {
                 .build()));
 
     bind(DashboardSettingsService.class).to(DashboardSettingsServiceImpl.class);
+    bind(NameService.class).to(NameServiceImpl.class);
     bind(TimeScaleDBService.class).toInstance(new TimeScaleDBServiceImpl(configuration.getTimeScaleDBConfig()));
     if (configuration.getExecutionLogsStorageMode() == null) {
       configuration.setExecutionLogsStorageMode(DataStorageMode.MONGO);
