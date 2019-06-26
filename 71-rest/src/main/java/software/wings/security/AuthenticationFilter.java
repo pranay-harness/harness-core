@@ -1,5 +1,6 @@
 package software.wings.security;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
@@ -18,6 +19,7 @@ import com.google.inject.Singleton;
 
 import io.harness.context.GlobalContext;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import io.harness.manage.GlobalContextManager;
 import software.wings.beans.AuthToken;
@@ -87,10 +89,25 @@ public class AuthenticationFilter implements ContainerRequestFilter {
       return;
     }
 
+    String authorization = containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
     if (isExternalFacingApiRequest(containerRequestContext)) {
-      ensureValidQPM(containerRequestContext.getHeaderString(API_KEY_HEADER));
-      validateExternalFacingApiRequest(containerRequestContext);
-      return;
+      String apiKey = containerRequestContext.getHeaderString(API_KEY_HEADER);
+
+      if (isNotEmpty(apiKey)) {
+        ensureValidQPM(containerRequestContext.getHeaderString(API_KEY_HEADER));
+        try {
+          validateExternalFacingApiRequest(containerRequestContext);
+          return;
+        } catch (UnauthorizedException | InvalidRequestException exception) {
+          if (authorization == null) {
+            throw exception;
+          }
+        }
+      }
+
+      if (checkIfBearerTokenAndValidate(authorization, containerRequestContext)) {
+        return;
+      }
     }
 
     if (harnessApiKeyService.isHarnessClientApi(resourceInfo)) {
@@ -98,7 +115,6 @@ public class AuthenticationFilter implements ContainerRequestFilter {
       return;
     }
 
-    String authorization = containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
     if (authorization == null) {
       throw new WingsException(INVALID_TOKEN, USER);
     }
@@ -142,11 +158,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
       return; // do nothing
     }
 
-    if (authorization.startsWith("Bearer")) {
-      User user = validateBearerToken(containerRequestContext);
-      containerRequestContext.setProperty("USER", user);
-      updateUserInAuditRecord(user);
-      UserThreadLocal.set(user);
+    if (checkIfBearerTokenAndValidate(authorization, containerRequestContext)) {
       return;
     }
 
@@ -156,6 +168,18 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   protected boolean isAuthenticatedByIdentitySvc(ContainerRequestContext containerRequestContext) {
     String value = containerRequestContext.getHeaderString(USER_IDENTITY_HEADER);
     return isNotEmpty(value);
+  }
+
+  private boolean checkIfBearerTokenAndValidate(String authHeader, ContainerRequestContext containerRequestContext) {
+    if (authHeader != null && authHeader.startsWith("Bearer")) {
+      User user = validateBearerToken(containerRequestContext);
+      containerRequestContext.setProperty("USER", user);
+      updateUserInAuditRecord(user);
+      UserThreadLocal.set(user);
+      return true;
+    }
+
+    return false;
   }
 
   private void ensureValidQPM(String key) {
@@ -208,6 +232,12 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     }
     String accountId = getRequestParamFromContext("accountId", containerRequestContext.getUriInfo().getPathParameters(),
         containerRequestContext.getUriInfo().getQueryParameters());
+
+    if (isEmpty(accountId)) {
+      // In case of graphql, accountId comes as null. For the new version of api keys, we can get the accountId
+      accountId = apiKeyService.getAccountIdFromApiKey(apiKey);
+    }
+
     apiKeyService.validate(apiKey, accountId);
   }
 
@@ -249,7 +279,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   }
 
   private boolean isExternalFacingApiRequest(ContainerRequestContext requestContext) {
-    return externalFacingAPI() && isNotEmpty(requestContext.getHeaderString(API_KEY_HEADER));
+    return externalFacingAPI();
   }
 
   boolean identityServiceAPI() {

@@ -35,6 +35,7 @@ import software.wings.security.annotations.ListAPI;
 import software.wings.security.annotations.PublicApi;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -67,7 +68,7 @@ import javax.ws.rs.core.MultivaluedMap;
 public class AuthRuleFilter implements ContainerRequestFilter {
   private static final String[] NO_FILTERING_URIS_PREFIXES = new String[] {"users/user", "users/sso/zendesk",
       "users/account", "users/two-factor-auth", "users/disable-two-factor-auth", "users/enable-two-factor-auth",
-      "users/refresh-token", "account/new", "harness-api-keys", "users/set-default-account", "graphql"};
+      "users/refresh-token", "account/new", "harness-api-keys", "users/set-default-account"};
   private static final String[] NO_FILTERING_URIS_SUFFIXES = new String[] {"/logout"};
   private static final String[] EXEMPTED_URI_PREFIXES = new String[] {"limits/configure", "account/license",
       "account/export", "account/import", "account/delete/", "account/disable", "account/enable"};
@@ -79,6 +80,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private AuthService authService;
   private AuthHandler authHandler;
   private UserService userService;
+  private ApiKeyService apiKeyService;
   private AppService appService;
   private WhitelistService whitelistService;
   private HarnessUserGroupService harnessUserGroupService;
@@ -93,11 +95,13 @@ public class AuthRuleFilter implements ContainerRequestFilter {
    */
   @Inject
   public AuthRuleFilter(AuthService authService, AuthHandler authHandler, AppService appService,
-      UserService userService, WhitelistService whitelistService, HarnessUserGroupService harnessUserGroupService) {
+      UserService userService, ApiKeyService apiKeyService, WhitelistService whitelistService,
+      HarnessUserGroupService harnessUserGroupService) {
     this.authService = authService;
     this.authHandler = authHandler;
     this.appService = appService;
     this.userService = userService;
+    this.apiKeyService = apiKeyService;
     this.whitelistService = whitelistService;
     this.harnessUserGroupService = harnessUserGroupService;
   }
@@ -148,6 +152,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     MultivaluedMap<String, String> queryParameters = requestContext.getUriInfo().getQueryParameters();
 
     String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
+    boolean isExternalApi = externalAPI();
+
     List<String> appIdsFromRequest = getRequestParamsFromContext("appId", pathParameters, queryParameters);
     boolean emptyAppIdsInReq = isEmpty(appIdsFromRequest);
 
@@ -165,8 +171,12 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     User user = UserThreadLocal.get();
 
     if (user == null) {
-      logger.warn("No user context in operation: {}", uriPath);
-      throw new InvalidRequestException("No user context set", USER);
+      if (isExternalApi) {
+        return;
+      } else {
+        logger.warn("No user context in operation: {}", uriPath);
+        throw new InvalidRequestException("No user context set", USER);
+      }
     }
 
     String httpMethod = requestContext.getMethod();
@@ -393,8 +403,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
   private boolean authorizationExemptedRequest(ContainerRequestContext requestContext) {
     // externalAPI() doesn't need any authorization
-    return publicAPI() || requestContext.getMethod().equals(OPTIONS) || externalAPI() || identityServiceAPI()
-        || harnessClientApi() || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/version")
+    return publicAPI() || requestContext.getMethod().equals(OPTIONS) || identityServiceAPI() || harnessClientApi()
+        || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/version")
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/swagger")
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/swagger.json");
   }

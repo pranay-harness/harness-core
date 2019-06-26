@@ -11,6 +11,7 @@ import io.harness.beans.PageResponse;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Application;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
@@ -74,7 +75,7 @@ public class AppResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.APPLICATION_CREATE_DELETE)
-  public RestResponse<Application> save(@QueryParam("accountId") String accountId, Application app) {
+  public RestResponse<Application> save(@NotEmpty @QueryParam("accountId") String accountId, Application app) {
     app.setAccountId(accountId);
     return new RestResponse<>(appService.save(app));
   }
