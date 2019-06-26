@@ -30,10 +30,16 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @FieldNameConstants(innerTypeName = "ContinuousVerificationExecutionMetaDataKeys")
 @Indexes({
-  @Index(fields = {
-    @Field("workflowId")
-    , @Field("stateType"), @Field("executionStatus"), @Field(value = "workflowStartTs", type = IndexType.DESC)
-  }, options = @IndexOptions(name = "stateHostIdx"))
+  @Index(fields =
+      {
+        @Field("workflowId")
+        , @Field("stateType"), @Field("executionStatus"), @Field(value = "workflowStartTs", type = IndexType.DESC)
+      },
+      options = @IndexOptions(name = "stateHostIdx"))
+  ,
+      @Index(fields = {
+        @Field("workflowExecutionId"), @Field(value = "createdAt", type = IndexType.DESC)
+      }, options = @IndexOptions(name = "workflowExec_idx"))
 })
 public class ContinuousVerificationExecutionMetaData extends Base {
   @NotEmpty @Indexed private long workflowStartTs;
