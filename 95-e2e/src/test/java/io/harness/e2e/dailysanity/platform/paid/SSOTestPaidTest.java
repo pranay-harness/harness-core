@@ -17,6 +17,7 @@ import io.harness.testframework.framework.Setup;
 import io.harness.testframework.framework.matchers.BooleanMatcher;
 import io.harness.testframework.framework.matchers.NotNullMatcher;
 import io.harness.testframework.framework.utils.SSOUtils;
+import io.harness.testframework.framework.utils.TestUtils;
 import io.harness.testframework.framework.utils.UserGroupUtils;
 import io.harness.testframework.framework.utils.UserUtils;
 import io.harness.testframework.restutils.SSORestUtils;
@@ -110,6 +111,7 @@ public class SSOTestPaidTest extends AbstractE2ETest {
     User user = UserUtils.getUser(bearerToken, getAccount().getUuid(), LDAP_LOGIN_ID);
     User user2 = UserUtils.getUser(bearerToken, getAccount().getUuid(), "ldaptest1@harness.io");
     assertTrue(SSORestUtils.assignAuthMechanism(getAccount().getUuid(), bearerToken, "LDAP") == HttpStatus.SC_OK);
+    TestUtils.sleep(30);
     String authToken = (String) retry.executeWithRetry(
         () -> Setup.getAuthToken(LDAP_LOGIN_ID, ldapLoginPassword), new NotNullMatcher(), true);
     assertTrue(StringUtils.isNotBlank(authToken));

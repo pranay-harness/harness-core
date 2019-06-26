@@ -17,6 +17,7 @@ import io.harness.testframework.framework.Setup;
 import io.harness.testframework.framework.matchers.BooleanMatcher;
 import io.harness.testframework.framework.matchers.NotNullMatcher;
 import io.harness.testframework.framework.utils.SSOUtils;
+import io.harness.testframework.framework.utils.TestUtils;
 import io.harness.testframework.framework.utils.UserGroupUtils;
 import io.harness.testframework.framework.utils.UserUtils;
 import io.harness.testframework.restutils.SSORestUtils;
@@ -115,6 +116,7 @@ public class SSOTestTrialTest extends AbstractE2ETest {
 
     assertTrue(
         SSORestUtils.assignAuthMechanism(getTrialAccount().getUuid(), trialBearerToken, "LDAP") == HttpStatus.SC_OK);
+    TestUtils.sleep(30);
     String authToken = (String) retry.executeWithRetry(
         ()
             -> Setup.getAuthTokenForAccount(trialQAAccount, LDAP_LOGIN_ID, ldapLoginPassword),

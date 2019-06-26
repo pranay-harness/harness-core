@@ -18,6 +18,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
 @Slf4j
 public class TestUtils {
   static final int MAX_RETRIES = 5;
@@ -113,5 +115,13 @@ public class TestUtils {
 
   public static String getDecryptedValue(String secretKey) {
     return new ScmSecret().decryptToString(new SecretName(secretKey));
+  }
+
+  public static void sleep(int sleepTimeInSeconds) {
+    try {
+      TimeUnit.SECONDS.sleep(sleepTimeInSeconds);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 }
