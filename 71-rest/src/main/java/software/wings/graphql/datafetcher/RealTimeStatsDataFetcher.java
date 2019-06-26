@@ -42,9 +42,7 @@ public abstract class RealTimeStatsDataFetcher<A, F, G, T> extends AbstractStats
     String firstLevelAggregation = groupBy.get(0);
     String secondLevelAggregation = groupBy.get(1);
     String entityIdColumn = getAggregationFieldName(firstLevelAggregation);
-    String entityNameColumn = getAggregationNameField(firstLevelAggregation);
     String secondLevelEntityIdColumn = getAggregationFieldName(secondLevelAggregation);
-    String secondLevelEntityNameColumn = getAggregationNameField(secondLevelAggregation);
 
     List<TwoLevelAggregatedData> aggregatedDataList = new ArrayList<>();
     wingsPersistence.getDatastore(query.getEntityClass())
