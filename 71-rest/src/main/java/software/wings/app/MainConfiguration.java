@@ -30,6 +30,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.DataStorageMode;
 import software.wings.beans.DefaultSalesContacts;
+import software.wings.beans.UrlInfo;
 import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.security.authentication.MarketPlaceConfig;
@@ -101,6 +102,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
 
   @JsonProperty("disabledCache") private Set<String> disabledCache;
+  @JsonProperty("techStacks") private Map<String, UrlInfo> techStackLinks;
 
   private int applicationPort;
   private boolean sslEnabled;

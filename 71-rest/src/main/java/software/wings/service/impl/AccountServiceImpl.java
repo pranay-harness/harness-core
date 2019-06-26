@@ -80,6 +80,7 @@ import software.wings.beans.RoleType;
 import software.wings.beans.Service;
 import software.wings.beans.SystemCatalog;
 import software.wings.beans.TechStack;
+import software.wings.beans.UrlInfo;
 import software.wings.beans.User;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.loginSettings.LoginSettingsService;
@@ -91,6 +92,7 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerConditionType;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.mail.EmailData;
 import software.wings.licensing.LicenseService;
 import software.wings.scheduler.AlertCheckJob;
 import software.wings.scheduler.InstanceStatsCollectorJob;
@@ -111,6 +113,7 @@ import software.wings.service.intfc.AlertNotificationRuleService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.RoleService;
@@ -159,6 +162,7 @@ public class AccountServiceImpl implements AccountService {
   private static final String UNLIMITED_PAGE_SIZE = "UNLIMITED";
   private static final String ILLEGAL_ACCOUNT_NAME_CHARACTERS = "[~!@#$%^*\\[\\]{}<>'\"/:;\\\\]";
   private static final int MAX_ACCOUNT_NAME_LENGTH = 50;
+  private static final String WELCOME_EMAIL_TEMPLATE_NAME = "welcome_email";
   private static final String GENERATE_SAMPLE_DELEGATE_CURL_COMMAND_FORMAT_STRING =
       "curl -s -X POST -H 'content-type: application/json' "
       + "--url https://app.harness.io/gateway/gratis/api/webhooks/cmnhGRyXyBP5RJzz8Ae9QP7mqUATVotr7v2knjOf "
@@ -167,6 +171,7 @@ public class AccountServiceImpl implements AccountService {
       + "\"account_id\":\"%s\",\"account_id_short\":\"%s\",\"account_secret\":\"%s\"}}'";
   private static final String SAMPLE_DELEGATE_NAME = "harness-sample-k8s-delegate";
   private static final String SAMPLE_DELEGATE_STATUS_ENDPOINT_FORMAT_STRING = "http://%s/account-%s.txt";
+  private static final String DELIMITER = "####";
   @Inject protected AuthService authService;
   @Inject protected CacheManager cacheManager;
   @Inject private WingsPersistence wingsPersistence;
@@ -195,8 +200,10 @@ public class AccountServiceImpl implements AccountService {
   @Inject private UserService userService;
   @Inject private LoginSettingsService loginSettingsService;
   @Inject private EventPublishHelper eventPublishHelper;
+  @Inject private EmailNotificationService emailNotificationService;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
+  private Map<String, UrlInfo> techStackDocLinks;
 
   @Override
   public Account save(@Valid Account account) {
@@ -416,11 +423,104 @@ public class AccountServiceImpl implements AccountService {
     notNullCheck("Invalid Account for the given Id: " + accountId, accountInDB, USER);
 
     UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class);
-    updateOperations.set("techStacks", techStacks);
+    if (isEmpty(techStacks)) {
+      updateOperations.unset("techStacks");
+    } else {
+      updateOperations.set("techStacks", techStacks);
+    }
     wingsPersistence.update(accountInDB, updateOperations);
     dbCache.invalidate(Account.class, accountId);
+
+    final List<User> usersOfAccount = userService.getUsersOfAccount(accountId);
+    if (isNotEmpty(usersOfAccount)) {
+      executorService.submit(() -> usersOfAccount.forEach(user -> sendWelcomeEmail(user, techStacks)));
+    }
     eventPublishHelper.publishTechStackEvent(accountId, techStacks);
     return true;
+  }
+
+  private UrlInfo getDocLink(TechStack techStack) {
+    String category = techStack.getCategory();
+    String technology = techStack.getTechnology();
+    if (isEmpty(category)) {
+      return null;
+    }
+
+    if (isEmpty(technology)) {
+      return null;
+    }
+
+    String key =
+        new StringBuilder(category.substring(0, category.indexOf(' '))).append("-").append(technology).toString();
+    return techStackDocLinks.get(key);
+  }
+
+  private void sendWelcomeEmail(User user, Set<TechStack> techStackSet) {
+    if (techStackDocLinks == null) {
+      techStackDocLinks = mainConfiguration.getTechStackLinks();
+    }
+
+    try {
+      List<String> deployPlatforms = new ArrayList<>();
+      List<String> artifacts = new ArrayList<>();
+      List<String> monitoringTools = new ArrayList<>();
+      if (isNotEmpty(techStackSet)) {
+        techStackSet.forEach(techStack -> {
+          UrlInfo docLink = getDocLink(techStack);
+          if (docLink != null) {
+            switch (techStack.getCategory()) {
+              case "Deployment Platforms":
+                deployPlatforms.add(String.join(DELIMITER, docLink.getTitle(), docLink.getUrl()));
+                break;
+              case "Artifact Repositories":
+                artifacts.add(String.join(DELIMITER, docLink.getTitle(), docLink.getUrl()));
+                break;
+              case "Monitoring And Logging":
+                monitoringTools.add(String.join(DELIMITER, docLink.getTitle(), docLink.getUrl()));
+                break;
+              default:
+                throw new WingsException("Unknown category " + techStack.getCategory());
+            }
+          }
+        });
+      }
+
+      if (isEmpty(deployPlatforms)) {
+        UrlInfo docLink =
+            getDocLink(TechStack.builder().category("Deployment Platforms").technology("General").build());
+        deployPlatforms.add(String.join(DELIMITER, docLink.getTitle(), docLink.getUrl()));
+      }
+
+      if (isEmpty(artifacts)) {
+        UrlInfo docLink =
+            getDocLink(TechStack.builder().category("Artifact Repositories").technology("General").build());
+        artifacts.add(String.join(DELIMITER, docLink.getTitle(), docLink.getUrl()));
+      }
+
+      if (isEmpty(monitoringTools)) {
+        UrlInfo docLink =
+            getDocLink(TechStack.builder().category("Monitoring And Logging").technology("General").build());
+        monitoringTools.add(String.join(DELIMITER, docLink.getTitle(), docLink.getUrl()));
+      }
+
+      Map<String, Object> model = new HashMap<>();
+      model.put("name", user.getName());
+      model.put("deploymentPlatforms", deployPlatforms);
+      model.put("artifacts", artifacts);
+      model.put("monitoringAndLoggingTools", monitoringTools);
+      sendEmail(user.getEmail(), WELCOME_EMAIL_TEMPLATE_NAME, model);
+    } catch (Exception e) {
+      logger.error("Failed to send welcome email", e);
+    }
+  }
+
+  private boolean sendEmail(String toEmail, String templateName, Map<String, Object> templateModel) {
+    List<String> toList = new ArrayList<>();
+    toList.add(toEmail);
+    EmailData emailData =
+        EmailData.builder().to(toList).templateName(templateName).templateModel(templateModel).build();
+    emailData.setRetries(2);
+    return emailNotificationService.send(emailData);
   }
 
   @Override
