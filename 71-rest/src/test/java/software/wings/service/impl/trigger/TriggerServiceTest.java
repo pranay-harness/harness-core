@@ -634,12 +634,14 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldDeleteScheduleTrigger() {
+    Trigger trigger = triggerService.save(scheduledConditionTrigger);
     triggerService.delete(APP_ID, TRIGGER_ID);
   }
 
   @Test
   @Category(UnitTests.class)
   public void shouldDeleteArtifactTrigger() {
+    Trigger trigger = triggerService.save(artifactConditionTrigger);
     triggerService.delete(APP_ID, TRIGGER_ID);
   }
 

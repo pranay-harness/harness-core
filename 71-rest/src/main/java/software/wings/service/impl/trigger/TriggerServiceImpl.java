@@ -182,6 +182,9 @@ public class TriggerServiceImpl implements TriggerService {
 
     if (featureFlagService.isEnabled(FeatureName.TRIGGER_YAML, accountId)) {
       yamlPushService.pushYamlChangeSet(accountId, null, savedTrigger, Type.CREATE, trigger.isSyncFromGit(), false);
+    } else {
+      // TODO: Once this flag is enabled for all accounts, this can be removed
+      auditServiceHelper.reportForAuditingUsingAppId(trigger.getAppId(), null, trigger, Type.CREATE);
     }
     return savedTrigger;
   }
@@ -203,6 +206,10 @@ public class TriggerServiceImpl implements TriggerService {
     if (featureFlagService.isEnabled(FeatureName.TRIGGER_YAML, accountId)) {
       yamlPushService.pushYamlChangeSet(
           accountId, existingTrigger, updatedTrigger, Type.UPDATE, trigger.isSyncFromGit(), isRename);
+    } else {
+      // TODO: Once this flag is enabled for all accounts, this can be removed
+      auditServiceHelper.reportForAuditingUsingAppId(
+          updatedTrigger.getAppId(), existingTrigger, updatedTrigger, Type.UPDATE);
     }
 
     return updatedTrigger;
@@ -219,6 +226,9 @@ public class TriggerServiceImpl implements TriggerService {
     }
     if (featureFlagService.isEnabled(FeatureName.TRIGGER_YAML, accountId) && (trigger != null)) {
       yamlPushService.pushYamlChangeSet(accountId, trigger, null, Type.DELETE, trigger.isSyncFromGit(), false);
+    } else {
+      // TODO: Once this flag is enabled for all accounts, this can be removed
+      auditServiceHelper.reportDeleteForAuditing(trigger.getAppId(), trigger);
     }
     return answer;
   }
