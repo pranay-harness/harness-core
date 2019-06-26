@@ -27,7 +27,8 @@ enum DeploymentAggregation {
 
 input DeploymentFilter {
   type: DeploymentFilterType
-  values: [String]
+  stringFilter: StringFilter
+  numberFilter: NumberFilter
 }
 
 extend type Query {
