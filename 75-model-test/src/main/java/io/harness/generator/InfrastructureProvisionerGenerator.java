@@ -72,7 +72,6 @@ public class InfrastructureProvisionerGenerator {
                     .deploymentType(SSH)
                     .cloudProviderType(AWS)
                     .properties(asList(BlueprintProperty.builder().name("region").value("${terraform.region}").build(),
-                        BlueprintProperty.builder().name("securityGroups").value("${terraform.security_group}").build(),
                         BlueprintProperty.builder().name("tags").value("${terraform.archive_tags}").build()))
                     .nodeFilteringType(AWS_INSTANCE_FILTER)
                     .build()))
