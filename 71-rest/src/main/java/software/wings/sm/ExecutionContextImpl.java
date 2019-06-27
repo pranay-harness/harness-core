@@ -278,7 +278,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     Map<String, Artifact> map = new HashMap<>();
     WorkflowStandardParams workflowStandardParams = getContextElement(ContextElementType.STANDARD);
     List<ArtifactVariable> artifactVariables = workflowStandardParams.getWorkflowElement().getArtifactVariables();
-    Map<String, Object> workflowVariables = getWorkflowVariables();
+    Map<String, Object> workflowVariables = getArtifactVariablesDefinedAtWorkflowLevel();
     Artifact artifact = null;
     if (isNotEmpty(artifactVariables)) {
       for (ArtifactVariable artifactVariable : artifactVariables) {
@@ -308,7 +308,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     return map;
   }
 
-  private Map<String, Object> getWorkflowVariables() {
+  private Map<String, Object> getArtifactVariablesDefinedAtWorkflowLevel() {
     SweepingOutput sweepingOutputInput = this.prepareSweepingOutputBuilder(Scope.WORKFLOW).name("artifacts").build();
     SweepingOutput result = sweepingOutputService.find(sweepingOutputInput.getAppId(), sweepingOutputInput.getName(),
         sweepingOutputInput.getPipelineExecutionId(), sweepingOutputInput.getWorkflowExecutionId(),

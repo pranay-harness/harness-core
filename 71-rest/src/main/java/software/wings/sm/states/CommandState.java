@@ -14,7 +14,6 @@ import static software.wings.api.CommandStateExecutionData.Builder.aCommandState
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
-import static software.wings.beans.template.TemplateHelper.convertToVariableMap;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.COMMAND;
 
@@ -83,6 +82,7 @@ import software.wings.beans.command.TailFilePatternEntry;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.template.ReferencedTemplate;
 import software.wings.beans.template.Template;
+import software.wings.beans.template.TemplateUtils;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.dl.WingsPersistence;
@@ -157,6 +157,7 @@ public class CommandState extends State {
   @Inject @Transient private transient AwsCommandHelper awsCommandHelper;
   @Inject @Transient private transient TemplateService templateService;
   @Inject @Transient private transient SweepingOutputService sweepingOutputService;
+  @Inject @Transient private transient TemplateUtils templateUtils;
 
   @Inject @Transient private transient WingsPersistence wingsPersistence;
 
@@ -427,25 +428,27 @@ public class CommandState extends State {
             if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
               renderCommandString(command, context, executionDataBuilder.build(), artifact, true);
             } else {
-              renderCommandString(command, context, executionDataBuilder.build(), multiArtifacts, true);
+              renderCommandString(command, context, executionDataBuilder.build(), true);
             }
           } else {
             expandCommand(serviceInstance, command, service.getUuid(), envId);
-            executionDataBuilder.withTemplateVariable(convertToVariableMap(commandTemplateVariables));
+            executionDataBuilder.withTemplateVariable(
+                templateUtils.processTemplateVariables(context, commandTemplateVariables));
             if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
               renderCommandString(command, context, executionDataBuilder.build(), artifact);
             } else {
-              renderCommandString(command, context, executionDataBuilder.build(), multiArtifacts);
+              renderCommandString(command, context, executionDataBuilder.build());
             }
           }
         }
       } else {
         expandCommand(serviceInstance, command, service.getUuid(), envId);
-        executionDataBuilder.withTemplateVariable(convertToVariableMap(commandTemplateVariables));
+        executionDataBuilder.withTemplateVariable(
+            templateUtils.processTemplateVariables(context, commandTemplateVariables));
         if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
           renderCommandString(command, context, executionDataBuilder.build(), artifact);
         } else {
-          renderCommandString(command, context, executionDataBuilder.build(), multiArtifacts);
+          renderCommandString(command, context, executionDataBuilder.build());
         }
       }
 
@@ -783,12 +786,17 @@ public class CommandState extends State {
       Application application = appService.get(appId);
       String accountId = application.getAccountId();
       Artifact artifact = null;
+      Map<String, Artifact> multiArtifacts = null;
 
       if (command.isArtifactNeeded()) {
         if (service == null) {
           throw new WingsException("Linked Command needs artifact but service is not found", USER);
         }
-        artifact = findArtifact(service.getUuid(), context);
+        if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+          artifact = findArtifact(service.getUuid(), context);
+        } else {
+          multiArtifacts = findArtifacts(service.getUuid(), context);
+        }
       }
 
       Map<String, String> serviceVariables = context.getServiceVariables().entrySet().stream().collect(
@@ -831,14 +839,28 @@ public class CommandState extends State {
         getHostConnectionDetails(context, host, commandExecutionContextBuilder);
       }
 
-      if (artifact != null) {
-        getArtifactDetails(context, executionDataBuilder, service, accountId, artifact, commandExecutionContextBuilder);
-      } else if (command.isArtifactNeeded()) {
-        if (service != null) {
-          throw new WingsException(
-              format("Unable to find artifact for service %s", service.getName()), WingsException.USER);
+      if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+        if (artifact != null) {
+          getArtifactDetails(
+              context, executionDataBuilder, service, accountId, artifact, commandExecutionContextBuilder);
+        } else if (command.isArtifactNeeded()) {
+          if (service != null) {
+            throw new WingsException(
+                format("Unable to find artifact for service %s", service.getName()), WingsException.USER);
+          }
+          throw new WingsException("Command needs artifact. However, service not found.", USER);
         }
-        throw new WingsException("Command needs artifact. However, service not found.", USER);
+      } else {
+        if (isNotEmpty(multiArtifacts)) {
+          getMultiArtifactDetails(
+              context, executionDataBuilder, service, accountId, multiArtifacts, commandExecutionContextBuilder);
+        } else if (command.isArtifactNeeded()) {
+          if (service != null) {
+            throw new WingsException(
+                format("Unable to find artifact for service %s", service.getName()), WingsException.USER);
+          }
+          throw new WingsException("Command needs artifact. However, service not found.", USER);
+        }
       }
 
       String templateId = this.getTemplateUuid();
@@ -851,7 +873,11 @@ public class CommandState extends State {
             command, sshCommandTemplate.getReferencedTemplateList(), this.getTemplateVariables());
       }
 
-      renderCommandString(command, context, executionDataBuilder.build(), artifact, true);
+      if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+        renderCommandString(command, context, executionDataBuilder.build(), artifact, true);
+      } else {
+        renderCommandString(command, context, executionDataBuilder.build(), true);
+      }
 
       List<CommandUnit> flattenCommandUnits =
           getFlattenCommandUnits(appId, envId, service, deploymentType.name(), accountId, command, true);
@@ -860,7 +886,8 @@ public class CommandState extends State {
       activityId = activity.getUuid();
 
       executionDataBuilder.withActivityId(activityId);
-      executionDataBuilder.withTemplateVariable(convertToVariableMap(command.getTemplateVariables()));
+      executionDataBuilder.withTemplateVariable(
+          templateUtils.processTemplateVariables(context, command.getTemplateVariables()));
       if (featureFlagService.isEnabled(FeatureName.INLINE_SSH_COMMAND, accountId)) {
         commandExecutionContextBuilder.withInlineSshCommand(true);
       }
@@ -916,24 +943,26 @@ public class CommandState extends State {
     return commandEntity;
   }
 
-  static void renderCommandString(Command command, ExecutionContext context,
+  void renderCommandString(Command command, ExecutionContext context,
       CommandStateExecutionData commandStateExecutionData, Artifact artifact) {
     renderCommandString(command, context, commandStateExecutionData, artifact, false);
   }
 
-  static void renderCommandString(Command command, ExecutionContext context,
+  void renderCommandString(Command command, ExecutionContext context,
       CommandStateExecutionData commandStateExecutionData, Artifact artifact, boolean linkedFromTemplateLibrary) {
     for (CommandUnit commandUnit : command.getCommandUnits()) {
       if (CommandUnitType.COMMAND.equals(commandUnit.getCommandUnitType())) {
         Command commandCommandUnit = (Command) commandUnit;
-        commandStateExecutionData.setTemplateVariable(convertToVariableMap(commandCommandUnit.getTemplateVariables()));
+        commandStateExecutionData.setTemplateVariable(
+            templateUtils.processTemplateVariables(context, commandCommandUnit.getTemplateVariables()));
         renderCommandString(
             (Command) commandUnit, context, commandStateExecutionData, artifact, linkedFromTemplateLibrary);
         continue;
       }
 
       if (linkedFromTemplateLibrary) {
-        commandStateExecutionData.setTemplateVariable(convertToVariableMap(command.getTemplateVariables()));
+        commandStateExecutionData.setTemplateVariable(
+            templateUtils.processTemplateVariables(context, command.getTemplateVariables()));
         commandUnit.setVariables(command.getTemplateVariables());
       }
 
@@ -967,25 +996,25 @@ public class CommandState extends State {
     }
   }
 
-  static void renderCommandString(Command command, ExecutionContext context,
-      CommandStateExecutionData commandStateExecutionData, Map<String, Artifact> multiArtifacts) {
-    renderCommandString(command, context, commandStateExecutionData, multiArtifacts, false);
+  void renderCommandString(
+      Command command, ExecutionContext context, CommandStateExecutionData commandStateExecutionData) {
+    renderCommandString(command, context, commandStateExecutionData, false);
   }
 
-  static void renderCommandString(Command command, ExecutionContext context,
-      CommandStateExecutionData commandStateExecutionData, Map<String, Artifact> multiArtifacts,
-      boolean linkedFromTemplateLibrary) {
+  void renderCommandString(Command command, ExecutionContext context,
+      CommandStateExecutionData commandStateExecutionData, boolean linkedFromTemplateLibrary) {
     for (CommandUnit commandUnit : command.getCommandUnits()) {
       if (CommandUnitType.COMMAND.equals(commandUnit.getCommandUnitType())) {
         Command commandCommandUnit = (Command) commandUnit;
-        commandStateExecutionData.setTemplateVariable(convertToVariableMap(commandCommandUnit.getTemplateVariables()));
-        renderCommandString(
-            (Command) commandUnit, context, commandStateExecutionData, multiArtifacts, linkedFromTemplateLibrary);
+        commandStateExecutionData.setTemplateVariable(
+            templateUtils.processTemplateVariables(context, commandCommandUnit.getTemplateVariables()));
+        renderCommandString((Command) commandUnit, context, commandStateExecutionData, linkedFromTemplateLibrary);
         continue;
       }
 
       if (linkedFromTemplateLibrary) {
-        commandStateExecutionData.setTemplateVariable(convertToVariableMap(command.getTemplateVariables()));
+        commandStateExecutionData.setTemplateVariable(
+            templateUtils.processTemplateVariables(context, command.getTemplateVariables()));
         commandUnit.setVariables(command.getTemplateVariables());
       }
 
@@ -1022,13 +1051,13 @@ public class CommandState extends State {
             context.renderExpression(execCommandUnit.getCommandString(), stateExecutionContextBuilder.build()));
       }
       if (isNotEmpty(execCommandUnit.getTailPatterns())) {
-        renderTailFilePattern(context, commandStateExecutionData, multiArtifacts, execCommandUnit);
+        renderTailFilePattern(context, commandStateExecutionData, execCommandUnit);
       }
     }
   }
 
-  static void renderTailFilePattern(ExecutionContext context, CommandStateExecutionData commandStateExecutionData,
-      Map<String, Artifact> multiArtifacts, ExecCommandUnit execCommandUnit) {
+  void renderTailFilePattern(
+      ExecutionContext context, CommandStateExecutionData commandStateExecutionData, ExecCommandUnit execCommandUnit) {
     List<TailFilePatternEntry> filePatternEntries = execCommandUnit.getTailPatterns();
     for (TailFilePatternEntry filePatternEntry : filePatternEntries) {
       if (isNotEmpty(filePatternEntry.getFilePath())) {
@@ -1043,7 +1072,7 @@ public class CommandState extends State {
     execCommandUnit.setTailPatterns(filePatternEntries);
   }
 
-  static void renderTailFilePattern(ExecutionContext context, CommandStateExecutionData commandStateExecutionData,
+  void renderTailFilePattern(ExecutionContext context, CommandStateExecutionData commandStateExecutionData,
       Artifact artifact, ExecCommandUnit execCommandUnit) {
     List<TailFilePatternEntry> filePatternEntries = execCommandUnit.getTailPatterns();
     for (TailFilePatternEntry filePatternEntry : filePatternEntries) {

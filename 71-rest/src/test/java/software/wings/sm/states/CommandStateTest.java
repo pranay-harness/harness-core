@@ -110,6 +110,7 @@ import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.command.TailFilePatternEntry;
 import software.wings.beans.infrastructure.Host;
+import software.wings.beans.template.TemplateUtils;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.intfc.ActivityService;
@@ -240,6 +241,7 @@ public class CommandStateTest extends WingsBaseTest {
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private AwsCommandHelper mockAwsCommandHelper;
+  @Mock private TemplateUtils templateUtils;
 
   @InjectMocks private CommandState commandState = new CommandState("start1", "START");
 
@@ -676,6 +678,8 @@ public class CommandStateTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldRenderCommandString() {
+    CommandState commandState = new CommandState("test");
+    on(commandState).set("templateUtils", templateUtils);
     CommandStateExecutionData commandStateExecutionData =
         CommandStateExecutionData.Builder.aCommandStateExecutionData().build();
     final Command command =
@@ -685,7 +689,7 @@ public class CommandStateTest extends WingsBaseTest {
                 aCommand().addCommandUnits(anExecCommandUnit().withCommandString("${var2}").build()).build())
             .build();
     Artifact artifact = null;
-    CommandState.renderCommandString(command, context, commandStateExecutionData, artifact);
+    commandState.renderCommandString(command, context, commandStateExecutionData, artifact);
     verify(context, times(1))
         .renderExpression(
             "${var1}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
@@ -697,6 +701,8 @@ public class CommandStateTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldRenderTailFilesPatterns() {
+    CommandState commandState = new CommandState("test");
+    on(commandState).set("templateUtils", templateUtils);
     CommandStateExecutionData commandStateExecutionData =
         CommandStateExecutionData.Builder.aCommandStateExecutionData().build();
     ExecCommandUnit execCommandUnit = anExecCommandUnit()
@@ -707,7 +713,7 @@ public class CommandStateTest extends WingsBaseTest {
                                                                        .build()))
                                           .build();
     Artifact artifact = null;
-    CommandState.renderTailFilePattern(context, commandStateExecutionData, artifact, execCommandUnit);
+    commandState.renderTailFilePattern(context, commandStateExecutionData, artifact, execCommandUnit);
     verify(context, times(1))
         .renderExpression("${serviceVariable.testfile}",
             StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
@@ -719,6 +725,8 @@ public class CommandStateTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldRenderCommandStringWithVariables() {
+    CommandState commandState = new CommandState("test");
+    on(commandState).set("templateUtils", templateUtils);
     Map<String, Object> stateVariables = new HashMap<>();
     if (isNotEmpty(command.getTemplateVariables())) {
       stateVariables.putAll(
@@ -733,7 +741,7 @@ public class CommandStateTest extends WingsBaseTest {
                 aCommand().addCommandUnits(anExecCommandUnit().withCommandString("${var2}").build()).build())
             .build();
     Artifact artifact = null;
-    CommandState.renderCommandString(command, context, commandStateExecutionData, artifact);
+    commandState.renderCommandString(command, context, commandStateExecutionData, artifact);
     verify(context, times(1))
         .renderExpression(
             "${var1}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
@@ -745,6 +753,8 @@ public class CommandStateTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldRenderReferencedCommandStringWithVariables() {
+    CommandState commandState = new CommandState("test");
+    on(commandState).set("templateUtils", templateUtils);
     Map<String, Object> stateVariables = new HashMap<>();
     if (isNotEmpty(command.getTemplateVariables())) {
       stateVariables.putAll(
@@ -761,7 +771,7 @@ public class CommandStateTest extends WingsBaseTest {
                                  .build())
             .build();
     Artifact artifact = null;
-    CommandState.renderCommandString(command, context, commandStateExecutionData, artifact);
+    commandState.renderCommandString(command, context, commandStateExecutionData, artifact);
     verify(context, times(1))
         .renderExpression(
             "${var1}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());

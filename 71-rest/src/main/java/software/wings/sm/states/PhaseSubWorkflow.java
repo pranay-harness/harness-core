@@ -263,8 +263,8 @@ public class PhaseSubWorkflow extends SubWorkflowState {
           throw new InvalidRequestException("Last Good Deployment ID is not found");
         }
         if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-          saveArtifactsFromVariablesForRollback(context, workflowStandardParams, stateExecutionInstance, service,
-              phaseElement, accountId, workflowExecution);
+          saveArtifactsFromVariablesForRollback(
+              context, workflowStandardParams, stateExecutionInstance, service, phaseElement, workflowExecution);
         } else {
           phaseElementBuilder.withRollbackArtifactId(findRollbackArtifactId(service, workflowExecution));
         }
@@ -278,7 +278,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
               workflowStandardParams.getAppId(), context.getWorkflowExecutionId());
           for (ArtifactVariable artifactVariable : artifactVariables) {
             if (artifactVariable.getEntityType().equals(EntityType.SERVICE)) {
-              if (artifactVariable.getEntityId().equals(service.getUuid())) {
+              if (service != null && artifactVariable.getEntityId().equals(service.getUuid())) {
                 Artifact artifact = getArtifactByUuid(workflowExecution.getArtifacts(), artifactVariable.getValue());
                 saveArtifactToSweepingOutput(
                     stateExecutionInstance.getAppId(), phaseExecutionId, artifactVariable, artifact);
@@ -404,14 +404,14 @@ public class PhaseSubWorkflow extends SubWorkflowState {
           default:
             throw new InvalidRequestException("Service cannot be empty", USER);
         }
-        if (isNotEmpty(artifactsMap)) {
-          sweepingOutputService.save(SweepingOutputServiceImpl
-                                         .prepareSweepingOutputBuilder(stateExecutionInstance.getAppId(), null, null,
-                                             phaseExecutionId, null, SweepingOutput.Scope.PHASE)
-                                         .name(artifactVariable.getName())
-                                         .output(KryoUtils.asDeflatedBytes(artifactsMap))
-                                         .build());
-        }
+      }
+      if (isNotEmpty(artifactsMap)) {
+        sweepingOutputService.save(SweepingOutputServiceImpl
+                                       .prepareSweepingOutputBuilder(stateExecutionInstance.getAppId(), null, null,
+                                           phaseExecutionId, null, SweepingOutput.Scope.PHASE)
+                                       .name("artifacts")
+                                       .output(KryoUtils.asDeflatedBytes(artifactsMap))
+                                       .build());
       }
     }
   }
@@ -432,7 +432,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
   private void saveArtifactsFromVariablesForRollback(ExecutionContext context,
       WorkflowStandardParams workflowStandardParams, StateExecutionInstance stateExecutionInstance, Service service,
-      PhaseElement phaseElement, String accountId, WorkflowExecution lastSuccessfulWorkflowExecution) {
+      PhaseElement phaseElement, WorkflowExecution lastSuccessfulWorkflowExecution) {
     String phaseExecutionId = context.getWorkflowExecutionId() + phaseElement.getUuid() + phaseElement.getPhaseName();
     // go over all artifact variables of service
     // throw exception if variable does not exist in service
