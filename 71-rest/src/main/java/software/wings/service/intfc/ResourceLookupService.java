@@ -37,4 +37,6 @@ public interface ResourceLookupService {
   <T> void updateResourceLookupRecordIfNeeded(EntityAuditRecord record, String accountId, T newEntity, T oldEntity);
 
   void saveResourceLookupRecordIfNeeded(EntityAuditRecord record, String accountId);
+
+  ResourceLookup getWithResourceId(String accountId, String resourceId);
 }

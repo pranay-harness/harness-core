@@ -88,8 +88,10 @@ public class HarnessTagResource {
   @Path("attach")
   @Timed
   @ExceptionMetered
-  public RestResponse attachTag(@QueryParam("accountId") String accountId, HarnessTagLink tagLink) {
+  public RestResponse attachTag(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, HarnessTagLink tagLink) {
     tagLink.setAccountId(accountId);
+    harnessTagService.authorizeTagAttachDetach(appId, tagLink);
     harnessTagService.attachTag(tagLink);
     return new RestResponse();
   }
@@ -98,9 +100,10 @@ public class HarnessTagResource {
   @Path("detach")
   @Timed
   @ExceptionMetered
-  public RestResponse detachTag(@QueryParam("accountId") String accountId, @QueryParam("entityId") String entityId,
-      @QueryParam("key") String key) {
-    harnessTagService.detachTag(accountId, entityId, key);
+  public RestResponse detachTag(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, HarnessTagLink tagLink) {
+    harnessTagService.authorizeTagAttachDetach(appId, tagLink);
+    harnessTagService.detachTag(accountId, tagLink.getEntityId(), tagLink.getKey());
     return new RestResponse();
   }
 
@@ -111,6 +114,6 @@ public class HarnessTagResource {
   public PageResponse<HarnessTagLink> listResourcesWithTag(
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<HarnessTagLink> request) {
     request.addFilter(HarnessTagLinkKeys.accountId, IN, accountId);
-    return harnessTagService.listResourcesWithTag(request);
+    return harnessTagService.listResourcesWithTag(accountId, request);
   }
 }

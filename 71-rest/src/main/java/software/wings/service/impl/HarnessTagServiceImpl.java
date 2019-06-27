@@ -1,6 +1,11 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.govern.Switch.unhandled;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.PIPELINE;
@@ -8,6 +13,7 @@ import static software.wings.beans.EntityType.PROVISIONER;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.TRIGGER;
 import static software.wings.beans.EntityType.WORKFLOW;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
@@ -24,8 +30,14 @@ import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTag.HarnessTagKeys;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.HarnessTagLink.HarnessTagLinkKeys;
+import software.wings.beans.ResourceLookup;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.PermissionAttribute;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.HarnessTagService;
+import software.wings.service.intfc.ResourceLookupService;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -39,6 +51,8 @@ import javax.validation.executable.ValidateOnExecution;
 @Slf4j
 public class HarnessTagServiceImpl implements HarnessTagService {
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private AuthHandler authHandler;
+  @Inject private ResourceLookupService resourceLookupService;
 
   private static final Set<EntityType> supportedEntityTypes =
       ImmutableSet.of(SERVICE, ENVIRONMENT, WORKFLOW, PROVISIONER, PIPELINE, TRIGGER);
@@ -156,8 +170,32 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   }
 
   @Override
-  public PageResponse<HarnessTagLink> listResourcesWithTag(PageRequest<HarnessTagLink> request) {
-    return wingsPersistence.query(HarnessTagLink.class, request);
+  public PageResponse<HarnessTagLink> listResourcesWithTag(String accountId, PageRequest<HarnessTagLink> request) {
+    PageRequest<HarnessTagLink> pageRequest = request.copy();
+    int offset = pageRequest.getStart();
+    int limit = pageRequest.getPageSize();
+
+    pageRequest.setOffset("0");
+    pageRequest.setLimit(String.valueOf(Integer.MAX_VALUE));
+
+    PageResponse<HarnessTagLink> pageResponse = wingsPersistence.query(HarnessTagLink.class, pageRequest);
+    List<HarnessTagLink> filteredResourcesWithTag = applyAuthFilters(accountId, pageResponse.getResponse());
+
+    List<HarnessTagLink> response;
+    int total = filteredResourcesWithTag.size();
+    if (total <= offset) {
+      response = new ArrayList<>();
+    } else {
+      int endIdx = Math.min(offset + limit, total);
+      response = filteredResourcesWithTag.subList(offset, endIdx);
+    }
+
+    return aPageResponse()
+        .withResponse(response)
+        .withTotal(filteredResourcesWithTag.size())
+        .withOffset(request.getOffset())
+        .withLimit(request.getLimit())
+        .build();
   }
 
   @Override
@@ -165,6 +203,11 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     wingsPersistence.delete(wingsPersistence.createQuery(HarnessTagLink.class)
                                 .filter(HarnessTagLinkKeys.accountId, accountId)
                                 .filter(HarnessTagLinkKeys.entityId, entityId));
+  }
+
+  @Override
+  public void authorizeTagAttachDetach(String appId, HarnessTagLink tagLink) {
+    validateResourceAccess(appId, tagLink, Action.UPDATE);
   }
 
   private void sanitizeAndValidateHarnessTag(HarnessTag tag) {
@@ -264,5 +307,57 @@ public class HarnessTagServiceImpl implements HarnessTagService {
 
     return new HashSet<>(
         wingsPersistence.getCollection(HarnessTagLink.class).distinct(HarnessTagLinkKeys.value, andQuery));
+  }
+
+  private List<HarnessTagLink> applyAuthFilters(String accountId, List<HarnessTagLink> tagLinks) {
+    List<HarnessTagLink> filteredTagLinks = new ArrayList<>();
+
+    if (tagLinks == null) {
+      return filteredTagLinks;
+    }
+
+    tagLinks.forEach(tagLink -> {
+      try {
+        ResourceLookup resourceLookup = resourceLookupService.getWithResourceId(accountId, tagLink.getEntityId());
+
+        if (resourceLookup != null) {
+          validateResourceAccess(resourceLookup.getAppId(), tagLink, Action.READ);
+          filteredTagLinks.add(tagLink);
+        }
+      } catch (Exception ex) {
+        // Exception is thrown if the user does not have permissions on the entity
+      }
+    });
+
+    return filteredTagLinks;
+  }
+
+  private void validateResourceAccess(String appId, HarnessTagLink tagLink, Action action) {
+    notNullCheck("appId cannot be null", appId);
+
+    PermissionType permissionType = getPermissionType(tagLink.getEntityType());
+    PermissionAttribute permissionAttribute = new PermissionAttribute(permissionType, action);
+
+    authHandler.authorize(asList(permissionAttribute), asList(appId), tagLink.getEntityId());
+  }
+
+  private PermissionType getPermissionType(EntityType entityType) {
+    PermissionType permissionType;
+
+    switch (entityType) {
+      case SERVICE:
+        permissionType = PermissionType.SERVICE;
+        break;
+
+      case ENVIRONMENT:
+        permissionType = PermissionType.ENV;
+        break;
+
+      default:
+        unhandled(entityType);
+        throw new InvalidRequestException(format("Unsupported entity type %s for tags", entityType), USER);
+    }
+
+    return permissionType;
   }
 }
