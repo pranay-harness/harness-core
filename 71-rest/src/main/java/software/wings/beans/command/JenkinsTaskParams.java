@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JenkinsSubTaskType;
+import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
@@ -30,6 +31,6 @@ public class JenkinsTaskParams implements ExecutionCapabilityDemander {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return jenkinsConfig.fetchRequiredExecutionCapabilities();
+    return CapabilityHelper.generateDelegateCapabilities(jenkinsConfig, encryptedDataDetails);
   }
 }
