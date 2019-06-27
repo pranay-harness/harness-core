@@ -806,19 +806,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     } else if (allInstancesIdMap.values().stream().anyMatch(i -> i.getStatus() == ExecutionStatus.WAITING)) {
       treeBuilder.overrideStatus(ExecutionStatus.WAITING);
     } else {
-      if (allInstancesIdMap.values().stream().anyMatch(
-              i -> i.getStatus() == ExecutionStatus.PAUSED || i.getStatus() == ExecutionStatus.PAUSING)) {
+      List<ExecutionInterrupt> executionInterrupts =
+          executionInterruptManager.checkForExecutionInterrupt(appId, workflowExecutionId);
+      if (executionInterrupts != null
+          && executionInterrupts.stream().anyMatch(
+                 e -> e.getExecutionInterruptType() == ExecutionInterruptType.PAUSE_ALL)) {
         treeBuilder.overrideStatus(ExecutionStatus.PAUSED);
-      } else if (allInstancesIdMap.values().stream().anyMatch(i -> i.getStatus() == ExecutionStatus.WAITING)) {
-        treeBuilder.overrideStatus(ExecutionStatus.WAITING);
-      } else {
-        List<ExecutionInterrupt> executionInterrupts =
-            executionInterruptManager.checkForExecutionInterrupt(appId, workflowExecutionId);
-        if (executionInterrupts != null
-            && executionInterrupts.stream().anyMatch(
-                   e -> e.getExecutionInterruptType() == ExecutionInterruptType.PAUSE_ALL)) {
-          treeBuilder.overrideStatus(ExecutionStatus.PAUSED);
-        }
       }
     }
 
