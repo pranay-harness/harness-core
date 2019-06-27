@@ -175,6 +175,12 @@ public class TemplateHelper {
             break;
           }
         }
+        if (variable.getType() != null) {
+          if (!variable.getType().equals(oldVariable.getType())) {
+            variablesChanged = true;
+            break;
+          }
+        }
         oldVariablesMap.remove(variable.getName());
       } else {
         // New variable added check if any default value present

@@ -1535,6 +1535,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     if (commandUnitDiff.hasChanges()
+        || isCommandUnitsSizeChanged(newcommand.getCommandUnits(), oldCommand.getCommandUnits())
         || isCommandUnitsOrderChanged(newcommand.getCommandUnits(), oldCommand.getCommandUnits()) || variablesChanged
         || fromTemplate) {
       EntityVersion entityVersion =
@@ -2001,6 +2002,15 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         List<String> oldCommandNames =
             oldCommandUnits.stream().map(oldCommandUnit -> oldCommandUnit.getName()).collect(toList());
         return !commandNames.equals(oldCommandNames);
+      }
+    }
+    return false;
+  }
+
+  private boolean isCommandUnitsSizeChanged(List<CommandUnit> commandUnits, List<CommandUnit> oldCommandUnits) {
+    if (commandUnits != null && oldCommandUnits != null) {
+      if (commandUnits.size() != oldCommandUnits.size()) {
+        return true;
       }
     }
     return false;

@@ -1,14 +1,18 @@
 package software.wings.beans;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 
 import java.util.List;
 import java.util.Map;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class ArtifactVariable extends Variable {
   private EntityType entityType;

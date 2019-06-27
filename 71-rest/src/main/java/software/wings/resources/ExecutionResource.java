@@ -3,6 +3,8 @@ package software.wings.resources;
 import static io.harness.beans.SearchFilter.Operator.GE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
@@ -18,6 +20,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.WorkflowType;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.harness.state.inspection.StateInspection;
@@ -27,6 +30,7 @@ import io.swagger.annotations.Api;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.ApprovalAuthorization;
 import software.wings.beans.ApprovalDetails;
+import software.wings.beans.ArtifactVariable;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GraphNode;
 import software.wings.beans.RequiredExecutionArgs;
@@ -188,6 +192,16 @@ public class ExecutionResource {
           authService.checkIfUserAllowedToDeployToEnv(appId, envId);
         } else if (executionArgs.getPipelineId() != null) {
           authHandler.authorize(permissionAttributeList, asList(appId), executionArgs.getPipelineId());
+        }
+      }
+    }
+    if (executionArgs != null) {
+      if (isNotEmpty(executionArgs.getArtifactVariables())) {
+        for (ArtifactVariable artifactVariable : executionArgs.getArtifactVariables()) {
+          if (isEmpty(artifactVariable.getValue())) {
+            throw new InvalidRequestException(
+                format("No value provided for artifact variable: [%s] ", artifactVariable.getName()), USER);
+          }
         }
       }
     }
