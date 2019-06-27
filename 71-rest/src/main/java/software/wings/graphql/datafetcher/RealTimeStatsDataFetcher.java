@@ -30,13 +30,19 @@ import software.wings.graphql.schema.type.aggregation.QLStackedData;
 import software.wings.graphql.schema.type.aggregation.QLStackedDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLStringFilter;
 import software.wings.graphql.schema.type.aggregation.QLStringFilterType;
+import software.wings.graphql.utils.nameservice.NameResult;
+import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.FlatEntitySummaryStats;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public abstract class RealTimeStatsDataFetcher<A, F, G, T> extends AbstractStatsDataFetcher<A, F, G, T> {
   @Inject protected WingsPersistence wingsPersistence;
+  @Inject protected NameService nameService;
 
   protected QLData getStackedData(List<String> groupBy, Class entityClass, Query query) {
     String firstLevelAggregation = groupBy.get(0);
@@ -57,7 +63,7 @@ public abstract class RealTimeStatsDataFetcher<A, F, G, T> extends AbstractStats
                     projection("name", secondLevelEntityIdColumn))))
         .sort(ascending("_id." + entityIdColumn), ascending("_id." + secondLevelEntityIdColumn), descending("count"))
         .aggregate(TwoLevelAggregatedData.class)
-        .forEachRemaining(twoLevelAggregatedData -> { aggregatedDataList.add(twoLevelAggregatedData); });
+        .forEachRemaining(aggregatedDataList::add);
 
     return getStackedData(aggregatedDataList, firstLevelAggregation, secondLevelAggregation);
   }
@@ -66,7 +72,7 @@ public abstract class RealTimeStatsDataFetcher<A, F, G, T> extends AbstractStats
     String firstLevelAggregation = groupBy.get(0);
     String entityIdColumn = getAggregationFieldName(firstLevelAggregation);
     List<QLDataPoint> dataPoints = new ArrayList<>();
-
+    List<FlatEntitySummaryStats> summaryStats = new ArrayList<>();
     wingsPersistence.getDatastore(entityClass)
         .createAggregation(entityClass)
         .match(query)
@@ -74,17 +80,36 @@ public abstract class RealTimeStatsDataFetcher<A, F, G, T> extends AbstractStats
         .project(projection("_id").suppress(), projection("entityId", "_id." + entityIdColumn),
             projection("entityName", "_id." + entityIdColumn), projection("count"))
         .aggregate(FlatEntitySummaryStats.class)
-        .forEachRemaining(flatEntitySummaryStats -> {
-          QLDataPoint dataPoint = getDataPoint(flatEntitySummaryStats, firstLevelAggregation);
-          dataPoints.add(dataPoint);
-        });
+        .forEachRemaining(summaryStats::add);
 
+    return getQlAggregatedData(firstLevelAggregation, dataPoints, summaryStats);
+  }
+
+  protected QLAggregatedData getQlAggregatedData(
+      String firstLevelAggregation, List<QLDataPoint> dataPoints, List<FlatEntitySummaryStats> summaryStats) {
+    Set<String> ids = summaryStats.stream().map(FlatEntitySummaryStats::getEntityId).collect(Collectors.toSet());
+    NameResult nameResult = nameService.getNames(ids, firstLevelAggregation);
+    summaryStats.forEach(getFlatEntitySummaryStatsConsumer(firstLevelAggregation, dataPoints, nameResult));
     return QLAggregatedData.builder().dataPoints(dataPoints).build();
+  }
+
+  @NotNull
+  protected Consumer<FlatEntitySummaryStats> getFlatEntitySummaryStatsConsumer(
+      String firstLevelAggregation, List<QLDataPoint> dataPoints, NameResult nameResult) {
+    return flatEntitySummaryStats -> {
+      QLDataPoint dataPoint = getDataPoint(flatEntitySummaryStats, firstLevelAggregation, nameResult);
+      dataPoints.add(dataPoint);
+    };
   }
 
   protected QLData getSingleDataPointData(Query query) {
     long count = query.count();
-    return QLSinglePointData.builder().dataPoint(QLDataPoint.builder().value(count).build()).build();
+    return QLSinglePointData.builder()
+        .dataPoint(QLDataPoint.builder()
+                       .key(QLReference.builder().name(getEntityType()).id(getEntityType()).build())
+                       .value(count)
+                       .build())
+        .build();
   }
 
   protected QLData getQLData(
@@ -152,12 +177,24 @@ public abstract class RealTimeStatsDataFetcher<A, F, G, T> extends AbstractStats
       List<TwoLevelAggregatedData> aggregatedDataList, String firstLevelType, String secondLevelType) {
     QLStackedDataPoint prevStackedDataPoint = null;
     List<QLStackedDataPoint> stackedDataPointList = new ArrayList<>();
+
+    Set<String> firstLevelIds = aggregatedDataList.stream()
+                                    .map(aggregationData -> aggregationData.getFirstLevelInfo().getId())
+                                    .collect(Collectors.toSet());
+
+    Set<String> secondLevelIds = aggregatedDataList.stream()
+                                     .map(aggregationData -> aggregationData.getSecondLevelInfo().getId())
+                                     .collect(Collectors.toSet());
+
+    NameResult firstLevelNameResult = nameService.getNames(firstLevelIds, firstLevelType);
+    NameResult secondLevelNameResult = nameService.getNames(secondLevelIds, secondLevelType);
+
     for (TwoLevelAggregatedData aggregatedData : aggregatedDataList) {
       EntitySummary firstLevelInfo = aggregatedData.getFirstLevelInfo();
       EntitySummary secondLevelInfo = aggregatedData.getSecondLevelInfo();
       QLReference secondLevelRef = QLReference.builder()
                                        .type(secondLevelType)
-                                       .name(secondLevelInfo.getName())
+                                       .name(getName(secondLevelNameResult, secondLevelInfo.getId(), secondLevelType))
                                        .id(secondLevelInfo.getId())
                                        .build();
       QLDataPoint secondLevelDataPoint =
@@ -170,7 +207,7 @@ public abstract class RealTimeStatsDataFetcher<A, F, G, T> extends AbstractStats
       } else {
         QLReference firstLevelRef = QLReference.builder()
                                         .type(firstLevelType)
-                                        .name(firstLevelInfo.getName())
+                                        .name(getName(firstLevelNameResult, firstLevelInfo.getId(), firstLevelType))
                                         .id(firstLevelInfo.getId())
                                         .build();
         prevStackedDataPoint =

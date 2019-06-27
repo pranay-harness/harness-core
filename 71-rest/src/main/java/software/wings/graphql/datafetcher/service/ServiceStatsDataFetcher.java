@@ -11,6 +11,7 @@ import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.service.QLServiceAggregation;
 import software.wings.graphql.schema.type.aggregation.service.QLServiceFilter;
 import software.wings.graphql.schema.type.aggregation.service.QLServiceFilterType;
+import software.wings.graphql.utils.nameservice.NameService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,5 +64,10 @@ public class ServiceStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggregat
       default:
         throw new WingsException("Unknown aggregation type" + aggregation);
     }
+  }
+
+  @Override
+  public String getEntityType() {
+    return NameService.service;
   }
 }

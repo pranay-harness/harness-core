@@ -16,6 +16,7 @@ import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.cloudprovider.QLCloudProviderAggregation;
 import software.wings.graphql.schema.type.aggregation.cloudprovider.QLCloudProviderFilter;
 import software.wings.graphql.schema.type.aggregation.cloudprovider.QLCloudProviderFilterType;
+import software.wings.graphql.utils.nameservice.NameService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,5 +75,10 @@ public class CloudProviderStatsDataFetcher extends SettingsAttributeStatsDataFet
       default:
         throw new WingsException("Unknown aggregation type" + aggregation);
     }
+  }
+
+  @Override
+  public String getEntityType() {
+    return NameService.cloudProvider;
   }
 }

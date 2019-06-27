@@ -16,6 +16,7 @@ import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.trigger.QLTriggerAggregation;
 import software.wings.graphql.schema.type.aggregation.trigger.QLTriggerFilter;
 import software.wings.graphql.schema.type.aggregation.trigger.QLTriggerFilterType;
+import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.service.intfc.AppService;
 
 import java.util.ArrayList;
@@ -75,5 +76,10 @@ public class TriggerStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggregat
       default:
         throw new WingsException("Unknown aggregation type" + aggregation);
     }
+  }
+
+  @Override
+  public String getEntityType() {
+    return NameService.trigger;
   }
 }

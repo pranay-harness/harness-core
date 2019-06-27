@@ -16,6 +16,7 @@ import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.connector.QLConnectorAggregation;
 import software.wings.graphql.schema.type.aggregation.connector.QLConnectorFilter;
 import software.wings.graphql.schema.type.aggregation.connector.QLConnectorFilterType;
+import software.wings.graphql.utils.nameservice.NameService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,5 +75,10 @@ public class ConnectorStatsDataFetcher extends SettingsAttributeStatsDataFetcher
       default:
         throw new WingsException("Unknown aggregation type" + aggregation);
     }
+  }
+
+  @Override
+  public String getEntityType() {
+    return NameService.connector;
   }
 }

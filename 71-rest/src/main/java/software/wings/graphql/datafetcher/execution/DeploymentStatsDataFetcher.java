@@ -54,6 +54,7 @@ import software.wings.graphql.schema.type.aggregation.QLTimeSeriesDataPoint.QLTi
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentAggregation;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentFilter;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentFilterType;
+import software.wings.graphql.utils.nameservice.NameService;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -316,7 +317,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
       }
       builder.dataPoint(QLDataPoint.builder()
                             .value(data)
-                            .key(QLReference.builder().type(schema.getDeploymentTable().getName()).build())
+                            .key(QLReference.builder().type(getEntityType()).id(getEntityType()).build())
                             .build());
     }
     return builder.build();
@@ -719,6 +720,11 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
       default:
         return FunctionCall.max();
     }
+  }
+
+  @Override
+  public String getEntityType() {
+    return NameService.deployment;
   }
 
   //  public static void main(String[] args) {

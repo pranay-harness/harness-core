@@ -35,24 +35,16 @@ import javax.validation.constraints.NotNull;
 public class NameServiceImpl implements NameService {
   @Inject WingsPersistence wingsPersistence;
 
-  private static final String application = "Application";
-  private static final String service = "Service";
-  private static final String environment = "Environment";
-  private static final String cloudProvider = "CloudProvider";
-  private static final String status = "Status";
-  private static final String triggeredBy = "TriggeredBy";
-  private static final String triggerId = "TriggerId";
-  private static final String workflow = "Workflow";
-  private static final String pipeline = "Pipeline";
-  private static final String instanceType = "InstanceType";
-
   @Override
   public NameResult getNames(@NotNull Set<String> ids, @NotNull String type) {
     NameResultBuilder nameResultBuilder = NameResult.builder();
     switch (type) {
       case instanceType:
       case status:
-        return nameResultBuilder.type(type).nameMap(ids.stream().collect(Collectors.toMap(id -> id, id -> id))).build();
+      case artifactType:
+        return nameResultBuilder.type(type)
+            .idNameMap(ids.stream().collect(Collectors.toMap(id -> id, id -> id)))
+            .build();
       default:
         return getData(type, ids);
     }
@@ -77,7 +69,7 @@ public class NameServiceImpl implements NameService {
         return getWorkflowNames(ids);
       default:
         logger.warn("Unsupported type :[{}]", type);
-        return NameResult.builder().type(type).notFoundNames(ids).build();
+        return NameResult.builder().type(type).build();
     }
   }
 
@@ -89,11 +81,8 @@ public class NameServiceImpl implements NameService {
         .field(ApplicationKeys.uuid)
         .in(ids)
         .fetch()
-        .forEachRemaining(application -> {
-          names.put(application.getUuid(), application.getName());
-          ids.remove(application.getUuid());
-        });
-    return nameResultBuilder.nameMap(names).notFoundNames(ids).build();
+        .forEachRemaining(application -> { names.put(application.getUuid(), application.getName()); });
+    return nameResultBuilder.idNameMap(names).build();
   }
 
   private NameResult getServiceNames(Set<String> ids) {
@@ -104,11 +93,8 @@ public class NameServiceImpl implements NameService {
         .field(ServiceKeys.uuid)
         .in(ids)
         .fetch()
-        .forEachRemaining(service -> {
-          names.put(service.getUuid(), service.getName());
-          ids.remove(service.getUuid());
-        });
-    return nameResultBuilder.nameMap(names).notFoundNames(ids).build();
+        .forEachRemaining(service -> { names.put(service.getUuid(), service.getName()); });
+    return nameResultBuilder.idNameMap(names).build();
   }
 
   private NameResult getEnvironmentNames(Set<String> ids) {
@@ -119,11 +105,8 @@ public class NameServiceImpl implements NameService {
         .field(EnvironmentKeys.uuid)
         .in(ids)
         .fetch()
-        .forEachRemaining(environment -> {
-          names.put(environment.getUuid(), environment.getName());
-          ids.remove(environment.getUuid());
-        });
-    return nameResultBuilder.nameMap(names).notFoundNames(ids).build();
+        .forEachRemaining(environment -> { names.put(environment.getUuid(), environment.getName()); });
+    return nameResultBuilder.idNameMap(names).build();
   }
 
   private NameResult getCloudProviderNames(Set<String> ids) {
@@ -136,11 +119,8 @@ public class NameServiceImpl implements NameService {
         .field(SettingAttributeKeys.uuid)
         .in(ids)
         .fetch()
-        .forEachRemaining(cloudProvider -> {
-          names.put(cloudProvider.getUuid(), cloudProvider.getName());
-          ids.remove(cloudProvider.getUuid());
-        });
-    return nameResultBuilder.nameMap(names).notFoundNames(ids).build();
+        .forEachRemaining(cloudProvider -> { names.put(cloudProvider.getUuid(), cloudProvider.getName()); });
+    return nameResultBuilder.idNameMap(names).build();
   }
 
   private NameResult getTriggerNames(Set<String> ids) {
@@ -151,11 +131,8 @@ public class NameServiceImpl implements NameService {
         .field(TriggerKeys.uuid)
         .in(ids)
         .fetch()
-        .forEachRemaining(trigger -> {
-          names.put(trigger.getUuid(), trigger.getName());
-          ids.remove(trigger.getUuid());
-        });
-    return nameResultBuilder.nameMap(names).notFoundNames(ids).build();
+        .forEachRemaining(trigger -> { names.put(trigger.getUuid(), trigger.getName()); });
+    return nameResultBuilder.idNameMap(names).build();
   }
 
   private NameResult getUserNames(Set<String> ids) {
@@ -166,11 +143,8 @@ public class NameServiceImpl implements NameService {
         .field("_id")
         .in(ids)
         .fetch()
-        .forEachRemaining(user -> {
-          names.put(user.getUuid(), user.getName());
-          ids.remove(user.getUuid());
-        });
-    return nameResultBuilder.nameMap(names).notFoundNames(ids).build();
+        .forEachRemaining(user -> { names.put(user.getUuid(), user.getName()); });
+    return nameResultBuilder.idNameMap(names).build();
   }
 
   private NameResult getWorkflowNames(Set<String> ids) {
@@ -181,10 +155,7 @@ public class NameServiceImpl implements NameService {
         .field(WorkflowKeys.uuid)
         .in(ids)
         .fetch()
-        .forEachRemaining(user -> {
-          names.put(user.getUuid(), user.getName());
-          ids.remove(user.getUuid());
-        });
-    return nameResultBuilder.nameMap(names).notFoundNames(ids).build();
+        .forEachRemaining(user -> { names.put(user.getUuid(), user.getName()); });
+    return nameResultBuilder.idNameMap(names).build();
   }
 }

@@ -30,6 +30,7 @@ import software.wings.graphql.schema.type.aggregation.QLNumberOperator;
 import software.wings.graphql.schema.type.aggregation.QLReference;
 import software.wings.graphql.schema.type.aggregation.QLStringFilter;
 import software.wings.graphql.schema.type.aggregation.QLStringOperator;
+import software.wings.graphql.utils.nameservice.NameResult;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.FlatEntitySummaryStats;
 
 import java.lang.reflect.ParameterizedType;
@@ -241,6 +242,24 @@ public abstract class AbstractStatsDataFetcher<A, F, G, T> implements DataFetche
         QLReference.builder().type(entityType).name(stats.getEntityName()).id(stats.getEntityId()).build();
     return QLDataPoint.builder().value(stats.getCount()).key(qlReference).build();
   }
+
+  protected QLDataPoint getDataPoint(FlatEntitySummaryStats stats, String entityType, NameResult nameResult) {
+    QLReference qlReference = QLReference.builder()
+                                  .type(entityType)
+                                  .name(getName(nameResult, stats.getEntityId(), entityType))
+                                  .id(stats.getEntityId())
+                                  .build();
+    return QLDataPoint.builder().value(stats.getCount()).key(qlReference).build();
+  }
+
+  protected String getName(NameResult nameResult, String id, String type) {
+    if (nameResult.getIdNameMap().containsKey(id)) {
+      return nameResult.getIdNameMap().get(id);
+    }
+    return NameResult.DELETED;
+  }
+
+  public abstract String getEntityType();
 
   @Value
   @Builder
