@@ -1,7 +1,7 @@
 Change Defaults
 ---------------
 
-To change CPU, memory, portMappings, or hostName, edit the default values in harness-ecs-delegate.json.
+To change CPU, memory, portMappings, or hostName, edit the default values in ecs-task-spec.json.
 
 You can also change any other JSON fields as needed.
 
@@ -9,6 +9,19 @@ Network Mode
 ------------
 
 If you select "awsvpc" as network mode, the ECS console will request network configuration info when you run the Delegate task or service, including subnets, security groups, and public IP (for Fargate launch type).
+
+
+FARGATE Launch type
+-------------------
+
+To run the ECS Delegate task with a FARGETE launch type, select "Use AWS VPC Mode" when downloading the Delegate.
+
+Update the ECS task spec with following changes:
+- Set "requiresCompatibilities" to "FARGATE" instead of "EC2"
+- Add "executionRoleArn" to the ECS task spec. This is needed by FARGETE launch types.
+
+Note: If you change the default CPU or memory settings, follow the steps in this document to avoid any invalid CPU
+or memory errors: https://docs.aws.amazon.com/AmazonECS/latest/userguide/task-cpu-memory-error.html.
 
 Install and Run the ECS Delegate
 --------------------------------
