@@ -98,6 +98,14 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
   }
 
   @Override
+  public ResourceLookup getWithResourceId(String accountId, String resourceId) {
+    return wingsPersistence.createQuery(ResourceLookup.class)
+        .filter(ResourceLookupKeys.resourceId, resourceId)
+        .filter(ResourceLookupKeys.accountId, accountId)
+        .get();
+  }
+
+  @Override
   public void updateResourceName(ResourceLookup resourceLookup) {
     if (resourceLookup == null) {
       return;

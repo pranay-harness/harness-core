@@ -18,6 +18,7 @@ public interface HarnessTagService {
   void delete(@NotNull HarnessTag tag);
   void attachTag(HarnessTagLink tagLink);
   void detachTag(@NotBlank String accountId, @NotBlank String entityId, @NotBlank String key);
-  PageResponse<HarnessTagLink> listResourcesWithTag(PageRequest<HarnessTagLink> request);
+  PageResponse<HarnessTagLink> listResourcesWithTag(String accountId, PageRequest<HarnessTagLink> request);
   void pruneTagLinks(String accountId, String entityId);
+  void authorizeTagAttachDetach(String appId, HarnessTagLink tagLink);
 }

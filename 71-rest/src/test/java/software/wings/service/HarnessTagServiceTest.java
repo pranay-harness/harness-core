@@ -3,7 +3,9 @@ package software.wings.service;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
@@ -22,8 +24,10 @@ import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTagLink;
+import software.wings.beans.ResourceLookup;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.HarnessTagServiceImpl;
+import software.wings.service.intfc.ResourceLookupService;
 
 import java.util.HashSet;
 
@@ -31,6 +35,8 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   private static final String TEST_ACCOUNT_ID = "TEST_ACCOUNT_ID";
 
   @Mock private MainConfiguration mainConfiguration;
+  @Mock private ResourceLookupService resourceLookupService;
+
   @Inject @InjectMocks @Spy private HarnessTagServiceImpl harnessTagService;
 
   @Inject private WingsPersistence wingsPersistence;
@@ -138,6 +144,9 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void attachTagSmokeTest() {
+    when(resourceLookupService.getWithResourceId(TEST_ACCOUNT_ID, "id"))
+        .thenReturn(ResourceLookup.builder().appId(APP_ID).build());
+
     harnessTagService.attachTag(HarnessTagLink.builder()
                                     .accountId(TEST_ACCOUNT_ID)
                                     .entityId("id")
@@ -151,7 +160,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
     request.addFilter("accountId", EQ, TEST_ACCOUNT_ID);
     request.addFilter("key", EQ, colorTagKey);
     request.addFilter("value", EQ, "red");
-    PageResponse<HarnessTagLink> resources = harnessTagService.listResourcesWithTag(request);
+    PageResponse<HarnessTagLink> resources = harnessTagService.listResourcesWithTag(TEST_ACCOUNT_ID, request);
 
     assertThat(resources).isNotNull();
     assertThat(resources.getResponse()).hasSize(1);
@@ -174,11 +183,14 @@ public class HarnessTagServiceTest extends WingsBaseTest {
 
     harnessTagService.attachTag(tagLink);
 
+    when(resourceLookupService.getWithResourceId(TEST_ACCOUNT_ID, "id"))
+        .thenReturn(ResourceLookup.builder().appId(APP_ID).build());
+
     PageRequest<HarnessTagLink> requestColorRed = new PageRequest<>();
     requestColorRed.addFilter("accountId", EQ, TEST_ACCOUNT_ID);
     requestColorRed.addFilter("key", EQ, colorTagKey);
     requestColorRed.addFilter("value", EQ, "red");
-    PageResponse<HarnessTagLink> resources = harnessTagService.listResourcesWithTag(requestColorRed);
+    PageResponse<HarnessTagLink> resources = harnessTagService.listResourcesWithTag(TEST_ACCOUNT_ID, requestColorRed);
     assertThat(resources).isNotNull();
     assertThat(resources.getResponse()).hasSize(1);
     assertThat(resources.getResponse().get(0).getKey()).isEqualTo(colorTagKey);
@@ -189,14 +201,14 @@ public class HarnessTagServiceTest extends WingsBaseTest {
     tagLink.setValue("blue");
     harnessTagService.attachTag(tagLink);
 
-    resources = harnessTagService.listResourcesWithTag(requestColorRed);
+    resources = harnessTagService.listResourcesWithTag(TEST_ACCOUNT_ID, requestColorRed);
     assertThat(resources.getResponse()).isEmpty();
 
     PageRequest<HarnessTagLink> requestColorBlue = new PageRequest<>();
     requestColorBlue.addFilter("accountId", EQ, TEST_ACCOUNT_ID);
     requestColorBlue.addFilter("key", EQ, colorTagKey);
     requestColorRed.addFilter("value", EQ, "blue");
-    resources = harnessTagService.listResourcesWithTag(requestColorBlue);
+    resources = harnessTagService.listResourcesWithTag(TEST_ACCOUNT_ID, requestColorBlue);
 
     assertThat(resources).isNotNull();
     assertThat(resources.getResponse()).hasSize(1);
@@ -221,7 +233,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
     PageRequest<HarnessTagLink> request = new PageRequest<>();
     request.addFilter("accountId", EQ, TEST_ACCOUNT_ID);
     request.addFilter("key", EQ, colorTagKey);
-    PageResponse<HarnessTagLink> resources = harnessTagService.listResourcesWithTag(request);
+    PageResponse<HarnessTagLink> resources = harnessTagService.listResourcesWithTag(TEST_ACCOUNT_ID, request);
 
     try {
       harnessTagService.delete(colorTag);
