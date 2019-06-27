@@ -11,6 +11,7 @@ import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentAggregation;
 import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentFilter;
 import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentFilterType;
+import software.wings.graphql.utils.nameservice.NameService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,5 +66,10 @@ public class EnvironmentStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggr
       default:
         throw new WingsException("Unknown aggregation type" + aggregation);
     }
+  }
+
+  @Override
+  public String getEntityType() {
+    return NameService.environment;
   }
 }

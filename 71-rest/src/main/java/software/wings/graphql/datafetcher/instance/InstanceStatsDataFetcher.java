@@ -15,7 +15,6 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.graphql.datafetcher.RealTimeStatsDataFetcher;
 import software.wings.graphql.schema.type.aggregation.QLAggregateFunction;
-import software.wings.graphql.schema.type.aggregation.QLAggregatedData;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
@@ -24,6 +23,7 @@ import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceAggregation;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceFilter;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceFilterType;
+import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.FlatEntitySummaryStats;
 
 import java.util.ArrayList;
@@ -73,6 +73,7 @@ public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggrega
         String entityNameColumn = getNameField(firstLevelAggregation);
         String function = getAggregateFunction(aggregateFunction);
         List<QLDataPoint> dataPoints = new ArrayList<>();
+        List<FlatEntitySummaryStats> summaryStats = new ArrayList<>();
 
         wingsPersistence.getDatastore(Instance.class)
             .createAggregation(Instance.class)
@@ -82,11 +83,10 @@ public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggrega
             .project(projection("_id").suppress(), projection("entityId", "_id." + entityIdColumn),
                 projection("entityName", entityNameColumn), projection("count"))
             .aggregate(FlatEntitySummaryStats.class)
-            .forEachRemaining(flatEntitySummaryStats -> {
-              QLDataPoint dataPoint = getDataPoint(flatEntitySummaryStats, firstLevelAggregation.name());
-              dataPoints.add(dataPoint);
-            });
-        return QLAggregatedData.builder().dataPoints(dataPoints).build();
+            .forEachRemaining(summaryStats::add);
+
+        return getQlAggregatedData(firstLevelAggregation.name(), dataPoints, summaryStats);
+
       } else if (groupBy.size() == 2) {
         QLInstanceAggregation firstLevelAggregation = groupBy.get(0);
         QLInstanceAggregation secondLevelAggregation = groupBy.get(1);
@@ -174,5 +174,10 @@ public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggrega
       default:
         throw new WingsException("Unknown aggregation type" + aggregation);
     }
+  }
+
+  @Override
+  public String getEntityType() {
+    return NameService.instance;
   }
 }

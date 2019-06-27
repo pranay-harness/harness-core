@@ -26,7 +26,7 @@ public abstract class SettingsAttributeStatsDataFetcher<A, F, G, T> extends Real
       idField = Group.id(grouping(entityIdFields[entityIdFields.length - 1], entityIdColumn));
     }
     List<QLDataPoint> dataPoints = new ArrayList<>();
-
+    List<FlatEntitySummaryStats> summaryStats = new ArrayList<>();
     final AggregationPipeline aggregationPipeline =
         wingsPersistence.getDatastore(entityClass)
             .createAggregation(entityClass)
@@ -35,11 +35,7 @@ public abstract class SettingsAttributeStatsDataFetcher<A, F, G, T> extends Real
             .project(projection("_id").suppress(),
                 projection("entityId", "_id." + entityIdFields[entityIdFields.length - 1]),
                 projection("entityName", "_id." + entityIdFields[entityIdFields.length - 1]), projection("count"));
-    aggregationPipeline.aggregate(FlatEntitySummaryStats.class).forEachRemaining(flatEntitySummaryStats -> {
-      QLDataPoint dataPoint = getDataPoint(flatEntitySummaryStats, firstLevelAggregation);
-      dataPoints.add(dataPoint);
-    });
-
-    return QLAggregatedData.builder().dataPoints(dataPoints).build();
+    aggregationPipeline.aggregate(FlatEntitySummaryStats.class).forEachRemaining(summaryStats::add);
+    return getQlAggregatedData(firstLevelAggregation, dataPoints, summaryStats);
   }
 }

@@ -8,6 +8,7 @@ import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.application.QLApplicationAggregation;
 import software.wings.graphql.schema.type.aggregation.application.QLApplicationFilter;
+import software.wings.graphql.utils.nameservice.NameService;
 
 import java.util.List;
 
@@ -20,5 +21,10 @@ public class ApplicationStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggr
     query.filter("accountId", accountId);
 
     return getSingleDataPointData(query);
+  }
+
+  @Override
+  public String getEntityType() {
+    return NameService.application;
   }
 }

@@ -4,12 +4,11 @@ import lombok.Builder;
 import lombok.Value;
 
 import java.util.Map;
-import java.util.Set;
 
 @Value
 @Builder
 public class NameResult {
-  Map<String, String> nameMap;
+  public static final String DELETED = "DELETED";
+  Map<String, String> idNameMap;
   String type;
-  Set<String> notFoundNames;
 }
