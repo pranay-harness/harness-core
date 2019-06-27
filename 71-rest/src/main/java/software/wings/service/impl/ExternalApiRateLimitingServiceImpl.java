@@ -16,7 +16,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class ExternalApiRateLimitingServiceImpl implements ExternalApiRateLimitingService {
   private static final Duration CACHE_EXPIRATION = Duration.ofMinutes(2);
-  //TODO this needs to be removed when generic rate limiting is implemented.
+  // TODO this needs to be removed when generic rate limiting is implemented.
   private static final double MAX_QPM_PER_MANAGER = 1000;
   private static final LoadingCache<String, RateLimiter> limiters =
       CacheBuilder.newBuilder()

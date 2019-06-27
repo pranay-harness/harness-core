@@ -1,14 +1,19 @@
 package software.wings.security.authentication;
 
+/**
+ * See `SimpleUrlBuilderTest` for usage example.
+ * For anything more sophisticated prefer {@link org.apache.http.client.utils.URIBuilder}
+ */
 public class SimpleUrlBuilder {
-  private StringBuilder builder;
+  private String url;
   private boolean hasQueryParams;
 
   public SimpleUrlBuilder(String baseUrl) {
-    this.builder = new StringBuilder(baseUrl);
+    this.url = baseUrl;
   }
 
   public SimpleUrlBuilder addQueryParam(String key, String value) {
+    StringBuilder builder = new StringBuilder();
     if (this.hasQueryParams) {
       builder.append('&');
     } else {
@@ -16,11 +21,14 @@ public class SimpleUrlBuilder {
     }
 
     builder.append(key).append('=').append(value);
+
     this.hasQueryParams = true;
+    this.url += builder.toString();
+
     return this;
   }
 
   public String build() {
-    return this.builder.toString();
+    return this.url;
   }
 }
