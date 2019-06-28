@@ -44,6 +44,7 @@ import software.wings.graphql.schema.type.aggregation.QLStackedTimeSeriesData;
 import software.wings.graphql.schema.type.aggregation.QLStackedTimeSeriesData.QLStackedTimeSeriesDataBuilder;
 import software.wings.graphql.schema.type.aggregation.QLStackedTimeSeriesDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLStackedTimeSeriesDataPoint.QLStackedTimeSeriesDataPointBuilder;
+import software.wings.graphql.schema.type.aggregation.QLStringOperator;
 import software.wings.graphql.schema.type.aggregation.QLTimeDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLTimeDataPoint.QLTimeDataPointBuilder;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
@@ -500,7 +501,23 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
 
   private void addSimpleStringFilter(SelectQuery selectQuery, QLDeploymentFilter filter) {
     DbColumn key = getFilterKey(filter.getType());
-    switch (filter.getStringFilter().getOperator()) {
+    QLStringOperator operator = filter.getStringFilter().getOperator();
+    QLStringOperator finalOperator = operator;
+    if (filter.getStringFilter().getValues().length > 0) {
+      switch (operator) {
+        case EQUALS:
+          finalOperator = QLStringOperator.IN;
+          logger.info("Changing simpleStringOperator from [{}] to [{}]", operator, finalOperator);
+          break;
+        case NOT_EQUALS:
+          finalOperator = QLStringOperator.NOT_IN;
+          logger.info("Changing simpleStringOperator from [{}] to [{}]", operator, finalOperator);
+          break;
+        default:
+          finalOperator = operator;
+      }
+    }
+    switch (finalOperator) {
       case EQUALS:
         selectQuery.addCondition(BinaryCondition.equalTo(key, filter.getStringFilter().getValues()[0]));
         break;
@@ -514,7 +531,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
         selectQuery.addCondition(new InCondition(key, (Object[]) filter.getStringFilter().getValues()).setNegate(true));
         break;
       default:
-        throw new RuntimeException("String simple operator not supported" + filter.getStringFilter().getOperator());
+        throw new RuntimeException("String simple operator not supported" + operator);
     }
   }
 
@@ -577,14 +594,14 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
     for (QLDeploymentFilter deploymentFilter : filters) {
       if (deploymentFilter.getType().getDataType().equals(QLDataType.NUMBER)) {
         if (deploymentFilter.getNumberFilter().getOperator() == null
-            || EmptyPredicate.isNotEmpty(deploymentFilter.getNumberFilter().getValues())) {
-          logger.error("Offending deployment filter is [{}]", deploymentFilter);
+            || EmptyPredicate.isEmpty(deploymentFilter.getNumberFilter().getValues())) {
+          logger.error("Offending number deployment filter is [{}]", deploymentFilter);
           return false;
         }
       } else {
         if (deploymentFilter.getStringFilter().getOperator() == null
-            || EmptyPredicate.isNotEmpty(deploymentFilter.getStringFilter().getValues())) {
-          logger.error("Offending deployment filter is [{}]", deploymentFilter);
+            || EmptyPredicate.isEmpty(deploymentFilter.getStringFilter().getValues())) {
+          logger.error("Offending string deployment filter is [{}]", deploymentFilter);
           return false;
         }
       }
