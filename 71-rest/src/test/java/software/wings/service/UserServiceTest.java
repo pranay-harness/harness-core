@@ -43,7 +43,6 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
-import static software.wings.utils.WingsTestConstants.FREEMIUM_ENV_PATH;
 import static software.wings.utils.WingsTestConstants.INVALID_USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.NEW_USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.NEW_USER_NAME;
@@ -332,7 +331,6 @@ public class UserServiceTest extends WingsBaseTest {
 
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
     when(configuration.getPortal().getVerificationUrl()).thenReturn(VERIFICATION_PATH);
-    when(configuration.getPortal().getAllowedDomainsList().isEmpty()).thenReturn(true);
     when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(savedUser);
     when(wingsPersistence.saveAndGet(eq(EmailVerificationToken.class), any(EmailVerificationToken.class)))
         .thenReturn(new EmailVerificationToken(USER_ID));
@@ -360,8 +358,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldIncludeEnvPathInTrialSignupEmailUrl() {
     when(configuration.isTrialRegistrationAllowed()).thenReturn(true);
-    when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
-    when(configuration.getPortal().getAllowedDomainsList().isEmpty()).thenReturn(true);
+    when(configuration.getPortal().getUrl()).thenReturn("https://qa.harness.io");
 
     String inviteId = UUIDGenerator.generateUuid();
     when(wingsPersistence.save(any(UserInvite.class))).thenReturn(inviteId);
@@ -372,11 +369,10 @@ public class UserServiceTest extends WingsBaseTest {
 
     String templateUrl = ((Map<String, String>) emailDataArgumentCaptor.getValue().getTemplateModel()).get("url");
     assertNotNull(templateUrl);
-    assertThat(UrlValidator.getInstance().isValid(templateUrl));
-    assertThat(templateUrl.startsWith(PORTAL_URL + "/#"));
-    assertThat(templateUrl.endsWith("e=" + FREEMIUM_ENV_PATH));
-    assertThat(templateUrl.contains("inviteId=" + inviteId));
-    assertThat(templateUrl.contains("email=" + USER_EMAIL));
+    assertThat(UrlValidator.getInstance().isValid(templateUrl)).isTrue();
+    assertThat(templateUrl.startsWith("https://qa.harness.io/#")).isTrue();
+    assertThat(templateUrl.contains("inviteId=" + inviteId)).isTrue();
+    assertThat(templateUrl.contains("email=" + USER_EMAIL)).isTrue();
   }
 
   @Test
@@ -433,7 +429,6 @@ public class UserServiceTest extends WingsBaseTest {
 
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
     when(configuration.getPortal().getVerificationUrl()).thenReturn(VERIFICATION_PATH);
-    when(configuration.getPortal().getAllowedDomainsList().isEmpty()).thenReturn(true);
     when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(savedUser);
     when(accountService.save(any(Account.class))).thenReturn(account);
     when(wingsPersistence.query(eq(User.class), any(PageRequest.class)))
@@ -1041,14 +1036,14 @@ public class UserServiceTest extends WingsBaseTest {
           JWT_CATEGORY.MULTIFACTOR_AUTH);
       Assertions.failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
-      Assertions.assertThatExceptionOfType(WingsException.class);
+      // Ignore
     }
 
     try {
       userService.verifyJWTToken("fakeData", JWT_CATEGORY.MULTIFACTOR_AUTH);
       Assertions.failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
-      Assertions.assertThatExceptionOfType(WingsException.class);
+      // Ignore
     }
   }
 

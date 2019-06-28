@@ -68,7 +68,6 @@ import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -225,7 +224,6 @@ public class AccountServiceTest extends WingsBaseTest {
                           .build();
 
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
-    when(configuration.getPortal().getAllowedDomainsList()).thenReturn(new ArrayList<>());
 
     try {
       accountService.save(account);

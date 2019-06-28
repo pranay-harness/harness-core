@@ -117,12 +117,10 @@ public class LocalPortalTestRule implements MethodRule, MongoRuleMixin, Injector
   protected Configuration getConfiguration(String mongoUri) {
     MainConfiguration configuration = new MainConfiguration();
     configuration.getPortal().setCompanyName("COMPANY_NAME");
-    configuration.getPortal().setAllowedDomains("harness.io");
     configuration.getPortal().setUrl("PORTAL_URL");
     configuration.getPortal().setVerificationUrl("VERIFICATION_PATH");
     configuration.setMongoConnectionFactory(MongoConfig.builder().uri(mongoUri).build());
     configuration.getBackgroundSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
-    //    configuration.setMarketoConfig(marketoConfig);
     return configuration;
   }
 
@@ -134,7 +132,7 @@ public class LocalPortalTestRule implements MethodRule, MongoRuleMixin, Injector
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
                                             .buildValidatorFactory();
 
-    List<Module> modules = new ArrayList();
+    List<Module> modules = new ArrayList<>();
 
     modules.add(new AbstractModule() {
       @Override

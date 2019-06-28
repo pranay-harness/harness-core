@@ -164,7 +164,6 @@ kubectlVersion: v1.13.2
 
 portal:
   url: https://localhost:8000
-  allowedDomains: harness.io, wings.software, localhost, 127.0.0.1
   allowedOrigins: http://localhost:8000, https://localhost:8000, https://127.0.0.1:8000, https://localhost:8181, https://127.0.0.1:8181, http://127.0.0.1:8000
   companyName: Harness Inc
   authTokenExpiryInMillis: 86400000

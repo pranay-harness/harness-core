@@ -17,11 +17,7 @@ if [[ -v "UI_SERVER_URL" ]]; then
 fi
 
 if [[ -v "ALLOWED_ORIGINS" ]]; then
-    sed -i "s|allowedOrigins: http://localhost:8000|allowedOrigins: ${ALLOWED_ORIGINS}|" /opt/harness/config.yml
-fi
-
-if [[ -v "ALLOWED_DOMAINS" ]]; then
-    sed -i "s|allowedDomains: harness.io, wings.software, localhost,|allowedDomains: harness.io, wings.software, ${ALLOWED_DOMAINS},|" /opt/harness/config.yml
+    sed -i "s|allowedOrigins:.*|allowedOrigins: ${ALLOWED_ORIGINS}|" /opt/harness/config.yml
 fi
 
 if [[ -v "MONGO_URI" ]]; then

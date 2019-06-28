@@ -116,7 +116,6 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
   protected Configuration getConfiguration(String mongoUri) {
     MainConfiguration configuration = new MainConfiguration();
     configuration.getPortal().setCompanyName("COMPANY_NAME");
-    configuration.getPortal().setAllowedDomains("harness.io");
     configuration.getPortal().setUrl("PORTAL_URL");
     configuration.getPortal().setVerificationUrl("VERIFICATION_PATH");
     configuration.setMongoConnectionFactory(MongoConfig.builder().uri(mongoUri).build());

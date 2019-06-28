@@ -245,7 +245,6 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
   protected Configuration getConfiguration(List<Annotation> annotations, String dbName) {
     MainConfiguration configuration = new MainConfiguration();
     configuration.getPortal().setCompanyName("COMPANY_NAME");
-    configuration.getPortal().setAllowedDomains("wings.software");
     configuration.getPortal().setUrl(PORTAL_URL);
     configuration.getPortal().setVerificationUrl(VERIFICATION_PATH);
     configuration.getPortal().setJwtExternalServiceSecret("JWT_EXTERNAL_SERVICE_SECRET");
