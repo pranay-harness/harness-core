@@ -22,6 +22,9 @@ import org.mongodb.morphia.annotations.Id;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+/**
+ * @author Praveen
+ */
 @Entity(value = "labeledLogRecords", noClassnameStored = true)
 @Data
 @Builder
