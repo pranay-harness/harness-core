@@ -121,7 +121,6 @@ type TimeSeriesData implements Data {
 enum TimeAggregationType {
   HOUR
   DAY
-  MONTH
 }
 
 input TimeRange {
@@ -140,6 +139,11 @@ input TimeSeriesAggregation {
 }
 
 #This data structure will be useful for bar charts which are aggregated over a period of time
+
+enum SortOrder {
+  ASCENDING
+  DESCENDING
+}
 
 type StackedTimeSeriesDataPoint {
   values: [DataPoint]

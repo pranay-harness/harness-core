@@ -7,6 +7,7 @@ import software.wings.beans.Service;
 import software.wings.graphql.datafetcher.RealTimeStatsDataFetcher;
 import software.wings.graphql.schema.type.aggregation.QLAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLData;
+import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.service.QLServiceAggregation;
 import software.wings.graphql.schema.type.aggregation.service.QLServiceFilter;
@@ -18,10 +19,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ServiceStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggregateFunction, QLServiceFilter,
-    QLServiceAggregation, QLTimeSeriesAggregation> {
+    QLServiceAggregation, QLTimeSeriesAggregation, QLNoOpSortCriteria> {
   @Override
   protected QLData fetch(String accountId, QLAggregateFunction aggregateFunction, List<QLServiceFilter> filters,
-      List<QLServiceAggregation> groupBy, QLTimeSeriesAggregation groupByTime) {
+      List<QLServiceAggregation> groupBy, QLTimeSeriesAggregation groupByTime, List<QLNoOpSortCriteria> sortCriteria) {
     final Class entityClass = Service.class;
     List<String> groupByList = new ArrayList<>();
     if (isNotEmpty(groupBy)) {

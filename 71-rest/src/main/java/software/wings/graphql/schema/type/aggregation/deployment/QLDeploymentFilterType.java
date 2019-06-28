@@ -1,36 +1,36 @@
 package software.wings.graphql.schema.type.aggregation.deployment;
 
+import software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.DeploymentMetaDataFields;
 import software.wings.graphql.schema.type.aggregation.QLDataType;
-import software.wings.graphql.schema.type.aggregation.QLFilterKind;
 
 public enum QLDeploymentFilterType {
-  Application(QLDataType.STRING, QLFilterKind.SIMPLE),
-  Service(QLDataType.STRING, QLFilterKind.ARRAY),
-  Environment(QLDataType.STRING, QLFilterKind.ARRAY),
-  CloudProvider(QLDataType.STRING, QLFilterKind.ARRAY),
-  Status(QLDataType.STRING, QLFilterKind.SIMPLE),
-  EndTime(QLDataType.NUMBER, QLFilterKind.TIME),
-  StartTime(QLDataType.NUMBER, QLFilterKind.TIME),
-  Duration(QLDataType.NUMBER, QLFilterKind.SIMPLE),
-  Triggered_By(QLDataType.STRING, QLFilterKind.SIMPLE),
-  Trigger(QLDataType.STRING, QLFilterKind.SIMPLE),
-  Workflow(QLDataType.STRING, QLFilterKind.ARRAY),
-  Pipeline(QLDataType.STRING, QLFilterKind.SIMPLE);
+  Application(QLDataType.STRING, DeploymentMetaDataFields.APPID),
+  Service(QLDataType.STRING, DeploymentMetaDataFields.SERVICEID),
+  Environment(QLDataType.STRING, DeploymentMetaDataFields.ENVID),
+  CloudProvider(QLDataType.STRING, DeploymentMetaDataFields.CLOUDPROVIDERID),
+  Status(QLDataType.STRING, DeploymentMetaDataFields.STATUS),
+  EndTime(QLDataType.NUMBER, DeploymentMetaDataFields.ENDTIME),
+  StartTime(QLDataType.NUMBER, DeploymentMetaDataFields.STARTTIME),
+  Duration(QLDataType.NUMBER, DeploymentMetaDataFields.DURATION),
+  Triggered_By(QLDataType.STRING, DeploymentMetaDataFields.TRIGGERED_BY),
+  Trigger(QLDataType.STRING, DeploymentMetaDataFields.TRIGGER_ID),
+  Workflow(QLDataType.STRING, DeploymentMetaDataFields.WORKFLOWID),
+  Pipeline(QLDataType.STRING, DeploymentMetaDataFields.PIPELINEID);
 
   private QLDataType dataType;
-  private QLFilterKind filterKind;
+  private DeploymentMetaDataFields metaDataFields;
   QLDeploymentFilterType() {}
 
-  QLDeploymentFilterType(QLDataType dataType, QLFilterKind filterKind) {
+  QLDeploymentFilterType(QLDataType dataType, DeploymentMetaDataFields metaDataFields) {
     this.dataType = dataType;
-    this.filterKind = filterKind;
+    this.metaDataFields = metaDataFields;
   }
 
   public QLDataType getDataType() {
     return dataType;
   }
 
-  public QLFilterKind getFilterKind() {
-    return filterKind;
+  public DeploymentMetaDataFields getMetaDataFields() {
+    return metaDataFields;
   }
 }

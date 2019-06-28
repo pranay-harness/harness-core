@@ -12,6 +12,7 @@ import software.wings.beans.trigger.Trigger.TriggerKeys;
 import software.wings.graphql.datafetcher.RealTimeStatsDataFetcher;
 import software.wings.graphql.schema.type.aggregation.QLAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLData;
+import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.trigger.QLTriggerAggregation;
 import software.wings.graphql.schema.type.aggregation.trigger.QLTriggerFilter;
@@ -24,12 +25,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class TriggerStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggregateFunction, QLTriggerFilter,
-    QLTriggerAggregation, QLTimeSeriesAggregation> {
+    QLTriggerAggregation, QLTimeSeriesAggregation, QLNoOpSortCriteria> {
   @Inject private AppService appService;
 
   @Override
   protected QLData fetch(String accountId, QLAggregateFunction aggregateFunction, List<QLTriggerFilter> filters,
-      List<QLTriggerAggregation> groupBy, QLTimeSeriesAggregation groupByTime) {
+      List<QLTriggerAggregation> groupBy, QLTimeSeriesAggregation groupByTime, List<QLNoOpSortCriteria> sortCriteria) {
     final Class entityClass = Trigger.class;
     List<String> groupByList = new ArrayList<>();
     if (isNotEmpty(groupBy)) {

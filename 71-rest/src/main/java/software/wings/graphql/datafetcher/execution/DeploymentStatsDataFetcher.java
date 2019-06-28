@@ -8,6 +8,7 @@ import com.healthmarketscience.sqlbuilder.CustomCondition;
 import com.healthmarketscience.sqlbuilder.CustomExpression;
 import com.healthmarketscience.sqlbuilder.FunctionCall;
 import com.healthmarketscience.sqlbuilder.InCondition;
+import com.healthmarketscience.sqlbuilder.OrderObject;
 import com.healthmarketscience.sqlbuilder.OrderObject.Dir;
 import com.healthmarketscience.sqlbuilder.SelectQuery;
 import com.healthmarketscience.sqlbuilder.UnaryCondition;
@@ -36,6 +37,7 @@ import software.wings.graphql.schema.type.aggregation.QLIntermediateStackDataPoi
 import software.wings.graphql.schema.type.aggregation.QLReference;
 import software.wings.graphql.schema.type.aggregation.QLSinglePointData;
 import software.wings.graphql.schema.type.aggregation.QLSinglePointData.QLSinglePointDataBuilder;
+import software.wings.graphql.schema.type.aggregation.QLSortOrder;
 import software.wings.graphql.schema.type.aggregation.QLStackedData;
 import software.wings.graphql.schema.type.aggregation.QLStackedData.QLStackedDataBuilder;
 import software.wings.graphql.schema.type.aggregation.QLStackedDataPoint;
@@ -55,6 +57,8 @@ import software.wings.graphql.schema.type.aggregation.QLTimeSeriesDataPoint.QLTi
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentAggregation;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentFilter;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentFilterType;
+import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentSortCriteria;
+import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentSortType;
 import software.wings.graphql.utils.nameservice.NameService;
 
 import java.sql.Connection;
@@ -71,7 +75,7 @@ import javax.validation.constraints.NotNull;
 
 @Slf4j
 public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggregateFunction, QLDeploymentFilter,
-    QLDeploymentAggregation, QLTimeSeriesAggregation> {
+    QLDeploymentAggregation, QLTimeSeriesAggregation, QLDeploymentSortCriteria> {
   @Inject TimeScaleDBService timeScaleDBService;
   @Inject QLStatsHelper statsHelper;
   private DeploymentTableSchema schema = new DeploymentTableSchema();
@@ -79,10 +83,11 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
 
   @Override
   protected QLData fetch(String accountId, QLAggregateFunction aggregateFunction, List<QLDeploymentFilter> filters,
-      List<QLDeploymentAggregation> groupBy, QLTimeSeriesAggregation groupByTime) {
+      List<QLDeploymentAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
+      List<QLDeploymentSortCriteria> sortCriteria) {
     try {
       if (timeScaleDBService.isValid()) {
-        return getData(accountId, aggregateFunction, filters, groupBy, groupByTime);
+        return getData(accountId, aggregateFunction, filters, groupBy, groupByTime, sortCriteria);
       } else {
         return getMockData(groupBy, groupByTime);
       }
@@ -114,7 +119,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
   }
 
   private QLData getData(@NotNull String accountId, QLAggregateFunction aggregateFunction,
-      List<QLDeploymentFilter> filters, List<QLDeploymentAggregation> groupBy, QLTimeSeriesAggregation groupByTime) {
+      List<QLDeploymentFilter> filters, List<QLDeploymentAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
+      List<QLDeploymentSortCriteria> sortCriteria) {
     DeploymentStatsQueryMetaData queryData = null;
     boolean successful = false;
     int retryCount = 0;
@@ -122,7 +128,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
       try (Connection connection = timeScaleDBService.getDBConnection();
            Statement statement = connection.createStatement()) {
         preValidateInput(groupBy, groupByTime);
-        queryData = formQuery(accountId, aggregateFunction, filters, groupBy, groupByTime);
+        queryData = formQuery(accountId, aggregateFunction, filters, groupBy, groupByTime, sortCriteria);
         logger.info("Query : [{}]", queryData.getQuery());
 
         long startTime = System.currentTimeMillis();
@@ -219,8 +225,10 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
       for (DeploymentMetaDataFields field : queryData.getFieldNames()) {
         switch (field.getDataType()) {
           case INTEGER:
-          case LONG:
             dataPointBuilder.value(resultSet.getInt(field.getFieldName()));
+            break;
+          case LONG:
+            dataPointBuilder.value(resultSet.getLong(field.getFieldName()));
             break;
           case STRING:
             final String entityId = resultSet.getString(field.getFieldName());
@@ -325,7 +333,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
   }
 
   private DeploymentStatsQueryMetaData formQuery(String accountId, QLAggregateFunction aggregateFunction,
-      List<QLDeploymentFilter> filters, List<QLDeploymentAggregation> groupBy, QLTimeSeriesAggregation groupByTime) {
+      List<QLDeploymentFilter> filters, List<QLDeploymentAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
+      List<QLDeploymentSortCriteria> sortCriteria) {
     DeploymentStatsQueryMetaDataBuilder queryMetaDataBuilder = DeploymentStatsQueryMetaData.builder();
     SelectQuery selectQuery = new SelectQuery();
 
@@ -353,8 +362,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
       fieldNames.add(DeploymentMetaDataFields.COUNT);
     } else if (aggregateFunction.getAggregateValue().equals(QLDeploymentFilterType.Duration.name())) {
       FunctionCall functionCall = getFunctionCall(aggregateFunction);
-      selectQuery.addCustomColumns(Converter.toColumnSqlObject(
-          functionCall.addColumnParams(schema.getDuration()), DeploymentMetaDataFields.DURATION.getFieldName()));
+      selectQuery.addColumns(schema.getDuration());
       fieldNames.add(DeploymentMetaDataFields.DURATION);
     }
     selectQuery.addCustomFromTable(schema.getDeploymentTable());
@@ -373,11 +381,37 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
 
     addAccountFilter(selectQuery, accountId);
 
+    if (!isValidGroupByTime(groupByTime)) {
+      validateAndAddSortCriteria(selectQuery, sortCriteria, fieldNames);
+    } else {
+      logger.info("Not adding sortCriteria since it is a timeSeries");
+    }
+
     selectQuery.getWhereClause().setDisableParens(true);
     queryMetaDataBuilder.fieldNames(fieldNames);
     queryMetaDataBuilder.query(selectQuery.toString());
     queryMetaDataBuilder.groupByFields(groupByFields);
+    queryMetaDataBuilder.sortCriteria(sortCriteria);
     return queryMetaDataBuilder.build();
+  }
+
+  private List<QLDeploymentSortCriteria> validateAndAddSortCriteria(
+      SelectQuery selectQuery, List<QLDeploymentSortCriteria> sortCriteria, List<DeploymentMetaDataFields> fieldNames) {
+    if (EmptyPredicate.isEmpty(sortCriteria)) {
+      return new ArrayList<>();
+    }
+
+    sortCriteria.removeIf(qlDeploymentSortCriteria
+        -> qlDeploymentSortCriteria.getSortOrder() == null
+            || !fieldNames.contains(qlDeploymentSortCriteria.getSortType().getDeploymentMetadata()));
+
+    List<DeploymentMetaDataFields> sortFields =
+        sortCriteria.stream().map(s -> s.getSortType().getDeploymentMetadata()).collect(Collectors.toList());
+
+    if (EmptyPredicate.isNotEmpty(sortCriteria)) {
+      sortCriteria.forEach(s -> addOrderBy(selectQuery, s));
+    }
+    return sortCriteria;
   }
 
   private void preValidateInput(List<QLDeploymentAggregation> groupBy, QLTimeSeriesAggregation groupByTime) {
@@ -397,11 +431,11 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
   private void decorateQueryWithFilters(SelectQuery selectQuery, List<QLDeploymentFilter> filters) {
     boolean timeFilterAdded = false;
     for (QLDeploymentFilter filter : filters) {
-      if (filter.getType().getFilterKind().equals(QLFilterKind.SIMPLE)) {
+      if (filter.getType().getMetaDataFields().getDataType().equals(QLFilterKind.SIMPLE)) {
         decorateSimpleFilter(selectQuery, filter);
-      } else if (filter.getType().getFilterKind().equals(QLFilterKind.ARRAY)) {
+      } else if (filter.getType().getMetaDataFields().getDataType().equals(QLFilterKind.ARRAY)) {
         decorateArrayFilter(selectQuery, filter);
-      } else if (filter.getType().getFilterKind().equals(QLFilterKind.TIME)) {
+      } else if (filter.getType().getMetaDataFields().getDataType().equals(QLFilterKind.TIME)) {
         decorateTimeFilter(selectQuery, filter);
         timeFilterAdded = true;
       }
@@ -532,6 +566,54 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
         break;
       default:
         throw new RuntimeException("String simple operator not supported" + operator);
+    }
+  }
+
+  private void addOrderBy(SelectQuery selectQuery, QLDeploymentSortCriteria sortCriteria) {
+    QLDeploymentSortType sortType = sortCriteria.getSortType();
+    OrderObject.Dir dir = sortCriteria.getSortOrder() == QLSortOrder.ASCENDING ? Dir.ASCENDING : Dir.DESCENDING;
+    switch (sortType) {
+      case StartTime:
+        selectQuery.addOrdering(schema.getStartTime(), dir);
+        break;
+      case EndTime:
+        selectQuery.addOrdering(schema.getEndTime(), dir);
+        break;
+      case Application:
+        selectQuery.addOrdering(schema.getAppId(), dir);
+        break;
+      case Trigger:
+        selectQuery.addOrdering(schema.getTriggerId(), dir);
+        break;
+      case Triggered_By:
+        selectQuery.addOrdering(schema.getTriggeredBy(), dir);
+        break;
+      case Status:
+        selectQuery.addOrdering(schema.getStatus(), dir);
+        break;
+      case Service:
+        selectQuery.addCustomOrdering(DeploymentMetaDataFields.SERVICEID.getFieldName(), dir);
+        break;
+      case Workflow:
+        selectQuery.addCustomOrdering(DeploymentMetaDataFields.WORKFLOWID.getFieldName(), dir);
+        break;
+      case CloudProvider:
+        selectQuery.addCustomOrdering(DeploymentMetaDataFields.CLOUDPROVIDERID.getFieldName(), dir);
+        break;
+      case Environment:
+        selectQuery.addCustomOrdering(DeploymentMetaDataFields.ENVID.getFieldName(), dir);
+        break;
+      case Pipeline:
+        selectQuery.addOrdering(schema.getPipeline(), dir);
+        break;
+      case Duration:
+        selectQuery.addOrdering(schema.getDuration(), dir);
+        break;
+      case Count:
+        selectQuery.addCustomOrdering(DeploymentMetaDataFields.COUNT.name(), dir);
+        break;
+      default:
+        throw new RuntimeException("Order type not supported " + sortType);
     }
   }
 
@@ -703,10 +785,6 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
         break;
       case HOUR:
         unit = "hours";
-        break;
-      case MONTH:
-        value = value * 30;
-        unit = "days";
         break;
       default:
         logger.info("Unsupported timeAggregationType " + groupByTime.getTimeAggregationType());
