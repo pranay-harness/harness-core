@@ -5,6 +5,7 @@ import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -163,7 +164,8 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     ExecutionResponse executionResponse = setupNonTemplatized(true).execute(executionContext);
     assertEquals(ExecutionStatus.ERROR, executionResponse.getExecutionStatus());
     assertEquals(
-        "ApplicationID and TierID in AppDynamics setup must be valid numbers", executionResponse.getErrorMessage());
+        "Error while fetching from AppDynamics. ApplicationId : 30444 and TierId : 123aa in AppDynamics setup must be valid numbers",
+        executionResponse.getErrorMessage());
   }
 
   @Test
@@ -258,5 +260,40 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
 
     String dummy = AppDynamicsState.getMetricTypeForMetric("incorrectName");
     assertNull(dummy);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateFieldsMissingFieldsCase() {
+    AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
+    // not adding any metrics for verification
+    Map<String, String> invalidFields = appDynamicsState.validateFields();
+    assertTrue("Size should be 1", invalidFields.size() == 1);
+    assertEquals("Fields Missing", "Required Fields missing", invalidFields.keySet().iterator().next());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateFieldsPartialMissingFieldsCase() {
+    AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
+    appDynamicsState.setApplicationId("test");
+    appDynamicsState.setTierId("test12");
+    // not adding any metrics for verification
+    Map<String, String> invalidFields = appDynamicsState.validateFields();
+    assertTrue("Size should be 1", invalidFields.size() == 1);
+    assertEquals("Fields Missing", "Required Fields missing", invalidFields.keySet().iterator().next());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateFieldsInValidCase() {
+    AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
+    appDynamicsState.setApplicationId("test");
+    appDynamicsState.setTierId("test12");
+    appDynamicsState.setAnalysisServerConfigId("test1234");
+    // not adding any metrics for verification
+    Map<String, String> invalidFields = appDynamicsState.validateFields();
+    assertTrue("Size should be 1", invalidFields.size() == 1);
+    assertEquals("Fields Missing", "Invalid Required Fields", invalidFields.keySet().iterator().next());
   }
 }

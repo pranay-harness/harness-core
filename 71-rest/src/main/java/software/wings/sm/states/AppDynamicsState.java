@@ -17,6 +17,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
@@ -143,13 +144,23 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
     this.tierId = tierId;
   }
 
-  private void validateFields(String finalAppId, String finalTierId) {
-    try {
-      Long.parseLong(finalAppId);
-      Long.parseLong(finalTierId);
-    } catch (NumberFormatException exception) {
-      throw new WingsException("ApplicationID and TierID in AppDynamics setup must be valid numbers");
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> results = new HashMap<>();
+    if (isEmpty(applicationId) || isEmpty(analysisServerConfigId) || isEmpty(tierId)) {
+      results.put("Required Fields missing", "AppId and tierId should be provided");
+    } else {
+      if (isEmpty(getTemplateExpressions())) {
+        try {
+          Long.parseLong(applicationId);
+          Long.parseLong(tierId);
+        } catch (NumberFormatException exception) {
+          results.put("Invalid Required Fields", "AppId and tierId should be provided");
+        }
+      }
     }
+    logger.info("AppDynamics State Validated");
+    return results;
   }
 
   @Override
@@ -162,34 +173,36 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
         context.getStateExecutionInstanceId(), null, APP_DYNAMICS_VALUES_TO_ANALYZE);
 
     SettingAttribute settingAttribute = null;
-    String finalApplicationId = applicationId;
-    String finalServerConfigId = analysisServerConfigId;
-    String finalTierId = tierId;
     if (!isEmpty(getTemplateExpressions())) {
       TemplateExpression configIdExpression =
           templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
       if (configIdExpression != null) {
         settingAttribute = templateExpressionProcessor.resolveSettingAttribute(context, configIdExpression);
-        finalServerConfigId = settingAttribute.getUuid();
+        analysisServerConfigId = settingAttribute.getUuid();
       }
       TemplateExpression appIdExpression =
           templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "applicationId");
       if (appIdExpression != null) {
-        finalApplicationId = templateExpressionProcessor.resolveTemplateExpression(context, appIdExpression);
+        applicationId = templateExpressionProcessor.resolveTemplateExpression(context, appIdExpression);
       }
       TemplateExpression tierIdExpression =
           templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "tierId");
       if (tierIdExpression != null) {
-        finalTierId = templateExpressionProcessor.resolveTemplateExpression(context, tierIdExpression);
+        tierId = templateExpressionProcessor.resolveTemplateExpression(context, tierIdExpression);
       }
     }
     if (settingAttribute == null) {
-      settingAttribute = settingsService.get(finalServerConfigId);
+      settingAttribute = settingsService.get(analysisServerConfigId);
       if (settingAttribute == null) {
-        throw new WingsException("No appdynamics setting with id: " + finalServerConfigId + " found");
+        throw new WingsException("No appdynamics setting with id: " + analysisServerConfigId + " found");
       }
     }
-    validateFields(finalApplicationId, finalTierId);
+    if (!validateFields().isEmpty()) {
+      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
+          .addParam("reason",
+              "ApplicationId : " + applicationId + " and TierId : " + tierId
+                  + " in AppDynamics setup must be valid numbers");
+    }
     AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
 
     List<AppdynamicsTier> dependentTiers = new ArrayList<>();
@@ -199,22 +212,21 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
         ? PREDICTIVE
         : TimeSeriesMlAnalysisType.COMPARATIVE;
     try {
-      Set<AppdynamicsTier> tiers = appdynamicsService.getTiers(finalServerConfigId, Long.parseLong(finalApplicationId));
-      final long tierId = Long.parseLong(finalTierId);
-      tiers.stream().filter(tier -> tier.getId() == tierId).forEach(tier -> {
+      Set<AppdynamicsTier> tiers = appdynamicsService.getTiers(analysisServerConfigId, Long.parseLong(applicationId));
+      tiers.stream().filter(tier -> tier.getId() == Long.parseLong(tierId)).forEach(tier -> {
         metricGroups.put(tier.getName(),
             TimeSeriesMlAnalysisGroupInfo.builder()
                 .groupName(tier.getName())
                 .mlAnalysisType(analyzedTierAnalysisType)
                 .build());
         analyzedTier.setName(tier.getName());
-        analyzedTier.setId(tierId);
+        analyzedTier.setId(Long.parseLong(tierId));
       });
       Preconditions.checkState(!isEmpty(analyzedTier.getName()), "failed for " + analyzedTier);
 
       if (!isEmpty(dependentTiersToAnalyze)) {
-        dependentTiers = Lists.newArrayList(appdynamicsService.getDependentTiers(
-            finalServerConfigId, Long.parseLong(finalApplicationId), analyzedTier));
+        dependentTiers = Lists.newArrayList(
+            appdynamicsService.getDependentTiers(analysisServerConfigId, Long.parseLong(applicationId), analyzedTier));
 
         for (Iterator<AppdynamicsTier> iterator = dependentTiers.iterator(); iterator.hasNext();) {
           AppdynamicsTier tier = iterator.next();
@@ -232,11 +244,11 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
     List<DelegateTask> delegateTasks = new ArrayList<>();
     String[] waitIds = new String[dependentTiers.size() + 1];
     waitIds[0] = createDelegateTask(context, analyzedTierAnalysisType == PREDICTIVE ? Collections.emptyMap() : hosts,
-        envId, finalApplicationId, Long.parseLong(finalTierId), appDynamicsConfig, dataCollectionStartTimeStamp,
+        envId, applicationId, Long.parseLong(tierId), appDynamicsConfig, dataCollectionStartTimeStamp,
         analyzedTierAnalysisType, delegateTasks);
 
     for (int i = 0; i < dependentTiers.size(); i++) {
-      waitIds[i + 1] = createDelegateTask(context, Collections.emptyMap(), envId, finalApplicationId,
+      waitIds[i + 1] = createDelegateTask(context, Collections.emptyMap(), envId, applicationId,
           dependentTiers.get(i).getId(), appDynamicsConfig, dataCollectionStartTimeStamp, PREDICTIVE, delegateTasks);
       metricGroups.put(dependentTiers.get(i).getName(),
           TimeSeriesMlAnalysisGroupInfo.builder()
