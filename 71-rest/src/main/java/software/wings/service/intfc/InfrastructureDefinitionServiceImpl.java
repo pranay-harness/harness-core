@@ -30,7 +30,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
   @Override
   public PageResponse<InfrastructureDefinition> list(PageRequest<InfrastructureDefinition> pageRequest) {
-    return null;
+    return wingsPersistence.query(InfrastructureDefinition.class, pageRequest);
   }
 
   @Override
