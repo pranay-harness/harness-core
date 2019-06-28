@@ -817,7 +817,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     treeBuilder.graph(graphRenderer.generateHierarchyNode(allInstancesIdMap, emptySet()));
 
-    final Tree cacheTree = treeBuilder.build();
+    Tree cacheTree = treeBuilder.build();
     executorService.submit(() -> { mongoStore.upsert(cacheTree, ofDays(30)); });
     return cacheTree;
   }
@@ -877,7 +877,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
 
       // this array is legacy, we always have just one item
-      final PipelineStageElement element = stage.getPipelineStageElements().get(0);
+      PipelineStageElement element = stage.getPipelineStageElements().get(0);
 
       if (element.isDisable()) {
         continue;
@@ -1253,7 +1253,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     stateExecutionInstance = stateMachineExecutor.queue(stateMachine, stateExecutionInstance);
 
     WorkflowExecution savedWorkflowExecution;
-    if (workflowExecution.getWorkflowType() != ORCHESTRATION) {
+    if (workflowExecution.getWorkflowType() != ORCHESTRATION
+        || BUILD.equals(workflowExecution.getOrchestrationType())) {
       stateMachineExecutor.startExecution(stateMachine, stateExecutionInstance);
       updateStartStatus(workflowExecution.getAppId(), workflowExecution.getUuid(), RUNNING);
       savedWorkflowExecution = wingsPersistence.getWithAppId(
@@ -1924,7 +1925,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           .in(map.keySet())
           .asList()
           .forEach(interrupt -> {
-            final ExecutionInterruptEffect effect = map.get(interrupt.getUuid());
+            ExecutionInterruptEffect effect = map.get(interrupt.getUuid());
             interrupts.add(
                 StateExecutionInterrupt.builder().interrupt(interrupt).tookAffectAt(effect.getTookEffectAt()).build());
           });
@@ -1947,18 +1948,18 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     RepeatStateExecutionData repeatStateExecutionData = (RepeatStateExecutionData) stateExecutionData;
 
-    final Map<String, StateExecutionElement> elementMap = repeatStateExecutionData.getRepeatElements()
-                                                              .stream()
-                                                              .map(element
-                                                                  -> StateExecutionElement.builder()
-                                                                         .executionContextElementId(element.getUuid())
-                                                                         .name(element.getName())
-                                                                         .progress(0)
-                                                                         .status(STARTING)
-                                                                         .build())
-                                                              .collect(toMap(StateExecutionElement::getName, x -> x));
+    Map<String, StateExecutionElement> elementMap = repeatStateExecutionData.getRepeatElements()
+                                                        .stream()
+                                                        .map(element
+                                                            -> StateExecutionElement.builder()
+                                                                   .executionContextElementId(element.getUuid())
+                                                                   .name(element.getName())
+                                                                   .progress(0)
+                                                                   .status(STARTING)
+                                                                   .build())
+                                                        .collect(toMap(StateExecutionElement::getName, x -> x));
 
-    final StateMachine stateMachine = stateExecutionService.obtainStateMachine(stateExecutionInstance);
+    StateMachine stateMachine = stateExecutionService.obtainStateMachine(stateExecutionInstance);
 
     int subStates =
         stateMachine.getChildStateMachines().get(stateExecutionInstance.getChildStateMachineId()).getStates().size()
@@ -2011,7 +2012,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         }
 
         if (stat.getElement() != null) {
-          final StateExecutionElement stateExecutionElement = elementMap.get(stat.getElement());
+          StateExecutionElement stateExecutionElement = elementMap.get(stat.getElement());
           elementMap.put(stat.getElement(),
               StateExecutionElement.builder()
                   .executionContextElementId(stateExecutionElement.getExecutionContextElementId())
@@ -2182,7 +2183,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (contextElement == null) {
       return null;
     }
-    final ContextElementType elementType = contextElement.getElementType();
+    ContextElementType elementType = contextElement.getElementType();
     switch (elementType) {
       case SERVICE: {
         return (ServiceElement) contextElement;
@@ -2625,7 +2626,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .addParam("message", "Invalid workflow type: " + workflowExecution.getWorkflowType());
     }
 
-    final Set<WorkflowExecutionBaseline> baselines = new HashSet<>();
+    Set<WorkflowExecutionBaseline> baselines = new HashSet<>();
 
     if (!isEmpty(workflowExecutions)) {
       workflowExecutions.forEach(stageExecution -> {
@@ -2719,14 +2720,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public HIterator<WorkflowExecution> obtainWorkflowExecutionIterator(List<String> appIds, long epochMilli) {
-    final Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
-                                               .field(WorkflowExecutionKeys.createdAt)
-                                               .greaterThanOrEq(epochMilli)
-                                               .field(WorkflowExecutionKeys.pipelineExecutionId)
-                                               .doesNotExist()
-                                               .field(WorkflowExecutionKeys.appId)
-                                               .in(appIds)
-                                               .project(WorkflowExecutionKeys.stateMachine, false);
+    Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
+                                         .field(WorkflowExecutionKeys.createdAt)
+                                         .greaterThanOrEq(epochMilli)
+                                         .field(WorkflowExecutionKeys.pipelineExecutionId)
+                                         .doesNotExist()
+                                         .field(WorkflowExecutionKeys.appId)
+                                         .in(appIds)
+                                         .project(WorkflowExecutionKeys.stateMachine, false);
     return new HIterator<>(query.fetch());
   }
 
