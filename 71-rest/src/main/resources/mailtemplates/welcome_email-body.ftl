@@ -51,8 +51,8 @@
                     <tr>
                         <td align="center" valign="top" style="${tdStyle}; padding-top: 25px; padding-bottom: 10px;" class="paragraph" width="87.5%">
                            <p style="${textStyle}">Hi ${name},</p>
-                           <p style="${textStyle}; padding-bottom: 0;">Thanks for signing up for Harness!  You’re just a few steps away from building and running your own continuous delivery pipeline.</p>
-                           <p style="${textStyle}; padding-bottom: 0;">Based on the information you provided us, we’ve created a setup guide tailored to your stack.</p>
+                           <p style="${textStyle}; padding-bottom: 0;">Thanks for signing up for Harness!  You are just a few steps away from building and running your own continuous delivery pipeline.</p>
+                           <p style="${textStyle}; padding-bottom: 0;">Based on the information you provided us, we have created a setup guide tailored to your stack.</p>
                         </td>
                     </tr>
                     <tr>
@@ -134,7 +134,7 @@
                     <tr>
                         <td align="left" valign="middle" style="${tdStyle}" height="70" class="button" width="87.5%">
                             <h3 style="${headerStyle}; margin-top: 5px;">Deployment Verification &amp; 24/7 ServiceGuard</h3>
-                            <p style="${textStyle}; padding-top: 0;">Once you’ve run your first pipeline, we recommend connecting Harness to your monitoring tools so you can automatically roll back bad deployments and continuously monitor your production services with <a href="https://harness.io/2018/12/harness-24-7-service-guard-empowers-developers-with-total-operational-control/" target="_blank" style="${linkStyle}">24/7 Service Guard</a>.</p>
+                            <p style="${textStyle}; padding-top: 0;">Once you have run your first pipeline, we recommend connecting Harness to your monitoring tools so you can automatically roll back bad deployments and continuously monitor your production services with <a href="https://harness.io/2018/12/harness-24-7-service-guard-empowers-developers-with-total-operational-control/" target="_blank" style="${linkStyle}">24/7 Service Guard</a>.</p>
                             <ul style="${listStyle}">
                             <#list monitoringAndLoggingTools as tool>
                                 <li>
