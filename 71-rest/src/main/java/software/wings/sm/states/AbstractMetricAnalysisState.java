@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
+import static software.wings.common.VerificationConstants.GA_PER_MINUTE_CV_STATES;
 import static software.wings.common.VerificationConstants.LAMBDA_HOST_NAME;
 import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
@@ -212,9 +213,9 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
       if (getComparisonStrategy() == PREDICTIVE
           || (featureFlagService.isEnabled(FeatureName.CV_DATA_COLLECTION_JOB, context.getAccountId())
-                 && (PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))))) {
-        getLogger().info(
-            "Feature flag CV_DATA_COLLECTION_JOB is enabled will use data collection for triggering delegate task");
+                 && (PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))))
+          || GA_PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))) {
+        getLogger().info("Per Minute data collection will be done for triggering delegate task");
       } else {
         delegateTaskId = triggerAnalysisDataCollection(context, analysisContext, executionData, hostsToCollect);
         getLogger().info("triggered data collection for {} state, id: {}, delgateTaskId: {}", getStateType(),
@@ -438,7 +439,8 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
     if (getComparisonStrategy() == PREDICTIVE
         || (featureFlagService.isEnabled(FeatureName.CV_DATA_COLLECTION_JOB, accountId)
-               && (PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))))) {
+               && (PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))))
+        || GA_PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))) {
       DataCollectionInfo dataCollectionInfo = createDataCollectionInfo(context);
       analysisContext.setDataCollectionInfo(dataCollectionInfo);
     }

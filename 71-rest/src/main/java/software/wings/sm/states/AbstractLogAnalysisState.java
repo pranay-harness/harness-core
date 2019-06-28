@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
+import static software.wings.common.VerificationConstants.GA_PER_MINUTE_CV_STATES;
 import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_CURRENT;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
@@ -214,9 +215,9 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       // Or in case when feature flag CV_DATA_COLLECTION_JOB is enabled. Delegate task creation will be every minute
       if (getComparisonStrategy() == PREDICTIVE
           || (featureFlagService.isEnabled(FeatureName.CV_DATA_COLLECTION_JOB, executionContext.getAccountId())
-                 && (PER_MINUTE_CV_STATES.contains(getStateType())))) {
-        getLogger().info(
-            "Feature flag CV_DATA_COLLECTION_JOB is enabled will use data collection for triggering delegate task");
+                 && (PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))))
+          || GA_PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))) {
+        getLogger().info("Per Minute data collection will be done for triggering delegate task");
       } else {
         delegateTaskId = triggerAnalysisDataCollection(executionContext, executionData, hostsToBeCollected);
         getLogger().info("triggered data collection for {} state, id: {}, delgateTaskId: {}", getStateType(),
@@ -431,7 +432,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     // todo: Pranjal: Condition will be removed once enabled for all verifiers.
     if (getComparisonStrategy() == PREDICTIVE
         || (featureFlagService.isEnabled(FeatureName.CV_DATA_COLLECTION_JOB, accountId)
-               && (PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))))) {
+               && (PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))))
+        || GA_PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))) {
       DataCollectionInfo dataCollectionInfo = createDataCollectionInfo(analysisContext);
       analysisContext.setDataCollectionInfo(dataCollectionInfo);
     }

@@ -1,5 +1,6 @@
 package io.harness.jobs.workflow.logs;
 
+import static software.wings.common.VerificationConstants.GA_PER_MINUTE_CV_STATES;
 import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
 
 import com.google.common.collect.Sets;
@@ -118,7 +119,8 @@ public class WorkflowLogClusterJob implements Job {
                 if (hasDataRecords) {
                   logger.info("Running cluster task for stateExecutionId {}, minute {}, stateType {}, ",
                       context.getStateExecutionId(), logRequest.getLogCollectionMinute(), context.getStateType());
-                  if (PER_MINUTE_CV_STATES.contains(context.getStateType())) {
+                  if (PER_MINUTE_CV_STATES.contains(context.getStateType())
+                      || GA_PER_MINUTE_CV_STATES.contains(context.getStateType())) {
                     new LogMLClusterGenerator(learningEngineService, context.getClusterContext(), ClusterLevel.L0,
                         ClusterLevel.L1, logRequest, (int) context.getStartDataCollectionMinute())
                         .run();

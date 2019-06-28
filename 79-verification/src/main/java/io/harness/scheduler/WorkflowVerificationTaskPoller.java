@@ -5,6 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.common.VerificationConstants.CV_CONFIGURATION_VALID_LIMIT_IN_DAYS;
 import static software.wings.common.VerificationConstants.DEFAULT_DATA_COLLECTION_INTERVAL_IN_SECONDS;
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
+import static software.wings.common.VerificationConstants.GA_PER_MINUTE_CV_STATES;
 import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
 import static software.wings.common.VerificationConstants.WORKFLOW_CV_COLLECTION_CRON_GROUP;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
@@ -108,38 +109,38 @@ public class WorkflowVerificationTaskPoller {
   }
 
   private void scheduleDataCollectionCronJob(AnalysisContext context) {
-    if (verificationManagerClientHelper
-            .callManagerWithRetry(
-                verificationManagerClient.isFeatureEnabled(FeatureName.CV_DATA_COLLECTION_JOB, context.getAccountId()))
-            .getResource()) {
-      logger.info("Feature flag CV_DATA_COLLECTION_JOB is enabled for accountId : {} and stateExecutionId : {}",
+    if ((verificationManagerClientHelper
+                .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(
+                    FeatureName.CV_DATA_COLLECTION_JOB, context.getAccountId()))
+                .getResource()
+            && PER_MINUTE_CV_STATES.contains(context.getStateType()))
+        || GA_PER_MINUTE_CV_STATES.contains(context.getStateType())) {
+      logger.info("PER MINUTE data collection will be triggered for accountId : {} and stateExecutionId : {}",
           context.getAccountId(), context.getStateExecutionId());
-      if (PER_MINUTE_CV_STATES.contains(context.getStateType())) {
-        logger.info("Current stateType is present in PER_MINUTE_CV_STATES, creating job for context : {}", context);
-        Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(DELAY_MINUTES));
-        JobDetail job = JobBuilder.newJob(WorkflowDataCollectionJob.class)
-                            .withIdentity(context.getStateExecutionId(),
-                                context.getStateType().name().toUpperCase() + WORKFLOW_CV_COLLECTION_CRON_GROUP)
-                            .usingJobData("jobParams", JsonUtils.asJson(context))
-                            .usingJobData("timestamp", System.currentTimeMillis())
-                            .withDescription(context.getStateType() + "-" + context.getStateExecutionId())
-                            .build();
+      logger.info("Current stateType is present in PER_MINUTE_CV_STATES, creating job for context : {}", context);
+      Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(DELAY_MINUTES));
+      JobDetail job = JobBuilder.newJob(WorkflowDataCollectionJob.class)
+                          .withIdentity(context.getStateExecutionId(),
+                              context.getStateType().name().toUpperCase() + WORKFLOW_CV_COLLECTION_CRON_GROUP)
+                          .usingJobData("jobParams", JsonUtils.asJson(context))
+                          .usingJobData("timestamp", System.currentTimeMillis())
+                          .withDescription(context.getStateType() + "-" + context.getStateExecutionId())
+                          .build();
 
-        Trigger trigger = TriggerBuilder.newTrigger()
-                              .withIdentity(context.getStateExecutionId(),
-                                  context.getStateType().name().toUpperCase() + WORKFLOW_CV_COLLECTION_CRON_GROUP)
-                              .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                                                .withIntervalInSeconds(context.getCollectionInterval() == 0
-                                                        ? DEFAULT_DATA_COLLECTION_INTERVAL_IN_SECONDS
-                                                        : context.getCollectionInterval()
-                                                            * DEFAULT_DATA_COLLECTION_INTERVAL_IN_SECONDS)
-                                                .withMisfireHandlingInstructionNowWithExistingCount()
-                                                .repeatForever())
-                              .startAt(startDate)
-                              .build();
-        jobScheduler.scheduleJob(job, trigger);
-        logger.info("Scheduled Data Collection Cron Job with details : {}", job);
-      }
+      Trigger trigger =
+          TriggerBuilder.newTrigger()
+              .withIdentity(context.getStateExecutionId(),
+                  context.getStateType().name().toUpperCase() + WORKFLOW_CV_COLLECTION_CRON_GROUP)
+              .withSchedule(SimpleScheduleBuilder.simpleSchedule()
+                                .withIntervalInSeconds(context.getCollectionInterval() == 0
+                                        ? DEFAULT_DATA_COLLECTION_INTERVAL_IN_SECONDS
+                                        : context.getCollectionInterval() * DEFAULT_DATA_COLLECTION_INTERVAL_IN_SECONDS)
+                                .withMisfireHandlingInstructionNowWithExistingCount()
+                                .repeatForever())
+              .startAt(startDate)
+              .build();
+      jobScheduler.scheduleJob(job, trigger);
+      logger.info("Scheduled Data Collection Cron Job with details : {}", job);
     }
   }
 
