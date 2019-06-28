@@ -8,7 +8,6 @@ import com.google.inject.Inject;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.User;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.security.authentication.OauthProviderType;
@@ -51,9 +50,9 @@ public class OauthOptions {
     }
   }
 
-  public SSORequest createOauthSSORequest(User user) {
-    logger.info("Creating OAuth SSO Request for user {}", user.getEmail());
-    OauthSettings oauthSettings = ssoSettingService.getOauthSettingsByAccountId(user.getDefaultAccountId());
+  public SSORequest createOauthSSORequest(String userEmail, String accountId) {
+    logger.info("Creating OAuth SSO Request for user {}", userEmail);
+    OauthSettings oauthSettings = ssoSettingService.getOauthSettingsByAccountId(accountId);
 
     if (null == oauthSettings || isEmpty(oauthSettings.getAllowedProviders())) {
       throw new WingsException("Could not fetch OAuth settings");
