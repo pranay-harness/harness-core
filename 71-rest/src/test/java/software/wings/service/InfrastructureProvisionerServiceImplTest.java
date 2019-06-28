@@ -50,6 +50,7 @@ import software.wings.service.impl.InfrastructureProvisionerServiceImpl;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
+import software.wings.service.intfc.aws.manager.AwsCFHelperServiceManager;
 import software.wings.sm.ExecutionContext;
 
 import java.util.ArrayList;
@@ -65,6 +66,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Mock MorphiaIterator infrastructureMappings;
   @Mock InfrastructureMappingService infrastructureMappingService;
   @Mock FeatureFlagService featureFlagService;
+  @Mock AwsCFHelperServiceManager awsCFHelperServiceManager;
   @Inject @InjectMocks InfrastructureProvisionerService infrastructureProvisionerService;
 
   @Test
@@ -80,8 +82,11 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
                     .cloudProviderType(CloudProviderType.AWS)
                     .serviceId(SERVICE_ID)
                     .deploymentType(DeploymentType.SSH)
-                    .properties(Arrays.asList(
-                        BlueprintProperty.builder().name("region").value("${cloudformation.myregion}").build(),
+                    .properties(Arrays.asList(BlueprintProperty.builder()
+                                                  .name("region")
+                                                  .value("${cloudformation"
+                                                      + ".myregion}")
+                                                  .build(),
                         BlueprintProperty.builder().name("vpcs").value("${cloudformation.myvpcs}").build(),
                         BlueprintProperty.builder().name("tags").value("${cloudformation.mytags}").build()))
                     .nodeFilteringType(AWS_INSTANCE_FILTER)
@@ -180,5 +185,37 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     } catch (InvalidRequestException ex) {
       assertTrue(ExceptionUtils.getMessage(ex).contains("Unknown Blueprint value"));
     }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetCFTemplateParamKeys() {
+    String defaultString = "default";
+
+    doReturn(Arrays.asList())
+        .when(awsCFHelperServiceManager)
+        .getParamsData(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
+
+    infrastructureProvisionerService.getCFTemplateParamKeys("GIT", defaultString, defaultString, defaultString,
+        defaultString, defaultString, defaultString, defaultString, defaultString, true);
+    assertThatThrownBy(
+        ()
+            -> infrastructureProvisionerService.getCFTemplateParamKeys("GIT", defaultString, defaultString,
+                defaultString, defaultString, "", defaultString, defaultString, defaultString, true))
+        .isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(()
+                           -> infrastructureProvisionerService.getCFTemplateParamKeys("GIT", defaultString,
+                               defaultString, defaultString, defaultString, defaultString, "", defaultString, "", true))
+        .isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(
+        ()
+            -> infrastructureProvisionerService.getCFTemplateParamKeys("TEMPLATE_BODY", defaultString, defaultString,
+                "", defaultString, defaultString, defaultString, defaultString, defaultString, true))
+        .isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(
+        ()
+            -> infrastructureProvisionerService.getCFTemplateParamKeys("TEMPLATE_URL", defaultString, defaultString, "",
+                defaultString, defaultString, defaultString, defaultString, defaultString, true))
+        .isInstanceOf(InvalidRequestException.class);
   }
 }
