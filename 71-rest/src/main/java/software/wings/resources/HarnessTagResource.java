@@ -14,6 +14,8 @@ import io.swagger.annotations.Api;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.HarnessTagLink.HarnessTagLinkKeys;
+import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.HarnessTagService;
 
 import javax.ws.rs.BeanParam;
@@ -31,12 +33,14 @@ import javax.ws.rs.QueryParam;
 @Path("tags")
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
+@AuthRule(permissionType = PermissionType.LOGGED_IN)
 public class HarnessTagResource {
   @Inject HarnessTagService harnessTagService;
 
   @POST
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<HarnessTag> create(@QueryParam("accountId") String accountId, HarnessTag tag) {
     tag.setAccountId(accountId);
     return new RestResponse<>(harnessTagService.create(tag));
@@ -46,6 +50,7 @@ public class HarnessTagResource {
   @Path("{key}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<HarnessTag> update(
       @QueryParam("accountId") String accountId, @PathParam("key") String key, HarnessTag tag) {
     tag.setAccountId(accountId);
@@ -70,6 +75,7 @@ public class HarnessTagResource {
   @Path("{key}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse delete(@QueryParam("accountId") String accountId, @PathParam("key") String key) {
     harnessTagService.delete(accountId, key);
     return new RestResponse();
