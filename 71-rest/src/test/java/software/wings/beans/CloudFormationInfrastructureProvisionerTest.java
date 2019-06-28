@@ -17,5 +17,8 @@ public class CloudFormationInfrastructureProvisionerTest {
     builder = CloudFormationInfrastructureProvisioner.builder();
     builder.sourceType("TEMPLATE_URL");
     assertThat(builder.build().provisionByUrl()).isTrue();
+    builder = CloudFormationInfrastructureProvisioner.builder();
+    builder.sourceType("GIT");
+    assertThat(builder.build().provisionByGit()).isTrue();
   }
 }
