@@ -18,7 +18,6 @@ import static io.harness.eraro.ErrorCode.MARKETPLACE_TOKEN_NOT_FOUND;
 import static io.harness.eraro.ErrorCode.ROLE_DOES_NOT_EXIST;
 import static io.harness.eraro.ErrorCode.USER_ALREADY_REGISTERED;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
-import static io.harness.eraro.ErrorCode.USER_DOMAIN_NOT_ALLOWED;
 import static io.harness.eraro.ErrorCode.USER_INVITATION_DOES_NOT_EXIST;
 import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED;
 import static io.harness.exception.WingsException.USER;
@@ -670,11 +669,6 @@ public class UserServiceImpl implements UserService {
     user.setUserGroups(userGroupList);
   }
 
-  private boolean domainAllowedToRegister(String email) {
-    return configuration.getPortal().getAllowedDomainsList().isEmpty()
-        || configuration.getPortal().getAllowedDomains().contains(email.split("@")[1]);
-  }
-
   private void sendVerificationEmail(User user) {
     EmailVerificationToken emailVerificationToken =
         wingsPersistence.saveAndGet(EmailVerificationToken.class, new EmailVerificationToken(user.getUuid()));
@@ -726,10 +720,6 @@ public class UserServiceImpl implements UserService {
     checkIfEmailIsValid(email);
 
     final String emailAddress = email.trim();
-    if (!domainAllowedToRegister(emailAddress)) {
-      throw new WingsException(USER_DOMAIN_NOT_ALLOWED, USER);
-    }
-
     User existingUser = getUserByEmail(emailAddress);
     if (existingUser != null && existingUser.isEmailVerified()) {
       throw new WingsException(USER_ALREADY_REGISTERED, USER);
@@ -1199,7 +1189,7 @@ public class UserServiceImpl implements UserService {
     if (existingUser == null) {
       throw new WingsException(USER_INVITATION_DOES_NOT_EXIST, USER);
     } else {
-      Map<String, Object> map = new HashMap();
+      Map<String, Object> map = new HashMap<>();
       map.put("name", userInvite.getName().trim());
       map.put("passwordHash", hashpw(new String(userInvite.getPassword()), BCrypt.gensalt()));
       map.put("emailVerified", true);

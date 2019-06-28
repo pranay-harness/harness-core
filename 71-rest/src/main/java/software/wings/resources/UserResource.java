@@ -906,10 +906,6 @@ public class UserResource {
 
   /**
    * List invites rest response.
-   *
-   * @param accountId   the account id
-   * @param pageRequest the page request
-   * @return the rest response
    */
   @POST
   @Path("trigger-account-password-expiration-job")

@@ -2,9 +2,11 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -129,12 +131,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
     when(roleService.getAccountAdminRole(any()))
         .thenReturn(Role.Builder.aRole().withAccountId(ACCOUNT_ID).withUuid(generateUuid()).build());
-    try {
-      userService.register(user);
-    } catch (Exception ex) {
-      // This was needed since some subsequent operation fails after user registration.
-      // This happens only in test scenario. Catching the exception for now.
-    }
+    wingsPersistence.save(user);
   }
 
   @Test
@@ -315,7 +312,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
       List<EmailData> emailsData = emailDataArgumentCaptor.getAllValues();
       assertFalse(emailsData.stream()
                       .filter(emailData -> emailData.getTemplateName().equals(INVITE_EMAIL_TEMPLATE_NAME))
-                      .collect(Collectors.toList())
+                      .collect(toList())
                       .size()
           == 1);
 
@@ -343,7 +340,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
       emailsData = emailDataArgumentCaptor.getAllValues();
       assertFalse(emailsData.stream()
                       .filter(emailData -> emailData.getTemplateName().equals(ADD_GROUP_EMAIL_TEMPLATE_NAME))
-                      .collect(Collectors.toList())
+                      .collect(toList())
                       .size()
           == 1);
     }
@@ -424,11 +421,11 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
       userGroupService.updateMembers(userGroup1, true);
       verify(emailNotificationService, atLeastOnce()).send(emailDataArgumentCaptor.capture());
       List<EmailData> emailsData = emailDataArgumentCaptor.getAllValues();
-      assertFalse(emailsData.stream()
-                      .filter(emailData -> emailData.getTemplateName().equals(ADD_GROUP_EMAIL_TEMPLATE_NAME))
-                      .collect(Collectors.toList())
-                      .size()
-          == 2);
+      assertNotEquals(2,
+          emailsData.stream()
+              .filter(emailData -> emailData.getTemplateName().equals(ADD_GROUP_EMAIL_TEMPLATE_NAME))
+              .collect(toList())
+              .size());
     }
   }
 
