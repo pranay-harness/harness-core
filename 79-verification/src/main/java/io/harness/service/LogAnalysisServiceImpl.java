@@ -10,6 +10,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
+import static software.wings.common.VerificationConstants.GA_PER_MINUTE_CV_STATES;
 import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
 import static software.wings.service.intfc.analysis.ClusterLevel.H0;
 import static software.wings.service.intfc.analysis.ClusterLevel.H1;
@@ -975,7 +976,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
   @Override
   public int getEndTimeForLogAnalysis(AnalysisContext context) {
-    if (PER_MINUTE_CV_STATES.contains(context.getStateType())) {
+    if (PER_MINUTE_CV_STATES.contains(context.getStateType())
+        || GA_PER_MINUTE_CV_STATES.contains(context.getStateType())) {
       return (int) context.getStartDataCollectionMinute() + context.getTimeDuration() - 1;
     } else {
       return context.getTimeDuration() - 1;
@@ -994,7 +996,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   @Override
   public boolean isProcessingComplete(String query, String appId, String stateExecutionId, StateType type,
       int timeDurationMins, long collectionMinute, String accountId) {
-    if (PER_MINUTE_CV_STATES.contains(type)) {
+    if (PER_MINUTE_CV_STATES.contains(type) || GA_PER_MINUTE_CV_STATES.contains(type)) {
       return getLastProcessedMinute(stateExecutionId) - collectionMinute >= timeDurationMins - 1;
     } else {
       return getLastProcessedMinute(stateExecutionId) >= timeDurationMins - 1;

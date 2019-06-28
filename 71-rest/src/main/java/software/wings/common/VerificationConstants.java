@@ -139,7 +139,9 @@ public class VerificationConstants {
 
   // Add to this list whenever we add more states to this type of collection
   public static final List<StateType> PER_MINUTE_CV_STATES =
-      Arrays.asList(StateType.SUMO, StateType.DATA_DOG_LOG, StateType.ELK, StateType.STACK_DRIVER);
+      Arrays.asList(StateType.SUMO, StateType.ELK, StateType.STACK_DRIVER);
+
+  public static final List<StateType> GA_PER_MINUTE_CV_STATES = Arrays.asList(StateType.DATA_DOG_LOG);
 
   public static final String DATA_DOG_KUBERNETES_HOSTNAME = "pod_name";
   public static final String DATA_DOG_DEFAULT_HOSTNAME = "container_id";
