@@ -29,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
@@ -77,7 +76,6 @@ public class UserTest extends AbstractFunctionalTest {
   @Test()
   @Owner(emails = SWAMY, resent = false)
   @Category(FunctionalTests.class)
-  @Ignore("We have migrated to new API's. Ignoring as per discussion with Swamy and Nataraja")
   public void testUserInvite() throws IOException, MessagingException {
     Account account = this.getAccount();
     String domainName = "@harness.mailinator.com";
