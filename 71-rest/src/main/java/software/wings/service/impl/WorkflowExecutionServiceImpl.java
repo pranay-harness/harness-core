@@ -997,6 +997,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       workflowExecution.setServiceIds(pipeline.getServices().stream().map(Service::getUuid).collect(toList()));
     }
     workflowExecution.setEnvIds(pipeline.getEnvIds());
+    workflowExecution.setWorkflowIds(pipeline.getWorkflowIds());
     workflowExecution.setInfraMappingIds(pipeline.getInfraMappingIds());
     return triggerExecution(
         workflowExecution, stateMachine, workflowExecutionUpdate, stdParams, trigger, pipeline, null);
@@ -1065,6 +1066,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       workflowExecution.setEnvIds(Collections.singletonList(resolveEnvId));
     }
     workflowExecution.setWorkflowId(workflowId);
+    workflowExecution.setWorkflowIds(asList(workflowId));
     workflowExecution.setName(workflow.getName());
     workflowExecution.setWorkflowType(ORCHESTRATION);
     workflowExecution.setOrchestrationType(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
@@ -1523,50 +1525,50 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     executionArgs.setArtifacts(artifacts); // todo: artifacts distinct by key
     workflowExecution.setArtifacts(artifacts); // todo: consolidated workflow ids should we filter - go over all
 
-    String workflowId = workflowExecution.getWorkflowId();
     List<String> serviceIds =
         isEmpty(workflowExecution.getServiceIds()) ? new ArrayList<>() : workflowExecution.getServiceIds();
-    if (workflowExecution.getWorkflowType().equals(ORCHESTRATION)) {
-      List<Artifact> filteredArtifacts = multiArtifactWorkflowExecutionServiceHelper.filterArtifactsForWorkflow(
-          artifactVariables, workflowId, serviceIds, accountId);
-      if (isNotEmpty(filteredArtifacts)) {
-        executionArgs.setArtifactIdNames(
-            filteredArtifacts.stream().collect(toMap(Artifact::getUuid, Artifact::getDisplayName)));
-        filteredArtifacts.forEach(artifact -> {
-          artifact.setArtifactFiles(null);
-          artifact.setCreatedBy(null);
-          artifact.setLastUpdatedBy(null);
-          artifact.setServiceIds(artifactStreamServiceBindingService.listServiceIds(artifact.getArtifactStreamId()));
-          keywords.add(artifact.getArtifactSourceName());
-          keywords.add(artifact.getDescription());
-          keywords.add(artifact.getRevision());
-          keywords.add(artifact.getBuildNo());
-        });
-      }
-      workflowExecution.setArtifacts(filteredArtifacts);
+    List<String> envIds = isEmpty(workflowExecution.getEnvIds()) ? new ArrayList<>() : workflowExecution.getEnvIds();
+    List<String> workflowIds =
+        isEmpty(workflowExecution.getWorkflowIds()) ? new ArrayList<>() : workflowExecution.getWorkflowIds();
 
-      Set<String> serviceIdsSet = new HashSet<>();
-      List<ServiceElement> services = new ArrayList<>();
-      if (isNotEmpty(artifactVariables)) {
-        for (ArtifactVariable artifactVariable : artifactVariables) {
-          if (artifactVariable.getEntityId() != null && isNotEmpty(serviceIds)
-              && serviceIds.contains(artifactVariable.getEntityId())) {
-            if (serviceIdsSet.contains(artifactVariable.getEntityId())) {
-              continue;
-            }
-            serviceIdsSet.add(artifactVariable.getEntityId());
-            Service service = serviceResourceService.get(artifactVariable.getEntityId());
-            ServiceElement se = new ServiceElement();
-            MapperUtils.mapObject(service, se);
-            services.add(se);
-            services.add(se);
-            keywords.add(se.getName());
-          }
-        }
-      }
-      // Set the services in the context
-      stdParams.setServices(services);
+    List<Artifact> filteredArtifacts = multiArtifactWorkflowExecutionServiceHelper.filterArtifactsForExecution(
+        artifactVariables, workflowExecution, accountId);
+    if (isNotEmpty(filteredArtifacts)) {
+      executionArgs.setArtifactIdNames(
+          filteredArtifacts.stream().collect(toMap(Artifact::getUuid, Artifact::getDisplayName)));
+      filteredArtifacts.forEach(artifact -> {
+        artifact.setArtifactFiles(null);
+        artifact.setCreatedBy(null);
+        artifact.setLastUpdatedBy(null);
+        artifact.setServiceIds(artifactStreamServiceBindingService.listServiceIds(artifact.getArtifactStreamId()));
+        keywords.add(artifact.getArtifactSourceName());
+        keywords.add(artifact.getDescription());
+        keywords.add(artifact.getRevision());
+        keywords.add(artifact.getBuildNo());
+      });
     }
+    workflowExecution.setArtifacts(filteredArtifacts);
+
+    Set<String> serviceIdsSet = new HashSet<>();
+    List<ServiceElement> services = new ArrayList<>();
+
+    // todo: check if this logic is needed
+    if (isNotEmpty(serviceIds)) {
+      for (String serviceId : serviceIds) {
+        if (serviceIdsSet.contains(serviceId)) {
+          continue;
+        }
+        serviceIdsSet.add(serviceId);
+        Service service = serviceResourceService.get(serviceId);
+        ServiceElement se = new ServiceElement();
+        MapperUtils.mapObject(service, se);
+        services.add(se);
+        services.add(se);
+        keywords.add(se.getName());
+      }
+    }
+    // Set the services in the context
+    stdParams.setServices(services);
   }
 
   private void lastGoodReleaseInfo(WorkflowElement workflowElement, WorkflowExecution workflowExecution) {

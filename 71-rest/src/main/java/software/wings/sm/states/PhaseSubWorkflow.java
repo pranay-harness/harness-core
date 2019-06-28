@@ -271,20 +271,10 @@ public class PhaseSubWorkflow extends SubWorkflowState {
       } else {
         // save current artifacts in sweeping output
         if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-          String phaseExecutionId =
-              context.getWorkflowExecutionId() + phaseElement.getUuid() + phaseElement.getPhaseName();
-          List<ArtifactVariable> artifactVariables = workflowStandardParams.getWorkflowElement().getArtifactVariables();
           WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(
               workflowStandardParams.getAppId(), context.getWorkflowExecutionId());
-          for (ArtifactVariable artifactVariable : artifactVariables) {
-            if (artifactVariable.getEntityType().equals(EntityType.SERVICE)) {
-              if (service != null && artifactVariable.getEntityId().equals(service.getUuid())) {
-                Artifact artifact = getArtifactByUuid(workflowExecution.getArtifacts(), artifactVariable.getValue());
-                saveArtifactToSweepingOutput(
-                    stateExecutionInstance.getAppId(), phaseExecutionId, artifactVariable, artifact);
-              }
-            }
-          }
+          saveArtifactsFromVariables(
+              context, workflowStandardParams, stateExecutionInstance, service, phaseElement, workflowExecution);
         }
       }
     }
@@ -299,6 +289,18 @@ public class PhaseSubWorkflow extends SubWorkflowState {
               .prepareSweepingOutputBuilder(appId, null, null, phaseExecutionId, null, SweepingOutput.Scope.PHASE)
               .name(artifactVariable.getName())
               .output(KryoUtils.asDeflatedBytes(artifact))
+              .build());
+    }
+  }
+
+  private void saveArtifactsToSweepingOutput(
+      String appId, String phaseExecutionId, Map<String, Artifact> artifactsMap) {
+    if (isNotEmpty(artifactsMap)) {
+      sweepingOutputService.save(
+          SweepingOutputServiceImpl
+              .prepareSweepingOutputBuilder(appId, null, null, phaseExecutionId, null, SweepingOutput.Scope.PHASE)
+              .name("artifacts")
+              .output(KryoUtils.asDeflatedBytes(artifactsMap))
               .build());
     }
   }
@@ -332,7 +334,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     // throw exception if variable does not exist in service
     List<ArtifactVariable> artifactVariables = workflowStandardParams.getWorkflowElement().getArtifactVariables();
     Map<String, Artifact> artifactsMap = new HashMap<>();
-    Artifact artifact;
+    Artifact artifact = null;
     if (isNotEmpty(artifactVariables)) {
       for (ArtifactVariable artifactVariable : artifactVariables) {
         switch (artifactVariable.getEntityType()) {
@@ -402,17 +404,14 @@ public class PhaseSubWorkflow extends SubWorkflowState {
             }
             break;
           default:
-            throw new InvalidRequestException("Service cannot be empty", USER);
+            throw new InvalidRequestException(
+                format("Artifact variable [%s] has invalid Entity Type", artifactVariable.getName()), USER);
+        }
+        if (artifactVariable.getName().equals("artifact")) {
+          saveArtifactToSweepingOutput(stateExecutionInstance.getAppId(), phaseExecutionId, artifactVariable, artifact);
         }
       }
-      if (isNotEmpty(artifactsMap)) {
-        sweepingOutputService.save(SweepingOutputServiceImpl
-                                       .prepareSweepingOutputBuilder(stateExecutionInstance.getAppId(), null, null,
-                                           phaseExecutionId, null, SweepingOutput.Scope.PHASE)
-                                       .name("artifacts")
-                                       .output(KryoUtils.asDeflatedBytes(artifactsMap))
-                                       .build());
-      }
+      saveArtifactsToSweepingOutput(stateExecutionInstance.getAppId(), phaseExecutionId, artifactsMap);
     }
   }
 
@@ -442,23 +441,102 @@ public class PhaseSubWorkflow extends SubWorkflowState {
         && lastSuccessfulWorkflowExecution.getExecutionArgs().getArtifacts() != null) {
       previousArtifactVariables = lastSuccessfulWorkflowExecution.getExecutionArgs().getArtifactVariables();
     }
+    Map<String, Artifact> artifactsMap = new HashMap<>();
+    Artifact artifact = null;
+    String artifactId;
     if (isNotEmpty(artifactVariables) && isNotEmpty(previousArtifactVariables)) {
       for (ArtifactVariable artifactVariable : artifactVariables) {
-        if (artifactVariable.getEntityType().equals(EntityType.SERVICE)) {
-          if (artifactVariable.getEntityId().equals(service.getUuid())) {
-            String artifactId = getArtifactIdFromPreviousArtifactVariables(artifactVariable, previousArtifactVariables);
-            //            Artifact artifact = artifactService.get(accountId, artifactVariable.getValue());
-            Artifact artifact = getArtifactByUuid(lastSuccessfulWorkflowExecution.getArtifacts(), artifactId);
-            saveArtifactToSweepingOutput(
-                stateExecutionInstance.getAppId(), phaseExecutionId, artifactVariable, artifact);
-            // todo: save workflow level artifacts overridden by this service at phase level to access artifact like
-            // artifact1.buildNo
-          } else {
-            throw new WingsException(format(
-                "Artifact Variable %s not defined in service %s", artifactVariable.getName(), service.getName()));
-          }
+        switch (artifactVariable.getEntityType()) {
+          case WORKFLOW:
+            if (isEmpty(artifactVariable.getOverriddenArtifactVariables())) {
+              artifactId = getArtifactIdFromPreviousArtifactVariables(artifactVariable, previousArtifactVariables);
+              artifact = getArtifactByUuid(lastSuccessfulWorkflowExecution.getArtifacts(), artifactId);
+              artifactsMap.put(artifactVariable.getName(), artifact);
+            } else {
+              for (ArtifactVariable overridingVariable : artifactVariable.getOverriddenArtifactVariables()) {
+                if (EntityType.SERVICE.equals(
+                        overridingVariable.getEntityType())) { // defined in service and overridden in workflow
+                  if (service == null) {
+                    throw new InvalidRequestException("Service cannot be empty", USER);
+                  }
+                  if (artifactVariable.getEntityId().equals(service.getUuid())) {
+                    artifactId =
+                        getArtifactIdFromPreviousArtifactVariables(artifactVariable, previousArtifactVariables);
+                    artifact = getArtifactByUuid(lastSuccessfulWorkflowExecution.getArtifacts(), artifactId);
+                    artifactsMap.put(artifactVariable.getName(), artifact);
+                  }
+                } else if (EntityType.ENVIRONMENT.equals(overridingVariable.getEntityType())) {
+                  if (isEmpty(overridingVariable
+                                  .getOverriddenArtifactVariables())) { // direct env variables - all service overrides
+                    artifactId =
+                        getArtifactIdFromPreviousArtifactVariables(artifactVariable, previousArtifactVariables);
+                    artifact = getArtifactByUuid(lastSuccessfulWorkflowExecution.getArtifacts(), artifactId);
+                    artifactsMap.put(artifactVariable.getName(), artifact);
+                  } else { // overridden for specific service
+                    for (ArtifactVariable variable : overridingVariable.getOverriddenArtifactVariables()) {
+                      if (EntityType.SERVICE.equals(variable.getEntityType())) {
+                        if (service == null) {
+                          throw new InvalidRequestException("Service cannot be empty", USER);
+                        }
+                        if (artifactVariable.getEntityId().equals(service.getUuid())) {
+                          artifactId =
+                              getArtifactIdFromPreviousArtifactVariables(artifactVariable, previousArtifactVariables);
+                          artifact = getArtifactByUuid(lastSuccessfulWorkflowExecution.getArtifacts(), artifactId);
+                          artifactsMap.put(artifactVariable.getName(), artifact);
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            break;
+          case ENVIRONMENT:
+            if (isEmpty(artifactVariable
+                            .getOverriddenArtifactVariables())) { // direct env variables - all service overrides
+              artifactId = getArtifactIdFromPreviousArtifactVariables(artifactVariable, previousArtifactVariables);
+              artifact = getArtifactByUuid(lastSuccessfulWorkflowExecution.getArtifacts(), artifactId);
+              artifactsMap.put(artifactVariable.getName(), artifact);
+            } else { // overridden for specific service
+              for (ArtifactVariable variable : artifactVariable.getOverriddenArtifactVariables()) {
+                if (EntityType.SERVICE.equals(variable.getEntityType())) {
+                  if (service == null) {
+                    throw new InvalidRequestException("Service cannot be empty", USER);
+                  }
+                  if (artifactVariable.getEntityId().equals(service.getUuid())) {
+                    artifactId =
+                        getArtifactIdFromPreviousArtifactVariables(artifactVariable, previousArtifactVariables);
+                    artifact = getArtifactByUuid(lastSuccessfulWorkflowExecution.getArtifacts(), artifactId);
+                    artifactsMap.put(artifactVariable.getName(), artifact);
+                  }
+                }
+              }
+            }
+            break;
+          case SERVICE:
+            if (service == null) {
+              throw new InvalidRequestException("Service cannot be empty", USER);
+            }
+            if (artifactVariable.getEntityId().equals(service.getUuid())) {
+              artifactId = getArtifactIdFromPreviousArtifactVariables(artifactVariable, previousArtifactVariables);
+              artifact = getArtifactByUuid(lastSuccessfulWorkflowExecution.getArtifacts(), artifactId);
+              artifactsMap.put(artifactVariable.getName(), artifact);
+              // todo: save workflow level artifacts overridden by this service at phase level to access artifact like
+              // artifact1.buildNo
+            } else {
+              throw new WingsException(format(
+                  "Artifact Variable %s not defined in service %s", artifactVariable.getName(), service.getName()));
+            }
+            break;
+          default:
+            throw new InvalidRequestException(
+                format("Artifact variable [%s] has invalid Entity Type", artifactVariable.getName()), USER);
+        }
+        if (artifactVariable.getName().equals("artifact")) {
+          saveArtifactToSweepingOutput(stateExecutionInstance.getAppId(), phaseExecutionId, artifactVariable, artifact);
         }
       }
+      saveArtifactsToSweepingOutput(stateExecutionInstance.getAppId(), phaseExecutionId, artifactsMap);
     }
   }
 

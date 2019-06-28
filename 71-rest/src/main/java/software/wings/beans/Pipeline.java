@@ -61,6 +61,7 @@ public class Pipeline extends Base implements KeywordsAware, NameAccess {
   private List<FailureStrategy> failureStrategies = new ArrayList<>();
   private transient List<Variable> pipelineVariables = new ArrayList<>();
   private transient List<String> envIds = new ArrayList<>();
+  private transient List<String> workflowIds = new ArrayList<>();
   private transient boolean envParameterized;
   private transient List<DeploymentType> deploymentTypes = new ArrayList<>();
   private transient List<EnvSummary> envSummaries = new ArrayList<>();

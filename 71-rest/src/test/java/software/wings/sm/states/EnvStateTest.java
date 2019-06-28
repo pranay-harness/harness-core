@@ -34,6 +34,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.EnvStateExecutionData;
+import software.wings.api.WorkflowElement;
+import software.wings.beans.ArtifactVariable;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Workflow;
@@ -52,8 +54,13 @@ public class EnvStateTest extends WingsBaseTest {
   @Mock private WorkflowService workflowService;
   @Mock private Workflow workflow;
   @Mock private CanaryOrchestrationWorkflow canaryOrchestrationWorkflow;
-  private static final WorkflowStandardParams WORKFLOW_STANDARD_PARAMS =
-      aWorkflowStandardParams().withAppId(APP_ID).withArtifactIds(asList(ARTIFACT_ID)).build();
+  private static final WorkflowElement workflowElement =
+      WorkflowElement.builder().artifactVariables(asList(ArtifactVariable.builder().name("artifact").build())).build();
+  private static final WorkflowStandardParams WORKFLOW_STANDARD_PARAMS = aWorkflowStandardParams()
+                                                                             .withAppId(APP_ID)
+                                                                             .withArtifactIds(asList(ARTIFACT_ID))
+                                                                             .withWorkflowElement(workflowElement)
+                                                                             .build();
 
   @InjectMocks private EnvState envState = new EnvState("ENV_STATE");
 

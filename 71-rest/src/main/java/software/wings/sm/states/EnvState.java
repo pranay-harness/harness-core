@@ -131,6 +131,7 @@ public class EnvState extends State {
     executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
     executionArgs.setOrchestrationId(workflowId);
     executionArgs.setArtifacts(artifacts);
+    executionArgs.setArtifactVariables(workflowStandardParams.getWorkflowElement().getArtifactVariables());
     executionArgs.setExecutionCredential(aSSHExecutionCredential().withExecutionType(SSH).build());
     executionArgs.setTriggeredFromPipeline(true);
     executionArgs.setPipelineId(pipelineId);

@@ -417,12 +417,13 @@ public class PipelineServiceImpl implements PipelineService {
     List<Service> services = new ArrayList<>();
     List<String> serviceIds = new ArrayList<>();
     List<String> envIds = new ArrayList<>();
+    List<String> workflowIds = new ArrayList<>();
     List<String> infraMappingIds = new ArrayList<>();
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
       for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
         if (ENV_STATE.name().equals(pipelineStageElement.getType())) {
-          Workflow workflow = workflowService.readWorkflow(
-              pipeline.getAppId(), (String) pipelineStageElement.getProperties().get("workflowId"));
+          String workflowId = (String) pipelineStageElement.getProperties().get("workflowId");
+          Workflow workflow = workflowService.readWorkflow(pipeline.getAppId(), workflowId);
           notNullCheck("Workflow does not exist", workflow);
           Map<String, String> resolvedWorkflowStepVariables =
               WorkflowServiceHelper.overrideWorkflowVariables(workflow.getOrchestrationWorkflow().getUserVariables(),
@@ -432,12 +433,16 @@ public class PipelineServiceImpl implements PipelineService {
             resolveInfraMappings(infraMappingIds, resolvedWorkflowStepVariables, workflow);
             resolveEnvIds(envIds, resolvedWorkflowStepVariables, workflow);
           }
+          if (!workflowIds.contains(workflowId)) {
+            workflowIds.add(workflowId);
+          }
         }
       }
     }
     pipeline.setServices(services);
     pipeline.setEnvIds(envIds);
     pipeline.setInfraMappingIds(infraMappingIds);
+    pipeline.setWorkflowIds(workflowIds);
     return pipeline;
   }
 
