@@ -40,7 +40,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   @Test
   @Owner(emails = SWAMY, resent = false)
   @Category(FunctionalTests.class)
-  public void accessManagementNoPermissionTestForList() {
+  public void accessManagementPermissionTestForList() {
     logger.info("Logging in as a ReadOnly user");
     String roBearerToken = Setup.getAuthToken(RBAC_USER, "rbac1");
     logger.info("List the users using ReadOnly permission");
@@ -71,6 +71,88 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
     String email = "testemail@harness.mailinator.com";
     String password = "rbac1";
     AccessManagementUtils.runUserPostFailTest(getAccount(), bearerToken, READ_ONLY_USER, email, password);
+  }
+
+  @Test
+  @Owner(emails = SWAMY, resent = false)
+  @Category(FunctionalTests.class)
+  public void accessManagementNoPermissionTestForGet() {
+    final String READ_ONLY_USER = "rbac1@harness.io";
+    AccessManagementUtils.runAllGetTests(
+        getAccount(), bearerToken, READ_ONLY_USER, "rbac1", HttpStatus.SC_OK, HttpStatus.SC_BAD_REQUEST);
+  }
+
+  @Test
+  @Owner(emails = SWAMY, resent = false)
+  @Category(FunctionalTests.class)
+  public void amNoPermissionToPostForUserGroup() {
+    final String READ_ONLY_USER = "rbac1@harness.io";
+    AccessManagementUtils.amNoPermissionToPostForUserGroup(
+        getAccount(), bearerToken, READ_ONLY_USER, "rbac1", HttpStatus.SC_BAD_REQUEST);
+  }
+
+  @Test
+  @Owner(emails = SWAMY, resent = false)
+  @Category(FunctionalTests.class)
+  public void amNoPermissionToPostForIPWhitelisting() {
+    final String READ_ONLY_USER = "readonlyuser@harness.io";
+    AccessManagementUtils.amNoPermissionToPostForIPWhitelisting(
+        getAccount(), bearerToken, READ_ONLY_USER, "readonlyuser", HttpStatus.SC_BAD_REQUEST);
+  }
+
+  @Test
+  @Owner(emails = SWAMY, resent = false)
+  @Category(FunctionalTests.class)
+  public void amNoPermissionToPostForAPIKeys() {
+    final String READ_ONLY_USER = "rbac1@harness.io";
+    AccessManagementUtils.runAPIKeyPostTest(
+        getAccount(), bearerToken, READ_ONLY_USER, "rbac1", HttpStatus.SC_BAD_REQUEST, userGroup);
+  }
+
+  @Test
+  @Owner(emails = SWAMY, resent = false)
+  @Category(FunctionalTests.class)
+  public void amNoPermissionToPostForLDAP() {
+    final String READ_ONLY_USER = "rbac1@harness.io";
+    AccessManagementUtils.ldapCreationFailureCheckTest(
+        getAccount(), bearerToken, READ_ONLY_USER, "rbac1", HttpStatus.SC_BAD_REQUEST);
+  }
+
+  @Test
+  @Owner(emails = SWAMY, resent = false)
+  @Category(FunctionalTests.class)
+  public void amNoPermissionToPostForSAML() {
+    final String READ_ONLY_USER = "rbac1@harness.io";
+    AccessManagementUtils.amNoPermissionToPostForSAML(
+        getAccount(), bearerToken, READ_ONLY_USER, "rbac1", HttpStatus.SC_BAD_REQUEST);
+  }
+
+  @Test
+  @Owner(emails = SWAMY, resent = false)
+  @Category(FunctionalTests.class)
+  public void updateIPWhitelistingTest() {
+    final String READ_ONLY_USER = "rbac1@harness.io";
+    AccessManagementUtils.updateIPWhiteListing(
+        getAccount(), bearerToken, READ_ONLY_USER, "rbac1", HttpStatus.SC_BAD_REQUEST);
+  }
+
+  @Test
+  @Owner(emails = SWAMY, resent = false)
+  @Category(FunctionalTests.class)
+  public void deleteIPWhitelistingTest() {
+    final String READ_ONLY_USER = "rbac1@harness.io";
+    AccessManagementUtils.deleteIPWhitelisting(
+        getAccount(), bearerToken, READ_ONLY_USER, "rbac1", HttpStatus.SC_BAD_REQUEST);
+  }
+
+  @Test
+  @Owner(emails = SWAMY, resent = false)
+  @Category(FunctionalTests.class)
+  public void updateAndDeleteApiKeysTest() {
+    final String READ_ONLY_USER = "rbac1@harness.io";
+    AccessManagementUtils.updateAndDeleteAPIKeys(
+        getAccount(), bearerToken, READ_ONLY_USER, "rbac1", userGroup, HttpStatus.SC_BAD_REQUEST);
+    logger.info("Test completed successfully");
   }
 
   private void createUserGroup() {
