@@ -13,8 +13,10 @@ public class CvValidationServiceImpl implements CvValidationService {
   @Inject private ElkAnalysisService elkAnalysisService;
 
   @Override
-  public Boolean validateELKQuery(String accountId, String appId, String settingId, String query, String index) {
-    return elkAnalysisService.validateQuery(accountId, appId, settingId, query, index, null);
+  public Boolean validateELKQuery(String accountId, String appId, String settingId, String query, String index,
+      String hostnameField, String messageField, String timestampField) {
+    return elkAnalysisService.validateQuery(
+        accountId, appId, settingId, query, index, null, hostnameField, messageField, timestampField);
   }
 
   @Override

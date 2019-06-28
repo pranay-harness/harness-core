@@ -21,6 +21,7 @@ public class VerificationConstants {
    */
   private static final String NEWRELIC_METRICS_YAML_URL = "/apm/newrelic_metrics.yml";
 
+  public static final long TOTAL_HITS_PER_MIN_THRESHOLD = 1000;
   public static final long VERIFICATION_TASK_TIMEOUT = TimeUnit.MINUTES.toMillis(3);
   public static final String LAST_SUCCESSFUL_WORKFLOW_IDS = "/last-successful-workflow-ids";
   public static final String NOTIFY_LEARNING_FAILURE = "/notify-learning-failure";

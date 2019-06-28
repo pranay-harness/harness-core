@@ -7,7 +7,8 @@ import software.wings.service.impl.verification.CvValidationService;
  */
 public class NoOpCvValidationServiceImpl implements CvValidationService {
   @Override
-  public Boolean validateELKQuery(String accountId, String appId, String settingId, String query, String index) {
+  public Boolean validateELKQuery(String accountId, String appId, String settingId, String query, String index,
+      String hostnameField, String messageField, String timestampField) {
     throw new UnsupportedOperationException();
   }
 
