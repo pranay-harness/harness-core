@@ -216,7 +216,8 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
     when(workflowStandardParams.getEnv())
         .thenReturn(Environment.Builder.anEnvironment().uuid(UUID.randomUUID().toString()).build());
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
-    when(elkAnalysisService.validateQuery(anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
+    when(elkAnalysisService.validateQuery(anyString(), anyString(), anyString(), anyString(), anyString(), anyString(),
+             anyString(), anyString(), anyString()))
         .thenReturn(true);
 
     ExecutionResponse response = spyState.execute(executionContext);

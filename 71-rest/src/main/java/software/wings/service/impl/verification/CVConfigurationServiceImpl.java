@@ -137,7 +137,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), ElkCVConfiguration.class);
         ElkCVConfiguration elkCVConfiguration = (ElkCVConfiguration) cvConfiguration;
         cvValidationService.validateELKQuery(accountId, appId, elkCVConfiguration.getConnectorId(),
-            elkCVConfiguration.getQuery(), elkCVConfiguration.getIndex());
+            elkCVConfiguration.getQuery(), elkCVConfiguration.getIndex(), elkCVConfiguration.getHostnameField(),
+            elkCVConfiguration.getMessageField(), elkCVConfiguration.getTimestampField());
         break;
       case BUG_SNAG:
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), BugsnagCVConfiguration.class);
@@ -313,7 +314,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), ElkCVConfiguration.class);
         ElkCVConfiguration elkCVConfiguration = (ElkCVConfiguration) updatedConfig;
         cvValidationService.validateELKQuery(accountId, appId, elkCVConfiguration.getConnectorId(),
-            elkCVConfiguration.getQuery(), elkCVConfiguration.getIndex());
+            elkCVConfiguration.getQuery(), elkCVConfiguration.getIndex(), elkCVConfiguration.getHostnameField(),
+            elkCVConfiguration.getMessageField(), elkCVConfiguration.getTimestampField());
         break;
       case BUG_SNAG:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), BugsnagCVConfiguration.class);
@@ -700,7 +702,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     Map<String, TimeSeriesMetricDefinition> metricTemplates = new HashMap<>();
     for (Entry<String, String> entry : metrics.entrySet()) {
       List<String> metricNames =
-          Arrays.asList(entry.getValue().split(",")).parallelStream().map(String ::trim).collect(Collectors.toList());
+          Arrays.asList(entry.getValue().split(",")).parallelStream().map(String::trim).collect(Collectors.toList());
       metricTemplates.putAll(
           DatadogState.metricDefinitions(DatadogState
                                              .metrics(Optional.of(metricNames), Optional.empty(), Optional.empty(),

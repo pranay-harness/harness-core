@@ -1,9 +1,6 @@
 package software.wings.service.impl.elk;
 
 import static io.harness.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
-import static software.wings.api.HostElement.Builder.aHostElement;
-import static software.wings.api.InstanceElement.Builder.anInstanceElement;
-import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
@@ -14,11 +11,14 @@ import com.google.inject.Singleton;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONObject;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
+import software.wings.common.VerificationConstants;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.LogElement;
@@ -42,6 +42,8 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 @Slf4j
 public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAnalysisService {
+  private static final int FETCH_ELK_LOGS_FOR_MINUTES = 15;
+
   @Inject private MLServiceUtils mlServiceUtils;
 
   @Override
@@ -85,7 +87,6 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
       throw new WingsException(
           "No " + StateType.ELK + " setting with id: " + elkSetupTestNodeData.getSettingId() + " found");
     }
-
     final ElkLogFetchRequest elkFetchRequestWithoutHost =
         ElkLogFetchRequest.builder()
             .query(elkSetupTestNodeData.getQuery())
@@ -94,8 +95,9 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
             .hostnameField(elkSetupTestNodeData.getHostNameField())
             .messageField(elkSetupTestNodeData.getMessageField())
             .timestampField(elkSetupTestNodeData.getTimeStampField())
-            .startTime(TimeUnit.SECONDS.toMillis(OffsetDateTime.now().minusMinutes(15).toEpochSecond()))
-            .endTime(TimeUnit.SECONDS.toMillis(OffsetDateTime.now().toEpochSecond()))
+            .startTime(TimeUnit.SECONDS.toMillis(
+                OffsetDateTime.now().minusMinutes(FETCH_ELK_LOGS_FOR_MINUTES + 2).toEpochSecond()))
+            .endTime(TimeUnit.SECONDS.toMillis(OffsetDateTime.now().minusMinutes(2).toEpochSecond()))
             .queryType(elkSetupTestNodeData.getQueryType())
             .build();
     List<EncryptedDataDetail> encryptedDataDetails =
@@ -114,6 +116,8 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
       logger.info("Error while getting data ", ex);
       return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
     }
+
+    long totalHitsPerMinute = parseTotalHits(responseWithoutHost) / FETCH_ELK_LOGS_FOR_MINUTES;
     List<LogElement> logElementsWithoutHost = parseElkResponse(responseWithoutHost, elkSetupTestNodeData.getQuery(),
         elkSetupTestNodeData.getTimeStampField(), elkSetupTestNodeData.getTimeStampFieldFormat(),
         elkSetupTestNodeData.getHostNameField(),
@@ -124,8 +128,11 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
     if (elkSetupTestNodeData.isServiceLevel()) {
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
+
           .loadResponse(VerificationLoadResponse.builder()
                             .isLoadPresent(!logElementsWithoutHost.isEmpty())
+                            .totalHits(totalHitsPerMinute)
+                            .totalHitsThreshold(VerificationConstants.TOTAL_HITS_PER_MIN_THRESHOLD)
                             .loadResponse(logElementsWithoutHost)
                             .build())
           .build();
@@ -134,7 +141,12 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
     if (logElementsWithoutHost.isEmpty()) {
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
-          .loadResponse(VerificationLoadResponse.builder().isLoadPresent(false).build())
+
+          .loadResponse(VerificationLoadResponse.builder()
+                            .totalHits(totalHitsPerMinute)
+                            .totalHitsThreshold(VerificationConstants.TOTAL_HITS_PER_MIN_THRESHOLD)
+                            .isLoadPresent(false)
+                            .build())
           .build();
     }
 
@@ -175,6 +187,8 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
     return VerificationNodeDataSetupResponse.builder()
         .providerReachable(true)
         .loadResponse(VerificationLoadResponse.builder()
+                          .totalHits(totalHitsPerMinute)
+                          .totalHitsThreshold(VerificationConstants.TOTAL_HITS_PER_MIN_THRESHOLD)
                           .loadResponse(logElementsWithoutHost)
                           .isLoadPresent(!logElementsWithHost.isEmpty())
                           .build())
@@ -182,46 +196,55 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
         .build();
   }
 
+  private long parseTotalHits(Object elkAPIResponse) {
+    JSONObject responseObject = new JSONObject(JsonUtils.asJson(elkAPIResponse));
+    JSONObject hits = responseObject.getJSONObject("hits");
+    if (hits == null) {
+      return 0;
+    }
+    if (hits.has("total")) {
+      return hits.getLong("total");
+    } else {
+      return 0;
+    }
+  }
+
   @Override
-  public Boolean validateQuery(
-      String accountId, String appId, String settingId, String query, String index, String guid) {
+  public Boolean validateQuery(String accountId, String appId, String settingId, String query, String index,
+      String guid, String hostnameField, String messageField, String timestampField) {
     try {
-      // create a sample test node data for elk. And use it to validate Query from ELK server
-      ElkSetupTestNodeData elkSetupTestNodeData =
-          ElkSetupTestNodeData.builder()
-              .settingId(settingId)
+      SettingAttribute settingAttribute = settingsService.get(settingId);
+      final ElkLogFetchRequest elkFetchRequestWithoutHost =
+          ElkLogFetchRequest.builder()
               .query(query)
               .indices(index)
-              .appId(appId)
-              .messageField("@timestamp")
-              .hostNameField("beat.hostname")
-              .timeStampField(query)
-              .timeStampFieldFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX")
-              .query(query)
+              .hosts(Collections.EMPTY_SET)
+              .hostnameField(hostnameField)
+              .messageField(messageField)
+              .timestampField(timestampField)
+              .startTime(TimeUnit.SECONDS.toMillis(
+                  OffsetDateTime.now().minusMinutes(FETCH_ELK_LOGS_FOR_MINUTES + 2).toEpochSecond()))
+              .endTime(TimeUnit.SECONDS.toMillis(OffsetDateTime.now().minusMinutes(2).toEpochSecond()))
               .queryType(ElkQueryType.MATCH)
-              .instanceName("testHost")
-              .guid(guid)
-              .instanceElement(anInstanceElement()
-                                   .withUuid("8cec1e1b0d16")
-                                   .withDisplayName("8cec1e1b0d16")
-                                   .withHostName("testHost")
-                                   .withDockerId("8cec1e1b0d16")
-                                   .withHost(aHostElement()
-                                                 .withUuid("8cec1e1b0d16")
-                                                 .withHostName("testHost")
-                                                 .withIp("1.1.1.1")
-                                                 .withInstanceId(null)
-                                                 .withPublicDns(null)
-                                                 .withEc2Instance(null)
-                                                 .build())
-                                   .withServiceTemplateElement(
-                                       aServiceTemplateElement().withUuid("8cec1e1b0d16").withName(null).build())
-                                   .withPodName("testHost")
-                                   .withWorkloadName("testHost")
-                                   .build())
-              .isServiceLevel(true)
               .build();
-      getLogDataByHost(accountId, elkSetupTestNodeData);
+      List<EncryptedDataDetail> encryptedDataDetails =
+          secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), appId, null);
+      SyncTaskContext elkTaskContext = SyncTaskContext.builder()
+                                           .accountId(accountId)
+                                           .appId(GLOBAL_APP_ID)
+                                           .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                           .build();
+      Object responseWithoutHost =
+          delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
+              .search((ElkConfig) settingAttribute.getValue(), encryptedDataDetails, elkFetchRequestWithoutHost,
+                  createApiCallLog(settingAttribute.getAccountId(), appId, guid), 5);
+      long totalHitsPerMinute = parseTotalHits(responseWithoutHost) / FETCH_ELK_LOGS_FOR_MINUTES;
+      if (totalHitsPerMinute >= VerificationConstants.TOTAL_HITS_PER_MIN_THRESHOLD) {
+        throw new WingsException(
+            ErrorCode.ELK_CONFIGURATION_ERROR, "Too many logs to process, please refine your query")
+            .addParam("reason", "Too many logs returned using query: '" + query + "'. Please refine your query.");
+      }
+
       logger.info("Valid query passed with query {} and index {}", query, index);
       return true;
     } catch (Exception ex) {
