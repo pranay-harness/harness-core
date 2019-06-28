@@ -67,6 +67,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.cache.Cache;
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by rsingh on 8/28/17.
@@ -200,6 +201,10 @@ public class NewRelicServiceImpl implements NewRelicService {
           List<NewRelicApplication> allApplications =
               delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
                   .getAllApplications((NewRelicConfig) settingAttribute.getValue(), encryptionDetails, null);
+          // check if number of apps is too big to compute
+          if (isNotEmpty(allApplications) && allApplications.size() == 1 && allApplications.get(0).getId() == -1) {
+            return allApplications;
+          }
           applications = NewRelicApplications.builder().applications(allApplications).build();
           newRelicApplicationCache.put(key, applications);
           return allApplications;
@@ -426,6 +431,55 @@ public class NewRelicServiceImpl implements NewRelicService {
       return metricsMap.values().stream().flatMap(metric -> metric.stream()).collect(Collectors.toList());
     } catch (Exception ex) {
       throw new WingsException("Unable to load New Relic metrics", ex);
+    }
+  }
+
+  @Override
+  public NewRelicApplication resolveApplicationName(
+      @NotNull String settingId, @NotNull String newRelicApplicationName) {
+    ErrorCode errorCode = null;
+    try {
+      final SettingAttribute settingAttribute = settingsService.get(settingId);
+      List<EncryptedDataDetail> encryptionDetails =
+          secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
+      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                            .accountId(settingAttribute.getAccountId())
+                                            .appId(GLOBAL_APP_ID)
+                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                            .build();
+      errorCode = ErrorCode.NEWRELIC_ERROR;
+      return delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
+          .resolveNewRelicApplicationName(
+              (NewRelicConfig) settingAttribute.getValue(), encryptionDetails, newRelicApplicationName, null);
+    } catch (Exception e) {
+      throw new WingsException(errorCode, USER)
+          .addParam("message",
+              "Error in resolving newrelic application " + newRelicApplicationName + " . "
+                  + ExceptionUtils.getMessage(e));
+    }
+  }
+
+  @Override
+  public NewRelicApplication resolveApplicationId(@NotNull String settingId, @NotNull String newRelicApplicationId) {
+    ErrorCode errorCode = null;
+    try {
+      final SettingAttribute settingAttribute = settingsService.get(settingId);
+      List<EncryptedDataDetail> encryptionDetails =
+          secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
+      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                            .accountId(settingAttribute.getAccountId())
+                                            .appId(GLOBAL_APP_ID)
+                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                            .build();
+      errorCode = ErrorCode.NEWRELIC_ERROR;
+      return delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
+          .resolveNewRelicApplicationId(
+              (NewRelicConfig) settingAttribute.getValue(), encryptionDetails, newRelicApplicationId, null);
+    } catch (Exception e) {
+      throw new WingsException(errorCode, USER)
+          .addParam("message",
+              "Error in resolving newrelic application with ID: " + newRelicApplicationId + " . "
+                  + ExceptionUtils.getMessage(e));
     }
   }
 }

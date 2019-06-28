@@ -21,6 +21,8 @@ import java.util.Collection;
  */
 public interface NewRelicRestClient {
   String NAMES_PARAM = "names[]";
+  String FILTER_NAME_PARAM = "filter[name]";
+  String FILTER_IDS_PARAM = "filter[ids]";
   /**
    * Lists all the applications of new relic
    *
@@ -29,6 +31,14 @@ public interface NewRelicRestClient {
   @GET("v2/applications.json")
   Call<NewRelicApplicationsResponse> listAllApplications(
       @Header("X-Api-Key") String apiKey, @Query("page") int pageCount);
+
+  @GET("v2/applications.json")
+  Call<NewRelicApplicationsResponse> listAllApplicationsByNameFilter(
+      @Header("X-Api-Key") String apiKey, @Query(FILTER_NAME_PARAM) String newRelicApplicationName);
+
+  @GET("v2/applications.json")
+  Call<NewRelicApplicationsResponse> listAllApplicationsByIdFilter(
+      @Header("X-Api-Key") String apiKey, @Query(FILTER_IDS_PARAM) String newRelicApplicationId);
 
   @GET("v2/applications/{applicationId}/instances.json")
   Call<NewRelicApplicationInstancesResponse> listAppInstances(
