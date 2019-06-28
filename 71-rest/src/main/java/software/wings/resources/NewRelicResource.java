@@ -137,4 +137,22 @@ public class NewRelicResource {
   public RestResponse<List<NewRelicState.Metric>> getAllMetricNames(@QueryParam("accountId") String accountId) {
     return new RestResponse<>(newRelicService.getListOfMetrics());
   }
+
+  @GET
+  @Path("/resolve-application-name")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<NewRelicApplication> resolveNewRelicAppName(@QueryParam("accountId") String accountId,
+      @QueryParam("settingId") final String settingId, @QueryParam("newRelicApplicationName") String newRelicAppName) {
+    return new RestResponse<>(newRelicService.resolveApplicationName(settingId, newRelicAppName));
+  }
+
+  @GET
+  @Path("/resolve-application-id")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<NewRelicApplication> resolveNewRelicAppId(@QueryParam("accountId") String accountId,
+      @QueryParam("settingId") final String settingId, @QueryParam("newRelicApplicationId") String newRelicAppId) {
+    return new RestResponse<>(newRelicService.resolveApplicationId(settingId, newRelicAppId));
+  }
 }

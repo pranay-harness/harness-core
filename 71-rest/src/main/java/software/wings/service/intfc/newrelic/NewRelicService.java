@@ -36,4 +36,6 @@ public interface NewRelicService {
   Map<String, TimeSeriesMetricDefinition> metricDefinitions(Collection<Metric> metrics);
   Map<String, Metric> getMetricsCorrespondingToMetricNames(List<String> metricNames);
   List<Metric> getListOfMetrics();
+  NewRelicApplication resolveApplicationName(@NotNull String settingId, @NotNull String newRelicApplicationName);
+  NewRelicApplication resolveApplicationId(@NotNull String settingId, @NotNull String newRelicApplicationId);
 }

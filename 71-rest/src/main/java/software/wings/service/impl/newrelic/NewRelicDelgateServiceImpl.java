@@ -64,6 +64,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by rsingh on 8/28/17.
@@ -160,14 +161,90 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
 
   public boolean validateConfig(NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails)
       throws IOException {
-    getAllApplications(newRelicConfig, encryptedDataDetails, null);
+    validateApplications(newRelicConfig, encryptedDataDetails, 1);
     return true;
+  }
+
+  private List<NewRelicApplication> validateApplications(
+      NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails, int pageCount) {
+    final Call<NewRelicApplicationsResponse> request =
+        getNewRelicRestClient(newRelicConfig)
+            .listAllApplications(getApiKey(newRelicConfig, encryptedDataDetails), pageCount);
+    Response<NewRelicApplicationsResponse> response;
+    try {
+      response = request.execute();
+      if (response.isSuccessful()) {
+        return response.body().getApplications();
+      } else {
+        throw new WingsException("Unsuccessful response while fetching data from NewRelic. Error message: "
+            + response.errorBody() + " Request: " + request.request().url().toString());
+      }
+    } catch (Exception ex) {
+      throw new WingsException("Unsuccessful response while fetching data from NewRelic. Error message: "
+          + ex.getMessage() + " Request: " + request.request().url().toString());
+    }
+  }
+
+  @Override
+  public NewRelicApplication resolveNewRelicApplicationName(@NotNull NewRelicConfig newRelicConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String newRelicApplicationName, ThirdPartyApiCallLog apiCallLog)
+      throws IOException {
+    if (apiCallLog == null) {
+      apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), GLOBAL_APP_ID, null);
+    }
+    final Call<NewRelicApplicationsResponse> request =
+        getNewRelicRestClient(newRelicConfig)
+            .listAllApplicationsByNameFilter(getApiKey(newRelicConfig, encryptedDataDetails), newRelicApplicationName);
+    List<NewRelicApplication> newRelicApplications = callAndParseApplicationAPI(request, newRelicConfig, apiCallLog);
+    if (isEmpty(newRelicApplications)) {
+      throw new WingsException(
+          "Application Name " + newRelicApplicationName + " could not be resolved to a valid NewRelic Application.");
+    }
+    if (newRelicApplications.size() > 1) {
+      throw new WingsException(
+          "Application Name " + newRelicApplicationName + " matched more than one NewRelic Application.");
+    }
+
+    if (isNotEmpty(newRelicApplicationName) && !newRelicApplicationName.equals(newRelicApplications.get(0).getName())) {
+      throw new WingsException(
+          "Application Name " + newRelicApplicationName + " does not match a NewRelic Application.");
+    }
+    return newRelicApplications.get(0);
+  }
+
+  @Override
+  public NewRelicApplication resolveNewRelicApplicationId(@NotNull NewRelicConfig newRelicConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String newRelicApplicationId, ThirdPartyApiCallLog apiCallLog)
+      throws IOException, CloneNotSupportedException {
+    if (apiCallLog == null) {
+      apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), GLOBAL_APP_ID, null);
+    }
+    final Call<NewRelicApplicationsResponse> request =
+        getNewRelicRestClient(newRelicConfig)
+            .listAllApplicationsByIdFilter(getApiKey(newRelicConfig, encryptedDataDetails), newRelicApplicationId);
+    List<NewRelicApplication> newRelicApplications = callAndParseApplicationAPI(request, newRelicConfig, apiCallLog);
+    if (isEmpty(newRelicApplications)) {
+      throw new WingsException(
+          "Application ID " + newRelicApplicationId + " could not be resolved to a valid NewRelic Application.");
+    }
+    if (newRelicApplications.size() > 1) {
+      throw new WingsException(
+          "Application ID " + newRelicApplicationId + " matched more than one NewRelic Application.");
+    }
+
+    return newRelicApplications.get(0);
   }
 
   @Override
   public List<NewRelicApplication> getAllApplications(NewRelicConfig newRelicConfig,
       List<EncryptedDataDetail> encryptedDataDetails, ThirdPartyApiCallLog apiCallLog) throws IOException {
     List<NewRelicApplication> rv = new ArrayList<>();
+    List<NewRelicApplication> largeApps = validateApplications(newRelicConfig, encryptedDataDetails, 5);
+    if (!isEmpty(largeApps)) {
+      rv.add(NewRelicApplication.builder().id(-1).build());
+      return rv;
+    }
+
     if (apiCallLog == null) {
       apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), GLOBAL_APP_ID, null);
     }
@@ -179,43 +256,51 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       final Call<NewRelicApplicationsResponse> request =
           getNewRelicRestClient(newRelicConfig)
               .listAllApplications(getApiKey(newRelicConfig, encryptedDataDetails), pageCount);
-      apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                       .name(URL_STRING)
-                                       .value(request.request().url().toString())
-                                       .type(FieldType.URL)
-                                       .build());
-
-      Response<NewRelicApplicationsResponse> response;
-      try {
-        response = request.execute();
-      } catch (Exception e) {
-        apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-        apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
-        delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
-        throw new WingsException("Unsuccessful response while fetching data from NewRelic. Error message: "
-            + e.getMessage() + " Request: " + request.request().url().toString());
+      List<NewRelicApplication> apps = callAndParseApplicationAPI(request, newRelicConfig, apiCallLog);
+      if (isEmpty(apps)) {
+        break;
       }
-      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-      if (response.isSuccessful()) {
-        apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
-        List<NewRelicApplication> applications = response.body().getApplications();
-        delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
-        if (isEmpty(applications)) {
-          break;
-        } else {
-          rv.addAll(applications);
-        }
-      } else {
-        apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
-        delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
-        throw new WingsException(
-            ErrorCode.NEWRELIC_ERROR, response.errorBody().string(), EnumSet.of(ReportTarget.UNIVERSAL));
-      }
-
+      rv.addAll(apps);
       pageCount++;
     }
 
     return rv;
+  }
+
+  private List<NewRelicApplication> callAndParseApplicationAPI(Call<NewRelicApplicationsResponse> request,
+      NewRelicConfig newRelicConfig, ThirdPartyApiCallLog apiCallLog) throws IOException {
+    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                     .name(URL_STRING)
+                                     .value(request.request().url().toString())
+                                     .type(FieldType.URL)
+                                     .build());
+
+    Response<NewRelicApplicationsResponse> response;
+    try {
+      response = request.execute();
+    } catch (Exception e) {
+      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+      apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
+      delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
+      throw new WingsException("Unsuccessful response while fetching data from NewRelic. Error message: "
+          + e.getMessage() + " Request: " + request.request().url().toString());
+    }
+    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+    if (response.isSuccessful()) {
+      apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
+      List<NewRelicApplication> applications = response.body().getApplications();
+      delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
+      if (isEmpty(applications)) {
+        return null;
+      } else {
+        return applications;
+      }
+    } else {
+      apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
+      delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
+      throw new WingsException(
+          ErrorCode.NEWRELIC_ERROR, response.errorBody().string(), EnumSet.of(ReportTarget.UNIVERSAL));
+    }
   }
 
   @Override
