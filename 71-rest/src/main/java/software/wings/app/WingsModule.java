@@ -325,6 +325,8 @@ import software.wings.service.intfc.HarnessSampleAppService;
 import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
+import software.wings.service.intfc.InfrastructureDefinitionServiceImpl;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.InfrastructureProvisionerService;
@@ -533,6 +535,7 @@ public class WingsModule extends DependencyModule {
     bind(GkeClusterService.class).to(GkeClusterServiceImpl.class);
     bind(KubernetesContainerService.class).to(KubernetesContainerServiceImpl.class);
     bind(InfrastructureMappingService.class).to(InfrastructureMappingServiceImpl.class);
+    bind(InfrastructureDefinitionService.class).to(InfrastructureDefinitionServiceImpl.class);
     bind(InfrastructureProvisionerService.class).to(InfrastructureProvisionerServiceImpl.class);
     bind(ResourceConstraintService.class).to(ResourceConstraintServiceImpl.class);
     bind(LicenseService.class).to(LicenseServiceImpl.class);

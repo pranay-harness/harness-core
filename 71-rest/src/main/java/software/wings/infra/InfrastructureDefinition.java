@@ -15,7 +15,11 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
 
@@ -23,6 +27,9 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @Entity(value = "infrastructureDefinitions", noClassnameStored = true)
+@Indexes(@Index(options = @IndexOptions(name = "infraDefinitionIdx", unique = true),
+    fields = { @Field("appId")
+               , @Field("envId"), @Field("name") }))
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
@@ -41,4 +48,5 @@ public class InfrastructureDefinition
   @NotNull private DeploymentType deploymentType;
   @NotNull private CloudProviderInfrastructure infrastructure;
   private List<String> scopedToServices;
+  @NotNull private String envId;
 }
