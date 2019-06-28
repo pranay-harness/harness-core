@@ -353,6 +353,18 @@ public class HarnessTagServiceImpl implements HarnessTagService {
         permissionType = PermissionType.ENV;
         break;
 
+      case WORKFLOW:
+        permissionType = PermissionType.WORKFLOW;
+        break;
+
+      case PIPELINE:
+        permissionType = PermissionType.PIPELINE;
+        break;
+
+      case PROVISIONER:
+        permissionType = PermissionType.PROVISIONER;
+        break;
+
       default:
         unhandled(entityType);
         throw new InvalidRequestException(format("Unsupported entity type %s for tags", entityType), USER);
