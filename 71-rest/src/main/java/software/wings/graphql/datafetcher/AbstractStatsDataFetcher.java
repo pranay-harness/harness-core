@@ -42,16 +42,17 @@ import java.util.stream.Collectors;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
-public abstract class AbstractStatsDataFetcher<A, F, G, T> implements DataFetcher {
+public abstract class AbstractStatsDataFetcher<A, F, G, T, S> implements DataFetcher {
   private static final String EXCEPTION_MSG_DELIMITER = ";; ";
   private static final String AGGREGATE_FUNCTION = "aggregateFunction";
   private static final String FILTERS = "filters";
   private static final String GROUP_BY = "groupBy";
   private static final String GROUP_BY_TIME = "groupByTime";
+  private static final String SORT_CRITERIA = "sortCriteria";
   private static final String GENERIC_EXCEPTION_MSG = "An error has occurred. Please contact the Harness support team.";
 
   protected abstract QLData fetch(
-      String accountId, A aggregateFunction, List<F> filters, List<G> groupBy, T groupByTime);
+      String accountId, A aggregateFunction, List<F> filters, List<G> groupBy, T groupByTime, List<S> sort);
 
   @Override
   public final Object get(DataFetchingEnvironment dataFetchingEnvironment) {
@@ -62,14 +63,15 @@ public abstract class AbstractStatsDataFetcher<A, F, G, T> implements DataFetche
       Class<F> filterClass = (Class<F>) typeArguments[1];
       Class<G> groupByClass = (Class<G>) typeArguments[2];
       Class<T> groupByTimeClass = (Class<T>) typeArguments[3];
+      Class<S> sortClass = (Class<S>) typeArguments[4];
 
       final A aggregateFunction = (A) fetchObject(dataFetchingEnvironment, AGGREGATE_FUNCTION, aggregationFuncClass);
       final List<F> filters = (List<F>) fetchObject(dataFetchingEnvironment, FILTERS, filterClass);
       final List<G> groupBy = (List<G>) fetchObject(dataFetchingEnvironment, GROUP_BY, groupByClass);
       final T groupByTime = (T) fetchObject(dataFetchingEnvironment, GROUP_BY_TIME, groupByTimeClass);
-
-      result = fetch(
-          AbstractDataFetcher.getAccountId(dataFetchingEnvironment), aggregateFunction, filters, groupBy, groupByTime);
+      final List<S> sort = (List<S>) fetchObject(dataFetchingEnvironment, SORT_CRITERIA, sortClass);
+      result = fetch(AbstractDataFetcher.getAccountId(dataFetchingEnvironment), aggregateFunction, filters, groupBy,
+          groupByTime, sort);
 
     } catch (WingsException ex) {
       throw new WingsException(getCombinedErrorMessages(ex), ex, ex.getReportTargets());

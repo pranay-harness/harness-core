@@ -14,7 +14,7 @@ import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.FlatE
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class SettingsAttributeStatsDataFetcher<A, F, G, T> extends RealTimeStatsDataFetcher<A, F, G, T> {
+public abstract class SettingsAttributeStatsDataFetcher<A, F, G, T, S> extends RealTimeStatsDataFetcher<A, F, G, T, S> {
   protected QLAggregatedData getAggregatedData(List<String> groupBy, Class entityClass, Query query) {
     String firstLevelAggregation = groupBy.get(0);
     String entityIdColumn = getAggregationFieldName(firstLevelAggregation);

@@ -7,6 +7,7 @@ import software.wings.beans.Environment;
 import software.wings.graphql.datafetcher.RealTimeStatsDataFetcher;
 import software.wings.graphql.schema.type.aggregation.QLAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLData;
+import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentAggregation;
 import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentFilter;
@@ -18,10 +19,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class EnvironmentStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggregateFunction, QLEnvironmentFilter,
-    QLEnvironmentAggregation, QLTimeSeriesAggregation> {
+    QLEnvironmentAggregation, QLTimeSeriesAggregation, QLNoOpSortCriteria> {
   @Override
   protected QLData fetch(String accountId, QLAggregateFunction aggregateFunction, List<QLEnvironmentFilter> filters,
-      List<QLEnvironmentAggregation> groupBy, QLTimeSeriesAggregation groupByTime) {
+      List<QLEnvironmentAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
+      List<QLNoOpSortCriteria> sortCriteria) {
     final Class entityClass = Environment.class;
     List<String> groupByList = new ArrayList<>();
     if (isNotEmpty(groupBy)) {

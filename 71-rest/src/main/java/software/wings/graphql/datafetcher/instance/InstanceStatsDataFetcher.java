@@ -17,6 +17,7 @@ import software.wings.graphql.datafetcher.RealTimeStatsDataFetcher;
 import software.wings.graphql.schema.type.aggregation.QLAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLDataPoint;
+import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
 import software.wings.graphql.schema.type.aggregation.QLStringFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
@@ -31,10 +32,10 @@ import java.util.List;
 
 @Slf4j
 public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggregateFunction, QLInstanceFilter,
-    QLInstanceAggregation, QLTimeSeriesAggregation> {
+    QLInstanceAggregation, QLTimeSeriesAggregation, QLNoOpSortCriteria> {
   @Override
   protected QLData fetch(String accountId, QLAggregateFunction aggregateFunction, List<QLInstanceFilter> filters,
-      List<QLInstanceAggregation> groupBy, QLTimeSeriesAggregation groupByTime) {
+      List<QLInstanceAggregation> groupBy, QLTimeSeriesAggregation groupByTime, List<QLNoOpSortCriteria> sortCriteria) {
     Query<Instance> query = wingsPersistence.createQuery(Instance.class);
     query.filter("accountId", accountId);
     query.filter("isDeleted", false);

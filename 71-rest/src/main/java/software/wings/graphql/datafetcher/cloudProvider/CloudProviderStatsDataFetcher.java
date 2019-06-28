@@ -12,6 +12,7 @@ import software.wings.graphql.datafetcher.SettingsAttributeStatsDataFetcher;
 import software.wings.graphql.schema.type.aggregation.QLAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLFilterType;
+import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.cloudprovider.QLCloudProviderAggregation;
 import software.wings.graphql.schema.type.aggregation.cloudprovider.QLCloudProviderFilter;
@@ -23,10 +24,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class CloudProviderStatsDataFetcher extends SettingsAttributeStatsDataFetcher<QLAggregateFunction,
-    QLCloudProviderFilter, QLCloudProviderAggregation, QLTimeSeriesAggregation> {
+    QLCloudProviderFilter, QLCloudProviderAggregation, QLTimeSeriesAggregation, QLNoOpSortCriteria> {
   @Override
   protected QLData fetch(String accountId, QLAggregateFunction aggregateFunction, List<QLCloudProviderFilter> filters,
-      List<QLCloudProviderAggregation> groupBy, QLTimeSeriesAggregation groupByTime) {
+      List<QLCloudProviderAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
+      List<QLNoOpSortCriteria> sortCriteria) {
     final Class entityClass = SettingAttribute.class;
     List<String> groupByList = new ArrayList<>();
     if (isNotEmpty(groupBy)) {
