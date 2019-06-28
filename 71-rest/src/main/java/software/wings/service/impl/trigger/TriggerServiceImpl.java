@@ -810,7 +810,7 @@ public class TriggerServiceImpl implements TriggerService {
       resolveServiceInfrastructures(trigger, triggerWorkflowVariableValues, envId, workflowVariables);
 
       /* Fetch the deployment data to find out the required entity types */
-      final DeploymentMetadata deploymentMetadata = workflowService.fetchDeploymentMetadata(
+      DeploymentMetadata deploymentMetadata = workflowService.fetchDeploymentMetadata(
           trigger.getAppId(), workflow, triggerWorkflowVariableValues, null, null, Include.ARTIFACT_SERVICE);
 
       // Fetch the service
@@ -937,7 +937,7 @@ public class TriggerServiceImpl implements TriggerService {
     notNullCheck("Trigger execution might have pruned", triggerExecution);
     Trigger trigger = get(triggerExecution.getAppId(), triggerExecution.getTriggerId());
     notNullCheck("Trigger might have been deleted", trigger);
-    final ExecutionStatus taskStatus = triggerResponse.getExecutionStatus();
+    ExecutionStatus taskStatus = triggerResponse.getExecutionStatus();
     if (ExecutionStatus.SUCCESS.equals(taskStatus)) {
       if (triggerResponse instanceof TriggerDeploymentNeededResponse) {
         TriggerDeploymentNeededResponse triggerDeploymentNeededResponse =
@@ -1290,7 +1290,7 @@ public class TriggerServiceImpl implements TriggerService {
         artifactStream = artifactStreamService.getArtifactStreamByName(
             appId, serviceArtifactSummaryEntry.getKey(), artifactSummary.getName());
       } else {
-        final List<String> artifactStreamIds =
+        List<String> artifactStreamIds =
             artifactStreamService.fetchArtifactStreamIdsForService(appId, serviceArtifactSummaryEntry.getKey());
         if (isEmpty(artifactStreamIds)) {
           throw new InvalidRequestException("No artifact sources defined for the service ["
