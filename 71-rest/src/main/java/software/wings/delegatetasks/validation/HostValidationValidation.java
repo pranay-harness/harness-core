@@ -45,9 +45,23 @@ public class HostValidationValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<DelegateConnectionResult> validate() {
-    HostValidationTaskParameters parameters = (HostValidationTaskParameters) getParameters()[0];
-    return validateHosts(parameters.getHostNames(), parameters.getConnectionSetting(),
-        parameters.getEncryptionDetails(), parameters.getExecutionCredential());
+    Object[] parameters = getParameters();
+    // TODO: temp change. Should go away when we enable delegate validation capability framework.
+    HostValidationTaskParameters hostValidationTaskParameters = null;
+    if (!(parameters[0] instanceof HostValidationTaskParameters)) {
+      hostValidationTaskParameters = HostValidationTaskParameters.builder()
+                                         .hostNames((List<String>) parameters[2])
+                                         .connectionSetting((SettingAttribute) parameters[3])
+                                         .encryptionDetails((List<EncryptedDataDetail>) parameters[4])
+                                         .executionCredential((ExecutionCredential) parameters[5])
+                                         .build();
+    } else {
+      hostValidationTaskParameters = (HostValidationTaskParameters) getParameters()[0];
+    }
+
+    return validateHosts(hostValidationTaskParameters.getHostNames(),
+        hostValidationTaskParameters.getConnectionSetting(), hostValidationTaskParameters.getEncryptionDetails(),
+        hostValidationTaskParameters.getExecutionCredential());
   }
 
   private List<DelegateConnectionResult> validateHosts(List<String> hostNames, SettingAttribute connectionSetting,
