@@ -1,3 +1,9 @@
 package software.wings.infra;
 
-public interface CloudProviderInfrastructure { String getCloudProviderId(); }
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
+
+@JsonTypeInfo(use = Id.NAME, property = "type")
+public interface CloudProviderInfrastructure {
+  String getCloudProviderId();
+}
