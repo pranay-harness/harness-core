@@ -266,6 +266,8 @@ SERVICE_VARIABLE_TYPE:
       value: TEXT
     - name: Encrypted Text
       value: ENCRYPTED_TEXT
+    - name: Artifact
+      value: ARTIFACT
 
 
 LOG_DRIVER:

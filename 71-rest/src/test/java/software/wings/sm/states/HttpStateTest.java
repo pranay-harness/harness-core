@@ -58,7 +58,9 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.TaskType;
+import software.wings.beans.Variable;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
+import software.wings.beans.template.TemplateUtils;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionContext;
@@ -120,6 +122,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Inject private Injector injector;
   @Mock private DelegateService delegateService;
   @Mock private ExecutionContextImpl executionContext;
+  @Mock private TemplateUtils templateUtils;
 
   private ExecutionResponse asyncExecutionResponse;
 
@@ -256,7 +259,14 @@ public class HttpStateTest extends WingsBaseTest {
     Map<String, Object> map = ImmutableMap.of(ARTIFACT,
         anArtifact().withMetadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "2.31.0-MASTER-SNAPSHOT")).build());
     when(workflowStandardParams.paramMap(context)).thenReturn(map);
-
+    List<Variable> templateVariables = asList(aVariable().name("url").value("localhost:8088/health/status").build(),
+        aVariable().name("buildNo").value("2.31.0-MASTER-SNAPSHOT").build(),
+        aVariable().name("contentType").value("application/json").build());
+    Map<String, Object> variableMap = new HashMap<>();
+    variableMap.put("url", "localhost:8088/health/status");
+    variableMap.put("buildNo", "2.31.0-MASTER-SNAPSHOT");
+    variableMap.put("contentType", "application/json");
+    when(templateUtils.processTemplateVariables(context, templateVariables)).thenReturn(variableMap);
     HttpState.Builder jsonHttpStateBuilder =
         aHttpState()
             .withName("healthCheck1")
@@ -582,6 +592,7 @@ public class HttpStateTest extends WingsBaseTest {
     HttpState httpState = builder.build();
     on(httpState).set("activityHelperService", activityHelperService);
     on(httpState).set("delegateService", delegateService);
+    on(httpState).set("templateUtils", templateUtils);
 
     doAnswer(invocation -> {
       DelegateTask task = invocation.getArgumentAt(0, DelegateTask.class);

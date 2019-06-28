@@ -110,8 +110,8 @@ public class MultiArtifactWorkflowExecutionServiceHelper {
     return isEmpty(string) || string.equals("null");
   }
 
-  public List<Artifact> filterArtifactsForWorkflow(
-      List<ArtifactVariable> artifactVariables, String workflowId, List<String> serviceIds, String accountId) {
+  public List<Artifact> filterArtifactsForExecution(
+      List<ArtifactVariable> artifactVariables, WorkflowExecution workflowExecution, String accountId) {
     List<Artifact> artifacts = new ArrayList<>();
     if (isNotEmpty(artifactVariables)) {
       for (ArtifactVariable variable : artifactVariables) {
@@ -125,23 +125,21 @@ public class MultiArtifactWorkflowExecutionServiceHelper {
         }
         switch (variable.getEntityType()) {
           case WORKFLOW:
-            if (variable.getEntityId().equals(workflowId)) {
-              Artifact artifact = artifactService.get(accountId, variable.getValue());
-              if (artifact == null) {
-                throw new InvalidRequestException(
-                    format("Unable to get artifact for artifact variable: [%s]", variable.getName()), USER);
-              }
-              artifacts.add(artifact);
+            if (isNotEmpty(workflowExecution.getWorkflowIds())
+                && workflowExecution.getWorkflowIds().contains(variable.getEntityId())) {
+              findArtifactForArtifactVariable(accountId, artifacts, variable);
+            }
+            break;
+          case ENVIRONMENT:
+            if (isNotEmpty(workflowExecution.getEnvIds())
+                && workflowExecution.getEnvIds().contains(variable.getEntityId())) {
+              findArtifactForArtifactVariable(accountId, artifacts, variable);
             }
             break;
           case SERVICE:
-            if (isNotEmpty(serviceIds) && serviceIds.contains(variable.getEntityId())) {
-              Artifact artifact = artifactService.get(accountId, variable.getValue());
-              if (artifact == null) {
-                throw new InvalidRequestException(
-                    format("Unable to get artifact for artifact variable: [%s]", variable.getName()), USER);
-              }
-              artifacts.add(artifact);
+            if (isNotEmpty(workflowExecution.getServiceIds())
+                && workflowExecution.getServiceIds().contains(variable.getEntityId())) {
+              findArtifactForArtifactVariable(accountId, artifacts, variable);
             }
             break;
           default:
@@ -150,5 +148,14 @@ public class MultiArtifactWorkflowExecutionServiceHelper {
       }
     }
     return artifacts;
+  }
+
+  private void findArtifactForArtifactVariable(String accountId, List<Artifact> artifacts, ArtifactVariable variable) {
+    Artifact artifact = artifactService.get(accountId, variable.getValue());
+    if (artifact == null) {
+      throw new InvalidRequestException(
+          format("Unable to get artifact for artifact variable: [%s]", variable.getName()), USER);
+    }
+    artifacts.add(artifact);
   }
 }

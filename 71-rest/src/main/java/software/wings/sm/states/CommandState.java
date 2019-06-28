@@ -11,6 +11,7 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.joor.Reflect.on;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
+import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
@@ -1147,30 +1148,25 @@ public class CommandState extends State {
 
   private Map<String, Artifact> findArtifacts(String serviceId, ExecutionContext context) {
     if (isRollback()) {
-      return findPreviousArtifacts(context);
+      return findPreviousArtifacts(serviceId, context);
     }
     // todo: get all overrides - workflow + service level
     return ((DeploymentExecutionContext) context).getArtifactsForService(serviceId);
   }
 
-  private Map<String, Artifact> findPreviousArtifacts(ExecutionContext context) {
+  private Map<String, Artifact> findPreviousArtifacts(String serviceId, ExecutionContext context) {
     Map<String, Artifact> map = new HashMap<>();
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     List<ArtifactVariable> artifactVariables = workflowStandardParams.getWorkflowElement().getArtifactVariables();
-
-    if (isNotEmpty(artifactVariables)) {
+    Map<String, Artifact> artifactVariablesForPhase = getArtifactVariablesForPhase(context);
+    Artifact artifact = null;
+    if (isNotEmpty(artifactVariables) && isNotEmpty(artifactVariablesForPhase)) {
       for (ArtifactVariable artifactVariable : artifactVariables) {
-        SweepingOutput sweepingOutputInput =
-            context.prepareSweepingOutputBuilder(SweepingOutput.Scope.PHASE).name(artifactVariable.getName()).build();
-        SweepingOutput result = sweepingOutputService.find(sweepingOutputInput.getAppId(),
-            sweepingOutputInput.getName(), sweepingOutputInput.getPipelineExecutionId(),
-            sweepingOutputInput.getWorkflowExecutionId(), sweepingOutputInput.getPhaseExecutionId(), null);
-
-        if (result == null) {
-          return null;
+        if (SERVICE.equals(artifactVariable.getEntityType()) && artifactVariable.getEntityId().equals(serviceId)) {
+          artifact = artifactVariablesForPhase.get(artifactVariable.getName());
+        } else if (EntityType.WORKFLOW.equals(artifactVariable.getEntityType())) {
+          artifact = artifactVariablesForPhase.get(artifactVariable.getName());
         }
-        Artifact artifact = (Artifact) KryoUtils.asInflatedObject(result.getOutput());
-
         // todo: throw error if null?
         if (artifact != null) {
           map.put(artifactVariable.getName(), artifact);
@@ -1178,6 +1174,19 @@ public class CommandState extends State {
       }
     }
     return map;
+  }
+
+  private Map<String, Artifact> getArtifactVariablesForPhase(ExecutionContext context) {
+    SweepingOutput sweepingOutputInput =
+        context.prepareSweepingOutputBuilder(SweepingOutput.Scope.PHASE).name("artifacts").build();
+    SweepingOutput result = sweepingOutputService.find(sweepingOutputInput.getAppId(), sweepingOutputInput.getName(),
+        sweepingOutputInput.getPipelineExecutionId(), sweepingOutputInput.getWorkflowExecutionId(),
+        sweepingOutputInput.getPhaseExecutionId(), null);
+
+    if (result == null) {
+      return null;
+    }
+    return (Map<String, Artifact>) KryoUtils.asInflatedObject(result.getOutput());
   }
 
   private ScriptType getScriptType(List<CommandUnit> commandUnits) {

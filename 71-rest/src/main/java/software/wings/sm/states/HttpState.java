@@ -46,6 +46,8 @@ import software.wings.beans.Activity.Type;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.TaskType;
 import software.wings.beans.Variable;
+import software.wings.beans.VariableType;
+import software.wings.beans.template.TemplateUtils;
 import software.wings.common.Constants;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.impl.ActivityHelperService;
@@ -64,6 +66,7 @@ import software.wings.stencils.DefaultValue;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -102,6 +105,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
 
   @Inject private transient ActivityHelperService activityHelperService;
   @Inject private transient SweepingOutputService sweepingOutputService;
+  @Inject private transient TemplateUtils templateUtils;
   @Inject protected transient ManagerDecryptionService managerDecryptionService;
   @Inject protected transient SecretManager secretManager;
 
@@ -265,19 +269,26 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     String resolvedBody = body;
     String resolvedHeader = header;
     String resolvedAssertion = assertion;
-    Map<String, Object> templateVariables = convertToVariableMap(this.getTemplateVariables());
-    if (isNotEmpty(templateVariables)) {
-      resolvedUrl = fetchTemplatedValue(url);
-      resolvedBody = fetchTemplatedValue(body);
-      resolvedHeader = fetchTemplatedValue(header);
-      resolvedAssertion = fetchTemplatedValue(assertion);
+    List<Variable> variables = new ArrayList<>();
+    if (isNotEmpty(this.getTemplateVariables())) {
+      for (Variable variable : this.getTemplateVariables()) {
+        if (!VariableType.ARTIFACT.equals(variable.getType())) {
+          variables.add(variable);
+        }
+      }
+      Map<String, Object> templateVariables = convertToVariableMap(variables);
+      if (isNotEmpty(templateVariables)) {
+        resolvedUrl = fetchTemplatedValue(url, templateVariables);
+        resolvedBody = fetchTemplatedValue(body, templateVariables);
+        resolvedHeader = fetchTemplatedValue(header, templateVariables);
+        resolvedAssertion = fetchTemplatedValue(assertion, templateVariables);
+      }
     }
     return asList(resolvedUrl, resolvedBody, resolvedHeader, resolvedAssertion);
   }
 
-  private String fetchTemplatedValue(String fieldName) {
+  private String fetchTemplatedValue(String fieldName, Map<String, Object> templatedVariables) {
     String templatedField = ManagerExpressionEvaluator.getName(fieldName);
-    Map<String, Object> templatedVariables = convertToVariableMap(getTemplateVariables());
     return templatedVariables.containsKey(templatedField) ? (String) templatedVariables.get(templatedField) : fieldName;
   }
 
@@ -336,8 +347,8 @@ public class HttpState extends State implements SweepingOutputStateMixin {
                                                       .url(finalUrl)
                                                       .socketTimeoutMillis(taskSocketTimeout)
                                                       .build();
-    HttpStateExecutionDataBuilder executionDataBuilder =
-        HttpStateExecutionData.builder().templateVariables(convertToVariableMap(getTemplateVariables()));
+    HttpStateExecutionDataBuilder executionDataBuilder = HttpStateExecutionData.builder().templateVariables(
+        templateUtils.processTemplateVariables(context, getTemplateVariables()));
 
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
     renderTaskParameters(context, executionDataBuilder.build(), httpTaskParameters, expressionFunctorToken);
@@ -398,7 +409,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
 
       String errorMessage = httpStateExecutionResponse.getErrorMessage();
       executionData.setAssertionStatement(assertion);
-      executionData.setTemplateVariable(convertToVariableMap(getTemplateVariables()));
+      executionData.setTemplateVariable(templateUtils.processTemplateVariables(context, getTemplateVariables()));
       ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
       if (!evaluateAssertion(context, executionData) || executionData.getStatus().equals(ExecutionStatus.ERROR)) {
         executionStatus = ExecutionStatus.FAILED;

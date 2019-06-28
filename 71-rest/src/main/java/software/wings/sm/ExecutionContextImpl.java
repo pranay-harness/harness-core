@@ -278,26 +278,14 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     Map<String, Artifact> map = new HashMap<>();
     WorkflowStandardParams workflowStandardParams = getContextElement(ContextElementType.STANDARD);
     List<ArtifactVariable> artifactVariables = workflowStandardParams.getWorkflowElement().getArtifactVariables();
-    Map<String, Object> workflowVariables = getArtifactVariablesDefinedAtWorkflowLevel();
+    Map<String, Artifact> artifactVariablesForPhase = getArtifactVariablesForPhase();
     Artifact artifact = null;
-    if (isNotEmpty(artifactVariables)) {
+    if (isNotEmpty(artifactVariables) && isNotEmpty(artifactVariablesForPhase)) {
       for (ArtifactVariable artifactVariable : artifactVariables) {
-        if (SERVICE.equals(artifactVariable.getEntityType())) {
-          SweepingOutput sweepingOutputInput =
-              this.prepareSweepingOutputBuilder(Scope.PHASE).name(artifactVariable.getName()).build();
-          SweepingOutput result = sweepingOutputService.find(sweepingOutputInput.getAppId(),
-              sweepingOutputInput.getName(), sweepingOutputInput.getPipelineExecutionId(),
-              sweepingOutputInput.getWorkflowExecutionId(), sweepingOutputInput.getPhaseExecutionId(), null);
-
-          if (result == null) {
-            return null;
-          }
-          artifact = (Artifact) KryoUtils.asInflatedObject(result.getOutput());
-
+        if (SERVICE.equals(artifactVariable.getEntityType()) && artifactVariable.getEntityId().equals(serviceId)) {
+          artifact = artifactVariablesForPhase.get(artifactVariable.getName());
         } else if (EntityType.WORKFLOW.equals(artifactVariable.getEntityType())) {
-          if (isNotEmpty(workflowVariables)) {
-            artifact = (Artifact) workflowVariables.get(artifactVariable.getName());
-          }
+          artifact = artifactVariablesForPhase.get(artifactVariable.getName());
         }
         // todo: throw error if null?
         if (artifact != null) {
@@ -308,8 +296,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     return map;
   }
 
-  private Map<String, Object> getArtifactVariablesDefinedAtWorkflowLevel() {
-    SweepingOutput sweepingOutputInput = this.prepareSweepingOutputBuilder(Scope.WORKFLOW).name("artifacts").build();
+  private Map<String, Artifact> getArtifactVariablesForPhase() {
+    SweepingOutput sweepingOutputInput = this.prepareSweepingOutputBuilder(Scope.PHASE).name("artifacts").build();
     SweepingOutput result = sweepingOutputService.find(sweepingOutputInput.getAppId(), sweepingOutputInput.getName(),
         sweepingOutputInput.getPipelineExecutionId(), sweepingOutputInput.getWorkflowExecutionId(),
         sweepingOutputInput.getPhaseExecutionId(), null);
@@ -317,7 +305,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     if (result == null) {
       return null;
     }
-    return (Map<String, Object>) KryoUtils.asInflatedObject(result.getOutput());
+    return (Map<String, Artifact>) KryoUtils.asInflatedObject(result.getOutput());
   }
 
   @Override
