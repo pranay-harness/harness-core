@@ -259,66 +259,66 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
            * In some versions of Tf, we have seen that -force-copy flag was not honoured by Tf.
            * Please do not remove.
            */
+          String command = format("terraform init -force-copy %s",
+              tfBackendConfigsFile.exists() ? format("-backend-config=%s", tfBackendConfigsFile.getAbsolutePath())
+                                            : "");
+          saveExecutionLog(parameters, command, CommandExecutionStatus.RUNNING);
           code = executeShellCommand(
-              format("echo \"yes\" | terraform init -force-copy %s && echo \"Terraform init... done\"",
-                  tfBackendConfigsFile.exists() ? format("-backend-config=%s", tfBackendConfigsFile.getAbsolutePath())
-                                                : ""),
-              scriptDirectory, parameters, activityLogOutputStream);
+              format("echo \"yes\" | %s", command), scriptDirectory, parameters, activityLogOutputStream);
 
           if (isNotEmpty(parameters.getWorkspace())) {
             WorkspaceCommand workspaceCommand =
                 getWorkspaceCommand(scriptDirectory, parameters.getWorkspace(), parameters.getTimeoutInMillis());
-            code = executeShellCommand(format("terraform workspace %s %s && echo \"Terraform workspace ... done\"",
-                                           workspaceCommand.command, parameters.getWorkspace()),
-                scriptDirectory, parameters, activityLogOutputStream);
+            command = format("terraform workspace %s %s", workspaceCommand.command, parameters.getWorkspace());
+            saveExecutionLog(parameters, command, CommandExecutionStatus.RUNNING);
+            code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
           }
           if (code == 0) {
-            code = executeShellCommand(
-                format("terraform refresh -input=false %s %s && echo \"Terraform refresh ... done\"", targetArgs,
-                    tfVarFiles),
-                scriptDirectory, parameters, activityLogOutputStream);
+            command = format("terraform refresh -input=false %s %s ", targetArgs, tfVarFiles);
+            saveExecutionLog(parameters, command, CommandExecutionStatus.RUNNING);
+            code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
           }
           if (code == 0) {
-            code = executeShellCommand(
-                format("terraform plan -out=tfplan -input=false %s %s && echo \"Terraform plan ... done\"", targetArgs,
-                    tfVarFiles),
-                scriptDirectory, parameters, planLogOutputStream);
+            command = format("terraform plan -out=tfplan -input=false %s %s ", targetArgs, tfVarFiles);
+            saveExecutionLog(parameters, command, CommandExecutionStatus.RUNNING);
+            code = executeShellCommand(command, scriptDirectory, parameters, planLogOutputStream);
           }
           if (code == 0 && !parameters.isRunPlanOnly()) {
-            code = executeShellCommand("terraform apply -input=false tfplan && echo \"Terraform apply... done\"",
-                scriptDirectory, parameters, activityLogOutputStream);
+            command = "terraform apply -input=false tfplan";
+            saveExecutionLog(parameters, command, CommandExecutionStatus.RUNNING);
+            code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
           }
           if (code == 0 && !parameters.isRunPlanOnly()) {
-            code = executeShellCommand(format("terraform output --json > %s", tfOutputsFile.toString()),
-                scriptDirectory, parameters, activityLogOutputStream);
+            command = format("terraform output --json > %s", tfOutputsFile.toString());
+            saveExecutionLog(parameters, command, CommandExecutionStatus.RUNNING);
+            code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
           }
           break;
         }
         case DESTROY: {
-          code = executeShellCommand(
-              format("terraform init -input=false %s && echo \"Terraform init... done\"",
-                  tfBackendConfigsFile.exists() ? format("-backend-config=%s", tfBackendConfigsFile.getAbsolutePath())
-                                                : ""),
-              scriptDirectory, parameters, activityLogOutputStream);
+          String command = format("terraform init -input=false %s",
+              tfBackendConfigsFile.exists() ? format("-backend-config=%s", tfBackendConfigsFile.getAbsolutePath())
+                                            : "");
+          saveExecutionLog(parameters, command, CommandExecutionStatus.RUNNING);
+          code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
 
           if (isNotEmpty(parameters.getWorkspace())) {
             WorkspaceCommand workspaceCommand =
                 getWorkspaceCommand(scriptDirectory, parameters.getWorkspace(), parameters.getTimeoutInMillis());
-            code = executeShellCommand(format("terraform workspace %s %s && echo \"Terraform workspace ... done\"",
-                                           workspaceCommand.command, parameters.getWorkspace()),
-                scriptDirectory, parameters, activityLogOutputStream);
+            command = format("terraform workspace %s %s", workspaceCommand.command, parameters.getWorkspace());
+            saveExecutionLog(parameters, command, CommandExecutionStatus.RUNNING);
+            code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
           }
 
           if (code == 0) {
-            code =
-                executeShellCommand(format("terraform refresh -input=false %s %s && echo \"Terraform refresh... done\"",
-                                        targetArgs, tfVarFiles),
-                    scriptDirectory, parameters, activityLogOutputStream);
+            command = format("terraform refresh -input=false %s %s", targetArgs, tfVarFiles);
+            saveExecutionLog(parameters, command, CommandExecutionStatus.RUNNING);
+            code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
           }
           if (code == 0) {
-            code = executeShellCommand(
-                format("terraform destroy -force %s %s && echo \"Terraform destroy... done\"", targetArgs, tfVarFiles),
-                scriptDirectory, parameters, activityLogOutputStream);
+            command = format("terraform destroy -force %s %s", targetArgs, tfVarFiles);
+            saveExecutionLog(parameters, command, CommandExecutionStatus.RUNNING);
+            code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
           }
           break;
         }
