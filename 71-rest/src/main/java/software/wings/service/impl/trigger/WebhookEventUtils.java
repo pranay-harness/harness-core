@@ -223,7 +223,7 @@ public class WebhookEventUtils {
             return;
           }
 
-          throw new InvalidRequestException(format("Push event expected. Found %s event", gitHubEventType));
+          throw new InvalidRequestException(format("Push event expected. Found %s event", gitHubEventType), USER);
         }
 
         case GITLAB: {
@@ -232,7 +232,7 @@ public class WebhookEventUtils {
             return;
           }
 
-          throw new InvalidRequestException(format("Push event expected. Found %s event", gitLabEventType));
+          throw new InvalidRequestException(format("Push event expected. Found %s event", gitLabEventType), USER);
         }
 
         case BITBUCKET: {
@@ -243,7 +243,7 @@ public class WebhookEventUtils {
             return;
           }
 
-          throw new InvalidRequestException(format("Push event expected. Found %s event", bitBucketEventType));
+          throw new InvalidRequestException(format("Push event expected. Found %s event", bitBucketEventType), USER);
         }
 
         default:
