@@ -79,7 +79,6 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
   @Inject TimeScaleDBService timeScaleDBService;
   @Inject QLStatsHelper statsHelper;
   private DeploymentTableSchema schema = new DeploymentTableSchema();
-  private static final int MAX_RETRY = 5;
 
   @Override
   protected QLData fetch(String accountId, QLAggregateFunction aggregateFunction, List<QLDeploymentFilter> filters,
@@ -236,7 +235,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
             break;
           case TIMESTAMP:
             long time = resultSet.getTimestamp(field.getFieldName()).getTime();
-            dataPointBuilder.time(resultSet.getTimestamp(field.getFieldName()).getTime());
+            dataPointBuilder.time(time);
             break;
           default:
             throw new RuntimeException("UnsupportedType " + field.getDataType());
@@ -429,7 +428,6 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
   }
 
   private void decorateQueryWithFilters(SelectQuery selectQuery, List<QLDeploymentFilter> filters) {
-    boolean timeFilterAdded = false;
     for (QLDeploymentFilter filter : filters) {
       if (filter.getType().getMetaDataFields().getDataType().equals(QLFilterKind.SIMPLE)) {
         decorateSimpleFilter(selectQuery, filter);
@@ -437,7 +435,6 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
         decorateArrayFilter(selectQuery, filter);
       } else if (filter.getType().getMetaDataFields().getDataType().equals(QLFilterKind.TIME)) {
         decorateTimeFilter(selectQuery, filter);
-        timeFilterAdded = true;
       }
     }
   }
@@ -776,21 +773,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
 
   private void decorateQueryWithGroupByTime(
       List<DeploymentMetaDataFields> fieldNames, SelectQuery selectQuery, QLTimeSeriesAggregation groupByTime) {
-    String unit = "days";
-    int value = groupByTime.getTimeAggregationValue();
-
-    switch (groupByTime.getTimeAggregationType()) {
-      case DAY:
-        unit = "days";
-        break;
-      case HOUR:
-        unit = "hours";
-        break;
-      default:
-        logger.info("Unsupported timeAggregationType " + groupByTime.getTimeAggregationType());
-    }
-
-    String timeBucket = "time_bucket('" + value + " " + unit + "',endtime)";
+    String timeBucket = getGroupByTimeQuery(groupByTime, "endtime");
 
     selectQuery.addCustomColumns(Converter.toCustomColumnSqlObject(
         new CustomExpression(timeBucket).setDisableParens(true), DeploymentMetaDataFields.TIME_SERIES.getFieldName()));
@@ -821,53 +804,4 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
   public String getEntityType() {
     return NameService.deployment;
   }
-
-  //  public static void main(String[] args) {
-  //    DeploymentStatsDataFetcher fetcher = new DeploymentStatsDataFetcher();
-  //    TimeScaleDBConfig config = TimeScaleDBConfig.builder()
-  //                                   .timescaledbUrl("jdbc:postgresql://localhost:5432/harness")
-  //                                   .timescaledbUsername("admin")
-  //                                   .timescaledbPassword("password")
-  //                                   .build();
-  //    fetcher.timeScaleDBService = new TimeScaleDBServiceImpl(config);
-  //
-  //    final QLTimeSeriesAggregation timeSeriesAggregation = QLTimeSeriesAggregation.builder()
-  //                                                              .timeAggregationType(QLTimeAggregationType.HOUR)
-  //                                                              .timeAggregationValue(1)
-  //                                                              .build();
-  //    final QLAggregateFunction aggregateFunction = QLAggregateFunction.builder()
-  //                                                      .aggregateOperation(QLAggregateOperation.MAX)
-  //                                                      .aggregateValue(QLDeploymentFilterType.Duration.name())
-  //                                                      .build();
-  //
-  //    List<QLDeploymentAggregation> aggregations = Lists.newArrayList(Environment,Application);
-  //
-  //    QLDeploymentFilter deploymentFilter1 = QLDeploymentFilter.builder()
-  //                                               .type(QLDeploymentFilterType.Pipeline)
-  //                                               .stringFilter(QLStringFilter.builder()
-  //                                                                 .operator(QLStringOperator.EQUALS)
-  //                                                                 .values(Arrays.asList("Test").toArray(new
-  //                                                                 String[1])) .build())
-  //                                               .build();
-  //
-  //    QLDeploymentFilter deploymentFilter2 =
-  //        QLDeploymentFilter.builder()
-  //            .type(QLDeploymentFilterType.Service)
-  //            .stringFilter(QLStringFilter.builder()
-  //                              .operator(QLStringOperator.IN)
-  //                              .values(Arrays.asList("Test1", "Test2").toArray(new String[1]))
-  //                              .build())
-  //            .build();
-  //
-  //    QLDeploymentFilter deploymentFilter3 =
-  //        QLDeploymentFilter.builder()
-  //            .type(QLDeploymentFilterType.EndTime)
-  //            .numberFilter(QLNumberFilter.builder()
-  //                              .operator(QLNumberOperator.LESS_THAN)
-  //                              .values(Arrays.asList(System.currentTimeMillis()).toArray(new Number[1]))
-  //                              .build())
-  //            .build();
-  //    List<QLDeploymentFilter> filters = Lists.newArrayList(deploymentFilter1,deploymentFilter2,deploymentFilter3);
-  //    System.out.println(fetcher.getData("kmpySmUISimoRrJL6NL73w", null, null, aggregations, null));
-  //  }
 }

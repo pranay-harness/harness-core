@@ -2,6 +2,7 @@ package software.wings.service.impl.instance.stats.collector;
 
 import com.google.inject.Inject;
 
+import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.infrastructure.instance.Instance;
@@ -29,12 +30,14 @@ public class StatsCollectorImpl implements StatsCollector {
 
   private InstanceStatService statService;
   private DashboardStatisticsService dashboardStatisticsService;
+  private UsageMetricsEventPublisher usageMetricsEventPublisher;
 
   @Inject
   public StatsCollectorImpl(DashboardStatisticsService dashboardStatisticsService, InstanceStatService statService,
-      WingsPersistence persistence) {
+      WingsPersistence persistence, UsageMetricsEventPublisher usageMetricsEventPublisher) {
     this.dashboardStatisticsService = dashboardStatisticsService;
     this.statService = statService;
+    this.usageMetricsEventPublisher = usageMetricsEventPublisher;
   }
 
   @Override
@@ -73,15 +76,14 @@ public class StatsCollectorImpl implements StatsCollector {
   }
 
   boolean createStats(String accountId, Instant timesamp) {
+    List<Instance> instances = null;
     try {
-      List<Instance> instances =
-          dashboardStatisticsService.getAppInstancesForAccount(accountId, timesamp.toEpochMilli());
+      instances = dashboardStatisticsService.getAppInstancesForAccount(accountId, timesamp.toEpochMilli());
       log.info("Fetched instances. Count: {}, Account: {}, Time: {}", instances.size(), accountId, timesamp);
 
       Mapper<Collection<Instance>, InstanceStatsSnapshot> instanceMapper = new InstanceMapper(timesamp, accountId);
       InstanceStatsSnapshot stats = instanceMapper.map(instances);
       boolean saved = statService.save(stats);
-
       if (!saved) {
         log.error("Error saving instance usage stats. AccountId: {}, Timestamp: {}", accountId, timesamp);
       }
@@ -91,6 +93,8 @@ public class StatsCollectorImpl implements StatsCollector {
     } catch (Exception e) {
       log.error("Could not create stats. AccountId: {}", accountId, e);
       return false;
+    } finally {
+      usageMetricsEventPublisher.publishInstanceTimeSeries(accountId, timesamp.toEpochMilli(), instances);
     }
   }
 }

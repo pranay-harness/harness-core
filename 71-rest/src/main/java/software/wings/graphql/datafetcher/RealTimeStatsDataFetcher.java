@@ -192,11 +192,12 @@ public abstract class RealTimeStatsDataFetcher<A, F, G, T, S> extends AbstractSt
     for (TwoLevelAggregatedData aggregatedData : aggregatedDataList) {
       EntitySummary firstLevelInfo = aggregatedData.getFirstLevelInfo();
       EntitySummary secondLevelInfo = aggregatedData.getSecondLevelInfo();
-      QLReference secondLevelRef = QLReference.builder()
-                                       .type(secondLevelType)
-                                       .name(getName(secondLevelNameResult, secondLevelInfo.getId(), secondLevelType))
-                                       .id(secondLevelInfo.getId())
-                                       .build();
+      QLReference secondLevelRef =
+          QLReference.builder()
+              .type(secondLevelType)
+              .name(getEntityName(secondLevelNameResult, secondLevelInfo.getId(), secondLevelType))
+              .id(secondLevelInfo.getId())
+              .build();
       QLDataPoint secondLevelDataPoint =
           QLDataPoint.builder().key(secondLevelRef).value(aggregatedData.getCount()).build();
 
@@ -205,11 +206,12 @@ public abstract class RealTimeStatsDataFetcher<A, F, G, T, S> extends AbstractSt
       if (sameAsPrevious) {
         prevStackedDataPoint.getValues().add(secondLevelDataPoint);
       } else {
-        QLReference firstLevelRef = QLReference.builder()
-                                        .type(firstLevelType)
-                                        .name(getName(firstLevelNameResult, firstLevelInfo.getId(), firstLevelType))
-                                        .id(firstLevelInfo.getId())
-                                        .build();
+        QLReference firstLevelRef =
+            QLReference.builder()
+                .type(firstLevelType)
+                .name(getEntityName(firstLevelNameResult, firstLevelInfo.getId(), firstLevelType))
+                .id(firstLevelInfo.getId())
+                .build();
         prevStackedDataPoint =
             QLStackedDataPoint.builder().key(firstLevelRef).values(Lists.newArrayList(secondLevelDataPoint)).build();
         stackedDataPointList.add(prevStackedDataPoint);

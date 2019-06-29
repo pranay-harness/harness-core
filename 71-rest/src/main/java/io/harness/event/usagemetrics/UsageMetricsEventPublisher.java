@@ -1,5 +1,6 @@
 package io.harness.event.usagemetrics;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.event.model.EventConstants.ACCOUNT_CREATED_AT;
 import static io.harness.event.model.EventConstants.ACCOUNT_ID;
 import static io.harness.event.model.EventConstants.ACCOUNT_NAME;
@@ -17,6 +18,7 @@ import static io.harness.event.model.EventConstants.WORKFLOW_EXECUTION_STATUS;
 import static io.harness.event.model.EventConstants.WORKFLOW_ID;
 import static io.harness.event.model.EventConstants.WORKFLOW_NAME;
 import static io.harness.event.model.EventConstants.WORKFLOW_TYPE;
+import static java.util.stream.Collectors.groupingBy;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -32,9 +34,13 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.service.impl.event.timeseries.TimeSeriesBatchEventInfo;
+import software.wings.service.impl.event.timeseries.TimeSeriesBatchEventInfo.DataPoint;
 import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -84,8 +90,6 @@ public class UsageMetricsEventPublisher {
   }
 
   public void publishDeploymentTimeSeriesEvent(String accountId, WorkflowExecution workflowExecution) {
-    Map properties = new HashMap<>();
-
     Map<String, String> stringData = new HashMap<>();
     Map<String, List<String>> listData = new HashMap<>();
     Map<String, Long> longData = new HashMap<>();
@@ -239,5 +243,47 @@ public class UsageMetricsEventPublisher {
         logger.error("Failed to publish event:[{}]", event.getEventType(), e);
       }
     });
+  }
+
+  public void publishInstanceTimeSeries(String accountId, long timestamp, List<Instance> instances) {
+    if (isEmpty(instances)) {
+      return;
+    }
+
+    List<TimeSeriesBatchEventInfo.DataPoint> dataPointList = new ArrayList<>();
+
+    // key - infraMappingId, value - Set<Instance>
+    Map<String, List<Instance>> infraMappingInstancesMap =
+        instances.stream().collect(groupingBy(Instance::getInfraMappingId));
+
+    infraMappingInstancesMap.values().forEach(instanceList -> {
+      if (isEmpty(instanceList)) {
+        return;
+      }
+
+      int size = instanceList.size();
+      Instance instance = instanceList.get(0);
+      Map<String, Object> data = new HashMap<>();
+      data.put(EventProcessor.ACCOUNTID, instance.getAccountId());
+      data.put(EventProcessor.APPID, instance.getAppId());
+      data.put(EventProcessor.SERVICEID, instance.getServiceId());
+      data.put(EventProcessor.ENVID, instance.getEnvId());
+      data.put(EventProcessor.INFRAMAPPINGID, instance.getInfraMappingId());
+      data.put(EventProcessor.COMPUTEPROVIDERID, instance.getComputeProviderId());
+      data.put(EventProcessor.INSTANCETYPE, instance.getInstanceType().name());
+      data.put(EventProcessor.ARTIFACTID, instance.getLastArtifactId());
+      data.put(EventProcessor.INSTANCECOUNT, size);
+
+      DataPoint dataPoint = DataPoint.builder().data(data).build();
+      dataPointList.add(dataPoint);
+    });
+
+    TimeSeriesBatchEventInfo eventInfo = TimeSeriesBatchEventInfo.builder()
+                                             .accountId(accountId)
+                                             .timestamp(timestamp)
+                                             .dataPointList(dataPointList)
+                                             .build();
+    EventData eventData = EventData.builder().eventInfo(eventInfo).build();
+    publishEvent(Event.builder().eventType(EventType.INSTANCE_EVENT).eventData(eventData).build());
   }
 }

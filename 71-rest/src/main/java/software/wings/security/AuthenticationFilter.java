@@ -94,7 +94,10 @@ public class AuthenticationFilter implements ContainerRequestFilter {
       String apiKey = containerRequestContext.getHeaderString(API_KEY_HEADER);
 
       if (isNotEmpty(apiKey)) {
-        ensureValidQPM(containerRequestContext.getHeaderString(API_KEY_HEADER));
+        if (!containerRequestContext.getUriInfo().getAbsolutePath().getPath().endsWith("graphql")) {
+          ensureValidQPM(containerRequestContext.getHeaderString(API_KEY_HEADER));
+        }
+
         try {
           validateExternalFacingApiRequest(containerRequestContext);
           return;

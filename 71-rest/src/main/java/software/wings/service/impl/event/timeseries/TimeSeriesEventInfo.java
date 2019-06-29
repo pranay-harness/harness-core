@@ -10,7 +10,10 @@ import java.util.Map;
 @Value
 @Builder
 public class TimeSeriesEventInfo implements EventInfo {
+  private String accountId;
   long timestamp;
+
+  private Map<String, Object> data;
 
   private Map<String, String> stringData;
 
@@ -24,5 +27,12 @@ public class TimeSeriesEventInfo implements EventInfo {
 
   private Map<String, Boolean> booleanData;
 
-  private String accountId;
+  @lombok.Value
+  @Builder
+  public static class Value<T> {
+    private Type type;
+    private T value;
+  }
+
+  public enum Type { STRING, STRING_LIST, INTEGER, LONG, FLOAT, BOOLEAN }
 }

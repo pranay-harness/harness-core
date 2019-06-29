@@ -40,18 +40,4 @@ class InstanceMapper implements Mapper<Collection<Instance>, InstanceStatsSnapsh
 
     return appCounts.values();
   }
-
-  private Collection<AggregateCount> aggregateByService(Collection<Instance> instances) {
-    // key = serviceId
-    Map<String, AggregateCount> serviceCounts = new HashMap<>();
-
-    for (Instance instance : instances) {
-      serviceCounts.putIfAbsent(instance.getServiceId(),
-          new AggregateCount(EntityType.SERVICE, instance.getServiceName(), instance.getServiceId(), 0));
-      AggregateCount serviceCount = serviceCounts.get(instance.getServiceId());
-      serviceCount.incrementCount(1);
-    }
-
-    return serviceCounts.values();
-  }
 }

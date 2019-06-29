@@ -19,7 +19,6 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
-import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.instance.dashboard.EntitySummary;
 import software.wings.graphql.schema.type.aggregation.QLAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLAggregateOperation;
@@ -30,6 +29,7 @@ import software.wings.graphql.schema.type.aggregation.QLNumberOperator;
 import software.wings.graphql.schema.type.aggregation.QLReference;
 import software.wings.graphql.schema.type.aggregation.QLStringFilter;
 import software.wings.graphql.schema.type.aggregation.QLStringOperator;
+import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.utils.nameservice.NameResult;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.FlatEntitySummaryStats;
 
@@ -50,6 +50,8 @@ public abstract class AbstractStatsDataFetcher<A, F, G, T, S> implements DataFet
   private static final String GROUP_BY_TIME = "groupByTime";
   private static final String SORT_CRITERIA = "sortCriteria";
   private static final String GENERIC_EXCEPTION_MSG = "An error has occurred. Please contact the Harness support team.";
+
+  public static final int MAX_RETRY = 5;
 
   protected abstract QLData fetch(
       String accountId, A aggregateFunction, List<F> filters, List<G> groupBy, T groupByTime, List<S> sort);
@@ -162,7 +164,7 @@ public abstract class AbstractStatsDataFetcher<A, F, G, T, S> implements DataFet
     }
   }
 
-  protected void setNumberFilter(FieldEnd<? extends Query<Instance>> field, QLNumberFilter numberFilter) {
+  protected void setNumberFilter(FieldEnd<? extends Query<?>> field, QLNumberFilter numberFilter) {
     if (numberFilter == null) {
       throw new WingsException("Filter is null");
     }
@@ -223,7 +225,7 @@ public abstract class AbstractStatsDataFetcher<A, F, G, T, S> implements DataFet
     }
   }
 
-  protected String getAggregateFunction(QLAggregateFunction aggregateFunction) {
+  protected String getMongoAggregateOperation(QLAggregateFunction aggregateFunction) {
     QLAggregateOperation aggregateOperation = aggregateFunction.getAggregateOperation();
     switch (aggregateOperation) {
       case MIN:
@@ -235,7 +237,23 @@ public abstract class AbstractStatsDataFetcher<A, F, G, T, S> implements DataFet
       case AVERAGE:
         return "$avg";
       default:
-        throw new WingsException("Unknown aggregation function" + aggregateOperation);
+        throw new WingsException("Unknown aggregation operation" + aggregateOperation);
+    }
+  }
+
+  public String getSqlAggregateOperation(QLAggregateFunction aggregateFunction) {
+    QLAggregateOperation aggregateOperation = aggregateFunction.getAggregateOperation();
+    switch (aggregateOperation) {
+      case MIN:
+        return "min";
+      case MAX:
+        return "max";
+      case SUM:
+        return "sum";
+      case AVERAGE:
+        return "avg";
+      default:
+        throw new WingsException("Unknown aggregation operation" + aggregateOperation);
     }
   }
 
@@ -248,13 +266,13 @@ public abstract class AbstractStatsDataFetcher<A, F, G, T, S> implements DataFet
   protected QLDataPoint getDataPoint(FlatEntitySummaryStats stats, String entityType, NameResult nameResult) {
     QLReference qlReference = QLReference.builder()
                                   .type(entityType)
-                                  .name(getName(nameResult, stats.getEntityId(), entityType))
+                                  .name(getEntityName(nameResult, stats.getEntityId(), entityType))
                                   .id(stats.getEntityId())
                                   .build();
     return QLDataPoint.builder().value(stats.getCount()).key(qlReference).build();
   }
 
-  protected String getName(NameResult nameResult, String id, String type) {
+  public String getEntityName(NameResult nameResult, String id, String type) {
     if (nameResult.getIdNameMap().containsKey(id)) {
       return nameResult.getIdNameMap().get(id);
     }
@@ -262,6 +280,44 @@ public abstract class AbstractStatsDataFetcher<A, F, G, T, S> implements DataFet
   }
 
   public abstract String getEntityType();
+
+  public String getGroupByTimeQuery(QLTimeSeriesAggregation groupByTime, String dbFieldName) {
+    String unit = "days";
+    int value = groupByTime.getTimeAggregationValue();
+
+    switch (groupByTime.getTimeAggregationType()) {
+      case DAY:
+        unit = "days";
+        break;
+      case HOUR:
+        unit = "hours";
+        break;
+      default:
+        logger.info("Unsupported timeAggregationType " + groupByTime.getTimeAggregationType());
+    }
+
+    return "time_bucket('" + value + " " + unit + "'," + dbFieldName + ")";
+  }
+
+  public void generateSqlInQuery(StringBuilder queryBuilder, Object[] values) {
+    if (isEmpty(values)) {
+      throw new WingsException("Filter should have at least one value");
+    }
+
+    boolean isString = values instanceof String[];
+
+    for (Object value : values) {
+      if (isString) {
+        queryBuilder.append('\'');
+      }
+      queryBuilder.append(value);
+      if (isString) {
+        queryBuilder.append('\'');
+      }
+      queryBuilder.append(',');
+    }
+    queryBuilder.deleteCharAt(queryBuilder.length() - 1);
+  }
 
   @Value
   @Builder

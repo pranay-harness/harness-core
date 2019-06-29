@@ -7,18 +7,23 @@ import static org.mongodb.morphia.aggregation.Projection.projection;
 import static org.mongodb.morphia.query.Sort.ascending;
 import static org.mongodb.morphia.query.Sort.descending;
 
+import com.google.inject.Inject;
+
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.RealTimeStatsDataFetcher;
 import software.wings.graphql.schema.type.aggregation.QLAggregateFunction;
+import software.wings.graphql.schema.type.aggregation.QLAggregatedData;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
+import software.wings.graphql.schema.type.aggregation.QLSinglePointData;
 import software.wings.graphql.schema.type.aggregation.QLStringFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceAggregation;
@@ -33,98 +38,116 @@ import java.util.List;
 @Slf4j
 public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggregateFunction, QLInstanceFilter,
     QLInstanceAggregation, QLTimeSeriesAggregation, QLNoOpSortCriteria> {
+  @Inject private WingsPersistence wingsPersistence;
+  @Inject InstanceTimeSeriesDataHelper timeSeriesDataHelper;
+
   @Override
   protected QLData fetch(String accountId, QLAggregateFunction aggregateFunction, List<QLInstanceFilter> filters,
       List<QLInstanceAggregation> groupBy, QLTimeSeriesAggregation groupByTime, List<QLNoOpSortCriteria> sortCriteria) {
-    Query<Instance> query = wingsPersistence.createQuery(Instance.class);
-    query.filter("accountId", accountId);
-    query.filter("isDeleted", false);
-
-    if (isNotEmpty(filters)) {
-      filters.forEach(filter -> {
-        QLStringFilter stringFilter = filter.getStringFilter();
-        QLNumberFilter numberFilter = filter.getNumberFilter();
-
-        if (stringFilter != null && numberFilter != null) {
-          throw new WingsException("Only one filter should be set");
+    if (groupByTime != null) {
+      if (isNotEmpty(groupBy)) {
+        if (groupBy.size() == 1) {
+          return timeSeriesDataHelper.getTimeSeriesAggregatedData(
+              accountId, aggregateFunction, filters, groupByTime, groupBy.get(0));
+        } else {
+          throw new WingsException("Invalid query. Only one groupBy column allowed");
         }
-
-        if (stringFilter == null && numberFilter == null) {
-          throw new WingsException("All filters are null");
-        }
-
-        QLInstanceFilterType filterType = filter.getType();
-        String columnName = getFieldName(filterType);
-        FieldEnd<? extends Query<Instance>> field = query.field(columnName);
-
-        if (stringFilter != null) {
-          setStringFilter(field, stringFilter);
-        }
-
-        if (numberFilter != null) {
-          setNumberFilter(field, numberFilter);
-        }
-      });
-    }
-
-    if (isNotEmpty(groupBy)) {
-      if (groupBy.size() == 1) {
-        QLInstanceAggregation firstLevelAggregation = groupBy.get(0);
-        String entityIdColumn = getFieldName(firstLevelAggregation);
-        String entityNameColumn = getNameField(firstLevelAggregation);
-        String function = getAggregateFunction(aggregateFunction);
-        List<QLDataPoint> dataPoints = new ArrayList<>();
-        List<FlatEntitySummaryStats> summaryStats = new ArrayList<>();
-
-        wingsPersistence.getDatastore(Instance.class)
-            .createAggregation(Instance.class)
-            .match(query)
-            .group(Group.id(grouping(entityIdColumn)), grouping("count", accumulator(function, 1)),
-                grouping(entityNameColumn, grouping("$first", entityNameColumn)))
-            .project(projection("_id").suppress(), projection("entityId", "_id." + entityIdColumn),
-                projection("entityName", entityNameColumn), projection("count"))
-            .aggregate(FlatEntitySummaryStats.class)
-            .forEachRemaining(summaryStats::add);
-
-        return getQlAggregatedData(firstLevelAggregation.name(), dataPoints, summaryStats);
-
-      } else if (groupBy.size() == 2) {
-        QLInstanceAggregation firstLevelAggregation = groupBy.get(0);
-        QLInstanceAggregation secondLevelAggregation = groupBy.get(1);
-        String entityIdColumn = getFieldName(firstLevelAggregation);
-        String entityNameColumn = getNameField(firstLevelAggregation);
-        String secondLevelEntityIdColumn = getFieldName(secondLevelAggregation);
-        String secondLevelEntityNameColumn = getNameField(secondLevelAggregation);
-        String function = getAggregateFunction(aggregateFunction);
-
-        List<TwoLevelAggregatedData> aggregatedDataList = new ArrayList<>();
-        wingsPersistence.getDatastore(query.getEntityClass())
-            .createAggregation(Instance.class)
-            .match(query)
-            .group(Group.id(grouping(entityIdColumn), grouping(secondLevelEntityIdColumn)),
-                grouping("count", accumulator(function, 1)),
-                grouping("firstLevelInfo",
-                    grouping("$first", projection("id", entityIdColumn), projection("name", entityNameColumn))),
-                grouping("secondLevelInfo",
-                    grouping("$first", projection("id", secondLevelEntityIdColumn),
-                        projection("name", secondLevelEntityNameColumn))))
-            .sort(
-                ascending("_id." + entityIdColumn), ascending("_id." + secondLevelEntityIdColumn), descending("count"))
-            .aggregate(TwoLevelAggregatedData.class)
-            .forEachRemaining(twoLevelAggregatedData -> { aggregatedDataList.add(twoLevelAggregatedData); });
-
-        return getStackedData(aggregatedDataList, firstLevelAggregation.name(), secondLevelAggregation.name());
-
       } else {
-        throw new WingsException("Only one or two level aggregations supported right now");
+        return timeSeriesDataHelper.getTimeSeriesData(accountId, aggregateFunction, filters, groupByTime);
       }
 
     } else {
-      return getSingleDataPointData(query);
+      Query<Instance> query = wingsPersistence.createQuery(Instance.class);
+      query.filter("accountId", accountId);
+      query.filter("isDeleted", false);
+
+      if (isNotEmpty(filters)) {
+        filters.forEach(filter -> {
+          QLStringFilter stringFilter = filter.getStringFilter();
+          QLNumberFilter numberFilter = filter.getNumberFilter();
+
+          if (stringFilter != null && numberFilter != null) {
+            throw new WingsException("Only one filter should be set");
+          }
+
+          if (stringFilter == null && numberFilter == null) {
+            throw new WingsException("All filters are null");
+          }
+
+          QLInstanceFilterType filterType = filter.getType();
+          String columnName = getMongoFieldName(filterType);
+          FieldEnd<? extends Query<Instance>> field = query.field(columnName);
+
+          if (stringFilter != null) {
+            setStringFilter(field, stringFilter);
+          }
+
+          if (numberFilter != null) {
+            setNumberFilter(field, numberFilter);
+          }
+        });
+      }
+
+      if (isNotEmpty(groupBy)) {
+        if (groupBy.size() == 1) {
+          QLInstanceAggregation firstLevelAggregation = groupBy.get(0);
+          String entityIdColumn = getMongoFieldName(firstLevelAggregation);
+          String entityNameColumn = getNameField(firstLevelAggregation);
+          String function = getMongoAggregateOperation(aggregateFunction);
+          List<QLDataPoint> dataPoints = new ArrayList<>();
+
+          wingsPersistence.getDatastore(Instance.class)
+              .createAggregation(Instance.class)
+              .match(query)
+              .group(Group.id(grouping(entityIdColumn)), grouping("count", accumulator(function, 1)),
+                  grouping(entityNameColumn, grouping("$first", entityNameColumn)))
+              .project(projection("_id").suppress(), projection("entityId", "_id." + entityIdColumn),
+                  projection("entityName", entityNameColumn), projection("count"))
+              .aggregate(FlatEntitySummaryStats.class)
+              .forEachRemaining(flatEntitySummaryStats -> {
+                QLDataPoint dataPoint = getDataPoint(flatEntitySummaryStats, firstLevelAggregation.name());
+                dataPoints.add(dataPoint);
+              });
+          return QLAggregatedData.builder().dataPoints(dataPoints).build();
+        } else if (groupBy.size() == 2) {
+          QLInstanceAggregation firstLevelAggregation = groupBy.get(0);
+          QLInstanceAggregation secondLevelAggregation = groupBy.get(1);
+          String entityIdColumn = getMongoFieldName(firstLevelAggregation);
+          String entityNameColumn = getNameField(firstLevelAggregation);
+          String secondLevelEntityIdColumn = getMongoFieldName(secondLevelAggregation);
+          String secondLevelEntityNameColumn = getNameField(secondLevelAggregation);
+          String function = getMongoAggregateOperation(aggregateFunction);
+
+          List<TwoLevelAggregatedData> aggregatedDataList = new ArrayList<>();
+          wingsPersistence.getDatastore(query.getEntityClass())
+              .createAggregation(Instance.class)
+              .match(query)
+              .group(Group.id(grouping(entityIdColumn), grouping(secondLevelEntityIdColumn)),
+                  grouping("count", accumulator(function, 1)),
+                  grouping("firstLevelInfo",
+                      grouping("$first", projection("id", entityIdColumn), projection("name", entityNameColumn))),
+                  grouping("secondLevelInfo",
+                      grouping("$first", projection("id", secondLevelEntityIdColumn),
+                          projection("name", secondLevelEntityNameColumn))))
+              .sort(ascending("_id." + entityIdColumn), ascending("_id." + secondLevelEntityIdColumn),
+                  descending("count"))
+              .aggregate(TwoLevelAggregatedData.class)
+              .forEachRemaining(twoLevelAggregatedData -> { aggregatedDataList.add(twoLevelAggregatedData); });
+
+          return getStackedData(aggregatedDataList, firstLevelAggregation.name(), secondLevelAggregation.name());
+
+        } else {
+          throw new WingsException("Only one or two level aggregations supported right now");
+        }
+
+      } else {
+        long count = query.count();
+        return QLSinglePointData.builder().dataPoint(QLDataPoint.builder().value(count).build()).build();
+      }
     }
   }
 
-  private String getFieldName(QLInstanceFilterType filterType) {
+  private String getMongoFieldName(QLInstanceFilterType filterType) {
     switch (filterType) {
       case CreatedAt:
         return "createdAt";
@@ -143,7 +166,7 @@ public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggrega
     }
   }
 
-  private String getFieldName(QLInstanceAggregation aggregation) {
+  private String getMongoFieldName(QLInstanceAggregation aggregation) {
     switch (aggregation) {
       case Application:
         return "appId";
