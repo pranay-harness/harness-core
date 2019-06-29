@@ -1,9 +1,10 @@
 package io.harness.event.timeseries.processor;
 
-import io.harness.persistence.PersistentEntity;
-import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
+import io.harness.event.model.EventInfo;
 
-public interface EventProcessor<T extends PersistentEntity> {
+public interface EventProcessor<T extends EventInfo> {
+  int MAX_RETRY_COUNT = 5;
+
   /**
    EXECUTIONID TEXT NOT NULL,
    STARTTIME TIMESTAMP NOT NULL,
@@ -36,6 +37,13 @@ public interface EventProcessor<T extends PersistentEntity> {
   String PIPELINE = "PIPELINE";
   String DURATION = "DURATION";
   String ARTIFACT_LIST = "ARTIFACT_LIST";
+  String SERVICEID = "SERVICEID";
+  String ARTIFACTID = "ARTIFACTID";
+  String ENVID = "ENVID";
+  String INFRAMAPPINGID = "INFRAMAPPINGID";
+  String COMPUTEPROVIDERID = "COMPUTEPROVIDERID";
+  String INSTANCECOUNT = "INSTANCECOUNT";
+  String INSTANCETYPE = "INSTANCETYPE";
 
-  void processEvent(TimeSeriesEventInfo eventInfo);
+  void processEvent(T eventInfo);
 }

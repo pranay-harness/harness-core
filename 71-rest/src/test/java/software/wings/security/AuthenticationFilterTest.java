@@ -38,6 +38,7 @@ import software.wings.service.intfc.HarnessApiKeyService;
 import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Arrays;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.WebApplicationException;
@@ -175,6 +176,7 @@ public class AuthenticationFilterTest {
     queryParams.put("accountId", Arrays.asList(ACCOUNT_ID));
     when(uriInfo.getQueryParameters()).thenReturn(queryParams);
     when(uriInfo.getPathParameters()).thenReturn(new MultivaluedHashMap<>());
+    when(uriInfo.getAbsolutePath()).thenReturn(URI.create("/abc/def"));
     when(context.getUriInfo()).thenReturn(uriInfo);
     authenticationFilter.filter(context);
     verify(apiKeyService).validate(eq(apiKey), eq(ACCOUNT_ID));
@@ -190,6 +192,13 @@ public class AuthenticationFilterTest {
     doReturn(false).when(authenticationFilter).identityServiceAPI();
     doReturn(true).when(authenticationFilter).externalFacingAPI();
     doReturn(true).when(rateLimitingService).rateLimitRequest(anyString());
+    UriInfo uriInfo = mock(UriInfo.class);
+    MultivaluedHashMap<String, String> queryParams = new MultivaluedHashMap<>();
+    queryParams.put("accountId", Arrays.asList(ACCOUNT_ID));
+    when(uriInfo.getQueryParameters()).thenReturn(queryParams);
+    when(uriInfo.getPathParameters()).thenReturn(new MultivaluedHashMap<>());
+    when(uriInfo.getAbsolutePath()).thenReturn(URI.create("/abc/def"));
+    when(context.getUriInfo()).thenReturn(uriInfo);
     assertThatThrownBy(() -> authenticationFilter.filter(context)).isInstanceOf(WebApplicationException.class);
   }
 

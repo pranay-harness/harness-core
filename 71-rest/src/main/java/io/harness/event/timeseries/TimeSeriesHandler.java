@@ -15,6 +15,7 @@ import io.harness.event.timeseries.processor.DeploymentEventProcessor;
 import io.harness.event.timeseries.processor.InstanceEventProcessor;
 import io.harness.event.timeseries.processor.VerificationEventProcessor;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.service.impl.event.timeseries.TimeSeriesBatchEventInfo;
 import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
 
 @Singleton
@@ -37,7 +38,7 @@ public class TimeSeriesHandler implements EventHandler {
   public void handleEvent(Event event) {
     switch (event.getEventType()) {
       case INSTANCE_EVENT:
-        instanceEventProcessor.processEvent((TimeSeriesEventInfo) event.getEventData().getEventInfo());
+        instanceEventProcessor.processEvent((TimeSeriesBatchEventInfo) event.getEventData().getEventInfo());
         break;
       case DEPLOYMENT_EVENT:
         deploymentEventProcessor.processEvent((TimeSeriesEventInfo) event.getEventData().getEventInfo());

@@ -17,8 +17,7 @@ import java.util.List;
 
 @Singleton
 @Slf4j
-public class DeploymentEventProcessor implements EventProcessor {
-  private static final int MAX_RETRY_COUNT = 5;
+public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventInfo> {
   /**
    *  EXECUTIONID TEXT NOT NULL,
    * 	STARTTIME TIMESTAMP NOT NULL,

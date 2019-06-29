@@ -5,7 +5,6 @@ import com.google.inject.Inject;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.Environment;
@@ -51,7 +50,6 @@ public class NameServiceImpl implements NameService {
   }
 
   private NameResult getData(String type, Set<String> ids) {
-    Query query;
     switch (type) {
       case application:
         return getAppNames(ids);

@@ -45,6 +45,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
+import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
@@ -122,6 +123,7 @@ import software.wings.service.intfc.SystemCatalogService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
+import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.service.intfc.template.TemplateGalleryService;
@@ -201,6 +203,8 @@ public class AccountServiceImpl implements AccountService {
   @Inject private LoginSettingsService loginSettingsService;
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private EmailNotificationService emailNotificationService;
+  @Inject private DashboardStatisticsService dashboardStatisticsService;
+  @Inject private UsageMetricsEventPublisher usageMetricsEventPublisher;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   private Map<String, UrlInfo> techStackDocLinks;
