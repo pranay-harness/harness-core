@@ -38,6 +38,7 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -59,6 +60,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   @Inject private ResourceLookupService resourceLookupService;
   @Inject private YamlPushService yamlPushService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private EnvironmentService environmentService;
 
   private static final Set<EntityType> supportedEntityTypes =
       ImmutableSet.of(SERVICE, ENVIRONMENT, WORKFLOW, PROVISIONER, PIPELINE, TRIGGER);
@@ -413,7 +415,10 @@ public class HarnessTagServiceImpl implements HarnessTagService {
 
     switch (entityType) {
       case SERVICE:
-        return serviceResourceService.get(resourceLookup.getAppId(), resourceLookup.getResourceId());
+        return serviceResourceService.get(resourceLookup.getAppId(), resourceLookup.getResourceId(), false);
+
+      case ENVIRONMENT:
+        return environmentService.get(resourceLookup.getAppId(), resourceLookup.getResourceId(), false);
 
       default:
         unhandled(entityType);

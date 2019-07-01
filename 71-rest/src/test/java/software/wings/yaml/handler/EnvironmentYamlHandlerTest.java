@@ -27,6 +27,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.rules.SetupScheduler;
+import software.wings.service.impl.yaml.HarnessTagYamlHelper;
 import software.wings.service.impl.yaml.handler.environment.EnvironmentYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
@@ -41,6 +42,7 @@ import java.io.IOException;
 @SetupScheduler
 public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock AppService appService;
+  @Mock HarnessTagYamlHelper harnessTagYamlHelper;
   @InjectMocks @Inject YamlHelper yamlHelper;
   @InjectMocks @Inject ServiceVariableService serviceVariableService;
   @InjectMocks @Inject EnvironmentService environmentService;
