@@ -71,7 +71,6 @@ import io.harness.validation.Create;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -292,13 +291,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     String accountId = appService.getAccountIdByAppId(service.getAppId());
     service.setAccountId(accountId);
 
+    // TODO: ASR: IMP: update the block below for artifact variables as service variable
     if (createdFromYaml) {
       if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
         List<String> artifactStreamIds = service.getArtifactStreamIds();
         if (artifactStreamIds == null) {
           artifactStreamIds = new ArrayList<>();
-          service.setArtifactStreamIds(artifactStreamIds);
         }
+        service.setArtifactStreamIds(artifactStreamIds);
       }
     }
 
@@ -647,6 +647,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         updateOperations.unset("helmValueYaml");
       }
       if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, savedService.getAccountId())) {
+        // TODO: ASR: IMP: update the block below for artifact variables as service variable
         List<String> artifactStreamIds = service.getArtifactStreamIds();
         if (artifactStreamIds == null) {
           artifactStreamIds = new ArrayList<>();
@@ -923,7 +924,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (isNotEmpty(serviceUuids)) {
       List<Service> services = wingsPersistence.createQuery(Service.class)
                                    .project(ServiceKeys.name, true)
-                                   .project(Service.APP_ID_KEY, true)
+                                   .project(ServiceKeys.accountId, true)
+                                   .project(ServiceKeys.appId, true)
                                    .filter(ServiceKeys.appId, appId)
                                    .field("uuid")
                                    .in(serviceUuids)
@@ -1977,6 +1979,30 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
+  public List<Service> fetchServicesByUuidsByAccountId(String accountId, List<String> serviceUuids) {
+    if (isNotEmpty(serviceUuids)) {
+      serviceUuids = serviceUuids.stream().distinct().collect(toList());
+      List<Service> services = wingsPersistence.createQuery(Service.class)
+                                   .project(ServiceKeys.appContainer, false)
+                                   .filter(ServiceKeys.accountId, accountId)
+                                   .field(ServiceKeys.uuid)
+                                   .in(serviceUuids)
+                                   .asList();
+
+      List<Service> orderedServices = new ArrayList<>();
+      Map<String, Service> servicesMap =
+          services.stream().collect(Collectors.toMap(Service::getUuid, Function.identity()));
+      for (String serviceId : serviceUuids) {
+        if (servicesMap.containsKey(serviceId)) {
+          orderedServices.add(servicesMap.get(serviceId));
+        }
+      }
+      return orderedServices;
+    }
+    return new ArrayList<>();
+  }
+
+  @Override
   public Artifact findPreviousArtifact(String appId, String workflowExecutionId, ContextElement instanceElement) {
     Activity activity = wingsPersistence.createQuery(Activity.class)
                             .filter(ActivityKeys.appId, appId)
@@ -2017,8 +2043,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private void setArtifactStreams(List<Service> services) {
-    services.forEach(
-        service -> service.setArtifactStreams(artifactStreamService.listByIds(service.getArtifactStreamIds())));
+    services.forEach(service
+        -> service.setArtifactStreams(
+            artifactStreamService.listByIds(artifactStreamServiceBindingService.listArtifactStreamIds(service))));
   }
 
   public void setServiceCommands(List<Service> services) {
@@ -2353,6 +2380,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     wingsPersistence.update(query, updateOperations);
   }
 
+  // TODO: ASR: remove these methods after refactor
+
   @Override
   public List<Service> listByArtifactStreamId(String appId, String artifactStreamId) {
     return wingsPersistence.createQuery(Service.class)
@@ -2368,21 +2397,5 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         .field(ServiceKeys.artifactStreamIds)
         .contains(artifactStreamId)
         .asList();
-  }
-
-  @Override
-  public List<String> listServiceNamesByArtifactStreamId(String artifactStreamId) {
-    List<Service> services = wingsPersistence.createQuery(Service.class, excludeAuthority)
-                                 .field(ServiceKeys.artifactStreamIds)
-                                 .contains(artifactStreamId)
-                                 .project(ServiceKeys.name, true)
-                                 .asList(new FindOptions().limit(10));
-    List<String> serviceNames = new ArrayList<>();
-    if (isNotEmpty(services)) {
-      for (Service service : services) {
-        serviceNames.add(service.getName());
-      }
-    }
-    return serviceNames;
   }
 }

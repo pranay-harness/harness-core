@@ -101,6 +101,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -141,6 +142,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private ArtifactService artifactService;
   @Mock private ArtifactStreamService artifactStreamService;
+  @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock private VariableProcessor variableProcessor;
   @Inject private ManagerExpressionEvaluator evaluator;
   @Mock private ServiceHelper serviceHelper;
@@ -243,6 +245,10 @@ public class CloudFormationStateTest extends WingsBaseTest {
     when(appService.get(APP_ID)).thenReturn(app);
     when(appService.getApplicationWithDefaults(APP_ID)).thenReturn(app);
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(service);
+    when(artifactStreamServiceBindingService.listArtifactStreamIds(APP_ID, SERVICE_ID))
+        .thenReturn(singletonList(ARTIFACT_STREAM_ID));
+    when(artifactStreamServiceBindingService.listArtifactStreamIds(SERVICE_ID))
+        .thenReturn(singletonList(ARTIFACT_STREAM_ID));
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(env);
 
     ServiceCommand serviceCommand =
@@ -261,6 +267,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
     on(workflowStandardParams).set("accountService", accountService);
     on(workflowStandardParams).set("infrastructureMappingService", infrastructureMappingService);
     on(workflowStandardParams).set("serviceResourceService", serviceResourceService);
+    on(workflowStandardParams).set("artifactStreamServiceBindingService", artifactStreamServiceBindingService);
 
     workflowStandardParams.setCurrentUser(EmbeddedUser.builder().name("test").email("test@harness.io").build());
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);

@@ -44,7 +44,6 @@ import software.wings.beans.ExecutionCredential;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PcfInfrastructureMapping;
-import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
 import software.wings.common.InstanceExpressionProcessor;
@@ -52,6 +51,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -90,6 +90,8 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   @Inject private transient WorkflowExecutionService workflowExecutionService;
 
   @Inject private transient ServiceResourceService serviceResourceService;
+
+  @Inject private transient ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   private String appId;
   private String envId;
@@ -569,12 +571,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       return null;
     }
 
-    Service service = serviceResourceService.get(serviceId);
-    if (service == null) {
-      return null;
-    }
-
-    List<String> artifactStreamIds = service.getArtifactStreamIds();
+    List<String> artifactStreamIds = artifactStreamServiceBindingService.listArtifactStreamIds(serviceId);
     if (isEmpty(artifactStreamIds)) {
       return null;
     }

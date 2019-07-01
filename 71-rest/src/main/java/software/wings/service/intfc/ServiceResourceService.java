@@ -423,6 +423,8 @@ public interface ServiceResourceService extends OwnedByApplication {
   // Get services excluding appContainer details
   List<Service> fetchServicesByUuids(String appId, List<String> serviceUuids);
 
+  List<Service> fetchServicesByUuidsByAccountId(String accountId, List<String> serviceUuids);
+
   PcfServiceSpecification getPcfServiceSpecification(String appId, String serviceId);
 
   PcfServiceSpecification createPcfServiceSpecification(PcfServiceSpecification pcfServiceSpecification);
@@ -505,6 +507,4 @@ public interface ServiceResourceService extends OwnedByApplication {
   List<Service> listByArtifactStreamId(String appId, String artifactStreamId);
 
   List<Service> listByArtifactStreamId(String artifactStreamId);
-
-  List<String> listServiceNamesByArtifactStreamId(String artifactStreamId);
 }

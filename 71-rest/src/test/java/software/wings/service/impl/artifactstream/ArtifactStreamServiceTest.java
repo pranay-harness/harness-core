@@ -1843,11 +1843,10 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     ArtifactStream savedArtifactStream = createArtifactStream(artifactoryArtifactStream);
     assertThat(savedArtifactStream).isNotNull();
 
-    when(serviceResourceService.findServicesByApp(APP_ID))
-        .thenReturn(
-            asList(Service.builder()
-                       .artifactStreamIds(asList(savedJenkinsArtifactSteam.getUuid(), savedArtifactStream.getUuid()))
-                       .build()));
+    List<String> artifactStreamIds = asList(savedJenkinsArtifactSteam.getUuid(), savedArtifactStream.getUuid());
+    Service service = Service.builder().artifactStreamIds(artifactStreamIds).build();
+    when(serviceResourceService.findServicesByApp(APP_ID)).thenReturn(Collections.singletonList(service));
+    when(artifactStreamServiceBindingService.listArtifactStreamIds(service)).thenReturn(artifactStreamIds);
 
     List<ArtifactStream> artifactStreams = artifactStreamService.listByAppId(APP_ID);
     assertThat(artifactStreams).isNotEmpty().size().isEqualTo(2);

@@ -17,6 +17,7 @@ import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EntityType;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.ServiceVariableKeys;
@@ -24,14 +25,17 @@ import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamBinding;
 import software.wings.beans.artifact.ArtifactStreamSummary;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.validation.executable.ValidateOnExecution;
 
 @Singleton
@@ -41,6 +45,8 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ServiceVariableService serviceVariableService;
+  @Inject private AppService appService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public ArtifactStreamBinding create(
@@ -211,6 +217,26 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
                                            .build());
   }
 
+  private List<ServiceVariable> getServiceVariablesByArtifactStreamId(
+      String appId, String accountId, String artifactStreamId) {
+    return serviceVariableService.list(
+        aPageRequest()
+            .addFilter(ServiceVariableKeys.accountId, Operator.EQ, accountId)
+            .addFilter(ServiceVariableKeys.appId, Operator.EQ, appId)
+            .addFilter(ServiceVariableKeys.entityType, Operator.EQ, EntityType.SERVICE)
+            .addFilter(ServiceVariableKeys.allowedList, Operator.CONTAINS, artifactStreamId)
+            .build());
+  }
+
+  private List<ServiceVariable> getServiceVariablesByArtifactStreamId(String accountId, String artifactStreamId) {
+    return serviceVariableService.list(
+        aPageRequest()
+            .addFilter(ServiceVariableKeys.accountId, Operator.EQ, accountId)
+            .addFilter(ServiceVariableKeys.entityType, Operator.EQ, EntityType.SERVICE)
+            .addFilter(ServiceVariableKeys.allowedList, Operator.CONTAINS, artifactStreamId)
+            .build());
+  }
+
   @Override
   public ArtifactStream createOld(String appId, String serviceId, String artifactStreamId) {
     Service service = serviceResourceService.get(appId, serviceId, false);
@@ -252,57 +278,115 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
     if (GLOBAL_APP_ID.equals(appId)) {
       return listArtifactStreamIds(serviceId);
     }
+
     Service service = serviceResourceService.get(appId, serviceId, false);
-    if (service == null || service.getArtifactStreamIds() == null) {
+    if (service == null) {
       return new ArrayList<>();
     }
 
-    return service.getArtifactStreamIds();
+    return listArtifactStreamIds(service);
   }
 
   @Override
   public List<String> listArtifactStreamIds(String serviceId) {
     Service service = serviceResourceService.get(serviceId);
-    if (service == null || service.getArtifactStreamIds() == null) {
+    if (service == null) {
       return new ArrayList<>();
     }
 
-    return service.getArtifactStreamIds();
+    return listArtifactStreamIds(service);
+  }
+
+  @Override
+  public List<String> listArtifactStreamIds(Service service) {
+    if (!hasFeatureFlag(service.getAccountId())) {
+      if (service.getArtifactStreamIds() == null) {
+        return new ArrayList<>();
+      }
+
+      return service.getArtifactStreamIds();
+    }
+
+    List<ServiceVariable> serviceVariables = getServiceVariables(service.getAppId(), service.getUuid());
+    if (isEmpty(serviceVariables)) {
+      return new ArrayList<>();
+    }
+
+    // list artifact stream ids and remove duplicates
+    return serviceVariables.stream()
+        .flatMap(serviceVariable -> {
+          if (serviceVariable.getAllowedList() == null) {
+            return Stream.empty();
+          }
+
+          return serviceVariable.getAllowedList().stream();
+        })
+        .distinct()
+        .collect(Collectors.toList());
   }
 
   @Override
   public List<ArtifactStream> listArtifactStreams(String appId, String serviceId) {
-    if (GLOBAL_APP_ID.equals(appId)) {
-      return listArtifactStreams(serviceId);
-    }
-    Service service = serviceResourceService.get(appId, serviceId, false);
-    if (service == null) {
-      return new ArrayList<>();
-    }
-
-    return artifactStreamService.listByIds(service.getArtifactStreamIds());
+    return listArtifactStreams(listArtifactStreamIds(appId, serviceId));
   }
 
   @Override
   public List<ArtifactStream> listArtifactStreams(String serviceId) {
-    Service service = serviceResourceService.get(serviceId);
-    if (service == null) {
+    return listArtifactStreams(listArtifactStreamIds(serviceId));
+  }
+
+  @Override
+  public List<ArtifactStream> listArtifactStreams(Service service) {
+    return listArtifactStreams(listArtifactStreamIds(service));
+  }
+
+  private List<ArtifactStream> listArtifactStreams(List<String> artifactStreamIds) {
+    if (isEmpty(artifactStreamIds)) {
       return new ArrayList<>();
     }
-
-    return artifactStreamService.listByIds(service.getArtifactStreamIds());
+    return artifactStreamService.listByIds(artifactStreamIds);
   }
 
   // TODO: ASR: most invocations of the methods below will use setting instead of service after refactoring.
 
   @Override
   public List<String> listServiceIds(String appId, String artifactStreamId) {
-    return listServices(appId, artifactStreamId).stream().map(Service::getUuid).collect(Collectors.toList());
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+    if (artifactStream == null) {
+      return new ArrayList<>();
+    }
+
+    if (!hasFeatureFlag(artifactStream.getAccountId())) {
+      return listServices(appId, artifactStreamId).stream().map(Service::getUuid).collect(Collectors.toList());
+    }
+
+    List<ServiceVariable> serviceVariables =
+        getServiceVariablesByArtifactStreamId(appId, artifactStream.getAccountId(), artifactStreamId);
+    if (isEmpty(serviceVariables)) {
+      return new ArrayList<>();
+    }
+
+    return serviceVariables.stream().map(ServiceVariable::getServiceId).distinct().collect(Collectors.toList());
   }
 
   @Override
   public List<String> listServiceIds(String artifactStreamId) {
-    return listServices(artifactStreamId).stream().map(Service::getUuid).collect(Collectors.toList());
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+    if (artifactStream == null) {
+      return new ArrayList<>();
+    }
+
+    if (!hasFeatureFlag(artifactStream.getAccountId())) {
+      return listServices(artifactStreamId).stream().map(Service::getUuid).collect(Collectors.toList());
+    }
+
+    List<ServiceVariable> serviceVariables =
+        getServiceVariablesByArtifactStreamId(artifactStream.getAccountId(), artifactStreamId);
+    if (isEmpty(serviceVariables)) {
+      return new ArrayList<>();
+    }
+
+    return serviceVariables.stream().map(ServiceVariable::getServiceId).distinct().collect(Collectors.toList());
   }
 
   @Override
@@ -310,12 +394,55 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
     if (GLOBAL_APP_ID.equals(appId)) {
       return listServices(artifactStreamId);
     }
-    return serviceResourceService.listByArtifactStreamId(appId, artifactStreamId);
+
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+    if (artifactStream == null) {
+      return new ArrayList<>();
+    }
+
+    if (!hasFeatureFlag(artifactStream.getAccountId())) {
+      return serviceResourceService.listByArtifactStreamId(appId, artifactStreamId);
+    }
+
+    List<ServiceVariable> serviceVariables =
+        getServiceVariablesByArtifactStreamId(appId, artifactStream.getAccountId(), artifactStreamId);
+    if (isEmpty(serviceVariables)) {
+      return new ArrayList<>();
+    }
+
+    List<String> serviceIds =
+        serviceVariables.stream().map(ServiceVariable::getServiceId).distinct().collect(Collectors.toList());
+    if (isEmpty(serviceIds)) {
+      return new ArrayList<>();
+    }
+
+    return serviceResourceService.fetchServicesByUuids(appId, serviceIds);
   }
 
   @Override
   public List<Service> listServices(String artifactStreamId) {
-    return serviceResourceService.listByArtifactStreamId(artifactStreamId);
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+    if (artifactStream == null) {
+      return new ArrayList<>();
+    }
+
+    if (!hasFeatureFlag(artifactStream.getAccountId())) {
+      return serviceResourceService.listByArtifactStreamId(artifactStreamId);
+    }
+
+    List<ServiceVariable> serviceVariables =
+        getServiceVariablesByArtifactStreamId(artifactStream.getAccountId(), artifactStreamId);
+    if (isEmpty(serviceVariables)) {
+      return new ArrayList<>();
+    }
+
+    List<String> serviceIds =
+        serviceVariables.stream().map(ServiceVariable::getServiceId).distinct().collect(Collectors.toList());
+    if (isEmpty(serviceIds)) {
+      return new ArrayList<>();
+    }
+
+    return serviceResourceService.fetchServicesByUuidsByAccountId(artifactStream.getAccountId(), serviceIds);
   }
 
   // TODO: ASR: make sure throwException is false after refactor to connector level artifact
@@ -364,5 +491,12 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
 
     serviceResourceService.updateArtifactStreamIds(service, artifactStreamIds);
     return true;
+  }
+
+  private boolean hasFeatureFlag(String accountId) {
+    if (accountId == null) {
+      return false;
+    }
+    return featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId);
   }
 }

@@ -55,6 +55,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -80,6 +81,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private LimitCheckerFactory limitCheckerFactory;
   @Mock private ServiceResourceService serviceResourceService;
+  @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   @Before
   public void setup() {
@@ -192,9 +194,12 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     when(artifactService.get(ARTIFACT_ID)).thenReturn(artifact);
     when(serviceResourceService.get(svc.getUuid()))
         .thenReturn(Service.builder().artifactStreamIds(singletonList(ARTIFACT_STREAM_ID)).build());
+    when(artifactStreamServiceBindingService.listArtifactStreamIds(svc.getUuid()))
+        .thenReturn(singletonList(ARTIFACT_STREAM_ID));
     on(std).set("artifactService", artifactService);
     on(std).set("serviceTemplateService", serviceTemplateService);
     on(std).set("serviceResourceService", serviceResourceService);
+    on(std).set("artifactStreamServiceBindingService", artifactStreamServiceBindingService);
   }
 
   @Test

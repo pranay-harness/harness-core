@@ -63,6 +63,8 @@ public interface ArtifactStreamServiceBindingService extends OwnedByArtifactStre
    */
   List<String> listArtifactStreamIds(@NotEmpty String serviceId);
 
+  List<String> listArtifactStreamIds(Service service);
+
   /**
    * List artifact streams with bindings to service.
    *
@@ -79,6 +81,8 @@ public interface ArtifactStreamServiceBindingService extends OwnedByArtifactStre
    * @return list of artifact streams
    */
   List<ArtifactStream> listArtifactStreams(@NotEmpty String serviceId);
+
+  List<ArtifactStream> listArtifactStreams(Service service);
 
   /**
    * List service ids with bindings to artifact stream.

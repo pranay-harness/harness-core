@@ -51,6 +51,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.security.UserGroup;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -96,6 +97,7 @@ public class WorkflowNotificationHelper {
   @Inject private Clock clock;
   @Inject private NotificationSetupService notificationSetupService;
   @Inject private UserGroupService userGroupService;
+  @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   private final DateFormat dateFormat = new SimpleDateFormat("MMM d");
   private final DateFormat timeFormat = new SimpleDateFormat("HH:mm z");
@@ -472,7 +474,7 @@ public class WorkflowNotificationHelper {
       notNullCheck("Service might have been deleted", service, USER);
       serviceMsg.append(service.getName()).append(": ");
 
-      List<String> artifactStreamIds = service.getArtifactStreamIds();
+      List<String> artifactStreamIds = artifactStreamServiceBindingService.listArtifactStreamIds(service);
       boolean found = false;
       if (isNotEmpty(artifactStreamIds)) {
         for (String artifactStreamId : artifactStreamIds) {
