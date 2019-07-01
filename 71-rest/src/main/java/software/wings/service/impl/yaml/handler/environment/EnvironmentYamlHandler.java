@@ -66,14 +66,18 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
     List<ServiceVariable> serviceVariableList = getAllVariableOverridesForEnv(environment);
     List<VariableOverrideYaml> variableOverrideYamlList =
         convertToVariableOverrideYaml(serviceVariableList, environment.getName());
-    return Environment.Yaml.builder()
-        .description(environment.getDescription())
-        .configMapYaml(environment.getConfigMapYaml())
-        .configMapYamlByServiceTemplateId(environment.getConfigMapYamlByServiceTemplateId())
-        .environmentType(environment.getEnvironmentType().name())
-        .variableOverrides(variableOverrideYamlList)
-        .harnessApiVersion(getHarnessApiVersion())
-        .build();
+
+    Yaml yaml = Yaml.builder()
+                    .description(environment.getDescription())
+                    .configMapYaml(environment.getConfigMapYaml())
+                    .configMapYamlByServiceTemplateId(environment.getConfigMapYamlByServiceTemplateId())
+                    .environmentType(environment.getEnvironmentType().name())
+                    .variableOverrides(variableOverrideYamlList)
+                    .harnessApiVersion(getHarnessApiVersion())
+                    .build();
+
+    updateYamlWithAdditionalInfo(environment, appId, yaml);
+    return yaml;
   }
 
   private List<ServiceVariable> getAllVariableOverridesForEnv(Environment environment) {
@@ -189,6 +193,8 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
       saveOrUpdateVariableOverrides(
           null, yaml.getVariableOverrides(), emptyList(), current.getAppId(), current.getUuid(), syncFromGit);
     }
+
+    changeContext.setEntity(current);
     return current;
   }
 

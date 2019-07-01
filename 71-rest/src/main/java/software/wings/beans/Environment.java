@@ -11,6 +11,7 @@ import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.persistence.NameAccess;
+import io.harness.tags.TagAware;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -47,7 +48,7 @@ import javax.validation.constraints.NotNull;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "EnvironmentKeys")
-public class Environment extends Base implements KeywordsAware, NameAccess {
+public class Environment extends Base implements KeywordsAware, NameAccess, TagAware {
   public static final String GLOBAL_ENV_ID = "__GLOBAL_ENV_ID__";
 
   @NotEmpty @EntityName private String name;
