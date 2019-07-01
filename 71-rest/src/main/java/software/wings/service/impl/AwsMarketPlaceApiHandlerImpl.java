@@ -34,6 +34,7 @@ import software.wings.security.authentication.MarketPlaceConfig;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AwsMarketPlaceApiHandler;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.marketplace.MarketPlaceService;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -45,6 +46,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.ws.rs.core.Response;
 
 @Singleton
@@ -57,6 +59,7 @@ public class AwsMarketPlaceApiHandlerImpl implements AwsMarketPlaceApiHandler {
   @Inject private LicenseService licenseService;
   @Inject private SecretManager secretManager;
   @Inject private AuthenticationUtils authenticationUtils;
+  @Inject private MarketPlaceService marketPlaceService;
 
   private static final String INFO = "INFO";
   private static final String REDIRECT_ACTION_LOGIN = "LOGIN";
@@ -132,15 +135,13 @@ public class AwsMarketPlaceApiHandlerImpl implements AwsMarketPlaceApiHandler {
     logger.info("oEntitlementResult=[{}]", entitlements);
     Integer orderQuantity = getOrderQuantity(entitlements.getEntitlements().get(0).getDimension());
     Date expirationDate = entitlements.getEntitlements().get(0).getExpirationDate();
-    MarketPlace marketPlace = wingsPersistence.createQuery(MarketPlace.class)
-                                  .field("type")
-                                  .equal(MarketPlaceType.AWS)
-                                  .field("customerIdentificationCode")
-                                  .equal(customerIdentifierCode)
-                                  .get();
+    Optional<MarketPlace> marketPlaceMaybe =
+        marketPlaceService.fetchMarketplace(customerIdentifierCode, MarketPlaceType.AWS);
 
     boolean existingCustomer = false;
-    if (marketPlace != null) {
+    MarketPlace marketPlace;
+    if (marketPlaceMaybe.isPresent()) {
+      marketPlace = marketPlaceMaybe.get();
       logger.info("Existing customer, not creating a new account");
       if (marketPlace.getAccountId() != null) {
         existingCustomer = true;

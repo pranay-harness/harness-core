@@ -19,6 +19,7 @@ import java.time.temporal.ChronoUnit;
 public class GCPUsageReportServiceTest extends WingsBaseTest {
   private static final String TEST_ACCOUNT_ID = "TEST_ACCOUNT_ID";
   private static final String TEST_CONSUMER_ID = "TEST_CONSUMER_ID";
+  private static final String TEST_OPERATION_ID = "TEST_OPERATION_ID";
 
   @Inject @InjectMocks @Spy private GCPUsageReportServiceImpl gcpUsageReportService;
 
@@ -31,7 +32,7 @@ public class GCPUsageReportServiceTest extends WingsBaseTest {
     Instant startInstance = Instant.now().truncatedTo(ChronoUnit.HOURS);
     Instant endInstance = startInstance.plusSeconds(600);
     GCPUsageReport gcpUsageReport =
-        new GCPUsageReport(TEST_ACCOUNT_ID, TEST_CONSUMER_ID, startInstance, endInstance, 5);
+        new GCPUsageReport(TEST_ACCOUNT_ID, TEST_CONSUMER_ID, TEST_OPERATION_ID, startInstance, endInstance, 5);
     gcpUsageReportService.create(gcpUsageReport);
     Instant lastGCPUsageReportTime = gcpUsageReportService.fetchLastGCPUsageReportTime(TEST_ACCOUNT_ID);
 
@@ -39,7 +40,7 @@ public class GCPUsageReportServiceTest extends WingsBaseTest {
     assertThat(lastGCPUsageReportTime).isEqualByComparingTo(endInstance);
 
     GCPUsageReport gcpUsageReportNew =
-        new GCPUsageReport(TEST_ACCOUNT_ID, TEST_CONSUMER_ID, startInstance, endInstance, 5);
+        new GCPUsageReport(TEST_ACCOUNT_ID, TEST_CONSUMER_ID, TEST_OPERATION_ID, startInstance, endInstance, 5);
     gcpUsageReportService.create(gcpUsageReportNew);
     Instant lastGCPUsageReportTimeLatest = gcpUsageReportService.fetchLastGCPUsageReportTime(TEST_ACCOUNT_ID);
 

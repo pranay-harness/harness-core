@@ -232,6 +232,7 @@ import software.wings.service.impl.instance.stats.InstanceStatServiceImpl;
 import software.wings.service.impl.instance.stats.collector.StatsCollectorImpl;
 import software.wings.service.impl.instance.sync.ContainerSync;
 import software.wings.service.impl.instance.sync.ContainerSyncImpl;
+import software.wings.service.impl.marketplace.MarketPlaceServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicServiceImpl;
 import software.wings.service.impl.notifications.NotificationDispatcher;
 import software.wings.service.impl.notifications.NotificationGroupBasedDispatcher;
@@ -402,6 +403,7 @@ import software.wings.service.intfc.instance.stats.InstanceStatService;
 import software.wings.service.intfc.instance.stats.collector.StatsCollector;
 import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import software.wings.service.intfc.limits.LimitVicinityHandler;
+import software.wings.service.intfc.marketplace.MarketPlaceService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.pagerduty.PagerDutyService;
 import software.wings.service.intfc.personalization.PersonalizationService;
@@ -715,6 +717,7 @@ public class WingsModule extends DependencyModule {
     bind(PermitService.class).to(PermitServiceImpl.class);
 
     bind(GovernanceConfigService.class).to(GovernanceConfigServiceImpl.class);
+    bind(MarketPlaceService.class).to(MarketPlaceServiceImpl.class);
     bind(AwsMarketPlaceApiHandler.class).to(AwsMarketPlaceApiHandlerImpl.class);
     bind(AlertVisibilityChecker.class).to(AlertVisibilityCheckerImpl.class);
 

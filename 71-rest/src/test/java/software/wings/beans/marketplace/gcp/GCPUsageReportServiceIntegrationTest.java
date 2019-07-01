@@ -30,6 +30,9 @@ public class GCPUsageReportServiceIntegrationTest extends BaseIntegrationTest {
   private static final String SOME_CONSUMER_ID =
       "gcp-consumer-id-" + GCPUsageReportServiceIntegrationTest.class.getSimpleName();
 
+  private static final String SOME_OPERATION_ID =
+      "gcp-operation-id-" + GCPUsageReportServiceIntegrationTest.class.getSimpleName();
+
   @Before
   public void ensureIndices() {
     if (!indexesEnsured) {
@@ -68,7 +71,7 @@ public class GCPUsageReportServiceIntegrationTest extends BaseIntegrationTest {
   private GCPUsageReport getSampleGCPUsageReport() {
     val startInstance = Instant.now();
     val endInstance = startInstance.plusSeconds(1);
-    return new GCPUsageReport(SOME_ACCOUNT_ID, SOME_CONSUMER_ID, startInstance, endInstance, 5);
+    return new GCPUsageReport(SOME_ACCOUNT_ID, SOME_CONSUMER_ID, SOME_OPERATION_ID, startInstance, endInstance, 5);
   }
 
   @After
