@@ -46,6 +46,9 @@ public class GcpMarketplaceMessageReceiver implements MessageReceiver {
       case ENTITLEMENT_CREATION_REQUESTED:
         Switch.noop();
         break;
+      case ENTITLEMENT_ACTIVE:
+        Switch.noop();
+        break;
       default:
         logger.error("No handler for eventType: {}", eventType);
     }

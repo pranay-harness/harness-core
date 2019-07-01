@@ -22,6 +22,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.marketplace.MarketPlaceService;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -41,6 +42,7 @@ public class GcpMarketPlaceApiHandlerImpl implements GcpMarketPlaceApiHandler {
   @Inject private AuthenticationUtils authenticationUtils;
   @Inject private UserService userService;
   @Inject private AccountService accountService;
+  @Inject private MarketPlaceService marketPlaceService;
   @Inject @NewSignUp private GcpMarketplaceSignUpHandler newUserSignUpHandler;
   @Inject @ReturningUser private GcpMarketplaceSignUpHandler returningUserHandler;
 
@@ -79,7 +81,7 @@ public class GcpMarketPlaceApiHandlerImpl implements GcpMarketPlaceApiHandler {
                                      .orderQuantity(GcpMarketPlaceApiHandler.GCP_PRO_PLAN_ORDER_QUANTITY)
                                      .build();
 
-    Optional<MarketPlace> existingMarketPlace = getMarketplace(gcpAccountId);
+    Optional<MarketPlace> existingMarketPlace = marketPlaceService.fetchMarketplace(gcpAccountId, MarketPlaceType.GCP);
     MarketPlace marketPlace = existingMarketPlace.orElse(newMarketPlace);
     wingsPersistence.save(marketPlace);
 
@@ -134,17 +136,6 @@ public class GcpMarketPlaceApiHandlerImpl implements GcpMarketPlaceApiHandler {
     }
 
     return fn.get();
-  }
-
-  private Optional<MarketPlace> getMarketplace(String gcpAccountId) {
-    MarketPlace marketPlace = wingsPersistence.createQuery(MarketPlace.class)
-                                  .field("type")
-                                  .equal(MarketPlaceType.GCP)
-                                  .field("customerIdentificationCode")
-                                  .equal(gcpAccountId)
-                                  .get();
-
-    return Optional.ofNullable(marketPlace);
   }
 
   // TODO(jatin): implement this

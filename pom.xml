@@ -475,6 +475,11 @@
             </dependency>
             <dependency>
                 <groupId>com.google.apis</groupId>
+                <artifactId>google-api-services-servicecontrol</artifactId>
+                <version>v1-rev142-1.25.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.apis</groupId>
                 <artifactId>google-api-services-storage</artifactId>
                 <version>v1-rev131-1.22.0</version>
             </dependency>

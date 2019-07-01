@@ -1310,11 +1310,12 @@ public class UserServiceImpl implements UserService {
     if (isGcpMarketPlace) {
       // 1. Create billing scheduler entry
       final Instant nextIteration = Instant.now().truncatedTo(ChronoUnit.DAYS).plus(25, ChronoUnit.HOURS);
-      gcpBillingPollingService.create(new GCPBillingJobEntity(accountId, nextIteration.toEpochMilli()));
+      gcpBillingPollingService.create(new GCPBillingJobEntity(
+          accountId, marketPlace.getCustomerIdentificationCode(), nextIteration.toEpochMilli()));
 
       // 2. approve call to GCP
-      //      gcpProcurementService.approve(marketPlace);
-      //      gcpProcurementService.approveRequestedEntitlement(marketPlace);
+      gcpProcurementService.approve(marketPlace);
+      gcpProcurementService.approveRequestedEntitlement(marketPlace);
     }
 
     return userInvite;

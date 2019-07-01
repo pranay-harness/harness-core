@@ -135,23 +135,23 @@ public class GcpProcurementService {
     }
 
     String gcpAccountId = marketPlace.getCustomerIdentificationCode();
+    String providerName =
+        MessageFormatter.format(PROVIDER_NAME_PATTERN, GcpMarketPlaceConstants.PROJECT_ID).getMessage();
     String accountName =
         MessageFormatter.format(ACCOUNT_NAME_PATTERN, GcpMarketPlaceConstants.PROJECT_ID, gcpAccountId).getMessage();
 
     try {
       ListEntitlementsResponse listEntitlementsResponse =
-          partnerProcurementService.providers().entitlements().list(GcpMarketPlaceConstants.PROJECT_ID).execute();
+          partnerProcurementService.providers().entitlements().list(providerName).execute();
 
       // TODO check next token
       List<Entitlement> entitlements = listEntitlementsResponse.getEntitlements();
       accountEntitlement = entitlements.stream()
                                .filter(entitlement -> entitlement.getAccount().equals(accountName))
                                .collect(Collectors.toList());
-
     } catch (IOException e) {
       logger.error("Exception listing entitlement: {}", marketPlace, e);
     }
-
     return accountEntitlement;
   }
 

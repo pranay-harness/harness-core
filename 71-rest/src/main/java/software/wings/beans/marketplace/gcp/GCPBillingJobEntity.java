@@ -26,15 +26,19 @@ import javax.validation.constraints.NotNull;
 @ToString
 @EqualsAndHashCode
 public class GCPBillingJobEntity implements PersistentIterable, CreatedAtAccess, UpdatedAtAccess {
-  @Id private String accountId;
+  @Id private String uuid;
+  @Indexed private String accountId;
+  private String gcpAccountId;
   @Setter @Indexed private Long nextIteration;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore @NotNull private long createdAt;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore @NotNull private long lastUpdatedAt;
 
-  public GCPBillingJobEntity(String accountId, Long nextIteration) {
+  public GCPBillingJobEntity(String accountId, String gcpAccountId, Long nextIteration) {
     long currentMillis = Instant.now().toEpochMilli();
+    this.uuid = accountId;
     this.accountId = accountId;
+    this.gcpAccountId = gcpAccountId;
     this.nextIteration = nextIteration;
     this.createdAt = currentMillis;
     this.lastUpdatedAt = currentMillis;
