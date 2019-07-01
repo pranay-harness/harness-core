@@ -304,7 +304,10 @@ public class GitClientImpl implements GitClient {
       return GitCheckoutResult.builder().build();
     } catch (IOException | GitAPIException ex) {
       logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
-      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in getting commit diff");
+      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, USER)
+          .addParam("message",
+              format("Unable to checkout given reference: %s",
+                  isEmpty(gitConfig.getReference()) ? gitConfig.getBranch() : gitConfig.getReference()));
     }
   }
 
@@ -955,19 +958,17 @@ public class GitClientImpl implements GitClient {
             getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset done for branch " + gitConfig.getBranch());
         // TODO:: log failed commits queued and being ignored.
         return;
-      } catch (Exception ex) {
+      } catch (IOException | GitAPIException ex) {
         executionFailed = true;
         if (ex instanceof IOException) {
           logger.error(
               getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Repo doesn't exist locally [repo: {}], {} ",
               gitConfig.getRepoUrl(), ex);
         } else {
-          if (ex instanceof GitAPIException) {
-            logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset failed for branch [{}]",
-                gitConfig.getBranch());
-            logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
-            gitClientHelper.checkIfTransportException(ex);
-          }
+          logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset failed for branch [{}]",
+              gitConfig.getBranch());
+          logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
+          gitClientHelper.checkIfTransportException(ex);
         }
       } finally {
         if (executionFailed) {
