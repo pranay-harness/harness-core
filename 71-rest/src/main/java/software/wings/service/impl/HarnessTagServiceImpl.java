@@ -23,9 +23,11 @@ import com.mongodb.BasicDBObject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
+import io.harness.persistence.PersistentEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotBlank;
 import software.wings.beans.EntityType;
+import software.wings.beans.Event.Type;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTag.HarnessTagKeys;
 import software.wings.beans.HarnessTagLink;
@@ -38,6 +40,8 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.ResourceLookupService;
+import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.yaml.YamlPushService;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -53,6 +57,8 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AuthHandler authHandler;
   @Inject private ResourceLookupService resourceLookupService;
+  @Inject private YamlPushService yamlPushService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   private static final Set<EntityType> supportedEntityTypes =
       ImmutableSet.of(SERVICE, ENVIRONMENT, WORKFLOW, PROVISIONER, PIPELINE, TRIGGER);
@@ -140,6 +146,12 @@ public class HarnessTagServiceImpl implements HarnessTagService {
 
   @Override
   public void attachTag(HarnessTagLink tagLink) {
+    attachTagWithoutGitPush(tagLink);
+    pushToGit(tagLink.getAccountId(), tagLink.getEntityId(), false);
+  }
+
+  @Override
+  public void attachTagWithoutGitPush(HarnessTagLink tagLink) {
     validateAndSanitizeTagLink(tagLink);
     validateAndCreateTagIfNeeded(tagLink.getAccountId(), tagLink.getKey(), tagLink.getValue());
 
@@ -163,6 +175,12 @@ public class HarnessTagServiceImpl implements HarnessTagService {
 
   @Override
   public void detachTag(@NotBlank String accountId, @NotBlank String entityId, @NotBlank String key) {
+    detachTagWithoutGitPush(accountId, entityId, key);
+    pushToGit(accountId, entityId, false);
+  }
+
+  @Override
+  public void detachTagWithoutGitPush(@NotBlank String accountId, @NotBlank String entityId, @NotBlank String key) {
     wingsPersistence.delete(wingsPersistence.createQuery(HarnessTagLink.class)
                                 .filter(HarnessTagLinkKeys.accountId, accountId)
                                 .filter(HarnessTagLinkKeys.entityId, entityId)
@@ -371,5 +389,36 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     }
 
     return permissionType;
+  }
+
+  @Override
+  public List<HarnessTagLink> getTagLinksWithEntityId(String accountId, String entityId) {
+    return wingsPersistence.createQuery(HarnessTagLink.class)
+        .filter(HarnessTagLinkKeys.accountId, accountId)
+        .filter(HarnessTagLinkKeys.entityId, entityId)
+        .order(HarnessTagLinkKeys.key)
+        .asList();
+  }
+
+  @Override
+  public void pushToGit(String accountId, String entityId, boolean syncFromGit) {
+    ResourceLookup resourceLookup = resourceLookupService.getWithResourceId(accountId, entityId);
+    PersistentEntity resource = getPersistentEntity(resourceLookup);
+
+    yamlPushService.pushYamlChangeSet(accountId, resource, resource, Type.UPDATE, syncFromGit, false);
+  }
+
+  private PersistentEntity getPersistentEntity(ResourceLookup resourceLookup) {
+    EntityType entityType = EntityType.valueOf(resourceLookup.getResourceType());
+
+    switch (entityType) {
+      case SERVICE:
+        return serviceResourceService.get(resourceLookup.getAppId(), resourceLookup.getResourceId());
+
+      default:
+        unhandled(entityType);
+    }
+
+    return null;
   }
 }

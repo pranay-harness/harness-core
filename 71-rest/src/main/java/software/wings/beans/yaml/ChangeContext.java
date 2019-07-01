@@ -2,6 +2,7 @@ package software.wings.beans.yaml;
 
 import com.google.common.collect.Maps;
 
+import io.harness.persistence.PersistentEntity;
 import lombok.Data;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.yaml.BaseYaml;
@@ -19,6 +20,7 @@ public class ChangeContext<Y extends BaseYaml> {
   private BaseYamlHandler yamlSyncHandler;
   private Map<String, String> entityIdMap = Maps.newHashMap();
   private Map<String, Object> properties = Maps.newHashMap();
+  private PersistentEntity entity;
 
   public Builder toBuilder() {
     return ChangeContext.Builder.aChangeContext()

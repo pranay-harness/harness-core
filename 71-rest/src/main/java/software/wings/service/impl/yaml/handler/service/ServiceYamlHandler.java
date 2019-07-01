@@ -96,7 +96,11 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     //      }
     //      yamlBuilder.artifactStreamBindings(artifactStreamBindings);
     //    }
-    return yamlBuilder.build();
+
+    Yaml yaml = yamlBuilder.build();
+    updateYamlWithAdditionalInfo(service, appId, yaml);
+
+    return yaml;
   }
 
   private List<NameValuePair.Yaml> convertToNameValuePair(List<ServiceVariable> serviceVariables) {
@@ -207,6 +211,8 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
       saveOrUpdateServiceVariables(
           null, yaml, emptyList(), currentService.getAppId(), currentService.getUuid(), syncFromGit);
     }
+
+    changeContext.setEntity(currentService);
     return currentService;
   }
 

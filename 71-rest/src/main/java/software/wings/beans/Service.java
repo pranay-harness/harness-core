@@ -9,6 +9,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.persistence.NameAccess;
+import io.harness.tags.TagAware;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -48,7 +49,7 @@ import java.util.List;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "ServiceKeys")
-public class Service extends Base implements KeywordsAware, NameAccess {
+public class Service extends Base implements KeywordsAware, NameAccess, TagAware {
   @Trimmed @EntityName @NotEmpty private String name;
   private String description;
   private ArtifactType artifactType;

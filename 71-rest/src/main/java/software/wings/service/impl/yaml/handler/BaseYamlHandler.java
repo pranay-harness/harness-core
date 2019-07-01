@@ -1,9 +1,14 @@
 package software.wings.service.impl.yaml.handler;
 
+import com.google.inject.Inject;
+
 import io.harness.exception.HarnessException;
+import io.harness.persistence.PersistentEntity;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.ChangeContext.Builder;
+import software.wings.service.impl.yaml.HarnessTagYamlHelper;
+import software.wings.yaml.BaseEntityYaml;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlHelper;
 
@@ -15,6 +20,8 @@ import java.util.List;
  * @author rktummala on 10/16/17
  */
 public abstract class BaseYamlHandler<Y extends BaseYaml, B extends Object> {
+  @Inject HarnessTagYamlHelper harnessTagYamlHelper;
+
   public abstract void delete(ChangeContext<Y> changeContext) throws HarnessException;
 
   public abstract Y toYaml(B bean, String appId);
@@ -39,5 +46,9 @@ public abstract class BaseYamlHandler<Y extends BaseYaml, B extends Object> {
 
   protected String getHarnessApiVersion() {
     return "1.0";
+  }
+
+  protected void updateYamlWithAdditionalInfo(PersistentEntity entity, String appId, BaseEntityYaml yaml) {
+    harnessTagYamlHelper.updateYamlWithHarnessTags(entity, appId, yaml);
   }
 }
