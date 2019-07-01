@@ -1,11 +1,16 @@
 package io.harness.testframework.restutils;
 
+import static io.restassured.config.EncoderConfig.encoderConfig;
 import static org.junit.Assert.assertNotNull;
 
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
 import io.harness.testframework.framework.Setup;
+import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import io.restassured.path.json.JsonPath;
+import io.restassured.response.Response;
 import org.junit.Assert;
 import software.wings.beans.SettingAttribute;
 
@@ -15,15 +20,34 @@ import java.util.HashMap;
 public class SettingsUtils {
   private static String ACCOUNT_ID = "accountId";
   private static String SETTINGS_ENDPOINT = "/settings";
+  private static String DEFAULT_USAGE_RESTRICTION =
+      "{\"appEnvRestrictions\":[{\"appFilter\":{\"type\":\"GenericEntityFilter\",\"ids\":null,\"filterType\":\"ALL\"},\"envFilter\":{\"type\":\"EnvFilter\",\"ids\":null,\"filterTypes\":[\"PROD\"]}},{\"appFilter\":{\"type\":\"GenericEntityFilter\",\"ids\":null,\"filterType\":\"ALL\"},\"envFilter\":{\"type\":\"EnvFilter\",\"ids\":null,\"filterTypes\":[\"NON_PROD\"]}}]}\n";
 
   public static JsonPath create(String bearerToken, String accountId, SettingAttribute setAttr) {
+    Response respo = Setup.portal()
+                         .auth()
+                         .oauth2(bearerToken)
+                         .queryParam(ACCOUNT_ID, accountId)
+                         .body(setAttr)
+                         .contentType(ContentType.JSON)
+                         .post(SETTINGS_ENDPOINT);
+    return respo.jsonPath();
+  }
+
+  public static JsonPath createGCP(String bearerToken, String accountId, String cloudProviderName) {
     return Setup.portal()
         .auth()
         .oauth2(bearerToken)
+        .given()
+        .multiPart("file", new ScmSecret().decryptToString(new SecretName("harness_gcp_exploration")))
+        .config(RestAssured.config().encoderConfig(
+            encoderConfig().encodeContentTypeAs("multipart/form-data", ContentType.JSON)))
         .queryParam(ACCOUNT_ID, accountId)
-        .body(setAttr, ObjectMapperType.GSON)
-        .contentType(ContentType.JSON)
-        .post(SETTINGS_ENDPOINT)
+        .formParam("name", cloudProviderName)
+        .formParam("type", "GCP")
+        .formParam("usageRestrictions", DEFAULT_USAGE_RESTRICTION)
+        .contentType("multipart/form-data")
+        .post(SETTINGS_ENDPOINT + "/upload")
         .jsonPath();
   }
 
@@ -79,7 +103,9 @@ public class SettingsUtils {
         .oauth2(bearerToken)
         .queryParam(ACCOUNT_ID, accountId)
         .queryParam("isPluginSetting", true)
-        .delete(SETTINGS_ENDPOINT + "/" + settingAttrId);
+        .delete(SETTINGS_ENDPOINT + "/" + settingAttrId)
+        .then()
+        .statusCode(200);
   }
 
   /*

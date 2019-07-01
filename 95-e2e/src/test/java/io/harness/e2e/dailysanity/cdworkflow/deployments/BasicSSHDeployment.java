@@ -1,7 +1,8 @@
-package io.harness.functional.e2e;
+package io.harness.e2e.dailysanity.cdworkflow.deployments;
 
 import static io.harness.rule.OwnerRule.SUNIL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertFalse;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
@@ -12,8 +13,8 @@ import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
 import io.harness.beans.WorkflowType;
-import io.harness.category.element.FunctionalTests;
-import io.harness.functional.AbstractFunctionalTest;
+import io.harness.category.element.E2ETests;
+import io.harness.e2e.AbstractE2ETest;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.testframework.restutils.ApplicationRestUtils;
 import io.harness.testframework.restutils.ArtifactStreamRestUtils;
@@ -23,9 +24,10 @@ import io.harness.testframework.restutils.EnvironmentRestUtils;
 import io.harness.testframework.restutils.ExecutionRestUtils;
 import io.harness.testframework.restutils.SSHKeysUtils;
 import io.harness.testframework.restutils.ServiceRestUtils;
+import io.harness.testframework.restutils.SettingsUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import io.restassured.path.json.JsonPath;
-import org.junit.Assert;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -50,22 +52,21 @@ import software.wings.utils.ArtifactType;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
+public class BasicSSHDeployment extends AbstractE2ETest {
   // TEST constants
   private static long appendString = System.currentTimeMillis();
   private static String APP_NAME = "WarServiceBasicDeploy-" + appendString;
   private static String CLOUD_PROVIDER_NAME = "AWS-Automation-CloudProvider-" + appendString;
   private static String ARTIFACTORY_NAME = "Artifactory-Automation-" + appendString;
-  private static String Automation_SSH_KEY = "Automation_SSH_KEY-" + appendString;
+  private static String SSHKEY_NAME = "Aws_playground_ec2_user_key_Automation-" + appendString;
   private String SERVICE_NAME = "WarServiceBasicDeploy";
   private String ARTIFACT_PATTERN = "war-automation/todolist-1.war";
   private String ARTIFACT_TYPE = "ARTIFACTORY";
   private String REPOSITORY_TYPE = "Any";
   private String JOB_NAME = "qa-test";
-  private static String ACCNT_ID = "kmpySmUISimoRrJL6NL73w";
   private String ENV_MAME = "QA";
-  private String PROVIDER_NAME = "Amazon Web Services: " + CLOUD_PROVIDER_NAME;
   private String DEPLOYMENT_TYPE = "SSH";
   private String PROVIDER_TYPE = "AWS";
   private String INFRA_TYPE = "AWS_SSH";
@@ -78,20 +79,22 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
   private static String serviceId;
   private static Environment environment;
   private static Workflow workflow;
-  private static WorkflowExecution workflowExecution;
   private static String awsInfraId;
+  private static WorkflowExecution workflowExecution;
   private static String artifactoryId;
   private static String cloudProviderId;
   private static String sshKeyId;
+  private static ExecutionArgs executionArgs;
 
   @Test
   @Owner(emails = SUNIL, resent = false)
-  @Category(FunctionalTests.class)
+  @Category(E2ETests.class)
   public void TC1_createApplication() {
     // Test data setup
-    cloudProviderId = CloudProviderUtils.createAWSCloudProvider(bearerToken, CLOUD_PROVIDER_NAME, ACCNT_ID);
-    artifactoryId = ConnectorUtils.createArtifactoryConnector(bearerToken, CLOUD_PROVIDER_NAME, ACCNT_ID);
-    sshKeyId = SSHKeysUtils.createSSHKey(bearerToken, CLOUD_PROVIDER_NAME, ACCNT_ID);
+    cloudProviderId =
+        CloudProviderUtils.createAWSCloudProvider(bearerToken, CLOUD_PROVIDER_NAME, getAccount().getUuid());
+    artifactoryId = ConnectorUtils.createArtifactoryConnector(bearerToken, ARTIFACTORY_NAME, getAccount().getUuid());
+    sshKeyId = SSHKeysUtils.createSSHKey(bearerToken, SSHKEY_NAME, getAccount().getUuid());
 
     Application warApp = anApplication().name(APP_NAME).build();
     application = ApplicationRestUtils.createApplication(bearerToken, getAccount(), warApp);
@@ -100,7 +103,7 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
 
   @Test
   @Owner(emails = SUNIL, resent = false)
-  @Category(FunctionalTests.class)
+  @Category(E2ETests.class)
   public void TC2_createServiceAndCollectArtifact() {
     Service warService =
         Service.builder().name(SERVICE_NAME).deploymentType(DeploymentType.SSH).artifactType(ArtifactType.WAR).build();
@@ -123,7 +126,7 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
 
   @Test
   @Owner(emails = SUNIL, resent = false)
-  @Category(FunctionalTests.class)
+  @Category(E2ETests.class)
   public void TC3_createEnvironment() {
     Environment myEnv = anEnvironment().name(ENV_MAME).environmentType(EnvironmentType.NON_PROD).build();
     environment = EnvironmentRestUtils.createEnvironment(bearerToken, getAccount(), application.getAppId(), myEnv);
@@ -157,8 +160,8 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
 
   @Test
   @Owner(emails = SUNIL, resent = false)
-  @Category(FunctionalTests.class)
-  public void TC4_createWorkflow() throws Exception {
+  @Category(E2ETests.class)
+  public void TC4_createWorkflow() {
     Workflow workflowBuilder =
         aWorkflow()
             .name(WF_NAME)
@@ -179,11 +182,11 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
 
   @Test
   @Owner(emails = SUNIL, intermittent = false)
-  @Category(FunctionalTests.class)
+  @Category(E2ETests.class)
   public void TC5_deployWorkflow() {
     String artifactStreamId = ArtifactStreamRestUtils.getArtifactStreamId(
         bearerToken, application.getAppId(), environment.getUuid(), serviceId);
-    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs = new ExecutionArgs();
     executionArgs.setWorkflowType(workflow.getWorkflowType());
     List<Artifact> artifacts = new ArrayList<>();
     Artifact artifact = new Artifact();
@@ -193,20 +196,37 @@ public class BasicSSHDeploymentWarTest extends AbstractFunctionalTest {
     executionArgs.setExecutionCredential(
         SSHExecutionCredential.Builder.aSSHExecutionCredential().withExecutionType(ExecutionType.SSH).build());
     executionArgs.setOrchestrationId(workflow.getUuid());
-
-    workflowExecution =
-        ExecutionRestUtils.runWorkflow(bearerToken, application.getAppId(), environment.getUuid(), executionArgs);
-    assertThat(workflowExecution).isNotNull();
   }
 
   @Test
-  @Owner(emails = SUNIL)
-  @Category(FunctionalTests.class)
-  public void TC6_checkExecutionStarted() {
-    String status = ExecutionRestUtils.getWorkflowExecutionStatus(
-        bearerToken, getAccount(), application.getAppId(), workflowExecution.getUuid());
-    if (!(status.equals("RUNNING") || status.equals("QUEUED"))) {
-      Assert.fail("ERROR: Execution did not START");
+  @Owner(emails = SUNIL, intermittent = false)
+  @Category(E2ETests.class)
+  public void TC6_startAndCheck() {
+    ExecutionRestUtils.executeAndCheck(
+        bearerToken, getAccount(), application.getAppId(), environment.getUuid(), executionArgs);
+  }
+
+  public static void Test_CleanUp() {
+    // Clean up all the resources created as part of the test suite.
+
+    if (cloudProviderId != null) {
+      SettingsUtils.delete(bearerToken, getAccount().getUuid(), cloudProviderId);
+      // Verify connector is deleted i.e connector with specific name doesn't exist
+      boolean connectorFound = SettingsUtils.checkCloudproviderConnectorExist(
+          bearerToken, getAccount().getUuid(), "CLOUD_PROVIDER", CLOUD_PROVIDER_NAME);
+      assertFalse(connectorFound);
+    }
+
+    if (artifactoryId != null) {
+      SettingsUtils.delete(bearerToken, getAccount().getUuid(), artifactoryId);
+      // Verify connector is deleted i.e connector with specific name doesn't exist
+      boolean connectorFound = SettingsUtils.checkCloudproviderConnectorExist(
+          bearerToken, getAccount().getUuid(), "CONNECTOR", ARTIFACTORY_NAME);
+      assertFalse(connectorFound);
+    }
+
+    if (sshKeyId != null) {
+      SettingsUtils.delete(bearerToken, getAccount().getUuid(), sshKeyId);
     }
   }
 }

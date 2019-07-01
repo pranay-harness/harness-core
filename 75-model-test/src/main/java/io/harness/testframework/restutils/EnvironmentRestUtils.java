@@ -61,12 +61,26 @@ public class EnvironmentRestUtils {
     return savedApplicationResponse.getResource();
   }
 
-  public static JsonPath configureInfraMapping(String bearerToken, Account account, String applicationId,
+  public static JsonPath configureInfraMapping(String bearerToken, String accountId, String applicationId,
+      String environmentId, GcpKubernetesInfrastructureMapping infrastructureMapping) {
+    return Setup.portal()
+        .auth()
+        .oauth2(bearerToken)
+        .queryParam("accountId", accountId)
+        .queryParam("appId", applicationId)
+        .queryParam("envId", environmentId)
+        .body(infrastructureMapping, ObjectMapperType.GSON)
+        .contentType(ContentType.JSON)
+        .post("/infrastructure-mappings")
+        .jsonPath();
+  }
+
+  public static JsonPath configureInfraMapping(String bearerToken, String accountId, String applicationId,
       String environmentId, AwsInfrastructureMapping infrastructureMapping) {
     return Setup.portal()
         .auth()
         .oauth2(bearerToken)
-        .queryParam("accountId", account.getUuid())
+        .queryParam("accountId", accountId)
         .queryParam("appId", applicationId)
         .queryParam("envId", environmentId)
         .body(infrastructureMapping, ObjectMapperType.GSON)
