@@ -1438,11 +1438,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             isEmpty(workflowExecution.getServiceIds()) ? new ArrayList<>() : workflowExecution.getServiceIds();
         Set<String> artifactStreamIds = new HashSet<>();
         serviceIds.forEach(serviceId -> {
-          Service service = serviceResourceService.get(serviceId);
-          if (service == null) {
-            return;
-          }
-          List<String> ids = service.getArtifactStreamIds();
+          List<String> ids = artifactStreamServiceBindingService.listArtifactStreamIds(serviceId);
           if (isEmpty(ids)) {
             return;
           }

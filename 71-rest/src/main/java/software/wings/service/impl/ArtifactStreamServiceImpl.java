@@ -520,16 +520,16 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   private void ensureArtifactStreamSafeToDelete(String appId, String artifactStreamId, String accountId) {
     if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
       validateTriggerUsages(appId, artifactStreamId);
-    } else {
-      if (appId.equals(GLOBAL_APP_ID)) {
-        validateTriggerUsages(appId, artifactStreamId);
-        List<String> serviceNames = serviceResourceService.listServiceNamesByArtifactStreamId(artifactStreamId);
-        if (isEmpty(serviceNames)) {
-          return;
-        }
-        throw new InvalidRequestException(
-            format("Artifact Stream linked to Services [%s]", Joiner.on(", ").join(serviceNames)), USER);
+    } else if (appId.equals(GLOBAL_APP_ID)) {
+      validateTriggerUsages(appId, artifactStreamId);
+      List<Service> services = artifactStreamServiceBindingService.listServices(artifactStreamId);
+      if (isEmpty(services)) {
+        return;
       }
+
+      List<String> serviceNames = services.stream().map(Service::getName).collect(toList());
+      throw new InvalidRequestException(
+          format("Artifact Stream linked to Services [%s]", Joiner.on(", ").join(serviceNames)), USER);
     }
   }
 
@@ -623,8 +623,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public boolean artifactStreamsExistForService(String appId, String serviceId) {
-    Service service = serviceResourceService.get(appId, serviceId);
-    return service != null && isNotEmpty(service.getArtifactStreamIds());
+    return isNotEmpty(artifactStreamServiceBindingService.listArtifactStreamIds(appId, serviceId));
   }
 
   @Override
@@ -802,24 +801,58 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                                .project(ArtifactStreamKeys.uuid, true)
                                                .project(ArtifactStreamKeys.name, true)
                                                .asList();
+
+    Map<String, ArtifactStream> artifactStreamMap =
+        artifactStreams.stream().collect(toMap(ArtifactStream::getUuid, Function.identity()));
+
+    List<ArtifactStreamSummary> artifactStreamSummaries = new ArrayList<>();
+    String accountId = appService.getAccountIdByAppId(appId);
+    if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+      List<Service> services = wingsPersistence.createQuery(Service.class)
+                                   .filter(ServiceKeys.appId, appId)
+                                   .project(ServiceKeys.uuid, true)
+                                   .project(ServiceKeys.name, true)
+                                   .project(ServiceKeys.artifactStreamIds, true)
+                                   .asList();
+
+      for (Service service : services) {
+        List<String> artifactStreamIds = service.getArtifactStreamIds();
+        if (isEmpty(artifactStreamIds)) {
+          continue;
+        }
+
+        String serviceName = service.getName();
+        artifactStreamSummaries.addAll(artifactStreamIds.stream()
+                                           .filter(artifactStreamMap::containsKey)
+                                           .map(artifactStreamId -> {
+                                             ArtifactStream artifactStream = artifactStreamMap.get(artifactStreamId);
+                                             return ArtifactStreamSummary.builder()
+                                                 .artifactStreamId(artifactStreamId)
+                                                 .settingId(artifactStream.getSettingId())
+                                                 .displayName(artifactStream.getName() + " (" + serviceName + ")")
+                                                 .build();
+                                           })
+                                           .collect(Collectors.toList()));
+      }
+
+      return artifactStreamSummaries;
+    }
+
     List<Service> services = wingsPersistence.createQuery(Service.class)
                                  .filter(ServiceKeys.appId, appId)
                                  .project(ServiceKeys.uuid, true)
                                  .project(ServiceKeys.name, true)
-                                 .project(ServiceKeys.artifactStreamIds, true)
                                  .asList();
 
-    Map<String, ArtifactStream> artifactStreamMap =
-        artifactStreams.stream().collect(toMap(ArtifactStream::getUuid, Function.identity()));
-    List<ArtifactStreamSummary> artifactStreamSummaries = new ArrayList<>();
     for (Service service : services) {
-      List<String> artifactStreamIds = service.getArtifactStreamIds();
+      List<String> artifactStreamIds = artifactStreamServiceBindingService.listArtifactStreamIds(service);
       if (isEmpty(artifactStreamIds)) {
         continue;
       }
 
       String serviceName = service.getName();
       artifactStreamSummaries.addAll(artifactStreamIds.stream()
+                                         .filter(artifactStreamMap::containsKey)
                                          .map(artifactStreamId -> {
                                            ArtifactStream artifactStream = artifactStreamMap.get(artifactStreamId);
                                            return ArtifactStreamSummary.builder()
@@ -907,8 +940,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     Set<String> artifactStreamIds = new HashSet<>();
     serviceResourceService.findServicesByApp(appId).forEach(service -> {
-      if (isNotEmpty(service.getArtifactStreamIds())) {
-        artifactStreamIds.addAll(service.getArtifactStreamIds());
+      List<String> serviceArtifactStreamIds = artifactStreamServiceBindingService.listArtifactStreamIds(service);
+      if (isNotEmpty(serviceArtifactStreamIds)) {
+        artifactStreamIds.addAll(serviceArtifactStreamIds);
       }
     });
 

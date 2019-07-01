@@ -39,13 +39,13 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
-import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -80,6 +80,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   @Mock private ArtifactService artifactService;
   @Mock private AccountService accountService;
   @Mock private ArtifactStreamService artifactStreamService;
+  @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock private LimitCheckerFactory limitCheckerFactory;
   @Mock private ServiceResourceService serviceResourceService;
 
@@ -123,12 +124,12 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
     when(artifactService.get(ARTIFACT_ID))
         .thenReturn(
             anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).build());
-    when(serviceResourceService.get(SERVICE_ID))
-        .thenReturn(Service.builder().artifactStreamIds(singletonList(ARTIFACT_STREAM_ID)).build());
+    when(artifactStreamServiceBindingService.listArtifactStreamIds(SERVICE_ID))
+        .thenReturn(singletonList(ARTIFACT_STREAM_ID));
     WorkflowStandardParams std = new WorkflowStandardParams();
     injector.injectMembers(std);
     on(std).set("artifactService", artifactService);
-    on(std).set("serviceResourceService", serviceResourceService);
+    on(std).set("artifactStreamServiceBindingService", artifactStreamServiceBindingService);
     std.setAppId(APP_ID);
     std.setArtifactIds(singletonList(ARTIFACT_ID));
 
@@ -140,12 +141,11 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetNullArtifact() {
     when(artifactService.get(ARTIFACT_ID)).thenReturn(anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).build());
-    when(serviceResourceService.get(SERVICE_ID))
-        .thenReturn(Service.builder().artifactStreamIds(new ArrayList<>()).build());
+    when(artifactStreamServiceBindingService.listArtifactStreamIds(SERVICE_ID)).thenReturn(new ArrayList<>());
     WorkflowStandardParams std = new WorkflowStandardParams();
     injector.injectMembers(std);
     on(std).set("artifactService", artifactService);
-    on(std).set("serviceResourceService", serviceResourceService);
+    on(std).set("artifactStreamServiceBindingService", artifactStreamServiceBindingService);
     std.setAppId(APP_ID);
     std.setArtifactIds(singletonList(ARTIFACT_ID));
 
@@ -167,7 +167,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
     injector.injectMembers(std);
     on(std).set("artifactService", artifactService);
     on(std).set("artifactStreamService", artifactStreamService);
-    on(std).set("serviceResourceService", serviceResourceService);
+    on(std).set("artifactStreamServiceBindingService", artifactStreamServiceBindingService);
 
     std.setAppId(app.getUuid());
     std.setEnvId(env.getUuid());
@@ -183,11 +183,11 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
                         .withAppId(app.getUuid())
                         .withArtifactStreamId(ARTIFACT_STREAM_ID)
                         .build());
-    when(serviceResourceService.get(SERVICE_ID))
-        .thenReturn(Service.builder().artifactStreamIds(singletonList(ARTIFACT_STREAM_ID)).build());
     when(artifactStreamService.fetchArtifactSourceProperties(app.getAccountId(), ARTIFACT_STREAM_ID))
         .thenReturn(ImmutableMap.of(
             ARTIFACT_SOURCE_USER_NAME_KEY, "harness", ARTIFACT_SOURCE_REGISTRY_URL_KEY, "http://docker.registry.io"));
+    when(artifactStreamServiceBindingService.listArtifactStreamIds(SERVICE_ID))
+        .thenReturn(singletonList(ARTIFACT_STREAM_ID));
 
     Map<String, Object> map = std.paramMap(context);
     assertThat(map).isNotNull().containsKey(ContextElement.ARTIFACT);

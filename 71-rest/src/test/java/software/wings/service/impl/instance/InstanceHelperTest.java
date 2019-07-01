@@ -71,6 +71,7 @@ import software.wings.service.impl.instance.sync.ContainerSync;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -109,6 +110,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Mock private Queue<DeploymentEvent> deploymentEventQueue;
   @Mock private ExecutionContext context;
   @Mock private ContainerSync containerSync;
+  @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @InjectMocks @Spy WorkflowStandardParams workflowStandardParams;
 
   @InjectMocks @Inject private AwsCodeDeployInstanceHandler awsCodeDeployInstanceHandler;
@@ -187,6 +189,10 @@ public class InstanceHelperTest extends WingsBaseTest {
         .thenReturn(Service.builder().artifactStreamIds(Collections.singletonList(ARTIFACT_STREAM_ID_1)).build());
     when(serviceResourceService.get(SERVICE_ID_2))
         .thenReturn(Service.builder().artifactStreamIds(Collections.singletonList(ARTIFACT_STREAM_ID_2)).build());
+    when(artifactStreamServiceBindingService.listArtifactStreamIds(SERVICE_ID))
+        .thenReturn(Collections.singletonList(ARTIFACT_STREAM_ID_1));
+    when(artifactStreamServiceBindingService.listArtifactStreamIds(SERVICE_ID_2))
+        .thenReturn(Collections.singletonList(ARTIFACT_STREAM_ID_2));
     // ------------------------------------------
 
     instance1 = new com.amazonaws.services.ec2.model.Instance();
@@ -656,7 +662,7 @@ public class InstanceHelperTest extends WingsBaseTest {
      * We have mocked deploymentQueueEvent.send(DeploymentEvent) to doNothing as we dont want to process queue.
      * We capture the argument i.e. deploymentEvent that is generated and sent to deploymentEventQueue, and
      * validate to check its valid
-     * */
+     */
     DeploymentEvent event = captor.getValue();
     assertNotNull(event);
     assertEquals(0, event.getRetries());

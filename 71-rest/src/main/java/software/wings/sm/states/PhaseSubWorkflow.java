@@ -40,6 +40,7 @@ import software.wings.common.TemplateExpressionProcessor;
 import software.wings.service.impl.MultiArtifactWorkflowExecutionServiceHelper;
 import software.wings.service.impl.SweepingOutputServiceImpl;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -88,6 +89,8 @@ public class PhaseSubWorkflow extends SubWorkflowState {
   @Inject @Transient private transient TemplateExpressionProcessor templateExpressionProcessor;
 
   @Inject @Transient private transient ArtifactService artifactService;
+
+  @Inject @Transient private transient ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   @Inject @Transient private transient SweepingOutputService sweepingOutputService;
 
@@ -310,8 +313,8 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     if (workflowExecution.getExecutionArgs() != null && workflowExecution.getExecutionArgs().getArtifacts() != null) {
       if (service != null) {
         for (Artifact artifact : workflowExecution.getExecutionArgs().getArtifacts()) {
-          if (isNotEmpty(service.getArtifactStreamIds())
-              && service.getArtifactStreamIds().contains(artifact.getArtifactStreamId())) {
+          List<String> artifactStreamIds = artifactStreamServiceBindingService.listArtifactStreamIds(service);
+          if (isNotEmpty(artifactStreamIds) && artifactStreamIds.contains(artifact.getArtifactStreamId())) {
             rollbackArtifactId = artifact.getUuid();
             break;
           }

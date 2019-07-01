@@ -107,6 +107,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
@@ -143,6 +144,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private ArtifactService artifactService;
   @Mock private ArtifactStreamService artifactStreamService;
+  @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock private EncryptionService encryptionService;
   @Mock private VariableProcessor variableProcessor;
   @Mock private ManagerExpressionEvaluator evaluator;
@@ -229,6 +231,10 @@ public class KubernetesSetupTest extends WingsBaseTest {
     when(appService.getApplicationWithDefaults(APP_ID)).thenReturn(app);
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(service);
     when(serviceResourceService.get(SERVICE_ID)).thenReturn(service);
+    when(artifactStreamServiceBindingService.listArtifactStreamIds(APP_ID, SERVICE_ID))
+        .thenReturn(singletonList(ARTIFACT_STREAM_ID));
+    when(artifactStreamServiceBindingService.listArtifactStreamIds(SERVICE_ID))
+        .thenReturn(singletonList(ARTIFACT_STREAM_ID));
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(env);
 
     ServiceCommand serviceCommand =
@@ -251,6 +257,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
     on(workflowStandardParams).set("serviceTemplateService", serviceTemplateService);
     on(workflowStandardParams).set("configuration", configuration);
     on(workflowStandardParams).set("artifactStreamService", artifactStreamService);
+    on(workflowStandardParams).set("artifactStreamServiceBindingService", artifactStreamServiceBindingService);
 
     when(artifactService.get(any())).thenReturn(artifact);
     when(artifactStreamService.get(any())).thenReturn(artifactStream);

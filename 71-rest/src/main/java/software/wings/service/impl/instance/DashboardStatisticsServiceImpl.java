@@ -89,6 +89,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.ServiceInstanceCount.EnvType;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -129,6 +130,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   @Inject private InfrastructureMappingService infraMappingService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private AccountService accountService;
+  @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   @Override
   public InstanceSummaryStats getAppInstanceSummaryStats(
@@ -867,7 +869,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       return deploymentExecutionHistoryList;
     }
 
-    List<String> artifactStreamIds = service.getArtifactStreamIds();
+    List<String> artifactStreamIds = artifactStreamServiceBindingService.listArtifactStreamIds(service);
     if (artifactStreamIds == null) {
       artifactStreamIds = new ArrayList<>();
     }

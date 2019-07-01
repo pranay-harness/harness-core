@@ -96,6 +96,7 @@ import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
@@ -111,6 +112,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -135,6 +137,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
   @Mock private MainConfiguration configuration;
   @Mock private PortalConfig portalConfig;
   @Mock private ArtifactService artifactService;
+  @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock private VariableProcessor variableProcessor;
   @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private FeatureFlagService featureFlagService;
@@ -199,6 +202,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
     when(appService.get(APP_ID)).thenReturn(app);
     when(appService.getApplicationWithDefaults(APP_ID)).thenReturn(app);
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(service);
+    when(artifactStreamServiceBindingService.listArtifactStreamIds(SERVICE_ID)).thenReturn(new ArrayList<>());
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(env);
 
     ServiceCommand serviceCommand =

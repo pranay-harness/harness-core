@@ -43,6 +43,8 @@ public class ArtifactStreamGeneratorHelper {
       return savedArtifactStream;
     }
 
+    // TODO: ASR: update this method after refactor
+
     List<String> artifactStreamIds = service.getArtifactStreamIds();
     if (artifactStreamIds == null) {
       artifactStreamIds = new ArrayList<>();

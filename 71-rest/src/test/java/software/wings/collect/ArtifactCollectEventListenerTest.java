@@ -1,6 +1,5 @@
 package software.wings.collect;
 
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -50,6 +49,8 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 
+import java.util.Collections;
+
 public class ArtifactCollectEventListenerTest extends WingsBaseTest {
   private final Application APP = anApplication().uuid(APP_ID).accountId(ACCOUNT_ID).build();
 
@@ -83,25 +84,13 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
                                              .build();
     when(settingsService.get(SETTING_ID)).thenReturn(SETTING_ATTRIBUTE);
 
-    ArtifactStream ARTIFACT_SOURCE = JenkinsArtifactStream.builder()
-                                         .sourceName(ARTIFACT_STREAM_NAME)
-                                         .appId(APP_ID)
-                                         .settingId(SETTING_ID)
-                                         .jobname(JOB_NAME)
-                                         .artifactPaths(asList(ARTIFACT_PATH))
-                                         .build();
-    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(ARTIFACT_SOURCE);
-
-    artifactCollectEventListener.onMessage(aCollectEvent()
-                                               .withArtifact(anArtifact()
-                                                                 .withUuid(ARTIFACT_ID)
-                                                                 .withAccountId(ACCOUNT_ID)
-                                                                 .withAppId(APP_ID)
-                                                                 .withArtifactStreamId(ARTIFACT_STREAM_ID)
-                                                                 .build())
-                                               .build());
-
-    verify(artifactService).updateStatus(ARTIFACT_ID, ACCOUNT_ID, RUNNING, DOWNLOADING);
+    sendTaskHelper(JenkinsArtifactStream.builder()
+                       .sourceName(ARTIFACT_STREAM_NAME)
+                       .appId(APP_ID)
+                       .settingId(SETTING_ID)
+                       .jobname(JOB_NAME)
+                       .artifactPaths(Collections.singletonList(ARTIFACT_PATH))
+                       .build());
 
     ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
@@ -119,15 +108,23 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
             .build();
     when(settingsService.get(SETTING_ID)).thenReturn(SETTING_ATTRIBUTE);
 
-    ArtifactStream ARTIFACT_SOURCE = BambooArtifactStream.builder()
-                                         .sourceName(ARTIFACT_STREAM_NAME)
-                                         .appId(APP_ID)
-                                         .settingId(SETTING_ID)
-                                         .jobname(JOB_NAME)
-                                         .artifactPaths(asList(ARTIFACT_PATH))
-                                         .build();
+    sendTaskHelper(BambooArtifactStream.builder()
+                       .sourceName(ARTIFACT_STREAM_NAME)
+                       .appId(APP_ID)
+                       .settingId(SETTING_ID)
+                       .jobname(JOB_NAME)
+                       .artifactPaths(Collections.singletonList(ARTIFACT_PATH))
+                       .build());
 
-    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(ARTIFACT_SOURCE);
+    ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
+    assertThat(delegateTaskArgumentCaptor.getValue())
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("data.taskType", BAMBOO_COLLECTION.name());
+  }
+
+  private void sendTaskHelper(ArtifactStream artifactStream) {
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(artifactStream);
 
     artifactCollectEventListener.onMessage(aCollectEvent()
                                                .withArtifact(anArtifact()
@@ -139,12 +136,6 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
                                                .build());
 
     verify(artifactService).updateStatus(ARTIFACT_ID, ACCOUNT_ID, RUNNING, DOWNLOADING);
-
-    ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
-    verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
-    assertThat(delegateTaskArgumentCaptor.getValue())
-        .isNotNull()
-        .hasFieldOrPropertyWithValue("data.taskType", BAMBOO_COLLECTION.name());
   }
 
   @Test
