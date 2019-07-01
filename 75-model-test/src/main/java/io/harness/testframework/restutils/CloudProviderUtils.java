@@ -28,4 +28,10 @@ public class CloudProviderUtils {
     assertNotNull(setAttrResponse);
     return setAttrResponse.getString("resource.uuid").trim();
   }
+
+  public static String createGCPCloudProvider(String bearerToken, String cloudProviderName, String accountId) {
+    JsonPath setAttrResponse = SettingsUtils.createGCP(bearerToken, accountId, cloudProviderName);
+    assertNotNull(setAttrResponse);
+    return setAttrResponse.getString("resource.uuid").trim();
+  }
 }

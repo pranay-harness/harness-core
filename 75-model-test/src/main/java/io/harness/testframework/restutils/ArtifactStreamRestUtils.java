@@ -1,18 +1,15 @@
 package io.harness.testframework.restutils;
 
-import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import io.restassured.path.json.JsonPath;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.Account;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import javax.ws.rs.core.GenericType;
 
 @Slf4j
 public class ArtifactStreamRestUtils {
@@ -62,22 +59,17 @@ public class ArtifactStreamRestUtils {
    * @param artifactSource
    * @return Docker Artifact steam response
    */
-  public static DockerArtifactStream configureDockerArtifactStream(
-      String bearerToken, Account account, String appId, DockerArtifactStream artifactSource) {
-    GenericType<RestResponse<DockerArtifactStream>> artifactStreamType =
-        new GenericType<RestResponse<DockerArtifactStream>>() {};
-
-    RestResponse<DockerArtifactStream> savedServiceResponse = Setup.portal()
-                                                                  .auth()
-                                                                  .oauth2(bearerToken)
-                                                                  .queryParam("accountId", account.getUuid())
-                                                                  .queryParam("appId", appId)
-                                                                  .body(artifactSource, ObjectMapperType.GSON)
-                                                                  .contentType(ContentType.JSON)
-                                                                  .post("/artifactstreams")
-                                                                  .as(artifactStreamType.getType());
-
-    return savedServiceResponse.getResource();
+  public static JsonPath configureDockerArtifactStream(
+      String bearerToken, String accountId, String appId, DockerArtifactStream artifactSource) {
+    return Setup.portal()
+        .auth()
+        .oauth2(bearerToken)
+        .queryParam("routingId", accountId)
+        .queryParam("appId", appId)
+        .body(artifactSource, ObjectMapperType.GSON)
+        .contentType(ContentType.JSON)
+        .post("/artifactstreams")
+        .jsonPath();
   }
 
   /**

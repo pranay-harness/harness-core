@@ -6,6 +6,7 @@ import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import io.restassured.path.json.JsonPath;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Assert;
 import software.wings.beans.Account;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.WorkflowExecution;
@@ -107,5 +108,15 @@ public class ExecutionRestUtils {
                             .jsonPath();
     Map<Object, Object> resource = jsonPath.getMap("resource");
     return resource.get("status").toString();
+  }
+
+  public static void executeAndCheck(
+      String bearerToken, Account account, String appId, String envId, ExecutionArgs executionArgs) {
+    WorkflowExecution workflowExecution = ExecutionRestUtils.runWorkflow(bearerToken, appId, envId, executionArgs);
+    String status =
+        ExecutionRestUtils.getWorkflowExecutionStatus(bearerToken, account, appId, workflowExecution.getUuid());
+    if (!(status.equals("RUNNING") || status.equals("QUEUED"))) {
+      Assert.fail("ERROR: Execution did not START");
+    }
   }
 }

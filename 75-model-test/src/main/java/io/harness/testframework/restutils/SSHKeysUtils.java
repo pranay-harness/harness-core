@@ -33,4 +33,8 @@ public class SSHKeysUtils {
     assertNotNull(setAttrResponse);
     return setAttrResponse.getString("resource.uuid").trim();
   }
+
+  public static void deleteSSHKey(String bearerToken, String settingAttrId, String accountId) {
+    SettingsUtils.delete(bearerToken, accountId, settingAttrId);
+  }
 }
