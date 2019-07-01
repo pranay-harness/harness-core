@@ -155,7 +155,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
       switch (createRequest.getCreateType()) {
         case CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_GIT: {
           executionLogCallback.saveExecutionLog(format("Fetching template from git url: %s, "
-                  + "branch: %s, templatePath: %s, commitId: %s [ ingored branch if commitId is "
+                  + "branch: %s, templatePath: %s, commitId: %s [ ignored branch if commitId is "
                   + "set ] ",
               createRequest.getGitConfig().getRepoUrl(), createRequest.getGitConfig().getBranch(),
               createRequest.getGitFileConfig().getFilePath(), createRequest.getGitFileConfig().getCommitId()));

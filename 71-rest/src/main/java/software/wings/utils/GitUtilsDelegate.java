@@ -1,5 +1,7 @@
 package software.wings.utils;
 
+import static java.lang.String.format;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -33,9 +35,8 @@ public class GitUtilsDelegate {
       List<String> data = Files.readAllLines(jsonPath);
       return String.join("\n", data);
     } catch (IOException ex) {
-      throw new WingsException(ErrorCode.GENERAL_ERROR,
-          "Could not checkout file at given "
-              + "branch/commitId");
+      throw new WingsException(ErrorCode.GENERAL_ERROR, WingsException.USER)
+          .addParam("message", format("Could not read %s at given branch/commitId", path));
     }
   }
 
@@ -43,12 +44,8 @@ public class GitUtilsDelegate {
       GitConfig gitConfig, GitFileConfig gitFileConfig, List<EncryptedDataDetail> sourceRepoEncryptionDetails) {
     GitOperationContext gitOperationContext =
         GitOperationContext.builder().gitConfig(gitConfig).gitConnectorId(gitFileConfig.getConnectorId()).build();
-    try {
-      encryptionService.decrypt(gitConfig, sourceRepoEncryptionDetails);
-      gitClient.ensureRepoLocallyClonedAndUpdated(gitOperationContext);
-    } catch (RuntimeException ex) {
-      throw new WingsException(ErrorCode.GENERAL_ERROR, "Unable to clone git repo");
-    }
+    encryptionService.decrypt(gitConfig, sourceRepoEncryptionDetails);
+    gitClient.ensureRepoLocallyClonedAndUpdated(gitOperationContext);
     return gitOperationContext;
   }
 
