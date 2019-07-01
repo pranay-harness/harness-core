@@ -65,16 +65,15 @@ public class AccessManagementUtils {
     logger.info("Readonly user logout successful");
   }
 
-  public static void runUserPostFailTest(
-      Account account, String bearerToken, String userName, String email, String password) {
-    logger.info("Starting with the ReadOnly Test");
+  public static void runUserPostTest(
+      Account account, String bearerToken, String userName, String email, String password, int expectedInviteStatus) {
+    logger.info("Creating the user : " + userName);
     User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), userName);
-    logger.info("Logging in as a ReadOnly user");
+    logger.info("Logging in as user : " + userName);
     String roBearerToken = Setup.getAuthToken(userName, password);
     UserInvite invite = UserUtils.createUserInvite(account, email);
-    logger.info("Attempting to create a user without permission");
-    assertTrue(UserUtils.doesInviteFail(invite, account, roBearerToken, HttpStatus.SC_BAD_REQUEST));
-    logger.info("User Creation Denied Successfully");
+    logger.info("Attempting to create a user with expectation : " + expectedInviteStatus);
+    assertTrue(UserUtils.attemptInvite(invite, account, roBearerToken, expectedInviteStatus));
     Setup.signOut(readOnlyUser.getUuid(), roBearerToken);
     logger.info("Readonly user logout successful");
   }
@@ -157,7 +156,7 @@ public class AccessManagementUtils {
     logger.info("Readonly user logout successful");
   }
 
-  public static void amNoPermissionToPostForUserGroup(
+  public static void testPermissionToPostInUserGroup(
       Account account, String bearerToken, String userId, String password, int expectedResult) {
     final String READ_ONLY_USER = userId;
     logger.info("Starting with the ReadOnly Test");
@@ -177,7 +176,6 @@ public class AccessManagementUtils {
                    .post("/userGroups")
                    .getStatusCode()
         == expectedResult);
-    logger.info("Group creation denied successfully.");
     Setup.signOut(readOnlyUser.getUuid(), roBearerToken);
     logger.info("Readonly user logout successful");
   }
@@ -406,5 +404,25 @@ public class AccessManagementUtils {
 
     Setup.signOut(readOnlyUser.getUuid(), roBearerToken);
     logger.info("Readonly user logout successful");
+  }
+
+  public static void runUserAndGroupsListTest(Account account, String bearerToken) {
+    logger.info("List the users using ReadOnly permission");
+    assertTrue(Setup.portal()
+                   .auth()
+                   .oauth2(bearerToken)
+                   .queryParam("accountId", account.getUuid())
+                   .get("/users")
+                   .getStatusCode()
+        == HttpStatus.SC_OK);
+    logger.info("List users failed with Bad request as expected");
+    logger.info("List the user groups using ReadOnly permission");
+    assertTrue(Setup.portal()
+                   .auth()
+                   .oauth2(bearerToken)
+                   .queryParam("accountId", account.getUuid())
+                   .get("/userGroups")
+                   .getStatusCode()
+        == HttpStatus.SC_OK);
   }
 }
