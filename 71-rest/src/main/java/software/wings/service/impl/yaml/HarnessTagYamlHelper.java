@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
@@ -45,7 +46,9 @@ public class HarnessTagYamlHelper {
     Map<String, String> harnessTags = new LinkedHashMap<>();
     tagLinks.forEach(harnessTagLink -> harnessTags.put(harnessTagLink.getKey(), harnessTagLink.getValue()));
 
-    yaml.setHarnessTags(harnessTags);
+    if (isNotEmpty(harnessTags)) {
+      yaml.setHarnessTags(harnessTags);
+    }
   }
 
   private String getAccountId(PersistentEntity entity, String appId) {
