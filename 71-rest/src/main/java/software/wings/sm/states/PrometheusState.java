@@ -113,6 +113,8 @@ public class PrometheusState extends AbstractMetricAnalysisState {
 
     metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.PROMETHEUS,
         context.getStateExecutionInstanceId(), null, createMetricTemplates(timeSeriesToAnalyze));
+
+    renderURLExpressions(context, timeSeriesToAnalyze);
     final long dataCollectionStartTimeStamp = Timestamp.minuteBoundary(System.currentTimeMillis());
     final PrometheusDataCollectionInfo dataCollectionInfo = PrometheusDataCollectionInfo.builder()
                                                                 .prometheusConfig(prometheusConfig)
@@ -154,6 +156,11 @@ public class PrometheusState extends AbstractMetricAnalysisState {
   @Override
   public Map<String, String> validateFields() {
     return PrometheusResource.validateTransactions(timeSeriesToAnalyze, false);
+  }
+
+  private void renderURLExpressions(ExecutionContext executionContext, List<TimeSeries> timeSeriesToAnalyze) {
+    timeSeriesToAnalyze.forEach(
+        timeSeries -> timeSeries.setUrl(executionContext.renderExpression(timeSeries.getUrl())));
   }
 
   public static Map<String, TimeSeriesMetricDefinition> createMetricTemplates(List<TimeSeries> timeSeriesToAnalyze) {
