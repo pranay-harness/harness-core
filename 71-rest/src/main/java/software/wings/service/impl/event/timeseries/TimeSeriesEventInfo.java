@@ -2,6 +2,7 @@ package software.wings.service.impl.event.timeseries;
 
 import io.harness.event.model.EventInfo;
 import lombok.Builder;
+import lombok.ToString;
 import lombok.Value;
 
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.Map;
 
 @Value
 @Builder
+@ToString
 public class TimeSeriesEventInfo implements EventInfo {
   private String accountId;
   long timestamp;

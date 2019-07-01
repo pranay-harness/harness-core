@@ -136,6 +136,9 @@ public class UsageMetricsEventPublisher {
                                         .longData(longData)
                                         .build();
     EventData eventData = EventData.builder().eventInfo(eventInfo).build();
+    if (isEmpty(eventInfo.getListData())) {
+      logger.info("TimeSeriesEventInfo has listData empty eventInfo=[{}]", eventInfo);
+    }
     publishEvent(Event.builder().eventType(EventType.DEPLOYMENT_EVENT).eventData(eventData).build());
   }
 

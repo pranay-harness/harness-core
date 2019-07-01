@@ -13,6 +13,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 
 @Singleton
@@ -76,49 +77,27 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
           insertPreparedStatement.setString(7, eventInfo.getStringData().get(EventProcessor.TRIGGER_ID));
           insertPreparedStatement.setString(8, eventInfo.getStringData().get(EventProcessor.STATUS));
 
-          final List<String> serviceList = eventInfo.getListData().get(EventProcessor.SERVICE_LIST);
-          if (!Lists.isNullOrEmpty(serviceList)) {
-            Array array = dbConnection.createArrayOf("text", serviceList.toArray());
-            insertPreparedStatement.setArray(9, array);
-          } else {
-            insertPreparedStatement.setArray(9, null);
+          if (eventInfo.getListData() == null) {
+            logger.warn("TimeSeriesEventInfo has listData=null:[{}]", eventInfo);
           }
 
-          final List<String> workflowList = eventInfo.getListData().get(EventProcessor.WORKFLOW_LIST);
-          if (!Lists.isNullOrEmpty(workflowList)) {
-            Array array = dbConnection.createArrayOf("text", workflowList.toArray());
-            insertPreparedStatement.setArray(10, array);
-          } else {
-            insertPreparedStatement.setArray(10, null);
-          }
+          insertArrayData(
+              dbConnection, insertPreparedStatement, getListData(eventInfo, EventProcessor.SERVICE_LIST), 9);
 
-          final List<String> cloudProviderList = eventInfo.getListData().get(EventProcessor.CLOUD_PROVIDER_LIST);
-          if (!Lists.isNullOrEmpty(cloudProviderList)) {
-            Array array = dbConnection.createArrayOf("text", cloudProviderList.toArray());
-            insertPreparedStatement.setArray(11, array);
-          } else {
-            insertPreparedStatement.setArray(11, null);
-          }
+          insertArrayData(
+              dbConnection, insertPreparedStatement, getListData(eventInfo, EventProcessor.WORKFLOW_LIST), 10);
 
-          final List<String> envList = eventInfo.getListData().get(EventProcessor.ENV_LIST);
-          if (!Lists.isNullOrEmpty(envList)) {
-            Array array = dbConnection.createArrayOf("text", envList.toArray());
-            insertPreparedStatement.setArray(12, array);
-          } else {
-            insertPreparedStatement.setArray(12, null);
-          }
+          insertArrayData(
+              dbConnection, insertPreparedStatement, getListData(eventInfo, EventProcessor.CLOUD_PROVIDER_LIST), 11);
+
+          insertArrayData(dbConnection, insertPreparedStatement, getListData(eventInfo, EventProcessor.ENV_LIST), 12);
 
           insertPreparedStatement.setString(13, eventInfo.getStringData().get(EventProcessor.PIPELINE));
 
           insertPreparedStatement.setLong(14, eventInfo.getLongData().get(EventProcessor.DURATION));
 
-          final List<String> artifactList = eventInfo.getListData().get(EventProcessor.ARTIFACT_LIST);
-          if (!Lists.isNullOrEmpty(artifactList)) {
-            Array array = dbConnection.createArrayOf("text", artifactList.toArray());
-            insertPreparedStatement.setArray(15, array);
-          } else {
-            insertPreparedStatement.setArray(15, null);
-          }
+          insertArrayData(
+              dbConnection, insertPreparedStatement, getListData(eventInfo, EventProcessor.ARTIFACT_LIST), 15);
 
           insertPreparedStatement.execute();
           successfulInsert = true;
@@ -135,6 +114,20 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
       }
     } else {
       logger.trace("Not processing data:[{}]", eventInfo);
+    }
+  }
+
+  private List<String> getListData(TimeSeriesEventInfo eventInfo, String key) {
+    return eventInfo.getListData() != null ? eventInfo.getListData().get(key) : new ArrayList<>();
+  }
+
+  private void insertArrayData(Connection dbConnection, PreparedStatement insertPreparedStatement, List<String> data,
+      int index) throws SQLException {
+    if (!Lists.isNullOrEmpty(data)) {
+      Array array = dbConnection.createArrayOf("text", data.toArray());
+      insertPreparedStatement.setArray(index, array);
+    } else {
+      insertPreparedStatement.setArray(index, null);
     }
   }
 }
