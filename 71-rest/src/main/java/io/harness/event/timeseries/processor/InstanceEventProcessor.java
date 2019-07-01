@@ -21,21 +21,8 @@ import java.util.Map;
 @Singleton
 @Slf4j
 public class InstanceEventProcessor implements EventProcessor<TimeSeriesBatchEventInfo> {
-  /**
-   *
-   * CREATE TABLE IF NOT EXISTS INSTANCE_STATS (
-   * 	REPORTEDAT TIMESTAMP NOT NULL,
-   * 	ACCOUNTID TEXT,
-   * 	APPID TEXT,
-   * 	SERVICEID TEXT,
-   * 	ENVID TEXT,
-   * 	COMPUTEPROVIDERID TEXT,
-   * 	COUNT INTEGER,
-   * 	ARTIFACTID TEXT
-   * );
-   */
   String insert_prepared_statement_sql =
-      "INSERT INTO INSTANCE_STATS (REPORTEDAT, ACCOUNTID, APPID, SERVICEID, ENVID, COMPUTEPROVIDERID, INSTANCECOUNT, ARTIFACTID) VALUES (?,?,?,?,?,?,?,?)";
+      "INSERT INTO INSTANCE_STATS (REPORTEDAT, ACCOUNTID, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, INSTANCETYPE, INSTANCECOUNT, ARTIFACTID) VALUES (?,?,?,?,?,?,?,?,?)";
 
   @Inject private TimeScaleDBService timeScaleDBService;
 
@@ -57,7 +44,7 @@ public class InstanceEventProcessor implements EventProcessor<TimeSeriesBatchEve
               statement.setString(3, (String) dataMap.get(EventProcessor.APPID));
               statement.setString(4, (String) dataMap.get(EventProcessor.SERVICEID));
               statement.setString(5, (String) dataMap.get(EventProcessor.ENVID));
-              statement.setString(6, (String) dataMap.get(EventProcessor.COMPUTEPROVIDERID));
+              statement.setString(6, (String) dataMap.get(EventProcessor.CLOUDPROVIDERID));
               statement.setString(7, (String) dataMap.get(EventProcessor.INSTANCETYPE));
               statement.setInt(8, (Integer) dataMap.get(EventProcessor.INSTANCECOUNT));
               statement.setString(9, (String) dataMap.get(EventProcessor.ARTIFACTID));
@@ -74,9 +61,9 @@ public class InstanceEventProcessor implements EventProcessor<TimeSeriesBatchEve
 
         } catch (SQLException e) {
           if (retryCount >= MAX_RETRY_COUNT) {
-            logger.error("Failed to save deployment data,[{}]", eventInfo, e);
+            logger.error("Failed to save instance data,[{}]", eventInfo, e);
           } else {
-            logger.info("Failed to save deployment data,[{}],retryCount=[{}]", eventInfo, retryCount);
+            logger.info("Failed to save instance data,[{}],retryCount=[{}]", eventInfo, retryCount);
           }
           retryCount++;
         } finally {

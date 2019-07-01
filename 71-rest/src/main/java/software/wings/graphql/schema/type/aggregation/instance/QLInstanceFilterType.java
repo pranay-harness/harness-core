@@ -10,7 +10,7 @@ public enum QLInstanceFilterType {
   Application(QLDataType.STRING, "appId", "APPID"),
   Service(QLDataType.STRING, "serviceId", "SERVICEID"),
   Environment(QLDataType.STRING, "envId", "ENVID"),
-  CloudProvider(QLDataType.STRING, "computeProviderId", "COMPUTEPROVIDERID"),
+  CloudProvider(QLDataType.STRING, "computeProviderId", "CLOUDPROVIDERID"),
   InstanceType(QLDataType.STRING, "instanceType", "INSTANCETYPE");
 
   private QLDataType dataType;

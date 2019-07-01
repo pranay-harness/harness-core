@@ -272,7 +272,7 @@ public class UsageMetricsEventPublisher {
       data.put(EventProcessor.SERVICEID, instance.getServiceId());
       data.put(EventProcessor.ENVID, instance.getEnvId());
       data.put(EventProcessor.INFRAMAPPINGID, instance.getInfraMappingId());
-      data.put(EventProcessor.COMPUTEPROVIDERID, instance.getComputeProviderId());
+      data.put(EventProcessor.CLOUDPROVIDERID, instance.getComputeProviderId());
       data.put(EventProcessor.INSTANCETYPE, instance.getInstanceType().name());
       data.put(EventProcessor.ARTIFACTID, instance.getLastArtifactId());
       data.put(EventProcessor.INSTANCECOUNT, size);

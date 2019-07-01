@@ -94,7 +94,11 @@ public class StatsCollectorImpl implements StatsCollector {
       log.error("Could not create stats. AccountId: {}", accountId, e);
       return false;
     } finally {
-      usageMetricsEventPublisher.publishInstanceTimeSeries(accountId, timesamp.toEpochMilli(), instances);
+      try {
+        usageMetricsEventPublisher.publishInstanceTimeSeries(accountId, timesamp.toEpochMilli(), instances);
+      } catch (Exception e) {
+        log.error("Error while publishing metrics for account {}, timestamp {}", accountId, timesamp.toEpochMilli(), e);
+      }
     }
   }
 }
