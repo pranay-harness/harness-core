@@ -5,28 +5,20 @@ import static io.harness.rule.OwnerRule.SWAMY;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
-import com.google.gson.JsonObject;
-
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.notifications.beans.Conditions;
 import io.harness.notifications.beans.Conditions.Operator;
 import io.harness.rule.OwnerRule.Owner;
-import io.harness.scm.ScmSecret;
-import io.harness.scm.SecretName;
 import io.harness.testframework.framework.utils.AlertsUtils;
-import io.harness.testframework.framework.utils.TestUtils;
 import io.harness.testframework.framework.utils.UserGroupUtils;
 import io.harness.testframework.restutils.AlertsRestUtils;
-import io.harness.testframework.restutils.UserGroupRestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.alerts.AlertCategory;
 import software.wings.beans.alert.AlertNotificationRule;
 import software.wings.beans.alert.AlertType;
-import software.wings.beans.notification.NotificationSettings;
-import software.wings.beans.security.UserGroup;
 
 import java.util.HashSet;
 import java.util.List;
@@ -39,7 +31,8 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void alertsCRUD() {
     Set<String> userGroups = new HashSet<>();
-    userGroups.add(getUserGroup().getUuid());
+    userGroups.add(
+        UserGroupUtils.createUserGroupAndUpdateWithNotificationSettings(getAccount(), bearerToken).getUuid());
     AlertNotificationRule createdAlert =
         createAndVerifyAlerts(userGroups, AlertCategory.Setup, AlertType.DelegatesDown);
 
@@ -67,7 +60,8 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void updateAllAlertTypes() {
     Set<String> userGroups = new HashSet<>();
-    userGroups.add(getUserGroup().getUuid());
+    userGroups.add(
+        UserGroupUtils.createUserGroupAndUpdateWithNotificationSettings(getAccount(), bearerToken).getUuid());
     AlertNotificationRule createdAlert = createAndVerifyAlerts(
         userGroups, AlertCategory.ContinuousVerification, AlertType.CONTINUOUS_VERIFICATION_ALERT);
 
@@ -95,7 +89,8 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void updateAlertConditions() {
     Set<String> userGroups = new HashSet<>();
-    userGroups.add(getUserGroup().getUuid());
+    userGroups.add(
+        UserGroupUtils.createUserGroupAndUpdateWithNotificationSettings(getAccount(), bearerToken).getUuid());
     AlertNotificationRule createdAlert =
         createAndVerifyAlerts(userGroups, AlertCategory.Setup, AlertType.DelegatesDown);
 
@@ -120,7 +115,8 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void updateAlertCategory() {
     Set<String> userGroups = new HashSet<>();
-    userGroups.add(getUserGroup().getUuid());
+    userGroups.add(
+        UserGroupUtils.createUserGroupAndUpdateWithNotificationSettings(getAccount(), bearerToken).getUuid());
     AlertNotificationRule createdAlert =
         createAndVerifyAlerts(userGroups, AlertCategory.Setup, AlertType.DelegatesDown);
 
@@ -140,27 +136,6 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
         updatedAlert.getAlertFilter().getAlertType().name().equals(AlertType.CONTINUOUS_VERIFICATION_ALERT.name()));
 
     deleteAlertNotificationRules(createdAlert, updatedAlert);
-  }
-
-  private UserGroup getUserGroup() {
-    logger.info("Creating a new user group");
-    JsonObject groupInfoAsJson = new JsonObject();
-    String name = "UserGroup - " + System.currentTimeMillis();
-    groupInfoAsJson.addProperty("name", name);
-    groupInfoAsJson.addProperty("description", "Test Description - " + System.currentTimeMillis());
-    UserGroup userGroup = UserGroupUtils.createUserGroup(getAccount(), bearerToken, groupInfoAsJson);
-    assertNotNull(userGroup);
-
-    logger.info("Creating a Notification Settings with an email id and slack webhook");
-    String emailId = TestUtils.generateRandomUUID() + "@harness.mailinator.com";
-    String slackWebHook = new ScmSecret().decryptToString(new SecretName("slack_webhook_for_alert"));
-    NotificationSettings notificationSettings = UserGroupUtils.createNotificationSettings(emailId, slackWebHook);
-    userGroup.setNotificationSettings(notificationSettings);
-    logger.info("Update user group with notification settings");
-    userGroup = UserGroupRestUtils.updateNotificationSettings(getAccount(), bearerToken, userGroup);
-    assertNotNull(userGroup);
-    assertNotNull(userGroup.getNotificationSettings());
-    return userGroup;
   }
 
   private AlertNotificationRule createAndVerifyAlerts(

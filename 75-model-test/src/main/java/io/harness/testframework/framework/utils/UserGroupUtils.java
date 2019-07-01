@@ -5,7 +5,11 @@ import static junit.framework.TestCase.assertTrue;
 
 import com.google.gson.JsonObject;
 
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
+import io.harness.testframework.framework.constants.AccountManagementConstants.PermissionTypes;
 import io.harness.testframework.restutils.UserGroupRestUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import software.wings.beans.Account;
 import software.wings.beans.notification.NotificationSettings;
@@ -19,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 public class UserGroupUtils {
   public static UserGroup getUserGroup(Account account, String bearerToken, String groupName) {
     List<UserGroup> userGroupList = UserGroupRestUtils.getUserGroups(account, bearerToken);
@@ -79,6 +84,13 @@ public class UserGroupUtils {
     return accountPermissions;
   }
 
+  public static AccountPermissions buildNoPermission() {
+    Set<PermissionType> permissionTypes = new HashSet<>();
+    AccountPermissions accountPermissions = AccountPermissions.builder().build();
+    accountPermissions.setPermissions(permissionTypes);
+    return accountPermissions;
+  }
+
   public static AccountPermissions buildUserManagementPermission() {
     Set<PermissionType> permissionTypes = new HashSet<>();
     permissionTypes.add(PermissionType.USER_PERMISSION_READ);
@@ -96,5 +108,55 @@ public class UserGroupUtils {
     AccountPermissions accountPermissions = AccountPermissions.builder().build();
     accountPermissions.setPermissions(permissionTypes);
     return accountPermissions;
+  }
+
+  public static void deleteMembers(Account account, String bearerToken, UserGroup userGroup) {
+    List<String> emptyList = new ArrayList<>();
+    userGroup.setMemberIds(emptyList);
+    assertTrue(UserGroupRestUtils.updateMembers(account, bearerToken, userGroup) == HttpStatus.SC_OK);
+    userGroup = UserGroupUtils.getUserGroup(account, bearerToken, userGroup.getName());
+    assertTrue(userGroup.getMemberIds() == null || userGroup.getMemberIds().size() == 0);
+  }
+
+  public static UserGroup createUserGroup(
+      Account account, String bearerToken, String rbacUserId, String userGroupPermission) {
+    logger.info("Starting with the ReadOnly Test");
+    List<String> userIds = new ArrayList<>();
+    userIds.add(rbacUserId);
+    AccountPermissions accountPermissions = null;
+    if (userGroupPermission.equals(PermissionTypes.ACCOUNT_READONLY.toString())) {
+      accountPermissions = buildReadOnlyPermission();
+    } else if (userGroupPermission.equals(PermissionTypes.ACCOUNT_USERANDGROUPS.toString())) {
+      accountPermissions = buildUserManagementPermission();
+    } else if (userGroupPermission.equals(PermissionTypes.ACCOUNT_ADMIN.toString())) {
+      accountPermissions = buildAccountAdmin();
+    } else if (userGroupPermission.equals(PermissionTypes.ACCOUNT_NOPERMISSION.toString())) {
+      accountPermissions = buildNoPermission();
+    } else {
+      logger.warn("Unknown permission type found : " + userGroupPermission + ": proceeding with No Permission Type");
+      accountPermissions = buildNoPermission();
+    }
+    return UserGroupUtils.createUserGroupWithPermissionAndMembers(account, bearerToken, userIds, accountPermissions);
+  }
+
+  public static UserGroup createUserGroupAndUpdateWithNotificationSettings(Account account, String bearerToken) {
+    logger.info("Creating a new user group");
+    JsonObject groupInfoAsJson = new JsonObject();
+    String name = "UserGroup - " + System.currentTimeMillis();
+    groupInfoAsJson.addProperty("name", name);
+    groupInfoAsJson.addProperty("description", "Test Description - " + System.currentTimeMillis());
+    UserGroup userGroup = UserGroupUtils.createUserGroup(account, bearerToken, groupInfoAsJson);
+    assertNotNull(userGroup);
+
+    logger.info("Creating a Notification Settings with an email id and slack webhook");
+    String emailId = TestUtils.generateRandomUUID() + "@harness.mailinator.com";
+    String slackWebHook = new ScmSecret().decryptToString(new SecretName("slack_webhook_for_alert"));
+    NotificationSettings notificationSettings = UserGroupUtils.createNotificationSettings(emailId, slackWebHook);
+    userGroup.setNotificationSettings(notificationSettings);
+    logger.info("Update user group with notification settings");
+    userGroup = UserGroupRestUtils.updateNotificationSettings(account, bearerToken, userGroup);
+    assertNotNull(userGroup);
+    assertNotNull(userGroup.getNotificationSettings());
+    return userGroup;
   }
 }

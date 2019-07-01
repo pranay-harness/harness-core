@@ -72,7 +72,8 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
     final String READ_ONLY_USER = "readonlyuser@harness.io";
     String email = "testemail@harness.mailinator.com";
     String password = "readonlyuser";
-    AccessManagementUtils.runUserPostFailTest(getAccount(), bearerToken, READ_ONLY_USER, email, password);
+    AccessManagementUtils.runUserPostTest(
+        getAccount(), bearerToken, READ_ONLY_USER, email, password, HttpStatus.SC_BAD_REQUEST);
   }
 
   @Test
@@ -80,7 +81,7 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForUserGroup() {
     final String READ_ONLY_USER = "readonlyuser@harness.io";
-    AccessManagementUtils.amNoPermissionToPostForUserGroup(
+    AccessManagementUtils.testPermissionToPostInUserGroup(
         getAccount(), bearerToken, READ_ONLY_USER, "readonlyuser", HttpStatus.SC_BAD_REQUEST);
   }
 

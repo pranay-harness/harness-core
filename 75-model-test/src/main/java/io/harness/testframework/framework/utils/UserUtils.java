@@ -135,7 +135,7 @@ public class UserUtils {
     return invite;
   }
 
-  public static boolean doesInviteFail(UserInvite invite, Account account, String bearerToken, int status) {
+  public static boolean attemptInvite(UserInvite invite, Account account, String bearerToken, int status) {
     return Setup.portal()
                .auth()
                .oauth2(bearerToken)
