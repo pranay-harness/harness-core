@@ -4,6 +4,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
+
 /**
  * Base class for all the yaml classes which are exposed as a .yaml file.
  * Note that not all yaml classes get exposed directly. Some of them are embedded within another yaml.
@@ -15,6 +17,7 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 public abstract class BaseEntityYaml extends BaseYamlWithType {
   private String harnessApiVersion = "1.0";
+  private Map<String, String> harnessTags;
 
   public BaseEntityYaml(String type, String harnessApiVersion) {
     super(type);

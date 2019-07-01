@@ -88,6 +88,7 @@ import software.wings.beans.yaml.YamlType;
 import software.wings.common.Constants;
 import software.wings.exception.YamlProcessingException;
 import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
+import software.wings.service.impl.yaml.HarnessTagYamlHelper;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.intfc.AppService;
@@ -149,6 +150,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   @Inject private WorkflowService workflowService;
   @Inject private AppService appService;
   @Inject private FailedCommitStore failedCommitStore;
+
+  @Inject private HarnessTagYamlHelper harnessTagYamlHelper;
 
   private final List<YamlType> yamlProcessingOrder = getEntityProcessingOrder();
 
@@ -627,6 +630,10 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
     try {
       yamlSyncHandler.upsertFromYaml(changeContext, changeContextList);
+
+      // Handling for tags
+      harnessTagYamlHelper.upsertTagsIfRequired(changeContext);
+
     } catch (WingsException e) {
       if (e.getCode() == ErrorCode.USAGE_LIMITS_EXCEEDED) {
         logger.info("Usage Limit Exceeded. Account: {}. Message: {}", change.getAccountId(), e.getMessage());

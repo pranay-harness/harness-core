@@ -22,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.EntityType;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.ResourceLookup;
@@ -45,7 +46,9 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   private HarnessTag colorTag = HarnessTag.builder().accountId(TEST_ACCOUNT_ID).key(colorTagKey).build();
 
   @Before
-  public void setUp() throws Exception {}
+  public void setUp() throws Exception {
+    when(resourceLookupService.getWithResourceId(TEST_ACCOUNT_ID, "id")).thenReturn(getResourceLookupWithId("id"));
+  }
 
   @Test
   @Category(UnitTests.class)
@@ -144,9 +147,6 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void attachTagSmokeTest() {
-    when(resourceLookupService.getWithResourceId(TEST_ACCOUNT_ID, "id"))
-        .thenReturn(ResourceLookup.builder().appId(APP_ID).build());
-
     harnessTagService.attachTag(HarnessTagLink.builder()
                                     .accountId(TEST_ACCOUNT_ID)
                                     .entityId("id")
@@ -182,9 +182,6 @@ public class HarnessTagServiceTest extends WingsBaseTest {
                                  .build();
 
     harnessTagService.attachTag(tagLink);
-
-    when(resourceLookupService.getWithResourceId(TEST_ACCOUNT_ID, "id"))
-        .thenReturn(ResourceLookup.builder().appId(APP_ID).build());
 
     PageRequest<HarnessTagLink> requestColorRed = new PageRequest<>();
     requestColorRed.addFilter("accountId", EQ, TEST_ACCOUNT_ID);
@@ -246,6 +243,9 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void getInUseValuesTest() {
+    when(resourceLookupService.getWithResourceId(TEST_ACCOUNT_ID, "id1")).thenReturn(getResourceLookupWithId("id1"));
+    when(resourceLookupService.getWithResourceId(TEST_ACCOUNT_ID, "id2")).thenReturn(getResourceLookupWithId("id2"));
+
     HarnessTagLink tagLinkRed = HarnessTagLink.builder()
                                     .accountId(TEST_ACCOUNT_ID)
                                     .entityId("id1")
@@ -270,5 +270,13 @@ public class HarnessTagServiceTest extends WingsBaseTest {
     assertThat(tag.getKey()).isEqualTo(colorTagKey);
     assertThat(tag.getInUseValues()).contains("red");
     assertThat(tag.getInUseValues()).containsAll(ImmutableSet.of("red", "blue"));
+  }
+
+  private ResourceLookup getResourceLookupWithId(String resourceId) {
+    return ResourceLookup.builder()
+        .appId(APP_ID)
+        .resourceType(EntityType.SERVICE.name())
+        .resourceId(resourceId)
+        .build();
   }
 }

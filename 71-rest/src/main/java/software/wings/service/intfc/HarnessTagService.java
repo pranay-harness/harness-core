@@ -6,6 +6,7 @@ import org.hibernate.validator.constraints.NotBlank;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTagLink;
 
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
 public interface HarnessTagService {
@@ -21,4 +22,8 @@ public interface HarnessTagService {
   PageResponse<HarnessTagLink> listResourcesWithTag(String accountId, PageRequest<HarnessTagLink> request);
   void pruneTagLinks(String accountId, String entityId);
   void authorizeTagAttachDetach(String appId, HarnessTagLink tagLink);
+  List<HarnessTagLink> getTagLinksWithEntityId(String accountId, String entityId);
+  void pushToGit(String accountId, String entityId, boolean syncFromGit);
+  void attachTagWithoutGitPush(HarnessTagLink tagLink);
+  void detachTagWithoutGitPush(@NotBlank String accountId, @NotBlank String entityId, @NotBlank String key);
 }
