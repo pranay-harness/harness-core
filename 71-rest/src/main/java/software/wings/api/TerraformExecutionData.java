@@ -34,7 +34,6 @@ public class TerraformExecutionData extends StateExecutionData implements Respon
   private List<String> tfVarFiles;
 
   private String planLogFileId;
-  private boolean isRemoteState;
   private String workspace;
 
   public Map<String, ExecutionDataValue> getExecutionDetails() {

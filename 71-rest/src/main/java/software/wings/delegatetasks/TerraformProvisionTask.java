@@ -16,13 +16,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.inject.Inject;
 
-import com.bertramlabs.plugins.hcl4j.HCLParser;
-import com.bertramlabs.plugins.hcl4j.HCLParserException;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import lombok.AllArgsConstructor;
@@ -67,9 +64,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -184,22 +179,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           Paths.get(scriptDirectory, format(TERRAFORM_VARIABLES_FILE_NAME, parameters.getEntityId())).toFile();
       tfBackendConfigsFile = Paths.get(scriptDirectory, TERRAFORM_BACKEND_CONFIGS_FILE_NAME).toFile();
 
-      boolean usingRemoteState = isRemoteStateConfigured(scriptDirectory);
-
-      if (!usingRemoteState) {
-        File tfStateFile = (isEmpty(parameters.getWorkspace()))
-            ? Paths.get(scriptDirectory, TERRAFORM_STATE_FILE_NAME).toFile()
-            : Paths.get(scriptDirectory, format(WORKSPACE_STATE_FILE_PATH_FORMAT, parameters.getWorkspace())).toFile();
-
-        if (parameters.getCurrentStateFileId() != null) {
-          try (InputStream stateRemoteInputStream = delegateFileManager.downloadByFileId(
-                   FileBucket.TERRAFORM_STATE, parameters.getCurrentStateFileId(), parameters.getAccountId())) {
-            FileUtils.copyInputStreamToFile(stateRemoteInputStream, tfStateFile);
-          }
-        } else {
-          FileUtils.deleteQuietly(tfStateFile);
-        }
-      }
+      downloadTfStateFile(parameters, scriptDirectory);
 
       boolean entityIdTfVarFileCreated = false;
       if (isNotEmpty(parameters.getVariables()) || isNotEmpty(parameters.getEncryptedVariables())) {
@@ -411,7 +391,6 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               .tfVarFiles(parameters.getTfVarFiles())
               .executionStatus(code == 0 ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED)
               .errorMessage(code == 0 ? null : "The terraform command exited with code " + code)
-              .isRemoteState(usingRemoteState)
               .workspace(parameters.getWorkspace());
 
       if (parameters.getCommandUnit() != TerraformCommandUnit.Destroy
@@ -434,6 +413,21 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     } finally {
       FileUtils.deleteQuietly(tfVariablesFile);
       FileUtils.deleteQuietly(tfBackendConfigsFile);
+    }
+  }
+
+  private void downloadTfStateFile(TerraformProvisionParameters parameters, String scriptDirectory) throws IOException {
+    File tfStateFile = (isEmpty(parameters.getWorkspace()))
+        ? Paths.get(scriptDirectory, TERRAFORM_STATE_FILE_NAME).toFile()
+        : Paths.get(scriptDirectory, format(WORKSPACE_STATE_FILE_PATH_FORMAT, parameters.getWorkspace())).toFile();
+
+    if (parameters.getCurrentStateFileId() != null) {
+      try (InputStream stateRemoteInputStream = delegateFileManager.downloadByFileId(
+               FileBucket.TERRAFORM_STATE, parameters.getCurrentStateFileId(), parameters.getAccountId())) {
+        FileUtils.copyInputStreamToFile(stateRemoteInputStream, tfStateFile);
+      }
+    } else {
+      FileUtils.deleteQuietly(tfStateFile);
     }
   }
 
@@ -517,40 +511,6 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     return targetArgs.toString();
   }
 
-  private boolean isRemoteStateConfigured(String scriptDirectory) {
-    HCLParser hclParser = new HCLParser();
-
-    File[] allFiles = new File(scriptDirectory).listFiles();
-    if (isNotEmpty(allFiles)) {
-      for (File file : allFiles) {
-        if (file.getName().endsWith(TERRAFORM_SCRIPT_FILE_EXTENSION)) {
-          Map<String, Object> parsedContents;
-          try {
-            byte[] tfContent = Files.readAllBytes(Paths.get(scriptDirectory, file.getName()));
-
-            if (hclParser == null) {
-              throw new WingsException(ErrorCode.UNKNOWN_ERROR, "Unable to instantiate HCL Parser");
-            }
-            parsedContents = hclParser.parse(new String(tfContent, Charsets.UTF_8));
-          } catch (IOException | HCLParserException e) {
-            logger.error("HCL Parser Exception for file [" + file.getAbsolutePath() + "], ", e);
-            throw new WingsException(ErrorCode.GENERAL_ERROR, WingsException.USER)
-                .addParam("message", "Invalid Terraform File [" + file.getAbsolutePath() + "] : " + e.getMessage());
-          }
-
-          LinkedHashMap<String, Object> terraform = (LinkedHashMap) parsedContents.get("terraform");
-          if (isNotEmpty(terraform)) {
-            if (terraform.getOrDefault("backend", null) != null) {
-              return true;
-            }
-          }
-        }
-      }
-    }
-
-    return false;
-  }
-
   private File getTerraformStateFile(String scriptDirectory, String workspace) {
     File tfStateFile = isEmpty(workspace)
         ? Paths.get(scriptDirectory, TERRAFORM_STATE_FILE_NAME).toFile()
@@ -558,14 +518,6 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
 
     if (tfStateFile.exists()) {
       return tfStateFile;
-    }
-
-    File tfRemoteStateDirectory = Paths.get(scriptDirectory, ".terraform").toFile();
-    if (tfRemoteStateDirectory.exists()) {
-      File tfRemoteStateFile = Paths.get(tfRemoteStateDirectory.getAbsolutePath(), TERRAFORM_STATE_FILE_NAME).toFile();
-      if (tfRemoteStateFile.exists()) {
-        return tfRemoteStateFile;
-      }
     }
 
     return null;
