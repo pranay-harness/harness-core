@@ -2,6 +2,7 @@ package software.wings.verification;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -150,6 +151,7 @@ public class LogsCVConfigurationYamlHandlerTest {
     assertEquals("query", bean.getQuery());
     assertEquals(16, bean.getBaselineStartMinute());
     assertEquals(30, bean.getBaselineEndMinute());
+    assertNotNull(bean.getUuid());
   }
 
   @Test
