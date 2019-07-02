@@ -12,9 +12,11 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -91,6 +93,7 @@ import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 
@@ -118,11 +121,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class SecretTextTest extends WingsBaseTest {
   @Parameter public EncryptionType encryptionType;
   @Mock private AccountService accountService;
+  @Mock private YamlPushService yamlPushService;
   @Inject @InjectMocks private VaultService vaultService;
   @Inject @InjectMocks private KmsService kmsService;
   @Inject private SecretManager secretManager;
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private ConfigService configService;
+  @Inject @InjectMocks private ConfigService configService;
   @Inject private EncryptionService encryptionService;
   @Inject private ServiceVariableService serviceVariableService;
   @Inject private ServiceVariableResource serviceVariableResource;
@@ -1049,6 +1053,7 @@ public class SecretTextTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @RealMongo
   public void saveAndUpdateFile() throws IOException, IllegalAccessException {
+    doNothing().when(yamlPushService).pushYamlChangeSet(anyString(), any(), any(), any(), anyBoolean(), anyBoolean());
     final long seed = System.currentTimeMillis();
     logger.info("seed: " + seed);
     Random r = new Random(seed);
@@ -1077,28 +1082,11 @@ public class SecretTextTest extends WingsBaseTest {
     Service service = Service.builder().name(generateUuid()).appId(appId).build();
     wingsPersistence.save(service);
 
-    ConfigFile configFile = ConfigFile.builder()
-                                .templateId(generateUuid())
-                                .envId(generateUuid())
-                                .entityType(EntityType.SERVICE)
-                                .entityId(service.getUuid())
-                                .description(generateUuid())
-                                .parentConfigFileId(generateUuid())
-                                .relativeFilePath(generateUuid())
-                                .targetToAllEnv(r.nextBoolean())
-                                .defaultVersion(r.nextInt())
-                                .envIdVersionMapString(generateUuid())
-                                .setAsDefault(r.nextBoolean())
-                                .notes(generateUuid())
-                                .overridePath(generateUuid())
-                                .configOverrideType(ConfigOverrideType.CUSTOM)
-                                .configOverrideExpression(generateUuid())
-                                .encryptedFileId(secretFileId)
-                                .encrypted(true)
-                                .build();
+    ConfigFile configFile = generateConfigFile(r, secretFileId, service);
+
     configFile.setAccountId(accountId);
     configFile.setAppId(appId);
-
+    configFile.setFileName("FileName");
     String configFileId = configService.save(configFile, null);
 
     query = wingsPersistence.createQuery(EncryptedData.class)
@@ -1106,14 +1094,7 @@ public class SecretTextTest extends WingsBaseTest {
                 .filter(EncryptedDataKeys.accountId, accountId);
     assertEquals(1, query.count());
     encryptedData = query.get();
-    assertEquals(secretName, encryptedData.getName());
-    assertNotNull(encryptedData.getEncryptionKey());
-    assertNotNull(encryptedData.getEncryptedValue());
-    assertEquals(accountId, encryptedData.getAccountId());
-    assertTrue(encryptedData.isEnabled());
-    assertEquals(kmsId, encryptedData.getKmsId());
-    assertEquals(encryptionType, encryptedData.getEncryptionType());
-    assertEquals(CONFIG_FILE, encryptedData.getType());
+    assertSecretData(secretName, encryptedData);
     assertEquals(1, encryptedData.getParentIds().size());
     assertTrue(encryptedData.getParentIds().contains(configFileId));
 
@@ -1143,14 +1124,7 @@ public class SecretTextTest extends WingsBaseTest {
                 .filter(EncryptedDataKeys.accountId, accountId);
     assertEquals(1, query.count());
     encryptedData = query.get();
-    assertEquals(newSecretName, encryptedData.getName());
-    assertNotNull(encryptedData.getEncryptionKey());
-    assertNotNull(encryptedData.getEncryptedValue());
-    assertEquals(accountId, encryptedData.getAccountId());
-    assertTrue(encryptedData.isEnabled());
-    assertEquals(kmsId, encryptedData.getKmsId());
-    assertEquals(encryptionType, encryptedData.getEncryptionType());
-    assertEquals(CONFIG_FILE, encryptedData.getType());
+    assertSecretData(newSecretName, encryptedData);
     assertEquals(1, encryptedData.getParentIds().size());
     assertTrue(encryptedData.getParentIds().contains(configFileId));
 
@@ -1200,22 +1174,10 @@ public class SecretTextTest extends WingsBaseTest {
     String secretFileId =
         secretManager.saveFile(accountId, secretName, null, new BoundedInputStream(new FileInputStream(fileToSave)));
 
-    Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
-                                     .filter(EncryptedDataKeys.type, CONFIG_FILE)
-                                     .filter(EncryptedDataKeys.accountId, accountId);
-    List<EncryptedData> encryptedDataList = query.asList();
-    assertEquals(1, encryptedDataList.size());
-    EncryptedData encryptedData = encryptedDataList.get(0);
-    assertEquals(secretName, encryptedData.getName());
-    assertNotNull(encryptedData.getEncryptionKey());
-    assertNotNull(encryptedData.getEncryptedValue());
-    assertTrue(isEmpty(encryptedData.getParentIds()));
-    assertEquals(accountId, encryptedData.getAccountId());
-    assertTrue(encryptedData.isEnabled());
-    assertEquals(kmsId, encryptedData.getKmsId());
-    assertEquals(encryptionType, encryptedData.getEncryptionType());
-    assertEquals(CONFIG_FILE, encryptedData.getType());
-    assertEquals(secretFileId, encryptedData.getUuid());
+    Query<EncryptedData> dataQuery = wingsPersistence.createQuery(EncryptedData.class)
+                                         .filter(EncryptedDataKeys.type, CONFIG_FILE)
+                                         .filter(EncryptedDataKeys.accountId, accountId);
+    assertEncryptedData(secretName, secretFileId, dataQuery);
 
     int numOfVariable = 10;
     Set<String> variableIds = new HashSet<>();
@@ -1223,91 +1185,74 @@ public class SecretTextTest extends WingsBaseTest {
       Service service = Service.builder().name(generateUuid()).appId(appId).build();
       wingsPersistence.save(service);
 
-      ConfigFile configFile = ConfigFile.builder()
-                                  .templateId(generateUuid())
-                                  .envId(generateUuid())
-                                  .entityType(EntityType.SERVICE)
-                                  .entityId(service.getUuid())
-                                  .description(generateUuid())
-                                  .parentConfigFileId(generateUuid())
-                                  .relativeFilePath(generateUuid())
-                                  .targetToAllEnv(r.nextBoolean())
-                                  .defaultVersion(r.nextInt())
-                                  .envIdVersionMapString(generateUuid())
-                                  .setAsDefault(r.nextBoolean())
-                                  .notes(generateUuid())
-                                  .overridePath(generateUuid())
-                                  .configOverrideType(ConfigOverrideType.CUSTOM)
-                                  .configOverrideExpression(generateUuid())
-                                  .encryptedFileId(secretFileId)
-                                  .encrypted(true)
-                                  .build();
+      ConfigFile configFile = generateConfigFile(r, secretFileId, service);
       configFile.setAccountId(accountId);
       configFile.setAppId(appId);
 
       String configFileId = configService.save(configFile, null);
       variableIds.add(configFileId);
 
-      query = wingsPersistence.createQuery(EncryptedData.class)
-                  .filter(EncryptedDataKeys.type, CONFIG_FILE)
-                  .filter(EncryptedDataKeys.accountId, accountId);
-      assertEquals(1, query.count());
-      encryptedData = query.get();
-      assertEquals(secretName, encryptedData.getName());
-      assertNotNull(encryptedData.getEncryptionKey());
-      assertNotNull(encryptedData.getEncryptedValue());
-      assertEquals(accountId, encryptedData.getAccountId());
-      assertTrue(encryptedData.isEnabled());
-      assertEquals(kmsId, encryptedData.getKmsId());
-      assertEquals(encryptionType, encryptedData.getEncryptionType());
-      assertEquals(CONFIG_FILE, encryptedData.getType());
+      dataQuery = wingsPersistence.createQuery(EncryptedData.class)
+                      .filter(EncryptedDataKeys.type, CONFIG_FILE)
+                      .filter(EncryptedDataKeys.accountId, accountId);
+      assertEquals(1, dataQuery.count());
+      EncryptedData encryptedData = dataQuery.get();
+      assertSecretData(secretName, encryptedData);
       assertEquals(i + 1, encryptedData.getParentIds().size());
       assertEquals(variableIds, encryptedData.getParentIds());
     }
 
     Set<String> remainingVariables = new HashSet<>(variableIds);
-    int i = numOfVariable - 1;
+    int j = numOfVariable - 1;
     for (String variableId : variableIds) {
       remainingVariables.remove(variableId);
       configService.delete(appId, variableId);
 
-      query = wingsPersistence.createQuery(EncryptedData.class)
-                  .filter(EncryptedDataKeys.type, CONFIG_FILE)
-                  .filter(EncryptedDataKeys.accountId, accountId);
-      assertEquals(1, query.count());
-      encryptedData = query.get();
-      assertEquals(secretName, encryptedData.getName());
-      assertNotNull(encryptedData.getEncryptionKey());
-      assertNotNull(encryptedData.getEncryptedValue());
-      assertEquals(accountId, encryptedData.getAccountId());
-      assertTrue(encryptedData.isEnabled());
-      assertEquals(kmsId, encryptedData.getKmsId());
-      assertEquals(encryptionType, encryptedData.getEncryptionType());
-      assertEquals(CONFIG_FILE, encryptedData.getType());
+      dataQuery = wingsPersistence.createQuery(EncryptedData.class)
+                      .filter(EncryptedDataKeys.type, CONFIG_FILE)
+                      .filter(EncryptedDataKeys.accountId, accountId);
+      assertEquals(1, dataQuery.count());
+      EncryptedData encryptedData = dataQuery.get();
+      assertSecretData(secretName, encryptedData);
 
-      if (i == 0) {
+      if (j == 0) {
         assertTrue(isEmpty(encryptedData.getParentIds()));
       } else {
-        assertEquals(i, encryptedData.getParentIds().size());
+        assertEquals(j, encryptedData.getParentIds().size());
         assertEquals(remainingVariables, encryptedData.getParentIds());
       }
-      i--;
+      j--;
     }
 
-    query = wingsPersistence.createQuery(EncryptedData.class)
-                .filter(EncryptedDataKeys.type, CONFIG_FILE)
-                .filter(EncryptedDataKeys.accountId, accountId);
-    assertEquals(1, query.count());
-    encryptedData = query.get();
-    assertEquals(secretName, encryptedData.getName());
-    assertNotNull(encryptedData.getEncryptionKey());
-    assertNotNull(encryptedData.getEncryptedValue());
-    assertEquals(accountId, encryptedData.getAccountId());
-    assertTrue(encryptedData.isEnabled());
-    assertEquals(kmsId, encryptedData.getKmsId());
-    assertEquals(encryptionType, encryptedData.getEncryptionType());
-    assertEquals(CONFIG_FILE, encryptedData.getType());
-    assertTrue(isEmpty(encryptedData.getParentIds()));
+    dataQuery = wingsPersistence.createQuery(EncryptedData.class)
+                    .filter(EncryptedDataKeys.type, CONFIG_FILE)
+                    .filter(EncryptedDataKeys.accountId, accountId);
+    assertEquals(1, dataQuery.count());
+    EncryptedData data = dataQuery.get();
+    assertSecretData(secretName, data);
+    assertTrue(isEmpty(data.getParentIds()));
+  }
+
+  private ConfigFile generateConfigFile(Random r, String secretFileId, Service service) {
+    return ConfigFile.builder()
+        .templateId(generateUuid())
+        .envId(generateUuid())
+        .entityType(EntityType.SERVICE)
+        .entityId(service.getUuid())
+        .description(generateUuid())
+        .parentConfigFileId(generateUuid())
+        .relativeFilePath(generateUuid())
+        .targetToAllEnv(r.nextBoolean())
+        .defaultVersion(r.nextInt())
+        .envIdVersionMapString(generateUuid())
+        .setAsDefault(r.nextBoolean())
+        .notes(generateUuid())
+        .overridePath(generateUuid())
+        .configOverrideType(ConfigOverrideType.CUSTOM)
+        .configOverrideExpression(generateUuid())
+        .encryptedFileId(secretFileId)
+        .encrypted(true)
+        .build();
   }
 
   @Test
@@ -1326,19 +1271,8 @@ public class SecretTextTest extends WingsBaseTest {
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
                                      .filter(EncryptedDataKeys.type, CONFIG_FILE)
                                      .filter(EncryptedDataKeys.accountId, accountId);
-    List<EncryptedData> encryptedDataList = query.asList();
-    assertEquals(1, encryptedDataList.size());
-    EncryptedData encryptedData = encryptedDataList.get(0);
-    assertEquals(secretName, encryptedData.getName());
-    assertNotNull(encryptedData.getEncryptionKey());
-    assertNotNull(encryptedData.getEncryptedValue());
-    assertTrue(isEmpty(encryptedData.getParentIds()));
-    assertEquals(accountId, encryptedData.getAccountId());
-    assertTrue(encryptedData.isEnabled());
-    assertEquals(kmsId, encryptedData.getKmsId());
-    assertEquals(encryptionType, encryptedData.getEncryptionType());
-    assertEquals(CONFIG_FILE, encryptedData.getType());
-    assertEquals(secretFileId, encryptedData.getUuid());
+    assertEncryptedData(secretName, secretFileId, query);
+    EncryptedData encryptedData;
 
     int numOfVariable = 10;
     Set<String> variableIds = new HashSet<>();
@@ -1346,25 +1280,7 @@ public class SecretTextTest extends WingsBaseTest {
       Service service = Service.builder().name(generateUuid()).appId(appId).build();
       wingsPersistence.save(service);
 
-      ConfigFile configFile = ConfigFile.builder()
-                                  .templateId(generateUuid())
-                                  .envId(generateUuid())
-                                  .entityType(EntityType.SERVICE)
-                                  .entityId(service.getUuid())
-                                  .description(generateUuid())
-                                  .parentConfigFileId(generateUuid())
-                                  .relativeFilePath(generateUuid())
-                                  .targetToAllEnv(r.nextBoolean())
-                                  .defaultVersion(r.nextInt())
-                                  .envIdVersionMapString(generateUuid())
-                                  .setAsDefault(r.nextBoolean())
-                                  .notes(generateUuid())
-                                  .overridePath(generateUuid())
-                                  .configOverrideType(ConfigOverrideType.CUSTOM)
-                                  .configOverrideExpression(generateUuid())
-                                  .encryptedFileId(secretFileId)
-                                  .encrypted(true)
-                                  .build();
+      ConfigFile configFile = generateConfigFile(r, secretFileId, service);
       configFile.setAccountId(accountId);
       configFile.setAppId(appId);
 
@@ -1376,14 +1292,7 @@ public class SecretTextTest extends WingsBaseTest {
                   .filter(EncryptedDataKeys.accountId, accountId);
       assertEquals(1, query.count());
       encryptedData = query.get();
-      assertEquals(secretName, encryptedData.getName());
-      assertNotNull(encryptedData.getEncryptionKey());
-      assertNotNull(encryptedData.getEncryptedValue());
-      assertEquals(accountId, encryptedData.getAccountId());
-      assertTrue(encryptedData.isEnabled());
-      assertEquals(kmsId, encryptedData.getKmsId());
-      assertEquals(encryptionType, encryptedData.getEncryptionType());
-      assertEquals(CONFIG_FILE, encryptedData.getType());
+      assertSecretData(secretName, encryptedData);
       assertEquals(i + 1, encryptedData.getParentIds().size());
       assertEquals(variableIds, encryptedData.getParentIds());
     }
@@ -1418,22 +1327,7 @@ public class SecretTextTest extends WingsBaseTest {
     }
   }
 
-  @Test
-  @Category(UnitTests.class)
-  @RealMongo
-  public void deleteEncryptedConfigFile() throws IOException, InterruptedException {
-    final long seed = System.currentTimeMillis();
-    logger.info("seed: " + seed);
-    Random r = new Random(seed);
-
-    String secretName = generateUuid();
-    File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
-    String secretFileId =
-        secretManager.saveFile(accountId, secretName, null, new BoundedInputStream(new FileInputStream(fileToSave)));
-
-    Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
-                                     .filter(EncryptedDataKeys.type, CONFIG_FILE)
-                                     .filter(EncryptedDataKeys.accountId, accountId);
+  private void assertEncryptedData(String secretName, String secretFileId, Query<EncryptedData> query) {
     List<EncryptedData> encryptedDataList = query.asList();
     assertEquals(1, encryptedDataList.size());
     EncryptedData encryptedData = encryptedDataList.get(0);
@@ -1447,47 +1341,41 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(encryptionType, encryptedData.getEncryptionType());
     assertEquals(CONFIG_FILE, encryptedData.getType());
     assertEquals(secretFileId, encryptedData.getUuid());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  @RealMongo
+  public void deleteEncryptedConfigFile() throws IOException, InterruptedException {
+    final long seed = System.currentTimeMillis();
+    logger.info("seed: " + seed);
+    Random r = new Random(seed);
+
+    String secretName = generateUuid();
+    File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+    String secretFileId =
+        secretManager.saveFile(accountId, secretName, null, new BoundedInputStream(new FileInputStream(fileToSave)));
+
+    Query<EncryptedData> encrDataQuery = wingsPersistence.createQuery(EncryptedData.class)
+                                             .filter(EncryptedDataKeys.type, CONFIG_FILE)
+                                             .filter(EncryptedDataKeys.accountId, accountId);
+    assertEncryptedData(secretName, secretFileId, encrDataQuery);
 
     Service service = Service.builder().name(generateUuid()).appId(appId).build();
     wingsPersistence.save(service);
 
-    ConfigFile configFile = ConfigFile.builder()
-                                .templateId(generateUuid())
-                                .envId(generateUuid())
-                                .entityType(EntityType.SERVICE)
-                                .entityId(service.getUuid())
-                                .description(generateUuid())
-                                .parentConfigFileId(generateUuid())
-                                .relativeFilePath(generateUuid())
-                                .targetToAllEnv(r.nextBoolean())
-                                .defaultVersion(r.nextInt())
-                                .envIdVersionMapString(generateUuid())
-                                .setAsDefault(r.nextBoolean())
-                                .notes(generateUuid())
-                                .overridePath(generateUuid())
-                                .configOverrideType(ConfigOverrideType.CUSTOM)
-                                .configOverrideExpression(generateUuid())
-                                .encryptedFileId(secretFileId)
-                                .encrypted(true)
-                                .build();
+    ConfigFile configFile = generateConfigFile(r, secretFileId, service);
     configFile.setAccountId(accountId);
     configFile.setAppId(appId);
 
     String configFileId = configService.save(configFile, null);
 
-    query = wingsPersistence.createQuery(EncryptedData.class)
-                .filter(EncryptedDataKeys.type, CONFIG_FILE)
-                .filter(EncryptedDataKeys.accountId, accountId);
-    assertEquals(1, query.count());
-    encryptedData = query.get();
-    assertEquals(secretName, encryptedData.getName());
-    assertNotNull(encryptedData.getEncryptionKey());
-    assertNotNull(encryptedData.getEncryptedValue());
-    assertEquals(accountId, encryptedData.getAccountId());
-    assertTrue(encryptedData.isEnabled());
-    assertEquals(kmsId, encryptedData.getKmsId());
-    assertEquals(encryptionType, encryptedData.getEncryptionType());
-    assertEquals(CONFIG_FILE, encryptedData.getType());
+    encrDataQuery = wingsPersistence.createQuery(EncryptedData.class)
+                        .filter(EncryptedDataKeys.type, CONFIG_FILE)
+                        .filter(EncryptedDataKeys.accountId, accountId);
+    assertEquals(1, encrDataQuery.count());
+    EncryptedData data = encrDataQuery.get();
+    assertSecretData(secretName, data);
 
     try {
       secretManagementResource.deleteFile(accountId, secretFileId);
@@ -1500,10 +1388,21 @@ public class SecretTextTest extends WingsBaseTest {
     Thread.sleep(2000);
 
     secretManagementResource.deleteSecret(accountId, secretFileId);
-    query = wingsPersistence.createQuery(EncryptedData.class)
-                .filter(EncryptedDataKeys.type, CONFIG_FILE)
-                .filter(EncryptedDataKeys.accountId, accountId);
-    assertTrue(query.asList().isEmpty());
+    encrDataQuery = wingsPersistence.createQuery(EncryptedData.class)
+                        .filter(EncryptedDataKeys.type, CONFIG_FILE)
+                        .filter(EncryptedDataKeys.accountId, accountId);
+    assertTrue(encrDataQuery.asList().isEmpty());
+  }
+
+  private void assertSecretData(String secretName, EncryptedData encryptedData) {
+    assertEquals(secretName, encryptedData.getName());
+    assertNotNull(encryptedData.getEncryptionKey());
+    assertNotNull(encryptedData.getEncryptedValue());
+    assertEquals(accountId, encryptedData.getAccountId());
+    assertTrue(encryptedData.isEnabled());
+    assertEquals(kmsId, encryptedData.getKmsId());
+    assertEquals(encryptionType, encryptedData.getEncryptionType());
+    assertEquals(CONFIG_FILE, encryptedData.getType());
   }
 
   @Test

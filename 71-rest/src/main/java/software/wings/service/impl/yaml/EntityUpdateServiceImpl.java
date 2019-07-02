@@ -14,6 +14,7 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
@@ -274,7 +275,9 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       }
     } else if (entity instanceof ConfigFile) {
       ConfigFile configFile = (ConfigFile) entity;
-      String fileContent = loadFileContentIntoString(configFile);
+      // When its delete, fileContent would have been already deleted at this point. No point in fetching it
+      String fileContent =
+          ChangeType.DELETE.equals(changeType) ? StringUtils.EMPTY : loadFileContentIntoString(configFile);
       String fileName = Utils.normalize(configFile.getRelativeFilePath());
 
       if (fileContent != null) {
