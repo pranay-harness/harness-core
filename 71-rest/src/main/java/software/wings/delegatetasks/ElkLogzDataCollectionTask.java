@@ -19,6 +19,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.TaskType;
+import software.wings.common.VerificationConstants;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
@@ -94,7 +95,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
 
   private class ElkLogzDataCollector implements Runnable {
     private final LogDataCollectionInfo dataCollectionInfo;
-    private long collectionStartTime;
+    private long collectionStartTime, collectionEndTime;
     private int logCollectionMinute;
     private DataCollectionTaskResult taskResult;
     private String delegateTaskId;
@@ -121,6 +122,8 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
         default:
           throw new WingsException("Invalid StateType : " + getStateType());
       }
+      collectionEndTime =
+          is24X7Task() ? dataCollectionInfo.getEndTime() : collectionStartTime + TimeUnit.MINUTES.toMillis(1);
       this.taskResult = taskResult;
     }
 
@@ -153,8 +156,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                         .hosts(
                             hostName.equals(DUMMY_HOST_NAME) ? Collections.emptySet() : Collections.singleton(hostName))
                         .startTime(collectionStartTime)
-                        .endTime(is24X7Task() ? dataCollectionInfo.getEndTime()
-                                              : collectionStartTime + TimeUnit.MINUTES.toMillis(1))
+                        .endTime(collectionEndTime)
                         .queryType(elkDataCollectionInfo.getQueryType())
                         .build();
                 logger.info("running elk query: " + JsonUtils.asJson(elkFetchRequest.toElasticSearchJsonObject()));
@@ -200,6 +202,13 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
             if (hits == null) {
               continue;
             }
+            if (!is24X7Task()) {
+              long totalHitsPerMinute = getTotalHitsPerMinute(hits);
+              if (totalHitsPerMinute > getDelegateTotalHitsVerificationThreshold()) {
+                String reason = "Number of logs returned per minute are above the threshold. Please refine your query.";
+                throw new WingsException(ErrorCode.ELK_CONFIGURATION_ERROR, reason).addParam("reason", reason);
+              }
+            }
             try {
               List<LogElement> logRecords = parseElkResponse(searchResponse, dataCollectionInfo.getQuery(),
                   timestampField, timestampFieldFormat, hostnameField, hostName, messageField, logCollectionMinute,
@@ -228,19 +237,19 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
               + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute);
           break;
         } catch (Throwable ex) {
-          if (!(ex instanceof Exception) || ++retry >= RETRIES) {
+          /*
+           * Save the exception from the first attempt. This is usually
+           * more meaningful to trouble shoot.
+           */
+          if (retry == 0) {
+            taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
+          }
+          if (ex instanceof WingsException || !(ex instanceof Exception) || ++retry >= RETRIES) {
             logger.error("error fetching logs for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
                 logCollectionMinute, ex);
             taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
             completed.set(true);
           } else {
-            /*
-             * Save the exception from the first attempt. This is usually
-             * more meaningful to trouble shoot.
-             */
-            if (retry == 1) {
-              taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
-            }
             logger.warn("error fetching elk/logz logs. retrying in " + RETRY_SLEEP + "s", ex);
             sleep(RETRY_SLEEP);
           }
@@ -269,6 +278,25 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
         shutDownCollection();
       }
     }
+
+    private long getTotalHitsPerMinute(JSONObject hits) {
+      long totalHits = 0;
+      if (hits.has("total")) {
+        totalHits = hits.getLong("total");
+      }
+      double intervalInMinutes = (collectionEndTime - collectionStartTime) / (1000 * 60.0);
+      if (intervalInMinutes != 0) {
+        return (long) (totalHits / intervalInMinutes);
+      } else {
+        return totalHits;
+      }
+    }
+  }
+
+  private long getDelegateTotalHitsVerificationThreshold() {
+    // The multiplier is added to reduce number of runtime exception when running workflow.
+    // Varying little bit from configure time threshold is acceptable.
+    return 2 * VerificationConstants.TOTAL_HITS_PER_MIN_THRESHOLD;
   }
 
   public static List<LogElement> parseElkResponse(Object searchResponse, String query, String timestampField,
