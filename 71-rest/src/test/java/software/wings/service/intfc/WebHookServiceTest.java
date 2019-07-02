@@ -288,6 +288,27 @@ public class WebHookServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void shouldTestJsonBitBucketRefChange() throws IOException {
+    webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.REPO));
+    webHookTriggerCondition.setBitBucketEvents(Arrays.asList(BitBucketEventType.REFS_CHANGED));
+
+    when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
+
+    ClassLoader classLoader = getClass().getClassLoader();
+    File file = new File(
+        classLoader.getResource("software/wings/service/impl/webhook/bitbucket_ref_changes_request.json").getFile());
+    String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
+
+    doReturn("repo:refs_changed").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
+    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(), anyMap(), any());
+
+    WebHookResponse response = (WebHookResponse) webHookService.executeByEvent(token, payLoad, httpHeaders).getEntity();
+    assertThat(response).isNotNull();
+    assertThat(response.getStatus()).isEqualTo(RUNNING.name());
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void shouldTestJsonBitBucketFork() throws IOException {
     webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.REPO));
     webHookTriggerCondition.setBitBucketEvents(Arrays.asList(BitBucketEventType.FORK));
