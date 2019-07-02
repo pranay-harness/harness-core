@@ -296,4 +296,29 @@ if (0 < db.accounts.count()) {
         'createdAt' : NumberLong(1518718228292),
         'lastUpdatedAt' : NumberLong(1518718228292)
     });
+    db.getCollection('loginSettings').insert({
+         "_id" : "8hZ0sj0zQc69235lOQoTHA",
+         "className" : "software.wings.beans.loginSettings.LoginSettings",
+         "accountId" : '{{ .Values.accounts.accountId }}',
+         "lastUpdatedAt" : NumberLong(1561665380309),
+         "userLockoutPolicy" : {
+             "enableLockoutPolicy" : false,
+             "numberOfFailedAttemptsBeforeLockout" : NumberInt(5),
+             "lockOutPeriod" : NumberInt(24),
+             "notifyUser" : true
+         },
+         "passwordExpirationPolicy" : {
+             "enabled" : false,
+             "daysBeforePasswordExpires" : NumberInt(90),
+             "daysBeforeUserNotifiedOfPasswordExpiration" : NumberInt(5)
+         },
+         "passwordStrengthPolicy" : {
+             "enabled" : false,
+             "minNumberOfCharacters" : NumberInt(0),
+             "minNumberOfUppercaseCharacters" : NumberInt(0),
+             "minNumberOfLowercaseCharacters" : NumberInt(0),
+             "minNumberOfSpecialCharacters" : NumberInt(0),
+             "minNumberOfDigits" : NumberInt(0)
+         }
+     });
 }
