@@ -842,8 +842,11 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     }
 
     wingsPersistence.update(savedEnv, updateOperations);
+    Environment updatedEnv = get(appId, envId, false);
+    String accountId = appService.getAccountIdByAppId(appId);
+    yamlPushService.pushYamlChangeSet(accountId, savedEnv, updatedEnv, Type.UPDATE, updatedEnv.isSyncFromGit(), false);
 
-    return get(appId, envId, false);
+    return updatedEnv;
   }
 
   @Override

@@ -168,6 +168,7 @@ public class PreferenceServiceImpl implements PreferenceService {
       setUnset(updateOperations, AuditPreferenceKeys.name, auditPreference.getName());
       setUnset(updateOperations, AuditPreferenceKeys.startTime, auditPreference.getStartTime());
       setUnset(updateOperations, AuditPreferenceKeys.endTime, auditPreference.getEndTime());
+      setUnset(updateOperations, AuditPreferenceKeys.lastNDays, auditPreference.getLastNDays());
       setUnset(updateOperations, AuditPreferenceKeys.createdByUserIds, auditPreference.getCreatedByUserIds());
       setUnset(updateOperations, AuditPreferenceKeys.operationTypes, auditPreference.getOperationTypes());
       setUnset(updateOperations, AuditPreferenceKeys.includeAccountLevelResources,

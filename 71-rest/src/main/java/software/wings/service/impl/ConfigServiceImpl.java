@@ -387,6 +387,9 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     wingsPersistence.updateFields(ConfigFile.class, inputConfigFile.getUuid(), updateMap);
+    ConfigFile updatedConfigFile = get(inputConfigFile.getAppId(), inputConfigFile.getUuid());
+    yamlPushService.pushYamlChangeSet(savedConfigFile.getAccountId(), savedConfigFile, updatedConfigFile, Type.UPDATE,
+        inputConfigFile.isSyncFromGit(), !savedConfigFile.getFileName().equals(updatedConfigFile.getFileName()));
   }
 
   /**
@@ -433,6 +436,8 @@ public class ConfigServiceImpl implements ConfigService {
 
     boolean deleted = wingsPersistence.delete(query);
     if (deleted) {
+      yamlPushService.pushYamlChangeSet(
+          configFile.getAccountId(), configFile, null, Type.DELETE, configFile.isSyncFromGit(), false);
       if (configFile.isEncrypted()) {
         EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
         if (encryptedData != null) {
@@ -465,6 +470,8 @@ public class ConfigServiceImpl implements ConfigService {
 
     boolean deleted = wingsPersistence.delete(ConfigFile.class, configFile.getUuid());
     if (deleted) {
+      yamlPushService.pushYamlChangeSet(
+          configFile.getAccountId(), configFile, null, Type.DELETE, configFile.isSyncFromGit(), false);
       List<ConfigFile> childConfigFiles = wingsPersistence.createQuery(ConfigFile.class)
                                               .filter("appId", appId)
                                               .filter(ConfigFileKeys.parentConfigFileId, configFile.getUuid())
