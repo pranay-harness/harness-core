@@ -2,7 +2,6 @@ package software.wings.service.impl.trigger;
 
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
-import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.equalCheck;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -17,10 +16,13 @@ import software.wings.beans.trigger.ArtifactCondition;
 import software.wings.beans.trigger.Condition;
 import software.wings.beans.trigger.Condition.Type;
 import software.wings.beans.trigger.DeploymentTrigger;
+import software.wings.beans.trigger.PipelineAction;
+import software.wings.beans.trigger.WorkflowAction;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
+import software.wings.utils.Validator;
 
 import java.util.Map;
 import javax.validation.executable.ValidateOnExecution;
@@ -42,8 +44,8 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
 
     triggerProcessor.validateTriggerCondition(trigger);
 
-    return duplicateCheck(
-        () -> wingsPersistence.saveAndGet(DeploymentTrigger.class, trigger), "name", trigger.getName());
+    String uuid = Validator.duplicateCheck(() -> wingsPersistence.save(trigger), "name", trigger.getName());
+    return wingsPersistence.get(DeploymentTrigger.class, uuid);
   }
 
   @Override
@@ -51,7 +53,7 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
     DeploymentTrigger existingTrigger =
         wingsPersistence.getWithAppId(DeploymentTrigger.class, trigger.getAppId(), trigger.getUuid());
     notNullCheck("Trigger was deleted ", existingTrigger, USER);
-    equalCheck(trigger.getWorkflowType(), existingTrigger.getWorkflowType());
+    equalCheck(trigger.getAction().getActionType(), existingTrigger.getAction().getActionType());
 
     setWorkflowName(trigger);
 
@@ -59,8 +61,8 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
 
     triggerProcessor.validateTriggerCondition(trigger);
 
-    return duplicateCheck(
-        () -> wingsPersistence.saveAndGet(DeploymentTrigger.class, trigger), "name", trigger.getName());
+    String uuid = Validator.duplicateCheck(() -> wingsPersistence.save(trigger), "name", trigger.getName());
+    return wingsPersistence.get(DeploymentTrigger.class, uuid);
   }
 
   @Override
@@ -90,15 +92,28 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
   }
 
   public void setWorkflowName(DeploymentTrigger trigger) {
-    switch (trigger.getWorkflowType()) {
+    switch (trigger.getAction().getActionType()) {
       case PIPELINE:
-        trigger.setWorkflowName(pipelineService.fetchPipelineName(trigger.getAppId(), trigger.getWorkflowId()));
+        PipelineAction pipelineAction = (PipelineAction) trigger.getAction();
+
+        trigger.setAction(
+            PipelineAction.builder()
+                .pipelineId(pipelineAction.getPipelineId())
+                .pipelineName(pipelineService.fetchPipelineName(trigger.getAppId(), pipelineAction.getPipelineId()))
+                .triggerArgs(pipelineAction.getTriggerArgs())
+                .build());
         break;
       case ORCHESTRATION:
-        trigger.setWorkflowName(workflowService.fetchWorkflowName(trigger.getAppId(), trigger.getWorkflowId()));
+        WorkflowAction workflowAction = (WorkflowAction) trigger.getAction();
+        trigger.setAction(
+            WorkflowAction.builder()
+                .workflowId(workflowAction.getWorkflowId())
+                .workflowName(workflowService.fetchWorkflowName(trigger.getAppId(), workflowAction.getWorkflowId()))
+                .triggerArgs(workflowAction.getTriggerArgs())
+                .build());
         break;
       default:
-        unhandled(trigger.getWorkflowType());
+        unhandled(trigger.getAction().getActionType());
     }
   }
 }
