@@ -13,6 +13,7 @@ import migrations.all.CleanupOrphanInstances;
 import migrations.all.CleanupSyncStatusForDeletedEntities;
 import migrations.all.DeleteAndAddInstanceSyncJobToAllAccounts;
 import migrations.all.DeleteOrphanNotificationGroups;
+import migrations.all.DeleteStaleThirdPartyApiCallLogsMigration;
 import migrations.all.ExplodeLogMLFeedbackRecordsMigration;
 import migrations.all.InitInfraProvisionerCounters;
 import migrations.all.InitPipelineCounters;
@@ -75,6 +76,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(33, LogAnalysisAddExecutionIdMigration.class))
         .add(Pair.of(34, LogAnalysisBaselineMigration.class))
         .add(Pair.of(35, InitInfraProvisionerCounters.class))
+        .add(Pair.of(36, DeleteStaleThirdPartyApiCallLogsMigration.class))
         .build();
   }
 }
