@@ -23,16 +23,6 @@ if (db.accounts.find(accountQuery).count() == 0) {
       "_id" : "__GLOBAL_ACCOUNT_ID__",
       "companyName" : "Global",
       "accountName" : "Global",
-      "licenseExpiryTime" : NumberLong(0),
-      "encryption" : {
-          "className" : "software.wings.security.encryption.SimpleEncryption",
-          "salt" : { "$binary" : "ZUP4bZiMNRrENid9aOYIm7c2bAnqREeRH+8JZWXmK7A=", "$type" : "00" }
-      },
-      "accountKey" : "7tDMNNM4aHvq76h8c4VoXswp0CFriUU9cnWo4Hyu6lACn2sV9ClEQTUhDdUhQpl8DgdHgN8M9sbesCmM",
-      "twoFactorAdminEnforced" : false,
-      "appId" : "__GLOBAL_APP_ID__",
-      "createdAt" : NumberLong(1532983777281),
-      "lastUpdatedAt" : NumberLong(1532983777281),
       "delegateConfiguration" : {
           "delegateVersions" : [
               version
