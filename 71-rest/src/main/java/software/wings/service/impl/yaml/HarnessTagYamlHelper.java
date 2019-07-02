@@ -71,6 +71,9 @@ public class HarnessTagYamlHelper {
 
     BaseEntityYaml yaml = (BaseEntityYaml) changeContext.getYaml();
     Map<String, String> tagsFromYaml = yaml.getHarnessTags();
+    if (isEmpty(tagsFromYaml)) {
+      tagsFromYaml = new HashMap<>();
+    }
 
     String entityId = ((UuidAware) entity).getUuid();
     List<HarnessTagLink> tagLinks = harnessTagService.getTagLinksWithEntityId(accountId, entityId);
