@@ -2,6 +2,7 @@ package software.wings.verification;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -74,6 +75,7 @@ public class CloudWatchCVConfigurationYamlHandler
       bean.setUuid(previous.getUuid());
       cvConfigurationService.updateConfiguration(bean, appId);
     } else {
+      bean.setUuid(generateUuid());
       cvConfigurationService.saveToDatabase(bean, true);
     }
 

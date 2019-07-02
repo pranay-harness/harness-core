@@ -1,5 +1,6 @@
 package software.wings.verification;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.resources.PrometheusResource.validateTransactions;
 
 import io.harness.data.structure.EmptyPredicate;
@@ -63,6 +64,7 @@ public class PrometheusCVConfigurationYamlHandler
       bean.setUuid(previous.getUuid());
       cvConfigurationService.updateConfiguration(bean, appId);
     } else {
+      bean.setUuid(generateUuid());
       cvConfigurationService.saveToDatabase(bean, true);
     }
     return bean;

@@ -2,6 +2,7 @@ package software.wings.verification;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -149,6 +150,7 @@ public class NewRelicCVConfigurationYamlHandlerTest {
     assertEquals("appId should match", appId, bean.getAppId());
     assertEquals("envId should match", envId, bean.getEnvId());
     assertEquals("serviceId should match", serviceId, bean.getServiceId());
+    assertNotNull(bean.getUuid());
   }
 
   @Test(expected = WingsException.class)
