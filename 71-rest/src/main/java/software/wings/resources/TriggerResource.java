@@ -145,7 +145,7 @@ public class TriggerResource {
             asList(new PermissionAttribute(PermissionType.ACCOUNT_MANAGEMENT, Action.READ)));
       } catch (WingsException ex) {
         throw new WingsException(
-            "User not authorized: Only admin can create or update the trigger with parameterized variables.");
+            "User not authorized: Only admin can create or update the trigger with parameterized variables.", USER);
       }
     } else {
       // Check if environment exist by envId
@@ -155,7 +155,7 @@ public class TriggerResource {
           authService.checkIfUserAllowedToDeployToEnv(appId, environmentValue);
         } catch (WingsException ex) {
           throw new WingsException(
-              "User does not have execute permission for environment [" + environment.getName() + "]");
+              "User does not have Deployment execute permission to environment [" + environment.getName() + "]", USER);
         }
 
       } else {
@@ -165,30 +165,37 @@ public class TriggerResource {
               asList(new PermissionAttribute(PermissionType.ACCOUNT_MANAGEMENT, Action.READ)));
         } catch (WingsException ex) {
           throw new WingsException(
-              "User not authorized: Only admin can create or update the trigger with parameterized variables.");
+              "User not authorized: Only admin can create or update the trigger with parameterized variables.", USER);
         }
       }
     }
   }
 
   private void authorize(Trigger trigger, boolean existing) {
-    authorizeWorkflowOrPipeline(trigger.getAppId(), trigger.getWorkflowId());
+    WorkflowType workflowType = trigger.getWorkflowType();
+    try {
+      authorizeWorkflowOrPipeline(trigger.getAppId(), trigger.getWorkflowId());
+    } catch (WingsException ex) {
+      throw new WingsException(
+          "User does not have Deployment execute permission to " + (workflowType == PIPELINE ? "Pipeline" : "Workflow"),
+          USER);
+    }
     boolean envParamaterized;
     List<Variable> variables;
-    if (PIPELINE.equals(trigger.getWorkflowType())) {
+    if (PIPELINE.equals(workflowType)) {
       Pipeline pipeline = pipelineService.readPipeline(trigger.getAppId(), trigger.getWorkflowId(), true);
       Validator.notNullCheck("Pipeline does not exist", pipeline, USER);
       envParamaterized = pipeline.isEnvParameterized();
       variables = pipeline.getPipelineVariables();
-    } else if (WorkflowType.ORCHESTRATION.equals(trigger.getWorkflowType())) {
+    } else if (WorkflowType.ORCHESTRATION.equals(workflowType)) {
       Workflow workflow = workflowService.readWorkflow(trigger.getAppId(), trigger.getWorkflowId());
       Validator.notNullCheck("Workflow does not exist", workflow, USER);
       Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow(), USER);
       envParamaterized = workflow.checkEnvironmentTemplatized();
       variables = workflow.getOrchestrationWorkflow().getUserVariables();
     } else {
-      logger.error("WorkflowType {} not supported", trigger.getWorkflowType());
-      throw new WingsException("Workflow Type [" + trigger.getWorkflowType() + "] not supported", USER);
+      logger.error("WorkflowType {} not supported", workflowType);
+      throw new WingsException("Workflow Type [" + workflowType + "] not supported", USER);
     }
     if (envParamaterized) {
       validateAndAuthorizeEnvironment(trigger, existing, variables);
