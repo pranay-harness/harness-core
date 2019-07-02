@@ -1,24 +1,18 @@
 package software.wings.service.impl.trigger;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
-import static software.wings.utils.WingsTestConstants.PIPELINE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TRIGGER_DESCRIPTION;
-import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
-import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -28,6 +22,7 @@ import software.wings.beans.Service;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.trigger.ArtifactCondition;
 import software.wings.beans.trigger.DeploymentTrigger;
+import software.wings.beans.trigger.PipelineAction;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.PipelineService;
@@ -47,12 +42,6 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
 
   @Inject private DeploymentTriggerGenerator deploymentTriggerGenerator;
 
-  @Before
-  public void setUp() {
-    when(pipelineService.fetchPipelineName(APP_ID, PIPELINE_ID)).thenReturn(PIPELINE_NAME);
-    when(workflowService.fetchWorkflowName(APP_ID, WORKFLOW_ID)).thenReturn(WORKFLOW_NAME);
-  }
-
   @Test
   @Category(UnitTests.class)
   public void shouldCRUDArtifactConditionTrigger() {
@@ -68,7 +57,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
 
     DeploymentTrigger trigger = DeploymentTrigger.builder()
                                     .name("New Artifact Pipeline")
-                                    .workflowId(PIPELINE_ID)
+                                    .action(PipelineAction.builder().pipelineId(PIPELINE_ID).build())
                                     .condition(ArtifactCondition.builder().build())
                                     .build();
 
@@ -76,8 +65,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
         deploymentTriggerService.save(deploymentTriggerGenerator.ensureDeploymentTrigger(trigger));
 
     assertThat(savedTrigger).isNotNull();
-    assertThat(savedTrigger.getWorkflowName()).isEqualTo(PIPELINE_NAME);
-
+    PipelineAction pipelineAction = (PipelineAction) (savedTrigger.getAction());
     assertThat(((ArtifactCondition) savedTrigger.getCondition()).getArtifactStreamId())
         .isNotNull()
         .isEqualTo(ARTIFACT_STREAM_ID);
@@ -100,7 +88,5 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
     assertThat(updatedTrigger).isNotNull();
     assertThat(updatedTrigger.getUuid()).isEqualTo(savedTrigger.getUuid());
     assertThat(updatedTrigger.getDescription()).isEqualTo(TRIGGER_DESCRIPTION);
-
-    verify(pipelineService, times(2)).fetchPipelineName(APP_ID, PIPELINE_ID);
   }
 }

@@ -4,14 +4,16 @@ import static software.wings.beans.trigger.ArtifactCondition.ArtifactConditionBu
 import static software.wings.beans.trigger.DeploymentTrigger.DeploymentTriggerBuilder;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
 import com.google.inject.Singleton;
 
-import io.harness.beans.WorkflowType;
 import software.wings.beans.trigger.ArtifactCondition;
 import software.wings.beans.trigger.Condition;
 import software.wings.beans.trigger.DeploymentTrigger;
+import software.wings.beans.trigger.PipelineAction;
+import software.wings.beans.trigger.WorkflowAction;
 
 @Singleton
 public class DeploymentTriggerGenerator {
@@ -24,17 +26,23 @@ public class DeploymentTriggerGenerator {
       triggerBuilder.appId(APP_ID);
     }
 
-    if (trigger.getWorkflowType() != null) {
-      triggerBuilder.workflowType(trigger.getWorkflowType());
-    } else {
-      triggerBuilder.workflowType(WorkflowType.PIPELINE);
+    if (trigger.getAction() instanceof WorkflowAction) {
+      WorkflowAction workflowAction = (WorkflowAction) trigger.getAction();
+
+      if (workflowAction != null) {
+        triggerBuilder.action(workflowAction);
+      } else {
+        triggerBuilder.action(WorkflowAction.builder().workflowId(WORKFLOW_ID).build());
+      }
+    } else if (trigger.getAction() instanceof PipelineAction) {
+      PipelineAction pipelineAction = (PipelineAction) trigger.getAction();
+      if (pipelineAction != null) {
+        triggerBuilder.action(pipelineAction);
+      } else {
+        triggerBuilder.action(PipelineAction.builder().pipelineId(PIPELINE_ID).build());
+      }
     }
 
-    if (trigger.getWorkflowId() != null) {
-      triggerBuilder.workflowId(trigger.getWorkflowId());
-    } else {
-      triggerBuilder.workflowId(WORKFLOW_ID);
-    }
     if (trigger.getName() != null) {
       triggerBuilder.name(trigger.getName());
     } else {

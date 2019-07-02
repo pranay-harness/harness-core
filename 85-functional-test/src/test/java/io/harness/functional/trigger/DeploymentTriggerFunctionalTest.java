@@ -1,7 +1,7 @@
 package io.harness.functional.trigger;
 
-import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.beans.trigger.Action.ActionType.ORCHESTRATION;
 
 import com.google.inject.Inject;
 
@@ -32,6 +32,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.trigger.ArtifactCondition;
 import software.wings.beans.trigger.Condition.Type;
 import software.wings.beans.trigger.DeploymentTrigger;
+import software.wings.beans.trigger.WorkflowAction;
 
 import javax.ws.rs.core.GenericType;
 
@@ -69,12 +70,12 @@ public class DeploymentTriggerFunctionalTest extends AbstractFunctionalTest {
 
     };
 
+    String name = "New Artifact Trigger" + System.currentTimeMillis();
     DeploymentTrigger trigger =
         DeploymentTrigger.builder()
-            .workflowId(buildWorkflow.getUuid())
-            .name("New Artifact Trigger")
+            .action(WorkflowAction.builder().workflowId(buildWorkflow.getUuid()).build())
+            .name(name)
             .appId(application.getAppId())
-            .workflowType(ORCHESTRATION)
             .condition(
                 ArtifactCondition.builder().type(Type.NEW_ARTIFACT).artifactStreamId(artifactStream.getUuid()).build())
             .build();
@@ -90,10 +91,12 @@ public class DeploymentTriggerFunctionalTest extends AbstractFunctionalTest {
                                                                .as(triggerType.getType());
 
     DeploymentTrigger savedTrigger = savedTriggerResponse.getResource();
+
+    WorkflowAction workflowAction = (WorkflowAction) savedTrigger.getAction();
     assertThat(savedTrigger).isNotNull();
     assertThat(savedTrigger.getUuid()).isNotEmpty();
-    assertThat(savedTrigger.getWorkflowId()).isEqualTo(buildWorkflow.getUuid());
-    assertThat(savedTrigger.getWorkflowType()).isEqualTo(ORCHESTRATION);
+    assertThat(workflowAction.getWorkflowId()).isEqualTo(buildWorkflow.getUuid());
+    assertThat(workflowAction.getActionType()).isEqualTo(ORCHESTRATION);
 
     // Get the saved trigger
     savedTriggerResponse = Setup.portal()
@@ -104,10 +107,11 @@ public class DeploymentTriggerFunctionalTest extends AbstractFunctionalTest {
                                .get("/deployment-triggers/{triggerId}")
                                .as(triggerType.getType());
     savedTrigger = savedTriggerResponse.getResource();
+    workflowAction = (WorkflowAction) savedTrigger.getAction();
     assertThat(savedTrigger).isNotNull();
     assertThat(savedTrigger.getUuid()).isNotEmpty();
-    assertThat(savedTrigger.getWorkflowId()).isEqualTo(buildWorkflow.getUuid());
-    assertThat(savedTrigger.getWorkflowType()).isEqualTo(ORCHESTRATION);
+    assertThat(workflowAction.getWorkflowId()).isEqualTo(buildWorkflow.getUuid());
+    assertThat(workflowAction.getActionType()).isEqualTo(ORCHESTRATION);
 
     // Delete the trigger
     Setup.portal()

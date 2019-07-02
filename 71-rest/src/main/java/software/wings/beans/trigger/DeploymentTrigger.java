@@ -1,53 +1,57 @@
 package software.wings.beans.trigger;
 
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
-import io.harness.beans.WorkflowType;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
+import io.harness.persistence.CreatedAtAware;
+import io.harness.persistence.CreatedByAware;
+import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UpdatedAtAware;
+import io.harness.persistence.UpdatedByAware;
+import io.harness.persistence.UuidAware;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
-import software.wings.beans.Base;
 
 import javax.validation.constraints.NotNull;
 
 /**
  * Created by sgurubelli on 10/25/17.
  */
-@Data
-@NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+
 @Entity(value = "deploymentTriggers")
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Indexes(@Index(
     options = @IndexOptions(name = "uniqueTriggerIdx", unique = true), fields = { @Field("appId")
                                                                                   , @Field("name") }))
 @HarnessExportableEntity
-public class DeploymentTrigger extends Base {
+public class DeploymentTrigger
+    implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
+  @Id @NotNull(groups = {DeploymentTrigger.class}) @SchemaIgnore private String uuid;
+  @Indexed @NotNull @SchemaIgnore protected String appId;
+  @SchemaIgnore private EmbeddedUser createdBy;
+  @SchemaIgnore @Indexed private long createdAt;
+
+  @SchemaIgnore private EmbeddedUser lastUpdatedBy;
+  @SchemaIgnore @NotNull private long lastUpdatedAt;
+
   @EntityName @NotEmpty @Trimmed private String name;
   private String description;
-  @NotEmpty private String workflowId;
-  private String workflowName;
-  @NotNull private WorkflowType workflowType;
-  @NotNull private Condition condition;
 
-  @Builder
-  public DeploymentTrigger(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
-      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String name, String description,
-      Condition condition, String workflowId, String workflowName, WorkflowType workflowType) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
-    this.name = name;
-    this.description = description;
-    this.condition = condition;
-    this.workflowId = workflowId;
-    this.workflowName = workflowName;
-    this.workflowType = workflowType;
-  }
+  private Action action;
+  @NotNull private Condition condition;
 }
