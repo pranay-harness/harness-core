@@ -308,7 +308,7 @@ public abstract class TerraformProvisionState extends State {
 
     fileService.updateParentEntityIdAndVersion(PhaseStep.class, terraformExecutionData.getEntityId(), null,
         terraformExecutionData.getStateFileId(), others, FileBucket.TERRAFORM_STATE);
-    if (isNotEmpty(workspace) && !terraformExecutionData.isRemoteState()) {
+    if (isNotEmpty(workspace)) {
       updateProvisionerWorkspaces(terraformProvisioner, workspace);
     }
     TerraformOutputInfoElement outputInfoElement = context.getContextElement(ContextElementType.TERRAFORM_PROVISION);
