@@ -38,6 +38,7 @@ import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.SSHKeyDataProvider;
 import software.wings.service.impl.WinRmConnectionAttributesDataProvider;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
+import software.wings.service.impl.yaml.HarnessTagYamlHelper;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.NameValuePairYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
@@ -87,6 +88,7 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock protected SettingsService settingsService;
   @Mock protected NotificationSetupService notificationSetupService;
   @Mock protected YamlPushService yamlPushService;
+  @Mock protected HarnessTagYamlHelper harnessTagYamlHelper;
 
   //  @InjectMocks @Inject YamlHelper yamlHelper;
   @InjectMocks @Inject protected WorkflowService workflowService;

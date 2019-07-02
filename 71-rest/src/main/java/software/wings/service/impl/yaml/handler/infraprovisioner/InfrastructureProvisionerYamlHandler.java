@@ -99,6 +99,8 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends Yaml, B ext
       yaml.setVariables(Utils.getSortedNameValuePairYamlList(nvpYamlList));
     }
 
+    updateYamlWithAdditionalInfo(bean, bean.getAppId(), yaml);
+
     return yaml;
   }
 

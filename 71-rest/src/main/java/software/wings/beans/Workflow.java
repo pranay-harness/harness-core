@@ -16,6 +16,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.data.validator.EntityName;
 import io.harness.persistence.NameAccess;
+import io.harness.tags.TagAware;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
@@ -37,7 +38,7 @@ import javax.validation.constraints.NotNull;
 @HarnessExportableEntity
 @FieldNameConstants(innerTypeName = "WorkflowKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Workflow extends Base implements KeywordsAware, NameAccess {
+public class Workflow extends Base implements KeywordsAware, NameAccess, TagAware {
   public static final String NAME_KEY = "name";
   public static final String KEYWORDS_KEY = "keywords";
   public static final String LINKED_TEMPLATE_UUIDS_KEY = "linkedTemplateUuids";
