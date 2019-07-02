@@ -11,7 +11,6 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.tags.TagAware;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.yaml.ChangeContext;
@@ -53,8 +52,7 @@ public class HarnessTagYamlHelper {
 
   private String getAccountId(PersistentEntity entity, String appId) {
     if (!GLOBAL_APP_ID.equals(appId)) {
-      Application application = appService.get(appId);
-      return application.getAccountId();
+      return appService.getAccountIdByAppId(appId);
     }
 
     return null;

@@ -33,6 +33,7 @@ import software.wings.beans.TerraformInfrastructureProvisioner.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
+import software.wings.service.impl.yaml.HarnessTagYamlHelper;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
@@ -49,6 +50,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
   @Mock private ServiceResourceService mockServiceResourceService;
   @Mock private SettingsService mockSettingsService;
   @Mock private AppService appService;
+  @Mock private HarnessTagYamlHelper harnessTagYamlHelper;
 
   @InjectMocks @Inject private TerraformInfrastructureProvisionerYamlHandler handler;
   private String validYamlFilePath = "Setup/Applications/APP_NAME/Infrastructure Provisioners/TF_Name.yaml";

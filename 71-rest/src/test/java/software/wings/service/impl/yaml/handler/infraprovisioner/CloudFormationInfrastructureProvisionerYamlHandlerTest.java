@@ -30,6 +30,7 @@ import software.wings.beans.Service;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
+import software.wings.service.impl.yaml.HarnessTagYamlHelper;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -42,6 +43,8 @@ public class CloudFormationInfrastructureProvisionerYamlHandlerTest extends Base
   @Mock private YamlHelper mockYamlHelper;
   @Mock private InfrastructureProvisionerService mockInfrastructureProvisionerService;
   @Mock private ServiceResourceService mockServiceResourceService;
+  @Mock private HarnessTagYamlHelper harnessTagYamlHelper;
+
   @InjectMocks @Inject private CloudFormationInfrastructureProvisionerYamlHandler handler;
 
   private String validYamlFilePath = "Setup/Applications/APP_NAME/Infrastructure Provisioners/CF_Name.yaml";

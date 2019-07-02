@@ -116,11 +116,14 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
             .map(pipelineStage -> pipelineStageYamlHandler.toYaml(pipelineStage, bean.getAppId()))
             .collect(toList());
 
-    return Yaml.builder()
-        .harnessApiVersion(getHarnessApiVersion())
-        .description(bean.getDescription())
-        .pipelineStages(pipelineStageYamlList)
-        .build();
+    Yaml yaml = Yaml.builder()
+                    .harnessApiVersion(getHarnessApiVersion())
+                    .description(bean.getDescription())
+                    .pipelineStages(pipelineStageYamlList)
+                    .build();
+
+    updateYamlWithAdditionalInfo(bean, appId, yaml);
+    return yaml;
   }
 
   @Override
@@ -133,10 +136,13 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
     current.setSyncFromGit(changeContext.getChange().isSyncFromGit());
     if (previous != null) {
       current.setUuid(previous.getUuid());
-      return pipelineService.update(current);
+      current = pipelineService.update(current);
     } else {
-      return pipelineService.save(current);
+      current = pipelineService.save(current);
     }
+
+    changeContext.setEntity(current);
+    return current;
   }
 
   @Override

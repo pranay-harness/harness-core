@@ -41,10 +41,13 @@ public class ShellScriptProvisionerYamlHandler
     if (previous != null) {
       current.setUuid(previous.getUuid());
       current.setSyncFromGit(changeContext.getChange().isSyncFromGit());
-      return (ShellScriptInfrastructureProvisioner) infrastructureProvisionerService.update(current);
+      current = (ShellScriptInfrastructureProvisioner) infrastructureProvisionerService.update(current);
     } else {
-      return (ShellScriptInfrastructureProvisioner) infrastructureProvisionerService.save(current);
+      current = (ShellScriptInfrastructureProvisioner) infrastructureProvisionerService.save(current);
     }
+
+    changeContext.setEntity(current);
+    return current;
   }
 
   private void toBean(ShellScriptInfrastructureProvisioner bean,

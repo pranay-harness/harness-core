@@ -67,10 +67,13 @@ public class TerraformInfrastructureProvisionerYamlHandler
     if (previous != null) {
       current.setUuid(previous.getUuid());
       current.setSyncFromGit(changeContext.getChange().isSyncFromGit());
-      return (TerraformInfrastructureProvisioner) infrastructureProvisionerService.update(current);
+      current = (TerraformInfrastructureProvisioner) infrastructureProvisionerService.update(current);
     } else {
-      return (TerraformInfrastructureProvisioner) infrastructureProvisionerService.save(current);
+      current = (TerraformInfrastructureProvisioner) infrastructureProvisionerService.save(current);
     }
+
+    changeContext.setEntity(current);
+    return current;
   }
 
   private void toBean(TerraformInfrastructureProvisioner bean,

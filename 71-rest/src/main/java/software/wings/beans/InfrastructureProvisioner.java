@@ -8,6 +8,7 @@ import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 import io.harness.persistence.NameAccess;
+import io.harness.tags.TagAware;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -33,7 +34,7 @@ import javax.validation.Valid;
 @Entity(value = "infrastructureProvisioner")
 @HarnessExportableEntity
 @FieldNameConstants(innerTypeName = "InfrastructureProvisionerKeys")
-public abstract class InfrastructureProvisioner extends Base implements NameAccess {
+public abstract class InfrastructureProvisioner extends Base implements NameAccess, TagAware {
   public static final String INFRASTRUCTURE_PROVISIONER_TYPE_KEY = "infrastructureProvisionerType";
   public static final String MAPPING_BLUEPRINTS_KEY = "mappingBlueprints";
   public static final String NAME_KEY = "name";

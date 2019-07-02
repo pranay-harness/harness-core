@@ -62,10 +62,13 @@ public class CloudFormationInfrastructureProvisionerYamlHandler
     current.setSyncFromGit(changeContext.getChange().isSyncFromGit());
     if (previous != null) {
       current.setUuid(previous.getUuid());
-      return (CloudFormationInfrastructureProvisioner) infrastructureProvisionerService.update(current);
+      current = (CloudFormationInfrastructureProvisioner) infrastructureProvisionerService.update(current);
     } else {
-      return (CloudFormationInfrastructureProvisioner) infrastructureProvisionerService.save(current);
+      current = (CloudFormationInfrastructureProvisioner) infrastructureProvisionerService.save(current);
     }
+
+    changeContext.setEntity(current);
+    return current;
   }
 
   private void toBean(CloudFormationInfrastructureProvisioner bean, ChangeContext<Yaml> changeContext, String appId)

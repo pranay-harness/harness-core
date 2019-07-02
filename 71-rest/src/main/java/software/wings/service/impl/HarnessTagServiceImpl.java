@@ -40,8 +40,11 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HarnessTagService;
+import software.wings.service.intfc.InfrastructureProvisionerService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
 import java.util.ArrayList;
@@ -61,6 +64,9 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   @Inject private YamlPushService yamlPushService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
+  @Inject private WorkflowService workflowService;
+  @Inject private PipelineService pipelineService;
+  @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
 
   private static final Set<EntityType> supportedEntityTypes =
       ImmutableSet.of(SERVICE, ENVIRONMENT, WORKFLOW, PROVISIONER, PIPELINE, TRIGGER);
@@ -419,6 +425,15 @@ public class HarnessTagServiceImpl implements HarnessTagService {
 
       case ENVIRONMENT:
         return environmentService.get(resourceLookup.getAppId(), resourceLookup.getResourceId(), false);
+
+      case WORKFLOW:
+        return workflowService.readWorkflow(resourceLookup.getAppId(), resourceLookup.getResourceId());
+
+      case PIPELINE:
+        return pipelineService.readPipeline(resourceLookup.getAppId(), resourceLookup.getResourceId(), false);
+
+      case PROVISIONER:
+        return infrastructureProvisionerService.get(resourceLookup.getAppId(), resourceLookup.getResourceId());
 
       default:
         unhandled(entityType);

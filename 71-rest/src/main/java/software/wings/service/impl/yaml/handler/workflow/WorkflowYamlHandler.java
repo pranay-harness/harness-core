@@ -72,14 +72,18 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     toBean(changeContext, changeSetContext, workflowBuilder, previous);
 
     workflowBuilder.syncFromGit(changeContext.getChange().isSyncFromGit());
+    Workflow current;
 
     if (previous != null) {
       previous.setSyncFromGit(changeContext.getChange().isSyncFromGit());
       workflowBuilder.uuid(previous.getUuid());
-      return workflowService.updateLinkedWorkflow(workflowBuilder.build(), previous, true);
+      current = workflowService.updateLinkedWorkflow(workflowBuilder.build(), previous, true);
     } else {
-      return workflowService.createWorkflow(workflowBuilder.build());
+      current = workflowService.createWorkflow(workflowBuilder.build());
     }
+
+    changeContext.setEntity(current);
+    return current;
   }
 
   private void toBean(ChangeContext<Y> changeContext, List<ChangeContext> changeContextList, WorkflowBuilder workflow,
@@ -412,6 +416,8 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     yaml.setNotificationRules(notificationRuleYamlList);
     yaml.setFailureStrategies(failureStrategyYamlList);
     yaml.setHarnessApiVersion(getHarnessApiVersion());
+
+    updateYamlWithAdditionalInfo(workflow, appId, yaml);
   }
 
   @Override
