@@ -4,9 +4,9 @@ import static java.util.stream.Collectors.toList;
 
 import lombok.NonNull;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Subject<T> {
   @FunctionalInterface
@@ -49,7 +49,7 @@ public class Subject<T> {
     U2 process(T t, U1 u1, U2 u2);
   }
 
-  private List<T> observers = new ArrayList<>();
+  private List<T> observers = new CopyOnWriteArrayList<>();
 
   public void register(@NonNull T observer) {
     observers.add(observer);
