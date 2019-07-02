@@ -9,7 +9,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
-import io.harness.beans.PageResponse;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import software.wings.beans.Application;
@@ -31,10 +30,8 @@ public class SetRollbackFlagToWorkflows implements Migration {
   public void migrate() {
     PageRequest<Application> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
     logger.info("Retrieving applications");
-    PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest, excludeAuthority);
-
-    List<Application> apps = pageResponse.getResponse();
-    if (pageResponse.isEmpty() || isEmpty(apps)) {
+    List<Application> apps = wingsPersistence.createQuery(Application.class, excludeAuthority).asList();
+    if (isEmpty(apps)) {
       logger.info("No applications found");
       return;
     }

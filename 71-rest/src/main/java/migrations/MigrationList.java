@@ -81,7 +81,6 @@ import migrations.all.RemoveDupInstanceStats;
 import migrations.all.RemoveResizeFromStatefulSetWorkflows;
 import migrations.all.RemoveServiceVariablesFromActivity;
 import migrations.all.RemoveUnusedLogDataRecordMigration;
-import migrations.all.RenameProvisionNodeToInfrastructureNodeWorkflows;
 import migrations.all.ResourceLookupMigration;
 import migrations.all.SecretManagerConfigMigration;
 import migrations.all.SecretTextNameKeyWordsMigration;
@@ -128,7 +127,7 @@ public class MigrationList {
         .add(Pair.of(136, TimeSeriesMLScoresMigration.class))
         .add(Pair.of(137, SetRollbackFlagToWorkflows.class))
         .add(Pair.of(138, BaseMigration.class))
-        .add(Pair.of(139, RenameProvisionNodeToInfrastructureNodeWorkflows.class))
+        .add(Pair.of(139, BaseMigration.class))
         .add(Pair.of(140, GitSyncToAllAccounts.class))
         .add(Pair.of(141, RemoveResizeFromStatefulSetWorkflows.class))
         .add(Pair.of(142, MetricDataRecordGroupNameMigration.class))
@@ -252,6 +251,7 @@ public class MigrationList {
         .add(Pair.of(260, AddLoginSettingsToAccountMigration.class))
         .add(Pair.of(261, AuditRecordMigration.class))
         .add(Pair.of(262, ResourceLookupMigration.class))
+        .add(Pair.of(263, SetRollbackFlagToWorkflows.class))
         .build();
   }
 }
