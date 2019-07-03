@@ -67,8 +67,8 @@ public class LabeledLogRecord implements GoogleDataStoreAware {
                       .newKey(this.uuid == null ? generateUuid() : this.uuid);
     com.google.cloud.datastore.Entity.Builder recordBuilder = com.google.cloud.datastore.Entity.newBuilder(taskKey);
     addFieldIfNotEmpty(recordBuilder, LabeledLogRecordKeys.label, label, false);
-    addFieldIfNotEmpty(recordBuilder, LabeledLogRecordKeys.feedbackIds, feedbackIds, true);
-    addFieldIfNotEmpty(recordBuilder, LabeledLogRecordKeys.logDataRecordIds, logDataRecordIds, true);
+    addFieldIfNotEmpty(recordBuilder, LabeledLogRecordKeys.feedbackIds, feedbackIds, true, String.class);
+    addFieldIfNotEmpty(recordBuilder, LabeledLogRecordKeys.logDataRecordIds, logDataRecordIds, true, String.class);
     addFieldIfNotEmpty(recordBuilder, LabeledLogRecordKeys.serviceId, serviceId, false);
     addFieldIfNotEmpty(recordBuilder, LabeledLogRecordKeys.accountId, accountId, false);
     addFieldIfNotEmpty(recordBuilder, LabeledLogRecordKeys.envId, envId, false);
@@ -92,11 +92,11 @@ public class LabeledLogRecord implements GoogleDataStoreAware {
                                             .envId(readString(entity, LabeledLogRecordKeys.envId))
                                             .build();
 
-    List<String> feedbackIds = readList(entity, LabeledLogRecordKeys.feedbackIds);
+    List<String> feedbackIds = readList(entity, LabeledLogRecordKeys.feedbackIds, String.class);
     if (isNotEmpty(feedbackIds)) {
       dataRecord.setFeedbackIds(Sets.newHashSet(feedbackIds));
     }
-    List<String> dataRecordIds = readList(entity, LabeledLogRecordKeys.logDataRecordIds);
+    List<String> dataRecordIds = readList(entity, LabeledLogRecordKeys.logDataRecordIds, String.class);
     if (isNotEmpty(dataRecordIds)) {
       dataRecord.setLogDataRecordIds(Sets.newHashSet(dataRecordIds));
     }

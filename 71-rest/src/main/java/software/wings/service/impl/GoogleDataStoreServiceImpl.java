@@ -7,8 +7,10 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.cloud.datastore.Blob;
 import com.google.cloud.datastore.BlobValue;
+import com.google.cloud.datastore.BooleanValue;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
+import com.google.cloud.datastore.DoubleValue;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.EntityQuery.Builder;
 import com.google.cloud.datastore.Key;
@@ -273,8 +275,35 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
     return entity.contains(fieldName) ? entity.getString(fieldName) : null;
   }
 
-  public static List readList(Entity entity, String fieldName) {
-    return entity.contains(fieldName) ? entity.getList(fieldName) : null;
+  public static <T> List readList(Entity entity, String fieldName, Class<T> clazz) {
+    List list = entity.contains(fieldName) ? entity.getList(fieldName) : null;
+    if (list == null) {
+      return null;
+    }
+    Class gdsType = StringValue.class;
+    if (clazz.equals(String.class)) {
+      gdsType = StringValue.class;
+    } else if (clazz.equals(Double.class)) {
+      gdsType = DoubleValue.class;
+    } else if (clazz.equals(Long.class)) {
+      gdsType = LongValue.class;
+    } else if (clazz.equals(Boolean.class)) {
+      gdsType = BooleanValue.class;
+    }
+
+    List output = new ArrayList<>();
+    for (Object entry : list) {
+      if (StringValue.class.isInstance(entry) && clazz.equals(String.class)) {
+        output.add(((StringValue) entry).get());
+      } else if (DoubleValue.class.isInstance(entry) && clazz.equals(Double.class)) {
+        output.add(((DoubleValue) entry).get());
+      } else if (LongValue.class.isInstance(entry) && clazz.equals(Long.class)) {
+        output.add(((LongValue) entry).get());
+      } else if (BooleanValue.class.isInstance(entry) && clazz.equals(Boolean.class)) {
+        output.add(((BooleanValue) entry).get());
+      }
+    }
+    return output;
   }
 
   public static long readLong(Entity entity, String fieldName) {
@@ -303,10 +332,31 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
     builder.set(key, LongValue.newBuilder(value).setExcludeFromIndexes(excludeFromIndex).build());
   }
 
-  public static void addFieldIfNotEmpty(
-      com.google.cloud.datastore.Entity.Builder builder, String key, Set value, boolean excludeFromIndex) {
-    builder.set(
-        key, ListValue.newBuilder().set(Lists.newArrayList(value)).setExcludeFromIndexes(excludeFromIndex).build());
+  public static <T> void addFieldIfNotEmpty(com.google.cloud.datastore.Entity.Builder builder, String key, Set value,
+      boolean excludeFromIndex, Class<T> clazz) {
+    if (isEmpty(value)) {
+      logger.info("Value is empty, nothing to store");
+      return;
+    }
+
+    com.google.cloud.datastore.ListValue.Builder listBuilder = ListValue.newBuilder();
+
+    for (Object entry : value) {
+      if (clazz.equals(Integer.class)) {
+        listBuilder.addValue(((Integer) entry).longValue());
+      } else if (clazz.equals(Long.class)) {
+        listBuilder.addValue((Long) entry);
+      } else if (clazz.equals(Double.class)) {
+        listBuilder.addValue((Double) entry);
+      } else if (clazz.equals(String.class)) {
+        listBuilder.addValue((String) entry);
+      } else {
+        logger.error("GDS addField in list: Class not supported {}", entry.getClass());
+      }
+    }
+
+    ListValue listValue = listBuilder.build();
+    builder.set(key, listValue);
   }
 
   public static void addFieldIfNotEmpty(
