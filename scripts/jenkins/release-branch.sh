@@ -14,17 +14,16 @@ fi
 
 
 # initialize variables
-export VERSION_FILE=pom.xml
+export VERSION_FILE=build.properties
 
 export VERSION=`cat ${VERSION_FILE} |\
-    grep '<build.number>' |\
-    sed -e 's: *<build.number>::g' | sed -e 's:</build.number>::g'`
+    grep 'build.number=' |\
+    sed -e 's: *build.number=::g'`
 export VERSION=${VERSION%??}
 export NEW_VERSION=$(( ${VERSION}+1 ))
 
 export BRANCH=`echo "${GIT_BRANCH}" | sed -e "s/origin\///g"`
 export SHA=`git rev-parse HEAD`
-
 
 # Update jira issues
 scripts/jenkins/release-branch-update-jiras.sh
@@ -33,7 +32,7 @@ scripts/jenkins/release-branch-update-jiras.sh
 git checkout -b release/${VERSION}
 git checkout ${BRANCH}
 
-sed -i "s:<build.number>${VERSION}00</build.number>:<build.number>${NEW_VERSION}00</build.number>:g" ${VERSION_FILE}
+sed -i "s:build.number=${VERSION}00:build.number=${NEW_VERSION}00:g" ${VERSION_FILE}
 git add ${VERSION_FILE}
 git commit -m "Branching to release/${PURPOSE}/${VERSION}xx. New version ${NEW_VERSION}xx"
 
