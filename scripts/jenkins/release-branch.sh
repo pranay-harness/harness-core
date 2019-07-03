@@ -38,6 +38,6 @@ git commit -m "Branching to release/${PURPOSE}/${VERSION}xx. New version ${NEW_V
 
 
 # Export variables
-echo VERSION=${VERSION} > build.properties
-echo BRANCH=${BRANCH} >> build.properties
-echo SHA=${SHA} >> build.properties
+echo VERSION=${VERSION} > jenkins.properties
+echo BRANCH=${BRANCH} >> jenkins.properties
+echo SHA=${SHA} >> jenkins.properties
