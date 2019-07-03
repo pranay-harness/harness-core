@@ -1,0 +1,18 @@
+enum WorkflowFilterType {
+  Application
+  Workflow
+}
+
+enum WorkflowAggregation {
+  Application
+}
+
+input WorkflowFilter {
+  type: WorkflowFilterType
+  stringFilter: StringFilter
+}
+
+extend type Query {
+  # Get Workflow stats.
+  workflowStats(filters: [WorkflowFilter], groupBy: [WorkflowAggregation]): Data @dataFetcher(name: workflowStats)
+}

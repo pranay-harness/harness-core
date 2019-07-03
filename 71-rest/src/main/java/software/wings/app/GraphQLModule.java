@@ -63,6 +63,7 @@ import software.wings.graphql.datafetcher.trigger.TriggerDataFetcher;
 import software.wings.graphql.datafetcher.trigger.TriggerStatsDataFetcher;
 import software.wings.graphql.datafetcher.workflow.WorkflowConnectionDataFetcher;
 import software.wings.graphql.datafetcher.workflow.WorkflowDataFetcher;
+import software.wings.graphql.datafetcher.workflow.WorkflowStatsDataFetcher;
 import software.wings.graphql.directive.DataFetcherDirective;
 import software.wings.graphql.provider.GraphQLProvider;
 import software.wings.graphql.provider.QueryLanguageProvider;
@@ -154,6 +155,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(TriggerDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowDataFetcher.class);
+    bindDataFetcherWithAnnotation(WorkflowStatsDataFetcher.class);
   }
 
   @NotNull
