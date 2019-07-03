@@ -1059,12 +1059,17 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     stateExecutionInstance.setAppId(appId);
     stateExecutionInstance.setUuid(stateExecutionId);
     stateExecutionInstance.setWorkflowId(workflowId);
+    stateExecutionInstance.setExecutionUuid(workflowExecutionId);
     stateExecutionInstance.setStatus(ExecutionStatus.ABORTED);
     stateExecutionInstance.getContextElements().push(
         PhaseElementBuilder.aPhaseElement()
             .withServiceElement(ServiceElement.Builder.aServiceElement().withUuid(serviceId).build())
             .build());
     wingsPersistence.save(stateExecutionInstance);
+
+    WorkflowExecution execution =
+        WorkflowExecution.builder().uuid(workflowExecutionId).envId("envId").appId(appId).build();
+    wingsPersistence.save(execution);
 
     LogMLAnalysisRecord records = JsonUtils.asObject(jsonTxt, LogMLAnalysisRecord.class);
     records.setStateType(ELK);

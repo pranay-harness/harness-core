@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.service.impl.LogServiceImpl.MAX_LOG_ROWS_PER_ACTIVITY;
 
 import com.google.inject.Inject;
@@ -13,7 +14,9 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.persistence.GoogleDataStoreAware;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Log;
 import software.wings.beans.Log.LogKeys;
 import software.wings.dl.WingsPersistence;
@@ -85,6 +88,14 @@ public class MongoDataStoreServiceImpl implements DataStoreService {
   @Override
   public <T extends GoogleDataStoreAware> T getEntity(Class<T> clazz, String id) {
     return wingsPersistence.get(clazz, id);
+  }
+
+  @Override
+  public <T extends GoogleDataStoreAware> void incrementField(
+      Class<T> clazz, String id, String fieldName, int incrementCount) {
+    UpdateOperations<T> updateOps = wingsPersistence.createUpdateOperations(clazz).inc(fieldName, incrementCount);
+    Query<T> query = wingsPersistence.createQuery(clazz).filter(ID_KEY, id);
+    wingsPersistence.findAndModify(query, updateOps, new FindAndModifyOptions());
   }
 
   @Override

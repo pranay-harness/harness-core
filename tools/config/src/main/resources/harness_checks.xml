@@ -84,6 +84,9 @@
             <!-- use org.apache.commons.lang3.reflect.FieldUtils instead -->
             <property name="illegalClasses" value="org.mockito.internal.util.reflection.Whitebox"/>
 
+            <!-- use org.apache.commons.lang3.tuple.Pair instead -->
+            <property name="illegalClasses" value="javafx.util.Pair"/>
+
             <!-- use org.assertj.core.api.Assertions.assertThat instead -->
             <property name="illegalClasses" value="com.google.common.truth.Truth.assertThat,
                                                    com.shazam.shazamcrest.MatcherAssert.assertThat,

@@ -4,37 +4,45 @@ import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static java.util.stream.Collectors.toMap;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
-import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.serializer.JsonUtils;
+import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.FindAndModifyOptions;
+import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.beans.Account;
+import software.wings.beans.Application;
 import software.wings.beans.FeatureName;
+import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.UserThreadLocal;
-import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.analysis.CVFeedbackRecord.CVFeedbackRecordKeys;
+import software.wings.service.impl.analysis.LabeledLogRecord.LabeledLogRecordKeys;
+import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.analysis.LogLabelingService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -46,6 +54,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
   @Inject DataStoreService dataStoreService;
   @Inject WingsPersistence wingsPersistence;
   @Inject FeatureFlagService featureFlagService;
+  @Inject AccountService accountService;
 
   public List<LogDataRecord> getLogRecordsToClassify(String accountId) {
     if (!featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)) {
@@ -115,63 +124,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
     return returnList;
   }
 
-  public void saveClassifiedLogRecord(LogDataRecord record, List<LogLabel> labels, String accountId, Object params) {
-    if (!featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)) {
-      return;
-    }
-
-    LabeledLogRecord classifiedRecord = JsonUtils.asObject(JsonUtils.asJson(params), LabeledLogRecord.class);
-    record = classifiedRecord.getDataRecord();
-    labels = classifiedRecord.getLabels();
-    // see if there exists a LogClassifyRecord.
-    if (!(dataStoreService instanceof GoogleDataStoreServiceImpl)) {
-      logger.info("Google data store is not enabled. Returning.");
-      return;
-    }
-
-    PageRequest<LabeledLogRecord> pageRequest = PageRequestBuilder.aPageRequest()
-                                                    .withLimit(UNLIMITED)
-                                                    .addFilter("dataRecordId", Operator.EQ, record.getUuid())
-                                                    .build();
-
-    final PageResponse<LabeledLogRecord> response = dataStoreService.list(LabeledLogRecord.class, pageRequest);
-    if (response.getTotal() > 1) {
-      logger.info("Got more than one labeled record with same ID: {}. Returning.", record.getUuid());
-      return;
-    }
-    LabeledLogRecord labeledLogRecord;
-    if (response.isEmpty()) {
-      labeledLogRecord = LabeledLogRecord.builder()
-                             .dataRecordId(record.getUuid())
-                             .logMessage(record.getLogMessage())
-                             .labels(labels)
-                             .timesLabeled(1)
-                             .build();
-      if (isEmpty(labeledLogRecord.getUsers())) {
-        labeledLogRecord.setUsers(new ArrayList<>());
-      }
-    } else {
-      labeledLogRecord = response.getResponse().get(0);
-      labels.addAll(labeledLogRecord.getLabels());
-      labeledLogRecord.setLabels(labels);
-    }
-    List<String> userList = labeledLogRecord.getUsers();
-    userList.add(UserThreadLocal.get().getPublicUser().getName());
-    labeledLogRecord.setUsers(userList);
-
-    // save the labelled record.
-    dataStoreService.save(LabeledLogRecord.class, Arrays.asList(labeledLogRecord), false);
-
-    // increment the timesLabeled count in logDataRecords
-
-    Query<LogMLAnalysisRecord> query =
-        wingsPersistence.createQuery(LogMLAnalysisRecord.class).filter("_id", record.getUuid());
-
-    UpdateOperations<LogMLAnalysisRecord> updateOperations =
-        wingsPersistence.createUpdateOperations(LogMLAnalysisRecord.class)
-            .set("timesLabeled", record.getTimesLabeled() + 1);
-    wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
-  }
+  public void saveClassifiedLogRecord(LogDataRecord record, List<LogLabel> labels, String accountId, Object params) {}
 
   public List<LogLabel> getLabels() {
     return Arrays.asList(LogLabel.values());
@@ -179,18 +132,18 @@ public class LogLabelingServiceImpl implements LogLabelingService {
 
   /**
    * This method will return a currently unclassified ignore feedback for this account/service combo.
+   *
    * @param accountId
    * @param serviceId
    * @return
    */
-  public List<CVFeedbackRecord> getCVFeedbackToClassify(String accountId, String serviceId, String envId) {
+  public List<CVFeedbackRecord> getCVFeedbackToClassify(String accountId, String serviceId) {
     if (!featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)) {
       return null;
     }
     PageRequest<CVFeedbackRecord> feedbackRecordPageRequest =
         PageRequestBuilder.aPageRequest()
             .addFilter(CVFeedbackRecordKeys.serviceId, Operator.EQ, serviceId)
-            .addFilter(CVFeedbackRecordKeys.envId, Operator.EQ, envId)
             .withLimit(UNLIMITED)
             .build();
     return getUnlabeledFeedback(feedbackRecordPageRequest, 5);
@@ -205,8 +158,10 @@ public class LogLabelingServiceImpl implements LogLabelingService {
     int toIndex = Integer.min(returnList.size(), count);
     return returnList.subList(0, toIndex);
   }
+
   /**
    * This method will return a currently unclassified cv feedback for any account.
+   *
    * @param accountId
    * @return
    */
@@ -221,6 +176,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
 
   /**
    * This method will return samples (2) of each label from the existing records for this account/service.
+   *
    * @param accountId
    * @param serviceId
    * @return
@@ -276,6 +232,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
 
   /**
    * This method will return samples (2) of each label from the existing records for any account
+   *
    * @param accountId
    * @return
    */
@@ -292,6 +249,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
 
   /**
    * Saves the cv feedback with a label
+   *
    * @return
    */
   public boolean saveLabeledIgnoreFeedback(String accountId, CVFeedbackRecord feedbackRecord, String label) {
@@ -306,6 +264,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
 
   /**
    * Saves the cv feedback with a label
+   *
    * @return
    */
   public boolean saveLabeledIgnoreFeedback(String accountId, Map<String, List<CVFeedbackRecord>> feedbackRecordMap) {
@@ -322,6 +281,173 @@ public class LogLabelingServiceImpl implements LogLabelingService {
     });
 
     dataStoreService.save(CVFeedbackRecord.class, recordsToSave, false);
+    return true;
+  }
+
+  public Map<Pair<String, String>, Integer> getAccountsWithFeedback() {
+    PageRequest<CVFeedbackRecord> feedbackRecordPageRequest =
+        PageRequestBuilder.aPageRequest().withLimit(UNLIMITED).build();
+    List<CVFeedbackRecord> records = dataStoreService.list(CVFeedbackRecord.class, feedbackRecordPageRequest);
+
+    Map<Pair<String, String>, Integer> accountCount = new HashMap<>();
+
+    records.forEach(cvFeedbackRecord -> {
+      Account account = wingsPersistence.get(Account.class, cvFeedbackRecord.getAccountId());
+      Pair<String, String> accountNamePair = Pair.of(account.getAccountName(), cvFeedbackRecord.getAccountId());
+      if (!accountCount.containsKey(accountNamePair)) {
+        accountCount.put(accountNamePair, 0);
+      }
+      accountCount.put(accountNamePair, accountCount.get(accountNamePair) + 1);
+    });
+
+    // sort by value
+    return accountCount.entrySet()
+        .stream()
+        .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
+        .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new));
+  }
+
+  public Map<Pair<String, String>, Integer> getServicesWithFeedbackForAccount(String accountId) {
+    PageRequest<CVFeedbackRecord> feedbackRecordPageRequest =
+        PageRequestBuilder.aPageRequest()
+            .withLimit(UNLIMITED)
+            .addFilter(CVFeedbackRecordKeys.accountId, Operator.EQ, accountId)
+            .build();
+    List<CVFeedbackRecord> records = dataStoreService.list(CVFeedbackRecord.class, feedbackRecordPageRequest);
+
+    Map<Pair<String, String>, Integer> serviceCount = new HashMap<>();
+
+    records.forEach(cvFeedbackRecord -> {
+      String serviceId = cvFeedbackRecord.getServiceId();
+      Service service = wingsPersistence.get(Service.class, serviceId);
+      String appName = wingsPersistence.get(Application.class, service.getAppId()).getName();
+
+      String nameToDisplay = appName + "-" + service.getName();
+      Pair<String, String> serviceNamePair = Pair.of(nameToDisplay, serviceId);
+      if (!serviceCount.containsKey(serviceNamePair)) {
+        serviceCount.put(serviceNamePair, 0);
+      }
+      serviceCount.put(serviceNamePair, serviceCount.get(serviceNamePair) + 1);
+    });
+
+    // sort by value
+    return serviceCount.entrySet()
+        .stream()
+        .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
+        .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new));
+  }
+
+  public Map<String, List<String>> getSampleLabeledRecords(String serviceId, String envId) {
+    PageRequest<LabeledLogRecord> logRecordPageRequest =
+        PageRequestBuilder.aPageRequest()
+            .addFilter(LabeledLogRecordKeys.serviceId, Operator.EQ, serviceId)
+            .withLimit(UNLIMITED)
+            .build();
+
+    List<LabeledLogRecord> labeledLogRecordList = dataStoreService.list(LabeledLogRecord.class, logRecordPageRequest);
+    Map<String, List<String>> labelLogTextMap = new HashMap<>();
+    if (isNotEmpty(labeledLogRecordList)) {
+      Map<String, LabeledLogRecord> labelRecordMap = new HashMap<>();
+
+      labeledLogRecordList.forEach(record -> {
+        List<String> feedbacksToFetch = new ArrayList<>(), l2IdsToFetch = new ArrayList<>();
+        Random rand = new Random();
+        List<String> feedbackList =
+            isNotEmpty(record.getFeedbackIds()) ? Lists.newArrayList(record.getFeedbackIds()) : new ArrayList<>();
+        while (feedbacksToFetch.size() < feedbackList.size() && feedbacksToFetch.size() < 20) {
+          feedbacksToFetch.add(feedbackList.get(rand.nextInt(feedbackList.size())));
+        }
+
+        rand = new Random();
+        List<String> l2List = isNotEmpty(record.getLogDataRecordIds())
+            ? Lists.newArrayList(record.getLogDataRecordIds())
+            : new ArrayList<>();
+        while (l2IdsToFetch.size() < l2List.size() && l2IdsToFetch.size() < 20) {
+          l2IdsToFetch.add(l2List.get(rand.nextInt(l2List.size())));
+        }
+
+        List<String> logTexts = new ArrayList<>();
+
+        feedbacksToFetch.forEach(feedbackId -> {
+          logTexts.add(dataStoreService.getEntity(CVFeedbackRecord.class, feedbackId).getLogMessage());
+        });
+
+        l2IdsToFetch.forEach(dataRecordId -> {
+          logTexts.add(dataStoreService.getEntity(LogDataRecord.class, dataRecordId).getLogMessage());
+        });
+
+        labelLogTextMap.put(record.getLabel(), logTexts);
+      });
+    }
+    return labelLogTextMap;
+  }
+
+  public List<LogDataRecord> getL2RecordsToClassify(String serviceId, String envId) {
+    PageRequest<LogDataRecord> logDataRecordPageRequest =
+        PageRequestBuilder.aPageRequest()
+            .addFilter(LogDataRecordKeys.serviceId, Operator.EQ, serviceId)
+            .addFilter(LogDataRecordKeys.timeStamp, Operator.GE,
+                Timestamp.currentMinuteBoundary() - TimeUnit.DAYS.toMillis(30))
+            .build();
+
+    List<LogDataRecord> logs = dataStoreService.list(LogDataRecord.class, logDataRecordPageRequest);
+    if (isNotEmpty(logs)) {
+      logs = logs.stream().filter(log -> log.getTimesLabeled() == 0).collect(Collectors.toList());
+      List<LogDataRecord> logsToReturn = new ArrayList<>();
+      Random rand = new Random();
+      while (logsToReturn.size() < 5) {
+        logsToReturn.add(logs.get(rand.nextInt(logs.size())));
+      }
+      return logsToReturn;
+    }
+    return null;
+  }
+
+  public boolean saveLabeledL2AndFeedback(List<LabeledLogRecord> labeledLogRecords) {
+    if (isNotEmpty(labeledLogRecords)) {
+      labeledLogRecords.forEach(labeledLogRecord -> {
+        String label = labeledLogRecord.getLabel();
+
+        // check to see if this is available in GDS already
+        PageRequest<LabeledLogRecord> pageRequest =
+            PageRequestBuilder.aPageRequest()
+                .addFilter(LabeledLogRecordKeys.label, Operator.EQ, label)
+                .addFilter(LabeledLogRecordKeys.serviceId, Operator.EQ, labeledLogRecord.getServiceId())
+                .build();
+        List<LabeledLogRecord> recordList = dataStoreService.list(LabeledLogRecord.class, pageRequest);
+        if (isEmpty(recordList)) {
+          recordList = new ArrayList<>();
+          recordList.add(labeledLogRecord);
+        } else {
+          // there will be only one record with this serviceId and label.
+          if (recordList.get(0).getFeedbackIds() == null) {
+            recordList.get(0).setFeedbackIds(new HashSet<>());
+          }
+          if (recordList.get(0).getLogDataRecordIds() == null) {
+            recordList.get(0).setLogDataRecordIds(new HashSet<>());
+          }
+          recordList.get(0).getFeedbackIds().addAll(labeledLogRecord.getFeedbackIds());
+          recordList.get(0).getLogDataRecordIds().addAll(labeledLogRecord.getLogDataRecordIds());
+        }
+        dataStoreService.save(LabeledLogRecord.class, recordList, false);
+
+        // update the timesLabeled field in L2 records
+        if (labeledLogRecord.getLogDataRecordIds() != null) {
+          labeledLogRecord.getLogDataRecordIds().forEach(
+              id -> dataStoreService.incrementField(LogDataRecord.class, id, LogDataRecordKeys.timesLabeled, 1));
+        }
+
+        if (labeledLogRecord.getFeedbackIds() != null) {
+          List<CVFeedbackRecord> recordsToSave = new ArrayList<>();
+          labeledLogRecord.getFeedbackIds().forEach(feedbackId -> {
+            CVFeedbackRecord feedbackRecord = dataStoreService.getEntity(CVFeedbackRecord.class, feedbackId);
+            feedbackRecord.setSupervisedLabel(label);
+            recordsToSave.add(feedbackRecord);
+          });
+          dataStoreService.save(CVFeedbackRecord.class, recordsToSave, false);
+        }
+      });
+    }
     return true;
   }
 }

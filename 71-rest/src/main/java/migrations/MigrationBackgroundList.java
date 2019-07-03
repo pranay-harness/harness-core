@@ -2,6 +2,7 @@ package migrations;
 
 import com.google.common.collect.ImmutableList;
 
+import migrations.all.AddAccountToCVFeedbackRecordMigration;
 import migrations.all.AddAnalysisStatusMigration;
 import migrations.all.AddInfraMappingNameToInstanceData;
 import migrations.all.AddIsDefaultFlagToUserGroup;
@@ -77,6 +78,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(34, LogAnalysisBaselineMigration.class))
         .add(Pair.of(35, InitInfraProvisionerCounters.class))
         .add(Pair.of(36, DeleteStaleThirdPartyApiCallLogsMigration.class))
+        .add(Pair.of(37, AddAccountToCVFeedbackRecordMigration.class))
         .build();
   }
 }

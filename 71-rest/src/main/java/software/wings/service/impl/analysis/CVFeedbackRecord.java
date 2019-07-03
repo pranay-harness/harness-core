@@ -39,6 +39,8 @@ import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
 @EqualsAndHashCode(callSuper = false)
 public class CVFeedbackRecord implements GoogleDataStoreAware {
   @Id private String uuid;
+  @NotEmpty @Indexed private String accountId;
+
   @NotEmpty @Indexed private String serviceId;
 
   @NotEmpty @Indexed private String envId;
@@ -99,6 +101,7 @@ public class CVFeedbackRecord implements GoogleDataStoreAware {
                       .newKey(this.getUuid() == null ? generateUuid() : this.getUuid());
     com.google.cloud.datastore.Entity.Builder recordBuilder = com.google.cloud.datastore.Entity.newBuilder(taskKey);
 
+    addFieldIfNotEmpty(recordBuilder, CVFeedbackRecordKeys.accountId, accountId, false);
     addFieldIfNotEmpty(recordBuilder, CVFeedbackRecordKeys.serviceId, serviceId, false);
     addFieldIfNotEmpty(recordBuilder, CVFeedbackRecordKeys.envId, envId, false);
     addFieldIfNotEmpty(recordBuilder, CVFeedbackRecordKeys.stateExecutionId, stateExecutionId, false);
@@ -143,6 +146,7 @@ public class CVFeedbackRecord implements GoogleDataStoreAware {
             .createdAt(readLong(entity, CVFeedbackRecordKeys.createdAt))
             .lastUpdatedAt(readLong(entity, CVFeedbackRecordKeys.lastUpdatedAt))
             .supervisedLabel(readString(entity, CVFeedbackRecordKeys.supervisedLabel))
+            .accountId(readString(entity, CVFeedbackRecordKeys.accountId))
             .build();
 
     String createdBy = readString(entity, CVFeedbackRecordKeys.createdBy);

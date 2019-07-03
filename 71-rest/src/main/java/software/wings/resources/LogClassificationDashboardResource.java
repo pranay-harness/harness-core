@@ -6,11 +6,14 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+
+import org.apache.commons.lang3.tuple.Pair;
 import retrofit2.http.Body;
 import software.wings.common.VerificationConstants;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.CVFeedbackRecord;
+import software.wings.service.impl.analysis.LabeledLogRecord;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogLabel;
 import software.wings.service.intfc.analysis.LogLabelingService;
@@ -60,7 +63,7 @@ public class LogClassificationDashboardResource {
   @ExceptionMetered
   public RestResponse<List<CVFeedbackRecord>> getIgnoreFeedbacksToClassify(@QueryParam("accountId") String accountId,
       @QueryParam("serviceId") String serviceId, @QueryParam("envId") String envId) {
-    return new RestResponse<>(logLabelingService.getCVFeedbackToClassify(accountId, serviceId, envId));
+    return new RestResponse<>(logLabelingService.getCVFeedbackToClassify(accountId, serviceId));
   }
 
   @GET
@@ -106,5 +109,51 @@ public class LogClassificationDashboardResource {
   public RestResponse<Boolean> saveLabeledIgnoreFeedbackList(
       @QueryParam("accountId") String accountId, Map<String, List<CVFeedbackRecord>> feedbackRecordMap) {
     return new RestResponse<>(logLabelingService.saveLabeledIgnoreFeedback(accountId, feedbackRecordMap));
+  }
+
+  @GET
+  @Path(VerificationConstants.GET_ACCOUNTS_WITH_FEEDBACK)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<Pair<String, String>, Integer>> getAccountsWithFeedback(
+      @QueryParam("accountId") String accountId) {
+    return new RestResponse<>(logLabelingService.getAccountsWithFeedback());
+  }
+
+  @GET
+  @Path(VerificationConstants.GET_SERVICES_WITH_FEEDBACK)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<Pair<String, String>, Integer>> getServicesWithFeedback(
+      @QueryParam("accountId") String accountId) {
+    return new RestResponse<>(logLabelingService.getServicesWithFeedbackForAccount(accountId));
+  }
+
+  @GET
+  @Path(VerificationConstants.GET_SAMPLE_FEEDBACK_L2)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<String, List<String>>> getSampleFeedbackL2(@QueryParam("accountId") String accountId,
+      @QueryParam("serviceId") String serviceId, @QueryParam("envId") String envId) {
+    return new RestResponse<>(logLabelingService.getSampleLabeledRecords(serviceId, envId));
+  }
+
+  @GET
+  @Path(VerificationConstants.GET_L2_TO_CLASSIFY)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<LogDataRecord>> getL2RecordsToClassify(@QueryParam("accountId") String accountId,
+      @QueryParam("serviceId") String serviceId, @QueryParam("envId") String envId) {
+    return new RestResponse<>(logLabelingService.getL2RecordsToClassify(serviceId, envId));
+  }
+
+  @POST
+  @Path(VerificationConstants.SAVE_LABELED_L2_FEEDBACK)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> saveLabeledL2Feedback(@QueryParam("accountId") String accountId,
+      @QueryParam("serviceId") String serviceId, @QueryParam("envId") String envId,
+      List<LabeledLogRecord> labeledLogRecords) {
+    return new RestResponse<>(logLabelingService.saveLabeledL2AndFeedback(labeledLogRecords));
   }
 }

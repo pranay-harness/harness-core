@@ -90,6 +90,7 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware {
 
   @NotEmpty private long timeStamp;
 
+  private String supervisedLabel;
   private int timesLabeled;
   @NotEmpty private int count;
   @NotEmpty private String logMessage;
