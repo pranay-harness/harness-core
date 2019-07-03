@@ -21,6 +21,7 @@ enum DataFetcherEnum {
   outcomeConnection
   pipeline
   pipelineConnection
+  pipelineStats
   service
   serviceConnection
   serviceStats

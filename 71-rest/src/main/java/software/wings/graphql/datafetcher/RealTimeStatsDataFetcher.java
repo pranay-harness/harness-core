@@ -169,10 +169,6 @@ public abstract class RealTimeStatsDataFetcher<A, F, G, T, S> extends AbstractSt
     throw new WingsException("Unknown aggregation field:" + aggregation);
   }
 
-  protected String getAggregationNameField(String aggregation) {
-    throw new WingsException("Unknown aggregation field:" + aggregation);
-  }
-
   protected QLStackedData getStackedData(
       List<TwoLevelAggregatedData> aggregatedDataList, String firstLevelType, String secondLevelType) {
     QLStackedDataPoint prevStackedDataPoint = null;
