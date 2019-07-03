@@ -7,6 +7,8 @@ public interface NameService {
   String application = "Application";
   String service = "Service";
   String environment = "Environment";
+  String environmentType = "EnvironmentType";
+  String Type = "Type";
   String cloudProvider = "CloudProvider";
   String status = "Status";
   String triggeredBy = "TriggeredBy";
