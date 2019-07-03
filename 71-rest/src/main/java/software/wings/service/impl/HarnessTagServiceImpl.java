@@ -23,6 +23,7 @@ import com.mongodb.BasicDBObject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.persistence.PersistentEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotBlank;
@@ -33,6 +34,7 @@ import software.wings.beans.HarnessTag.HarnessTagKeys;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.HarnessTagLink.HarnessTagLinkKeys;
 import software.wings.beans.ResourceLookup;
+import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
@@ -44,6 +46,7 @@ import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
@@ -67,6 +70,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
+  @Inject private TriggerService triggerService;
 
   private static final Set<EntityType> supportedEntityTypes =
       ImmutableSet.of(SERVICE, ENVIRONMENT, WORKFLOW, PROVISIONER, PIPELINE, TRIGGER);
@@ -361,10 +365,25 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   private void validateResourceAccess(String appId, HarnessTagLink tagLink, Action action) {
     notNullCheck("appId cannot be null", appId);
 
+    if (EntityType.TRIGGER.equals(tagLink.getEntityType())) {
+      // ToDo anshul We check for deployment permission for update and read action type.
+      // For Read action (list tags), this should use different authorization
+      authorizeTriggers(appId, tagLink);
+      return;
+    }
+
     PermissionType permissionType = getPermissionType(tagLink.getEntityType());
     PermissionAttribute permissionAttribute = new PermissionAttribute(permissionType, action);
 
     authHandler.authorize(asList(permissionAttribute), asList(appId), tagLink.getEntityId());
+  }
+
+  private void authorizeTriggers(String appId, HarnessTagLink tagLink) {
+    Trigger existingTrigger = triggerService.get(appId, tagLink.getEntityId());
+    if (existingTrigger == null) {
+      throw new WingsException("Trigger does not exist", USER);
+    }
+    triggerService.authorize(existingTrigger, true);
   }
 
   private PermissionType getPermissionType(EntityType entityType) {
@@ -434,6 +453,9 @@ public class HarnessTagServiceImpl implements HarnessTagService {
 
       case PROVISIONER:
         return infrastructureProvisionerService.get(resourceLookup.getAppId(), resourceLookup.getResourceId());
+
+      case TRIGGER:
+        return triggerService.get(resourceLookup.getAppId(), resourceLookup.getResourceId());
 
       default:
         unhandled(entityType);

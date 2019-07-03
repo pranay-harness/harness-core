@@ -108,15 +108,18 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
             .collect(Collectors.toList());
 
     TriggerConditionYaml triggerConditionYaml = handler.toYaml(bean.getCondition(), appId);
-    return Trigger.Yaml.builder()
-        .description(bean.getDescription())
-        .executionType(executionType)
-        .triggerCondition(Arrays.asList(triggerConditionYaml))
-        .executionName(executionName)
-        .workflowVariables(convertToTriggerYamlVariables(appId, bean.getWorkflowVariables(), workflow))
-        .artifactSelections(artifactSelectionList)
-        .harnessApiVersion(getHarnessApiVersion())
-        .build();
+    Yaml yaml = Yaml.builder()
+                    .description(bean.getDescription())
+                    .executionType(executionType)
+                    .triggerCondition(Arrays.asList(triggerConditionYaml))
+                    .executionName(executionName)
+                    .workflowVariables(convertToTriggerYamlVariables(appId, bean.getWorkflowVariables(), workflow))
+                    .artifactSelections(artifactSelectionList)
+                    .harnessApiVersion(getHarnessApiVersion())
+                    .build();
+
+    updateYamlWithAdditionalInfo(bean, appId, yaml);
+    return yaml;
   }
 
   @Override
@@ -129,10 +132,12 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
 
     Trigger trigger = toBean(appId, changeContext, changeSetContext);
     if (existingTrigger == null) {
-      triggerService.save(trigger);
+      trigger = triggerService.save(trigger);
     } else {
-      triggerService.update(trigger);
+      trigger = triggerService.update(trigger);
     }
+
+    changeContext.setEntity(trigger);
     return trigger;
   }
 

@@ -11,6 +11,7 @@ import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofSeconds;
+import static java.util.Arrays.asList;
 import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -90,16 +91,22 @@ import software.wings.beans.trigger.WebhookParameters;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.common.MongoIdempotentRegistry;
 import software.wings.dl.WingsPersistence;
+import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.trigger.response.TriggerDeploymentNeededResponse;
 import software.wings.helpers.ext.trigger.response.TriggerResponse;
 import software.wings.scheduler.ScheduledTriggerJob;
+import software.wings.security.PermissionAttribute;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.service.impl.AuditServiceHelper;
+import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessTagService;
@@ -159,6 +166,8 @@ public class TriggerServiceImpl implements TriggerService {
   @Inject private WebhookTriggerProcessor webhookTriggerProcessor;
   @Inject private TriggerExecutionService triggerExecutionService;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private AuthService authService;
+  @Inject private AuthHandler authHandler;
 
   @Override
   public PageResponse<Trigger> list(PageRequest<Trigger> pageRequest) {
@@ -1366,5 +1375,96 @@ public class TriggerServiceImpl implements TriggerService {
     }
     return isEmpty(workflowServices) ? new HashMap<>()
                                      : workflowServices.stream().collect(toMap(Service::getUuid, Service::getName));
+  }
+
+  public void authorize(Trigger trigger, boolean existing) {
+    WorkflowType workflowType = trigger.getWorkflowType();
+    try {
+      authorizeWorkflowOrPipeline(trigger.getAppId(), trigger.getWorkflowId());
+    } catch (WingsException ex) {
+      throw new WingsException(
+          "User does not have Deployment execute permission to " + (workflowType == PIPELINE ? "Pipeline" : "Workflow"),
+          USER);
+    }
+    boolean envParamaterized;
+    List<Variable> variables;
+    if (PIPELINE.equals(workflowType)) {
+      Pipeline pipeline = pipelineService.readPipeline(trigger.getAppId(), trigger.getWorkflowId(), true);
+      Validator.notNullCheck("Pipeline does not exist", pipeline, USER);
+      envParamaterized = pipeline.isEnvParameterized();
+      variables = pipeline.getPipelineVariables();
+    } else if (WorkflowType.ORCHESTRATION.equals(workflowType)) {
+      Workflow workflow = workflowService.readWorkflow(trigger.getAppId(), trigger.getWorkflowId());
+      Validator.notNullCheck("Workflow does not exist", workflow, USER);
+      Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow(), USER);
+      envParamaterized = workflow.checkEnvironmentTemplatized();
+      variables = workflow.getOrchestrationWorkflow().getUserVariables();
+    } else {
+      logger.error("WorkflowType {} not supported", workflowType);
+      throw new WingsException("Workflow Type [" + workflowType + "] not supported", USER);
+    }
+    if (envParamaterized) {
+      validateAndAuthorizeEnvironment(trigger, existing, variables);
+    }
+  }
+
+  private void validateAndAuthorizeEnvironment(Trigger trigger, boolean existing, List<Variable> variables) {
+    String templatizedEnvVariableName = WorkflowServiceTemplateHelper.getTemplatizedEnvVariableName(variables);
+    if (isNotEmpty(templatizedEnvVariableName)) {
+      Map<String, String> workflowVariables = trigger.getWorkflowVariables();
+      if (isEmpty(workflowVariables)) {
+        if (existing) {
+          return;
+        }
+        throw new WingsException("Please select value for Entity Type variables", USER);
+      }
+      String environment = workflowVariables.get(templatizedEnvVariableName);
+      if (isEmpty(environment)) {
+        if (existing) {
+          return;
+        }
+        throw new WingsException("Environment is parameterized. Please select value in the format ${varName}", USER);
+      }
+      authorizeEnvironment(trigger.getAppId(), environment);
+    }
+  }
+
+  private void authorizeWorkflowOrPipeline(String appId, String workflowOrPipelineId) {
+    PermissionAttribute permissionAttribute = new PermissionAttribute(PermissionType.DEPLOYMENT, Action.EXECUTE);
+    List<PermissionAttribute> permissionAttributeList = asList(permissionAttribute);
+    authHandler.authorize(permissionAttributeList, asList(appId), workflowOrPipelineId);
+  }
+
+  private void authorizeEnvironment(String appId, String environmentValue) {
+    if (ManagerExpressionEvaluator.matchesVariablePattern(environmentValue)) {
+      try {
+        authHandler.authorizeAccountPermission(
+            asList(new PermissionAttribute(PermissionType.ACCOUNT_MANAGEMENT, Action.READ)));
+      } catch (WingsException ex) {
+        throw new WingsException(
+            "User not authorized: Only admin can create or update the trigger with parameterized variables.", USER);
+      }
+    } else {
+      // Check if environment exist by envId
+      Environment environment = environmentService.get(appId, environmentValue);
+      if (environment != null) {
+        try {
+          authService.checkIfUserAllowedToDeployToEnv(appId, environmentValue);
+        } catch (WingsException ex) {
+          throw new WingsException(
+              "User does not have Deployment execute permission to environment [" + environment.getName() + "]", USER);
+        }
+
+      } else {
+        // either environment does not exist or user give some random name.. then check account level permission
+        try {
+          authHandler.authorizeAccountPermission(
+              asList(new PermissionAttribute(PermissionType.ACCOUNT_MANAGEMENT, Action.READ)));
+        } catch (WingsException ex) {
+          throw new WingsException(
+              "User not authorized: Only admin can create or update the trigger with parameterized variables.", USER);
+        }
+      }
+    }
   }
 }
