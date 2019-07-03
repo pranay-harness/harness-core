@@ -35,6 +35,7 @@ public class TerraformExecutionData extends StateExecutionData implements Respon
 
   private String planLogFileId;
   private String workspace;
+  private String delegateTag;
 
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();

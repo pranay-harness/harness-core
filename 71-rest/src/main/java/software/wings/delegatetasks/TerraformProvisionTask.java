@@ -394,6 +394,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               .backendConfigs(backendConfigs)
               .targets(parameters.getTargets())
               .tfVarFiles(parameters.getTfVarFiles())
+              .delegateTag(parameters.getDelegateTag())
               .executionStatus(code == 0 ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED)
               .errorMessage(code == 0 ? null : "The terraform command exited with code " + code)
               .workspace(parameters.getWorkspace());
