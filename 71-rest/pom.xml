@@ -191,10 +191,6 @@
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>
-            <artifactId>google-cloud-core-grpc</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-datastore</artifactId>
         </dependency>
         <dependency>

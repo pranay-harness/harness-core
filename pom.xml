@@ -37,10 +37,6 @@
         <alpnboot.version>8.1.13.v20181017</alpnboot.version>
         <argLine>-Xmx1024m</argLine>
         <aws.sdk.version>1.11.455</aws.sdk.version>
-        <build.fullVersion>${build.majorVersion}.${build.minorVersion}.${build.number}</build.fullVersion>
-        <build.majorVersion>1</build.majorVersion>
-        <build.minorVersion>0</build.minorVersion>
-        <build.number>35300</build.number>
         <buildTimeStamp>${maven.build.timestamp}</buildTimeStamp>
         <categories>io.harness.category.element.UnitTests.class</categories>
         <checkStyleFile>harness_checks.xml</checkStyleFile>
@@ -1642,6 +1638,24 @@
                             <goal>compile</goal>
                             <goal>test-compile</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>properties-maven-plugin</artifactId>
+                <version>1.0.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>read-project-properties</goal>
+                        </goals>
+                        <phase>initialize</phase>
+                        <configuration>
+                            <files>
+                                <file>${session.executionRootDirectory}/build.properties</file>
+                            </files>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
