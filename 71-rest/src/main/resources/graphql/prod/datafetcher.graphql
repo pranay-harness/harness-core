@@ -30,4 +30,5 @@ enum DataFetcherEnum {
   triggerStats
   workflow
   workflowConnection
+  workflowStats
 }
