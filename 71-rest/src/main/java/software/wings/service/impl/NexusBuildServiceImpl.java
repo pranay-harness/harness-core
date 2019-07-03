@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.exception.WingsException.USER;
 import static io.harness.network.Http.connectableHttpUrl;
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.utils.Validator.equalCheck;
@@ -43,7 +44,14 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   @Override
   public Map<String, String> getPlans(NexusConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactType artifactType, String repositoryType) {
-    return nexusService.getRepositories(config, encryptionDetails, artifactType);
+    if (!artifactType.equals(ArtifactType.DOCKER) && repositoryType != null
+        && repositoryType.equals(RepositoryType.docker.name())) {
+      throw new WingsException(format("Not supported for Artifact Type %s", artifactType), USER);
+    }
+    if (artifactType.equals(ArtifactType.DOCKER)) {
+      return nexusService.getRepositories(config, encryptionDetails, RepositoryType.docker.name());
+    }
+    return nexusService.getRepositories(config, encryptionDetails, repositoryType);
   }
 
   @Override

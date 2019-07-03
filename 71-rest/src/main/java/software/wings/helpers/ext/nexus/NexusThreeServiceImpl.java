@@ -1,8 +1,9 @@
 package software.wings.helpers.ext.nexus;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
+import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.getBaseUrl;
@@ -24,11 +25,10 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.nexus.model.DockerImageResponse;
 import software.wings.helpers.ext.nexus.model.DockerImageTagResponse;
-import software.wings.helpers.ext.nexus.model.RepositoryRequest;
-import software.wings.helpers.ext.nexus.model.RepositoryResponse;
-import software.wings.helpers.ext.nexus.model.RequestData;
+import software.wings.helpers.ext.nexus.model.Nexus3Repository;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.RepositoryType;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,43 +42,34 @@ import java.util.stream.Collectors;
 public class NexusThreeServiceImpl {
   @Inject EncryptionService encryptionService;
 
-  public Map<String, String> getRepositories(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails)
-      throws IOException {
-    return getDockerRepositories(nexusConfig, encryptionDetails);
-  }
-
-  private Map<String, String> getDockerRepositories(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails) throws IOException {
-    logger.info("Retrieving docker repositories");
-    RepositoryRequest repositoryRequest =
-        RepositoryRequest.builder()
-            .action("coreui_Repository")
-            .method("readReferences")
-            .type("rpc")
-            .tid(15)
-            .data(singletonList(
-                RequestData.builder()
-                    .filter(singletonList(RequestData.Filter.builder().property("format").value("docker").build()))
-                    .build()))
-            .build();
-
+  public Map<String, String> getRepositories(
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repositoryType) throws IOException {
+    logger.info("Retrieving repositories");
     NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
-    Response<RepositoryResponse> response;
+    Response<List<Nexus3Repository>> response;
     if (nexusConfig.hasCredentials()) {
       response =
           nexusThreeRestClient
-              .getRepositories(Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())),
-                  repositoryRequest)
+              .listRepositories(Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())))
               .execute();
     } else {
-      response = nexusThreeRestClient.getRepositories(repositoryRequest).execute();
+      response = nexusThreeRestClient.listRepositories().execute();
     }
 
     if (isSuccessful(response)) {
-      if (response.body().getResult().isSuccess()) {
-        logger.info("Retrieving docker repositories success");
-        final Map<String, String> repositories =
-            response.body().getResult().getData().stream().collect(Collectors.toMap(o -> o.getId(), o -> o.getName()));
+      if (isNotEmpty(response.body())) {
+        logger.info(format("Retrieving %s repositories success", repositoryType));
+        final Map<String, String> repositories;
+        if (repositoryType == null) {
+          repositories =
+              response.body().stream().collect(Collectors.toMap(Nexus3Repository::getName, Nexus3Repository::getName));
+        } else {
+          final String filterBy = repositoryType.equals(RepositoryType.maven.name()) ? "maven2" : repositoryType;
+          repositories = response.body()
+                             .stream()
+                             .filter(o -> o.getFormat().equals(filterBy))
+                             .collect(Collectors.toMap(Nexus3Repository::getName, Nexus3Repository::getName));
+        }
         logger.info("Retrieved repositories are {}", repositories.values());
         return repositories;
       } else {
@@ -86,7 +77,7 @@ public class NexusThreeServiceImpl {
             .addParam("message", "Failed to fetch the repositories");
       }
     }
-    logger.info("No docker repositories found. Returning empty results");
+    logger.info("No repositories found returning empty map");
     return emptyMap();
   }
 

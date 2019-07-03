@@ -7,7 +7,6 @@ import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
-import static software.wings.utils.ArtifactType.DOCKER;
 
 import com.google.inject.Inject;
 
@@ -27,6 +26,7 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.utils.RepositoryType;
 
 import java.io.InputStream;
 import java.util.List;
@@ -584,7 +584,7 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldGetDockerRepositories() {
-    assertThat(nexusService.getRepositories(nexusThreeConfig, null, DOCKER))
+    assertThat(nexusService.getRepositories(nexusThreeConfig, null, RepositoryType.docker.name()))
         .hasSize(3)
         .containsEntry("docker-group", "docker-group");
   }

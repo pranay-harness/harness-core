@@ -9,8 +9,11 @@ import retrofit2.http.POST;
 import retrofit2.http.Path;
 import software.wings.helpers.ext.nexus.model.DockerImageResponse;
 import software.wings.helpers.ext.nexus.model.DockerImageTagResponse;
+import software.wings.helpers.ext.nexus.model.Nexus3Repository;
 import software.wings.helpers.ext.nexus.model.RepositoryRequest;
 import software.wings.helpers.ext.nexus.model.RepositoryResponse;
+
+import java.util.List;
 
 /**
  * Created by sgurubelli on 11/16/17.
@@ -40,4 +43,12 @@ public interface NexusThreeRestClient {
   @GET("repository/{repoKey}/v2/{imageName}/tags/list")
   Call<DockerImageTagResponse> getDockerTags(@Path(value = "repoKey", encoded = true) String repository,
       @Path(value = "imageName", encoded = true) String imageName);
+
+  @Headers("Accept: application/json")
+  @GET("/service/rest/v1/repositories")
+  Call<List<Nexus3Repository>> listRepositories(@Header("Authorization") String authorization);
+
+  @Headers("Accept: application/json")
+  @GET("/service/rest/v1/repositories")
+  Call<List<Nexus3Repository>> listRepositories();
 }
