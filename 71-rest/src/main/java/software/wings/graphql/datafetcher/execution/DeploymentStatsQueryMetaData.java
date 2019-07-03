@@ -48,6 +48,10 @@ public class DeploymentStatsQueryMetaData {
       return dataType;
     }
 
+    public QLFilterKind getFilterKind() {
+      return filterKind;
+    }
+
     public String getFieldName() {
       return fieldName;
     }

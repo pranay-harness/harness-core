@@ -429,12 +429,14 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
 
   private void decorateQueryWithFilters(SelectQuery selectQuery, List<QLDeploymentFilter> filters) {
     for (QLDeploymentFilter filter : filters) {
-      if (filter.getType().getMetaDataFields().getDataType().equals(QLFilterKind.SIMPLE)) {
+      if (filter.getType().getMetaDataFields().getFilterKind().equals(QLFilterKind.SIMPLE)) {
         decorateSimpleFilter(selectQuery, filter);
-      } else if (filter.getType().getMetaDataFields().getDataType().equals(QLFilterKind.ARRAY)) {
+      } else if (filter.getType().getMetaDataFields().getFilterKind().equals(QLFilterKind.ARRAY)) {
         decorateArrayFilter(selectQuery, filter);
-      } else if (filter.getType().getMetaDataFields().getDataType().equals(QLFilterKind.TIME)) {
+      } else if (filter.getType().getMetaDataFields().getFilterKind().equals(QLFilterKind.TIME)) {
         decorateTimeFilter(selectQuery, filter);
+      } else {
+        logger.error("Failed to apply filter :[{}]", filter);
       }
     }
   }
