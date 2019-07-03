@@ -74,9 +74,9 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Audit Service Implementation class.
@@ -144,19 +144,35 @@ public class AuditServiceImpl implements AuditService {
       return builder.build();
     }
 
-    Set<String> yamlIds = newHashSet();
-    Optional<EntityAuditRecord> recordForPath =
-        header.getEntityAuditRecords().stream().filter(record -> entityId.equals(record.getEntityId())).findFirst();
-    if (!recordForPath.isPresent()) {
+    /**
+     * Under single AuditHeader record, there can be multiple entityAuditRecords with same yamlPath.
+     * e.g, User updates TriggerTags, then there will be 2 records for path,
+     * "Setup/Applications/Tags/Triggers/[TRIGGER].yaml"
+     * 1 created for actual trigger update and 1 created for trigger-tag update, but both will use same yamlPath
+     * mentioned above.
+     *
+     * EntityAuditRecords are stored in the list in the order of update.
+     * So to show complete diff that happened to TriggerYaml in this auditOperation, we need to pick oldYamlId from 1st
+     * entityAuditRecord and newYamlId from last entityAuditRecord.
+     *
+     * Similar also applies for serviceVariables, as there will be multiple entityAuditRecords created for yamlPath
+     * Setup/Application/[APP]/Service/[SERVICE]/Index.yaml
+     */
+    List<EntityAuditRecord> entityAuditRecords = header.getEntityAuditRecords()
+                                                     .stream()
+                                                     .filter(record -> entityId.equals(record.getEntityId()))
+                                                     .collect(Collectors.toList());
+
+    if (isEmpty(entityAuditRecords)) {
       return builder.build();
     }
 
-    if (isNotEmpty(recordForPath.get().getEntityOldYamlRecordId())) {
-      yamlIds.add(recordForPath.get().getEntityOldYamlRecordId());
-    }
-    if (isNotEmpty(recordForPath.get().getEntityNewYamlRecordId())) {
-      yamlIds.add(recordForPath.get().getEntityNewYamlRecordId());
-    }
+    String entityOldYamlRecordId = entityAuditRecords.get(0).getEntityOldYamlRecordId();
+    String entityNewYamlRecordId = entityAuditRecords.get(entityAuditRecords.size() - 1).getEntityNewYamlRecordId();
+
+    Set<String> yamlIds = newHashSet();
+    yamlIds.add(entityOldYamlRecordId);
+    yamlIds.add(entityNewYamlRecordId);
 
     if (isNotEmpty(yamlIds)) {
       Query<EntityYamlRecord> query = wingsPersistence.createQuery(EntityYamlRecord.class)
@@ -166,10 +182,10 @@ public class AuditServiceImpl implements AuditService {
       List<EntityYamlRecord> entityAuditYamls = query.asList();
       if (isNotEmpty(entityAuditYamls)) {
         entityAuditYamls.forEach(yaml -> {
-          if (yaml.getUuid().equals(recordForPath.get().getEntityOldYamlRecordId())) {
+          if (yaml.getUuid().equals(entityOldYamlRecordId)) {
             builder.oldYaml(yaml.getYamlContent());
             builder.oldYamlPath(yaml.getYamlPath());
-          } else if (yaml.getUuid().equals(recordForPath.get().getEntityNewYamlRecordId())) {
+          } else if (yaml.getUuid().equals(entityNewYamlRecordId)) {
             builder.newYaml(yaml.getYamlContent());
             builder.newYamlPath(yaml.getYamlPath());
           }
