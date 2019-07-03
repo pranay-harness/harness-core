@@ -99,7 +99,7 @@ public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggrega
           wingsPersistence.getDatastore(Instance.class)
               .createAggregation(Instance.class)
               .match(query)
-              .group(Group.id(grouping(entityIdColumn)), grouping("count", accumulator(function, 1)),
+              .group(Group.id(grouping(entityIdColumn)), grouping("count", accumulator("$sum", 1)),
                   grouping(entityNameColumn, grouping("$first", entityNameColumn)))
               .project(projection("_id").suppress(), projection("entityId", "_id." + entityIdColumn),
                   projection("entityName", entityNameColumn), projection("count"))
@@ -123,7 +123,7 @@ public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggrega
               .createAggregation(Instance.class)
               .match(query)
               .group(Group.id(grouping(entityIdColumn), grouping(secondLevelEntityIdColumn)),
-                  grouping("count", accumulator(function, 1)),
+                  grouping("count", accumulator("$sum", 1)),
                   grouping("firstLevelInfo",
                       grouping("$first", projection("id", entityIdColumn), projection("name", entityNameColumn))),
                   grouping("secondLevelInfo",
