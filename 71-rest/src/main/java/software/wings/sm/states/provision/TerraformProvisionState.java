@@ -9,6 +9,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -86,7 +87,6 @@ import software.wings.utils.GitUtilsManager;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -138,6 +138,7 @@ public abstract class TerraformProvisionState extends State {
   @Getter @Setter private boolean runPlanOnly;
   @Getter @Setter private boolean inheritApprovedPlan;
   @Getter @Setter private String workspace;
+  @Getter @Setter private String delegateTag;
 
   /**
    * Instantiates a new state.
@@ -211,6 +212,7 @@ public abstract class TerraformProvisionState extends State {
             .entityId(generateEntityId(context, terraformExecutionData.getWorkspace()))
             .provisionerId(provisionerId)
             .targets(terraformExecutionData.getTargets())
+            .delegateTag(terraformExecutionData.getDelegateTag())
             .tfVarFiles(terraformExecutionData.getTfVarFiles())
             .sourceRepoSettingId(terraformProvisioner.getSourceRepoSettingId())
             .sourceRepoReference(terraformExecutionData.getSourceRepoReference())
@@ -473,13 +475,21 @@ public abstract class TerraformProvisionState extends State {
             .tfVarFiles(element.getTfVarFiles())
             .runPlanOnly(false)
             .workspace(workspace)
+            .delegateTag(element.getDelegateTag())
             .build();
 
-    return createAndRunTask(activityId, executionContext, parameters);
+    return createAndRunTask(activityId, executionContext, parameters, element.getDelegateTag());
   }
 
-  protected ExecutionResponse createAndRunTask(
-      String activityId, ExecutionContextImpl executionContext, TerraformProvisionParameters parameters) {
+  private List<String> getRenderedTaskTags(String rawTag, ExecutionContextImpl executionContext) {
+    if (isEmpty(rawTag)) {
+      return null;
+    }
+    return singletonList(executionContext.renderExpression(rawTag));
+  }
+
+  protected ExecutionResponse createAndRunTask(String activityId, ExecutionContextImpl executionContext,
+      TerraformProvisionParameters parameters, String delegateTag) {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .async(true)
@@ -487,6 +497,7 @@ public abstract class TerraformProvisionState extends State {
             .waitId(activityId)
             .appId(executionContext.getApp().getAppId())
             .envId(executionContext.getEnv() != null ? executionContext.getEnv().getUuid() : null)
+            .tags(getRenderedTaskTags(delegateTag, executionContext))
             .data(TaskData.builder()
                       .taskType(TERRAFORM_PROVISION_TASK.name())
                       .parameters(new Object[] {parameters})
@@ -498,7 +509,7 @@ public abstract class TerraformProvisionState extends State {
 
     return anExecutionResponse()
         .withAsync(true)
-        .withCorrelationIds(Collections.singletonList(activityId))
+        .withCorrelationIds(singletonList(activityId))
         .withDelegateTaskId(delegateTaskId)
         .withStateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())
         .build();
@@ -641,9 +652,10 @@ public abstract class TerraformProvisionState extends State {
             .runPlanOnly(runPlanOnly)
             .tfVarFiles(getRenderedTfVarFiles(tfVarFiles, context))
             .workspace(workspace)
+            .delegateTag(delegateTag)
             .build();
 
-    return createAndRunTask(activityId, executionContext, parameters);
+    return createAndRunTask(activityId, executionContext, parameters, delegateTag);
   }
 
   protected String handleDefaultWorkspace(String workspace) {
@@ -681,6 +693,7 @@ public abstract class TerraformProvisionState extends State {
                                            .sourceRepoSettingId(provisioner.getSourceRepoSettingId())
                                            .sourceRepoReference(executionData.getSourceRepoReference())
                                            .variables(executionData.getVariables())
+                                           .delegateTag(executionData.getDelegateTag())
                                            .backendConfigs(executionData.getBackendConfigs())
                                            .tfVarFiles(executionData.getTfVarFiles())
                                            .workflowExecutionId(context.getWorkflowExecutionId())

@@ -159,9 +159,10 @@ public class TerraformRollbackState extends TerraformProvisionState {
             .runPlanOnly(false)
             .tfVarFiles(configParameter.getTfVarFiles())
             .workspace(workspace)
+            .delegateTag(configParameter.getDelegateTag())
             .build();
 
-    return createAndRunTask(activityId, executionContext, parameters);
+    return createAndRunTask(activityId, executionContext, parameters, configParameter.getDelegateTag());
   }
 
   @Override

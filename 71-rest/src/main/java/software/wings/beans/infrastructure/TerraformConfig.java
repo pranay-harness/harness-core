@@ -53,4 +53,5 @@ public class TerraformConfig implements PersistentEntity, UuidAware, CreatedAtAw
 
   @Indexed private final String entityId;
   private final String workflowExecutionId;
+  private final String delegateTag;
 }

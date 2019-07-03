@@ -24,6 +24,7 @@ public class TerraformProvisionInheritPlanElement implements ContextElement {
   private List<NameValuePair> variables;
   private List<NameValuePair> backendConfigs;
   private String workspace;
+  private String delegateTag;
 
   @Override
   public ContextElementType getElementType() {
