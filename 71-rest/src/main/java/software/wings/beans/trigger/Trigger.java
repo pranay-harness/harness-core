@@ -9,6 +9,7 @@ import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.persistence.NameAccess;
+import io.harness.tags.TagAware;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -56,7 +57,7 @@ import javax.validation.constraints.NotNull;
     @Field(TriggerKeys.artifactSelections + "." + ArtifactSelectionKeys.artifactStreamId)
   })
 })
-public class Trigger extends Base implements NameAccess {
+public class Trigger extends Base implements NameAccess, TagAware {
   @NotEmpty private String name;
   private String description;
   @NotNull private TriggerCondition condition;

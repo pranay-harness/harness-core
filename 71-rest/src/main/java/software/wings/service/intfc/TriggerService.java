@@ -195,4 +195,6 @@ public interface TriggerService extends OwnedByApplication, OwnedByPipeline, Own
 
   void handleTriggerTaskResponse(
       @NotEmpty String appId, @NotEmpty String triggerExecutionId, TriggerResponse triggerResponse);
+
+  void authorize(Trigger trigger, boolean existing);
 }

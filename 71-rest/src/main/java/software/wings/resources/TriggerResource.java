@@ -1,11 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.beans.WorkflowType.PIPELINE;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
-import static java.util.Arrays.asList;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.google.inject.Inject;
@@ -19,22 +15,13 @@ import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.Environment;
-import software.wings.beans.Pipeline;
-import software.wings.beans.Variable;
 import software.wings.beans.WebHookToken;
-import software.wings.beans.Workflow;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookParameters;
 import software.wings.beans.trigger.WebhookSource;
-import software.wings.expression.ManagerExpressionEvaluator;
-import software.wings.security.PermissionAttribute;
-import software.wings.security.PermissionAttribute.Action;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.security.auth.AuthHandler;
-import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.PipelineService;
@@ -42,7 +29,6 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.Validator;
 
-import java.util.List;
 import java.util.Map;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -130,103 +116,12 @@ public class TriggerResource {
       if (existingTrigger == null) {
         throw new WingsException("Trigger does not exist", USER);
       }
-      authorize(existingTrigger, true);
-      authorize(trigger, false);
+      triggerService.authorize(existingTrigger, true);
+      triggerService.authorize(trigger, false);
       return new RestResponse(triggerService.update(trigger));
     }
-    authorize(trigger, false);
+    triggerService.authorize(trigger, false);
     return new RestResponse<>(triggerService.save(trigger));
-  }
-
-  private void authorizeEnvironment(String appId, String environmentValue) {
-    if (ManagerExpressionEvaluator.matchesVariablePattern(environmentValue)) {
-      try {
-        authHandler.authorizeAccountPermission(
-            asList(new PermissionAttribute(PermissionType.ACCOUNT_MANAGEMENT, Action.READ)));
-      } catch (WingsException ex) {
-        throw new WingsException(
-            "User not authorized: Only admin can create or update the trigger with parameterized variables.", USER);
-      }
-    } else {
-      // Check if environment exist by envId
-      Environment environment = environmentService.get(appId, environmentValue);
-      if (environment != null) {
-        try {
-          authService.checkIfUserAllowedToDeployToEnv(appId, environmentValue);
-        } catch (WingsException ex) {
-          throw new WingsException(
-              "User does not have Deployment execute permission to environment [" + environment.getName() + "]", USER);
-        }
-
-      } else {
-        // either environment does not exist or user give some random name.. then check account level permission
-        try {
-          authHandler.authorizeAccountPermission(
-              asList(new PermissionAttribute(PermissionType.ACCOUNT_MANAGEMENT, Action.READ)));
-        } catch (WingsException ex) {
-          throw new WingsException(
-              "User not authorized: Only admin can create or update the trigger with parameterized variables.", USER);
-        }
-      }
-    }
-  }
-
-  private void authorize(Trigger trigger, boolean existing) {
-    WorkflowType workflowType = trigger.getWorkflowType();
-    try {
-      authorizeWorkflowOrPipeline(trigger.getAppId(), trigger.getWorkflowId());
-    } catch (WingsException ex) {
-      throw new WingsException(
-          "User does not have Deployment execute permission to " + (workflowType == PIPELINE ? "Pipeline" : "Workflow"),
-          USER);
-    }
-    boolean envParamaterized;
-    List<Variable> variables;
-    if (PIPELINE.equals(workflowType)) {
-      Pipeline pipeline = pipelineService.readPipeline(trigger.getAppId(), trigger.getWorkflowId(), true);
-      Validator.notNullCheck("Pipeline does not exist", pipeline, USER);
-      envParamaterized = pipeline.isEnvParameterized();
-      variables = pipeline.getPipelineVariables();
-    } else if (WorkflowType.ORCHESTRATION.equals(workflowType)) {
-      Workflow workflow = workflowService.readWorkflow(trigger.getAppId(), trigger.getWorkflowId());
-      Validator.notNullCheck("Workflow does not exist", workflow, USER);
-      Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow(), USER);
-      envParamaterized = workflow.checkEnvironmentTemplatized();
-      variables = workflow.getOrchestrationWorkflow().getUserVariables();
-    } else {
-      logger.error("WorkflowType {} not supported", workflowType);
-      throw new WingsException("Workflow Type [" + workflowType + "] not supported", USER);
-    }
-    if (envParamaterized) {
-      validateAndAuthorizeEnvironment(trigger, existing, variables);
-    }
-  }
-
-  private void validateAndAuthorizeEnvironment(Trigger trigger, boolean existing, List<Variable> variables) {
-    String templatizedEnvVariableName = WorkflowServiceTemplateHelper.getTemplatizedEnvVariableName(variables);
-    if (isNotEmpty(templatizedEnvVariableName)) {
-      Map<String, String> workflowVariables = trigger.getWorkflowVariables();
-      if (isEmpty(workflowVariables)) {
-        if (existing) {
-          return;
-        }
-        throw new WingsException("Please select value for Entity Type variables", USER);
-      }
-      String environment = workflowVariables.get(templatizedEnvVariableName);
-      if (isEmpty(environment)) {
-        if (existing) {
-          return;
-        }
-        throw new WingsException("Environment is parameterized. Please select value in the format ${varName}", USER);
-      }
-      authorizeEnvironment(trigger.getAppId(), environment);
-    }
-  }
-
-  private void authorizeWorkflowOrPipeline(String appId, String workflowOrPipelineId) {
-    PermissionAttribute permissionAttribute = new PermissionAttribute(PermissionType.DEPLOYMENT, Action.EXECUTE);
-    List<PermissionAttribute> permissionAttributeList = asList(permissionAttribute);
-    authHandler.authorize(permissionAttributeList, asList(appId), workflowOrPipelineId);
   }
 
   /**
@@ -249,8 +144,8 @@ public class TriggerResource {
     if (existingTrigger == null) {
       throw new WingsException("Trigger doesn't exist", USER);
     }
-    authorize(existingTrigger, true);
-    authorize(trigger, false);
+    triggerService.authorize(existingTrigger, true);
+    triggerService.authorize(trigger, false);
     return new RestResponse<>(triggerService.update(trigger));
   }
 
@@ -268,7 +163,7 @@ public class TriggerResource {
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("triggerId") String triggerId) {
     Trigger trigger = triggerService.get(appId, triggerId);
     if (trigger != null) {
-      authorize(trigger, true);
+      triggerService.authorize(trigger, true);
       triggerService.delete(appId, triggerId);
     }
     return new RestResponse<>();
