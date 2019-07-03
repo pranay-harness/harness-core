@@ -93,7 +93,8 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       splunkLogElement.setHost(host);
       splunkLogElement.setCount(Integer.parseInt(event.get("cluster_count")));
       splunkLogElement.setLogMessage(event.get("_raw"));
-      splunkLogElement.setTimeStamp(SPLUNK_DATE_FORMATER.parse(event.get("_time")).getTime());
+      // splunkLogElement.setTimeStamp(SPLUNK_DATE_FORMATER.parse(event.get("_time")).getTime());
+      splunkLogElement.setTimeStamp(System.currentTimeMillis());
       splunkLogElement.setLogCollectionMinute(logCollectionMinute);
       logElements.add(splunkLogElement);
     }

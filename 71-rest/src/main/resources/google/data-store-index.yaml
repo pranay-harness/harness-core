@@ -98,3 +98,9 @@ indexes:
   - name: clusterLevel
   - name: logCollectionMinute
     direction: desc
+
+- kind: logDataRecords
+  properties:
+  - name: serviceId
+  - name: timeStamp
+    direction: desc

@@ -317,6 +317,16 @@ public class AnalysisServiceImpl implements AnalysisService {
 
     dataStoreService.save(LogMLFeedbackRecord.class, Arrays.asList(mlFeedbackRecord), true);
 
+    // also "add to baseline" for new CVFeedbacks
+
+    CVFeedbackRecord record = CVFeedbackRecord.builder()
+                                  .clusterLabel(feedback.getClusterLabel())
+                                  .logMessage(logText)
+                                  .stateExecutionId(feedback.getStateExecutionId())
+                                  .clusterType(feedback.getClusterType())
+                                  .build();
+    addToBaseline(appService.getAccountIdByAppId(feedback.getAppId()), null, feedback.getStateExecutionId(), record);
+
     metricRegistry.recordGaugeInc(IGNORED_ERRORS_METRIC_NAME,
         new String[] {feedback.getLogMLFeedbackType().toString(), stateType.toString(), feedback.getAppId(),
             stateExecutionInstance.getWorkflowId()});
@@ -325,35 +335,39 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   @Override
-  public boolean addToBaseline(String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord) {
+  public boolean addToBaseline(
+      String accountId, String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord) {
     if (isNotEmpty(feedbackRecord.getUuid())) {
       CVFeedbackRecord feedbackRecordFromDataStore =
           dataStoreService.getEntity(CVFeedbackRecord.class, feedbackRecord.getUuid());
       checkIfActionIsAllowed(feedbackRecordFromDataStore, FeedbackAction.ADD_TO_BASELINE);
     }
     feedbackRecord.setPriority(FeedbackPriority.BASELINE);
-    return saveLogFeedback(cvConfigId, stateExecutionId, feedbackRecord, FeedbackAction.ADD_TO_BASELINE);
+    return saveLogFeedback(accountId, cvConfigId, stateExecutionId, feedbackRecord, FeedbackAction.ADD_TO_BASELINE);
   }
 
   @Override
-  public boolean removeFromBaseline(String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord) {
+  public boolean removeFromBaseline(
+      String accountId, String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord) {
     if (isNotEmpty(feedbackRecord.getUuid())) {
       CVFeedbackRecord feedbackRecordFromDataStore =
           dataStoreService.getEntity(CVFeedbackRecord.class, feedbackRecord.getUuid());
       checkIfActionIsAllowed(feedbackRecordFromDataStore, FeedbackAction.REMOVE_FROM_BASELINE);
     }
-    return saveLogFeedback(cvConfigId, stateExecutionId, feedbackRecord, FeedbackAction.REMOVE_FROM_BASELINE);
+    return saveLogFeedback(
+        accountId, cvConfigId, stateExecutionId, feedbackRecord, FeedbackAction.REMOVE_FROM_BASELINE);
   }
 
   @Override
-  public boolean updateFeedbackPriority(String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord) {
+  public boolean updateFeedbackPriority(
+      String accountId, String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord) {
     if (isNotEmpty(feedbackRecord.getUuid())) {
       CVFeedbackRecord feedbackRecordFromDataStore =
           dataStoreService.getEntity(CVFeedbackRecord.class, feedbackRecord.getUuid());
       checkIfActionIsAllowed(feedbackRecordFromDataStore, FeedbackAction.UPDATE_PRIORITY);
     }
 
-    return saveLogFeedback(cvConfigId, stateExecutionId, feedbackRecord, FeedbackAction.UPDATE_PRIORITY);
+    return saveLogFeedback(accountId, cvConfigId, stateExecutionId, feedbackRecord, FeedbackAction.UPDATE_PRIORITY);
   }
 
   private boolean checkIfActionIsAllowed(CVFeedbackRecord feedbackRecordFromDataStore, FeedbackAction nextAction) {
@@ -381,8 +395,8 @@ public class AnalysisServiceImpl implements AnalysisService {
     return feedbackActionListMap;
   }
 
-  private boolean saveLogFeedback(
-      String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord, FeedbackAction feedbackAction) {
+  private boolean saveLogFeedback(String accountId, String cvConfigId, String stateExecutionId,
+      CVFeedbackRecord feedbackRecord, FeedbackAction feedbackAction) {
     if (isNotEmpty(cvConfigId)) {
       CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
       feedbackRecord.setServiceId(cvConfiguration.getServiceId());
@@ -407,7 +421,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     } else {
       throw new WingsException("Missing cvConfigId or stateExecutionId to create/modify a feedback");
     }
-
+    feedbackRecord.setAccountId(accountId);
     feedbackRecord.setActionTaken(feedbackAction);
     dataStoreService.save(CVFeedbackRecord.class, Arrays.asList(feedbackRecord), false);
     return true;
@@ -460,7 +474,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     cvJiraParameters.getCvFeedbackRecord().setPriority(
         FeedbackPriority.valueOf(cvJiraParameters.getJiraTaskParameters().getPriority()));
     cvJiraParameters.getCvFeedbackRecord().setJiraLink(jiraLink);
-    addToBaseline(cvConfigId, stateExecutionId, cvJiraParameters.getCvFeedbackRecord());
+    addToBaseline(accountId, cvConfigId, stateExecutionId, cvJiraParameters.getCvFeedbackRecord());
     return jiraLink;
   }
 

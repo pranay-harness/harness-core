@@ -172,7 +172,7 @@ public class LogMLResource {
   public RestResponse<Boolean> addToBaseline(@QueryParam("accountId") String accountId,
       @QueryParam("cvConfigId") String cvConfigId, @QueryParam("stateExecutionId") String stateExecutionId,
       CVFeedbackRecord feedback) {
-    return new RestResponse<>(analysisService.addToBaseline(cvConfigId, stateExecutionId, feedback));
+    return new RestResponse<>(analysisService.addToBaseline(accountId, cvConfigId, stateExecutionId, feedback));
   }
 
   @POST
@@ -182,7 +182,7 @@ public class LogMLResource {
   public RestResponse<Boolean> removeFromBaseline(@QueryParam("accountId") String accountId,
       @QueryParam("cvConfigId") String cvConfigId, @QueryParam("stateExecutionId") String stateExecutionId,
       CVFeedbackRecord feedback) {
-    return new RestResponse<>(analysisService.removeFromBaseline(cvConfigId, stateExecutionId, feedback));
+    return new RestResponse<>(analysisService.removeFromBaseline(accountId, cvConfigId, stateExecutionId, feedback));
   }
 
   @POST
@@ -192,7 +192,8 @@ public class LogMLResource {
   public RestResponse<Boolean> updateFeedbackPriority(@QueryParam("accountId") String accountId,
       @QueryParam("cvConfigId") String cvConfigId, @QueryParam("stateExecutionId") String stateExecutionId,
       CVFeedbackRecord feedback) {
-    return new RestResponse<>(analysisService.updateFeedbackPriority(cvConfigId, stateExecutionId, feedback));
+    return new RestResponse<>(
+        analysisService.updateFeedbackPriority(accountId, cvConfigId, stateExecutionId, feedback));
   }
 
   @POST

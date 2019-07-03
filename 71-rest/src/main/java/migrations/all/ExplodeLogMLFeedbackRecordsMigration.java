@@ -15,6 +15,7 @@ import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.analysis.CVFeedbackRecord;
 import software.wings.service.impl.analysis.FeedbackAction;
 import software.wings.service.impl.analysis.LogMLFeedbackRecord;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElement;
@@ -28,6 +29,7 @@ public class ExplodeLogMLFeedbackRecordsMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private DataStoreService dataStoreService;
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private AppService appService;
 
   @Override
   public void migrate() {
@@ -57,6 +59,7 @@ public class ExplodeLogMLFeedbackRecordsMigration implements Migration {
   private CVFeedbackRecord createCVFeedbackRecordFromLogMLFeedback(LogMLFeedbackRecord record) {
     StateExecutionInstance stateExecutionInstance =
         wingsPersistence.get(StateExecutionInstance.class, record.getStateExecutionId());
+
     return CVFeedbackRecord.builder()
         .stateExecutionId(record.getStateExecutionId())
         .serviceId(record.getServiceId())

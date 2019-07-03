@@ -77,9 +77,11 @@ public interface AnalysisService {
 
   boolean save24x7Feedback(LogMLFeedback feedback, String cvConfigId);
   List<CVFeedbackRecord> getFeedbacks(String cvConfigId, String stateExecutionId);
-  boolean addToBaseline(String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord);
-  boolean removeFromBaseline(String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord);
-  boolean updateFeedbackPriority(String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord);
+  boolean addToBaseline(String accountId, String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord);
+  boolean removeFromBaseline(
+      String accountId, String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord);
+  boolean updateFeedbackPriority(
+      String accountId, String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord);
   Map<FeedbackAction, List<FeedbackAction>> getNextFeedbackActions();
   String createCollaborationFeedbackTicket(String accountId, String appId, String cvConfigId, String stateExecutionId,
       CVCollaborationProviderParameters cvJiraParameters);

@@ -12,6 +12,7 @@ import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.EntityQuery.Builder;
 import com.google.cloud.datastore.Key;
+import com.google.cloud.datastore.ListValue;
 import com.google.cloud.datastore.LongValue;
 import com.google.cloud.datastore.Query;
 import com.google.cloud.datastore.QueryResults;
@@ -19,6 +20,7 @@ import com.google.cloud.datastore.StringValue;
 import com.google.cloud.datastore.StructuredQuery.CompositeFilter;
 import com.google.cloud.datastore.StructuredQuery.OrderBy;
 import com.google.cloud.datastore.StructuredQuery.PropertyFilter;
+import com.google.cloud.datastore.Transaction;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -103,6 +105,18 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
     } catch (Exception ex) {
       throw new WingsException(ex);
     }
+  }
+
+  public <T extends GoogleDataStoreAware> void incrementField(
+      Class<T> clazz, String id, String fieldName, int incrementCount) {
+    Transaction txn = datastore.newTransaction();
+    Key keyToFetch = datastore.newKeyFactory()
+                         .setKind(clazz.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value())
+                         .newKey(id);
+    Entity entity = txn.get(keyToFetch);
+    Entity updatedEntity = Entity.newBuilder(entity).set(fieldName, entity.getLong(fieldName) + incrementCount).build();
+    txn.put(updatedEntity);
+    txn.commit();
   }
 
   @Override
@@ -222,6 +236,7 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
   }
 
   private PropertyFilter createFilter(SearchFilter searchFilter) {
+    String field = searchFilter.getFieldName().equals("uuid") ? "__key__" : searchFilter.getFieldName();
     switch (searchFilter.getOp()) {
       case EQ:
         if (searchFilter.getFieldValues()[0] instanceof String) {
@@ -258,6 +273,10 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
     return entity.contains(fieldName) ? entity.getString(fieldName) : null;
   }
 
+  public static List readList(Entity entity, String fieldName) {
+    return entity.contains(fieldName) ? entity.getList(fieldName) : null;
+  }
+
   public static long readLong(Entity entity, String fieldName) {
     return entity.contains(fieldName) ? entity.getLong(fieldName) : 0;
   }
@@ -282,6 +301,12 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
   public static void addFieldIfNotEmpty(
       com.google.cloud.datastore.Entity.Builder builder, String key, long value, boolean excludeFromIndex) {
     builder.set(key, LongValue.newBuilder(value).setExcludeFromIndexes(excludeFromIndex).build());
+  }
+
+  public static void addFieldIfNotEmpty(
+      com.google.cloud.datastore.Entity.Builder builder, String key, Set value, boolean excludeFromIndex) {
+    builder.set(
+        key, ListValue.newBuilder().set(Lists.newArrayList(value)).setExcludeFromIndexes(excludeFromIndex).build());
   }
 
   public static void addFieldIfNotEmpty(
