@@ -1,3 +1,3 @@
 package software.wings.utils;
 
-public enum RepositoryType { docker, maven, any }
+public enum RepositoryType { docker, maven, any, nuget }

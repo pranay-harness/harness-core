@@ -4,8 +4,6 @@ import static io.harness.eraro.ErrorCode.ARTIFACT_SERVER_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
-import static software.wings.utils.ArtifactType.DOCKER;
-import static software.wings.utils.ArtifactType.WAR;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
@@ -13,6 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.waiter.ListNotifyResponseData;
@@ -25,7 +24,6 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryType;
 
 import java.io.IOException;
@@ -86,7 +84,7 @@ public class NexusServiceImpl implements NexusService {
 
   @Override
   public Map<String, String> getRepositories(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails) {
-    return getRepositories(nexusConfig, encryptionDetails, WAR);
+    return getRepositories(nexusConfig, encryptionDetails, null);
   }
 
   public Map<String, String> getRepositories(
@@ -101,46 +99,10 @@ public class NexusServiceImpl implements NexusService {
           }
           return nexusTwoService.getRepositories(nexusConfig, encryptionDetails);
         } else {
-          if (RepositoryType.docker.name().equals(repositoryType)) {
-            return nexusThreeService.getRepositories(nexusConfig, encryptionDetails);
-          } else {
-            throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-                .addParam("message", "Not supported for Nexus 3.x version");
+          if (repositoryType == null || !repositoryType.equals(RepositoryType.docker.name())) {
+            throw new InvalidRequestException("Not supported for nexus 3.x", USER);
           }
-        }
-      }, 20L, TimeUnit.SECONDS, true);
-    } catch (UncheckedTimeoutException e) {
-      logger.warn("Nexus server request did not succeed within 20 secs");
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Nexus server took too long to respond");
-    } catch (WingsException e) {
-      throw e;
-    } catch (Exception e) {
-      logger.error("Error occurred while retrieving Repositories from Nexus server " + nexusConfig.getNexusUrl(), e);
-      if (e.getCause() != null && e.getCause() instanceof XMLStreamException) {
-        throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Nexus may not be running");
-      }
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
-    }
-  }
-  public Map<String, String> getRepositories(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, ArtifactType artifactType) {
-    try {
-      boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
-      return timeLimiter.callWithTimeout(() -> {
-        if (isNexusTwo) {
-          if (DOCKER.equals(artifactType)) {
-            throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-                .addParam("message", "Nexus 2.x does not support Docker artifact type");
-          }
-          return nexusTwoService.getRepositories(nexusConfig, encryptionDetails);
-        } else {
-          if (DOCKER.equals(artifactType)) {
-            return nexusThreeService.getRepositories(nexusConfig, encryptionDetails);
-          } else {
-            throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-                .addParam("message", "Not supported for Nexus 3.x version");
-          }
+          return nexusThreeService.getRepositories(nexusConfig, encryptionDetails, repositoryType);
         }
       }, 20L, TimeUnit.SECONDS, true);
     } catch (UncheckedTimeoutException e) {
@@ -280,10 +242,10 @@ public class NexusServiceImpl implements NexusService {
   @Override
   public boolean isRunning(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails) {
     if (nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x")) {
-      return getRepositories(nexusConfig, encryptionDetails) != null;
+      return getRepositories(nexusConfig, encryptionDetails, null) != null;
     } else {
       try {
-        return getRepositories(nexusConfig, encryptionDetails, ArtifactType.DOCKER) != null;
+        return getRepositories(nexusConfig, encryptionDetails, null) != null;
       } catch (WingsException e) {
         if (ExceptionUtils.getMessage(e).contains("Invalid Nexus credentials")) {
           throw e;

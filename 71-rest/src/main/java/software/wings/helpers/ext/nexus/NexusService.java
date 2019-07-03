@@ -6,7 +6,6 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.utils.ArtifactType;
 
 import java.io.InputStream;
 import java.util.List;
@@ -30,14 +29,6 @@ public interface NexusService {
    */
   Map<String, String> getRepositories(
       NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repositoryType);
-
-  /**
-   * Get Repositories
-   *
-   * @return map RepoId and Name
-   */
-  Map<String, String> getRepositories(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, ArtifactType artifactType);
 
   /**
    * Get Artifact paths under repository
