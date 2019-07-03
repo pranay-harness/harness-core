@@ -26,6 +26,7 @@ import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.input.NullInputStream;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
@@ -333,6 +334,10 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       if (tfStateFile != null) {
         try (InputStream initialStream = new FileInputStream(tfStateFile)) {
           delegateFileManager.upload(delegateFile, initialStream);
+        }
+      } else {
+        try (InputStream nullInputStream = new NullInputStream(0)) {
+          delegateFileManager.upload(delegateFile, nullInputStream);
         }
       }
 
