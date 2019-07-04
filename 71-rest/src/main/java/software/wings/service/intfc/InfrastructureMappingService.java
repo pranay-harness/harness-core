@@ -152,4 +152,6 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
   Integer getPcfRunningInstances(String appId, String infraMappingId, String appNameExpression);
 
   AwsAsgGetRunningCountData getAmiCurrentlyRunningInstanceCount(String infraMappingId, String appId);
+
+  List<String> fetchCloudProviderIds(String appId, List<String> infraMappingIds);
 }

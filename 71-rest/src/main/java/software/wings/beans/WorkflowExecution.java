@@ -90,6 +90,7 @@ public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAt
   private String envId;
   private List<String> envIds;
   private List<String> workflowIds;
+  private List<String> cloudProviderIds;
   @Indexed private List<String> serviceIds;
   @Indexed private List<String> infraMappingIds;
   private String appName;

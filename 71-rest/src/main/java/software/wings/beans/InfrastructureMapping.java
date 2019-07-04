@@ -403,4 +403,11 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
 
     return (List<String>) input;
   }
+
+  public static final class InfrastructureMappingKeys {
+    // Temporary
+    public static final String appId = "appId";
+    public static final String createdAt = "createdAt";
+    public static final String uuid = "uuid";
+  }
 }
