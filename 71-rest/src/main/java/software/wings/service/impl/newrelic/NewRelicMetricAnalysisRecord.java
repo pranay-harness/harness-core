@@ -15,6 +15,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -110,12 +111,14 @@ public class NewRelicMetricAnalysisRecord extends Base implements Comparable<New
 
   @Override
   public int compareTo(NewRelicMetricAnalysisRecord o) {
-    int analysisTypeComparison = this.mlAnalysisType.compareTo(o.mlAnalysisType);
-    if (analysisTypeComparison != 0) {
-      return analysisTypeComparison;
+    if (this.mlAnalysisType != null) {
+      int analysisTypeComparison = this.mlAnalysisType.compareTo(o.mlAnalysisType);
+      if (analysisTypeComparison != 0) {
+        return analysisTypeComparison;
+      }
     }
 
-    return this.groupName.compareTo(o.groupName);
+    return StringUtils.compare(this.groupName, o.groupName);
   }
 
   @Data

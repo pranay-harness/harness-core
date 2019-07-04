@@ -1,6 +1,5 @@
 package software.wings.resources;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -20,8 +19,8 @@ import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.StateType;
 
-import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -45,13 +44,13 @@ public class TimeSeriesResource {
   @Path("/generate-metrics-appdynamics")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<NewRelicMetricAnalysisRecord>> getMetricsAnalysisAppdynamics(
+  public RestResponse<Set<NewRelicMetricAnalysisRecord>> getMetricsAnalysisAppdynamics(
       @QueryParam("stateExecutionId") final String stateExecutionId,
       @QueryParam("workflowExecutionId") final String workflowExecutionId,
-      @QueryParam("accountId") final String accountId, @QueryParam("appId") final String appId) throws IOException {
+      @QueryParam("accountId") final String accountId, @QueryParam("appId") final String appId) {
     if (featureFlagService.isEnabledReloadCache(FeatureName.CV_DEMO, accountId)) {
-      return new RestResponse<>(Lists.newArrayList(
-          metricDataAnalysisService.getMetricsAnalysisForDemo(appId, stateExecutionId, workflowExecutionId).get(0)));
+      return new RestResponse<>(
+          metricDataAnalysisService.getMetricsAnalysisForDemo(appId, stateExecutionId, workflowExecutionId));
     }
     return new RestResponse<>(
         metricDataAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId));

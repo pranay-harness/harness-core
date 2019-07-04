@@ -67,6 +67,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
@@ -266,7 +268,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                        .filter("cvConfigId", cvConfigId));
   }
 
-  public List<NewRelicMetricAnalysisRecord> getMetricsAnalysisForDemo(
+  public Set<NewRelicMetricAnalysisRecord> getMetricsAnalysisForDemo(
       final String appId, final String stateExecutionId, final String workflowExecutionId) {
     logger.info("Creating analysis summary for demo {}", stateExecutionId);
     StateExecutionInstance stateExecutionInstance =
@@ -294,9 +296,9 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   @Override
-  public List<NewRelicMetricAnalysisRecord> getMetricsAnalysis(
+  public Set<NewRelicMetricAnalysisRecord> getMetricsAnalysis(
       final String appId, final String stateExecutionId, final String workflowExecutionId) {
-    List<NewRelicMetricAnalysisRecord> analysisRecords = new ArrayList<>();
+    Set<NewRelicMetricAnalysisRecord> analysisRecords = new TreeSet<>();
     List<TimeSeriesMLAnalysisRecord> allAnalysisRecords =
         wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
             .filter(MetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
@@ -323,6 +325,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
               .showTimeSeries(true)
               .groupName(timeSeriesMLAnalysisRecord.getGroupName())
               .message(timeSeriesMLAnalysisRecord.getMessage())
+              .mlAnalysisType(TimeSeriesMlAnalysisType.COMPARATIVE)
               .build();
       analysisRecords.add(metricAnalysisRecord);
       if (timeSeriesMLAnalysisRecord.getTransactions() != null) {
@@ -456,33 +459,27 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     });
 
     populateProgress(analysisRecords);
-    Collections.sort(analysisRecords);
     return analysisRecords;
   }
 
-  private void populateProgress(List<NewRelicMetricAnalysisRecord> analysisRecords) {
+  private void populateProgress(Set<NewRelicMetricAnalysisRecord> analysisRecords) {
     if (isEmpty(analysisRecords)) {
       return;
     }
 
     analysisRecords.forEach(analysisRecord -> {
       AnalysisContext analysisContext =
-          wingsPersistence.createQuery(AnalysisContext.class)
-              .filter("appId", analysisRecord.getAppId())
+          wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
               .filter(AnalysisContextKeys.stateExecutionId, analysisRecord.getStateExecutionId())
               .get();
       if (analysisContext == null) {
         return;
       }
-      int numOfAnalysis = (int) Math.max(wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class)
-                                             .filter("appId", analysisRecord.getAppId())
-                                             .filter("stateExecutionId", analysisRecord.getStateExecutionId())
-                                             .filter("groupName", analysisRecord.getGroupName())
-                                             .count(),
-          wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
-              .filter(MetricAnalysisRecordKeys.stateExecutionId, analysisRecord.getStateExecutionId())
-              .filter(MetricAnalysisRecordKeys.groupName, analysisRecord.getGroupName())
-              .count());
+      int numOfAnalysis = (int) wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
+                              .filter(MetricAnalysisRecordKeys.stateExecutionId, analysisRecord.getStateExecutionId())
+                              .filter(MetricAnalysisRecordKeys.groupName, analysisRecord.getGroupName())
+                              .count();
+
       int duration = analysisContext.getTimeDuration();
       analysisRecord.setProgress((numOfAnalysis * 100) / duration);
     });

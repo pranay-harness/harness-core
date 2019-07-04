@@ -638,7 +638,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           final HeatMap heatMap = HeatMap.builder().cvConfiguration(cvConfig).build();
           rv.add(heatMap);
 
-          List<HeatMapUnit> units = createAllHeatMapUnits(appId, startTime, endTime, cvConfig);
+          List<HeatMapUnit> units = createAllHeatMapUnits(startTime, endTime, cvConfig);
           List<HeatMapUnit> resolvedUnits = resolveHeatMapUnits(units, startTime, endTime);
           heatMap.getRiskLevelSummary().addAll(resolvedUnits);
           return null;
@@ -745,17 +745,24 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return retList;
   }
 
-  private List<HeatMapUnit> createAllHeatMapUnits(
-      String appId, long startTime, long endTime, CVConfiguration cvConfiguration) {
+  private List<HeatMapUnit> createAllHeatMapUnits(long startTime, long endTime, CVConfiguration cvConfiguration) {
     long cronPollIntervalMs = TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES);
     Preconditions.checkState((endTime - startTime) >= cronPollIntervalMs);
     List<TimeSeriesMLAnalysisRecord> records = getAnalysisRecordsInTimeRange(startTime, endTime, cvConfiguration);
     records = mergeRecordsOfDifferentTagsIfNecessary(records);
+    return computeHeatMapUnits(startTime, endTime, records, null);
+  }
+
+  public static List<HeatMapUnit> computeHeatMapUnits(long startTime, long endTime,
+      List<TimeSeriesMLAnalysisRecord> timeSeriesAnalysisRecords, List<LogMLAnalysisRecord> logAnalysisRecords) {
+    Preconditions.checkState(timeSeriesAnalysisRecords == null || logAnalysisRecords == null,
+        "both time series and log analysis records can not be present");
+
     long startMinute = TimeUnit.MILLISECONDS.toMinutes(startTime);
     long endMinute = TimeUnit.MILLISECONDS.toMinutes(endTime);
 
     List<HeatMapUnit> units = new ArrayList<>();
-    if (isEmpty(records)) {
+    if (isEmpty(timeSeriesAnalysisRecords) && isEmpty(logAnalysisRecords)) {
       while (endMinute > startMinute) {
         units.add(HeatMapUnit.builder()
                       .startTime(TimeUnit.MINUTES.toMillis(startMinute))
@@ -769,29 +776,50 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       return units;
     }
 
-    List<HeatMapUnit> unitsFromDB = new ArrayList<>();
-    records.forEach(record -> {
-      HeatMapUnit heatMapUnit =
-          HeatMapUnit.builder()
-              .startTime(TimeUnit.MINUTES.toMillis(record.getAnalysisMinute() - CRON_POLL_INTERVAL_IN_MINUTES) + 1)
-              .endTime(TimeUnit.MINUTES.toMillis(record.getAnalysisMinute()))
-              .overallScore(-2)
-              .build();
+    SortedSet<HeatMapUnit> sortedUnitsFromDB = new TreeSet<>();
 
-      heatMapUnit.updateOverallScore(record.getOverallMetricScores());
-      unitsFromDB.add(heatMapUnit);
-    });
+    if (isNotEmpty(timeSeriesAnalysisRecords)) {
+      timeSeriesAnalysisRecords.forEach(record -> {
+        HeatMapUnit heatMapUnit =
+            HeatMapUnit.builder()
+                .startTime(TimeUnit.MINUTES.toMillis(record.getAnalysisMinute() - CRON_POLL_INTERVAL_IN_MINUTES) + 1)
+                .endTime(TimeUnit.MINUTES.toMillis(record.getAnalysisMinute()))
+                .overallScore(-2)
+                .build();
+
+        heatMapUnit.updateOverallScore(record.getOverallMetricScores());
+        sortedUnitsFromDB.add(heatMapUnit);
+      });
+    }
+
+    if (isNotEmpty(logAnalysisRecords)) {
+      logAnalysisRecords.forEach(record -> {
+        HeatMapUnit heatMapUnit =
+            HeatMapUnit.builder()
+                .startTime(
+                    TimeUnit.MINUTES.toMillis(record.getLogCollectionMinute() - CRON_POLL_INTERVAL_IN_MINUTES) + 1)
+                .endTime(TimeUnit.MINUTES.toMillis(record.getLogCollectionMinute()))
+                .overallScore(-2)
+                .build();
+
+        heatMapUnit.updateOverallScore(record.getScore());
+        sortedUnitsFromDB.add(heatMapUnit);
+      });
+    }
+
+    long cronPollIntervalMs = TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES);
 
     // find the actual start time so that we fill from there
-    HeatMapUnit heatMapUnit = unitsFromDB.get(0);
+    HeatMapUnit heatMapUnit = sortedUnitsFromDB.first();
     long actualUnitStartTime = heatMapUnit.getStartTime();
     while (startTime < actualUnitStartTime - cronPollIntervalMs) {
       actualUnitStartTime -= cronPollIntervalMs;
     }
 
     int dbUnitIndex = 0;
+    List<HeatMapUnit> unitsFromDB = new ArrayList<>(sortedUnitsFromDB);
     for (long unitTime = actualUnitStartTime; unitTime <= endTime; unitTime += cronPollIntervalMs) {
-      heatMapUnit = dbUnitIndex < unitsFromDB.size() ? unitsFromDB.get(dbUnitIndex) : null;
+      heatMapUnit = dbUnitIndex < sortedUnitsFromDB.size() ? unitsFromDB.get(dbUnitIndex) : null;
       if (heatMapUnit != null) {
         long timeDifference = TimeUnit.MILLISECONDS.toSeconds(abs(heatMapUnit.getStartTime() - unitTime));
         if (timeDifference != 0 && timeDifference < 60) {

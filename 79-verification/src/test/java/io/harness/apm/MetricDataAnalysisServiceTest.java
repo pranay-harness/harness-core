@@ -59,6 +59,7 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -129,8 +130,8 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
             .filter("appId", appId)
             .asList()
             .size());
-    List<NewRelicMetricAnalysisRecord> resultList =
-        metricDataAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
+    Set<NewRelicMetricAnalysisRecord> resultList =
+        managerAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
 
     assertNotNull(resultList);
     assertEquals(numOfGroups, resultList.size());
