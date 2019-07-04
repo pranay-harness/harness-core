@@ -16,6 +16,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
@@ -34,9 +35,11 @@ import java.util.Map;
  */
 @Getter
 @Setter
-@EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
+@EqualsAndHashCode(callSuper = false,
+    of = {"stateType", "workflowExecutionId", "stateExecutionId", "analysisMinute", "groupName", "baseLineExecutionId",
+        "cvConfigId", "tag"})
 @FieldNameConstants(innerTypeName = "MetricAnalysisRecordKeys")
-public class MetricAnalysisRecord extends Base {
+public class MetricAnalysisRecord extends Base implements Comparable<MetricAnalysisRecord> {
   @NotEmpty private StateType stateType;
 
   @NotEmpty private String workflowExecutionId;
@@ -97,5 +100,10 @@ public class MetricAnalysisRecord extends Base {
     } catch (IOException e) {
       throw new WingsException(e);
     }
+  }
+
+  @Override
+  public int compareTo(@NotNull MetricAnalysisRecord o) {
+    return this.analysisMinute - o.analysisMinute;
   }
 }

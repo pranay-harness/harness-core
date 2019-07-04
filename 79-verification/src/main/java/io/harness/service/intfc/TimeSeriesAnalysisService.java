@@ -51,9 +51,6 @@ public interface TimeSeriesAnalysisService {
 
   List<String> getLastSuccessfulWorkflowExecutionIds(String appId, String workflowId, String serviceId);
 
-  List<NewRelicMetricAnalysisRecord> getMetricsAnalysis(
-      String appId, String stateExecutionId, String workflowExecutionId);
-
   NewRelicMetricDataRecord getLastHeartBeat(StateType stateType, String appId, String stateExecutionId,
       String workflowExecutionId, String serviceId, String metricGroup);
 

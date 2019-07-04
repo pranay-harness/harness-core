@@ -51,7 +51,6 @@ import software.wings.verification.VerificationStateAnalysisExecutionData;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -295,7 +294,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
     int analysisMinute = executionResponse.getStateExecutionData().getAnalysisMinute();
     for (int i = 0; i < NUM_OF_RETRIES; i++) {
-      List<NewRelicMetricAnalysisRecord> metricAnalysisRecords = metricAnalysisService.getMetricsAnalysis(
+      Set<NewRelicMetricAnalysisRecord> metricAnalysisRecords = metricAnalysisService.getMetricsAnalysis(
           context.getAppId(), context.getStateExecutionInstanceId(), context.getWorkflowExecutionId());
       if (isEmpty(metricAnalysisRecords)) {
         getLogger().info("for {} No analysis summary.", context.getStateExecutionInstanceId());

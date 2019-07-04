@@ -18,11 +18,9 @@ import org.mongodb.morphia.utils.IndexType;
 @Entity(value = "timeSeriesAnalysisRecords", noClassnameStored = true)
 @Indexes({
   @Index(fields =
-      {
-        @Field("workflowExecutionId")
-        , @Field("stateExecutionId"), @Field("analysisMinute"), @Field("groupName"), @Field("cvConfigId"), @Field("tag")
-      },
-      options = @IndexOptions(unique = true, name = "MetricAnalysisUniqueIdx"))
+      { @Field("stateExecutionId")
+        , @Field("groupName"), @Field(value = "analysisMinute", type = IndexType.DESC) },
+      options = @IndexOptions(name = "stateExIdx"))
   ,
       @Index(fields = {
         @Field("cvConfigId"), @Field(value = "analysisMinute", type = IndexType.DESC)

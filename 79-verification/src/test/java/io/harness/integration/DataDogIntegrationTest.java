@@ -26,6 +26,7 @@ import io.harness.scm.SecretName;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -39,11 +40,14 @@ import software.wings.beans.CountsByStatuses;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.WorkflowExecution;
+import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.MetricDataAnalysisServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
@@ -54,6 +58,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.WebTarget;
@@ -64,10 +69,14 @@ public class DataDogIntegrationTest extends VerificationBaseIntegrationTest {
   @Inject private ScmSecret scmSecret;
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Inject private VerificationManagerClientHelper managerClient;
+  @Inject private WingsPersistence wingsPersistence;
+  private MetricDataAnalysisService metricDataAnalysisService;
 
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    metricDataAnalysisService = new MetricDataAnalysisServiceImpl();
+    FieldUtils.writeField(metricDataAnalysisService, "wingsPersistence", wingsPersistence, true);
     loginAdminUser();
   }
 
@@ -277,11 +286,11 @@ public class DataDogIntegrationTest extends VerificationBaseIntegrationTest {
 
     // TODO I know....
     Thread.sleep(10000);
-    List<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
-        timeSeriesAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
+    Set<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
+        metricDataAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
     assertEquals(1, metricAnalysisRecords.size());
 
-    NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.get(0);
+    NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.iterator().next();
 
     assertEquals(RiskLevel.LOW, metricsAnalysis.getRiskLevel());
     assertTrue(metricsAnalysis.isShowTimeSeries());

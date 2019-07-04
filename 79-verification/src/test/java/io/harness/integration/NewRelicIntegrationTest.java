@@ -46,6 +46,7 @@ import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,10 +64,12 @@ import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.WorkflowExecution;
+import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.MetricDataAnalysisServiceImpl;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.newrelic.MetricUtilHelper;
 import software.wings.service.impl.newrelic.NewRelicApplication;
@@ -77,6 +80,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewReli
 import software.wings.service.impl.newrelic.NewRelicMetricData;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicSetupTestNodeData;
+import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
@@ -112,6 +116,8 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   @Inject private LearningEngineService learningEngineService;
   @Inject private VerificationManagerClient mgrClient;
   @Inject private VerificationManagerClientHelper managerClient;
+  @Inject private WingsPersistence wingsPersistence;
+  private MetricDataAnalysisService metricDataAnalysisService;
 
   private String newRelicConfigId;
 
@@ -129,6 +135,8 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
                            .filter(SettingAttributeKeys.accountId, accountId)
                            .get()
                            .getUuid();
+    metricDataAnalysisService = new MetricDataAnalysisServiceImpl();
+    FieldUtils.writeField(metricDataAnalysisService, "wingsPersistence", wingsPersistence, true);
   }
 
   @Test
@@ -653,11 +661,11 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
         timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext, jobExecutionContext)
         .run();
 
-    List<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
-        timeSeriesAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
+    Set<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
+        metricDataAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
     assertEquals(1, metricAnalysisRecords.size());
 
-    NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.get(0);
+    NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.iterator().next();
     assertEquals(RiskLevel.NA, metricsAnalysis.getRiskLevel());
     assertFalse(metricsAnalysis.isShowTimeSeries());
     assertEquals("No data available", metricsAnalysis.getMessage());
@@ -786,11 +794,11 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
         timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext, jobExecutionContext)
         .run();
 
-    List<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
-        timeSeriesAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
+    Set<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
+        metricDataAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
     assertEquals(1, metricAnalysisRecords.size());
 
-    NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.get(0);
+    NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.iterator().next();
 
     assertEquals(RiskLevel.NA, metricsAnalysis.getRiskLevel());
     assertFalse(metricsAnalysis.isShowTimeSeries());
@@ -922,11 +930,11 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
         timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext, jobExecutionContext)
         .run();
 
-    List<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
-        timeSeriesAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
+    Set<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
+        metricDataAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
     assertEquals(1, metricAnalysisRecords.size());
 
-    NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.get(0);
+    NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.iterator().next();
 
     assertEquals(RiskLevel.LOW, metricsAnalysis.getRiskLevel());
     assertFalse(metricsAnalysis.isShowTimeSeries());
@@ -1085,11 +1093,11 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     // TODO I know....
     Thread.sleep(10000);
 
-    List<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
-        timeSeriesAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
+    Set<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
+        metricDataAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
     assertEquals(1, metricAnalysisRecords.size());
 
-    NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.get(0);
+    NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.iterator().next();
 
     assertEquals(RiskLevel.LOW, metricsAnalysis.getRiskLevel());
     assertTrue(metricsAnalysis.isShowTimeSeries());

@@ -3,12 +3,12 @@ package software.wings.service.impl.verification;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
 import static java.lang.Math.min;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.LOGS_HIGH_RISK_THRESHOLD;
 import static software.wings.common.VerificationConstants.LOGS_MEDIUM_RISK_THRESHOLD;
+import static software.wings.service.impl.analysis.ContinuousVerificationServiceImpl.computeHeatMapUnits;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -53,9 +53,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
@@ -82,7 +81,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
         final HeatMap heatMap = HeatMap.builder().cvConfiguration(cvConfig).build();
         rv.add(heatMap);
 
-        List<HeatMapUnit> units = createAllHeatMapUnits(appId, startTime, endTime, cvConfig);
+        List<HeatMapUnit> units = createAllHeatMapUnits(startTime, endTime, cvConfig);
         List<HeatMapUnit> resolvedUnits = resolveHeatMapUnits(units, startTime, endTime);
         heatMap.getRiskLevelSummary().addAll(resolvedUnits);
       }
@@ -103,79 +102,13 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
     return cvConfigurations;
   }
 
-  private List<HeatMapUnit> createAllHeatMapUnits(
-      String appId, long startTime, long endTime, CVConfiguration cvConfiguration) {
+  private List<HeatMapUnit> createAllHeatMapUnits(long startTime, long endTime, CVConfiguration cvConfiguration) {
     long cronPollIntervalMs = TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES);
     Preconditions.checkState((endTime - startTime) >= cronPollIntervalMs);
 
-    List<LogMLAnalysisRecord> records =
-        getLogAnalysisRecordsInTimeRange(appId, startTime, endTime, false, cvConfiguration);
+    List<LogMLAnalysisRecord> records = getLogAnalysisRecordsInTimeRange(startTime, endTime, false, cvConfiguration);
 
-    long startMinute = TimeUnit.MILLISECONDS.toMinutes(startTime);
-    long endMinute = TimeUnit.MILLISECONDS.toMinutes(endTime);
-
-    List<HeatMapUnit> units = new ArrayList<>();
-    if (isEmpty(records)) {
-      while (endMinute > startMinute) {
-        units.add(HeatMapUnit.builder()
-                      .startTime(TimeUnit.MINUTES.toMillis(startMinute))
-                      .endTime(TimeUnit.MINUTES.toMillis(startMinute + CRON_POLL_INTERVAL_IN_MINUTES))
-                      .na(1)
-                      .overallScore(-2)
-                      .build());
-        startMinute += CRON_POLL_INTERVAL_IN_MINUTES;
-      }
-
-      return units;
-    }
-
-    SortedSet<HeatMapUnit> sortedUnitsFromDB = new TreeSet<>();
-    records.forEach(record -> {
-      HeatMapUnit heatMapUnit =
-          HeatMapUnit.builder()
-              .startTime(TimeUnit.MINUTES.toMillis(record.getLogCollectionMinute() - CRON_POLL_INTERVAL_IN_MINUTES) + 1)
-              .endTime(TimeUnit.MINUTES.toMillis(record.getLogCollectionMinute()))
-              .overallScore(-2)
-              .build();
-
-      heatMapUnit.updateOverallScore(record.getScore());
-      sortedUnitsFromDB.add(heatMapUnit);
-    });
-
-    // find the actual start time so that we fill from there
-    HeatMapUnit heatMapUnit = sortedUnitsFromDB.first();
-    long actualUnitStartTime = heatMapUnit.getStartTime();
-    while (startTime < actualUnitStartTime - cronPollIntervalMs) {
-      actualUnitStartTime -= cronPollIntervalMs;
-    }
-
-    int dbUnitIndex = 0;
-    List<HeatMapUnit> unitsFromDB = new ArrayList<>(sortedUnitsFromDB);
-    for (long unitTime = actualUnitStartTime; unitTime <= endTime; unitTime += cronPollIntervalMs) {
-      heatMapUnit = dbUnitIndex < unitsFromDB.size() ? unitsFromDB.get(dbUnitIndex) : null;
-      if (heatMapUnit != null) {
-        long timeDifference = TimeUnit.MILLISECONDS.toSeconds(abs(heatMapUnit.getStartTime() - unitTime));
-        if (timeDifference != 0 && timeDifference < 60) {
-          logger.error(
-              "Unexpected state: timeDifference = {}, should have been 0 or > 60, heatmap unit start time = {}",
-              timeDifference, heatMapUnit.getStartTime());
-        }
-      }
-
-      if (heatMapUnit != null && unitTime == heatMapUnit.getStartTime()) {
-        units.add(heatMapUnit);
-        dbUnitIndex++;
-        continue;
-      }
-
-      units.add(HeatMapUnit.builder()
-                    .endTime(unitTime + cronPollIntervalMs - 1)
-                    .startTime(unitTime)
-                    .overallScore(-2)
-                    .na(1)
-                    .build());
-    }
-    return units;
+    return computeHeatMapUnits(startTime, endTime, null, records);
   }
 
   private List<HeatMapUnit> resolveHeatMapUnits(List<HeatMapUnit> units, long startTime, long endTime) {
@@ -227,7 +160,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
   }
 
   private List<LogMLAnalysisRecord> getLogAnalysisRecordsInTimeRange(
-      String appId, long startTime, long endTime, boolean readDetails, CVConfiguration cvConfiguration) {
+      long startTime, long endTime, boolean readDetails, CVConfiguration cvConfiguration) {
     Query<LogMLAnalysisRecord> analysisRecordQuery =
         wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
             .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfiguration.getUuid())
@@ -268,7 +201,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
 
     List<LogMLAnalysisRecord> analysisRecords;
     if (startTime != null && endTime != null) {
-      analysisRecords = getLogAnalysisRecordsInTimeRange(appId, startTime, endTime, true, cvConfiguration);
+      analysisRecords = getLogAnalysisRecordsInTimeRange(startTime, endTime, true, cvConfiguration);
     } else {
       analysisRecords = Arrays.asList(getLastAnalysisRecord(appId, cvConfigId));
     }
@@ -462,7 +395,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
   }
 
   private Double computeOverallScoreForTag(long startTime, long endTime, String cvConfigId, String tag) {
-    final List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords =
+    final Set<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords =
         wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
             .filter(MetricAnalysisRecordKeys.cvConfigId, cvConfigId)
             .field(MetricAnalysisRecordKeys.analysisMinute)
@@ -473,7 +406,9 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
             .order(MetricAnalysisRecordKeys.analysisMinute)
             .project(MetricAnalysisRecordKeys.transactions, false)
             .project(MetricAnalysisRecordKeys.transactionsCompressedJson, false)
-            .asList();
+            .asList()
+            .stream()
+            .collect(Collectors.toSet());
 
     List<Double> scoreList = new ArrayList<>();
     timeSeriesMLAnalysisRecords.forEach(record -> {

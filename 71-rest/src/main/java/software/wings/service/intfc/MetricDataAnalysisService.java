@@ -9,6 +9,7 @@ import software.wings.sm.StateType;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by rsingh on 9/17/18.
@@ -16,7 +17,7 @@ import java.util.Map;
 public interface MetricDataAnalysisService {
   String RESOURCE_URL = "timeseries";
 
-  List<NewRelicMetricAnalysisRecord> getMetricsAnalysis(
+  Set<NewRelicMetricAnalysisRecord> getMetricsAnalysis(
       String appId, String stateExecutionId, String workflowExecutionId);
 
   boolean isStateValid(String appId, String stateExecutionID);
@@ -37,7 +38,7 @@ public interface MetricDataAnalysisService {
 
   void cleanUpForMetricRetry(String stateExecutionId);
 
-  List<NewRelicMetricAnalysisRecord> getMetricsAnalysisForDemo(
+  Set<NewRelicMetricAnalysisRecord> getMetricsAnalysisForDemo(
       String appId, String stateExecutionId, String workflowExecutionId);
 
   TimeSeriesMLTransactionThresholds getCustomThreshold(String appId, StateType stateType, String serviceId,

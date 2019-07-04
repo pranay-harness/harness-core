@@ -4,7 +4,6 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.Integer.max;
@@ -65,8 +64,6 @@ import software.wings.service.impl.analysis.TimeSeriesRiskData;
 import software.wings.service.impl.analysis.TimeSeriesRiskSummary;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
-import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
-import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord.NewRelicMetricDataRecordKeys;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
@@ -77,7 +74,6 @@ import software.wings.sm.StateType;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -537,171 +533,6 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     }
     result.putAll(getCustomMetricTemplates(appId, stateType, serviceId, cvConfigId, groupName));
     return result;
-  }
-
-  @Override
-  public List<NewRelicMetricAnalysisRecord> getMetricsAnalysis(
-      final String appId, final String stateExecutionId, final String workflowExecutionId) {
-    List<NewRelicMetricAnalysisRecord> analysisRecords = new ArrayList<>();
-    List<TimeSeriesMLAnalysisRecord> allAnalysisRecords =
-        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
-            .filter(MetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
-            .order(Sort.descending(TimeSeriesMLAnalysisRecord.CREATED_AT_KEY))
-            .asList();
-
-    Map<String, TimeSeriesMLAnalysisRecord> groupVsAnalysisRecord = new HashMap<>();
-    allAnalysisRecords.forEach(analysisRecord -> {
-      analysisRecord.decompressTransactions();
-      if (!groupVsAnalysisRecord.containsKey(analysisRecord.getGroupName())) {
-        groupVsAnalysisRecord.put(analysisRecord.getGroupName(), analysisRecord);
-      }
-    });
-    Collection<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords = groupVsAnalysisRecord.values();
-    timeSeriesMLAnalysisRecords.forEach(timeSeriesMLAnalysisRecord -> {
-      NewRelicMetricAnalysisRecord metricAnalysisRecord =
-          NewRelicMetricAnalysisRecord.builder()
-              .appId(timeSeriesMLAnalysisRecord.getAppId())
-              .stateType(timeSeriesMLAnalysisRecord.getStateType())
-              .analysisMinute(timeSeriesMLAnalysisRecord.getAnalysisMinute())
-              .stateExecutionId(timeSeriesMLAnalysisRecord.getStateExecutionId())
-              .workflowExecutionId(timeSeriesMLAnalysisRecord.getWorkflowExecutionId())
-              .baseLineExecutionId(timeSeriesMLAnalysisRecord.getBaseLineExecutionId())
-              .showTimeSeries(true)
-              .groupName(timeSeriesMLAnalysisRecord.getGroupName())
-              .message(timeSeriesMLAnalysisRecord.getMessage())
-              .build();
-      analysisRecords.add(metricAnalysisRecord);
-      if (timeSeriesMLAnalysisRecord.getTransactions() != null) {
-        List<NewRelicMetricAnalysis> metricAnalysisList = new ArrayList<>();
-        for (TimeSeriesMLTxnSummary txnSummary : timeSeriesMLAnalysisRecord.getTransactions().values()) {
-          List<NewRelicMetricAnalysisValue> metricsList = new ArrayList<>();
-          RiskLevel globalRisk = RiskLevel.NA;
-          for (TimeSeriesMLMetricSummary mlMetricSummary : txnSummary.getMetrics().values()) {
-            RiskLevel riskLevel = getRiskLevel(mlMetricSummary.getMax_risk());
-
-            if (riskLevel.compareTo(globalRisk) < 0) {
-              globalRisk = riskLevel;
-            }
-            metricsList.add(NewRelicMetricAnalysisValue.builder()
-                                .name(mlMetricSummary.getMetric_name())
-                                .type(mlMetricSummary.getMetric_type())
-                                .alertType(mlMetricSummary.getAlert_type())
-                                .riskLevel(riskLevel)
-                                .controlValue(mlMetricSummary.getControl_avg())
-                                .testValue(mlMetricSummary.getTest_avg())
-                                .build());
-          }
-          metricAnalysisList.add(NewRelicMetricAnalysis.builder()
-                                     .metricName(txnSummary.getTxn_name())
-                                     .tag(txnSummary.getTxn_tag())
-                                     .metricValues(metricsList)
-                                     .riskLevel(globalRisk)
-                                     .build());
-        }
-        metricAnalysisRecord.setMetricAnalyses(metricAnalysisList);
-      }
-    });
-    List<NewRelicMetricAnalysisRecord> allMetricAnalyisRecords =
-        wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class)
-            .filter("appId", appId)
-            .filter("stateExecutionId", stateExecutionId)
-            .filter("workflowExecutionId", workflowExecutionId)
-            .order(Sort.descending(NewRelicMetricAnalysisRecord.CREATED_AT_KEY))
-            .asList();
-
-    Map<String, NewRelicMetricAnalysisRecord> groupVsMetricAnalysisRecord = new HashMap<>();
-    allMetricAnalyisRecords.forEach(analysisRecord -> {
-      if (!groupVsMetricAnalysisRecord.containsKey(analysisRecord.getGroupName())) {
-        groupVsMetricAnalysisRecord.put(analysisRecord.getGroupName(), analysisRecord);
-      }
-    });
-    analysisRecords.addAll(groupVsMetricAnalysisRecord.values());
-
-    if (isEmpty(analysisRecords)) {
-      analysisRecords.add(NewRelicMetricAnalysisRecord.builder()
-                              .showTimeSeries(false)
-                              .stateType(StateType.APP_DYNAMICS)
-                              .riskLevel(RiskLevel.NA)
-                              .message("No data available")
-                              .build());
-    }
-
-    Map<String, TimeSeriesMlAnalysisGroupInfo> metricGroups = getMetricGroups(appId, stateExecutionId);
-    analysisRecords.forEach(analysisRecord -> {
-      TimeSeriesMlAnalysisGroupInfo mlAnalysisGroupInfo = metricGroups.get(analysisRecord.getGroupName());
-      analysisRecord.setDependencyPath(mlAnalysisGroupInfo == null ? null : mlAnalysisGroupInfo.getDependencyPath());
-      analysisRecord.setMlAnalysisType(
-          mlAnalysisGroupInfo == null ? TimeSeriesMlAnalysisType.COMPARATIVE : mlAnalysisGroupInfo.getMlAnalysisType());
-      if (analysisRecord.getMetricAnalyses() != null) {
-        int highRisk = 0;
-        int mediumRisk = 0;
-        for (NewRelicMetricAnalysis metricAnalysis : analysisRecord.getMetricAnalyses()) {
-          final RiskLevel riskLevel = metricAnalysis.getRiskLevel();
-          switch (riskLevel) {
-            case HIGH:
-              highRisk++;
-              break;
-            case MEDIUM:
-              mediumRisk++;
-              break;
-            case NA:
-              noop();
-              break;
-            case LOW:
-              noop();
-              break;
-            default:
-              unhandled(riskLevel);
-          }
-        }
-
-        if (highRisk == 0 && mediumRisk == 0) {
-          analysisRecord.setMessage("No problems found");
-        } else {
-          StringBuffer message = new StringBuffer(20);
-          if (highRisk > 0) {
-            message.append(highRisk + " high risk " + (highRisk > 1 ? "transactions" : "transaction") + " found. ");
-          }
-
-          if (mediumRisk > 0) {
-            message.append(
-                mediumRisk + " medium risk " + (mediumRisk > 1 ? "transactions" : "transaction") + " found.");
-          }
-
-          analysisRecord.setMessage(message.toString());
-        }
-
-        if (highRisk > 0) {
-          analysisRecord.setRiskLevel(RiskLevel.HIGH);
-        } else if (mediumRisk > 0) {
-          analysisRecord.setRiskLevel(RiskLevel.MEDIUM);
-        } else {
-          analysisRecord.setRiskLevel(RiskLevel.LOW);
-        }
-
-        Collections.sort(analysisRecord.getMetricAnalyses());
-      } else {
-        analysisRecord.setRiskLevel(RiskLevel.NA);
-      }
-
-      if (analysisRecord.getStateType() == StateType.DYNA_TRACE && !isEmpty(analysisRecord.getMetricAnalyses())) {
-        for (NewRelicMetricAnalysis analysis : analysisRecord.getMetricAnalyses()) {
-          String metricName = analysis.getMetricName();
-          String[] split = metricName.split(":");
-          if (split == null || split.length == 1) {
-            analysis.setDisplayName(metricName);
-            analysis.setFullMetricName(metricName);
-            continue;
-          }
-          String btName = split[0];
-          String fullBTName = btName + " (" + metricName.substring(btName.length() + 1) + ")";
-          analysis.setDisplayName(btName);
-          analysis.setFullMetricName(fullBTName);
-        }
-      }
-    });
-    Collections.sort(analysisRecords);
-    return analysisRecords;
   }
 
   @Override
