@@ -8,9 +8,9 @@ public interface GcpMarketPlaceConstants {
   String GCP_METRIC_NAME =
       "harness-continuous-delivery.gcpmarketplace.harness.io/harness_pro_additional_service_instances";
   String GCP_OPERATION_NAME = "GCP Instance Usage Report";
-  String SERVICE_CONTROL_API_END_POINT = "https://staging-servicecontrol.sandbox.googleapis.com";
   String HARNESS_GCP_APPLICATION = "HARNESS_INSTANCE_USAGE_REPORTING_APP";
-  String SERVICE_NAME = "staging.harness-continuous-delivery.gcpmarketplace.harness.io";
+  String SERVICE_NAME = "harness-continuous-delivery.gcpmarketplace.harness.io";
+  String SERVICE_CONTROL_API_END_POINT = "https://servicecontrol.googleapis.com";
 
   String ENTITLEMENT_ACTIVATED = "ENTITLEMENT_ACTIVE";
   String ENTITLEMENT_ACTIVATION_REQUESTED = "ENTITLEMENT_ACTIVATION_REQUESTED";
