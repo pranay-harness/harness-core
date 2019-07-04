@@ -1377,13 +1377,14 @@ public class TriggerServiceImpl implements TriggerService {
                                      : workflowServices.stream().collect(toMap(Service::getUuid, Service::getName));
   }
 
+  @Override
   public void authorize(Trigger trigger, boolean existing) {
     WorkflowType workflowType = trigger.getWorkflowType();
     try {
       authorizeWorkflowOrPipeline(trigger.getAppId(), trigger.getWorkflowId());
     } catch (WingsException ex) {
-      throw new WingsException(
-          "User does not have Deployment execute permission to " + (workflowType == PIPELINE ? "Pipeline" : "Workflow"),
+      throw new WingsException("User does not have deployment execution permission on "
+              + (workflowType == PIPELINE ? "Pipeline" : "Workflow"),
           USER);
     }
     boolean envParamaterized;
@@ -1416,14 +1417,14 @@ public class TriggerServiceImpl implements TriggerService {
         if (existing) {
           return;
         }
-        throw new WingsException("Please select value for Entity Type variables", USER);
+        throw new WingsException("Please select a value for entity type variables.", USER);
       }
       String environment = workflowVariables.get(templatizedEnvVariableName);
       if (isEmpty(environment)) {
         if (existing) {
           return;
         }
-        throw new WingsException("Environment is parameterized. Please select value in the format ${varName}", USER);
+        throw new WingsException("Environment is parameterized. Please select a value in the format ${varName}.", USER);
       }
       authorizeEnvironment(trigger.getAppId(), environment);
     }
@@ -1442,7 +1443,8 @@ public class TriggerServiceImpl implements TriggerService {
             asList(new PermissionAttribute(PermissionType.ACCOUNT_MANAGEMENT, Action.READ)));
       } catch (WingsException ex) {
         throw new WingsException(
-            "User not authorized: Only admin can create or update the trigger with parameterized variables.", USER);
+            "User not authorized: Only members of the Account Administrator user group can create or update Triggers with parameterized variables.",
+            USER);
       }
     } else {
       // Check if environment exist by envId
@@ -1452,7 +1454,8 @@ public class TriggerServiceImpl implements TriggerService {
           authService.checkIfUserAllowedToDeployToEnv(appId, environmentValue);
         } catch (WingsException ex) {
           throw new WingsException(
-              "User does not have Deployment execute permission to environment [" + environment.getName() + "]", USER);
+              "User does not have deployment execution permission on environment. [" + environment.getName() + "]",
+              USER);
         }
 
       } else {
@@ -1462,7 +1465,8 @@ public class TriggerServiceImpl implements TriggerService {
               asList(new PermissionAttribute(PermissionType.ACCOUNT_MANAGEMENT, Action.READ)));
         } catch (WingsException ex) {
           throw new WingsException(
-              "User not authorized: Only admin can create or update the trigger with parameterized variables.", USER);
+              "User not authorized: Only members of the Account Administrator user group can create or update Triggers with parameterized variables",
+              USER);
         }
       }
     }
