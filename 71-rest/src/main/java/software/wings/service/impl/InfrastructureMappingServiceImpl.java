@@ -1489,6 +1489,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     return emptyList();
   }
 
+  @Override
   public List<String> listOrganizationsForPcf(String appId, String computeProviderId) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
     notNullCheck("Compute Provider", computeProviderSetting);
@@ -2023,6 +2024,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         awsConfig, encryptionDetails, region, infraMappingId, appId);
   }
 
+  @Override
   public Integer getPcfRunningInstances(String appId, String infraMappingId, String appNameExpression) {
     PcfInfrastructureMapping infrastructureMapping = (PcfInfrastructureMapping) get(appId, infraMappingId);
     notNullCheck("Inframapping Doesnt Exists", infrastructureMapping);
@@ -2186,5 +2188,24 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         .filter(ACCOUNT_ID_KEY, accountId)
         .filter(COMPUTE_PROVIDER_SETTING_ID_KEY, computeProviderId)
         .asList(new FindOptions().limit(REFERENCED_ENTITIES_TO_SHOW));
+  }
+
+  @Override
+  public List<String> fetchCloudProviderIds(String appId, List<String> infraMappingIds) {
+    if (isNotEmpty(infraMappingIds)) {
+      List<InfrastructureMapping> infrastructureMappings =
+          wingsPersistence.createQuery(InfrastructureMapping.class)
+              .project(InfrastructureMappingKeys.appId, true)
+              .project(InfrastructureMappingKeys.computeProviderSettingId, true)
+              .filter(InfrastructureMappingKeys.appId, appId)
+              .field(InfrastructureMappingKeys.uuid)
+              .in(infraMappingIds)
+              .asList();
+      return infrastructureMappings.stream()
+          .map(InfrastructureMapping::getComputeProviderSettingId)
+          .distinct()
+          .collect(toList());
+    }
+    return new ArrayList<>();
   }
 }

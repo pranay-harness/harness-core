@@ -999,6 +999,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setEnvIds(pipeline.getEnvIds());
     workflowExecution.setWorkflowIds(pipeline.getWorkflowIds());
     workflowExecution.setInfraMappingIds(pipeline.getInfraMappingIds());
+    workflowExecution.setCloudProviderIds(
+        infrastructureMappingService.fetchCloudProviderIds(appId, workflowExecution.getInfraMappingIds()));
+
     return triggerExecution(
         workflowExecution, stateMachine, workflowExecutionUpdate, stdParams, trigger, pipeline, null);
   }
@@ -1081,6 +1084,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     workflowExecution.setInfraMappingIds(workflowService.getResolvedInfraMappingIds(workflow, workflowVariables));
+    workflowExecution.setCloudProviderIds(
+        infrastructureMappingService.fetchCloudProviderIds(appId, workflowExecution.getInfraMappingIds()));
 
     WorkflowStandardParams stdParams;
     if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.CANARY
