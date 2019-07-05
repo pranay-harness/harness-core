@@ -61,8 +61,7 @@ public class SettingGenerator {
   private static final String HARNESS_ARTIFACTORY = "Harness Artifactory";
   private static final String HARNESS_BAMBOO = "Harness Bamboo";
   private static final String HARNESS_DOCKER_REGISTRY = "Harness Docker Registry";
-  private static final String HARNESS_GCP_EXPLORATION = "harness-exploration";
-  private static final String HARNESS_EXPLORATION_GCS = "harness-exploration-gcs";
+  private static final String GCP_PLAYGROUND = "playground-gke-gcs-gcr";
 
   private static final String HELM_CHART_REPO_URL = "http://storage.googleapis.com/kubernetes-charts/";
   private static final String HELM_CHART_REPO = "Helm Chart Repo";
@@ -88,8 +87,7 @@ public class SettingGenerator {
     HARNESS_NEXU3_CONNECTOR,
     HARNESS_ARTIFACTORY_CONNECTOR,
     HARNESS_DOCKER_REGISTRY,
-    HARNESS_GCP_EXPLORATION,
-    HARNESS_EXPLORATION_GCS,
+    GCP_PLAYGROUND,
     HARNESS_JIRA,
     SERVICENOW_CONNECTOR,
     PHYSICAL_DATA_CENTER,
@@ -127,10 +125,8 @@ public class SettingGenerator {
         return ensureHarnessArtifactory(seed, owners);
       case HARNESS_DOCKER_REGISTRY:
         return ensureHarnessDocker(seed, owners);
-      case HARNESS_GCP_EXPLORATION:
-        return ensureHarnessGcpExploration(seed, owners);
-      case HARNESS_EXPLORATION_GCS:
-        return ensureHarnessExplorationGcs(seed, owners);
+      case GCP_PLAYGROUND:
+        return ensureGcpPlayground(seed, owners);
       case HARNESS_JIRA:
         return ensureHarnessJira(seed, owners);
       case SERVICENOW_CONNECTOR:
@@ -467,35 +463,17 @@ public class SettingGenerator {
     return ensureSettingAttribute(seed, dockerSettingAttribute, owners);
   }
 
-  private SettingAttribute ensureHarnessGcpExploration(Randomizer.Seed seed, Owners owners) {
+  private SettingAttribute ensureGcpPlayground(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
     SettingAttribute gcpSettingAttribute =
         aSettingAttribute()
-            .withName(HARNESS_GCP_EXPLORATION)
+            .withName(GCP_PLAYGROUND)
             .withCategory(SettingCategory.CLOUD_PROVIDER)
             .withAccountId(account.getUuid())
             .withValue(GcpConfig.builder()
-                           .serviceAccountKeyFileContent(
-                               scmSecret.decryptToCharArray(new SecretName("harness_gcp_exploration")))
+                           .serviceAccountKeyFileContent(scmSecret.decryptToCharArray(new SecretName("gcp_playground")))
                            .accountId(account.getUuid())
                            .build())
-            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
-            .build();
-    return ensureSettingAttribute(seed, gcpSettingAttribute, owners);
-  }
-
-  private SettingAttribute ensureHarnessExplorationGcs(Randomizer.Seed seed, Owners owners) {
-    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
-    SettingAttribute gcpSettingAttribute =
-        aSettingAttribute()
-            .withName(HARNESS_EXPLORATION_GCS)
-            .withCategory(SettingCategory.CLOUD_PROVIDER)
-            .withAccountId(account.getUuid())
-            .withValue(
-                GcpConfig.builder()
-                    .serviceAccountKeyFileContent(scmSecret.decryptToCharArray(new SecretName("harness_exploration")))
-                    .accountId(account.getUuid())
-                    .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
     return ensureSettingAttribute(seed, gcpSettingAttribute, owners);

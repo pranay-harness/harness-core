@@ -3,7 +3,7 @@ package io.harness.generator;
 import static io.harness.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.AZURE_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
-import static io.harness.generator.SettingGenerator.Settings.HARNESS_GCP_EXPLORATION;
+import static io.harness.generator.SettingGenerator.Settings.GCP_PLAYGROUND;
 import static io.harness.generator.SettingGenerator.Settings.PHYSICAL_DATA_CENTER;
 import static io.harness.generator.SettingGenerator.Settings.WINRM_TEST_CONNECTOR;
 import static io.harness.govern.Switch.unhandled;
@@ -205,7 +205,7 @@ public class InfrastructureMappingGenerator {
       owners.add(service);
     }
 
-    final SettingAttribute gcpCloudProvider = settingGenerator.ensurePredefined(seed, owners, HARNESS_GCP_EXPLORATION);
+    final SettingAttribute gcpCloudProvider = settingGenerator.ensurePredefined(seed, owners, GCP_PLAYGROUND);
 
     String namespaceUnique = namespace + '-' + System.currentTimeMillis();
 

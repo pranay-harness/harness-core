@@ -43,13 +43,13 @@ public class GCSFunctionalTest extends AbstractFunctionalTest {
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private SettingGenerator settingGenerator;
 
-  private static final String GCS_PROJECT = "exploration-161417";
+  private static final String GCS_PROJECT = "playground-243019";
   private static final String GCS_ARTIFACT = "todolist-v1.0.zip";
   private static final String GCS_BUCKET = "functional-test";
 
-  Application application;
-  final Seed seed = new Seed(0);
-  Owners owners;
+  private Application application;
+  private final Seed seed = new Seed(0);
+  private Owners owners;
 
   @Before
   public void setUp() {
@@ -62,8 +62,7 @@ public class GCSFunctionalTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void shouldCollectGCSArtifact() {
     Service service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
-    SettingAttribute gcpCloudProvider =
-        settingGenerator.ensurePredefined(seed, owners, Settings.HARNESS_EXPLORATION_GCS);
+    SettingAttribute gcpCloudProvider = settingGenerator.ensurePredefined(seed, owners, Settings.GCP_PLAYGROUND);
 
     // List buckets and paths for project
     listBuckets(gcpCloudProvider);
@@ -77,10 +76,10 @@ public class GCSFunctionalTest extends AbstractFunctionalTest {
         bearerToken, application.getUuid(), savedArtifactSteam.getUuid());
     assertThat(collectedArtifact).isNotNull();
 
-    assertThat(collectedArtifact.getArtifactStreamId().equals(savedArtifactSteam.getUuid()));
-    assertThat(collectedArtifact.getStatus().equals(Status.APPROVED));
-    assertThat(collectedArtifact.getMetadata().get("bucketName").equals(GCS_BUCKET));
-    assertThat(collectedArtifact.getMetadata().get("artifactFileName").equals(GCS_ARTIFACT));
+    assertThat(collectedArtifact.getArtifactStreamId()).isEqualTo(savedArtifactSteam.getUuid());
+    assertThat(collectedArtifact.getStatus()).isEqualTo(Status.APPROVED);
+    assertThat(collectedArtifact.getMetadata().get("bucketName")).isEqualTo(GCS_BUCKET);
+    assertThat(collectedArtifact.getMetadata().get("artifactFileName")).isEqualTo(GCS_ARTIFACT);
 
     // Clean up all resources
     Setup.portal()
@@ -97,25 +96,24 @@ public class GCSFunctionalTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void shouldCollectGCSArtifactWithRegex() {
     Service service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
-    SettingAttribute gcpCloudProvider =
-        settingGenerator.ensurePredefined(seed, owners, Settings.HARNESS_EXPLORATION_GCS);
+    SettingAttribute gcpCloudProvider = settingGenerator.ensurePredefined(seed, owners, Settings.GCP_PLAYGROUND);
 
     // List buckets and paths for project
     listBuckets(gcpCloudProvider);
     listArtifactPaths(gcpCloudProvider, GCS_BUCKET);
 
     // Create an artifact stream with retrieved bucket and artifact
-    String artifactPath = "todolist-v*.zip";
+    String artifactPath = "todolist-v1*";
     ArtifactStream savedArtifactSteam = saveAndGetGcsArtifactStream(service, gcpCloudProvider, artifactPath);
     assertThat(savedArtifactSteam).isNotNull();
 
     final Artifact collectedArtifact = ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
         bearerToken, application.getUuid(), savedArtifactSteam.getUuid());
 
-    assertThat(collectedArtifact.getArtifactStreamId().equals(savedArtifactSteam.getUuid()));
-    assertThat(collectedArtifact.getStatus().equals(Status.APPROVED));
-    assertThat(collectedArtifact.getMetadata().get("bucketName").equals(GCS_BUCKET));
-    assertThat(collectedArtifact.getMetadata().get("artifactFileName").equals(GCS_ARTIFACT));
+    assertThat(collectedArtifact.getArtifactStreamId()).isEqualTo(savedArtifactSteam.getUuid());
+    assertThat(collectedArtifact.getStatus()).isEqualTo(Status.APPROVED);
+    assertThat(collectedArtifact.getMetadata().get("bucketName")).isEqualTo(GCS_BUCKET);
+    assertThat(collectedArtifact.getMetadata().get("artifactFileName")).isEqualTo(GCS_ARTIFACT);
 
     // Clean up all resources
     Setup.portal()
@@ -142,7 +140,7 @@ public class GCSFunctionalTest extends AbstractFunctionalTest {
                                                                .as(bucketType.getType());
     assertThat(bucketResponse).isNotNull();
     assertThat(bucketResponse.getResource()).isNotEmpty();
-    assertThat(bucketResponse.getResource().containsKey(GCS_BUCKET));
+    assertThat(bucketResponse.getResource()).containsKey(GCS_BUCKET);
   }
 
   private void listArtifactPaths(SettingAttribute gcpCloudProvider, String bucket) {
