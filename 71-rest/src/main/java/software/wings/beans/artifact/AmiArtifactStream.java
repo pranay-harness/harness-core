@@ -119,13 +119,13 @@ public class AmiArtifactStream extends ArtifactStream {
   public static class Yaml extends ArtifactStream.Yaml {
     private String platform;
     private String region;
-    private List<NameValuePair.Yaml> tags = new ArrayList<>();
+    private List<NameValuePair.Yaml> amiTags = new ArrayList<>();
 
     @lombok.Builder
     public Yaml(
-        String harnessApiVersion, String serverName, List<NameValuePair.Yaml> tags, String region, String platform) {
+        String harnessApiVersion, String serverName, List<NameValuePair.Yaml> amiTags, String region, String platform) {
       super(AMI.name(), harnessApiVersion, serverName);
-      this.tags = tags;
+      this.amiTags = amiTags;
       this.region = region;
       this.platform = platform;
     }

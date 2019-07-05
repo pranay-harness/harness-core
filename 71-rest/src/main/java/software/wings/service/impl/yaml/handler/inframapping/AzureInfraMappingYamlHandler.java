@@ -20,7 +20,7 @@ public class AzureInfraMappingYamlHandler
     yaml.setType(InfrastructureMappingType.AZURE_INFRA.name());
     yaml.setSubscriptionId(bean.getSubscriptionId());
     yaml.setResourceGroup(bean.getResourceGroup());
-    yaml.setTags(bean.getTags());
+    yaml.setAzureTags(bean.getTags());
     return yaml;
   }
 
@@ -55,7 +55,7 @@ public class AzureInfraMappingYamlHandler
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, null);
     bean.setSubscriptionId(yaml.getSubscriptionId());
     bean.setResourceGroup(yaml.getResourceGroup());
-    bean.setTags(yaml.getTags());
+    bean.setTags(yaml.getAzureTags());
   }
 
   @Override

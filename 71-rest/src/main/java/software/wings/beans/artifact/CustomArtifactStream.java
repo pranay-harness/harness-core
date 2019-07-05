@@ -75,13 +75,13 @@ public class CustomArtifactStream extends ArtifactStream {
   @EqualsAndHashCode(callSuper = true)
   public static class Yaml extends ArtifactStream.Yaml {
     @NotNull private List<Script> scripts = new ArrayList<>();
-    private List<String> tags = new ArrayList<>();
+    private List<String> delegateTags = new ArrayList<>();
 
     @lombok.Builder
-    public Yaml(String harnessApiVersion, List<Script> scripts, List<String> tags) {
+    public Yaml(String harnessApiVersion, List<Script> scripts, List<String> delegateTags) {
       super(CUSTOM.name(), harnessApiVersion);
       this.scripts = scripts;
-      this.tags = tags;
+      this.delegateTags = delegateTags;
     }
   }
 }

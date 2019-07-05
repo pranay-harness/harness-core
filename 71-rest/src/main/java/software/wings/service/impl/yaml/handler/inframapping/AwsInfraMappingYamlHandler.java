@@ -64,7 +64,7 @@ public class AwsInfraMappingYamlHandler
     if (bean.getProvisionerId() == null) {
       yaml.setRegion(bean.getRegion());
       yaml.setVpcs(vpcIds);
-      yaml.setTags(getTagsYaml(tagList));
+      yaml.setAwsTags(getTagsYaml(tagList));
     } else {
       final InfrastructureProvisioner infrastructureProvisioner =
           infrastructureProvisionerService.get(appId, bean.getProvisionerId());
@@ -123,8 +123,8 @@ public class AwsInfraMappingYamlHandler
     Yaml yaml = changeContext.getYaml();
 
     AwsInstanceFilterBuilder builder = AwsInstanceFilter.builder().vpcIds(yaml.getVpcs());
-    if (yaml.getTags() != null) {
-      builder.tags(getTags(yaml.getTags()));
+    if (yaml.getAwsTags() != null) {
+      builder.tags(getTags(yaml.getAwsTags()));
     }
 
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, provisionerId);
