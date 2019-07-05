@@ -6,6 +6,7 @@ import org.quartz.TriggerKey;
 
 import java.util.Date;
 
+@Deprecated
 public interface PersistentScheduler {
   void ensureJob__UnderConstruction(JobDetail jobDetail, Trigger trigger);
   Date scheduleJob(JobDetail jobDetail, Trigger trigger);
