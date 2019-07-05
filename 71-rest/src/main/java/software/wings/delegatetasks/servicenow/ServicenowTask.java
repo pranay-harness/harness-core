@@ -5,12 +5,14 @@ import static io.harness.exception.WingsException.USER;
 import static software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl.getBaseUrl;
 import static software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl.getRetrofit;
 import static software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl.handleResponse;
+import static software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType.CHANGE_TASK;
 
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
@@ -31,7 +33,9 @@ import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.helpers.ext.servicenow.ServiceNowRestClient;
 import software.wings.service.intfc.security.EncryptionService;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Consumer;
@@ -117,50 +121,19 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
   }
 
   private ResponseData updateServiceNowTicket(ServiceNowTaskParameters parameters) {
+    if (parameters.getTicketType().equals(CHANGE_TASK) && parameters.isUpdateMultiple()) {
+      return updateAllChangeTaskTickets(parameters);
+    }
+
     ServiceNowConfig config = parameters.getServiceNowConfig();
     Map<String, String> body = new HashMap<>();
+
     for (Entry<ServiceNowFields, String> entry : parameters.getFields().entrySet()) {
       body.put(entry.getKey().getJsonBodyName(), entry.getValue());
     }
 
     if (parameters.getIssueId() == null && parameters.getIssueNumber() != null) {
-      String query = "number=" + parameters.getIssueNumber();
-      final Call<JsonNode> request =
-          getRestClient(parameters)
-              .getIssue(Credentials.basic(config.getUsername(), new String(config.getPassword())),
-                  parameters.getTicketType().toString().toLowerCase(), query, "all");
-      Response<JsonNode> response = null;
-      try {
-        response = request.execute();
-        logger.info("Response received from serviceNow: {}", response);
-        handleResponse(response, "Failed to fetch IssueId : " + parameters.getIssueNumber() + " from serviceNow");
-        JsonNode responseObj = response.body().get("result");
-        if (responseObj.isArray()) {
-          if (responseObj.size() > 1) {
-            String errorMsg =
-                "Multiple issues found for " + parameters.getIssueNumber() + "Please enter unique issueNumber";
-            throw new WingsException(SERVICENOW_ERROR, USER).addParam("message", errorMsg);
-          }
-          JsonNode issueObj = responseObj.get(0);
-          if (issueObj != null) {
-            String issueId = issueObj.get("sys_id").get("display_value").asText();
-            parameters.setIssueId(issueId);
-          } else {
-            String errorMsg = "Error in fetching issue " + parameters.getIssueNumber() + " .Issue does not exist";
-            throw new WingsException(SERVICENOW_ERROR, USER).addParam("message", errorMsg);
-          }
-        } else {
-          throw new WingsException(SERVICENOW_ERROR, USER)
-              .addParam(
-                  "message", "Failed to fetch issueNumber " + parameters.getIssueNumber() + "response: " + response);
-        }
-      } catch (WingsException e) {
-        throw e;
-      } catch (Exception e) {
-        String errorMsg = "Error in fetching issueNumber " + parameters.getIssueNumber();
-        throw new WingsException(SERVICENOW_ERROR, USER, e)
-            .addParam("message", errorMsg + " " + ExceptionUtils.getMessage(e));
-      }
+      setIssueIdFromIssueNumber(parameters, config);
     }
 
     final Call<JsonNode> request;
@@ -191,8 +164,159 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
     } catch (WingsException we) {
       throw we;
     } catch (Exception e) {
-      String errorMsg = "Error while updating serviceNow ticket: ";
+      String errorMsg = "Error while updating serviceNow ticket: " + parameters.getIssueNumber();
       throw new WingsException(SERVICENOW_ERROR, USER, e).addParam("message", errorMsg + ExceptionUtils.getMessage(e));
+    }
+  }
+
+  private ResponseData updateAllChangeTaskTickets(ServiceNowTaskParameters parameters) {
+    if (!parameters.getFields().containsKey(ServiceNowFields.CHANGE_REQUEST_NUMBER)
+        || EmptyPredicate.isEmpty(parameters.getFields().get(ServiceNowFields.CHANGE_REQUEST_NUMBER))) {
+      throw new WingsException(SERVICENOW_ERROR, USER)
+          .addParam("message", "Change Request Number is required to update change tasks");
+    }
+
+    List<String> changeTaskIdsToUpdate = fetchChangeTasksFromCR(parameters);
+    String changeRequestNumber = parameters.getFields().get(ServiceNowFields.CHANGE_REQUEST_NUMBER);
+    if (EmptyPredicate.isEmpty(changeTaskIdsToUpdate)) {
+      return ServiceNowExecutionData.builder()
+          .issueNumber(changeRequestNumber)
+          .ticketType(parameters.getTicketType())
+          .responseMsg("No change tasks to update for: " + changeRequestNumber)
+          .executionStatus(ExecutionStatus.SUCCESS)
+          .build();
+    }
+    Map<String, String> body = new HashMap<>();
+    for (Entry<ServiceNowFields, String> entry : parameters.getFields().entrySet()) {
+      body.put(entry.getKey().getJsonBodyName(), entry.getValue());
+    }
+    body.remove(ServiceNowFields.CHANGE_REQUEST_NUMBER.getJsonBodyName());
+    body.remove(ServiceNowFields.CHANGE_TASK_TYPE.getJsonBodyName());
+
+    ServiceNowConfig config = parameters.getServiceNowConfig();
+
+    Response<JsonNode> response = null;
+    List<String> updateChangeTaskNumbers = new ArrayList<>();
+    List<String> updatedCjhangeTaskUrls = new ArrayList<>();
+    Call<JsonNode> request;
+
+    for (String changeTaskId : changeTaskIdsToUpdate) {
+      try {
+        request = getRestClient(parameters)
+                      .updateTicket(Credentials.basic(config.getUsername(), new String(config.getPassword())),
+                          CHANGE_TASK.toString().toLowerCase(), changeTaskId, "all", "number,sys_id", body);
+
+        response = request.execute();
+        logger.info("Response received from serviceNow: {}", response);
+        handleResponse(response, "Failed to update ServiceNow ticket");
+        JsonNode responseObj = response.body().get("result");
+        String issueNumber = responseObj.get("number").get("display_value").asText();
+        String issueId = responseObj.get("sys_id").get("display_value").asText();
+        String issueUrl = getBaseUrl(config) + "nav_to.do?uri=/" + parameters.getTicketType().toString().toLowerCase()
+            + ".do?sys_id=" + issueId;
+
+        logger.info("Successfully updated ticket : " + issueNumber);
+        updateChangeTaskNumbers.add(issueNumber);
+        updatedCjhangeTaskUrls.add(issueUrl);
+      } catch (WingsException we) {
+        throw we;
+      } catch (Exception e) {
+        String errorMsg = "Error while updating serviceNow task: " + changeTaskId;
+        throw new WingsException(SERVICENOW_ERROR, USER, e)
+            .addParam("message", errorMsg + ExceptionUtils.getMessage(e));
+      }
+    }
+    return ServiceNowExecutionData.builder()
+        .issueNumber(parameters.getFields().get(ServiceNowFields.CHANGE_REQUEST_NUMBER))
+        .issueUrl(updatedCjhangeTaskUrls.toString().replaceAll("[\\[\\]]", ""))
+        .ticketType(parameters.getTicketType())
+        .responseMsg("Updated Service Now tasks " + updateChangeTaskNumbers.toString().replaceAll("[\\[\\]]", ""))
+        .executionStatus(ExecutionStatus.SUCCESS)
+        .build();
+  }
+
+  private List<String> fetchChangeTasksFromCR(ServiceNowTaskParameters parameters) {
+    ServiceNowConfig config = parameters.getServiceNowConfig();
+    final Call<JsonNode> request;
+    List<String> changeTaskIds = new ArrayList<>();
+    String changeRequestNumber = parameters.getFields().get(ServiceNowFields.CHANGE_REQUEST_NUMBER);
+
+    request = getRestClient(parameters)
+                  .fetchChangeTasksFromCR(Credentials.basic(config.getUsername(), new String(config.getPassword())),
+                      parameters.getTicketType().toString().toLowerCase(), "number,sys_id,change_task_type",
+                      "change_request.number=" + changeRequestNumber);
+
+    Response<JsonNode> response = null;
+    try {
+      response = request.execute();
+      logger.info("Response received from serviceNow: {}", response);
+      handleResponse(response, "Failed to update ServiceNow ticket");
+      JsonNode responseObj = response.body().get("result");
+      if (responseObj.isArray()) {
+        for (JsonNode changeTaskObj : responseObj) {
+          if (parameters.getFields().containsKey(ServiceNowFields.CHANGE_TASK_TYPE)
+              && EmptyPredicate.isNotEmpty(parameters.getFields().get(ServiceNowFields.CHANGE_TASK_TYPE))) {
+            if (parameters.getFields()
+                    .get(ServiceNowFields.CHANGE_TASK_TYPE)
+                    .equalsIgnoreCase(changeTaskObj.get("change_task_type").textValue())) {
+              changeTaskIds.add(changeTaskObj.get("sys_id").textValue());
+            }
+          } else {
+            // update all ticket types
+            changeTaskIds.add(changeTaskObj.get("sys_id").textValue());
+          }
+        }
+        return changeTaskIds;
+      } else {
+        throw new WingsException(SERVICENOW_ERROR, USER)
+            .addParam("message", "Response for fetching changeTasks is not an array. Response: " + response);
+      }
+
+    } catch (WingsException we) {
+      throw we;
+    } catch (Exception e) {
+      String errorMsg = "Error while fetching change tasks for : " + changeRequestNumber;
+      throw new WingsException(SERVICENOW_ERROR, USER, e).addParam("message", errorMsg + ExceptionUtils.getMessage(e));
+    }
+  }
+
+  private void setIssueIdFromIssueNumber(ServiceNowTaskParameters parameters, ServiceNowConfig config) {
+    String query = "number=" + parameters.getIssueNumber();
+    final Call<JsonNode> request =
+        getRestClient(parameters)
+            .getIssue(Credentials.basic(config.getUsername(), new String(config.getPassword())),
+                parameters.getTicketType().toString().toLowerCase(), query, "all");
+    Response<JsonNode> response = null;
+    try {
+      response = request.execute();
+      logger.info("Response received from serviceNow: {}", response);
+      handleResponse(response, "Failed to fetch IssueId : " + parameters.getIssueNumber() + " from serviceNow");
+      JsonNode responseObj = response.body().get("result");
+      if (responseObj.isArray()) {
+        if (responseObj.size() > 1) {
+          String errorMsg =
+              "Multiple issues found for " + parameters.getIssueNumber() + "Please enter unique issueNumber";
+          throw new WingsException(SERVICENOW_ERROR, USER).addParam("message", errorMsg);
+        }
+        JsonNode issueObj = responseObj.get(0);
+        if (issueObj != null) {
+          String issueId = issueObj.get("sys_id").get("display_value").asText();
+          parameters.setIssueId(issueId);
+        } else {
+          String errorMsg = "Error in fetching issue " + parameters.getIssueNumber() + " .Issue does not exist";
+          throw new WingsException(SERVICENOW_ERROR, USER).addParam("message", errorMsg);
+        }
+      } else {
+        throw new WingsException(SERVICENOW_ERROR, USER)
+            .addParam(
+                "message", "Failed to fetch issueNumber " + parameters.getIssueNumber() + "response: " + response);
+      }
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      String errorMsg = "Error in fetching issueNumber " + parameters.getIssueNumber();
+      throw new WingsException(SERVICENOW_ERROR, USER, e)
+          .addParam("message", errorMsg + " " + ExceptionUtils.getMessage(e));
     }
   }
 

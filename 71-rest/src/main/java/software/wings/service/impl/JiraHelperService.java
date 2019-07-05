@@ -83,11 +83,11 @@ public class JiraHelperService {
     try {
       jiraExecutionData = delegateService.executeTask(delegateTask);
     } catch (Exception e) {
-      throw new WingsException("Unexpected error during authentication to JIRA server");
+      throw new WingsException("Unexpected error during authentication to JIRA server", WingsException.USER);
     }
 
     if (jiraExecutionData.getExecutionStatus() != ExecutionStatus.SUCCESS) {
-      throw new WingsException("Failed to Authenticate with JIRA Server.");
+      throw new WingsException("Failed to Authenticate with JIRA Server.", WingsException.USER);
     }
   }
 
@@ -122,7 +122,7 @@ public class JiraHelperService {
 
     JiraExecutionData jiraExecutionData = runTask(accountId, appId, connectorId, jiraTaskParameters);
     if (jiraExecutionData.getExecutionStatus() != ExecutionStatus.SUCCESS) {
-      throw new WingsException("Failed to fetch Projects");
+      throw new WingsException("Failed to fetch Projects", WingsException.USER);
     }
     return jiraExecutionData.getProjects();
   }
@@ -158,7 +158,7 @@ public class JiraHelperService {
 
     JiraExecutionData jiraExecutionData = runTask(accountId, appId, connectorId, jiraTaskParameters);
     if (jiraExecutionData.getExecutionStatus() != ExecutionStatus.SUCCESS) {
-      throw new WingsException("Failed to fetch IssueType and Priorities");
+      throw new WingsException("Failed to fetch IssueType and Priorities", WingsException.USER);
     }
 
     return jiraExecutionData.getFields();
@@ -170,7 +170,7 @@ public class JiraHelperService {
 
     JiraExecutionData jiraExecutionData = runTask(accountId, appId, connectorId, jiraTaskParameters);
     if (jiraExecutionData.getExecutionStatus() != ExecutionStatus.SUCCESS) {
-      throw new WingsException("Failed to fetch Status for this project");
+      throw new WingsException("Failed to fetch Status for this project", WingsException.USER);
     }
     return jiraExecutionData.getStatuses();
   }
@@ -224,7 +224,7 @@ public class JiraHelperService {
 
     JiraExecutionData jiraExecutionData = runTask(accountId, appId, connectorId, jiraTaskParameters);
     if (jiraExecutionData.getExecutionStatus() != ExecutionStatus.SUCCESS) {
-      throw new WingsException("Failed to fetch Projects and Issue Metadata");
+      throw new WingsException("Failed to fetch Issue Metadata", WingsException.USER);
     }
     return jiraExecutionData.getCreateMetadata();
   }

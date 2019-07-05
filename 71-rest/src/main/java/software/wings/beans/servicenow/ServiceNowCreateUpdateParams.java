@@ -13,6 +13,7 @@ public class ServiceNowCreateUpdateParams {
   @Setter private Map<ServiceNowFields, String> fields;
   @Getter @Setter private String issueNumber;
   @Getter @Setter private String ticketId;
+  @Getter @Setter private boolean updateMultiple;
 
   public Map<ServiceNowFields, String> fetchFields() {
     return fields;

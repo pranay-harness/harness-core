@@ -51,7 +51,8 @@ public class ServiceNowServiceImpl implements ServiceNowService {
   public enum ServiceNowTicketType {
     INCIDENT("Incident"),
     PROBLEM("Problem"),
-    CHANGE_REQUEST("Change");
+    CHANGE_REQUEST("Change"),
+    CHANGE_TASK("Change Task");
     @Getter private String displayName;
     ServiceNowTicketType(String s) {
       displayName = s;

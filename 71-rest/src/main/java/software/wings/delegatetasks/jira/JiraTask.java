@@ -295,7 +295,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           updateStatus(issue, parameters.getStatus());
         }
 
-        logger.info("Successfully updates ticket : " + issueId);
+        logger.info("Successfully updated ticket : " + issueId);
         issueKeys.add(issue.getKey());
         issueUrls.add(getIssueUrl(parameters.getJiraConfig(), issue));
       } catch (JiraException j) {
