@@ -56,10 +56,8 @@ public class ScmSecretTest {
 
     int skip = (test.length() / 118) * 118;
     if (test.length() - skip != 0) {
-      logger.info(test.substring(skip, test.length()));
+      logger.info(test.substring(skip));
     }
-
-    logger.info(test.substring(skip, test.length()));
 
     logger.info(test);
     assertThat(scmSecret.decrypt(test)).isEqualTo(bytes);

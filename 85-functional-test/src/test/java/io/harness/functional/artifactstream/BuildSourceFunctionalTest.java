@@ -11,6 +11,7 @@ import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import io.harness.generator.SettingGenerator;
+import io.harness.generator.SettingGenerator.Settings;
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
 import io.restassured.http.ContentType;
@@ -269,8 +270,7 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
     GenericType<RestResponse<String>> artifactStreamType = new GenericType<RestResponse<String>>() {
 
     };
-    final SettingAttribute settingAttribute =
-        settingGenerator.ensurePredefined(seed, owners, SettingGenerator.Settings.HARNESS_EXPLORATION_GCS);
+    final SettingAttribute settingAttribute = settingGenerator.ensurePredefined(seed, owners, Settings.GCP_PLAYGROUND);
     RestResponse<String> restResponse = Setup.portal()
                                             .auth()
                                             .oauth2(bearerToken)

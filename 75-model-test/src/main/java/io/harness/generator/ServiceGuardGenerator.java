@@ -1,6 +1,6 @@
 package io.harness.generator;
 
-import static io.harness.generator.SettingGenerator.Settings.HARNESS_GCP_EXPLORATION;
+import static io.harness.generator.SettingGenerator.Settings.GCP_PLAYGROUND;
 import static io.harness.govern.Switch.unhandled;
 import static software.wings.sm.StateType.STACK_DRIVER;
 
@@ -55,7 +55,7 @@ public class ServiceGuardGenerator {
       owners.add(service);
     }
 
-    final SettingAttribute gcpCloudProvider = settingGenerator.ensurePredefined(seed, owners, HARNESS_GCP_EXPLORATION);
+    final SettingAttribute gcpCloudProvider = settingGenerator.ensurePredefined(seed, owners, GCP_PLAYGROUND);
 
     long currentTime = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
 
