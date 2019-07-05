@@ -252,6 +252,7 @@ public class MigrationList {
         .add(Pair.of(261, AuditRecordMigration.class))
         .add(Pair.of(262, ResourceLookupMigration.class))
         .add(Pair.of(263, SetRollbackFlagToWorkflows.class))
+        .add(Pair.of(264, BaseMigration.class))
         .build();
   }
 }

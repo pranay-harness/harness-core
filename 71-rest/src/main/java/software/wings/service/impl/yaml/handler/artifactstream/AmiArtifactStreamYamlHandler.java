@@ -24,7 +24,7 @@ public class AmiArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
     super.toYaml(yaml, bean);
     yaml.setPlatform(bean.getPlatform());
     yaml.setRegion(bean.getRegion());
-    yaml.setTags(getTagsYaml(bean.getTags()));
+    yaml.setAmiTags(getTagsYaml(bean.getTags()));
     return yaml;
   }
 
@@ -38,7 +38,7 @@ public class AmiArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
     Yaml yaml = changeContext.getYaml();
     bean.setRegion(yaml.getRegion());
     bean.setPlatform(yaml.getPlatform());
-    bean.setTags(getTags(yaml.getTags()));
+    bean.setTags(getTags(yaml.getAmiTags()));
   }
 
   @Override

@@ -21,7 +21,7 @@ public class CustomArtifactStreamYamlHandler
     if (bean.getTemplateUuid() == null) {
       yaml.setScripts(bean.getScripts());
     }
-    yaml.setTags(bean.getTags());
+    yaml.setDelegateTags(bean.getTags());
     return yaml;
   }
 
@@ -29,7 +29,7 @@ public class CustomArtifactStreamYamlHandler
     super.toBean(bean, changeContext, appId);
     Yaml yaml = changeContext.getYaml();
     bean.setScripts(yaml.getScripts());
-    bean.setTags(yaml.getTags());
+    bean.setTags(yaml.getDelegateTags());
   }
 
   @Override

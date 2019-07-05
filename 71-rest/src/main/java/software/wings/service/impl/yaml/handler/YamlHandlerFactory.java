@@ -518,7 +518,8 @@ public class YamlHandlerFactory {
         "EcsContainerTask", "KubernetesContainerTask", "ConfigFile", "SettingAttribute", "ServiceCommand",
         "ManifestFile", "ApplicationManifest", "CustomArtifactStream", "AppDynamicsCVServiceConfiguration",
         "CloudWatchCVServiceConfiguration", "NewRelicCVServiceConfiguration", "DatadogCVServiceConfiguration",
-        "PrometheusCVServiceConfiguration", "BugsnagCVConfiguration", "ElkCVConfiguration", "LogsCVConfiguration");
+        "PrometheusCVServiceConfiguration", "BugsnagCVConfiguration", "ElkCVConfiguration", "LogsCVConfiguration",
+        "AzureInfrastructureMapping");
   }
 
   private static List<String> obtainLeafEntitiesWithFeatureFlag() {
@@ -535,6 +536,7 @@ public class YamlHandlerFactory {
         "EcsContainerTask", "KubernetesContainerTask", "ConfigFile", "ServiceCommand", "ManifestFile",
         "ApplicationManifest", "CustomArtifactStream", "AppDynamicsCVServiceConfiguration",
         "CloudWatchCVServiceConfiguration", "NewRelicCVServiceConfiguration", "DatadogCVServiceConfiguration",
-        "PrometheusCVServiceConfiguration", "BugsnagCVConfiguration", "ElkCVConfiguration", "LogsCVConfiguration");
+        "PrometheusCVServiceConfiguration", "BugsnagCVConfiguration", "ElkCVConfiguration", "LogsCVConfiguration",
+        "AzureInfrastructureMapping");
   }
 }
