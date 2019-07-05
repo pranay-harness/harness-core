@@ -53,7 +53,7 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      logger.error("Failed to authenticate to servicenow");
+      logger.error("Failed to authenticate to servicenow. ");
       if (e instanceof SocketTimeoutException) {
         throw new WingsException(ErrorCode.INVALID_TICKETING_SERVER, USER, e)
             .addParam("message",
@@ -81,6 +81,10 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
         request =
             getRestClient(taskParameters)
                 .getChangeRequestStates(Credentials.basic(config.getUsername(), new String(config.getPassword())));
+        break;
+      case CHANGE_TASK:
+        request = getRestClient(taskParameters)
+                      .getChangeTaskStates(Credentials.basic(config.getUsername(), new String(config.getPassword())));
         break;
       default:
         throw new WingsException(SERVICENOW_ERROR, USER)
@@ -134,6 +138,10 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
         responseMap.put("risk", getRisk(taskParameters));
         responseMap.put("changeRequestType", getChangeRequestType(taskParameters));
         return responseMap;
+      case CHANGE_TASK:
+        responseMap.put("changeRequestNumber", new ArrayList<>());
+        responseMap.put("changeTaskType", getChangeTaskType(taskParameters));
+        return responseMap;
       default:
         throw new WingsException(SERVICENOW_ERROR, USER)
             .addParam("message", "Invalid ticket type : " + taskParameters.getTicketType());
@@ -155,6 +163,15 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
         getRestClient(taskParameters)
             .getChangeRequestTypes(Credentials.basic(config.getUsername(), new String(config.getPassword())));
     return handleGetCallForFields(request, "changeRequestType");
+  }
+
+  private List<ServiceNowMetaDTO> getChangeTaskType(ServiceNowTaskParameters taskParameters) {
+    ServiceNowConfig config = taskParameters.getServiceNowConfig();
+    Response<JsonNode> response;
+    Call<JsonNode> request =
+        getRestClient(taskParameters)
+            .getChangeTaskTypes(Credentials.basic(config.getUsername(), new String(config.getPassword())));
+    return handleGetCallForFields(request, "changeTaskType");
   }
 
   private List<ServiceNowMetaDTO> getPriority(ServiceNowTaskParameters taskParameters) {
@@ -205,7 +222,7 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
     } catch (WingsException we) {
       throw we;
     } catch (Exception e) {
-      String errorMsg = "Error in fetching " + field + " from serviceNow";
+      String errorMsg = "Error in fetching " + field + " from serviceNow. ";
       throw new WingsException(SERVICENOW_ERROR, USER, e).addParam("message", errorMsg + ExceptionUtils.getMessage(e));
     }
   }

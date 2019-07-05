@@ -27,6 +27,11 @@ public interface ServiceNowRestClient {
       @Path("ticket-id") String ticketId, @Query("sysparm_display_value") String displayValue,
       @Query("sysparm_fields") String returnFields, @Body Object jsonBody);
 
+  @GET("api/now/table/{ticket-type}")
+  Call<JsonNode> fetchChangeTasksFromCR(@Header("Authorization") String authorization,
+      @Path("ticket-type") String ticketType, @Query("sysparm_fields") String returnFields,
+      @Query("sysparm_query") String query);
+
   @GET(
       "/api/now/table/sys_choice?sysparm_query=elementSTARTSWITHstate%5EnameSTARTSWITHincident%5EinactiveSTARTSWITHfalse")
   Call<JsonNode>
@@ -59,9 +64,19 @@ public interface ServiceNowRestClient {
   getChangeRequestStates(@Header("Authorization") String authorization);
 
   @GET(
+      "/api/now/table/sys_choice?sysparm_query=elementSTARTSWITHstate%5EnameSTARTSWITHchange_task%5EinactiveSTARTSWITHfalse")
+  Call<JsonNode>
+  getChangeTaskStates(@Header("Authorization") String authorization);
+
+  @GET(
       "/api/now/table/sys_choice?sysparm_query=elementSTARTSWITHtype%5EnameSTARTSWITHchange_request%5EinactiveSTARTSWITHfalse")
   Call<JsonNode>
   getChangeRequestTypes(@Header("Authorization") String authorization);
+
+  @GET(
+      "/api/now/table/sys_choice?sysparm_query=elementSTARTSWITHchange_task_type%5EnameSTARTSWITHchange_task%5EinactiveSTARTSWITHfalse")
+  Call<JsonNode>
+  getChangeTaskTypes(@Header("Authorization") String authorization);
 
   @GET("/api/now/table/{ticketType}")
   Call<JsonNode> getIssue(@Header("Authorization") String authorization, @Path("ticketType") String ticketType,

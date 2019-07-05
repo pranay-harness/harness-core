@@ -106,6 +106,7 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
             .issueNumber(serviceNowCreateUpdateParams.getIssueNumber())
             .issueId(serviceNowCreateUpdateParams.getTicketId())
             .action(serviceNowCreateUpdateParams.getAction())
+            .updateMultiple(serviceNowCreateUpdateParams.isUpdateMultiple())
             .accountId(accountId)
             .fields(serviceNowCreateUpdateParams.fetchFields())
             .build();
