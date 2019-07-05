@@ -2,6 +2,7 @@ package software.wings.graphql.utils.nameservice;
 
 import com.google.inject.Inject;
 
+import io.harness.persistence.HQuery;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -76,7 +77,7 @@ public class NameServiceImpl implements NameService {
   private NameResult getAppNames(Set<String> ids) {
     NameResultBuilder nameResultBuilder = NameResult.builder();
     Map<String, String> names = new HashMap<>();
-    wingsPersistence.createQuery(Application.class)
+    wingsPersistence.createQuery(Application.class, HQuery.excludeAuthority)
         .project(ApplicationKeys.name, true)
         .field(ApplicationKeys.uuid)
         .in(ids)
@@ -88,7 +89,7 @@ public class NameServiceImpl implements NameService {
   private NameResult getServiceNames(Set<String> ids) {
     NameResultBuilder nameResultBuilder = NameResult.builder();
     Map<String, String> names = new HashMap<>();
-    wingsPersistence.createQuery(Service.class)
+    wingsPersistence.createQuery(Service.class, HQuery.excludeAuthority)
         .project(ServiceKeys.name, true)
         .field(ServiceKeys.uuid)
         .in(ids)
@@ -100,7 +101,7 @@ public class NameServiceImpl implements NameService {
   private NameResult getEnvironmentNames(Set<String> ids) {
     NameResultBuilder nameResultBuilder = NameResult.builder();
     Map<String, String> names = new HashMap<>();
-    wingsPersistence.createQuery(Environment.class)
+    wingsPersistence.createQuery(Environment.class, HQuery.excludeAuthority)
         .project(EnvironmentKeys.name, true)
         .field(EnvironmentKeys.uuid)
         .in(ids)
@@ -112,7 +113,7 @@ public class NameServiceImpl implements NameService {
   private NameResult getCloudProviderNames(Set<String> ids) {
     NameResultBuilder nameResultBuilder = NameResult.builder();
     Map<String, String> names = new HashMap<>();
-    wingsPersistence.createQuery(SettingAttribute.class)
+    wingsPersistence.createQuery(SettingAttribute.class, HQuery.excludeAuthority)
         .field(SettingAttributeKeys.category)
         .equal(SettingCategory.CLOUD_PROVIDER)
         .project(SettingAttributeKeys.name, true)
@@ -126,7 +127,7 @@ public class NameServiceImpl implements NameService {
   private NameResult getTriggerNames(Set<String> ids) {
     NameResultBuilder nameResultBuilder = NameResult.builder();
     Map<String, String> names = new HashMap<>();
-    wingsPersistence.createQuery(Trigger.class)
+    wingsPersistence.createQuery(Trigger.class, HQuery.excludeAuthority)
         .project(TriggerKeys.name, true)
         .field(TriggerKeys.uuid)
         .in(ids)
@@ -138,7 +139,7 @@ public class NameServiceImpl implements NameService {
   private NameResult getUserNames(Set<String> ids) {
     NameResultBuilder nameResultBuilder = NameResult.builder();
     Map<String, String> names = new HashMap<>();
-    wingsPersistence.createQuery(User.class)
+    wingsPersistence.createQuery(User.class, HQuery.excludeAuthority)
         .project(UserKeys.name, true)
         .field("_id")
         .in(ids)
@@ -150,7 +151,7 @@ public class NameServiceImpl implements NameService {
   private NameResult getWorkflowNames(Set<String> ids) {
     NameResultBuilder nameResultBuilder = NameResult.builder();
     Map<String, String> names = new HashMap<>();
-    wingsPersistence.createQuery(Workflow.class)
+    wingsPersistence.createQuery(Workflow.class, HQuery.excludeAuthority)
         .project(WorkflowKeys.name, true)
         .field(WorkflowKeys.uuid)
         .in(ids)
