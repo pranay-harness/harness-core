@@ -130,7 +130,7 @@ public class AuthenticationManager {
   }
 
   public LoginTypeResponse getLoginTypeResponseForOnPrem() {
-    if (!DeployMode.ONPREM.equals(mainConfiguration.getDeployMode())) {
+    if (mainConfiguration.getDeployMode() != null && !DeployMode.isOnPrem(mainConfiguration.getDeployMode().name())) {
       throw new InvalidRequestException("This API should only be called for on-prem deployments.");
     }
     List<Account> accounts = accountService.listAllAccounts();
