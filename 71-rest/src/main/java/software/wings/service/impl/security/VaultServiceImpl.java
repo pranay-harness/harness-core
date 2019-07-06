@@ -388,8 +388,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
           vaultConfig.getSecretId(), vaultConfig.getName());
     }
 
-    wingsPersistence.delete(SecretManagerConfig.class, vaultConfigId);
-    return wingsPersistence.delete(vaultConfig);
+    return wingsPersistence.delete(SecretManagerConfig.class, vaultConfigId);
   }
 
   @Override
