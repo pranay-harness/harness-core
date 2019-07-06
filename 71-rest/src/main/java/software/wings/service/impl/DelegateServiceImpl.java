@@ -371,6 +371,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                   .tags(delegate.getTags())
                                   .profileExecutedAt(delegate.getProfileExecutedAt())
                                   .profileError(delegate.isProfileError())
+                                  .sampleDelegate(delegate.isSampleDelegate())
                                   .connections(delegateConnections.stream()
                                                    .filter(delegateConnection
                                                        -> StringUtils.equals(
@@ -439,6 +440,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     setUnset(updateOperations, DelegateKeys.version, delegate.getVersion());
     setUnset(updateOperations, DelegateKeys.description, delegate.getDescription());
     setUnset(updateOperations, DelegateKeys.delegateProfileId, delegate.getDelegateProfileId());
+    setUnset(updateOperations, DelegateKeys.sampleDelegate, delegate.isSampleDelegate());
     return updateOperations;
   }
   @Override
