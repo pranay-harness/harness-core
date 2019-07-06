@@ -63,6 +63,7 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware {
   private String profileResult;
   private boolean profileError;
   private long profileExecutedAt;
+  private boolean sampleDelegate;
 
   @SchemaIgnore private List<String> keywords;
 

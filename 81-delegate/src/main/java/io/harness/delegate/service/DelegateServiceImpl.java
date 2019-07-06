@@ -322,6 +322,7 @@ public class DelegateServiceImpl implements DelegateService {
       }
 
       delegateType = System.getenv().get("DELEGATE_TYPE");
+      boolean isSample = "true".equals(System.getenv().get("SAMPLE_DELEGATE"));
 
       logger.info("DELEGATE_TYPE is: " + delegateType);
       if (isNotBlank(delegateType)) {
@@ -339,7 +340,8 @@ public class DelegateServiceImpl implements DelegateService {
                                     .delegateProfileId(delegateProfile)
                                     .description(description)
                                     .version(getVersion())
-                                    .delegateType(delegateType);
+                                    .delegateType(delegateType)
+                                    .sampleDelegate(isSample);
 
       delegateId = registerDelegate(builder);
       logger.info("[New] Delegate registered in {} ms", clock.millis() - start);

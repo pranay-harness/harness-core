@@ -36,6 +36,7 @@ public class DelegateStatus {
     private List<String> tags;
     private long profileExecutedAt;
     private boolean profileError;
+    private boolean sampleDelegate;
     List<DelegateConnectionInner> connections;
 
     @JsonInclude(Include.NON_NULL)
