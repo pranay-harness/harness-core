@@ -872,7 +872,7 @@ public class SecretManagerImpl implements SecretManager {
       while (records.hasNext()) {
         Account account = records.next();
         try {
-          vaildateSecretManagerConfigs(account.getUuid());
+          validateSecretManagerConfigs(account.getUuid());
           vaultService.renewTokens(account.getUuid());
           vaultService.appRoleLogin(account.getUuid());
         } catch (Exception e) {
@@ -1085,6 +1085,8 @@ public class SecretManagerImpl implements SecretManager {
       boolean valueChanged = isNotEmpty(value) && !value.equals(SECRET_MASK);
       boolean pathChanged = !Objects.equals(path, savedData.getPath());
 
+      boolean needReencryption = false;
+
       StringBuilder builder = new StringBuilder();
       if (nameChanged) {
         builder.append("Changed name");
@@ -1098,14 +1100,22 @@ public class SecretManagerImpl implements SecretManager {
           String secretName = savedData.getEncryptionKey();
           switch (savedData.getEncryptionType()) {
             case VAULT:
+              needReencryption = true;
               VaultConfig vaultConfig = vaultService.getVaultConfig(accountId, savedData.getKmsId());
+              if (!valueChanged) {
+                // retrieve/decrypt the old secret value.
+                secretValue = vaultService.decrypt(savedData, accountId, vaultConfig);
+              }
               vaultService.deleteSecret(accountId, secretName, vaultConfig);
               break;
             case AWS_SECRETS_MANAGER:
+              needReencryption = true;
               AwsSecretsManagerConfig secretsManagerConfig =
                   secretsManagerService.getAwsSecretsManagerConfig(accountId, savedData.getKmsId());
-              // retrieve/decrypt the old secret value.
-              secretValue = secretsManagerService.decrypt(savedData, accountId, secretsManagerConfig);
+              if (!valueChanged) {
+                // retrieve/decrypt the old secret value.
+                secretValue = secretsManagerService.decrypt(savedData, accountId, secretsManagerConfig);
+              }
               secretsManagerService.deleteSecret(accountId, secretName, secretsManagerConfig);
               break;
             default:
@@ -1115,9 +1125,11 @@ public class SecretManagerImpl implements SecretManager {
         }
       }
       if (valueChanged) {
+        needReencryption = true;
         builder.append(builder.length() > 0 ? " & value" : " Changed value");
       }
       if (pathChanged) {
+        needReencryption = true;
         builder.append(builder.length() > 0 ? " & path" : " Changed path");
         savedData.setPath(path);
       }
@@ -1128,7 +1140,7 @@ public class SecretManagerImpl implements SecretManager {
 
       // Re-encrypt if secret value or path has changed. Update should not change the existing Encryption type and
       // secret manager if the secret is 'path' enabled!
-      if (nameChanged || valueChanged || pathChanged) {
+      if (needReencryption) {
         EncryptedData encryptedData = encrypt(getEncryptionType(accountId), accountId, SettingVariableTypes.SECRET_TEXT,
             secretValue, path, savedData, name, usageRestrictions);
         savedData.setEncryptionKey(encryptedData.getEncryptionKey());
@@ -1937,7 +1949,7 @@ public class SecretManagerImpl implements SecretManager {
     }
   }
 
-  private void vaildateSecretManagerConfigs(String accountId) {
+  private void validateSecretManagerConfigs(String accountId) {
     List<SecretManagerConfig> encryptionConfigs = secretManagerConfigService.listSecretManagers(accountId, false);
     for (EncryptionConfig encryptionConfig : encryptionConfigs) {
       KmsSetupAlert kmsSetupAlert =

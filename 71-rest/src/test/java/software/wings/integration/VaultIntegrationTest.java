@@ -40,6 +40,7 @@ import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.security.SecretManagerConfigService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -66,6 +67,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
   private static final String VAULT_BASE_PATH_3 = " /";
 
   @Inject private SecretManagementDelegateService secretManagementDelegateService;
+  @Inject private SecretManagerConfigService secretManagerConfigService;
 
   private String vaultToken;
   private VaultConfig vaultConfig;
@@ -198,6 +200,20 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Category(IntegrationTests.class)
+  public void testUpdateKmsSecretTextName_shouldNotAlterSecretValue() {
+    String kmsConfigId = createKmsConfig(kmsConfig);
+    KmsConfig savedKmsConfig = wingsPersistence.get(KmsConfig.class, kmsConfigId);
+    assertNotNull(savedKmsConfig);
+
+    try {
+      testUpdateSecretTextNameOnly(savedKmsConfig);
+    } finally {
+      deleteKmsConfig(kmsConfigId);
+    }
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
   public void testUpdateKmsEncryptedSecretFile_withNoContent_shouldNot_UpdateFileContent() throws IOException {
     String kmsConfigId = createKmsConfig(kmsConfig);
     KmsConfig savedKmsConfig = wingsPersistence.get(KmsConfig.class, kmsConfigId);
@@ -230,7 +246,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
       try {
         // Update will save the secret in VAULT as vault is the default now.
         updateSecretText(secretUuid, "FooBarSecret_Modified", "MySecretValue_Modified", null);
-        verifySecretValue(secretUuid, "MySecretValue_Modified", savedVaultConfig);
+        verifySecret(secretUuid, "FooBarSecret_Modified", "MySecretValue_Modified", savedVaultConfig);
         deleteSecretText(secretUuid);
       } finally {
         deleteVaultConfig(vaultConfigId);
@@ -260,7 +276,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
       try {
         // Update will save the secret in KMS as KMS is the default now.
         updateSecretText(secretUuid, "FooBarSecret_Modified", "MySecretValue_Modified", null);
-        verifySecretValue(secretUuid, "MySecretValue_Modified", kmsConfig);
+        verifySecret(secretUuid, "FooBarSecret_Modified", "MySecretValue_Modified", kmsConfig);
         deleteSecretText(secretUuid);
       } finally {
         deleteKmsConfig(kmsConfigId);
@@ -343,6 +359,20 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     assertEquals(VAULT_BASE_PATH, savedVaultConfig.getBasePath());
 
     deleteVaultConfig(vaultConfigId);
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public void testUpdateVaultSecretTextName_shouldNotAlterSecretValue() {
+    String vaultConfigId = createVaultConfig(vaultConfig);
+    VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
+    assertNotNull(savedVaultConfig);
+
+    try {
+      testUpdateSecretTextNameOnly(savedVaultConfig);
+    } finally {
+      deleteVaultConfig(vaultConfigId);
+    }
   }
 
   @Test
@@ -456,7 +486,21 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     try {
       secretUuid = createSecretText("FooBarSecret", "MySecretValue", null);
       updateSecretText(secretUuid, "FooBarSecret_Modified", "MySecretValue_Modified", null);
-      verifySecretValue(secretUuid, "MySecretValue_Modified", kmsConfig);
+      verifySecret(secretUuid, "FooBarSecret_Modified", "MySecretValue_Modified", kmsConfig);
+    } finally {
+      // Clean up.
+      if (secretUuid != null) {
+        deleteSecretText(secretUuid);
+      }
+    }
+  }
+
+  private void testUpdateSecretTextNameOnly(SecretManagerConfig secretManagerConfig) {
+    String secretUuid = null;
+    try {
+      secretUuid = createSecretText("FooBarSecret", "MySecretValue", null);
+      updateSecretText(secretUuid, "FooBarSecret_Modified", SecretString.SECRET_MASK, null);
+      verifySecret(secretUuid, "FooBarSecret_Modified", "MySecretValue", secretManagerConfig);
     } finally {
       // Clean up.
       if (secretUuid != null) {
@@ -472,7 +516,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
       // Old encrypted data referred to an old path in Vault.
       EncryptedData oldEncryptedData = wingsPersistence.get(EncryptedData.class, secretUuid);
       updateSecretText(secretUuid, "FooBarSecret_Modified", "MySecretValue_Modified", null);
-      verifySecretValue(secretUuid, "MySecretValue_Modified", savedVaultConfig);
+      verifySecret(secretUuid, "FooBarSecret_Modified", "MySecretValue_Modified", savedVaultConfig);
 
       try {
         secretManagementDelegateService.decrypt(oldEncryptedData, savedVaultConfig);
@@ -630,11 +674,11 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     try {
       // This will create one secret at path 'harness/SECRET_TEXT/FooSecret".
       secretUuid1 = createSecretText(secretName, secretValue, null);
-      verifySecretValue(secretUuid1, secretValue, savedVaultConfig);
+      verifySecret(secretUuid1, secretName, secretValue, savedVaultConfig);
 
       // Second secret will refer the first secret by absolute path of format "/foo/bar/FooSecret#value'.
       secretUuid2 = createSecretText(secretName2, null, absoluteSecretPath);
-      verifySecretValue(secretUuid2, secretValue, savedVaultConfig);
+      verifySecret(secretUuid2, secretName, secretValue, savedVaultConfig);
       verifyVaultChangeLog(secretUuid2);
 
     } finally {
@@ -793,7 +837,7 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse<Boolean>>() {});
     // Verify the vault config was deleted successfully
     assertEquals(0, deleteRestResponse.getResponseMessages().size());
-    assertTrue(Boolean.valueOf(deleteRestResponse.getResource()));
+    assertTrue(deleteRestResponse.getResource());
     assertNull(wingsPersistence.get(VaultConfig.class, vaultConfigId));
   }
 
@@ -804,25 +848,27 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<Boolean>>() {});
     // Verify the vault config was deleted successfully
     assertEquals(0, deleteRestResponse.getResponseMessages().size());
-    assertTrue(Boolean.valueOf(deleteRestResponse.getResource()));
+    assertTrue(deleteRestResponse.getResource());
     assertNull(wingsPersistence.get(KmsConfig.class, kmsConfigId));
   }
 
-  private void verifySecretValue(String secretUuid, String expectedValue, VaultConfig vaultConfig) {
-    vaultConfig.setAuthToken(this.vaultToken);
+  private void verifySecret(
+      String secretUuid, String expectedName, String expectedValue, SecretManagerConfig secretManagerConfig) {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, secretUuid);
     assertNotNull(encryptedData);
 
-    char[] decrypted = secretManagementDelegateService.decrypt(encryptedData, vaultConfig);
-    assertTrue(isNotEmpty(decrypted));
-    assertEquals(expectedValue, new String(decrypted));
-  }
+    assertEquals(expectedName, encryptedData.getName());
 
-  private void verifySecretValue(String secretUuid, String expectedValue, KmsConfig kmsConfig) {
-    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, secretUuid);
-    assertNotNull(encryptedData);
-
-    char[] decrypted = secretManagementDelegateService.decrypt(encryptedData, kmsConfig);
+    final char[] decrypted;
+    if (secretManagerConfig instanceof VaultConfig) {
+      VaultConfig vaultConfig = (VaultConfig) secretManagerConfig;
+      vaultConfig.setAuthToken(this.vaultToken);
+      decrypted = secretManagementDelegateService.decrypt(encryptedData, vaultConfig);
+    } else {
+      KmsConfig kmsConfig =
+          (KmsConfig) secretManagerConfigService.getSecretManager(accountId, secretManagerConfig.getUuid());
+      decrypted = secretManagementDelegateService.decrypt(encryptedData, kmsConfig);
+    }
     assertTrue(isNotEmpty(decrypted));
     assertEquals(expectedValue, new String(decrypted));
   }
