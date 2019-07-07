@@ -1,6 +1,7 @@
 package software.wings.sm.states.provision;
 
 import static io.harness.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.context.ContextElementType.TERRAFORM_INHERIT_PLAN;
@@ -237,15 +238,50 @@ public abstract class TerraformProvisionState extends State {
     TerraformExecutionData terraformExecutionData = (TerraformExecutionData) responseEntry.getValue();
     terraformExecutionData.setActivityId(activityId);
 
-    if (terraformExecutionData.getExecutionStatus() == ExecutionStatus.FAILED) {
+    TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
+    saveUserInputs(context, terraformExecutionData, terraformProvisioner);
+    if (terraformExecutionData.getExecutionStatus() == FAILED) {
       return anExecutionResponse()
           .withStateExecutionData(terraformExecutionData)
           .withExecutionStatus(terraformExecutionData.getExecutionStatus())
           .withErrorMessage(terraformExecutionData.getErrorMessage())
           .build();
-    }
+    } else {
+      TerraformOutputInfoElement outputInfoElement = context.getContextElement(ContextElementType.TERRAFORM_PROVISION);
+      if (outputInfoElement == null) {
+        outputInfoElement = TerraformOutputInfoElement.builder().build();
+      }
+      if (terraformExecutionData.getOutputs() != null) {
+        Map<String, Object> outputs = parseOutputs(terraformExecutionData.getOutputs());
+        Map<String, Object> contextOutputs = new HashMap<>();
+        for (Map.Entry<String, Object> entry : outputs.entrySet()) {
+          if (!(entry.getValue() instanceof List || entry.getValue() instanceof Map)) {
+            contextOutputs.put(entry.getKey(), entry.getValue());
+          }
+        }
+        outputInfoElement.addOutPuts(contextOutputs);
 
-    TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
+        ManagerExecutionLogCallback executionLogCallback = infrastructureProvisionerService.getManagerExecutionCallback(
+            terraformProvisioner.getAppId(), terraformExecutionData.getActivityId(), commandUnit().name());
+        infrastructureProvisionerService.regenerateInfrastructureMappings(
+            provisionerId, context, outputs, Optional.of(executionLogCallback), Optional.empty());
+      }
+
+      updateActivityStatus(activityId, context.getAppId(), terraformExecutionData.getExecutionStatus());
+
+      // subsequent execution
+      return anExecutionResponse()
+          .withStateExecutionData(terraformExecutionData)
+          .addContextElement(outputInfoElement)
+          .addNotifyElement(outputInfoElement)
+          .withExecutionStatus(terraformExecutionData.getExecutionStatus())
+          .withErrorMessage(terraformExecutionData.getErrorMessage())
+          .build();
+    }
+  }
+
+  private void saveUserInputs(ExecutionContext context, TerraformExecutionData terraformExecutionData,
+      TerraformInfrastructureProvisioner terraformProvisioner) {
     String workspace = terraformExecutionData.getWorkspace();
     Map<String, Object> others = Maps.newHashMap();
     if (!(this instanceof DestroyTerraformProvisionState)) {
@@ -313,38 +349,6 @@ public abstract class TerraformProvisionState extends State {
     if (isNotEmpty(workspace)) {
       updateProvisionerWorkspaces(terraformProvisioner, workspace);
     }
-    TerraformOutputInfoElement outputInfoElement = context.getContextElement(ContextElementType.TERRAFORM_PROVISION);
-    if (outputInfoElement == null) {
-      outputInfoElement = TerraformOutputInfoElement.builder().build();
-    }
-    if (terraformExecutionData.getExecutionStatus() == SUCCESS) {
-      if (terraformExecutionData.getOutputs() != null) {
-        Map<String, Object> outputs = parseOutputs(terraformExecutionData.getOutputs());
-        Map<String, Object> contextOutputs = new HashMap<>();
-        for (Map.Entry<String, Object> entry : outputs.entrySet()) {
-          if (!(entry.getValue() instanceof List || entry.getValue() instanceof Map)) {
-            contextOutputs.put(entry.getKey(), entry.getValue());
-          }
-        }
-        outputInfoElement.addOutPuts(contextOutputs);
-
-        ManagerExecutionLogCallback executionLogCallback = infrastructureProvisionerService.getManagerExecutionCallback(
-            terraformProvisioner.getAppId(), terraformExecutionData.getActivityId(), commandUnit().name());
-        infrastructureProvisionerService.regenerateInfrastructureMappings(
-            provisionerId, context, outputs, Optional.of(executionLogCallback), Optional.empty());
-      }
-    }
-
-    updateActivityStatus(activityId, context.getAppId(), terraformExecutionData.getExecutionStatus());
-
-    // subsequent execution
-    return anExecutionResponse()
-        .withStateExecutionData(terraformExecutionData)
-        .addContextElement(outputInfoElement)
-        .addNotifyElement(outputInfoElement)
-        .withExecutionStatus(terraformExecutionData.getExecutionStatus())
-        .withErrorMessage(terraformExecutionData.getErrorMessage())
-        .build();
   }
 
   protected void updateProvisionerWorkspaces(
@@ -688,20 +692,20 @@ public abstract class TerraformProvisionState extends State {
 
   protected void saveTerraformConfig(
       ExecutionContext context, TerraformInfrastructureProvisioner provisioner, TerraformExecutionData executionData) {
-    TerraformConfig terraformfConfig = TerraformConfig.builder()
-                                           .entityId(generateEntityId(context, executionData.getWorkspace()))
-                                           .sourceRepoSettingId(provisioner.getSourceRepoSettingId())
-                                           .sourceRepoReference(executionData.getSourceRepoReference())
-                                           .variables(executionData.getVariables())
-                                           .delegateTag(executionData.getDelegateTag())
-                                           .backendConfigs(executionData.getBackendConfigs())
-                                           .tfVarFiles(executionData.getTfVarFiles())
-                                           .workflowExecutionId(context.getWorkflowExecutionId())
-                                           .targets(executionData.getTargets())
-                                           .command(executionData.getCommandExecuted())
-                                           .appId(context.getAppId())
-                                           .build();
-    wingsPersistence.save(terraformfConfig);
+    TerraformConfig terraformConfig = TerraformConfig.builder()
+                                          .entityId(generateEntityId(context, executionData.getWorkspace()))
+                                          .sourceRepoSettingId(provisioner.getSourceRepoSettingId())
+                                          .sourceRepoReference(executionData.getSourceRepoReference())
+                                          .variables(executionData.getVariables())
+                                          .delegateTag(executionData.getDelegateTag())
+                                          .backendConfigs(executionData.getBackendConfigs())
+                                          .tfVarFiles(executionData.getTfVarFiles())
+                                          .workflowExecutionId(context.getWorkflowExecutionId())
+                                          .targets(executionData.getTargets())
+                                          .command(executionData.getCommandExecuted())
+                                          .appId(context.getAppId())
+                                          .build();
+    wingsPersistence.save(terraformConfig);
   }
 
   protected String generateEntityId(ExecutionContext context, String workspace) {
