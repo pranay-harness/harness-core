@@ -31,6 +31,8 @@ import org.sonatype.nexus.rest.model.RepositoryListResourceResponse;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.NexusConfig;
 import software.wings.common.AlphanumComparator;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
@@ -41,6 +43,7 @@ import software.wings.helpers.ext.nexus.model.IndexBrowserTreeViewResponse;
 import software.wings.helpers.ext.nexus.model.Project;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.RepositoryType;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -72,8 +75,8 @@ public class NexusTwoServiceImpl {
   @Inject private ExecutorService executorService;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
-  public Map<String, String> getRepositories(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails)
-      throws IOException {
+  public Map<String, String> getRepositories(
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repositoryType) throws IOException {
     logger.info("Retrieving repositories");
     final Call<RepositoryListResourceResponse> request;
     if (nexusConfig.hasCredentials()) {
@@ -87,6 +90,19 @@ public class NexusTwoServiceImpl {
     final Response<RepositoryListResourceResponse> response = request.execute();
     if (isSuccessful(response)) {
       logger.info("Retrieving repositories success");
+      if (RepositoryType.maven.name().equals(repositoryType)) {
+        return response.body()
+            .getData()
+            .stream()
+            .filter(repositoryListResource -> "maven2".equals(repositoryListResource.getFormat()))
+            .collect(toMap(RepositoryListResource::getId, RepositoryListResource::getName));
+      } else if (RepositoryType.nuget.name().equals(repositoryType)) {
+        return response.body()
+            .getData()
+            .stream()
+            .filter(repositoryListResource -> "nuget".equals(repositoryListResource.getFormat()))
+            .collect(toMap(RepositoryListResource::getId, RepositoryListResource::getName));
+      }
       return response.body().getData().stream().collect(
           toMap(RepositoryListResource::getId, RepositoryListResource::getName));
     }
@@ -94,8 +110,37 @@ public class NexusTwoServiceImpl {
     return emptyMap();
   }
 
+  public List<String> collectPackageNames(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
+      String repoId, List<String> packageNames) throws IOException {
+    Call<ContentListResourceResponse> request;
+    if (nexusConfig.hasCredentials()) {
+      request = getRestClient(nexusConfig, encryptionDetails)
+                    .getRepositoryContents(
+                        Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repoId);
+    } else {
+      request = getRestClient(nexusConfig, encryptionDetails).getRepositoryContents(repoId);
+    }
+
+    final Response<ContentListResourceResponse> response = request.execute();
+    if (isSuccessful(response)) {
+      response.body().getData().forEach(content -> packageNames.add(content.getText()));
+    }
+    return packageNames;
+  }
+
   public List<String> collectGroupIds(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoId, List<String> groupIds) throws ExecutionException, InterruptedException {
+      String repoId, List<String> groupIds, String repositoryType)
+      throws ExecutionException, InterruptedException, IOException {
+    if (repositoryType == null || repositoryType.equals(RepositoryType.maven.name())) {
+      return fetchMavenGroupIds(nexusConfig, encryptionDetails, repoId, groupIds);
+    } else if (repositoryType.equals(RepositoryType.nuget.name())) {
+      return collectPackageNames(nexusConfig, encryptionDetails, repoId, groupIds);
+    }
+    return groupIds;
+  }
+
+  private List<String> fetchMavenGroupIds(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
+      String repoId, List<String> groupIds) throws InterruptedException, ExecutionException {
     NexusRestClient nexusRestClient = getRestClient(nexusConfig, encryptionDetails);
     Queue<Future> futures = new ConcurrentLinkedQueue<>();
     Stack<FolderPath> paths = new Stack<>();
@@ -204,14 +249,65 @@ public class NexusTwoServiceImpl {
     logger.info("Versions come from nexus server {}", versions);
     versions = versions.stream().sorted(new AlphanumComparator()).collect(toList());
     logger.info("After sorting alphanumerically versions {}", versions);
+
     return versions.stream()
-        .map(version
-            -> aBuildDetails()
-                   .withNumber(version)
-                   .withRevision(version)
-                   .withBuildUrl(versionToArtifactUrls.get(version))
-                   .withUiDisplayName("Version# " + version)
-                   .build())
+        .map(version -> {
+          Map<String, String> metadata = new HashMap<>();
+          metadata.put(ArtifactMetadataKeys.repositoryName, repoId);
+          metadata.put(ArtifactMetadataKeys.nexusGroupId, groupId);
+          metadata.put(ArtifactMetadataKeys.nexusArtifactId, artifactName);
+          metadata.put(ArtifactMetadataKeys.version, version);
+          return aBuildDetails()
+              .withNumber(version)
+              .withRevision(version)
+              .withBuildUrl(versionToArtifactUrls.get(version))
+              .withMetadata(metadata)
+              .withUiDisplayName("Version# " + version)
+              .build();
+        })
+        .collect(toList());
+  }
+
+  public List<BuildDetails> getVersions(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
+      String repositoryId, String packageName) throws IOException {
+    logger.info("Retrieving versions for repositoryId {} for packageName {}", repositoryId, packageName);
+    Call<ContentListResourceResponse> request;
+    if (nexusConfig.hasCredentials()) {
+      request = getRestClient(nexusConfig, encryptionDetails)
+                    .getRepositoryContents(
+                        Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())),
+                        repositoryId, packageName);
+    } else {
+      request = getRestClient(nexusConfig, encryptionDetails)
+                    .getRepositoryContentsWithoutCredentials(repositoryId, packageName);
+    }
+    List<String> versions = new ArrayList<>();
+    final Response<ContentListResourceResponse> response = request.execute();
+    Map<String, String> versionToArtifactUrls = new HashMap<>();
+    if (isSuccessful(response)) {
+      response.body().getData().forEach(content -> {
+        versions.add(content.getText());
+        versionToArtifactUrls.put(content.getText(), content.getResourceURI());
+      });
+    }
+    logger.info("Versions oreder come from nexus server {}", versions);
+    List<String> sortedVersions = versions.stream().sorted(new AlphanumComparator()).collect(toList());
+    logger.info("After sorting alphanumerically versions {}", versions);
+
+    return sortedVersions.stream()
+        .map(version -> {
+          Map<String, String> metadata = new HashMap<>();
+          metadata.put(ArtifactMetadataKeys.repositoryName, repositoryId);
+          metadata.put(ArtifactMetadataKeys.nexusPackageName, packageName);
+          metadata.put(ArtifactMetadataKeys.version, version);
+          return aBuildDetails()
+              .withNumber(version)
+              .withRevision(version)
+              .withBuildUrl(versionToArtifactUrls.get(version))
+              .withMetadata(metadata)
+              .withUiDisplayName("Version# " + version)
+              .build();
+        })
         .collect(toList());
   }
 
@@ -240,22 +336,80 @@ public class NexusTwoServiceImpl {
   }
 
   public Pair<String, InputStream> downloadArtifact(NexusConfig nexusConfig,
-      List<EncryptedDataDetail> encryptionDetails, String repoType, String groupId, String artifactName, String version,
-      String delegateId, String taskId, String accountId, ListNotifyResponseData notifyResponseData)
-      throws IOException {
-    logger.info("Downloading artifact of repo {} group {} artifact {} and version {}", repoType, groupId, artifactName,
-        version);
-    final String relativePath = getGroupId(groupId) + artifactName + "/" + version + "/";
-    final String url = getIndexContentPathUrl(nexusConfig, repoType, relativePath);
-    logger.info("Url {}", url);
-    final Response<IndexBrowserTreeViewResponse> response =
-        getIndexBrowserTreeViewResponseResponse(getRestClient(nexusConfig, encryptionDetails), nexusConfig, url);
-    if (isSuccessful(response)) {
-      final List<IndexBrowserTreeNode> treeNodes = response.body().getData().getChildren();
-      return getUrlInputStream(
-          nexusConfig, encryptionDetails, treeNodes, delegateId, taskId, accountId, notifyResponseData);
+      List<EncryptedDataDetail> encryptionDetails, ArtifactStreamAttributes artifactStreamAttributes,
+      Map<String, String> artifactMetadata, String delegateId, String taskId, String accountId,
+      ListNotifyResponseData notifyResponseData) throws IOException {
+    final String repositoryName = artifactStreamAttributes.getRepositoryName();
+    final String repositoryType = artifactStreamAttributes.getRepositoryType();
+    final String version = artifactMetadata.get(ArtifactMetadataKeys.buildNo);
+    if (repositoryType == null || repositoryType.equals(RepositoryType.maven.name())) {
+      logger.info("Downloading artifact of repo {} group {} artifact {} and version {}", repositoryName,
+          artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName(), version);
+      final String url = getIndexContentPathUrl(nexusConfig, repositoryName,
+          getGroupId(artifactStreamAttributes.getGroupId()) + artifactStreamAttributes.getArtifactName() + "/" + version
+              + "/");
+      logger.info("Index Content Url {}", url);
+      final Response<IndexBrowserTreeViewResponse> response =
+          getIndexBrowserTreeViewResponseResponse(getRestClient(nexusConfig, encryptionDetails), nexusConfig, url);
+      if (isSuccessful(response)) {
+        return getUrlInputStream(nexusConfig, encryptionDetails, response.body().getData().getChildren(), delegateId,
+            taskId, accountId, notifyResponseData);
+      }
+    } else if (repositoryType.equals(RepositoryType.nuget.name())) {
+      logger.info("Retrieving artifacts of  Repository {}, Package {} of Version {}", repositoryName,
+          artifactStreamAttributes.getNexusPackageName(), version);
+      Call<ContentListResourceResponse> request;
+      if (nexusConfig.hasCredentials()) {
+        request = getRestClient(nexusConfig, encryptionDetails)
+                      .getRepositoryContents(
+                          Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())),
+                          repositoryName, artifactStreamAttributes.getNexusPackageName() + "/" + version);
+      } else {
+        request = getRestClient(nexusConfig, encryptionDetails)
+                      .getRepositoryContentsWithoutCredentials(
+                          repositoryName, artifactStreamAttributes.getNexusPackageName() + "/" + version);
+      }
+      final Response<ContentListResourceResponse> response = request.execute();
+      if (isSuccessful(response)) {
+        response.body().getData().forEach(content -> {
+          final String artifactName = content.getText();
+          if (artifactName.endsWith("pom") || artifactName.endsWith("md5") || artifactName.endsWith("sha1")) {
+            return;
+          }
+          final String artifactUrl = content.getResourceURI();
+          logger.info("Artifact Download Url {}", artifactUrl);
+          downloadArtifactByUrl(nexusConfig, encryptionDetails, delegateId, taskId, accountId, notifyResponseData,
+              artifactName, artifactUrl);
+        });
+      }
     }
     return null;
+  }
+
+  private void downloadArtifactByUrl(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
+      String delegateId, String taskId, String accountId, ListNotifyResponseData notifyResponseData,
+      String artifactName, String artifactUrl) {
+    try {
+      if (nexusConfig.hasCredentials()) {
+        encryptionService.decrypt(nexusConfig, encryptionDetails);
+        Authenticator.setDefault(new MyAuthenticator(nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
+      }
+      URL url = new URL(artifactUrl);
+      URLConnection conn = url.openConnection();
+      if (conn instanceof HttpsURLConnection) {
+        HttpsURLConnection conn1 = (HttpsURLConnection) url.openConnection();
+        conn1.setHostnameVerifier((hostname, session) -> true);
+        conn1.setSSLSocketFactory(Http.getSslContext().getSocketFactory());
+        artifactCollectionTaskHelper.addDataToResponse(ImmutablePair.of(artifactName, conn1.getInputStream()),
+            artifactUrl, notifyResponseData, delegateId, taskId, accountId);
+      } else {
+        artifactCollectionTaskHelper.addDataToResponse(ImmutablePair.of(artifactName, conn.getInputStream()),
+            artifactUrl, notifyResponseData, delegateId, taskId, accountId);
+      }
+
+    } catch (IOException ex) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(ex), ex);
+    }
   }
 
   private Pair<String, InputStream> getUrlInputStream(NexusConfig nexusConfig,
@@ -270,30 +424,8 @@ public class NexusTwoServiceImpl {
               if (!artifact.getNodeName().endsWith("pom")) {
                 String artifactUrl = constructArtifactDownloadUrl(nexusConfig, artifact);
                 logger.info("Artifact Url:" + artifactUrl);
-                try {
-                  if (nexusConfig.hasCredentials()) {
-                    encryptionService.decrypt(nexusConfig, encryptionDetails);
-                    Authenticator.setDefault(
-                        new MyAuthenticator(nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
-                  }
-                  URL url = new URL(artifactUrl);
-                  URLConnection conn = url.openConnection();
-                  if (conn instanceof HttpsURLConnection) {
-                    HttpsURLConnection conn1 = (HttpsURLConnection) url.openConnection();
-                    conn1.setHostnameVerifier((hostname, session) -> true);
-                    conn1.setSSLSocketFactory(Http.getSslContext().getSocketFactory());
-                    artifactCollectionTaskHelper.addDataToResponse(
-                        ImmutablePair.of(artifact.getNodeName(), conn1.getInputStream()), artifactUrl, res, delegateId,
-                        taskId, accountId);
-                  } else {
-                    artifactCollectionTaskHelper.addDataToResponse(
-                        ImmutablePair.of(artifact.getNodeName(), conn.getInputStream()), artifactUrl, res, delegateId,
-                        taskId, accountId);
-                  }
-
-                } catch (IOException ex) {
-                  throw new InvalidRequestException(ExceptionUtils.getMessage(ex), ex);
-                }
+                downloadArtifactByUrl(nexusConfig, encryptionDetails, delegateId, taskId, accountId, res,
+                    artifact.getNodeName(), artifactUrl);
               }
             }
           }

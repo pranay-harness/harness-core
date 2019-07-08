@@ -42,6 +42,7 @@ public class ArtifactStreamAttributes {
   private String artifactoryDockerRepositoryServer;
   private String nexusDockerPort;
   private String nexusDockerRegistryUrl;
+  private String nexusPackageName;
 
   private String customScriptTimeout;
   private String accountId;

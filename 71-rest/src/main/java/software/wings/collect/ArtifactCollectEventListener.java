@@ -163,8 +163,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
                 TaskData.builder()
                     .taskType(TaskType.NEXUS_COLLECTION.name())
                     .parameters(new Object[] {nexusConfig, secretManager.getEncryptionDetails(nexusConfig, null, null),
-                        nexusArtifactStream.getJobname(), nexusArtifactStream.getGroupId(),
-                        nexusArtifactStream.getArtifactPaths(), artifact.getBuildNo()})
+                        nexusArtifactStream.fetchArtifactStreamAttributes(), artifact.getMetadata()})
                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                     .build())
             .build();

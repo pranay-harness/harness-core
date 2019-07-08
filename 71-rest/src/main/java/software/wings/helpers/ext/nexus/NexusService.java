@@ -47,18 +47,8 @@ public interface NexusService {
   List<String> getArtifactPaths(
       NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String name);
 
-  /**
-   * Download artifact pair
-   *
-   * @param nexusConfig
-   * @param repoType
-   * @param groupId
-   * @param artifactName
-   * @param version
-   * @return Input stream
-   */
   Pair<String, InputStream> downloadArtifacts(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoType, String groupId, String artifactName, String version, String delegateId, String taskId,
+      ArtifactStreamAttributes artifactStreamAttributes, Map<String, String> metadata, String delegateId, String taskId,
       String accountId, ListNotifyResponseData res);
 
   /***
@@ -67,7 +57,8 @@ public interface NexusService {
    * @param repoId
    * @return
    */
-  List<String> getGroupIdPaths(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId);
+  List<String> getGroupIdPaths(
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String repositoryType);
 
   /***
    *
@@ -88,6 +79,9 @@ public interface NexusService {
    */
   List<BuildDetails> getVersions(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
       String groupId, String artifactName);
+
+  List<BuildDetails> getVersions(
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String packageName);
 
   /**
    * Gets the latest version of the given artifact

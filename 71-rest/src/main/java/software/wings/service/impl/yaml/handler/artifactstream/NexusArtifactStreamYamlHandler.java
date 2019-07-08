@@ -27,6 +27,7 @@ public class NexusArtifactStreamYamlHandler
       yaml.setImageName(bean.getImageName());
       yaml.setDockerRegistryUrl(bean.getDockerRegistryUrl());
     }
+    yaml.setPackageName(bean.getPackageName());
     yaml.setRepositoryType(bean.getRepositoryType());
     if (!bean.getRepositoryType().equals(RepositoryType.docker.name())) {
       yaml.setMetadataOnly(bean.isMetadataOnly());
@@ -48,6 +49,7 @@ public class NexusArtifactStreamYamlHandler
     }
     bean.setJobname(yaml.getRepositoryName());
     bean.setRepositoryType(yaml.getRepositoryType());
+    bean.setPackageName(yaml.getPackageName());
     if (!yaml.getRepositoryType().equals(RepositoryType.docker.name())) {
       bean.setMetadataOnly(yaml.isMetadataOnly());
     } else {

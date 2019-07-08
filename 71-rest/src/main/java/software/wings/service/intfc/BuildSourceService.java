@@ -22,8 +22,8 @@ public interface BuildSourceService {
   /**
    * Gets jobs.
    *
-   * @param appId     the app id
-   * @param settingId the jenkins setting id
+   * @param appId         the app id
+   * @param settingId     the jenkins setting id
    * @param parentJobName the jenkins parent job name (if any)
    * @return the jobs
    */
@@ -34,8 +34,8 @@ public interface BuildSourceService {
   /**
    * Gets plans.
    *
-   * @param appId     the app id
-   * @param settingId the setting id
+   * @param appId              the app id
+   * @param settingId          the setting id
    * @param artifactStreamType artifact stream type
    * @return the plans
    */
@@ -76,11 +76,12 @@ public interface BuildSourceService {
   default List<String> getSmbPaths(String appId, String settingId) {
     throw new UnsupportedOperationException();
   }
+
   /**
    * Get Artifact paths by stream id.
    *
-   * @param appId     the app id
-   * @param settingId the setting id
+   * @param appId      the app id
+   * @param settingId  the setting id
    * @param streamType artifact stream type
    * @return the paths
    */
@@ -91,8 +92,8 @@ public interface BuildSourceService {
   /**
    * Gets plans.
    *
-   * @param appId     the app id
-   * @param settingId the setting id
+   * @param appId              the app id
+   * @param settingId          the setting id
    * @param artifactStreamType artifact stream type
    * @return the plans
    */
@@ -104,10 +105,10 @@ public interface BuildSourceService {
   /**
    * Gets artifact paths.
    *
-   * @param appId     the app id
-   * @param jobName   the job name
-   * @param settingId the setting id
-   * @param groupId   the group id
+   * @param appId              the app id
+   * @param jobName            the job name
+   * @param settingId          the setting id
+   * @param groupId            the group id
    * @param artifactStreamType artifact stream type
    * @return the artifact paths
    */
@@ -168,6 +169,11 @@ public interface BuildSourceService {
     throw new UnsupportedOperationException();
   }
 
+  default Set<String> fetchNexusPackageNames(@NotEmpty String appId, @NotEmpty String repositoryName,
+      @NotEmpty String repositoryType, @NotEmpty String settingId) {
+    throw new UnsupportedOperationException();
+  }
+
   /**
    * Gets group Id paths.
    *
@@ -195,6 +201,7 @@ public interface BuildSourceService {
 
   /**
    * Validate Artifact Stream
+   *
    * @param artifactStream
    * @return
    */
@@ -204,6 +211,7 @@ public interface BuildSourceService {
 
   /**
    * Get Job details
+   *
    * @param appId
    * @param settingId
    * @param jobName
@@ -238,7 +246,7 @@ public interface BuildSourceService {
   /**
    * Gets jobs.
    *
-   * @param settingId the jenkins setting id
+   * @param settingId     the jenkins setting id
    * @param parentJobName the jenkins parent job name (if any)
    * @return the jobs
    */
@@ -259,9 +267,9 @@ public interface BuildSourceService {
   /**
    * Gets artifact paths.
    *
-   * @param jobName   the job name
-   * @param settingId the setting id
-   * @param groupId   the group id
+   * @param jobName            the job name
+   * @param settingId          the setting id
+   * @param groupId            the group id
    * @param artifactStreamType artifact stream type
    * @return the artifact paths
    */
@@ -288,7 +296,7 @@ public interface BuildSourceService {
   /**
    * Gets plans.
    *
-   * @param settingId the setting id
+   * @param settingId          the setting id
    * @param artifactStreamType artifact stream type
    * @return the plans
    */
@@ -343,7 +351,7 @@ public interface BuildSourceService {
   /**
    * Get Artifact paths by stream id.
    *
-   * @param settingId the setting id
+   * @param settingId  the setting id
    * @param streamType artifact stream type
    * @return the paths
    */
