@@ -3410,7 +3410,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
       if (isNotBlank(phaseId)) {
         if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
-          workflowPhase = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhaseIdMap().get(phaseId);
+          workflowPhase = ((CanaryOrchestrationWorkflow) orchestrationWorkflow)
+                              .getWorkflowPhases()
+                              .stream()
+                              .findFirst()
+                              .filter(phase -> phase.getUuid().equals(phaseId))
+                              .orElseGet(null);
         }
         if (workflowPhase == null) {
           throw new InvalidRequestException(
