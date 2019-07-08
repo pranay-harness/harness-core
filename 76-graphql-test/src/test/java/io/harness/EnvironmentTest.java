@@ -24,7 +24,6 @@ import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
-import software.wings.graphql.datafetcher.environment.EnvironmentDataFetcher;
 import software.wings.graphql.scalar.GraphQLDateTimeScalar;
 import software.wings.graphql.schema.type.QLEnvironment.QLEnvironmentKeys;
 import software.wings.graphql.schema.type.QLEnvironmentConnection;
@@ -60,7 +59,7 @@ public class EnvironmentTest extends GraphQLTest {
   }
 }*/ environment.getUuid());
 
-    QLTestObject qlEnvironment = qlExecute(query);
+    QLTestObject qlEnvironment = qlExecute(query, environment.getAccountId());
     assertThat(qlEnvironment.get(QLEnvironmentKeys.id)).isEqualTo(environment.getUuid());
     assertThat(qlEnvironment.get(QLEnvironmentKeys.name)).isEqualTo(environment.getName());
     assertThat(qlEnvironment.get(QLEnvironmentKeys.description)).isEqualTo(environment.getDescription());
@@ -80,12 +79,11 @@ public class EnvironmentTest extends GraphQLTest {
   }
 }*/);
 
-    final ExecutionResult result = qlResult(query);
+    final ExecutionResult result = qlResult(query, "accountId");
     assertThat(result.getErrors().size()).isEqualTo(1);
 
     assertThat(result.getErrors().get(0).getMessage())
-        .isEqualTo("Exception while fetching data (/environment) : Invalid request: "
-            + EnvironmentDataFetcher.ENV_DOES_NOT_EXISTS_MSG);
+        .isEqualTo("Exception while fetching data (/environment) : Entity with id: blah is not found");
   }
 
   @Test
@@ -109,14 +107,15 @@ public class EnvironmentTest extends GraphQLTest {
     {
       String query = $GQL(/*
 {
-  environments(applicationId: "%s" limit: 2) {
+  environments(filters:[{type:Application,stringFilter:{operator:EQUALS,values:["%s"]}}]  limit: 2) {
     nodes {
       id
     }
   }
 }*/ application.getUuid());
 
-      QLEnvironmentConnection environmentConnection = qlExecute(QLEnvironmentConnection.class, query);
+      QLEnvironmentConnection environmentConnection =
+          qlExecute(QLEnvironmentConnection.class, query, application.getAccountId());
       assertThat(environmentConnection.getNodes().size()).isEqualTo(2);
 
       assertThat(environmentConnection.getNodes().get(0).getId()).isEqualTo(environment3.getUuid());
@@ -126,14 +125,15 @@ public class EnvironmentTest extends GraphQLTest {
     {
       String query = $GQL(/*
 {
-  environments(applicationId: "%s" limit: 2 offset: 1) {
+  environments(filters:[{type:Application,stringFilter:{operator:EQUALS,values:["%s"]}}]  limit: 2 offset: 1) {
     nodes {
       id
     }
   }
 }*/ application.getUuid());
 
-      QLEnvironmentConnection environmentConnection = qlExecute(QLEnvironmentConnection.class, query);
+      QLEnvironmentConnection environmentConnection =
+          qlExecute(QLEnvironmentConnection.class, query, application.getAccountId());
       assertThat(environmentConnection.getNodes().size()).isEqualTo(2);
 
       assertThat(environmentConnection.getNodes().get(0).getId()).isEqualTo(environment2.getUuid());

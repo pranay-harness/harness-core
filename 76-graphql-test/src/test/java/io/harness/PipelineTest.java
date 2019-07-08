@@ -4,7 +4,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.PipelineGenerator.Pipelines.BARRIER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.graphql.datafetcher.pipeline.PipelineDataFetcher.PIPELINE_DOES_NOT_EXIST_MSG;
 
 import com.google.inject.Inject;
 
@@ -56,7 +55,7 @@ public class PipelineTest extends GraphQLTest {
   }
 }*/ pipeline.getUuid());
 
-    QLTestObject qlPipeline = qlExecute(query);
+    QLTestObject qlPipeline = qlExecute(query, pipeline.getAccountId());
     assertThat(qlPipeline.get(QLPipelineKeys.id)).isEqualTo(pipeline.getUuid());
     assertThat(qlPipeline.get(QLPipelineKeys.name)).isEqualTo(pipeline.getName());
     assertThat(qlPipeline.get(QLPipelineKeys.description)).isEqualTo(pipeline.getDescription());
@@ -72,11 +71,11 @@ public class PipelineTest extends GraphQLTest {
   }
 }*/);
 
-    final ExecutionResult result = qlResult(query);
+    final ExecutionResult result = qlResult(query, "accountId");
     assertThat(result.getErrors().size()).isEqualTo(1);
 
     assertThat(result.getErrors().get(0).getMessage())
-        .isEqualTo("Exception while fetching data (/pipeline) : Invalid request: " + PIPELINE_DOES_NOT_EXIST_MSG);
+        .isEqualTo("Exception while fetching data (/pipeline) : Entity with id: blah is not found");
   }
 
   @Test
@@ -87,7 +86,7 @@ public class PipelineTest extends GraphQLTest {
 
     final Application application =
         applicationGenerator.ensureApplication(seed, owners, anApplication().name("Application Pipelines").build());
-
+    String accountId = application.getAccountId();
     final PipelineBuilder builder = Pipeline.builder().name("pipeline").appId(application.getUuid());
 
     final Pipeline pipeline1 = pipelineGenerator.ensurePipeline(seed, owners, builder.uuid(generateUuid()).build());
@@ -97,7 +96,7 @@ public class PipelineTest extends GraphQLTest {
     {
       String query = $GQL(/*
 {
-  pipelines(applicationId: "%s" limit: 2) {
+  pipelines(filters:[{type:Application,stringFilter:{operator:EQUALS,values:["%s"]}}] limit: 2) {
     nodes {
       id
       name
@@ -106,7 +105,7 @@ public class PipelineTest extends GraphQLTest {
   }
 }*/ application.getUuid());
 
-      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
+      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query, accountId);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(2);
 
       assertThat(pipelineConnection.getNodes().get(0).getId()).isEqualTo(pipeline3.getUuid());
@@ -116,7 +115,7 @@ public class PipelineTest extends GraphQLTest {
     {
       String query = $GQL(/*
 {
-  pipelines(applicationId: "%s" limit: 2 offset: 1) {
+  pipelines(filters:[{type:Application,stringFilter:{operator:EQUALS,values:["%s"]}}] limit: 2 offset: 1) {
     nodes {
       id
       name
@@ -125,7 +124,7 @@ public class PipelineTest extends GraphQLTest {
   }
 }*/ application.getUuid());
 
-      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
+      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query, accountId);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(2);
 
       assertThat(pipelineConnection.getNodes().get(0).getId()).isEqualTo(pipeline2.getUuid());
@@ -144,7 +143,7 @@ public class PipelineTest extends GraphQLTest {
   }
 }*/ application.getUuid());
 
-      final QLTestObject qlTestObject = qlExecute(query);
+      final QLTestObject qlTestObject = qlExecute(query, accountId);
       assertThat(qlTestObject.getMap().size()).isEqualTo(1);
     }
   }

@@ -3,7 +3,19 @@ extend type Query {
   cloudProvider(cloudProviderId: String!): CloudProvider @dataFetcher(name: cloudProvider)
 
   # Will remove it once authentication is available
-  cloudProviders(accountId: String!): CloudProviderConnection @dataFetcher(name: cloudProviderConnection)
+  cloudProviders: CloudProviderConnection @dataFetcher(name: cloudProviderConnection)
+}
+
+enum CloudProviderFilterType {
+  CloudProvider
+  Type
+  CreatedAt
+}
+
+input CloudProviderFilter {
+  type: CloudProviderFilterType
+  stringFilter: StringFilter
+  numberFilter: NumberFilter
 }
 
 interface CloudProvider {

@@ -6,8 +6,8 @@ import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.graphql.datafetcher.AbstractDataFetcher.NEGATIVE_LIMIT_ARG_MSG;
-import static software.wings.graphql.datafetcher.AbstractDataFetcher.NEGATIVE_OFFSET_ARG_MSG;
+import static software.wings.graphql.datafetcher.DataFetcherUtils.NEGATIVE_LIMIT_ARG_MSG;
+import static software.wings.graphql.datafetcher.DataFetcherUtils.NEGATIVE_OFFSET_ARG_MSG;
 
 import com.google.inject.Inject;
 
@@ -36,7 +36,7 @@ public class ConnectionTest extends GraphQLTest {
 
   private static final String pattern = $.GQL(/*
 {
-  pipelines(applicationId: "%s" limit: %d offset: %d) {
+  pipelines(filters:[{type:Application,stringFilter:{operator:EQUALS,values:["%s"]}}] limit: %d offset: %d) {
     nodes {
       id
     }
@@ -51,7 +51,7 @@ public class ConnectionTest extends GraphQLTest {
 
   private static final String patternNoHasMore = $.GQL(/*
 {
-  pipelines(applicationId: "%s" limit: %d offset: %d) {
+  pipelines(filters:[{type:Application,stringFilter:{operator:EQUALS,values:["%s"]}}] limit: %d offset: %d) {
     nodes {
       id
     }
@@ -71,7 +71,7 @@ public class ConnectionTest extends GraphQLTest {
 
     final Application application =
         applicationGenerator.ensureApplication(seed, owners, anApplication().name("Application Pipelines").build());
-
+    final String accountId = application.getAccountId();
     final PipelineBuilder builder = Pipeline.builder().name("pipeline").appId(application.getUuid());
 
     final Pipeline pipeline1 = pipelineGenerator.ensurePipeline(seed, owners, builder.uuid(generateUuid()).build());
@@ -81,7 +81,7 @@ public class ConnectionTest extends GraphQLTest {
     {
       String query = format(pattern, application.getUuid(), 2, 0);
 
-      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
+      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query, accountId);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(2);
 
       assertThat(pipelineConnection.getPageInfo().getLimit()).isEqualTo(2);
@@ -93,7 +93,7 @@ public class ConnectionTest extends GraphQLTest {
     {
       String query = format(pattern, application.getUuid(), 2, 1);
 
-      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
+      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query, accountId);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(2);
 
       assertThat(pipelineConnection.getPageInfo().getLimit()).isEqualTo(2);
@@ -104,7 +104,7 @@ public class ConnectionTest extends GraphQLTest {
     {
       String query = format(pattern, application.getUuid(), 5, 0);
 
-      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
+      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query, accountId);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(3);
 
       assertThat(pipelineConnection.getPageInfo().getLimit()).isEqualTo(5);
@@ -115,7 +115,7 @@ public class ConnectionTest extends GraphQLTest {
     {
       String query = format(pattern, application.getUuid(), 5, 4);
 
-      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
+      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query, accountId);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(0);
 
       assertThat(pipelineConnection.getPageInfo().getLimit()).isEqualTo(5);
@@ -126,7 +126,7 @@ public class ConnectionTest extends GraphQLTest {
     {
       String query = format(pattern, application.getUuid(), 0, 0);
 
-      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
+      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query, accountId);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(0);
 
       assertThat(pipelineConnection.getPageInfo().getLimit()).isEqualTo(0);
@@ -137,7 +137,7 @@ public class ConnectionTest extends GraphQLTest {
     {
       String query = format(pattern, application.getUuid(), 2, 0);
 
-      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
+      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query, accountId);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(2);
 
       assertThat(pipelineConnection.getPageInfo().getLimit()).isEqualTo(2);
@@ -147,7 +147,7 @@ public class ConnectionTest extends GraphQLTest {
     {
       String query = format(pattern, application.getUuid(), 5, 0);
 
-      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
+      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query, accountId);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(3);
 
       assertThat(pipelineConnection.getPageInfo().getLimit()).isEqualTo(5);
@@ -158,7 +158,7 @@ public class ConnectionTest extends GraphQLTest {
     {
       String query = format(patternNoHasMore, application.getUuid(), 5, 2);
 
-      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
+      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query, accountId);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(1);
 
       assertThat(pipelineConnection.getPageInfo().getLimit()).isEqualTo(5);
@@ -169,7 +169,7 @@ public class ConnectionTest extends GraphQLTest {
     {
       String query = format(patternNoHasMore, application.getUuid(), 5, 3);
 
-      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
+      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query, accountId);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(0);
 
       assertThat(pipelineConnection.getPageInfo().getLimit()).isEqualTo(5);
@@ -180,7 +180,7 @@ public class ConnectionTest extends GraphQLTest {
     {
       String query = format(patternNoHasMore, application.getUuid(), 5, 5);
 
-      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query);
+      QLPipelineConnection pipelineConnection = qlExecute(QLPipelineConnection.class, query, accountId);
       assertThat(pipelineConnection.getNodes().size()).isEqualTo(0);
 
       assertThat(pipelineConnection.getPageInfo().getLimit()).isEqualTo(5);
@@ -201,7 +201,7 @@ public class ConnectionTest extends GraphQLTest {
     {
       String query = format(patternNoHasMore, application.getUuid(), -5, 5);
 
-      final ExecutionResult result = qlResult(query);
+      final ExecutionResult result = qlResult(query, application.getAccountId());
       assertThat(result.getErrors().size()).isEqualTo(1);
 
       assertThat(result.getErrors().get(0).getMessage())
@@ -211,7 +211,7 @@ public class ConnectionTest extends GraphQLTest {
     {
       String query = format(patternNoHasMore, application.getUuid(), 5, -5);
 
-      final ExecutionResult result = qlResult(query);
+      final ExecutionResult result = qlResult(query, application.getAccountId());
       assertThat(result.getErrors().size()).isEqualTo(1);
 
       assertThat(result.getErrors().get(0).getMessage())

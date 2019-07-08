@@ -1,17 +1,5 @@
-enum ConnectorFilterType {
-  Connector
-  Type
-  CreatedAt
-}
-
 enum ConnectorAggregation {
   Type
-}
-
-input ConnectorFilter {
-  type: ConnectorFilterType
-  stringFilter: StringFilter
-  numberFilter: NumberFilter
 }
 
 extend type Query {

@@ -49,7 +49,7 @@ public class ConnectorTest extends GraphQLTest {
 
       String query = String.format(connectorQueryPattern, settingAttribute.getUuid());
 
-      QLTestObject qlJiraConnector = qlExecute(query);
+      QLTestObject qlJiraConnector = qlExecute(query, settingAttribute.getAccountId());
       assertThat(qlJiraConnector.get(QLJiraConnectorKeys.id)).isEqualTo(settingAttribute.getUuid());
       assertThat(qlJiraConnector.get(QLJiraConnectorKeys.name)).isEqualTo(settingAttribute.getName());
       assertThat(qlJiraConnector.get(QLJiraConnectorKeys.createdAt))
@@ -72,15 +72,15 @@ public class ConnectorTest extends GraphQLTest {
     {
       String query = $GQL(/*
 {
-  connectors(accountId: "%s") {
+  connectors {
     nodes {
       id
       name
     }
   }
-}*/ jira.getAccountId());
+}*/);
 
-      QLTestObject qlJiraConnector = qlExecute(query);
+      QLTestObject qlJiraConnector = qlExecute(query, jira.getAccountId());
       assertThat(qlJiraConnector.sub(QLConnectorsConnectionKeys.nodes).size()).isNotEqualTo(0);
     }
   }

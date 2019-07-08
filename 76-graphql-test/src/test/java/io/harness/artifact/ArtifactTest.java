@@ -42,7 +42,7 @@ public class ArtifactTest extends GraphQLTest {
     final Application application = applicationGenerator.ensureApplication(
         seed, owners, Application.Builder.anApplication().name("Artifact App").build());
     assertThat(application).isNotNull();
-
+    String accountId = application.getAccountId();
     owners.add(application);
     final ArtifactStream artifactStream =
         artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR);
@@ -66,7 +66,7 @@ public class ArtifactTest extends GraphQLTest {
   }
 }*/ artifact.getUuid());
 
-    QLTestObject qlArtifact = qlExecute(query);
+    QLTestObject qlArtifact = qlExecute(query, accountId);
     assertThat(qlArtifact.get(QLArtifactKeys.id)).isEqualTo(artifact.getUuid());
     assertThat(qlArtifact.get(QLArtifactKeys.buildNo)).isEqualTo(artifact.getBuildNo());
     assertThat(qlArtifact.get(QLArtifactKeys.collectedAt))

@@ -3,7 +3,6 @@ package io.harness;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.graphql.datafetcher.application.ApplicationDataFetcher.APP_DOES_NOT_EXIST_MSG;
 
 import com.google.inject.Inject;
 
@@ -21,7 +20,6 @@ import io.harness.testframework.graphql.QLTestObject;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.graphql.scalar.GraphQLDateTimeScalar;
 import software.wings.graphql.schema.type.QLApplication.QLApplicationKeys;
@@ -57,7 +55,7 @@ public class ApplicationTest extends GraphQLTest {
   }
 }*/ application.getUuid());
 
-    final QLTestObject qlTestObject = qlExecute(query);
+    final QLTestObject qlTestObject = qlExecute(query, application.getAccountId());
     assertThat(qlTestObject.get(QLApplicationKeys.id)).isEqualTo(application.getUuid());
     assertThat(qlTestObject.get(QLApplicationKeys.name)).isEqualTo(application.getName());
     assertThat(qlTestObject.get(QLApplicationKeys.description)).isEqualTo(application.getDescription());
@@ -79,11 +77,15 @@ public class ApplicationTest extends GraphQLTest {
   }
 }*/);
 
-    final ExecutionResult result = qlResult(query);
+    final Seed seed = new Seed(0);
+    final Owners owners = ownerManager.create();
+    owners.add(EmbeddedUser.builder().uuid(generateUuid()).build());
+    final Application application = applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST);
+    final ExecutionResult result = qlResult(query, application.getAccountId());
     assertThat(result.getErrors().size()).isEqualTo(1);
 
     assertThat(result.getErrors().get(0).getMessage())
-        .isEqualTo("Exception while fetching data (/application) : Invalid request: " + APP_DOES_NOT_EXIST_MSG);
+        .isEqualTo("Exception while fetching data (/application) : User not authorized.");
   }
 
   @Test
@@ -92,9 +94,9 @@ public class ApplicationTest extends GraphQLTest {
     final Seed seed = new Seed(0);
     final Owners owners = ownerManager.create();
 
-    final Account account = accountGenerator.getOrCreateAccount(generateUuid(), "testing", "graphql");
-    accountGenerator.ensureAccount(account);
-    owners.add(account);
+    // final Account account = accountGenerator.getOrCreateAccount(generateUuid(), "testing", "graphql");
+    /// accountGenerator.ensureAccount(account);
+    // owners.add(account);
 
     final Application application1 = applicationGenerator.ensureApplication(
         seed, owners, anApplication().name("Application - " + generateUuid()).build());
@@ -106,16 +108,17 @@ public class ApplicationTest extends GraphQLTest {
     {
       String query = $GQL(/*
 {
-  applications(accountId: "%s", limit: 2) {
+  applications(limit: 2) {
     nodes {
       id
       name
       description
     }
   }
-}*/ account.getUuid());
+}*/ application1.getAccountId());
 
-      QLApplicationConnection applicationConnection = qlExecute(QLApplicationConnection.class, query);
+      QLApplicationConnection applicationConnection =
+          qlExecute(QLApplicationConnection.class, query, application1.getAccountId());
       assertThat(applicationConnection.getNodes().size()).isEqualTo(2);
 
       assertThat(applicationConnection.getNodes().get(0).getId()).isEqualTo(application3.getUuid());
@@ -125,16 +128,17 @@ public class ApplicationTest extends GraphQLTest {
     {
       String query = $GQL(/*
 {
-  applications(accountId: "%s", limit: 2, offset: 1) {
+  applications(limit: 2, offset: 1) {
     nodes {
       id
       name
       description
     }
   }
-}*/ account.getUuid());
+}*/ application1.getAccountId());
 
-      QLApplicationConnection applicationConnection = qlExecute(QLApplicationConnection.class, query);
+      QLApplicationConnection applicationConnection =
+          qlExecute(QLApplicationConnection.class, query, application1.getAccountId());
       assertThat(applicationConnection.getNodes().size()).isEqualTo(2);
 
       assertThat(applicationConnection.getNodes().get(0).getId()).isEqualTo(application2.getUuid());

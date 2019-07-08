@@ -1,17 +1,6 @@
-enum EnvironmentFilterType {
-  Application
-  Environment
-  EnvironmentType
-}
-
 enum EnvironmentAggregation {
   Application
   EnvironmentType
-}
-
-input EnvironmentFilter {
-  type: EnvironmentFilterType
-  stringFilter: StringFilter
 }
 
 extend type Query {

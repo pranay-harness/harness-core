@@ -3,6 +3,7 @@ package software.wings.graphql.datafetcher;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import graphql.GraphQLContext;
@@ -17,25 +18,18 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.FieldEnd;
-import org.mongodb.morphia.query.Query;
 import software.wings.beans.instance.dashboard.EntitySummary;
 import software.wings.graphql.schema.type.aggregation.QLAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLAggregateOperation;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLDataPoint;
-import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
-import software.wings.graphql.schema.type.aggregation.QLNumberOperator;
 import software.wings.graphql.schema.type.aggregation.QLReference;
-import software.wings.graphql.schema.type.aggregation.QLStringFilter;
-import software.wings.graphql.schema.type.aggregation.QLStringOperator;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.utils.nameservice.NameResult;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.FlatEntitySummaryStats;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,6 +45,7 @@ public abstract class AbstractStatsDataFetcher<A, F, G, T, S> implements DataFet
   private static final String SORT_CRITERIA = "sortCriteria";
   private static final String GENERIC_EXCEPTION_MSG = "An error has occurred. Please contact the Harness support team.";
 
+  @Inject protected DataFetcherUtils utils;
   public static final int MAX_RETRY = 5;
 
   protected abstract QLData fetch(
@@ -72,8 +67,8 @@ public abstract class AbstractStatsDataFetcher<A, F, G, T, S> implements DataFet
       final List<G> groupBy = (List<G>) fetchObject(dataFetchingEnvironment, GROUP_BY, groupByClass);
       final T groupByTime = (T) fetchObject(dataFetchingEnvironment, GROUP_BY_TIME, groupByTimeClass);
       final List<S> sort = (List<S>) fetchObject(dataFetchingEnvironment, SORT_CRITERIA, sortClass);
-      result = fetch(AbstractDataFetcher.getAccountId(dataFetchingEnvironment), aggregateFunction, filters, groupBy,
-          groupByTime, sort);
+      result =
+          fetch(utils.getAccountId(dataFetchingEnvironment), aggregateFunction, filters, groupBy, groupByTime, sort);
 
     } catch (WingsException ex) {
       throw new WingsException(getCombinedErrorMessages(ex), ex, ex.getReportTargets());
@@ -121,108 +116,6 @@ public abstract class AbstractStatsDataFetcher<A, F, G, T, S> implements DataFet
     }
 
     return accountId;
-  }
-
-  protected void setStringFilter(FieldEnd<? extends Query<?>> field, QLStringFilter stringFilter) {
-    if (stringFilter == null) {
-      throw new WingsException("Filter is null");
-    }
-
-    QLStringOperator operator = stringFilter.getOperator();
-    if (operator == null) {
-      throw new WingsException("String Operator cannot be null");
-    }
-
-    String[] values = stringFilter.getValues();
-
-    if (isEmpty(values)) {
-      throw new WingsException("Values cannot be empty");
-    }
-
-    switch (operator) {
-      case IN:
-        field.in(Arrays.asList(values));
-        break;
-      case NOT_IN:
-        field.notIn(Arrays.asList(values));
-        break;
-      case EQUALS:
-        if (values.length > 1) {
-          throw new WingsException("Only one value needs to be inputted for operator EQUALS");
-        }
-        field.equal(values[0]);
-        break;
-      case NOT_EQUALS:
-        if (values.length > 1) {
-          throw new WingsException("Only one value needs to be inputted for operator NOT_EQUALS");
-        }
-        field.notEqual(values[0]);
-        break;
-
-      default:
-        throw new WingsException("Unknown String operator " + operator);
-    }
-  }
-
-  protected void setNumberFilter(FieldEnd<? extends Query<?>> field, QLNumberFilter numberFilter) {
-    if (numberFilter == null) {
-      throw new WingsException("Filter is null");
-    }
-
-    QLNumberOperator operator = numberFilter.getOperator();
-    if (operator == null) {
-      throw new WingsException("Number operator is null");
-    }
-
-    Number[] values = numberFilter.getValues();
-
-    if (isEmpty(values)) {
-      throw new WingsException("Values cannot be empty");
-    }
-
-    switch (operator) {
-      case EQUALS:
-      case NOT_EQUALS:
-      case LESS_THAN:
-      case LESS_THAN_OR_EQUALS:
-      case GREATER_THAN:
-      case GREATER_THAN_OR_EQUALS:
-        if (values.length > 1) {
-          throw new WingsException("Only one value is expected for operator " + operator);
-        }
-        break;
-      default:
-        break;
-    }
-
-    switch (operator) {
-      case EQUALS:
-        field.equal(values[0]);
-        break;
-      case IN:
-        field.in(Arrays.asList(values));
-        break;
-      case NOT_EQUALS:
-        field.notEqual(values[0]);
-        break;
-      case NOT_IN:
-        field.notIn(Arrays.asList(values));
-        break;
-      case LESS_THAN:
-        field.lessThan(values[0]);
-        break;
-      case LESS_THAN_OR_EQUALS:
-        field.lessThanOrEq(values[0]);
-        break;
-      case GREATER_THAN:
-        field.greaterThan(values[0]);
-        break;
-      case GREATER_THAN_OR_EQUALS:
-        field.greaterThanOrEq(values[0]);
-        break;
-      default:
-        throw new WingsException("Unknown Number operator " + operator);
-    }
   }
 
   protected String getMongoAggregateOperation(QLAggregateFunction aggregateFunction) {

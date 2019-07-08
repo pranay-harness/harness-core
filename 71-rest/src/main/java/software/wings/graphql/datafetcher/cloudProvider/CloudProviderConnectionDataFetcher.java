@@ -4,42 +4,40 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.AwsConfig;
-import software.wings.beans.AzureConfig;
-import software.wings.beans.GcpConfig;
-import software.wings.beans.KubernetesClusterConfig;
-import software.wings.beans.PcfConfig;
-import software.wings.beans.PhysicalDataCenterConfig;
+import org.mongodb.morphia.query.Query;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
-import software.wings.graphql.datafetcher.AbstractConnectionDataFetcher;
-import software.wings.graphql.schema.query.QLCloudProvidersQueryParameters;
+import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
+import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.graphql.schema.type.QLPageInfo;
 import software.wings.graphql.schema.type.QLPageInfo.QLPageInfoBuilder;
+import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
+import software.wings.graphql.schema.type.aggregation.cloudprovider.QLCloudProviderFilter;
+import software.wings.graphql.schema.type.aggregation.cloudprovider.QLCloudProviderFilterType;
 import software.wings.graphql.schema.type.cloudProvider.QLCloudProviderConnection;
 import software.wings.graphql.schema.type.cloudProvider.QLCloudProviderConnection.QLCloudProviderConnectionBuilder;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.SettingsService;
-import software.wings.settings.SettingValue;
 
 import java.util.List;
 
 @Slf4j
 public class CloudProviderConnectionDataFetcher
-    extends AbstractConnectionDataFetcher<QLCloudProviderConnection, QLCloudProvidersQueryParameters> {
+    extends AbstractConnectionV2DataFetcher<QLCloudProviderFilter, QLNoOpSortCriteria, QLCloudProviderConnection> {
   @Inject private SettingsService settingsService;
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
-  protected QLCloudProviderConnection fetchConnection(QLCloudProvidersQueryParameters parameters) {
-    final List<SettingAttribute> settingAttributes =
-        persistence.createAuthorizedQuery(SettingAttribute.class)
-            .filter(SettingAttributeKeys.accountId, parameters.getAccountId())
-            .filter(SettingAttributeKeys.category, SettingCategory.CLOUD_PROVIDER)
-            .asList();
+  protected QLCloudProviderConnection fetchConnection(List<QLCloudProviderFilter> filters,
+      QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
+    Query<SettingAttribute> query = populateFilters(wingsPersistence, filters, SettingAttribute.class)
+                                        .filter(SettingAttributeKeys.category, SettingCategory.CLOUD_PROVIDER);
+
+    final List<SettingAttribute> settingAttributes = query.asList();
 
     final List<SettingAttribute> filteredSettingAttributes =
         settingsService.getFilteredSettingAttributes(settingAttributes, null, null);
@@ -52,24 +50,27 @@ public class CloudProviderConnectionDataFetcher
       pageInfoBuilder.total(filteredSettingAttributes.size()).limit(filteredSettingAttributes.size());
 
       for (SettingAttribute settingAttribute : filteredSettingAttributes) {
-        SettingValue settingValue = settingAttribute.getValue();
-        if (settingValue instanceof PhysicalDataCenterConfig) {
-          qlCloudProviderConnectionBuilder.node(
-              CloudProviderController.preparePhysicalDataCenterConfig(settingAttribute));
-        } else if (settingValue instanceof AwsConfig) {
-          qlCloudProviderConnectionBuilder.node(CloudProviderController.prepareAwsConfig(settingAttribute));
-        } else if (settingValue instanceof GcpConfig) {
-          qlCloudProviderConnectionBuilder.node(CloudProviderController.prepareGcpConfig(settingAttribute));
-        } else if (settingValue instanceof AzureConfig) {
-          qlCloudProviderConnectionBuilder.node(CloudProviderController.prepareAzureConfig(settingAttribute));
-        } else if (settingValue instanceof KubernetesClusterConfig) {
-          qlCloudProviderConnectionBuilder.node(CloudProviderController.prepareKubernetesConfig(settingAttribute));
-        } else if (settingValue instanceof PcfConfig) {
-          qlCloudProviderConnectionBuilder.node(CloudProviderController.preparePcfConfig(settingAttribute));
-        }
+        qlCloudProviderConnectionBuilder.node(CloudProviderController
+                                                  .populateCloudProvider(settingAttribute,
+                                                      CloudProviderController.getCloudProviderBuilder(settingAttribute))
+                                                  .build());
       }
     }
 
     return qlCloudProviderConnectionBuilder.build();
+  }
+
+  protected String getFilterFieldName(String filterType) {
+    QLCloudProviderFilterType qlFilterType = QLCloudProviderFilterType.valueOf(filterType);
+    switch (qlFilterType) {
+      case Type:
+        return "value.type";
+      case CloudProvider:
+        return "_id";
+      case CreatedAt:
+        return "createdAt";
+      default:
+        throw new WingsException("Unknown filter type" + filterType);
+    }
   }
 }

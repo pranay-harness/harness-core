@@ -79,11 +79,11 @@ public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggrega
           FieldEnd<? extends Query<Instance>> field = query.field(columnName);
 
           if (stringFilter != null) {
-            setStringFilter(field, stringFilter);
+            utils.setStringFilter(field, stringFilter);
           }
 
           if (numberFilter != null) {
-            setNumberFilter(field, numberFilter);
+            utils.setNumberFilter(field, numberFilter);
           }
         });
       }
@@ -198,6 +198,16 @@ public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggrega
       default:
         throw new WingsException("Unknown aggregation type" + aggregation);
     }
+  }
+
+  @Override
+  protected String getFilterFieldName(String filterType) {
+    return null;
+  }
+
+  @Override
+  protected String getAggregationFieldName(String aggregation) {
+    return null;
   }
 
   @Override

@@ -14,7 +14,6 @@ import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.aggregation.Accumulator;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.query.Query;
-import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.instance.dashboard.EntitySummary;
 import software.wings.dl.WingsPersistence;
 import software.wings.graphql.schema.type.aggregation.QLAggregatedData;
@@ -114,7 +113,7 @@ public abstract class RealTimeStatsDataFetcher<A, F, G, T, S> extends AbstractSt
 
   protected QLData getQLData(
       String accountId, List<? extends QLFilterType> filters, Class entityClass, List<String> groupByAsStringList) {
-    Query query = populateFilters(accountId, filters, entityClass);
+    Query query = populateFilters(wingsPersistence, accountId, filters, entityClass);
     if (isNotEmpty(groupByAsStringList)) {
       if (groupByAsStringList.size() == 1) {
         return getAggregatedData(groupByAsStringList, entityClass, query);
@@ -129,8 +128,9 @@ public abstract class RealTimeStatsDataFetcher<A, F, G, T, S> extends AbstractSt
   }
 
   @NotNull
-  protected Query populateFilters(String accountId, List<? extends QLFilterType> filters, Class entityClass) {
-    Query query = populateAccountFilter(accountId, entityClass);
+  protected Query populateFilters(
+      WingsPersistence wingsPersistence, String accountId, List<? extends QLFilterType> filters, Class entityClass) {
+    Query query = utils.populateAccountFilter(wingsPersistence, accountId, entityClass);
 
     if (isNotEmpty(filters)) {
       filters.forEach(filter -> {
@@ -140,34 +140,23 @@ public abstract class RealTimeStatsDataFetcher<A, F, G, T, S> extends AbstractSt
           if (stringFilter == null) {
             throw new WingsException("Filter value is null for type:" + filter.getFilterType());
           }
-          setStringFilter(query.field(getFilterFieldName(filter.getFilterType())), stringFilter);
+          utils.setStringFilter(query.field(getFilterFieldName(filter.getFilterType())), stringFilter);
         } else if (((QLFilterType) filter).getDataType().equals(QLDataType.NUMBER)) {
           QLNumberFilter numberFilter = ((QLNumberFilterType) filter).getNumberFilter();
 
           if (numberFilter == null) {
             throw new WingsException("Filter value is null for type:" + filter.getFilterType());
           }
-          setNumberFilter(query.field(getFilterFieldName(filter.getFilterType())), numberFilter);
+          utils.setNumberFilter(query.field(getFilterFieldName(filter.getFilterType())), numberFilter);
         }
       });
     }
     return query;
   }
 
-  @NotNull
-  protected Query populateAccountFilter(String accountId, Class entityClass) {
-    Query query = wingsPersistence.createQuery(entityClass);
-    query.filter(SettingAttributeKeys.accountId, accountId);
-    return query;
-  }
+  protected abstract String getFilterFieldName(String filterType);
 
-  protected String getFilterFieldName(String filterType) {
-    throw new WingsException("Unknown filter type:" + filterType);
-  }
-
-  protected String getAggregationFieldName(String aggregation) {
-    throw new WingsException("Unknown aggregation field:" + aggregation);
-  }
+  protected abstract String getAggregationFieldName(String aggregation);
 
   protected QLStackedData getStackedData(
       List<TwoLevelAggregatedData> aggregatedDataList, String firstLevelType, String secondLevelType) {

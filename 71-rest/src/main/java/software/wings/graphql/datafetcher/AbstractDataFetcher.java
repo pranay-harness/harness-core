@@ -1,13 +1,14 @@
 package software.wings.graphql.datafetcher;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.ReportTarget.GRAPHQL_API;
 import static io.harness.exception.WingsException.USER_SRE;
+import static software.wings.graphql.datafetcher.DataFetcherUtils.GENERIC_EXCEPTION_MSG;
+import static software.wings.graphql.datafetcher.DataFetcherUtils.NEGATIVE_LIMIT_ARG_MSG;
+import static software.wings.graphql.datafetcher.DataFetcherUtils.NEGATIVE_OFFSET_ARG_MSG;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
-import graphql.GraphQLContext;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import io.harness.eraro.ResponseMessage;
@@ -17,7 +18,6 @@ import io.harness.logging.ExceptionLogger;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.dataloader.DataLoader;
 import org.modelmapper.ModelMapper;
@@ -30,7 +30,6 @@ import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.graphql.schema.type.QLContextedObject;
 import software.wings.security.PermissionAttribute;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashMap;
@@ -45,13 +44,9 @@ import javax.validation.constraints.NotNull;
 @Slf4j
 public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
   public static final String SELECTION_SET_FIELD_NAME = "selectionSet";
-  private static final String EXCEPTION_MSG_DELIMITER = ";; ";
-  private static final String GENERIC_EXCEPTION_MSG = "An error has occurred. Please contact the Harness support team.";
-  public static final String NEGATIVE_LIMIT_ARG_MSG = "Limit argument accepts only non negative values";
-  public static final String NEGATIVE_OFFSET_ARG_MSG = "Offset argument accepts only non negative values";
 
   @Inject AuthRuleGraphQL authRuleInstrumentation;
-
+  @Inject protected DataFetcherUtils utils;
   final Map<String, DataFetcherDirectiveAttributes> parentToContextFieldArgsMap;
 
   public AbstractDataFetcher() {
@@ -95,7 +90,9 @@ public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
 
   private String getCombinedErrorMessages(WingsException ex) {
     List<ResponseMessage> responseMessages = ExceptionLogger.getResponseMessageList(ex, GRAPHQL_API);
-    return responseMessages.stream().map(rm -> rm.getMessage()).collect(Collectors.joining(EXCEPTION_MSG_DELIMITER));
+    return responseMessages.stream()
+        .map(rm -> rm.getMessage())
+        .collect(Collectors.joining(DataFetcherUtils.EXCEPTION_MSG_DELIMITER));
   }
 
   public PermissionAttribute getPermissionAttribute(P parameters) {
@@ -117,10 +114,11 @@ public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
       map.putAll(((QLContextedObject) dataFetchingEnvironment.getSource()).getContext());
     }
 
-    Map<String, String> contextFieldArgsMap = getContextFieldArgsMap(dataFetchingEnvironment.getParentType().getName());
+    Map<String, String> contextFieldArgsMap =
+        utils.getContextFieldArgsMap(parentToContextFieldArgsMap, dataFetchingEnvironment.getParentType().getName());
     if (contextFieldArgsMap != null) {
       contextFieldArgsMap.forEach(
-          (key, value) -> map.put(key, getFieldValue(dataFetchingEnvironment.getSource(), value)));
+          (key, value) -> map.put(key, utils.getFieldValue(dataFetchingEnvironment.getSource(), value)));
     }
     modelMapper.map(map, parameters);
     if (FieldUtils.getField(clazz, SELECTION_SET_FIELD_NAME, true) != null) {
@@ -175,37 +173,9 @@ public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
         return null;
       }
       String parentFieldName = parentFieldNameOptional.get();
-      argumentValue = getFieldValue(dataFetchingEnvironment.getSource(), parentFieldName);
+      argumentValue = utils.getFieldValue(dataFetchingEnvironment.getSource(), parentFieldName);
     }
     return argumentValue;
-  }
-
-  private Object getFieldValue(Object obj, String fieldName) {
-    try {
-      return PropertyUtils.getProperty(obj, fieldName);
-    } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException exception) {
-      throw new InvalidRequestException(String.format("Failed to obtain the value for field %s", fieldName), exception);
-    }
-  }
-
-  public static String getAccountId(DataFetchingEnvironment environment) {
-    GraphQLContext context = environment.getContext();
-    String accountId = context.get("accountId");
-
-    if (isEmpty(accountId)) {
-      throw new WingsException("accountId is null in the environment");
-    }
-
-    return accountId;
-  }
-
-  private Map<String, String> getContextFieldArgsMap(String parentTypeName) {
-    DataFetcherDirectiveAttributes dataFetcherDirectiveAttributes = parentToContextFieldArgsMap.get(parentTypeName);
-    Map<String, String> contextFieldArgsMap = null;
-    if (dataFetcherDirectiveAttributes != null) {
-      contextFieldArgsMap = dataFetcherDirectiveAttributes.getContextFieldArgsMap();
-    }
-    return contextFieldArgsMap;
   }
 
   private String getDataFetcherName(@NotNull String parentTypeName) {

@@ -1,0 +1,39 @@
+extend type Query {
+  # Get details about an environment
+  environment(environmentId: String!): Environment @dataFetcher(name: environment)
+
+  environments(filters: [EnvironmentFilter], limit: Int!, offset: Int): EnvironmentConnection
+    @dataFetcher(name: environmentConnection)
+}
+
+enum EnvironmentFilterType {
+  Application
+  Environment
+  EnvironmentType
+}
+
+input EnvironmentFilter {
+  type: EnvironmentFilterType
+  stringFilter: StringFilter
+}
+
+type Environment {
+  id: String
+  name: String
+  description: String
+  type: EnvironmentType
+  createdAt: DateTime
+  createdBy: User
+  instances(limit: Int!, offset: Int): InstanceConnection
+    @dataFetcher(name: instanceConnection, contextFieldArgsMap: "{ \"Environment\": \"id\"}")
+}
+
+type EnvironmentConnection {
+  pageInfo: PageInfo
+  nodes: [Environment]
+}
+
+enum EnvironmentType {
+  PROD
+  NON_PROD
+}

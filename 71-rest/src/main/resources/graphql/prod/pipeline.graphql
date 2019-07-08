@@ -1,0 +1,39 @@
+extend type Query {
+  # Get a pipeline object by ID
+  pipeline(pipelineId: String!): Pipeline @dataFetcher(name: pipeline)
+
+  pipelines(filters: [PipelineFilter], limit: Int!, offset: Int): PipelineConnection
+    @dataFetcher(name: pipelineConnection)
+}
+
+enum PipelineFilterType {
+  Application
+  Pipeline
+}
+input PipelineFilter {
+  type: PipelineFilterType
+  stringFilter: StringFilter
+}
+
+# Type for pipeline
+type Pipeline {
+  # Pipeline Id
+  id: String
+
+  # Name of the pipeline
+  name: String
+
+  # Description of the pipeline
+  description: String
+
+  createdAt: DateTime
+  createdBy: User
+
+  executions(limit: Int!, offset: Int, statuses: [ExecutionStatus], from: DateTime, to: DateTime): ExecutionConnection
+    @dataFetcher(name: executionConnection, contextFieldArgsMap: "{ \"pipelineId\": \"id\"}")
+}
+
+type PipelineConnection {
+  pageInfo: PageInfo
+  nodes: [Pipeline]
+}

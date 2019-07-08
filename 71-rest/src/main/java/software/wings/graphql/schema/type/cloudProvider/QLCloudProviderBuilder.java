@@ -9,4 +9,5 @@ public interface QLCloudProviderBuilder {
   QLCloudProviderBuilder name(String name);
   QLCloudProviderBuilder createdAt(OffsetDateTime createdAt);
   QLCloudProviderBuilder createdBy(QLUser createdBy);
+  QLCloudProvider build();
 }

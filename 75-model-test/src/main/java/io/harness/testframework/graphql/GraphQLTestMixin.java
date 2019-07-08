@@ -42,12 +42,12 @@ public interface GraphQLTestMixin {
     return modelMapper;
   }
 
-  default ExecutionResult qlResult(String query) {
-    return getGraphQL().execute(getExecutionInput(query));
+  default ExecutionResult qlResult(String query, String accountId) {
+    return getGraphQL().execute(getExecutionInput(query, accountId));
   }
 
-  default QLTestObject qlExecute(String query) {
-    final ExecutionResult result = qlResult(query);
+  default QLTestObject qlExecute(String query, String accountId) {
+    final ExecutionResult result = qlResult(query, accountId);
     if (isNotEmpty(result.getErrors())) {
       throw new RuntimeException(result.getErrors().toString());
     }
@@ -57,16 +57,16 @@ public interface GraphQLTestMixin {
   }
 
   // TODO: add support for scalars
-  default<T> T qlExecute(Class<T> clazz, String query) {
-    final QLTestObject testObject = qlExecute(query);
+  default<T> T qlExecute(Class<T> clazz, String query, String accountId) {
+    final QLTestObject testObject = qlExecute(query, accountId);
 
     final T t = objenesis.newInstance(clazz);
     modelMapper().map(testObject.getMap(), t);
     return t;
   }
 
-  default ExecutionInput getExecutionInput(String query) {
-    return ExecutionInput.newExecutionInput().query(query).dataLoaderRegistry(getDataLoaderRegistry()).build();
+  default ExecutionInput getExecutionInput(String query, String accountId) {
+    return null;
   }
 
   default DataLoaderRegistry getDataLoaderRegistry() {

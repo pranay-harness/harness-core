@@ -1,24 +1,9 @@
-enum InstanceFilterType {
-  CreatedAt
-  Application
-  Service
-  Environment
-  CloudProvider
-  InstanceType
-}
-
 enum InstanceAggregation {
   Application
   Service
   Environment
   CloudProvider
   InstanceType
-}
-
-input InstanceFilter {
-  type: InstanceFilterType
-  stringFilter: StringFilter
-  numberFilter: NumberFilter
 }
 
 extend type Query {
