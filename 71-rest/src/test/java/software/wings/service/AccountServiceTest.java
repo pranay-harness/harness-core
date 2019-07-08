@@ -559,4 +559,20 @@ public class AccountServiceTest extends WingsBaseTest {
         .pipelinePermissions(pipelinePermissions)
         .build();
   }
+
+  @Test
+  @Category(UnitTests.class)
+  public void test_updateWhitelistedDomains_shouldTrimStringsAndIgnoreWhiteSpace() {
+    Account account = accountService.save(anAccount()
+                                              .withCompanyName("Company Name 1")
+                                              .withAccountName("Account Name 1")
+                                              .withAccountKey("ACCOUNT_KEY")
+                                              .withLicenseInfo(getLicenseInfo())
+                                              .withWhitelistedDomains(new HashSet<>())
+                                              .build());
+    accountService.updateWhitelistedDomains(
+        account.getUuid(), Sets.newHashSet(" harness.io", "harness.io ", " harness.io \t\t\t \t \t"));
+    account = accountService.get(account.getUuid());
+    assertEquals(Sets.newHashSet("harness.io"), account.getWhitelistedDomains());
+  }
 }
