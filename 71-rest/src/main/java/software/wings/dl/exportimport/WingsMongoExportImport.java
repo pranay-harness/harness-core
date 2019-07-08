@@ -7,6 +7,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import com.mongodb.DuplicateKeyException;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.model.DBCollectionFindOptions;
 import io.harness.persistence.HPersistence;
@@ -74,14 +75,23 @@ public class WingsMongoExportImport {
         case INSERT:
           if (recordCountFromId == 0) {
             // Totally new record, it can be inserted directly.
-            collection.insert(importRecord, WriteConcern.ACKNOWLEDGED);
-            importedRecords++;
+            try {
+              collection.insert(importRecord, WriteConcern.ACKNOWLEDGED);
+              importedRecords++;
+            } catch (DuplicateKeyException e) {
+              logger.warn("Skip importing a record with conflicting key with existing record in db.", e);
+            }
           }
           break;
         case UPSERT:
           // We should not UPSERT record if same ID record exists, but with different natural key.
-          collection.save(importRecord, WriteConcern.ACKNOWLEDGED);
-          importedRecords++;
+          try {
+            collection.save(importRecord, WriteConcern.ACKNOWLEDGED);
+            importedRecords++;
+          } catch (DuplicateKeyException e) {
+            // PL-2536: Skip conflicting user entries when import account data exported from free into paid cluster.
+            logger.warn("Skip importing a record with conflicting key with existing record in db.", e);
+          }
           break;
         default:
           throw new IllegalArgumentException("Import mode " + mode + " is not supported");
