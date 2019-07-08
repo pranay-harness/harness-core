@@ -37,4 +37,12 @@ public interface AppdynamicsService {
    */
   VerificationNodeDataSetupResponse getMetricsWithDataForNode(
       AppdynamicsSetupTestNodeData appdynamicsSetupTestNodeData);
+
+  NewRelicApplication getAppDynamicsApplication(String connectorId, String appDynamicsApplicationId);
+
+  AppdynamicsTier getTier(String connectorId, long appdynamicsAppId, String tierId);
+
+  String getAppDynamicsApplicationByName(String analysisServerConfigId, String applicationName);
+
+  String getTierByName(String analysisServerConfigId, String applicationId, String tierName);
 }

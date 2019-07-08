@@ -169,4 +169,78 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
           .addParam("message", "Error in getting metric data for the node. " + e.getMessage());
     }
   }
+
+  @Override
+  public NewRelicApplication getAppDynamicsApplication(String connectorId, String appDynamicsApplicationId) {
+    try {
+      List<NewRelicApplication> apps = getApplications(connectorId);
+      NewRelicApplication appDynamicsApp = null;
+      for (NewRelicApplication app : apps) {
+        if (String.valueOf(app.getId()).equals(appDynamicsApplicationId)) {
+          appDynamicsApp = app;
+          break;
+        }
+      }
+      return appDynamicsApp;
+    } catch (Exception ex) {
+      throw new WingsException(ex.getMessage());
+    }
+  }
+
+  @Override
+  public AppdynamicsTier getTier(String connectorId, long appdynamicsAppId, String tierId) {
+    try {
+      AppdynamicsTier appdynamicsTier = null;
+      Set<AppdynamicsTier> tiers = getTiers(connectorId, appdynamicsAppId);
+      for (AppdynamicsTier tier : tiers) {
+        if (String.valueOf(tier.getId()).equals(tierId)) {
+          appdynamicsTier = tier;
+          break;
+        }
+      }
+      return appdynamicsTier;
+    } catch (Exception ex) {
+      throw new WingsException(ex.getMessage());
+    }
+  }
+
+  @Override
+  public String getAppDynamicsApplicationByName(String analysisServerConfigId, String applicationName) {
+    try {
+      String applicationId = null;
+      List<NewRelicApplication> apps = getApplications(analysisServerConfigId);
+      for (NewRelicApplication app : apps) {
+        if (String.valueOf(app.getName()).equals(applicationName)) {
+          applicationId = String.valueOf(app.getId());
+          break;
+        }
+      }
+      if (isEmpty(applicationId)) {
+        throw new WingsException("Invalid AppDynamics Application Name provided : " + applicationName);
+      }
+      return applicationId;
+    } catch (Exception ex) {
+      throw new WingsException(ex.getMessage());
+    }
+  }
+
+  @Override
+  public String getTierByName(String analysisServerConfigId, String applicationId, String tierName) {
+    try {
+      String tierId = null;
+      Set<AppdynamicsTier> tiers = getTiers(analysisServerConfigId, Long.valueOf(applicationId));
+      for (AppdynamicsTier tier : tiers) {
+        if (String.valueOf(tier.getName()).equals(tierName)) {
+          tierId = String.valueOf(tier.getId());
+          break;
+        }
+      }
+      if (isEmpty(tierId)) {
+        throw new WingsException("Invalid AppDynamics Tier Name provided : " + tierName);
+      }
+      return tierId;
+    } catch (Exception ex) {
+      throw new WingsException(ex.getMessage());
+    }
+  }
 }

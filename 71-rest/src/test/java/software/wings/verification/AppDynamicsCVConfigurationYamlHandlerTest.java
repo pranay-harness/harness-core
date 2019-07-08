@@ -3,6 +3,7 @@ package software.wings.verification;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -96,6 +97,11 @@ public class AppDynamicsCVConfigurationYamlHandlerTest extends WingsBaseTest {
     when(appdynamicsService.getTiers(connectorId, 1234))
         .thenReturn(
             new HashSet<>(Arrays.asList(AppdynamicsTier.builder().id(Long.valueOf(tierId)).name(tierName).build())));
+
+    when(appdynamicsService.getAppDynamicsApplication(anyString(), anyString()))
+        .thenReturn(NewRelicApplication.builder().id(1234).name(appName).build());
+    when(appdynamicsService.getTier(anyString(), anyLong(), anyString()))
+        .thenReturn(AppdynamicsTier.builder().id(Long.valueOf(tierId)).name(tierName).build());
 
     SettingAttribute settingAttribute =
         SettingAttribute.Builder.aSettingAttribute().withName(connectorName).withUuid(connectorId).build();

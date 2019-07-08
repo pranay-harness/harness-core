@@ -174,6 +174,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
 
     SettingAttribute settingAttribute = null;
     if (!isEmpty(getTemplateExpressions())) {
+      boolean isTriggerBased = isTriggerBasedDeployment(context);
       TemplateExpression configIdExpression =
           templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
       if (configIdExpression != null) {
@@ -184,11 +185,19 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
           templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "applicationId");
       if (appIdExpression != null) {
         applicationId = templateExpressionProcessor.resolveTemplateExpression(context, appIdExpression);
+        if (isTriggerBased) {
+          // applicationId will actually contain App Name
+          applicationId = appdynamicsService.getAppDynamicsApplicationByName(analysisServerConfigId, applicationId);
+        }
       }
       TemplateExpression tierIdExpression =
           templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "tierId");
       if (tierIdExpression != null) {
         tierId = templateExpressionProcessor.resolveTemplateExpression(context, tierIdExpression);
+        if (isTriggerBased) {
+          // tierId will actually contain tier Name
+          tierId = appdynamicsService.getTierByName(analysisServerConfigId, applicationId, tierId);
+        }
       }
     }
     if (settingAttribute == null) {
@@ -243,6 +252,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
     final long dataCollectionStartTimeStamp = Timestamp.currentMinuteBoundary();
     List<DelegateTask> delegateTasks = new ArrayList<>();
     String[] waitIds = new String[dependentTiers.size() + 1];
+    logger.info("Creating AppDynamics Delegate Task for AppD applicationId : {} Tier Id : {}", applicationId, tierId);
     waitIds[0] = createDelegateTask(context, analyzedTierAnalysisType == PREDICTIVE ? Collections.emptyMap() : hosts,
         envId, applicationId, Long.parseLong(tierId), appDynamicsConfig, dataCollectionStartTimeStamp,
         analyzedTierAnalysisType, delegateTasks);
