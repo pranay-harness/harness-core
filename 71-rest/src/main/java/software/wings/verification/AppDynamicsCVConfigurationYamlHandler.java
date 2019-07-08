@@ -36,22 +36,14 @@ public class AppDynamicsCVConfigurationYamlHandler
     yaml.setType(StateType.APP_DYNAMICS.name());
 
     try {
-      List<NewRelicApplication> apps = appdynamicsService.getApplications(bean.getConnectorId());
-      NewRelicApplication appDynamicsApp = null;
-      for (NewRelicApplication app : apps) {
-        if (String.valueOf(app.getId()).equals(bean.getAppDynamicsApplicationId())) {
-          yaml.setAppDynamicsApplicationName(app.getName());
-          appDynamicsApp = app;
-          break;
-        }
-      }
-      if (appDynamicsApp != null) {
-        Set<AppdynamicsTier> tiers = appdynamicsService.getTiers(bean.getConnectorId(), appDynamicsApp.getId());
-        for (AppdynamicsTier tier : tiers) {
-          if (String.valueOf(tier.getId()).equals(bean.getTierId())) {
-            yaml.setTierName(tier.getName());
-            break;
-          }
+      NewRelicApplication appdynamicsApp =
+          appdynamicsService.getAppDynamicsApplication(bean.getConnectorId(), bean.getAppDynamicsApplicationId());
+      if (appdynamicsApp != null) {
+        yaml.setAppDynamicsApplicationName(appdynamicsApp.getName());
+        AppdynamicsTier appdynamicsTier =
+            appdynamicsService.getTier(bean.getConnectorId(), appdynamicsApp.getId(), bean.getTierId());
+        if (appdynamicsTier != null) {
+          yaml.setTierName(appdynamicsTier.getName());
         }
       }
       if (isEmpty(yaml.getAppDynamicsApplicationName()) || isEmpty(yaml.getTierName())) {
