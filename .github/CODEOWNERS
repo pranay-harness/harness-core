@@ -1,2 +1,2 @@
 # pom files are essential for the build process and they can open security concerns with introducing new dependencies
-pom.xml             @george-harness @NitinKotwal
+pom.xml             @portal_pom-maintainers
