@@ -16,6 +16,7 @@ import static software.wings.security.GenericEntityFilter.FilterType.SELECTED;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.ALL_APP_ENTITIES;
 import static software.wings.security.PermissionAttribute.PermissionType.APPLICATION_CREATE_DELETE;
+import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.PermissionType.PIPELINE;
@@ -1327,6 +1328,10 @@ public class AuthHandler {
 
   private UserGroup buildSupportUserGroup(
       String accountId, String envFilterType, String userGroupName, String description, boolean isDefault) {
+    // For Account level permissions, only add AUDIT_VIEW permission
+    AccountPermissions accountPermissions =
+        AccountPermissions.builder().permissions(Sets.newHashSet(AUDIT_VIEWER)).build();
+
     Set<Action> actions = getAllNonDeploymentActions();
     Set<AppPermission> appPermissions = Sets.newHashSet();
     AppPermission svcPermission = AppPermission.builder()
@@ -1385,6 +1390,7 @@ public class AuthHandler {
                                             .name(userGroupName)
                                             .isDefault(isDefault)
                                             .appPermissions(appPermissions)
+                                            .accountPermissions(accountPermissions)
                                             .description(description);
 
     return userGroupBuilder.build();
@@ -1402,7 +1408,7 @@ public class AuthHandler {
 
   private Set<PermissionType> getAllAccountPermissions() {
     return Sets.newHashSet(USER_PERMISSION_MANAGEMENT, ACCOUNT_MANAGEMENT, APPLICATION_CREATE_DELETE,
-        TEMPLATE_MANAGEMENT, USER_PERMISSION_READ);
+        TEMPLATE_MANAGEMENT, USER_PERMISSION_READ, AUDIT_VIEWER);
   }
 
   private Set<Action> getAllActions() {
