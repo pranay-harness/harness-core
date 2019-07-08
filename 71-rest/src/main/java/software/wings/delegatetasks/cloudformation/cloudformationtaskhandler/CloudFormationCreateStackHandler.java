@@ -368,7 +368,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
     }
     createBuilder.commandExecutionStatus(CommandExecutionStatus.SUCCESS);
     builder.commandExecutionStatus(CommandExecutionStatus.SUCCESS).commandResponse(createBuilder.build());
-    executionLogCallback.saveExecutionLog("# Waiting 30 seconds for instances to come up");
+    executionLogCallback.saveExecutionLog("# Waiting 30 seconds for resources to come up");
     sleep(ofSeconds(30));
   }
 

@@ -278,6 +278,11 @@ public class AwsAmiHelperServiceDelegateImpl
             awsConfig, encryptionDetails, region, newAsgName, 0, logCallback);
         awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
             awsConfig, encryptionDetails, region, newAsgName, 0, logCallback, timeout);
+        logCallback.saveExecutionLog(format("Asg: [%s] being deleted after shutting down to 0 instances", newAsgName));
+        awsAsgHelperServiceDelegate.deleteAutoScalingGroups(awsConfig, encryptionDetails, region,
+            singletonList(
+                awsAsgHelperServiceDelegate.getAutoScalingGroup(awsConfig, encryptionDetails, region, newAsgName)),
+            logCallback);
       }
 
       logCallback.saveExecutionLog("Completed rollback switch routes");
