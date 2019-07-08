@@ -67,20 +67,41 @@ public class RestLogAppender<E> extends AppenderBase<E> {
                    .client(Http.getUnsafeOkHttpClient(LOGDNA_HOST_DIRECT))
                    .build();
     try {
+      logger.info("Initializing logdna");
       LogLines logLines = new LogLines();
-      logLines.add(new LogLine("Init. Using " + LOGDNA_HOST_DIRECT, Level.INFO.toString(), programName));
+      logLines.add(new LogLine("Init logdna using " + LOGDNA_HOST_DIRECT, Level.INFO.toString(), programName));
 
       new SimpleTimeLimiter().callWithTimeout(() -> {
         Flow.retry(3, ofSeconds(1),
             () -> retrofit.create(LogdnaRestClient.class).postLogs(getAuthHeader(), localhostName, logLines).execute());
         return true;
       }, 5, TimeUnit.SECONDS, true);
+      logger.info("Connection to logdna succeeded using direct connection: {}", LOGDNA_HOST_DIRECT);
     } catch (Exception e) {
+      logger.info("Failed to connect directly to logdna", e);
       retrofit = new Retrofit.Builder()
                      .baseUrl(LOGDNA_HOST_PROXY)
                      .addConverterFactory(JacksonConverterFactory.create())
                      .client(Http.getUnsafeOkHttpClient(LOGDNA_HOST_PROXY))
                      .build();
+      try {
+        logger.info("Initializing logdna using proxy connection: {}", LOGDNA_HOST_PROXY);
+        LogLines logLines = new LogLines();
+        logLines.add(
+            new LogLine("Direct failed. Init logdna using " + LOGDNA_HOST_PROXY, Level.INFO.toString(), programName));
+
+        new SimpleTimeLimiter().callWithTimeout(() -> {
+          Flow.retry(3, ofSeconds(1),
+              ()
+                  -> retrofit.create(LogdnaRestClient.class)
+                         .postLogs(getAuthHeader(), localhostName, logLines)
+                         .execute());
+          return true;
+        }, 5, TimeUnit.SECONDS, true);
+        logger.info("Connection to logdna succeeded using proxy connection: {}", LOGDNA_HOST_PROXY);
+      } catch (Exception ex) {
+        logger.warn("Failed to connect via proxy to logdna", ex);
+      }
     }
   }
 
