@@ -12,7 +12,6 @@ import migrations.all.AddValidUntilToCommandLog;
 import migrations.all.AddValidUntilToWorkflowExecution;
 import migrations.all.CleanupOrphanInstances;
 import migrations.all.CleanupSyncStatusForDeletedEntities;
-import migrations.all.DeleteAndAddInstanceSyncJobToAllAccounts;
 import migrations.all.DeleteOrphanNotificationGroups;
 import migrations.all.DeleteStaleThirdPartyApiCallLogsMigration;
 import migrations.all.ExplodeLogMLFeedbackRecordsMigration;
@@ -52,7 +51,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(8, BaseMigration.class))
         .add(Pair.of(9, BaseMigration.class))
         .add(Pair.of(10, BaseMigration.class))
-        .add(Pair.of(11, DeleteAndAddInstanceSyncJobToAllAccounts.class))
+        .add(Pair.of(11, BaseMigration.class))
         .add(Pair.of(12, TerraformIsTemplatizedMigration.class))
         .add(Pair.of(13, AddValidUntilToWorkflowExecution.class))
         .add(Pair.of(14, SendInviteUrlForAllUserInvites.class))

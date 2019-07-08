@@ -54,7 +54,6 @@ import software.wings.dl.exportimport.WingsMongoExportImport;
 import software.wings.licensing.LicenseService;
 import software.wings.scheduler.AlertCheckJob;
 import software.wings.scheduler.InstanceStatsCollectorJob;
-import software.wings.scheduler.InstanceSyncJob;
 import software.wings.scheduler.LdapGroupSyncJob;
 import software.wings.scheduler.LimitVicinityCheckerJob;
 import software.wings.scheduler.ScheduledTriggerJob;
@@ -508,23 +507,12 @@ public class AccountExportImportResource {
       importedJobCount++;
     }
 
-    // 4. InstanceSyncJob:
-    for (String appId : appIds) {
-      InstanceSyncJob.addWithDelay(scheduler, accountId, appId);
-      importedJobCount++;
-    }
-
-    // 5. LdapGroupSyncJob
+    // 4. LdapGroupSyncJob
     List<LdapSettings> ldapSettings = getAllLdapSettingsForAccount(accountId);
     for (LdapSettings ldapSetting : ldapSettings) {
       LdapGroupSyncJob.add(scheduler, accountId, ldapSetting.getUuid());
       importedJobCount++;
     }
-
-    // 6. PruneFileJob seems to be transient, the old cluster should have managed to prune all the deleted app
-    // containers.
-
-    // 7. JiraPollingJob seems to be transient as well. No need to migrate/recreate in new cluster.
 
     logger.info("{} cron jobs has been recreated.", importedJobCount);
 

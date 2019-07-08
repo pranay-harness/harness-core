@@ -99,7 +99,6 @@ import software.wings.helpers.ext.mail.EmailData;
 import software.wings.licensing.LicenseService;
 import software.wings.scheduler.AlertCheckJob;
 import software.wings.scheduler.InstanceStatsCollectorJob;
-import software.wings.scheduler.InstanceSyncJob;
 import software.wings.scheduler.LdapGroupSyncJob;
 import software.wings.scheduler.LimitVicinityCheckerJob;
 import software.wings.scheduler.ScheduledTriggerJob;
@@ -940,12 +939,7 @@ public class AccountServiceImpl implements AccountService {
       ScheduledTriggerJob.add(jobScheduler, accountId, trigger.getAppId(), trigger.getUuid(), trigger);
     }
 
-    // 3. InstanceSyncJob:
-    for (String appId : appIds) {
-      InstanceSyncJob.add(jobScheduler, accountId, appId);
-    }
-
-    // 4. LdapGroupSyncJob
+    // 3. LdapGroupSyncJob
     List<LdapSettings> ldapSettings = getAllLdapSettingsForAccount(accountId);
     for (LdapSettings ldapSetting : ldapSettings) {
       LdapGroupSyncJob.add(jobScheduler, accountId, ldapSetting.getUuid());
@@ -968,12 +962,7 @@ public class AccountServiceImpl implements AccountService {
       ScheduledTriggerJob.delete(jobScheduler, trigger.getUuid());
     }
 
-    // 3. InstanceSyncJob:
-    for (String appId : appIds) {
-      InstanceSyncJob.delete(jobScheduler, appId);
-    }
-
-    // 4. LdapGroupSyncJob
+    // 3. LdapGroupSyncJob
     List<LdapSettings> ldapSettings = getAllLdapSettingsForAccount(accountId);
     for (LdapSettings ldapSetting : ldapSettings) {
       LdapGroupSyncJob.delete(jobScheduler, ssoSettingService, accountId, ldapSetting.getUuid());
