@@ -78,13 +78,14 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -733,7 +734,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Override
   public Set<NewRelicMetricDataRecord> getMetricRecords(
       String cvConfigId, int analysisStartMinute, int analysisEndMinute, String tag) {
-    Set<NewRelicMetricDataRecord> rv = new HashSet<>();
+    ConcurrentMap<NewRelicMetricDataRecord, Boolean> rv = new ConcurrentHashMap<>();
     List<Callable<Void>> callables = new ArrayList<>();
     for (int startMin = analysisStartMinute; startMin <= analysisEndMinute;
          startMin = startMin + CRON_POLL_INTERVAL_IN_MINUTES) {
@@ -758,13 +759,13 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
         results.stream()
             .filter(dataRecord -> !dataRecord.getName().equals(HARNESS_HEARTBEAT_METRIC_NAME))
-            .forEach(dataRecord -> rv.add(dataRecord));
+            .forEach(dataRecord -> rv.put(dataRecord, Boolean.TRUE));
         return null;
       });
     }
 
     dataCollectionService.executeParrallel(callables);
-    return rv;
+    return rv.keySet();
   }
 
   @Override
