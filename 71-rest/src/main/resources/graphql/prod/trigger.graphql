@@ -1,0 +1,33 @@
+extend type Query {
+  # Get details about a trigger
+  trigger(triggerId: String!): Trigger @dataFetcher(name: trigger)
+
+  # Get list of services for applicationId. It will return paginated data
+  triggers(filters: [TriggerFilter], limit: Int!, offset: Int): TriggerConnection @dataFetcher(name: triggerConnection)
+}
+
+type Trigger {
+  # Trigger ID
+  id: String
+  # Name of the trigger
+  name: String
+  # Description of the Trigger
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+
+type TriggerConnection {
+  pageInfo: PageInfo
+  nodes: [Trigger]
+}
+
+enum TriggerFilterType {
+  Trigger
+  Application
+}
+
+input TriggerFilter {
+  type: TriggerFilterType
+  stringFilter: StringFilter
+}

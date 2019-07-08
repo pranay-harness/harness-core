@@ -1,16 +1,6 @@
-enum ServiceFilterType {
-  Application
-  Service
-}
-
 enum ServiceAggregation {
   Application
   ArtifactType
-}
-
-input ServiceFilter {
-  type: ServiceFilterType
-  stringFilter: StringFilter
 }
 
 extend type Query {

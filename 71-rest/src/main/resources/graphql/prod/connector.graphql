@@ -2,8 +2,19 @@ extend type Query {
   # Get details about connector
   connector(connectorId: String!): Connector @dataFetcher(name: connector)
 
-  # Will remove it once authentication is available
-  connectors(accountId: String!): ConnectorConnection @dataFetcher(name: connectorConnection)
+  connectors: ConnectorConnection @dataFetcher(name: connectorConnection)
+}
+
+enum ConnectorFilterType {
+  Connector
+  Type
+  CreatedAt
+}
+
+input ConnectorFilter {
+  type: ConnectorFilterType
+  stringFilter: StringFilter
+  numberFilter: NumberFilter
 }
 
 interface Connector {
@@ -44,6 +55,14 @@ type SmtpConnector implements Connector {
 }
 
 type ServiceNowConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+
+type DockerConnector implements Connector {
   id: String
   name: String
   description: String

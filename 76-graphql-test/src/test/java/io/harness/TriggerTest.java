@@ -54,6 +54,8 @@ public class TriggerTest extends GraphQLTest {
 
     owners.add(application);
 
+    String accountId = application.getAccountId();
+
     final Pipeline pipeline = pipelineGenerator.ensurePredefined(seed, owners, BARRIER);
     assertThat(pipeline).isNotNull();
 
@@ -92,7 +94,7 @@ public class TriggerTest extends GraphQLTest {
   }
 }*/ savedTrigger.getUuid());
 
-    QLTestObject qlTrigger = qlExecute(query);
+    QLTestObject qlTrigger = qlExecute(query, accountId);
     assertThat(qlTrigger.get(QLTriggerKeys.id)).isEqualTo(savedTrigger.getUuid());
     assertThat(qlTrigger.get(QLTriggerKeys.name)).isEqualTo(savedTrigger.getName());
     assertThat(qlTrigger.get(QLTriggerKeys.description)).isEqualTo(savedTrigger.getDescription());
@@ -116,6 +118,8 @@ public class TriggerTest extends GraphQLTest {
     assertThat(application).isNotNull();
 
     owners.add(application);
+
+    String accountId = application.getAccountId();
 
     final Pipeline pipeline = pipelineGenerator.ensurePredefined(seed, owners, BARRIER);
     assertThat(pipeline).isNotNull();
@@ -170,14 +174,14 @@ public class TriggerTest extends GraphQLTest {
     {
       String query = $GQL(/*
 {
-  triggers(applicationId: "%s" limit: 2) {
+  triggers(filters:[{type:Application,stringFilter:{operator:EQUALS,values:["%s"]}}]  limit: 2) {
     nodes {
       id
     }
   }
 }*/ application.getUuid());
 
-      QLTriggerConnection triggerConnection = qlExecute(QLTriggerConnection.class, query);
+      QLTriggerConnection triggerConnection = qlExecute(QLTriggerConnection.class, query, accountId);
       assertThat(triggerConnection.getNodes().size()).isEqualTo(2);
 
       assertThat(triggerConnection.getNodes().get(0).getId()).isEqualTo(trigger3.getUuid());
@@ -187,14 +191,14 @@ public class TriggerTest extends GraphQLTest {
     {
       String query = $GQL(/*
 {
-  triggers(applicationId: "%s" limit: 2 offset: 1) {
+  triggers(filters:[{type:Application,stringFilter:{operator:EQUALS,values:["%s"]}}]  limit: 2 offset: 1) {
     nodes {
       id
     }
   }
 }*/ application.getUuid());
 
-      QLTriggerConnection triggerConnection = qlExecute(QLTriggerConnection.class, query);
+      QLTriggerConnection triggerConnection = qlExecute(QLTriggerConnection.class, query, accountId);
       assertThat(triggerConnection.getNodes().size()).isEqualTo(2);
 
       assertThat(triggerConnection.getNodes().get(0).getId()).isEqualTo(trigger2.getUuid());
@@ -213,7 +217,7 @@ public class TriggerTest extends GraphQLTest {
   }
 }*/ application.getUuid());
 
-      final QLTestObject qlTestObject = qlExecute(query);
+      final QLTestObject qlTestObject = qlExecute(query, accountId);
       assertThat(qlTestObject.getMap().size()).isEqualTo(1);
     }
   }

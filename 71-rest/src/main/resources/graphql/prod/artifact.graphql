@@ -1,0 +1,15 @@
+extend type Query {
+  # Get details about am artifact
+  artifact(artifactId: String!): Artifact @dataFetcher(name: artifact)
+}
+
+type Artifact {
+  # Artifact ID
+  id: String
+
+  # Build No
+  buildNo: String
+
+  # Collected At
+  collectedAt: DateTime
+}

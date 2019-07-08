@@ -1,15 +1,5 @@
-enum TriggerFilterType {
-  Trigger
-  Application
-}
-
 enum TriggerAggregation {
   Application
-}
-
-input TriggerFilter {
-  type: TriggerFilterType
-  stringFilter: StringFilter
 }
 
 extend type Query {

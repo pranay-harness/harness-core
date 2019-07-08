@@ -10,7 +10,6 @@ import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
-import static software.wings.graphql.datafetcher.workflow.WorkflowDataFetcher.WORKFLOW_DOES_NOT_EXIST_MSG;
 
 import com.google.inject.Inject;
 
@@ -68,7 +67,7 @@ public class WorkflowTest extends GraphQLTest {
   }
 }*/ workflow.getUuid());
 
-    QLTestObject qlWorkflow = qlExecute(query);
+    QLTestObject qlWorkflow = qlExecute(query, workflow.getAccountId());
     assertThat(qlWorkflow.get(QLWorkflowKeys.id)).isEqualTo(workflow.getUuid());
     assertThat(qlWorkflow.get(QLWorkflowKeys.name)).isEqualTo(workflow.getName());
     assertThat(qlWorkflow.get(QLWorkflowKeys.description)).isEqualTo(workflow.getDescription());
@@ -88,10 +87,10 @@ public class WorkflowTest extends GraphQLTest {
   }
 }*/);
 
-    final ExecutionResult result = qlResult(query);
+    final ExecutionResult result = qlResult(query, "accountId");
     assertThat(result.getErrors().size()).isEqualTo(1);
     assertThat(result.getErrors().get(0).getMessage())
-        .isEqualTo("Exception while fetching data (/workflow) : Invalid request: " + WORKFLOW_DOES_NOT_EXIST_MSG);
+        .isEqualTo("Exception while fetching data (/workflow) : Entity with id: blah is not found");
   }
 
   @Test
@@ -104,6 +103,7 @@ public class WorkflowTest extends GraphQLTest {
         applicationGenerator.ensureApplication(seed, owners, anApplication().name("Application Workflows").build());
     owners.add(application);
 
+    String accountId = application.getAccountId();
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingGenerator.ensurePredefined(seed, owners, AWS_SSH_TEST);
 
@@ -123,14 +123,14 @@ public class WorkflowTest extends GraphQLTest {
     {
       String query = $GQL(/*
 {
-  workflows(applicationId: "%s" limit: 2) {
+  workflows(filters:[{type:Application,stringFilter:{operator:EQUALS,values:["%s"]}}]  limit: 2) {
     nodes {
       id
     }
   }
 }*/ application.getUuid());
 
-      QLWorkflowConnection workflowConnection = qlExecute(QLWorkflowConnection.class, query);
+      QLWorkflowConnection workflowConnection = qlExecute(QLWorkflowConnection.class, query, accountId);
       assertThat(workflowConnection.getNodes().size()).isEqualTo(2);
 
       assertThat(workflowConnection.getNodes().get(0).getId()).isEqualTo(workflow3.getUuid());
@@ -139,14 +139,14 @@ public class WorkflowTest extends GraphQLTest {
     {
       String query = $GQL(/*
 {
-  workflows(applicationId: "%s" limit: 2 offset: 1) {
+  workflows(filters:[{type:Application,stringFilter:{operator:EQUALS,values:["%s"]}}]  limit: 2 offset: 1) {
     nodes {
       id
     }
   }
 }*/ application.getUuid());
 
-      QLWorkflowConnection workflowConnection = qlExecute(QLWorkflowConnection.class, query);
+      QLWorkflowConnection workflowConnection = qlExecute(QLWorkflowConnection.class, query, accountId);
       assertThat(workflowConnection.getNodes().size()).isEqualTo(2);
 
       assertThat(workflowConnection.getNodes().get(0).getId()).isEqualTo(workflow2.getUuid());
@@ -165,7 +165,7 @@ application(applicationId: "%s") {
 }
 }*/ application.getUuid());
 
-      final QLTestObject qlTestObject = qlExecute(query);
+      final QLTestObject qlTestObject = qlExecute(query, accountId);
       assertThat(qlTestObject.getMap().size()).isEqualTo(1);
     }
   }

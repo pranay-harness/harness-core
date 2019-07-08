@@ -20,6 +20,7 @@ import software.wings.graphql.schema.type.cloudProvider.QLGcpCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLKubernetesClusterCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLPcfCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLPhysicalDataCenterCloudProvider;
+import software.wings.graphql.schema.type.connector.QLDockerConnector;
 import software.wings.graphql.schema.type.connector.QLJiraConnector;
 import software.wings.graphql.schema.type.connector.QLServiceNowConnector;
 import software.wings.graphql.schema.type.connector.QLSlackConnector;
@@ -79,6 +80,7 @@ public class TypeResolverManager {
     public static final String SlackConnector = "SlackConnector";
     public static final String ServiceNowConnector = "ServiceNowConnector";
     public static final String SmtpConnector = "SmtpConnector";
+    public static final String DockerConnector = "DockerConnector";
   }
 
   /**
@@ -111,6 +113,7 @@ public class TypeResolverManager {
                                       .put(QLSlackConnector.class, TypeResolverManagerTypes.SlackConnector)
                                       .put(QLSmtpConnector.class, TypeResolverManagerTypes.SmtpConnector)
                                       .put(QLServiceNowConnector.class, TypeResolverManagerTypes.ServiceNowConnector)
+                                      .put(QLDockerConnector.class, TypeResolverManagerTypes.DockerConnector)
                                       .build()))
         .put(TypeResolverManagerUnifaces.Execution,
             getResultTypeResolver(ImmutableMap.<Class, String>builder()

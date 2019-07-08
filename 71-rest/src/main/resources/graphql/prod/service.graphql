@@ -1,0 +1,45 @@
+extend type Query {
+  # Get details about a service
+  service(serviceId: String!): Service @dataFetcher(name: service)
+
+  # Get list of services for applicationId. It will return paginated data
+  services(filters: [ServiceFilter], limit: Int!, offset: Int): ServiceConnection @dataFetcher(name: serviceConnection)
+}
+
+# Service Type
+type Service {
+  # Service ID
+  id: String
+  # Name of the service
+  name: String
+  # Description of the Service
+  description: String
+  # Artifact type deployed by this service
+  artifactType: String
+  # Deployment Type SSH, Helm, Kubernetes
+  deploymentType: String
+
+  createdAt: DateTime
+  createdBy: User
+
+  executions(limit: Int!, offset: Int, statuses: [ExecutionStatus], from: DateTime, to: DateTime): ExecutionConnection
+    @dataFetcher(name: executionConnection, contextFieldArgsMap: "{ \"serviceId\": \"id\"}")
+
+  instances(limit: Int!, offset: Int): InstanceConnection
+    @dataFetcher(name: instanceConnection, contextFieldArgsMap: "{ \"serviceId\": \"id\"}")
+}
+
+type ServiceConnection {
+  pageInfo: PageInfo
+  nodes: [Service]
+}
+
+enum ServiceFilterType {
+  Application
+  Service
+}
+
+input ServiceFilter {
+  type: ServiceFilterType
+  stringFilter: StringFilter
+}

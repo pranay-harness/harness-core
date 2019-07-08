@@ -50,7 +50,7 @@ public class ExecutionConnectionDataFetcher
     filterDatetimeRange(query, WorkflowExecutionKeys.createdAt, qlQuery.getFrom(), qlQuery.getTo());
 
     QLExecutionConnectionBuilder connectionBuilder = QLExecutionConnection.builder();
-    connectionBuilder.pageInfo(populate(qlQuery, query, execution -> {
+    connectionBuilder.pageInfo(utils.populate(qlQuery, query, execution -> {
       final QLExecution qlExecution = executionController.populateExecution(execution);
       connectionBuilder.node(qlExecution);
     }));

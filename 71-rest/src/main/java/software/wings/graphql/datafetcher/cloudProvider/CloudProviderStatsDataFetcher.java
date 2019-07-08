@@ -8,6 +8,7 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
+import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.SettingsAttributeStatsDataFetcher;
 import software.wings.graphql.schema.type.aggregation.QLAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLData;
@@ -37,10 +38,11 @@ public class CloudProviderStatsDataFetcher extends SettingsAttributeStatsDataFet
     return getQLData(accountId, filters, entityClass, groupByList);
   }
 
-  @NotNull
   @Override
-  protected Query populateFilters(String accountId, List<? extends QLFilterType> filters, Class entityClass) {
-    Query query = super.populateFilters(accountId, filters, entityClass);
+  @NotNull
+  protected Query populateFilters(
+      WingsPersistence wingsPersistence, String accountId, List<? extends QLFilterType> filters, Class entityClass) {
+    Query query = super.populateFilters(wingsPersistence, accountId, filters, entityClass);
     query.filter(SettingAttributeKeys.category, SettingCategory.CLOUD_PROVIDER);
     return query;
   }

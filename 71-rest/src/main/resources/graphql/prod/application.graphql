@@ -1,0 +1,28 @@
+extend type Query {
+  # Get details about an application
+  application(applicationId: String!): Application @dataFetcher(name: application)
+
+  applications(limit: Int!, offset: Int): ApplicationConnection @dataFetcher(name: applicationConnection)
+}
+
+type Application {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+
+  services(limit: Int!, offset: Int): ServiceConnection
+    @dataFetcher(name: serviceConnection, contextFieldArgsMap: "{ \"Application\": \"id\"}")
+
+  workflows(limit: Int!, offset: Int): WorkflowConnection
+    @dataFetcher(name: workflowConnection, contextFieldArgsMap: "{ \"Application\": \"id\"}")
+
+  pipelines(limit: Int!, offset: Int): PipelineConnection
+    @dataFetcher(name: pipelineConnection, contextFieldArgsMap: "{ \"Application\": \"id\"}")
+}
+
+type ApplicationConnection {
+  pageInfo: PageInfo
+  nodes: [Application]
+}

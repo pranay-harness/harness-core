@@ -26,6 +26,16 @@ public class ApplicationStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggr
   }
 
   @Override
+  protected String getFilterFieldName(String filterType) {
+    return null;
+  }
+
+  @Override
+  protected String getAggregationFieldName(String aggregation) {
+    return null;
+  }
+
+  @Override
   public String getEntityType() {
     return NameService.application;
   }

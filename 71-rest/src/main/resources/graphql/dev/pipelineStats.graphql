@@ -1,15 +1,5 @@
-enum PipelineFilterType {
-  Application
-  Pipeline
-}
-
 enum PipelineAggregation {
   Application
-}
-
-input PipelineFilter {
-  type: PipelineFilterType
-  stringFilter: StringFilter
 }
 
 extend type Query {

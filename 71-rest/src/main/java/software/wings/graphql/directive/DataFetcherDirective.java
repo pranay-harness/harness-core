@@ -19,6 +19,7 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.app.GraphQLModule;
+import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
 import software.wings.graphql.datafetcher.AbstractDataFetcher;
 
 import java.io.IOException;
@@ -55,6 +56,15 @@ public class DataFetcherDirective implements SchemaDirectiveWiring {
     DataFetcher dataFetcher = getDataFetcherForField(dataFetcherName, useBatch);
     if (dataFetcher instanceof AbstractDataFetcher) {
       AbstractDataFetcher abstractDataFetcher = (AbstractDataFetcher) dataFetcher;
+      abstractDataFetcher.addDataFetcherDirectiveAttributesForParent(
+          environment.getElementParentTree().getParentInfo().get().getElement().getName(),
+          DataFetcherDirectiveAttributes.builder()
+              .dataFetcherName(dataFetcherName)
+              .contextFieldArgsMap(contextFieldArgsMap)
+              .useBatch(useBatch)
+              .build());
+    } else if (dataFetcher instanceof AbstractConnectionV2DataFetcher) {
+      AbstractConnectionV2DataFetcher abstractDataFetcher = (AbstractConnectionV2DataFetcher) dataFetcher;
       abstractDataFetcher.addDataFetcherDirectiveAttributesForParent(
           environment.getElementParentTree().getParentInfo().get().getElement().getName(),
           DataFetcherDirectiveAttributes.builder()

@@ -60,7 +60,7 @@ public class ServiceTest extends GraphQLTest {
   }
 }*/ service.getUuid());
 
-    QLTestObject qlService = qlExecute(query);
+    QLTestObject qlService = qlExecute(query, service.getAccountId());
     assertThat(qlService.get(QLServiceKeys.id)).isEqualTo(service.getUuid());
     assertThat(qlService.get(QLServiceKeys.name)).isEqualTo(service.getName());
     assertThat(qlService.get(QLServiceKeys.description)).isEqualTo(service.getDescription());
@@ -95,16 +95,15 @@ public class ServiceTest extends GraphQLTest {
     {
       String query = $GQL(/*
 {
-  services(applicationId: "%s" limit: 2) {
+  services(filters:[{type:Application,stringFilter:{operator:EQUALS,values:["%s"]}}], limit: 2) {
     nodes {
       id
     }
   }
 }*/ application.getUuid());
 
-      QLServiceConnection serviceConnection = qlExecute(QLServiceConnection.class, query);
+      QLServiceConnection serviceConnection = qlExecute(QLServiceConnection.class, query, application.getAccountId());
       assertThat(serviceConnection.getNodes().size()).isEqualTo(2);
-
       assertThat(serviceConnection.getNodes().get(0).getId()).isEqualTo(service3.getUuid());
       assertThat(serviceConnection.getNodes().get(1).getId()).isEqualTo(service2.getUuid());
     }
@@ -112,14 +111,14 @@ public class ServiceTest extends GraphQLTest {
     {
       String query = $GQL(/*
 {
-  services(applicationId: "%s" limit: 2 offset: 1) {
+  services(filters:[{type:Application,stringFilter:{operator:EQUALS,values:["%s"]}}] limit: 2 offset: 1) {
     nodes {
       id
     }
   }
 }*/ application.getUuid());
 
-      QLServiceConnection serviceConnection = qlExecute(QLServiceConnection.class, query);
+      QLServiceConnection serviceConnection = qlExecute(QLServiceConnection.class, query, application.getAccountId());
       assertThat(serviceConnection.getNodes().size()).isEqualTo(2);
 
       assertThat(serviceConnection.getNodes().get(0).getId()).isEqualTo(service2.getUuid());
@@ -138,7 +137,7 @@ public class ServiceTest extends GraphQLTest {
   }
 }*/ application.getUuid());
 
-      final QLTestObject qlTestObject = qlExecute(query);
+      final QLTestObject qlTestObject = qlExecute(query, application.getAccountId());
       assertThat(qlTestObject.getMap().size()).isEqualTo(1);
     }
   }

@@ -8,7 +8,6 @@ import io.harness.category.layer.GraphQLTests;
 import io.harness.data.structure.EmptyPredicate;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.graphql.datafetcher.environment.EnvironmentDataFetcher;
 
 import java.util.List;
 import java.util.Map;
@@ -33,13 +32,13 @@ public class GraphQLExceptionHandlingTest extends GraphQLTest {
   }
 }*/ INCORRECT_ENVIRONMENT_ID);
 
-    final ExecutionResult result = qlResult(query);
+    final ExecutionResult result = qlResult(query, "dummy_account");
     Map<String, Object> spec = result.toSpecification();
     List error = (List) spec.get("errors");
     if (EmptyPredicate.isNotEmpty(error)) {
       Map errorMsgMap = (Map) error.get(0);
       String message = (String) errorMsgMap.get("message");
-      assertThat(message).contains(EnvironmentDataFetcher.ENV_DOES_NOT_EXISTS_MSG);
+      assertThat(message).contains(INCORRECT_ENVIRONMENT_ID + " is not found");
     }
   }
 }

@@ -99,6 +99,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
     final Application application = owners.obtainApplication();
     final Environment environment = owners.obtainEnvironment();
 
+    resetCache(application.getAccountId());
     // Test running the workflow
 
     WorkflowExecution workflowExecution1 = executeWorkflow(workflow, application, environment);
@@ -117,8 +118,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
   }
 }*/ workflow.getUuid(), convertToString(workflowExecution1.getCreatedAt()),
           convertToString(workflowExecution2.getCreatedAt()));
-
-      final QLTestObject qlTestObject = qlExecute(query);
+      final QLTestObject qlTestObject = qlExecute(query, application.getAccountId());
       assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total)).isEqualTo(1);
     }
   }
@@ -133,10 +133,11 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
     final Application application = owners.obtainApplication();
     final Environment environment = owners.obtainEnvironment();
 
+    resetCache(application.getAccountId());
+
     // Test running the workflow
-
     WorkflowExecution workflowExecution = executeWorkflow(workflow, application, environment);
-
+    String accountId = application.getAccountId();
     {
       String query = $GQL(/*
 {
@@ -179,7 +180,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
   }
 }*/ workflowExecution.getUuid());
 
-      final QLTestObject qlTestObject = qlExecute(query);
+      final QLTestObject qlTestObject = qlExecute(query, accountId);
 
       assertThat(qlTestObject.get(QLWorkflowExecutionKeys.id)).isEqualTo(workflowExecution.getUuid());
       assertThat(qlTestObject.sub("application").get(QLApplicationKeys.id)).isEqualTo(application.getUuid());
@@ -208,7 +209,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
   }
 }*/ workflow.getUuid());
 
-      final QLTestObject qlTestObject = qlExecute(query);
+      final QLTestObject qlTestObject = qlExecute(query, accountId);
       assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total)).isEqualTo(1);
     }
 
@@ -227,7 +228,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
   }
 }*/ workflow.getUuid());
 
-      final QLTestObject qlTestObject = qlExecute(query);
+      final QLTestObject qlTestObject = qlExecute(query, accountId);
       assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total)).isEqualTo(2);
     }
 
@@ -243,7 +244,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
   }
 }*/ workflow.getUuid());
 
-      final QLTestObject qlTestObject = qlExecute(query);
+      final QLTestObject qlTestObject = qlExecute(query, accountId);
 
       assertThat(qlTestObject.sub("executions").sub("nodes").size()).isEqualTo(2);
     }
@@ -288,8 +289,10 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
     executionArgs.setPipelineId(pipeline.getUuid());
 
     final Application application = owners.obtainApplication();
+    final String accountId = application.getAccountId();
     final Environment environment = owners.obtainEnvironment();
 
+    resetCache(accountId);
     WorkflowExecution pipelineExecution =
         runPipeline(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
     assertThat(pipelineExecution).isNotNull();
@@ -324,7 +327,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
   }
 }*/ pipelineExecution.getUuid());
 
-      final QLTestObject qlTestObject = qlExecute(query);
+      final QLTestObject qlTestObject = qlExecute(query, accountId);
       assertThat(qlTestObject.get(QLPipelineExecutionKeys.id)).isEqualTo(pipelineExecution.getUuid());
       assertThat(qlTestObject.sub("application").get(QLApplicationKeys.id)).isEqualTo(application.getUuid());
       assertThat(qlTestObject.get(QLPipelineExecutionKeys.createdAt)).isNotNull();
@@ -352,7 +355,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
   }
 }*/ pipeline.getUuid());
 
-      final QLTestObject qlTestObject = qlExecute(query);
+      final QLTestObject qlTestObject = qlExecute(query, accountId);
       assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total)).isEqualTo(1);
     }
 
@@ -371,7 +374,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
   }
 }*/ pipeline.getUuid());
 
-      final QLTestObject qlTestObject = qlExecute(query);
+      final QLTestObject qlTestObject = qlExecute(query, accountId);
       assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total)).isEqualTo(2);
     }
 
@@ -387,7 +390,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
   }
 }*/ pipeline.getUuid());
 
-      final QLTestObject qlTestObject = qlExecute(query);
+      final QLTestObject qlTestObject = qlExecute(query, accountId);
 
       assertThat(qlTestObject.sub("executions").sub("nodes").size()).isEqualTo(2);
     }
@@ -413,7 +416,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
   }
 }*/ workflowExecutionId);
 
-      final QLTestObject qlTestObject = qlExecute(query);
+      final QLTestObject qlTestObject = qlExecute(query, accountId);
 
       assertThat(qlTestObject.sub(QLPipelineExecutionKeys.cause).sub("execution").get(QLPipelineExecutionKeys.id))
           .isEqualTo(pipelineExecution.getUuid());

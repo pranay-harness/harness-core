@@ -9,4 +9,5 @@ public interface QLConnectorBuilder {
   QLConnectorBuilder name(String name);
   QLConnectorBuilder createdAt(OffsetDateTime createdAt);
   QLConnectorBuilder createdBy(QLUser createdBy);
+  QLConnector build();
 }
