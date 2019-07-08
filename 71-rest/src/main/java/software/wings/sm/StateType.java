@@ -546,10 +546,11 @@ public enum StateType implements StateTypeDescriptor {
       asList(InfrastructureMappingType.AWS_SSH), asList(POST_DEPLOYMENT), ORCHESTRATION_STENCILS),
 
   CLOUD_FORMATION_CREATE_STACK(CloudFormationCreateStackState.class, PROVISIONERS, 1, PROVISION_CLOUD_FORMATION,
-      asList(InfrastructureMappingType.AWS_SSH), asList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
+      asList(InfrastructureMappingType.AWS_SSH), asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE),
+      ORCHESTRATION_STENCILS),
 
   CLOUD_FORMATION_DELETE_STACK(CloudFormationDeleteStackState.class, PROVISIONERS, DE_PROVISION_CLOUD_FORMATION,
-      asList(InfrastructureMappingType.AWS_SSH), asList(POST_DEPLOYMENT), ORCHESTRATION_STENCILS),
+      asList(InfrastructureMappingType.AWS_SSH), asList(POST_DEPLOYMENT, WRAP_UP), ORCHESTRATION_STENCILS),
 
   KUBERNETES_SWAP_SERVICE_SELECTORS(KubernetesSwapServiceSelectors.class, KUBERNETES, 2,
       Constants.KUBERNETES_SWAP_SERVICE_SELECTORS,

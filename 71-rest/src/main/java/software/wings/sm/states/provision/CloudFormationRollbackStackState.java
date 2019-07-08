@@ -69,6 +69,24 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
     return super.getVariables();
   }
 
+  @Override
+  @SchemaIgnore
+  public String getCustomStackName() {
+    return super.getCustomStackName();
+  }
+
+  @Override
+  @SchemaIgnore
+  public Integer getTimeoutMillis() {
+    return super.getTimeoutMillis();
+  }
+
+  @Override
+  @SchemaIgnore
+  public boolean isUseCustomStackName() {
+    return super.isUseCustomStackName();
+  }
+
   protected DelegateTask buildDelegateTask(ExecutionContextImpl executionContext,
       CloudFormationInfrastructureProvisioner provisioner, AwsConfig awsConfig, String activityId) {
     throw new WingsException("Method should not be called");
