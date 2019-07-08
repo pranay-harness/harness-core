@@ -353,6 +353,11 @@ public class PermissionAttribute {
     /**
      * User Permission Read.
      */
-    USER_PERMISSION_READ
+    USER_PERMISSION_READ,
+
+    /**
+     * View Audit Page
+     */
+    AUDIT_VIEWER
   }
 }
