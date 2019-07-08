@@ -170,6 +170,17 @@ public class BuildSourceResource {
     return new RestResponse<>(buildSourceService.getGroupIds(appId, jobName, settingId));
   }
 
+  @GET
+  @Path("nexus/repositories/{repositoryName}/packageNames")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Set<String>> fetchPackageNames(@QueryParam("appId") String appId,
+      @PathParam("repositoryName") String repositoryName, @QueryParam("repositoryType") String repositoryType,
+      @QueryParam("settingId") String settingId) {
+    return new RestResponse<>(
+        buildSourceService.fetchNexusPackageNames(appId, repositoryName, repositoryType, settingId));
+  }
+
   /**
    * Gets builds.
    *

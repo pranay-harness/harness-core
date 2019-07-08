@@ -22,6 +22,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.NexusConfig;
@@ -29,7 +30,9 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.utils.RepositoryType;
 
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by srinivas on 3/30/17.
@@ -45,12 +48,12 @@ public class NexusServiceTest extends WingsBaseTest {
   @Inject @InjectMocks private NexusService nexusService;
 
   private NexusConfig nexusConfig =
-      NexusConfig.builder().nexusUrl(DEFAULT_NEXUS_URL).username("admin").password("admin123".toCharArray()).build();
+      NexusConfig.builder().nexusUrl(DEFAULT_NEXUS_URL).username("admin").password("wings123!".toCharArray()).build();
   private NexusConfig nexusThreeConfig = NexusConfig.builder()
                                              .nexusUrl(DEFAULT_NEXUS_URL)
                                              .version("3.x")
                                              .username("admin")
-                                             .password("admin123".toCharArray())
+                                             .password("wings123!".toCharArray())
                                              .build();
 
   @Test
@@ -271,7 +274,7 @@ public class NexusServiceTest extends WingsBaseTest {
                                                  + "</indexBrowserTreeViewResponse>")
                                              .withHeader("Content-Type", "application/xml")));
 
-    assertThat(nexusService.getGroupIdPaths(nexusConfig, null, "releases")).hasSize(1).contains("fakepath");
+    assertThat(nexusService.getGroupIdPaths(nexusConfig, null, "releases", null)).hasSize(1).contains("fakepath");
   }
 
   @Test
@@ -565,8 +568,15 @@ public class NexusServiceTest extends WingsBaseTest {
             "/nexus/service/local/repositories/releases/index_content/software/wings/nexus/rest-client/3.0/rest-client-3.0.jar"))
                              .willReturn(aResponse().withBody(new byte[] {1, 2, 3, 4})));
     // TODO: Need to mock the file input stream
+    ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder()
+                                                            .repositoryName("releases")
+                                                            .groupId("software.wings.nexus")
+                                                            .artifactName("rest-client")
+                                                            .build();
+    Map<String, String> artifactMetadata = new HashMap<>();
+    artifactMetadata.put(ArtifactMetadataKeys.buildNo, "LATEST");
     Pair<String, InputStream> fileInfo = nexusService.downloadArtifacts(
-        nexusConfig, null, "releases", "software.wings.nexus", "rest-client", "LATEST", null, null, null, null);
+        nexusConfig, null, artifactStreamAttributes, artifactMetadata, null, null, null, null);
 
     assertThat(fileInfo).isNotNull();
     assertThat(fileInfo.getKey()).isEqualTo("rest-client-3.0.jar");
@@ -592,7 +602,7 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldDockerImages() {
-    assertThat(nexusService.getGroupIdPaths(nexusThreeConfig, null, "docker-group"))
+    assertThat(nexusService.getGroupIdPaths(nexusThreeConfig, null, "docker-group", RepositoryType.docker.name()))
         .hasSize(1)
         .contains("wingsplugins/todolist");
   }

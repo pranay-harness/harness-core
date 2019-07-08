@@ -9,6 +9,7 @@ import io.harness.waiter.ListNotifyResponseData;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.DelegateTaskResponse;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.NexusConfig;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.DelegateFileManager;
@@ -16,6 +17,7 @@ import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -43,8 +45,8 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask {
   @Override
   public ListNotifyResponseData run(Object[] parameters) {
     try {
-      return run((NexusConfig) parameters[0], (List<EncryptedDataDetail>) parameters[1], (String) parameters[2],
-          (String) parameters[3], (List<String>) parameters[4], (String) parameters[5]);
+      return run((NexusConfig) parameters[0], (List<EncryptedDataDetail>) parameters[1],
+          (ArtifactStreamAttributes) parameters[2], (Map<String, String>) parameters[3]);
     } catch (Exception e) {
       logger.error("Exception occurred while collecting artifact", e);
       return new ListNotifyResponseData();
@@ -52,14 +54,13 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask {
   }
 
   public ListNotifyResponseData run(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoType, String groupId, List<String> artifactPaths, String version) {
+      ArtifactStreamAttributes artifactStreamAttributes, Map<String, String> artifactMetadata) {
     ListNotifyResponseData res = new ListNotifyResponseData();
     try {
-      for (String artifactPath : artifactPaths) {
-        logger.info("Collecting artifact {}  from Nexus server {}", artifactPath, nexusConfig.getNexusUrl());
-        nexusService.downloadArtifacts(nexusConfig, encryptionDetails, repoType, groupId, artifactPath, version,
-            getDelegateId(), getTaskId(), getAccountId(), res);
-      }
+      logger.info("Collecting artifact {}  from Nexus server {}", nexusConfig.getNexusUrl());
+      nexusService.downloadArtifacts(nexusConfig, encryptionDetails, artifactStreamAttributes, artifactMetadata,
+          getDelegateId(), getTaskId(), getAccountId(), res);
+
     } catch (Exception e) {
       logger.warn("Exception: " + ExceptionUtils.getMessage(e), e);
     }

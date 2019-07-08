@@ -38,7 +38,11 @@ public interface NexusBuildService extends BuildService<NexusConfig> {
       String jobName, String groupId, NexusConfig config, List<EncryptedDataDetail> encryptionDetails);
 
   @DelegateTaskType(TaskType.NEXUS_GET_GROUP_IDS)
-  List<String> getGroupIds(String repoType, NexusConfig config, List<EncryptedDataDetail> encryptionDetails);
+  List<String> getGroupIds(String repositoryName, NexusConfig config, List<EncryptedDataDetail> encryptionDetails);
+
+  @DelegateTaskType(TaskType.NEXUS_GET_GROUP_IDS)
+  List<String> getGroupIds(
+      String repositoryName, String repositoryType, NexusConfig config, List<EncryptedDataDetail> encryptionDetails);
 
   @DelegateTaskType(TaskType.NEXUS_GET_BUILDS)
   List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes, NexusConfig config,

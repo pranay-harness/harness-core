@@ -43,6 +43,11 @@ public class Artifact extends Base {
     public static final String url = "url";
     public static final String image = "image";
     public static final String tag = "tag";
+    public static final String repositoryName = "repositoryName";
+    public static final String nexusPackageName = "package";
+    public static final String version = "version";
+    public static final String nexusGroupId = "groupId";
+    public static final String nexusArtifactId = "artifactId";
   }
 
   public static final class ArtifactKeys {

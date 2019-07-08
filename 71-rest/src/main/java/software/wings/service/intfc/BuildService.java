@@ -162,11 +162,16 @@ public interface BuildService<T> {
   /**
    * Gets group Id paths.
    *
-   * @param repoType The repo type
+   * @param repositoryName The repo id or name
    * @param config   the config
    * @return the groupId paths
    */
-  default List<String> getGroupIds(String repoType, T config, List<EncryptedDataDetail> encryptionDetails) {
+  default List<String> getGroupIds(String repositoryName, T config, List<EncryptedDataDetail> encryptionDetails) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<String> getGroupIds(
+      String repositoryName, String repositoryType, T config, List<EncryptedDataDetail> encryptionDetails) {
     throw new UnsupportedOperationException();
   }
 

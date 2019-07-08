@@ -68,6 +68,9 @@ public class NexusBuildServiceImpl implements NexusBuildService {
       if (artifactStreamAttributes.getArtifactType() != null
           && artifactStreamAttributes.getArtifactType().equals(ArtifactType.DOCKER)) {
         return nexusService.getBuilds(config, encryptionDetails, artifactStreamAttributes, 50);
+      } else if (artifactStreamAttributes.getRepositoryType().equals(RepositoryType.nuget.name())) {
+        return nexusService.getVersions(config, encryptionDetails, artifactStreamAttributes.getJobName(),
+            artifactStreamAttributes.getNexusPackageName());
       } else {
         return nexusService.getVersions(config, encryptionDetails, artifactStreamAttributes.getJobName(),
             artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName());
@@ -75,6 +78,9 @@ public class NexusBuildServiceImpl implements NexusBuildService {
     } else {
       if (artifactStreamAttributes.getRepositoryType().equals(RepositoryType.docker.name())) {
         return nexusService.getBuilds(config, encryptionDetails, artifactStreamAttributes, 50);
+      } else if (artifactStreamAttributes.getRepositoryType().equals(RepositoryType.nuget.name())) {
+        return nexusService.getVersions(config, encryptionDetails, artifactStreamAttributes.getJobName(),
+            artifactStreamAttributes.getNexusPackageName());
       } else {
         return nexusService.getVersions(config, encryptionDetails, artifactStreamAttributes.getJobName(),
             artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName());
@@ -99,8 +105,15 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   }
 
   @Override
-  public List<String> getGroupIds(String repoType, NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    return nexusService.getGroupIdPaths(config, encryptionDetails, repoType);
+  public List<String> getGroupIds(
+      String repositoryName, NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    return nexusService.getGroupIdPaths(config, encryptionDetails, repositoryName, null);
+  }
+
+  @Override
+  public List<String> getGroupIds(
+      String repositoryName, String repositoryType, NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    return nexusService.getGroupIdPaths(config, encryptionDetails, repositoryName, repositoryType);
   }
 
   @Override

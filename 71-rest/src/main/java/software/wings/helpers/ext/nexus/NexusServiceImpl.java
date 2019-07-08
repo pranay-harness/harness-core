@@ -11,7 +11,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.waiter.ListNotifyResponseData;
@@ -97,10 +96,10 @@ public class NexusServiceImpl implements NexusService {
             throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
                 .addParam("message", "Nexus 2.x does not support Docker artifact type");
           }
-          return nexusTwoService.getRepositories(nexusConfig, encryptionDetails);
+          return nexusTwoService.getRepositories(nexusConfig, encryptionDetails, repositoryType);
         } else {
           if (repositoryType == null || !repositoryType.equals(RepositoryType.docker.name())) {
-            throw new InvalidRequestException("Not supported for nexus 3.x", USER);
+            throw new WingsException("Not supported for nexus 3.x", USER);
           }
           return nexusThreeService.getRepositories(nexusConfig, encryptionDetails, repositoryType);
         }
@@ -122,13 +121,13 @@ public class NexusServiceImpl implements NexusService {
 
   @Override
   public List<String> getGroupIdPaths(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId) {
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String repositoryType) {
     List<String> groupIds = new ArrayList<>();
     try {
       boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
       timeLimiter.callWithTimeout(()
                                       -> isNexusTwo
-              ? nexusTwoService.collectGroupIds(nexusConfig, encryptionDetails, repoId, groupIds)
+              ? nexusTwoService.collectGroupIds(nexusConfig, encryptionDetails, repoId, groupIds, repositoryType)
               : nexusThreeService.getDockerImages(nexusConfig, encryptionDetails, repoId, groupIds),
           20L, TimeUnit.SECONDS, true);
     } catch (UncheckedTimeoutException e) {
@@ -176,11 +175,13 @@ public class NexusServiceImpl implements NexusService {
 
   @Override
   public Pair<String, InputStream> downloadArtifacts(NexusConfig nexusConfig,
-      List<EncryptedDataDetail> encryptionDetails, String repoType, String groupId, String artifactName, String version,
-      String delegateId, String taskId, String accountId, ListNotifyResponseData notifyResponseData) {
+      List<EncryptedDataDetail> encryptionDetails, ArtifactStreamAttributes artifactStreamAttributes,
+      Map<String, String> artifactMetadata, String delegateId, String taskId, String accountId,
+      ListNotifyResponseData notifyResponseData) {
     try {
-      return nexusTwoService.downloadArtifact(nexusConfig, encryptionDetails, repoType, groupId, artifactName, version,
-          delegateId, taskId, accountId, notifyResponseData);
+      return nexusTwoService.downloadArtifact(nexusConfig, encryptionDetails, artifactStreamAttributes,
+          artifactMetadata, delegateId, taskId, accountId, notifyResponseData);
+
     } catch (IOException e) {
       logger.error("Error occurred while downloading the artifact", e);
       throw new WingsException(ARTIFACT_SERVER_ERROR, USER).addParam("message", ExceptionUtils.getMessage(e));
@@ -212,6 +213,21 @@ public class NexusServiceImpl implements NexusService {
           format(
               "Error occurred while retrieving versions from Nexus server %s for Repository %s under group id %s and artifact name %s",
               nexusConfig.getNexusUrl(), repoId, groupId, artifactName),
+          e);
+      handleException(e);
+    }
+    return new ArrayList<>();
+  }
+
+  @Override
+  public List<BuildDetails> getVersions(
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String packageName) {
+    try {
+      return nexusTwoService.getVersions(nexusConfig, encryptionDetails, repoId, packageName);
+    } catch (final IOException e) {
+      logger.error(
+          format("Error occurred while retrieving versions from Nexus server %s for Repository %s under package %s",
+              nexusConfig.getNexusUrl(), repoId, packageName),
           e);
       handleException(e);
     }

@@ -22,6 +22,7 @@ import com.google.inject.name.Named;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.Service;
@@ -267,7 +268,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
     return Sets.newTreeSet(
-        getBuildService(settingAttribute, appId).getGroupIds(repoType, settingValue, encryptedDataDetails));
+        getBuildService(settingAttribute, appId).getGroupIds(repoType, null, settingValue, encryptedDataDetails));
   }
 
   @Override
@@ -484,5 +485,15 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     return getBuildService(streamType, settingAttribute)
         .getArtifactPathsByStreamType(
             getSettingValue(settingAttribute), getEncryptedDataDetails((EncryptableSetting) settingValue), streamType);
+  }
+
+  @Override
+  public Set<String> fetchNexusPackageNames(@NotEmpty String appId, @NotEmpty String repositoryName,
+      @NotEmpty String repositoryType, @NotEmpty String settingId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    return Sets.newTreeSet(getBuildService(settingAttribute, appId)
+                               .getGroupIds(repositoryName, repositoryType, settingValue, encryptedDataDetails));
   }
 }
