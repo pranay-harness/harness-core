@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeAuthorityCount;
 import static java.util.Arrays.asList;
@@ -41,6 +42,7 @@ import io.harness.account.ProvisionStep.ProvisionStepKeys;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.eraro.ErrorCode;
@@ -1201,9 +1203,14 @@ public class AccountServiceImpl implements AccountService {
   }
 
   public Account updateWhitelistedDomains(String accountId, Set<String> whitelistedDomains) {
-    Account account = get(accountId);
-    account.setWhitelistedDomains(whitelistedDomains);
-    return update(account);
+    Set<String> trimmedWhitelistedDomains =
+        whitelistedDomains.stream().map(String::trim).filter(EmptyPredicate::isNotEmpty).collect(Collectors.toSet());
+    UpdateOperations<Account> whitelistedDomainsUpdateOperations =
+        wingsPersistence.createUpdateOperations(Account.class);
+    setUnset(whitelistedDomainsUpdateOperations, AccountKeys.whitelistedDomains, trimmedWhitelistedDomains);
+    wingsPersistence.update(wingsPersistence.createQuery(Account.class).filter(Mapper.ID_KEY, accountId),
+        whitelistedDomainsUpdateOperations);
+    return get(accountId);
   }
 
   public AccountSettingsResponse getAuthSettingsByAccountId(String accountId) {
