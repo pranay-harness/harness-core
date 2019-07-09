@@ -85,6 +85,8 @@ public class ThirdPartyApiCallLogsIntegrationTest extends BaseIntegrationTest {
     savedApiCallLogs.forEach(savedApiCallLog -> {
       assertNotNull(savedApiCallLog.getUuid());
       savedApiCallLog.setUuid(null);
+      assertTrue(savedApiCallLog.getCreatedAt() > 0);
+      savedApiCallLog.setCreatedAt(0);
     });
 
     assertTrue(CollectionUtils.isEqualCollection(apiCallLogs, savedApiCallLogs));
