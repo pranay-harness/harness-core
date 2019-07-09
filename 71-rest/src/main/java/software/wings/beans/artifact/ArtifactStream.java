@@ -76,7 +76,7 @@ public abstract class ArtifactStream
   private boolean metadataOnly;
   private int failedCronAttempts;
   @Indexed private Long nextIteration;
-  private Long nextCleanupIteration;
+  @Indexed private Long nextCleanupIteration;
   private String templateUuid;
   private String templateVersion;
   private List<Variable> templateVariables = new ArrayList<>();

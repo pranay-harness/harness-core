@@ -3,6 +3,7 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.PersistentIterable;
 import io.harness.persistence.UuidAware;
 import lombok.Builder;
 import lombok.Data;
@@ -26,20 +27,35 @@ import javax.validation.constraints.NotNull;
 
 @Entity(value = "barrierInstances", noClassnameStored = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "search", unique = true), fields = {
-    @Field("name"), @Field("pipeline.executionId")
-  })
+  @Index(options = @IndexOptions(name = "search", unique = true),
+      fields = { @Field("name")
+                 , @Field("pipeline.executionId") })
+  ,
+      @Index(options = @IndexOptions(name = "next"), fields = { @Field("state")
+                                                                , @Field("nextIteration") })
 })
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "BarrierInstanceKeys")
-public class BarrierInstance implements PersistentEntity, UuidAware {
+public class BarrierInstance implements PersistentEntity, UuidAware, PersistentIterable {
   @Id private String uuid;
   @Indexed @NotNull protected String appId;
 
   private String name;
   @Indexed private String state;
+
+  private Long nextIteration;
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    return nextIteration;
+  }
+
+  @Override
+  public void updateNextIteration(String fieldName, Long nextIteration) {
+    this.nextIteration = nextIteration;
+  }
 
   @Data
   @Builder

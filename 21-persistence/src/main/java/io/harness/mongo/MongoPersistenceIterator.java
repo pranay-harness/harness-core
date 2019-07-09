@@ -114,8 +114,9 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
 
         Duration sleepInterval = maximumDaleyForCheck == null ? targetInterval : maximumDaleyForCheck;
 
-        if (first != null && first.obtainNextIteration(fieldName) != null) {
-          final Duration nextEntity = ofMillis(Math.max(0, first.obtainNextIteration(fieldName) - currentTimeMillis()));
+        final Long nextIteration = entity.obtainNextIteration(fieldName);
+        if (first != null && nextIteration != null) {
+          final Duration nextEntity = ofMillis(Math.max(0, nextIteration - currentTimeMillis()));
           if (nextEntity.compareTo(maximumDaleyForCheck) < 0) {
             sleepInterval = nextEntity;
           }
@@ -155,8 +156,8 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
       return;
     }
 
-    long delay =
-        entity.obtainNextIteration(fieldName) == null ? 0 : currentTimeMillis() - entity.obtainNextIteration(fieldName);
+    final Long nextIteration = entity.obtainNextIteration(fieldName);
+    long delay = nextIteration == null ? 0 : currentTimeMillis() - nextIteration;
     if (delay < acceptableDelay.toMillis()) {
       logger.info("Working on entity {}.{} with delay {}", clazz.getCanonicalName(), entity.getUuid(), delay);
     } else {

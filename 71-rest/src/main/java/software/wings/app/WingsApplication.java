@@ -116,7 +116,6 @@ import software.wings.scheduler.AccountIdAdditionJob;
 import software.wings.scheduler.AdministrativeJob;
 import software.wings.scheduler.ArtifactCleanupHandler;
 import software.wings.scheduler.ArtifactCollectionHandler;
-import software.wings.scheduler.BarrierBackupJob;
 import software.wings.scheduler.ExecutionLogsPruneJob;
 import software.wings.scheduler.InstancesPurgeJob;
 import software.wings.scheduler.LicenseCheckJob;
@@ -135,6 +134,7 @@ import software.wings.security.AuthenticationFilter;
 import software.wings.security.ThreadLocalUserProvider;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.AuditServiceImpl;
+import software.wings.service.impl.BarrierServiceImpl;
 import software.wings.service.impl.DelayEventListener;
 import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.ExecutionEventListener;
@@ -603,6 +603,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     InstanceSyncHandler.InstanceSyncExecutor.registerIterators(injector);
     ApprovalPollingHandler.ApprovalPollingExecutor.registerIterators(injector);
     GCPBillingHandler.GCPBillingExecutor.registerIterators(injector);
+    BarrierServiceImpl.registerIterators(injector);
   }
 
   private void registerCronJobs(Injector injector) {
@@ -618,7 +619,6 @@ public class WingsApplication extends Application<MainConfiguration> {
       // and they will initialize the jobs.
       if (acquiredLock != null) {
         WorkflowExecutionMonitorJob.add(jobScheduler);
-        BarrierBackupJob.addJob(jobScheduler);
         ResourceConstraintBackupJob.addJob(jobScheduler);
         PersistentLockCleanupJob.add(jobScheduler);
         ZombieHunterJob.scheduleJobs(jobScheduler);
