@@ -26,6 +26,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
@@ -35,6 +36,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.TimeSeriesMetricDefinition;
+import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataKeys;
 import software.wings.service.impl.analysis.MetricAnalysisRecord.MetricAnalysisRecordKeys;
@@ -590,5 +592,34 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     // delete verification service tasks
     wingsPersistence.delete(wingsPersistence.createQuery(AnalysisContext.class)
                                 .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId));
+  }
+
+  @Override
+  public void saveRawDataToGoogleDataStore(
+      String accountId, String stateExecutionId, ExecutionStatus executionStatus, String serviceId) {
+    if (dataStoreService instanceof GoogleDataStoreServiceImpl) {
+      try {
+        Query<TimeSeriesMLAnalysisRecord> query =
+            wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
+                .filter(MetricAnalysisRecordKeys.stateExecutionId, stateExecutionId);
+
+        Map<String, Map<String, TimeSeriesRawData>> rawDataMap = new HashMap<>();
+        try (HIterator<TimeSeriesMLAnalysisRecord> records = new HIterator<>(query.fetch())) {
+          while (records.hasNext()) {
+            TimeSeriesMLAnalysisRecord record = records.next();
+            TimeSeriesRawData.populateRawDataFromAnalysisRecords(
+                record, accountId, executionStatus, rawDataMap, serviceId);
+          }
+        }
+
+        List<TimeSeriesRawData> rawDataList = new ArrayList<>();
+        rawDataMap.values().forEach(metricMap -> rawDataList.addAll(metricMap.values()));
+
+        dataStoreService.save(TimeSeriesRawData.class, rawDataList, true);
+        logger.info("Saved {} raw data time series records to GoogleDataStore", rawDataList.size());
+      } catch (Exception e) {
+        logger.error("Exception while saving time series raw data to Google DataStore", e);
+      }
+    }
   }
 }

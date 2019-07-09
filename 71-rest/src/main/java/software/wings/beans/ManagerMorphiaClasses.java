@@ -102,6 +102,7 @@ import software.wings.service.impl.analysis.TimeSeriesMLScores;
 import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
+import software.wings.service.impl.analysis.TimeSeriesRawData;
 import software.wings.service.impl.analysis.TimeSeriesRiskSummary;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
@@ -196,7 +197,7 @@ public class ManagerMorphiaClasses {
       HarnessTagLink.class, CVFeedbackRecord.class, SecretManagerConfig.class, VaultLegacyConfig.class,
       KmsLegacyConfig.class, AwsSecretsManagerLegacyConfig.class, LocalEncryptionConfig.class, ResourceLookup.class,
       LoginSettings.class, GCPUsageReport.class, GCPBillingJobEntity.class, DashboardSettings.class,
-      InfrastructureDefinition.class, GcpMarketplaceEvent.class);
+      InfrastructureDefinition.class, GcpMarketplaceEvent.class, TimeSeriesRawData.class);
 
   public static final Set<Class> dependentClasses =
       ImmutableSet.<Class>of(EncryptionConfig.class, EncryptedRecord.class, ExecutionCapabilityDemander.class);

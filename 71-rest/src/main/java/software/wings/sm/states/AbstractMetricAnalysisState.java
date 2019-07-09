@@ -26,6 +26,7 @@ import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.time.Timestamp;
 import io.harness.version.VersionInfoManager;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.PcfInstanceElement;
 import software.wings.beans.FeatureName;
@@ -59,6 +60,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by rsingh on 9/25/17.
  */
+@Slf4j
 public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState {
   public static final int SMOOTH_WINDOW = 3;
   public static final int MIN_REQUESTS_PER_MINUTE = 10;
@@ -349,6 +351,10 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       getLogger().info("State done with status {}, id: {}", executionStatus, context.getStateExecutionInstanceId());
       continuousVerificationService.setMetaDataExecutionStatus(
           context.getStateExecutionInstanceId(), executionStatus, false);
+
+      metricAnalysisService.saveRawDataToGoogleDataStore(
+          context.getAccountId(), context.getStateExecutionInstanceId(), executionStatus, getPhaseServiceId(context));
+
       return anExecutionResponse()
           .withExecutionStatus(
               isQAVerificationPath(appService.get(context.getAppId()).getAccountId(), context.getAppId())

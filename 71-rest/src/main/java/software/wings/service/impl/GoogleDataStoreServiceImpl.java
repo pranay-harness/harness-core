@@ -367,4 +367,30 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
 
     builder.set(key, BlobValue.newBuilder(value).setExcludeFromIndexes(excludeFromIndex).build());
   }
+
+  public static <T> void addFieldIfNotEmpty(
+      com.google.cloud.datastore.Entity.Builder builder, String key, List value, Class<T> clazz) {
+    if (value == null || value.size() == 0) {
+      return;
+    }
+
+    com.google.cloud.datastore.ListValue.Builder listBuilder = ListValue.newBuilder();
+
+    for (Object entry : value) {
+      if (clazz.equals(Integer.class)) {
+        listBuilder.addValue(((Integer) entry).longValue());
+      } else if (clazz.equals(Long.class)) {
+        listBuilder.addValue((Long) entry);
+      } else if (clazz.equals(Double.class)) {
+        listBuilder.addValue((Double) entry);
+      } else if (clazz.equals(String.class)) {
+        listBuilder.addValue((String) entry);
+      } else {
+        logger.error("GDS addField in list: Class not supported {}", entry.getClass());
+      }
+    }
+
+    ListValue listValue = listBuilder.build();
+    builder.set(key, listValue);
+  }
 }
