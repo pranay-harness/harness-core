@@ -70,6 +70,7 @@ import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.MetricDataAnalysisServiceImpl;
+import software.wings.service.impl.analysis.TSRequest;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.newrelic.MetricUtilHelper;
 import software.wings.service.impl.newrelic.NewRelicApplication;
@@ -316,28 +317,6 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
             record.getValues().put(APDEX_SCORE, r.nextDouble());
 
             metricDataRecords.add(record);
-
-            // add more records for duplicate records for the same time
-            if (collectionMin > 0) {
-              record = new NewRelicMetricDataRecord();
-              record.setName(metricName);
-              record.setHost(host);
-              record.setWorkflowId(workflowId);
-              record.setWorkflowExecutionId(workflowExecutionId);
-              record.setServiceId(serviceId);
-              record.setStateExecutionId(stateExecutionId);
-              // duplicate for previous minute
-              record.setTimeStamp(collectionMin - 1);
-              record.setDataCollectionMinute(collectionMin);
-
-              record.setValues(new HashMap<>());
-              record.getValues().put(THROUGHPUT, r.nextDouble());
-              record.getValues().put(AVERAGE_RESPONSE_TIME, r.nextDouble());
-              record.getValues().put(ERROR, r.nextDouble());
-              record.getValues().put(APDEX_SCORE, r.nextDouble());
-
-              metricDataRecords.add(record);
-            }
           }
         }
       }
@@ -355,9 +334,30 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
           entity(metricDataRecords, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
       assertTrue(restResponse.getResource());
 
+      target =
+          client.target(VERIFICATION_API_BASE + "/timeseries/save-metrics?accountId=" + accountId + "&applicationId="
+              + applicationId + "&stateExecutionId=" + stateExecutionId + "&delegateTaskId=" + delegateTaskId);
+      restResponse = getRequestBuilderWithLearningAuthHeader(target).post(
+          entity(metricDataRecords, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+      assertTrue(restResponse.getResource());
+
+      target = client.target(VERIFICATION_API_BASE + "/timeseries/get-metrics?accountId=" + accountId
+          + "&appId=" + applicationId + "&compareCurrent=" + true + "&groupName=" + DEFAULT_GROUP_NAME);
+      RestResponse<Set<NewRelicMetricDataRecord>> metricResponse =
+          getRequestBuilderWithLearningAuthHeader(target).post(entity(TSRequest.builder()
+                                                                          .stateExecutionId(stateExecutionId)
+                                                                          .nodes(hosts)
+                                                                          .analysisMinute(numOfMinutes)
+                                                                          .analysisStartMinute(0)
+                                                                          .build(),
+                                                                   APPLICATION_JSON),
+              new GenericType<RestResponse<Set<NewRelicMetricDataRecord>>>() {});
+
+      final Set<NewRelicMetricDataRecord> metricsFromDb = metricResponse.getResource();
+      assertEquals((batchNum + 1) * numOfMetricsPerBatch * hosts.size() * numOfMinutes, metricsFromDb.size());
       Query<NewRelicMetricDataRecord> query =
           wingsPersistence.createQuery(NewRelicMetricDataRecord.class).filter("stateExecutionId", stateExecutionId);
-      assertEquals((batchNum + 1) * numOfMetricsPerBatch * hosts.size() * numOfMinutes, query.count());
+      assertEquals((batchNum + 1) * numOfMetricsPerBatch * hosts.size() * numOfMinutes * 2, query.count());
     }
   }
 
