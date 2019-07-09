@@ -29,8 +29,8 @@ import java.util.stream.Collectors;
 @Singleton
 public class GCPMarketPlaceServiceImpl implements GCPMarketPlaceService {
   public static final double DEFAULT_PERCENTILE = 95.0D;
-  private static final ChronoUnit SYNC_CHRONO_UNIT = ChronoUnit.DAYS;
-  private static final long SYNC_INTERVAL = TimeUnit.DAYS.toDays(1);
+  private static final ChronoUnit SYNC_CHRONO_UNIT = ChronoUnit.HOURS;
+  private static final long SYNC_INTERVAL = TimeUnit.HOURS.toHours(1);
 
   @Inject private InstanceStatService statService;
   @Inject private GCPUsageReportService gcpUsageReportService;

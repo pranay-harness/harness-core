@@ -1309,7 +1309,7 @@ public class UserServiceImpl implements UserService {
     boolean isGcpMarketPlace = MarketPlaceType.GCP == marketPlaceType;
     if (isGcpMarketPlace) {
       // 1. Create billing scheduler entry
-      final Instant nextIteration = Instant.now().truncatedTo(ChronoUnit.DAYS).plus(25, ChronoUnit.HOURS);
+      final Instant nextIteration = Instant.now().plus(1, ChronoUnit.HOURS);
       gcpBillingPollingService.create(new GCPBillingJobEntity(
           accountId, marketPlace.getCustomerIdentificationCode(), nextIteration.toEpochMilli()));
 
