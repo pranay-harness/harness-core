@@ -23,6 +23,7 @@ import migrations.all.LogAnalysisAddExecutionIdMigration;
 import migrations.all.LogAnalysisBaselineMigration;
 import migrations.all.MarkSendMailFlagAsTrueInUserGroup;
 import migrations.all.MigrateLogDataRecordsToGoogle;
+import migrations.all.MigrateTimeSeriesRawDataToGoogle;
 import migrations.all.RemoveSupportEmailFromSalesContacts;
 import migrations.all.SendInviteUrlForAllUserInvites;
 import migrations.all.SetDummyTechStackForOldAccounts;
@@ -78,6 +79,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(35, InitInfraProvisionerCounters.class))
         .add(Pair.of(36, DeleteStaleThirdPartyApiCallLogsMigration.class))
         .add(Pair.of(37, AddAccountToCVFeedbackRecordMigration.class))
+        .add(Pair.of(38, MigrateTimeSeriesRawDataToGoogle.class))
         .build();
   }
 }

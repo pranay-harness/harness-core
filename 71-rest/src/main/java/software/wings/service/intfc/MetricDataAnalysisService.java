@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import io.harness.beans.ExecutionStatus;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
@@ -49,4 +50,7 @@ public interface MetricDataAnalysisService {
 
   boolean deleteCustomThreshold(String appId, StateType stateType, String serviceId, String cvConfigId,
       String groupName, String transactionName, String metricName);
+
+  void saveRawDataToGoogleDataStore(
+      String accountId, String stateExecutionId, ExecutionStatus executionStatus, String serviceId);
 }
