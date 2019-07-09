@@ -5,7 +5,6 @@ import static io.harness.rule.OwnerRule.MARK;
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -48,8 +47,8 @@ import software.wings.beans.RoleType;
 import software.wings.beans.User;
 import software.wings.beans.User.UserKeys;
 import software.wings.beans.UserInvite;
+import software.wings.beans.UserInvite.UserInviteBuilder;
 import software.wings.beans.UserInvite.UserInviteKeys;
-import software.wings.beans.UserInviteSource.SourceType;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.resources.UserResource.ResendInvitationEmailRequest;
 import software.wings.security.AuthenticationFilter;
@@ -108,8 +107,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     // 3. Once the user is disabled, its logintype call will fail with 401 unauthorized error.
     target = client.target(API_BASE + "/users/logintype?userName=" + defaultEmail + "&accountId=" + userAccountId);
     try {
-      RestResponse<LoginTypeResponse> loginTypeResponse =
-          getRequestBuilder(target).get(new GenericType<RestResponse<LoginTypeResponse>>() {});
+      getRequestBuilder(target).get(new GenericType<RestResponse<LoginTypeResponse>>() {});
       fail("NotAuthorizedException is expected");
     } catch (NotAuthorizedException e) {
       // Expected 'HTTP 401 Unauthorized' exception here.
@@ -301,41 +299,39 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   @Category(IntegrationTests.class)
   public void testTrialSignupSuccess() {
     final String name = "Mark Lu";
-    final String pwd = "somepwd";
+    final String pwd = "somepwd123456";
     final String email = "mark" + System.currentTimeMillis() + "@harness.io";
 
-    WebTarget target = client.target(API_BASE + "/users/trial");
+    UserInvite userInvite = UserInviteBuilder.anUserInvite()
+                                .withAccountId(accountId)
+                                .withName(name)
+                                .withCompanyName("Freemium Inc")
+                                .withAccountName("Freemium Inc")
+                                .withEmail(email)
+                                .build();
+    userInvite.setPassword(pwd.toCharArray());
+
+    WebTarget target = client.target(API_BASE + "/users/new-trial");
     // Trial signup with just one email address, nothing else.
     RestResponse<Boolean> response =
-        target.request().post(entity(email, TEXT_PLAIN), new GenericType<RestResponse<Boolean>>() {});
+        target.request().post(entity(userInvite, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
     assertEquals(0, response.getResponseMessages().size());
     assertTrue(response.getResource());
 
     // Trial signup again using the same email should succeed. A new verification email will be sent.
-    response = target.request().post(entity(email, TEXT_PLAIN), new GenericType<RestResponse<Boolean>>() {});
+    response = target.request().post(entity(userInvite, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
     assertEquals(0, response.getResponseMessages().size());
     assertTrue(response.getResource());
 
-    UserInvite userInvite = wingsPersistence.createQuery(UserInvite.class).filter(UserInviteKeys.email, email).get();
+    userInvite = wingsPersistence.createQuery(UserInvite.class).filter(UserInviteKeys.email, email).get();
     assertNotNull(userInvite);
     assertFalse(userInvite.isCompleted());
     String inviteId = userInvite.getUuid();
     assertNotNull(inviteId);
 
-    // Preparing for completing the invitation.
-    final String accountName = "Harness_" + System.currentTimeMillis();
-    final String companyName = "Harness_" + System.currentTimeMillis();
-    userInvite.setName(name);
-    userInvite.setAgreement(true);
-    userInvite.setPassword(pwd.toCharArray());
-
     // Complete the trial invitation.
-    userInvite = completeTrialUserInvite(inviteId, userInvite, accountName, companyName);
-    assertTrue(userInvite.isCompleted());
-    assertEquals(SourceType.TRIAL, userInvite.getSource().getType());
-    String accountId = userInvite.getAccountId();
-    assertNotNull(userInvite.getAccountId());
-    assertTrue(userInvite.isAgreement());
+    User user = completeTrialUserInviteAndSignin(inviteId);
+    assertNotNull(user.getToken());
 
     // Verify the account get created.
     Account account = accountService.get(accountId);
@@ -347,10 +343,12 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     assertTrue(savedUser.isEmailVerified());
     assertEquals(1, savedUser.getAccounts().size());
 
+    userInvite.setPassword(pwd.toCharArray());
     // Trial signup a few more time using the same email will trigger the rejection, and the singup result will be
     // false.
     for (int i = 0; i < UserServiceImpl.REGISTRATION_SPAM_THRESHOLD; i++) {
-      response = target.request().post(entity(email, TEXT_PLAIN), new GenericType<RestResponse<Boolean>>() {});
+      response =
+          target.request().post(entity(userInvite, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
     }
     assertEquals(0, response.getResponseMessages().size());
     assertFalse(response.getResource());
@@ -545,38 +543,6 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Category(IntegrationTests.class)
-  public void testSignupBadEmailDomain() throws IOException {
-    final String name = "Brad  Pitt    ";
-    final String email = "xyz@some-email.io";
-    final char[] pwd = "somepwd".toCharArray();
-    final String accountName = " star   wars   ";
-    final String companyName = "  star   wars    enterprise   ";
-    WebTarget target = client.target(API_BASE + "/users");
-
-    try {
-      RestResponse<User> response = target.request().post(entity(anUser()
-                                                                     .withName(name)
-                                                                     .withEmail(email)
-                                                                     .withPassword(pwd)
-                                                                     .withRoles(getAccountAdminRoles())
-                                                                     .withAccountName(accountName)
-                                                                     .withCompanyName(companyName)
-                                                                     .build(),
-                                                              APPLICATION_JSON),
-          new GenericType<RestResponse<User>>() {});
-      Assert.fail("was able to sign up with bad email");
-    } catch (ClientErrorException e) {
-      assertEquals(HttpStatus.SC_UNAUTHORIZED, e.getResponse().getStatus());
-      final String jsonResponse = new String(ByteStreams.toByteArray((InputStream) e.getResponse().getEntity()));
-      final RestResponse<User> restResponse =
-          JsonUtils.asObject(jsonResponse, new TypeReference<RestResponse<User>>() {});
-      assertEquals(1, restResponse.getResponseMessages().size());
-      assertEquals(ErrorCode.USER_DOMAIN_NOT_ALLOWED, restResponse.getResponseMessages().get(0).getCode());
-    }
-  }
-
-  @Test
-  @Category(IntegrationTests.class)
   public void testSignupEmailExists() throws IOException {
     final String name = "Brad  Pitt    ";
     final String email = "admin@harness.io";
@@ -672,12 +638,10 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
         .getResponse();
   }
 
-  private UserInvite completeTrialUserInvite(
-      String inviteId, UserInvite userInvite, String accountName, String companyName) {
-    WebTarget target = client.target(
-        API_BASE + "/users/invites/trial/" + inviteId + "?account=" + accountName + "&company=" + companyName);
-    RestResponse<UserInvite> response =
-        target.request().put(entity(userInvite, APPLICATION_JSON), new GenericType<RestResponse<UserInvite>>() {});
+  private User completeTrialUserInviteAndSignin(String inviteId) {
+    WebTarget target = client.target(API_BASE + "/users/invites/trial/" + inviteId + "/new-signin");
+    RestResponse<User> response =
+        target.request().put(entity(inviteId, APPLICATION_JSON), new GenericType<RestResponse<User>>() {});
     assertEquals(0, response.getResponseMessages().size());
     assertNotNull(response.getResource());
 

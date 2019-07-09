@@ -242,13 +242,6 @@ public interface UserService extends OwnedByAccount {
   boolean verifyToken(String token);
 
   /**
-   * Update stats fetched on.
-   *
-   * @param user the user
-   */
-  void updateStatsFetchedOnForUser(User user);
-
-  /**
    * Invite user user invite.
    *
    * @param userInvite the user invite
@@ -339,16 +332,6 @@ public interface UserService extends OwnedByAccount {
    * @return the new User
    */
   User signUpUserUsingOauth(OauthUserInfo userInfo, String oauthProviderName);
-
-  /**
-   * Complete the trial user signup and signin. Both the trial account and the account admin user will be created
-   * as part of this operation.
-   *
-   * @param user The user to be signed up for a free trial
-   * @param userInvite the user invite.
-   * @return the completed user invite
-   */
-  User completeTrialSignupAndSignIn(User user, UserInvite userInvite);
 
   /**
    * Complete the trial user signup and signin. Both the trial account and the account admin user will be created
@@ -445,8 +428,6 @@ public interface UserService extends OwnedByAccount {
 
   boolean isUserAssignedToAccount(User user, String accountId);
 
-  List<String> fetchUserEmailAddressesFromUserIds(List<String> userIds);
-
   boolean isUserVerified(User user);
 
   List<User> getUsersOfAccount(@NotEmpty String accountId);
@@ -487,8 +468,6 @@ public interface UserService extends OwnedByAccount {
    *
    */
   boolean accountJoinRequest(AccountJoinRequest accountJoinRequest);
-
-  boolean isOauthEnabled(User user);
 
   boolean postCustomEvent(String accountId, String event);
 

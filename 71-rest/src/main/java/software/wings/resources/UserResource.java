@@ -186,22 +186,6 @@ public class UserResource {
   }
 
   /**
-   *  Start the trial registration with an email. A verification/signup email will be sent to the
-   *  specified email address for the next steps in completing the signup process.
-   *
-   * @param email the email of the user who is registering for a trial account.
-   */
-  @PublicApi
-  @POST
-  @Path("trial")
-  @Consumes(MediaType.TEXT_PLAIN)
-  @Timed
-  @ExceptionMetered
-  public RestResponse<Boolean> trialSignup(String email) {
-    return new RestResponse<>(userService.trialSignup(email));
-  }
-
-  /**
    *  Start the trial registration with email and user info.
    *  A verification email will be sent to the specified email address.
    *  On successful verification, it creates the account and registers the user.
@@ -1034,44 +1018,6 @@ public class UserResource {
     userInvite.setAccountId(accountId);
     userInvite.setUuid(inviteId);
     return new RestResponse<>(userService.completeInviteAndSignIn(userInvite));
-  }
-
-  @PublicApi
-  @PUT
-  @Path("invites/trial/{inviteId}")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<UserInvite> completeTrialSignup(@QueryParam("account") @NotEmpty String accountName,
-      @QueryParam("company") @NotEmpty String companyName, @PathParam("inviteId") @NotEmpty String inviteId,
-      @NotNull UserInvite userInvite) {
-    userInvite.setUuid(inviteId);
-    User user = User.Builder.anUser()
-                    .withEmail(userInvite.getEmail())
-                    .withName(userInvite.getName())
-                    .withPassword(userInvite.getPassword())
-                    .withAccountName(accountName)
-                    .withCompanyName(companyName)
-                    .build();
-    return getPublicUserInvite(userService.completeTrialSignup(user, userInvite));
-  }
-
-  @PublicApi
-  @PUT
-  @Path("invites/trial/{inviteId}/signin")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<User> completeTrialSignupAndSignIn(@QueryParam("account") @NotEmpty String accountName,
-      @QueryParam("company") @NotEmpty String companyName, @PathParam("inviteId") @NotEmpty String inviteId,
-      @NotNull UserInvite userInvite) {
-    userInvite.setUuid(inviteId);
-    User user = User.Builder.anUser()
-                    .withEmail(userInvite.getEmail())
-                    .withName(userInvite.getName())
-                    .withPassword(userInvite.getPassword())
-                    .withAccountName(accountName)
-                    .withCompanyName(companyName)
-                    .build();
-    return new RestResponse<>(userService.completeTrialSignupAndSignIn(user, userInvite));
   }
 
   @PublicApi
