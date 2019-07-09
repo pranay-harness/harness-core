@@ -36,7 +36,7 @@ public class GCPBillingHandler implements Handler<GCPBillingJobEntity> {
       PersistenceIterator iterator = MongoPersistenceIterator.<GCPBillingJobEntity>builder()
                                          .clazz(GCPBillingJobEntity.class)
                                          .fieldName(GCPBillingJobEntityKeys.nextIteration)
-                                         .targetInterval(ofMinutes(1440))
+                                         .targetInterval(ofMinutes(60))
                                          .acceptableDelay(ofMinutes(1))
                                          .executorService(executor)
                                          .semaphore(semaphore)
@@ -45,13 +45,13 @@ public class GCPBillingHandler implements Handler<GCPBillingJobEntity> {
                                          .build();
 
       injector.injectMembers(iterator);
-      executor.scheduleAtFixedRate(() -> iterator.process(ProcessMode.PUMP), 0, 60, TimeUnit.MINUTES);
+      executor.scheduleAtFixedRate(() -> iterator.process(ProcessMode.PUMP), 0, 30, TimeUnit.MINUTES);
     }
   }
 
   @Override
   public void handle(GCPBillingJobEntity entity) {
-    logger.info("Inside GCP billing handler !! {} ", entity.toString());
+    logger.info("Inside GCP billing handler ! {} ", entity.toString());
     try {
       gcpMarketPlaceService.createUsageReport(entity.getAccountId(), entity.getGcpAccountId());
     } catch (Exception ex) {
