@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.distribution.barrier.Barrier.State.STANDING;
 import static io.harness.eraro.ErrorCode.BARRIERS_NOT_RUNNING_CONCURRENTLY;
 import static io.harness.govern.Switch.unhandled;
-import static io.harness.persistence.HQuery.excludeAuthority;
+import static java.time.Duration.ofMinutes;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.sm.StateType.BARRIER;
@@ -13,7 +13,9 @@ import static software.wings.sm.StateType.PHASE;
 import static software.wings.sm.StateType.PHASE_STEP;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
@@ -24,6 +26,9 @@ import io.harness.distribution.barrier.Forcer;
 import io.harness.distribution.barrier.Forcer.State;
 import io.harness.distribution.barrier.ForcerId;
 import io.harness.exception.WingsException;
+import io.harness.iterator.PersistenceIterator;
+import io.harness.iterator.PersistenceIterator.ProcessMode;
+import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HKeyIterator;
 import io.harness.waiter.WaitNotifyEngine;
@@ -48,6 +53,9 @@ import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 
@@ -60,6 +68,30 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowService workflowService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
+
+  public static void registerIterators(Injector injector) {
+    final int threads = 2;
+    final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
+        threads, new ThreadFactoryBuilder().setNameFormat("BarrierInstanceMonitor").build());
+
+    final BarrierService barrierService = injector.getInstance(BarrierService.class);
+
+    PersistenceIterator iterator =
+        MongoPersistenceIterator.<BarrierInstance>builder()
+            .clazz(BarrierInstance.class)
+            .fieldName(BarrierInstanceKeys.nextIteration)
+            .targetInterval(ofMinutes(1))
+            .acceptableDelay(ofMinutes(1))
+            .executorService(executor)
+            .semaphore(new Semaphore(threads))
+            .handler(barrierInstance -> barrierService.update(barrierInstance))
+            .filterExpander(query -> query.filter(BarrierInstanceKeys.state, STANDING.name()))
+            .redistribute(true)
+            .build();
+
+    injector.injectMembers(iterator);
+    executor.scheduleAtFixedRate(() -> iterator.process(ProcessMode.PUMP), 0, 1, TimeUnit.MINUTES);
+  }
 
   @Override
   public String save(@Valid BarrierInstance barrier) {
@@ -393,19 +425,6 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
                       .stepUuid(node.getId())
                       .build())
         .build();
-  }
-
-  @Override
-  public void updateAllActiveBarriers() {
-    try (HIterator<BarrierInstance> barrierInstances =
-             new HIterator<>(wingsPersistence.createQuery(BarrierInstance.class, excludeAuthority)
-                                 .filter(BarrierInstanceKeys.state, STANDING.name())
-                                 .fetch())) {
-      while (barrierInstances.hasNext()) {
-        BarrierInstance barrierInstance = barrierInstances.next();
-        update(barrierInstance);
-      }
-    }
   }
 
   @Override

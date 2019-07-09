@@ -12,6 +12,7 @@ public interface BarrierService {
   String save(@Valid BarrierInstance barrier);
   BarrierInstance get(String barrierId);
   BarrierInstance update(String appId, String barrierId);
+  BarrierInstance update(BarrierInstance barrierInstance);
 
   String findByStep(String appId, String pipelineStateId, String workflowExecutionId, String identifier);
 
@@ -26,6 +27,5 @@ public interface BarrierService {
   List<BarrierInstance> obtainInstances(
       String appId, List<OrchestrationWorkflowInfo> orchestrations, String pipelineExecutionId);
 
-  void updateAllActiveBarriers();
   void updateAllActiveBarriers(String appId);
 }
