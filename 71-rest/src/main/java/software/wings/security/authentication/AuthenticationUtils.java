@@ -1,6 +1,8 @@
 package software.wings.security.authentication;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.USER_DISABLED;
+import static io.harness.exception.WingsException.USER;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
@@ -9,6 +11,7 @@ import com.google.inject.Singleton;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
@@ -22,6 +25,7 @@ import java.util.EnumSet;
 import java.util.Map;
 
 @Singleton
+@Slf4j
 public class AuthenticationUtils {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;
@@ -46,6 +50,9 @@ public class AuthenticationUtils {
       } else {
         throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST, reportTargets);
       }
+    } else if (user.isDisabled()) {
+      logger.info("User {} is disabled.", userName);
+      throw new WingsException(USER_DISABLED, USER);
     }
     return user;
   }

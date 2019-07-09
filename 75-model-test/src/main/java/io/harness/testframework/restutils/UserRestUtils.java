@@ -115,28 +115,6 @@ public class UserRestUtils {
     return completed.getResource();
   }
 
-  public static UserInvite completeTrialUserSignup(
-      String bearerToken, String accountName, String companyName, UserInvite invite) {
-    Registration registration = new Registration();
-    registration.setAgreement(true);
-    registration.setEmail(invite.getEmail());
-    registration.setName(invite.getName());
-    registration.setPassword(UserConstants.DEFAULT_PASSWORD);
-    registration.setUuid(invite.getUuid());
-
-    RestResponse<UserInvite> completed = Setup.portal()
-                                             .auth()
-                                             .oauth2(bearerToken)
-                                             .queryParam("account", accountName)
-                                             .queryParam("company", companyName)
-                                             .body(registration, ObjectMapperType.GSON)
-                                             .contentType(ContentType.JSON)
-                                             .put("/users/invites/trial/" + invite.getUuid())
-                                             .as(new GenericType<RestResponse<UserInvite>>() {}.getType());
-
-    return completed.getResource();
-  }
-
   public static User completeNewTrialUserSignup(String bearerToken, String inviteId) {
     RestResponse<User> completed = Setup.portal()
                                        .auth()
@@ -145,38 +123,6 @@ public class UserRestUtils {
                                        .as(new GenericType<RestResponse<User>>() {}.getType());
 
     return completed.getResource();
-  }
-
-  public static User completeTrialUserSignupAndSignin(
-      String bearerToken, String accountName, String companyName, UserInvite invite) {
-    Registration registration = new Registration();
-    registration.setAgreement(true);
-    registration.setEmail(invite.getEmail());
-    registration.setName(invite.getName());
-    registration.setPassword(UserConstants.DEFAULT_PASSWORD);
-    registration.setUuid(invite.getUuid());
-
-    RestResponse<User> completed = Setup.portal()
-                                       .auth()
-                                       .oauth2(bearerToken)
-                                       .queryParam("account", accountName)
-                                       .queryParam("company", companyName)
-                                       .body(registration, ObjectMapperType.GSON)
-                                       .contentType(ContentType.JSON)
-                                       .put("/users/invites/trial/" + invite.getUuid() + "/signin")
-                                       .as(new GenericType<RestResponse<User>>() {}.getType());
-
-    return completed.getResource();
-  }
-
-  public static Boolean createTrialInvite(String emailId) {
-    RestResponse<Boolean> trialInviteResponse = Setup.portal()
-                                                    .body(emailId)
-                                                    .contentType(ContentType.TEXT)
-                                                    .post("/users/trial")
-                                                    .as(new GenericType<RestResponse<Boolean>>() {}.getType());
-
-    return trialInviteResponse.getResource();
   }
 
   public static Boolean createNewTrialInvite(UserInvite userInvite) {

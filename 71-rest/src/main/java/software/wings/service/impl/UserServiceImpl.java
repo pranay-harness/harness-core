@@ -22,7 +22,6 @@ import static io.harness.eraro.ErrorCode.USER_INVITATION_DOES_NOT_EXIST;
 import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
-import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -781,13 +780,6 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public void updateStatsFetchedOnForUser(User user) {
-    user.setStatsFetchedOn(System.currentTimeMillis());
-    wingsPersistence.updateFields(
-        User.class, user.getUuid(), ImmutableMap.of("statsFetchedOn", user.getStatsFetchedOn()));
-  }
-
-  @Override
   public List<UserInvite> inviteUsers(UserInvite userInvite) {
     String accountId = userInvite.getAccountId();
 
@@ -1207,12 +1199,6 @@ public class UserServiceImpl implements UserService {
   @Override
   public User completeInviteAndSignIn(UserInvite userInvite) {
     completeInvite(userInvite);
-    return authenticationManager.defaultLogin(userInvite.getEmail(), String.valueOf(userInvite.getPassword()));
-  }
-
-  @Override
-  public User completeTrialSignupAndSignIn(User user, UserInvite userInvite) {
-    completeTrialSignup(user, userInvite);
     return authenticationManager.defaultLogin(userInvite.getEmail(), String.valueOf(userInvite.getPassword()));
   }
 
@@ -2330,24 +2316,6 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public List<String> fetchUserEmailAddressesFromUserIds(List<String> userIds) {
-    if (isEmpty(userIds)) {
-      return asList();
-    }
-
-    return wingsPersistence.createQuery(User.class, excludeAuthority)
-        .field(User.ID_KEY)
-        .in(userIds)
-        .project(User.EMAIL_KEY, true)
-        .project(User.EMAIL_VERIFIED_KEY, true)
-        .asList()
-        .stream()
-        .filter(User::isEmailVerified)
-        .map(user -> user.getEmail())
-        .collect(toList());
-  }
-
-  @Override
   public boolean isUserVerified(User user) {
     if (user.getAccounts().size() > 0) {
       AuthenticationMechanism authenticationMechanism = getPrimaryAccount(user).getAuthenticationMechanism();
@@ -2446,14 +2414,6 @@ public class UserServiceImpl implements UserService {
       logger.info("User {} is enabled: {}", user.getEmail(), enabled);
     }
     return true;
-  }
-
-  public boolean isOauthEnabled(User user) {
-    final Account primaryAccount = accountService.get(user.getDefaultAccountId());
-    if (null != primaryAccount) {
-      return primaryAccount.isOauthEnabled();
-    }
-    return false;
   }
 
   public void sendPasswordExpirationWarning(String email, Integer passExpirationDays) {
