@@ -1159,8 +1159,6 @@ public class DelegateServiceImpl implements DelegateService {
       try {
         timeLimiter.callWithTimeout(() -> socket.fire(JsonUtils.asJson(delegate)), 15L, TimeUnit.SECONDS, true);
         lastHeartbeatSentAt.set(clock.millis());
-        logger.info("SeqNum sent to manager is: " + delegate.getSequenceNum());
-        logger.info("DelegateToken sent to manager is: " + delegate.getDelegateRandomToken());
       } catch (UncheckedTimeoutException ex) {
         logger.warn("Timed out sending heartbeat");
       } catch (Exception e) {
@@ -1200,10 +1198,13 @@ public class DelegateServiceImpl implements DelegateService {
       delegate.setPolllingModeEnabled(true);
       delegate.setCurrentlyExecutingDelegateTasks(
           currentlyExecutingTasks.values().stream().map(DelegateTask::getUuid).collect(toList()));
-      logger.info("SeqNum being sent to manager is: " + delegate.getSequenceNum());
-      logger.info("DelegateToken being sent to manager is: " + delegate.getDelegateRandomToken());
 
+      lastHeartbeatSentAt.set(clock.millis());
       RestResponse<Delegate> delegateResponse = execute(managerClient.delegateHeartbeat(accountId, delegate));
+      long now = clock.millis();
+      logger.info("Delegate {} received heartbeat response {} after sending. {} since last response.", delegateId,
+          getDurationString(lastHeartbeatSentAt.get(), now), getDurationString(lastHeartbeatReceivedAt.get(), now));
+      lastHeartbeatReceivedAt.set(now);
 
       Delegate delegateReceived = delegateResponse.getResource();
       if (delegateId.equals(delegateReceived.getUuid())) {
