@@ -2,6 +2,8 @@ package software.wings.common;
 
 import static java.util.Collections.unmodifiableList;
 
+import com.google.common.collect.Sets;
+
 import io.harness.event.model.EventConstants;
 import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
@@ -13,6 +15,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class VerificationConstants {
@@ -114,6 +117,12 @@ public class VerificationConstants {
       "learning_engine_feedback_task_queued_time_in_seconds";
   public static final String LEARNING_ENGINE_EXP_TASK_QUEUED_TIME_IN_SECONDS =
       "learning_engine_exp_task_queued_time_in_seconds";
+
+  public static final Set<String> VERIFICATION_SERVICE_METRICS =
+      Sets.newHashSet(LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS,
+          LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS, LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS,
+          LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_TIME_IN_SECONDS, LEARNING_ENGINE_EXP_TASK_QUEUED_TIME_IN_SECONDS);
+
   public static final String IGNORED_ERRORS_METRIC_NAME = "ignored_errors";
 
   public static final String HEARTBEAT_METRIC_NAME = "Harness heartbeat metric";

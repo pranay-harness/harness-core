@@ -17,6 +17,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Harness Metric Registry is a custom Metric Registry build on the top of CodeHale MetricRegistry
@@ -175,6 +176,10 @@ public class HarnessMetricRegistry {
     }
   }
 
+  public Enumeration<MetricFamilySamples> getMetric(Set<String> metricsList) {
+    return collectorRegistry.filteredMetricFamilySamples(getAbsoluteMetricName(metricsList));
+  }
+
   public Enumeration<MetricFamilySamples> getMetric() {
     return collectorRegistry.filteredMetricFamilySamples(new HashSet<>());
   }
@@ -184,6 +189,12 @@ public class HarnessMetricRegistry {
       return DEFAULT_METRIC_PATH_PREFIX + metricName;
     }
     return metricName;
+  }
+
+  public static Set<String> getAbsoluteMetricName(Set<String> metricNames) {
+    Set<String> absoluteMetricPath = new HashSet<>();
+    metricNames.forEach(metricName -> { absoluteMetricPath.add(getAbsoluteMetricName(metricName)); });
+    return absoluteMetricPath;
   }
 
   @VisibleForTesting
