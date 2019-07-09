@@ -18,6 +18,7 @@ import migrations.all.AddWhitelistedDomainsToAccountMigration;
 import migrations.all.AppDTemplateMigration;
 import migrations.all.AppKeywordsMigration;
 import migrations.all.AuditRecordMigration;
+import migrations.all.AuditViewerPermissionMigration;
 import migrations.all.AuthTokenTtlMigration;
 import migrations.all.CVCollectionCronFrequencyMigration;
 import migrations.all.CleanUpDatadogCallLogMigration;
@@ -253,6 +254,7 @@ public class MigrationList {
         .add(Pair.of(262, ResourceLookupMigration.class))
         .add(Pair.of(263, SetRollbackFlagToWorkflows.class))
         .add(Pair.of(264, BaseMigration.class))
+        .add(Pair.of(265, AuditViewerPermissionMigration.class))
         .build();
   }
 }
