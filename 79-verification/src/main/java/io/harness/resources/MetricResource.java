@@ -1,5 +1,7 @@
 package io.harness.resources;
 
+import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_METRICS;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -40,7 +42,7 @@ public class MetricResource {
   public String get() throws IOException {
     final StringWriter writer = new StringWriter();
     try {
-      TextFormat.write004(writer, metricRegistry.getMetric());
+      TextFormat.write004(writer, metricRegistry.getMetric(VERIFICATION_SERVICE_METRICS));
       writer.flush();
     } finally {
       writer.close();
