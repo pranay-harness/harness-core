@@ -152,7 +152,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -276,12 +275,9 @@ public class AccountServiceImpl implements AccountService {
       }
     }
 
-    String suggestedAccountName = suggestAccountName(accountName);
-    if (suggestedAccountName == null) {
-      throw new WingsException(GENERAL_ERROR, USER)
-          .addParam("message", "Account Name '" + accountName + "' already exists");
-    } else {
-      account.setAccountName(suggestedAccountName);
+    if (exists(account.getAccountName())) {
+      throw new WingsException(GENERAL_ERROR)
+          .addParam("message", "Account Name is already taken, please try a different one.");
     }
   }
 
@@ -415,38 +411,18 @@ public class AccountServiceImpl implements AccountService {
     update(account);
   }
 
-  /**
-   * Takes a valid account name and checks database for duplicates, if duplicate exists appends
-   * "-x" (where x is a random number between 0 and 1000) to the name and repeats the process until it generates a
-   * unique account name
-   * @param accountName user input account name
-   * @return uniqueAccountName
-   */
   @Override
   public String suggestAccountName(String accountName) {
+    String suggestedAccountName = accountName;
     Random rand = new Random();
-    int count = 0;
-    while (count < 20) {
-      String newAccountName = accountName + "-" + (1000 + rand.nextInt(9000));
-      if (!checkDuplicateAccountName(newAccountName)) {
-        return newAccountName;
+    do {
+      Account res =
+          wingsPersistence.createQuery(Account.class).filter(AccountKeys.accountName, suggestedAccountName).get();
+      if (res == null) {
+        return suggestedAccountName;
       }
-      count++;
-    }
-    return null;
-  }
-
-  /**
-   * Takes an account name and performs a case-insensitive check on all account names in database
-   * @param accountName account name
-   * @return Returns true if duplicate is found else false
-   */
-  private Boolean checkDuplicateAccountName(@NotNull String accountName) {
-    return wingsPersistence.createQuery(Account.class, excludeAuthority)
-               .field(AccountKeys.accountName)
-               .equalIgnoreCase(accountName)
-               .get()
-        != null;
+      suggestedAccountName = accountName + rand.nextInt(1000);
+    } while (true);
   }
 
   @Override

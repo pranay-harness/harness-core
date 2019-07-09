@@ -99,13 +99,6 @@ public class AccountServiceTest extends WingsBaseTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
   private static final String HARNESS_NAME = "Harness";
-  private final String serviceId = UUID.randomUUID().toString();
-  private final String envId = UUID.randomUUID().toString();
-  private final String accountId = UUID.randomUUID().toString();
-  private final String appId = UUID.randomUUID().toString();
-  private final String workflowId = UUID.randomUUID().toString();
-  private final String cvConfigId = UUID.randomUUID().toString();
-  private final User user = new User();
 
   @Before
   public void setup() throws IllegalAccessException {
@@ -378,6 +371,14 @@ public class AccountServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testGetServicesForAccountBreadcrumb() {
+    String serviceId = UUID.randomUUID().toString();
+    String envId = UUID.randomUUID().toString();
+    String accountId = UUID.randomUUID().toString();
+    String appId = UUID.randomUUID().toString();
+    String workflowId = UUID.randomUUID().toString();
+    String cvConfigId = UUID.randomUUID().toString();
+    User user = new User();
+
     // setup
     setupCvServicesTests(accountId, serviceId + "-test", envId, appId, cvConfigId + "-test", workflowId, user);
     setupCvServicesTests(accountId, serviceId, envId, appId, cvConfigId, workflowId, user);
@@ -396,6 +397,14 @@ public class AccountServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testGetServicesForAccount() {
+    String serviceId = UUID.randomUUID().toString();
+    String envId = UUID.randomUUID().toString();
+    String accountId = UUID.randomUUID().toString();
+    String appId = UUID.randomUUID().toString();
+    String workflowId = UUID.randomUUID().toString();
+    String cvConfigId = UUID.randomUUID().toString();
+    User user = new User();
+
     // setup
     setupCvServicesTests(accountId, serviceId, envId, appId, cvConfigId, workflowId, user);
     PageRequest<String> request = PageRequestBuilder.aPageRequest().withOffset("0").build();
@@ -415,6 +424,14 @@ public class AccountServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testGetServicesForAccountDisabledCVConfig() {
+    String serviceId = UUID.randomUUID().toString();
+    String envId = UUID.randomUUID().toString();
+    String accountId = UUID.randomUUID().toString();
+    String appId = UUID.randomUUID().toString();
+    String workflowId = UUID.randomUUID().toString();
+    String cvConfigId = UUID.randomUUID().toString();
+    User user = new User();
+
     // setup
     setupCvServicesTests(accountId, serviceId, envId, appId, cvConfigId, workflowId, user);
     // Save one with isEnabled set to false
@@ -447,6 +464,14 @@ public class AccountServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testGetServicesForAccountSpecificService() {
+    String serviceId = UUID.randomUUID().toString();
+    String envId = UUID.randomUUID().toString();
+    String accountId = UUID.randomUUID().toString();
+    String appId = UUID.randomUUID().toString();
+    String workflowId = UUID.randomUUID().toString();
+    String cvConfigId = UUID.randomUUID().toString();
+    User user = new User();
+
     // setup
     setupCvServicesTests(accountId, serviceId + "-test", envId, appId, cvConfigId + "-test", workflowId, user);
     setupCvServicesTests(accountId, serviceId, envId, appId, cvConfigId, workflowId, user);
@@ -467,6 +492,14 @@ public class AccountServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testGetServicesForAccountLastOffset() {
+    String serviceId = UUID.randomUUID().toString();
+    String envId = UUID.randomUUID().toString();
+    String accountId = UUID.randomUUID().toString();
+    String appId = UUID.randomUUID().toString();
+    String workflowId = UUID.randomUUID().toString();
+    String cvConfigId = UUID.randomUUID().toString();
+    User user = new User();
+
     // setup
     setupCvServicesTests(accountId, serviceId, envId, appId, cvConfigId, workflowId, user);
     PageRequest<String> request = PageRequestBuilder.aPageRequest().withOffset("1").build();
@@ -525,36 +558,6 @@ public class AccountServiceTest extends WingsBaseTest {
         .workflowPermissions(workflowPermissions)
         .pipelinePermissions(pipelinePermissions)
         .build();
-  }
-
-  /**
-   * Tests if function generates unique unique account names after checking for duplicates in db
-   */
-  @Test
-  @Category(UnitTests.class)
-  public void testSuggestedAccountName() {
-    // Add account
-    wingsPersistence.save(anAccount()
-                              .withUuid(UUID.randomUUID().toString())
-                              .withCompanyName(HARNESS_NAME)
-                              .withAccountName(HARNESS_NAME)
-                              .build());
-
-    // Check unique suggested account name
-    String suggestion1 = accountService.suggestAccountName(HARNESS_NAME);
-    assertThat(suggestion1).isNotEqualTo(HARNESS_NAME);
-
-    // Add suggested acccount name
-    wingsPersistence.save(anAccount()
-                              .withUuid(UUID.randomUUID().toString())
-                              .withCompanyName(HARNESS_NAME)
-                              .withAccountName(suggestion1)
-                              .build());
-
-    // Check for unique suggestions
-    String suggestion2 = accountService.suggestAccountName(HARNESS_NAME);
-    assertThat(suggestion2).isNotEqualTo(HARNESS_NAME);
-    assertThat(suggestion2).isNotEqualTo(suggestion1);
   }
 
   @Test
