@@ -43,7 +43,7 @@ import software.wings.helpers.ext.nexus.model.IndexBrowserTreeViewResponse;
 import software.wings.helpers.ext.nexus.model.Project;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.RepositoryType;
+import software.wings.utils.RepositoryFormat;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -75,8 +75,8 @@ public class NexusTwoServiceImpl {
   @Inject private ExecutorService executorService;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
-  public Map<String, String> getRepositories(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repositoryType) throws IOException {
+  public Map<String, String> getRepositories(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
+      String repositoryFormat) throws IOException {
     logger.info("Retrieving repositories");
     final Call<RepositoryListResourceResponse> request;
     if (nexusConfig.hasCredentials()) {
@@ -90,13 +90,13 @@ public class NexusTwoServiceImpl {
     final Response<RepositoryListResourceResponse> response = request.execute();
     if (isSuccessful(response)) {
       logger.info("Retrieving repositories success");
-      if (RepositoryType.maven.name().equals(repositoryType)) {
+      if (RepositoryFormat.maven.name().equals(repositoryFormat)) {
         return response.body()
             .getData()
             .stream()
             .filter(repositoryListResource -> "maven2".equals(repositoryListResource.getFormat()))
             .collect(toMap(RepositoryListResource::getId, RepositoryListResource::getName));
-      } else if (RepositoryType.nuget.name().equals(repositoryType)) {
+      } else if (RepositoryFormat.nuget.name().equals(repositoryFormat)) {
         return response.body()
             .getData()
             .stream()
@@ -129,11 +129,11 @@ public class NexusTwoServiceImpl {
   }
 
   public List<String> collectGroupIds(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoId, List<String> groupIds, String repositoryType)
+      String repoId, List<String> groupIds, String repositoryFormat)
       throws ExecutionException, InterruptedException, IOException {
-    if (repositoryType == null || repositoryType.equals(RepositoryType.maven.name())) {
+    if (repositoryFormat == null || repositoryFormat.equals(RepositoryFormat.maven.name())) {
       return fetchMavenGroupIds(nexusConfig, encryptionDetails, repoId, groupIds);
-    } else if (repositoryType.equals(RepositoryType.nuget.name())) {
+    } else if (repositoryFormat.equals(RepositoryFormat.nuget.name())) {
       return collectPackageNames(nexusConfig, encryptionDetails, repoId, groupIds);
     }
     return groupIds;
@@ -340,9 +340,9 @@ public class NexusTwoServiceImpl {
       Map<String, String> artifactMetadata, String delegateId, String taskId, String accountId,
       ListNotifyResponseData notifyResponseData) throws IOException {
     final String repositoryName = artifactStreamAttributes.getRepositoryName();
-    final String repositoryType = artifactStreamAttributes.getRepositoryType();
+    final String repositoryFormat = artifactStreamAttributes.getRepositoryFormat();
     final String version = artifactMetadata.get(ArtifactMetadataKeys.buildNo);
-    if (repositoryType == null || repositoryType.equals(RepositoryType.maven.name())) {
+    if (repositoryFormat == null || repositoryFormat.equals(RepositoryFormat.maven.name())) {
       logger.info("Downloading artifact of repo {} group {} artifact {} and version {}", repositoryName,
           artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName(), version);
       final String url = getIndexContentPathUrl(nexusConfig, repositoryName,
@@ -355,7 +355,7 @@ public class NexusTwoServiceImpl {
         return getUrlInputStream(nexusConfig, encryptionDetails, response.body().getData().getChildren(), delegateId,
             taskId, accountId, notifyResponseData);
       }
-    } else if (repositoryType.equals(RepositoryType.nuget.name())) {
+    } else if (repositoryFormat.equals(RepositoryFormat.nuget.name())) {
       logger.info("Retrieving artifacts of  Repository {}, Package {} of Version {}", repositoryName,
           artifactStreamAttributes.getNexusPackageName(), version);
       Call<ContentListResourceResponse> request;

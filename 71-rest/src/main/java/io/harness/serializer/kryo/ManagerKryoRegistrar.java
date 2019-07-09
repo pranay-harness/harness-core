@@ -615,6 +615,7 @@ import software.wings.sm.states.ShellScriptState;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.ContainerFamily;
 import software.wings.utils.FileType;
+import software.wings.utils.RepositoryFormat;
 import software.wings.utils.RepositoryType;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.yaml.gitSync.YamlGitConfig;
@@ -1285,5 +1286,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(JiraCreateMetaResponse.class, 7201);
     kryo.register(ArtifactStreamSummary.class, 7202);
     kryo.register(AwsCrossAccountAttributes.class, 7203);
+    kryo.register(RepositoryFormat.class, 7204);
   }
 }

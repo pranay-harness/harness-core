@@ -23,7 +23,7 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.utils.RepositoryType;
+import software.wings.utils.RepositoryFormat;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -87,21 +87,21 @@ public class NexusServiceImpl implements NexusService {
   }
 
   public Map<String, String> getRepositories(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repositoryType) {
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repositoryFormat) {
     try {
       boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
       return timeLimiter.callWithTimeout(() -> {
         if (isNexusTwo) {
-          if (RepositoryType.docker.name().equals(repositoryType)) {
+          if (RepositoryFormat.docker.name().equals(repositoryFormat)) {
             throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
                 .addParam("message", "Nexus 2.x does not support Docker artifact type");
           }
-          return nexusTwoService.getRepositories(nexusConfig, encryptionDetails, repositoryType);
+          return nexusTwoService.getRepositories(nexusConfig, encryptionDetails, repositoryFormat);
         } else {
-          if (repositoryType == null || !repositoryType.equals(RepositoryType.docker.name())) {
+          if (repositoryFormat == null || !repositoryFormat.equals(RepositoryFormat.docker.name())) {
             throw new WingsException("Not supported for nexus 3.x", USER);
           }
-          return nexusThreeService.getRepositories(nexusConfig, encryptionDetails, repositoryType);
+          return nexusThreeService.getRepositories(nexusConfig, encryptionDetails, repositoryFormat);
         }
       }, 20L, TimeUnit.SECONDS, true);
     } catch (UncheckedTimeoutException e) {
@@ -121,13 +121,13 @@ public class NexusServiceImpl implements NexusService {
 
   @Override
   public List<String> getGroupIdPaths(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String repositoryType) {
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String repositoryFormat) {
     List<String> groupIds = new ArrayList<>();
     try {
       boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
       timeLimiter.callWithTimeout(()
                                       -> isNexusTwo
-              ? nexusTwoService.collectGroupIds(nexusConfig, encryptionDetails, repoId, groupIds, repositoryType)
+              ? nexusTwoService.collectGroupIds(nexusConfig, encryptionDetails, repoId, groupIds, repositoryFormat)
               : nexusThreeService.getDockerImages(nexusConfig, encryptionDetails, repoId, groupIds),
           20L, TimeUnit.SECONDS, true);
     } catch (UncheckedTimeoutException e) {

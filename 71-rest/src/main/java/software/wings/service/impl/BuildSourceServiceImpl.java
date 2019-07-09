@@ -50,7 +50,7 @@ import software.wings.service.intfc.artifact.CustomBuildSourceService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.utils.RepositoryType;
+import software.wings.utils.RepositoryFormat;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -432,11 +432,11 @@ public class BuildSourceServiceImpl implements BuildSourceService {
 
   @Override
   public Map<String, String> getPlansForRepositoryType(
-      String settingId, String streamType, RepositoryType repositoryType) {
+      String settingId, String streamType, RepositoryFormat repositoryFormat) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue value = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) value);
-    return getBuildService(settingAttribute).getPlans(value, encryptedDataDetails, repositoryType);
+    return getBuildService(settingAttribute).getPlans(value, encryptedDataDetails, repositoryFormat);
   }
 
   @Override
@@ -489,11 +489,11 @@ public class BuildSourceServiceImpl implements BuildSourceService {
 
   @Override
   public Set<String> fetchNexusPackageNames(@NotEmpty String appId, @NotEmpty String repositoryName,
-      @NotEmpty String repositoryType, @NotEmpty String settingId) {
+      @NotEmpty String repositoryFormat, @NotEmpty String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
     return Sets.newTreeSet(getBuildService(settingAttribute, appId)
-                               .getGroupIds(repositoryName, repositoryType, settingValue, encryptedDataDetails));
+                               .getGroupIds(repositoryName, repositoryFormat, settingValue, encryptedDataDetails));
   }
 }

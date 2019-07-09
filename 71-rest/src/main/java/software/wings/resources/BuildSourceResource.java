@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
@@ -69,9 +70,13 @@ public class BuildSourceResource {
   @ExceptionMetered
   public RestResponse<Map<String, String>> getBuildPlans(@QueryParam("appId") String appId,
       @QueryParam("settingId") String settingId, @QueryParam("serviceId") String serviceId,
-      @QueryParam("streamType") String streamType, @QueryParam("repositoryType") String repositoryType) {
+      @QueryParam("streamType") String streamType, @QueryParam("repositoryType") String repositoryType,
+      @QueryParam("repositoryFormat") String repositoryFormat) {
     if (isBlank(serviceId)) {
       return new RestResponse<>(buildSourceService.getPlans(appId, settingId, streamType));
+    }
+    if (isNotEmpty(repositoryFormat)) {
+      return new RestResponse<>(buildSourceService.getPlans(appId, settingId, serviceId, streamType, repositoryFormat));
     }
     return new RestResponse<>(buildSourceService.getPlans(appId, settingId, serviceId, streamType, repositoryType));
   }
@@ -175,10 +180,10 @@ public class BuildSourceResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Set<String>> fetchPackageNames(@QueryParam("appId") String appId,
-      @PathParam("repositoryName") String repositoryName, @QueryParam("repositoryType") String repositoryType,
+      @PathParam("repositoryName") String repositoryName, @QueryParam("repositoryFormat") String repositoryFormat,
       @QueryParam("settingId") String settingId) {
     return new RestResponse<>(
-        buildSourceService.fetchNexusPackageNames(appId, repositoryName, repositoryType, settingId));
+        buildSourceService.fetchNexusPackageNames(appId, repositoryName, repositoryFormat, settingId));
   }
 
   /**

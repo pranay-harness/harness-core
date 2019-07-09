@@ -27,7 +27,7 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.utils.RepositoryType;
+import software.wings.utils.RepositoryFormat;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -594,7 +594,7 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldGetDockerRepositories() {
-    assertThat(nexusService.getRepositories(nexusThreeConfig, null, RepositoryType.docker.name()))
+    assertThat(nexusService.getRepositories(nexusThreeConfig, null, RepositoryFormat.docker.name()))
         .hasSize(3)
         .containsEntry("docker-group", "docker-group");
   }
@@ -602,7 +602,7 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldDockerImages() {
-    assertThat(nexusService.getGroupIdPaths(nexusThreeConfig, null, "docker-group", RepositoryType.docker.name()))
+    assertThat(nexusService.getGroupIdPaths(nexusThreeConfig, null, "docker-group", RepositoryFormat.docker.name()))
         .hasSize(1)
         .contains("wingsplugins/todolist");
   }

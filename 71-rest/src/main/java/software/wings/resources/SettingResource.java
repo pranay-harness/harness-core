@@ -56,7 +56,7 @@ import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
-import software.wings.utils.RepositoryType;
+import software.wings.utils.RepositoryFormat;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -457,10 +457,10 @@ public class SettingResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Map<String, String>> getBuildPlans(@QueryParam("settingId") String settingId,
-      @QueryParam("streamType") String streamType, @QueryParam("repositoryType") String repositoryType) {
-    if (repositoryType != null) {
-      return new RestResponse<>(
-          buildSourceService.getPlansForRepositoryType(settingId, streamType, RepositoryType.valueOf(repositoryType)));
+      @QueryParam("streamType") String streamType, @QueryParam("repositoryFormat") String repositoryFormat) {
+    if (repositoryFormat != null) {
+      return new RestResponse<>(buildSourceService.getPlansForRepositoryType(
+          settingId, streamType, RepositoryFormat.valueOf(repositoryFormat)));
     }
     return new RestResponse<>(buildSourceService.getPlans(settingId, streamType));
   }

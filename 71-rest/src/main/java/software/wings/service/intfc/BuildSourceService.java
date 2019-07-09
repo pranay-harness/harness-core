@@ -8,7 +8,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
-import software.wings.utils.RepositoryType;
+import software.wings.utils.RepositoryFormat;
 
 import java.util.List;
 import java.util.Map;
@@ -170,7 +170,7 @@ public interface BuildSourceService {
   }
 
   default Set<String> fetchNexusPackageNames(@NotEmpty String appId, @NotEmpty String repositoryName,
-      @NotEmpty String repositoryType, @NotEmpty String settingId) {
+      @NotEmpty String repositoryFormat, @NotEmpty String settingId) {
     throw new UnsupportedOperationException();
   }
 
@@ -309,11 +309,11 @@ public interface BuildSourceService {
    *
    * @param settingId
    * @param streamType
-   * @param repositoryType
+   * @param repositoryFormat
    * @return
    */
   default Map<String, String> getPlansForRepositoryType(
-      @NotEmpty String settingId, String streamType, RepositoryType repositoryType) {
+      @NotEmpty String settingId, String streamType, RepositoryFormat repositoryFormat) {
     throw new UnsupportedOperationException();
   }
 

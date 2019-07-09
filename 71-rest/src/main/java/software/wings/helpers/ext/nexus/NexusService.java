@@ -28,7 +28,7 @@ public interface NexusService {
    * @return map RepoId and Name
    */
   Map<String, String> getRepositories(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repositoryType);
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repositoryFormat);
 
   /**
    * Get Artifact paths under repository
@@ -58,7 +58,7 @@ public interface NexusService {
    * @return
    */
   List<String> getGroupIdPaths(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String repositoryType);
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String repositoryFormat);
 
   /***
    *
