@@ -235,17 +235,17 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       PlanLogOutputStream planLogOutputStream = new PlanLogOutputStream(parameters, new ArrayList<>());
       switch (parameters.getCommand()) {
         case APPLY: {
-          /**
-           * The "echo yes" in the terraform init command below is required as a workaround for a Tf bug.
-           * In some versions of Tf, we have seen that -force-copy flag was not honoured by Tf.
-           * Please do not remove.
-           */
-          String command = format("terraform init -force-copy %s",
+          String command = format("terraform init %s",
               tfBackendConfigsFile.exists() ? format("-backend-config=%s", tfBackendConfigsFile.getAbsolutePath())
                                             : "");
+          /**
+           * echo "no" is to prevent copying of state from local to remote by suppressing the
+           * copy prompt. As of tf version 0.12.3
+           * there is no way to provide this as a command line argument
+           */
           saveExecutionLog(parameters, command, CommandExecutionStatus.RUNNING);
           code = executeShellCommand(
-              format("echo \"yes\" | %s", command), scriptDirectory, parameters, activityLogOutputStream);
+              format("echo \"no\" | %s", command), scriptDirectory, parameters, activityLogOutputStream);
 
           if (isNotEmpty(parameters.getWorkspace())) {
             WorkspaceCommand workspaceCommand =
