@@ -381,7 +381,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       throw new InvalidRequestException("Artifact Stream's metadata-only property cannot be changed", USER);
     }
 
+    // for artifactory
     validateRepositoryType(artifactStream, existingArtifactStream);
+    // for nexus
+    validateRepositoryFormat(artifactStream, existingArtifactStream);
 
     boolean versionChanged = false;
     List<Variable> oldTemplateVariables = existingArtifactStream.getTemplateVariables();
@@ -462,17 +465,23 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   private void validateRepositoryType(ArtifactStream artifactStream, ArtifactStream existingArtifactStream) {
     if (artifactStream != null && existingArtifactStream != null) {
-      if (artifactStream.getArtifactStreamType().equals(NEXUS.name())) {
-        if (!((NexusArtifactStream) artifactStream)
-                 .getRepositoryType()
-                 .equals(((NexusArtifactStream) existingArtifactStream).getRepositoryType())) {
-          throw new InvalidRequestException("Repository Type cannot be updated", USER);
-        }
-      } else if (artifactStream.getArtifactStreamType().equals(ARTIFACTORY.name())) {
+      if (artifactStream.getArtifactStreamType().equals(ARTIFACTORY.name())) {
         if (!((ArtifactoryArtifactStream) artifactStream)
                  .getRepositoryType()
                  .equals(((ArtifactoryArtifactStream) existingArtifactStream).getRepositoryType())) {
           throw new InvalidRequestException("Repository Type cannot be updated", USER);
+        }
+      }
+    }
+  }
+
+  private void validateRepositoryFormat(ArtifactStream artifactStream, ArtifactStream existingArtifactStream) {
+    if (artifactStream != null && existingArtifactStream != null) {
+      if (artifactStream.getArtifactStreamType().equals(NEXUS.name())) {
+        if (!((NexusArtifactStream) artifactStream)
+                 .getRepositoryFormat()
+                 .equals(((NexusArtifactStream) existingArtifactStream).getRepositoryFormat())) {
+          throw new InvalidRequestException("Repository Format cannot be updated", USER);
         }
       }
     }

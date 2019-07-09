@@ -28,7 +28,7 @@ import software.wings.helpers.ext.nexus.model.DockerImageTagResponse;
 import software.wings.helpers.ext.nexus.model.Nexus3Repository;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.RepositoryType;
+import software.wings.utils.RepositoryFormat;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,8 +42,8 @@ import java.util.stream.Collectors;
 public class NexusThreeServiceImpl {
   @Inject EncryptionService encryptionService;
 
-  public Map<String, String> getRepositories(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repositoryType) throws IOException {
+  public Map<String, String> getRepositories(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
+      String repositoryFormat) throws IOException {
     logger.info("Retrieving repositories");
     NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
     Response<List<Nexus3Repository>> response;
@@ -58,13 +58,13 @@ public class NexusThreeServiceImpl {
 
     if (isSuccessful(response)) {
       if (isNotEmpty(response.body())) {
-        logger.info(format("Retrieving %s repositories success", repositoryType));
+        logger.info(format("Retrieving %s repositories success", repositoryFormat));
         final Map<String, String> repositories;
-        if (repositoryType == null) {
+        if (repositoryFormat == null) {
           repositories =
               response.body().stream().collect(Collectors.toMap(Nexus3Repository::getName, Nexus3Repository::getName));
         } else {
-          final String filterBy = repositoryType.equals(RepositoryType.maven.name()) ? "maven2" : repositoryType;
+          final String filterBy = repositoryFormat.equals(RepositoryFormat.maven.name()) ? "maven2" : repositoryFormat;
           repositories = response.body()
                              .stream()
                              .filter(o -> o.getFormat().equals(filterBy))

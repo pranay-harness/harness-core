@@ -14,6 +14,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import software.wings.utils.RepositoryFormat;
 import software.wings.utils.RepositoryType;
 
 import java.text.SimpleDateFormat;
@@ -36,10 +37,11 @@ public class NexusArtifactStream extends ArtifactStream {
   private String dockerPort;
   private String dockerRegistryUrl;
   private String packageName;
+  private String repositoryFormat;
 
   public NexusArtifactStream() {
     super(NEXUS.name());
-    if (getRepositoryType().equals(RepositoryType.docker.name())) {
+    if (getRepositoryFormat().equals(RepositoryFormat.docker.name())) {
       this.setMetadataOnly(true);
     }
   }
@@ -49,7 +51,7 @@ public class NexusArtifactStream extends ArtifactStream {
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
       String name, boolean autoPopulate, String serviceId, boolean metadataOnly, String jobname, String groupId,
       String imageName, List<String> artifactPaths, String dockerPort, String dockerRegistryUrl, String repositoryType,
-      String accountId, List<String> keywords, String packageName) {
+      String accountId, List<String> keywords, String packageName, String repositoryFormat) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, NEXUS.name(), sourceName,
         settingId, name, autoPopulate, serviceId, metadataOnly, accountId, keywords);
     this.jobname = jobname;
@@ -60,6 +62,7 @@ public class NexusArtifactStream extends ArtifactStream {
     this.dockerRegistryUrl = dockerRegistryUrl;
     this.repositoryType = repositoryType;
     this.packageName = packageName;
+    this.repositoryFormat = repositoryFormat;
   }
 
   // Do not remove this unless UI changes to start using groupId
@@ -71,10 +74,10 @@ public class NexusArtifactStream extends ArtifactStream {
     if (isNotEmpty(artifactPaths)) {
       return format("%s_%s_%s", getSourceName(), buildNo, new SimpleDateFormat(dateFormat).format(new Date()));
     }
-    if (getRepositoryType().equals(RepositoryType.docker.name())) {
+    if (getRepositoryFormat().equals(RepositoryFormat.docker.name())) {
       return format("%s_%s_%s", getJobname() + "/" + getImageName(), buildNo,
           new SimpleDateFormat(dateFormat).format(new Date()));
-    } else if (getRepositoryType().equals(RepositoryType.nuget.name())) {
+    } else if (getRepositoryFormat().equals(RepositoryFormat.nuget.name())) {
       return format("%s_%s_%s", getJobname() + "/" + getPackageName(), buildNo,
           new SimpleDateFormat(dateFormat).format(new Date()));
     }
@@ -88,9 +91,9 @@ public class NexusArtifactStream extends ArtifactStream {
       builder.append('/').append(getGroupId());
       getArtifactPaths().forEach(artifactPath -> builder.append('/').append(artifactPath));
     } else {
-      if (getRepositoryType().equals(RepositoryType.docker.name())) {
+      if (getRepositoryFormat().equals(RepositoryFormat.docker.name())) {
         builder.append('/').append(getImageName());
-      } else if (getRepositoryType().equals(RepositoryType.nuget.name())) {
+      } else if (getRepositoryFormat().equals(RepositoryFormat.nuget.name())) {
         builder.append('/').append(getPackageName());
       }
     }
@@ -118,10 +121,24 @@ public class NexusArtifactStream extends ArtifactStream {
     return repositoryType;
   }
 
+  public String getRepositoryFormat() {
+    if (repositoryFormat != null) {
+      return repositoryFormat;
+    }
+    if (isEmpty(artifactPaths)) {
+      if (isEmpty(packageName)) {
+        repositoryFormat = RepositoryFormat.docker.name();
+      }
+    } else {
+      repositoryFormat = RepositoryFormat.maven.name();
+    }
+    return repositoryFormat;
+  }
+
   @Override
   public boolean artifactSourceChanged(ArtifactStream artifactStream) {
     boolean changed = super.artifactSourceChanged(artifactStream);
-    if (this.repositoryType.equals(RepositoryType.docker.name())) {
+    if (getRepositoryFormat().equals(RepositoryFormat.docker.name())) {
       return changed || registryUrlChanged(((NexusArtifactStream) artifactStream).dockerRegistryUrl);
     }
     return changed;
@@ -150,6 +167,7 @@ public class NexusArtifactStream extends ArtifactStream {
         .nexusDockerRegistryUrl(dockerRegistryUrl)
         .repositoryType(getRepositoryType())
         .nexusPackageName(packageName)
+        .repositoryFormat(getRepositoryFormat())
         .build();
   }
 
@@ -174,11 +192,28 @@ public class NexusArtifactStream extends ArtifactStream {
     private String repositoryType;
     private boolean metadataOnly;
     private String packageName;
+    private String repositoryFormat;
+
+    public void setRepositoryFormat(String repositoryFormat) {
+      if (repositoryFormat != null) {
+        this.repositoryFormat = repositoryFormat;
+        return;
+      }
+      if (isEmpty(artifactPaths)) {
+        if (isEmpty(packageName)) {
+          this.repositoryFormat = RepositoryFormat.docker.name();
+        } else {
+          this.repositoryFormat = RepositoryFormat.nuget.name();
+        }
+      } else {
+        this.repositoryFormat = RepositoryFormat.maven.name();
+      }
+    }
 
     @lombok.Builder
     public Yaml(String harnessApiVersion, String serverName, boolean metadataOnly, String repositoryName,
         String groupId, List<String> artifactPaths, String imageName, String dockerRegistryUrl, String repositoryType,
-        String packageName) {
+        String packageName, String repositoryFormat) {
       super(NEXUS.name(), harnessApiVersion, serverName);
       this.repositoryName = repositoryName;
       this.groupId = groupId;
@@ -188,6 +223,7 @@ public class NexusArtifactStream extends ArtifactStream {
       this.repositoryType = repositoryType;
       this.metadataOnly = metadataOnly;
       this.packageName = packageName;
+      this.repositoryFormat = repositoryFormat;
     }
   }
 }

@@ -76,6 +76,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.RepositoryFormat;
 import software.wings.utils.RepositoryType;
 
 import java.io.File;
@@ -224,7 +225,7 @@ public class ArtifactServiceImpl implements ArtifactService {
         return;
       } else {
         artifact.setContentStatus(
-            RepositoryType.docker.name().equals(((NexusArtifactStream) artifactStream).getRepositoryType())
+            RepositoryFormat.docker.name().equals(((NexusArtifactStream) artifactStream).getRepositoryFormat())
                 ? METADATA_ONLY
                 : NOT_DOWNLOADED);
         artifact.setStatus(APPROVED);

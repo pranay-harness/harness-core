@@ -7,7 +7,7 @@ import com.google.inject.Singleton;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream.Yaml;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.utils.RepositoryType;
+import software.wings.utils.RepositoryFormat;
 
 /**
  * @author rktummala on 10/09/17
@@ -28,8 +28,8 @@ public class NexusArtifactStreamYamlHandler
       yaml.setDockerRegistryUrl(bean.getDockerRegistryUrl());
     }
     yaml.setPackageName(bean.getPackageName());
-    yaml.setRepositoryType(bean.getRepositoryType());
-    if (!bean.getRepositoryType().equals(RepositoryType.docker.name())) {
+    yaml.setRepositoryFormat(bean.getRepositoryFormat());
+    if (!bean.getRepositoryFormat().equals(RepositoryFormat.docker.name())) {
       yaml.setMetadataOnly(bean.isMetadataOnly());
     } else {
       yaml.setMetadataOnly(true);
@@ -48,9 +48,9 @@ public class NexusArtifactStreamYamlHandler
       bean.setDockerRegistryUrl(yaml.getDockerRegistryUrl());
     }
     bean.setJobname(yaml.getRepositoryName());
-    bean.setRepositoryType(yaml.getRepositoryType());
     bean.setPackageName(yaml.getPackageName());
-    if (!yaml.getRepositoryType().equals(RepositoryType.docker.name())) {
+    bean.setRepositoryFormat(yaml.getRepositoryFormat());
+    if (!yaml.getRepositoryFormat().equals(RepositoryFormat.docker.name())) {
       bean.setMetadataOnly(yaml.isMetadataOnly());
     } else {
       bean.setMetadataOnly(true);

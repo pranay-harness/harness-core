@@ -77,6 +77,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.RepositoryFormat;
 import software.wings.utils.RepositoryType;
 
 import java.util.ArrayList;
@@ -409,7 +410,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedNexusArtifactStream.getJobname()).isEqualTo("releases");
     assertThat(savedNexusArtifactStream.getGroupId()).isEqualTo("io.harness.test");
     assertThat(savedNexusArtifactStream.getArtifactPaths()).contains("todolist");
-    assertThat(savedNexusArtifactStream.getRepositoryType()).isEqualTo(RepositoryType.maven.name());
+    assertThat(savedNexusArtifactStream.getRepositoryFormat()).isEqualTo(RepositoryFormat.maven.name());
   }
 
   @Test
@@ -421,7 +422,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedNexusArtifactStream.getJobname()).isEqualTo("releases");
     assertThat(savedNexusArtifactStream.getGroupId()).isEqualTo("io.harness.test");
     assertThat(savedNexusArtifactStream.getArtifactPaths()).contains("todolist");
-    assertThat(savedNexusArtifactStream.getRepositoryType()).isEqualTo(RepositoryType.maven.name());
+    assertThat(savedNexusArtifactStream.getRepositoryFormat()).isEqualTo(RepositoryFormat.maven.name());
   }
 
   private ArtifactStream createNexusArtifactStream() {
@@ -489,13 +490,13 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
   @Test(expected = InvalidRequestException.class)
   @Category(UnitTests.class)
-  public void shouldNotUpdateNexusArtifactStreamWithDifferentRepositoryType() {
+  public void shouldNotUpdateNexusArtifactStreamWithDifferentRepositoryFormat() {
     NexusArtifactStream savedNexusArtifactStream = (NexusArtifactStream) createNexusArtifactStreamAtConnectorLevel();
     assertThat(savedNexusArtifactStream.getJobname()).isEqualTo("releases");
     assertThat(savedNexusArtifactStream.getArtifactPaths()).contains("todolist");
-    assertThat(savedNexusArtifactStream.getRepositoryType()).isEqualTo(RepositoryType.maven.name());
+    assertThat(savedNexusArtifactStream.getRepositoryFormat()).isEqualTo(RepositoryFormat.maven.name());
 
-    savedNexusArtifactStream.setRepositoryType(RepositoryType.docker.name());
+    savedNexusArtifactStream.setRepositoryFormat(RepositoryFormat.docker.name());
     artifactStreamService.update(savedNexusArtifactStream);
   }
 
@@ -503,7 +504,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     NexusArtifactStream savedNexusArtifactStream = savedArtifactSteam;
     assertThat(savedNexusArtifactStream.getJobname()).isEqualTo("releases");
     assertThat(savedNexusArtifactStream.getArtifactPaths()).contains("todolist");
-    assertThat(savedNexusArtifactStream.getRepositoryType()).isEqualTo(RepositoryType.maven.name());
+    assertThat(savedNexusArtifactStream.getRepositoryFormat()).isEqualTo(RepositoryFormat.maven.name());
 
     savedNexusArtifactStream.setName("Nexus_Changed");
     savedNexusArtifactStream.setJobname("snapshots");
@@ -548,6 +549,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                         .imageName("wingsplugings/todolist")
                                                         .autoPopulate(true)
                                                         .serviceId(SERVICE_ID)
+                                                        .repositoryFormat(RepositoryFormat.docker.name())
                                                         .build();
     validateNexusDockerArtifactStream(nexusDockerArtifactStream, APP_ID);
   }
@@ -563,7 +565,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                         .groupId("wingsplugings/todolist")
                                                         .imageName("wingsplugings/todolist")
                                                         .autoPopulate(true)
-                                                        .repositoryType(RepositoryType.docker.name())
+                                                        .repositoryFormat(RepositoryFormat.docker.name())
                                                         .build();
     validateNexusDockerArtifactStream(nexusDockerArtifactStream, GLOBAL_APP_ID);
   }
