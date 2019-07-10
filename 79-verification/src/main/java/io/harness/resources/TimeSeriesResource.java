@@ -7,18 +7,23 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.entities.TimeSeriesAnomaliesRecord;
 import io.harness.entities.TimeSeriesCumulativeSums;
+import io.harness.managerclient.VerificationManagerClient;
+import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.rest.RestResponse;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import io.swagger.annotations.Api;
+import software.wings.beans.FeatureName;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.analysis.TSRequest;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.StateType;
 
@@ -42,11 +47,17 @@ import javax.ws.rs.QueryParam;
 public class TimeSeriesResource {
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Inject private LearningEngineService learningEngineService;
+  @Inject private VerificationManagerClient managerClient;
+  @Inject private VerificationManagerClientHelper managerClientHelper;
+  @Inject private DataStoreService dataStoreService;
 
   @VisibleForTesting
   @Inject
-  public TimeSeriesResource(TimeSeriesAnalysisService timeSeriesAnalysisService) {
+  public TimeSeriesResource(TimeSeriesAnalysisService timeSeriesAnalysisService,
+      VerificationManagerClientHelper managerClientHelper, VerificationManagerClient managerClient) {
     this.timeSeriesAnalysisService = timeSeriesAnalysisService;
+    this.managerClientHelper = managerClientHelper;
+    this.managerClient = managerClient;
   }
 
   @POST
@@ -142,8 +153,16 @@ public class TimeSeriesResource {
       @QueryParam("stateType") StateType stateType, @QueryParam("stateExecutionId") String stateExecutionId,
       @QueryParam("serviceId") String serviceId, @QueryParam("cvConfigId") String cvConfigId,
       @QueryParam("groupName") String groupName) {
-    return new RestResponse<>(timeSeriesAnalysisService.getMetricTemplate(
-        appId, stateType, stateExecutionId, serviceId, cvConfigId, groupName));
+    if (managerClientHelper
+            .callManagerWithRetry(managerClient.isFeatureEnabled(FeatureName.SUPERVISED_TS_THRESHOLD, accountId))
+            .getResource()
+        && dataStoreService instanceof GoogleDataStoreServiceImpl) {
+      return new RestResponse<>(timeSeriesAnalysisService.getMetricTemplateWithCategorizedThresholds(
+          appId, stateType, stateExecutionId, serviceId, cvConfigId, groupName));
+    } else {
+      return new RestResponse<>(timeSeriesAnalysisService.getMetricTemplate(
+          appId, stateType, stateExecutionId, serviceId, cvConfigId, groupName));
+    }
   }
 
   @Produces({"application/json", "application/v1+json"})

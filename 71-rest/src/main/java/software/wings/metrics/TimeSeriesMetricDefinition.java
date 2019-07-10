@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -17,6 +18,7 @@ public class TimeSeriesMetricDefinition {
   private MetricType metricType;
   private Set<String> tags;
   private List<Threshold> customThresholds;
+  private Map<ThresholdCategory, List<Threshold>> categorizedThresholds;
 
   @JsonProperty("metricType")
   public String getMetricTypeName() {

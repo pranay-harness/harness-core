@@ -69,6 +69,9 @@ public interface TimeSeriesAnalysisService {
   Map<String, Map<String, TimeSeriesMetricDefinition>> getMetricTemplate(String appId, StateType stateType,
       String stateExecutionId, String serviceId, String cvConfigId, String groupName);
 
+  Map<String, Map<String, TimeSeriesMetricDefinition>> getMetricTemplateWithCategorizedThresholds(String appId,
+      StateType stateType, String stateExecutionId, String serviceId, String cvConfigId, String groupName);
+
   NewRelicMetricDataRecord getAnalysisMinute(StateType stateType, String appId, String stateExecutionId,
       String workflowExecutionId, String serviceId, String groupName);
 
