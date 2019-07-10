@@ -108,6 +108,6 @@ public interface LogAnalysisService {
 
   Map<FeedbackAction, List<CVFeedbackRecord>> getUserFeedback(String cvConfigId, String stateExecutionId, String appId);
 
-  boolean updateAnalysisStatus(String fieldName, String fieldValue, long analysisMinute, LogMLAnalysisStatus status);
+  boolean createAndUpdateFeedbackAnalysis(String fieldName, String fieldValue, long analysisMinute);
   int getEndTimeForLogAnalysis(AnalysisContext context);
 }

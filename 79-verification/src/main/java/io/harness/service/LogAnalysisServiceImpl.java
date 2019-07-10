@@ -5,6 +5,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
@@ -1124,22 +1125,33 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     return logDataRecords == null ? -1 : logDataRecords.getLogCollectionMinute();
   }
 
-  public boolean updateAnalysisStatus(
-      String fieldName, String fieldValue, long analysisMinute, LogMLAnalysisStatus status) {
+  @Override
+  public boolean createAndUpdateFeedbackAnalysis(String fieldName, String fieldValue, long analysisMinute) {
     final Query<LogMLAnalysisRecord> query =
         wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
             .filter(fieldName, fieldValue) // this will query with either stateExecutionId or cvConfigId
-            .filter(LogMLAnalysisRecordKeys.logCollectionMinute, analysisMinute);
+            .filter(LogMLAnalysisRecordKeys.logCollectionMinute, analysisMinute)
+            .filter(LogMLAnalysisRecordKeys.analysisStatus, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
 
-    try {
-      UpdateResults results = wingsPersistence.update(query,
-          wingsPersistence.createUpdateOperations(LogMLAnalysisRecord.class)
-              .set(LogMLAnalysisRecordKeys.analysisStatus, status));
-      logger.info("for {} and minute {} bumped the analysisStatus to  {}", fieldValue, analysisMinute, status);
-      return true;
-    } catch (DuplicateKeyException e) {
-      logger.info("for {} and minute {} Failed to bump the analysisStatus to  {}", fieldValue, analysisMinute, status);
+    LogMLAnalysisRecord existingRecord = query.get();
+
+    if (existingRecord == null) {
+      logger.error("Missing LE analysis record for " + fieldName + " and " + fieldValue
+          + " and analysisMinute: " + analysisMinute);
       return false;
     }
+    existingRecord.setUuid(generateUuid());
+    existingRecord.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
+
+    try {
+      wingsPersistence.save(existingRecord);
+      return true;
+
+    } catch (Exception ex) {
+      logger.error("Error while creating a new Feedback Analysis for " + fieldName + " and " + fieldValue
+              + " and analysisMinute: " + analysisMinute,
+          ex);
+    }
+    return false;
   }
 }

@@ -700,8 +700,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     Query<LogMLAnalysisRecord> analysisRecordQuery =
         wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
             .filter(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId)
-            .order(Sort.descending(LogMLAnalysisRecordKeys.logCollectionMinute))
-            .order(Sort.descending("lastUpdatedAt"));
+            .order(Sort.descending(LogMLAnalysisRecordKeys.logCollectionMinute), Sort.descending("lastUpdatedAt"));
 
     if (recordsForThisExecution == null) {
       analysisRecordQuery =
