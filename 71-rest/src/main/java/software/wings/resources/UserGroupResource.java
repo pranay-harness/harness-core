@@ -282,6 +282,14 @@ public class UserGroupResource {
     return new RestResponse<>(userGroupService.deleteNonAdminUserGroups(accountId));
   }
 
+  @DELETE
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> delete(
+      @QueryParam("accountId") @NotEmpty String accountId, @NotEmpty List<String> userGroupsToRetain) {
+    return new RestResponse<>(userGroupService.deleteUserGroupsByName(accountId, userGroupsToRetain));
+  }
+
   /**
    * List for approvals
    *

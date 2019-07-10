@@ -156,11 +156,15 @@ public enum EntityType {
    */
   NEWRELIC_MARKER_APPID,
 
+  API_KEY,
+
   ACCOUNT,
 
   APPLICATION_MANIFEST,
 
   USER_GROUP,
+
+  WHITELISTED_IP,
 
   CF_AWS_CONFIG_ID,
 

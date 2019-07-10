@@ -48,6 +48,8 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
 
     NotificationSettings notificationSettings = userGroup.getNotificationSettings();
 
+    String accountId = notifications.get(0).getAccountId();
+
     // if `isUseIndividualEmails` is true, then notify all "members" of group
     if (notificationSettings.isUseIndividualEmails()) {
       List<String> emails =
@@ -57,8 +59,6 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
           userGroup.getUuid(), userGroup.getName());
       emailDispatcher.dispatch(notifications, emails);
     }
-
-    String accountId = notifications.get(0).getAccountId();
 
     if (CollectionUtils.isNotEmpty(userGroup.getEmailAddresses())) {
       try {
@@ -72,7 +72,7 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
     if (null != userGroup.getSlackConfig()) {
       try {
         log.info("{} - Trying to send slack message. slack configuration: {}", randLogId, userGroup.getSlackConfig());
-        slackMessageDispatcher.dispatch(notifications, userGroup.getSlackConfig());
+        slackMessageDispatcher.dispatch(accountId, notifications, userGroup.getSlackConfig());
       } catch (Exception e) {
         log.error("{} - Error sending slack message. Slack Config: {}", randLogId, userGroup.getSlackConfig(), e);
       }
@@ -89,7 +89,7 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
       try {
         log.info("{} - Trying to send pager duty event. pagerDutyKey: {}", randLogId,
             userGroup.getPagerDutyIntegrationKey());
-        pagerDutyEventDispatcher.dispatch(notifications, userGroup.getPagerDutyIntegrationKey());
+        pagerDutyEventDispatcher.dispatch(accountId, notifications, userGroup.getPagerDutyIntegrationKey());
       } catch (Exception e) {
         log.error("{} - Error sending pager duty event. pagerDutyKey: {}", randLogId,
             userGroup.getPagerDutyIntegrationKey(), e);

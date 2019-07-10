@@ -112,8 +112,6 @@ public interface AccountService {
 
   boolean isCommunityAccount(String accountId);
 
-  boolean isTrialAccount(String accountId);
-
   Set<String> getWhitelistedDomains(String accountId);
 
   Account updateWhitelistedDomains(String accountId, Set<String> whitelistedDomains);

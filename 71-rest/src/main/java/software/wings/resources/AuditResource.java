@@ -1,9 +1,11 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static software.wings.features.AuditTrailFeature.FEATURE_NAME;
 import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -16,10 +18,13 @@ import io.swagger.annotations.Api;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.audit.AuditHeaderYamlResponse;
+import software.wings.features.AuditTrailFeature;
+import software.wings.features.api.RestrictedFeature;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuditService;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
@@ -36,6 +41,7 @@ import javax.ws.rs.QueryParam;
 public class AuditResource {
   private AuditService httpAuditService;
   private AccountService accountService;
+  @Inject @Named(FEATURE_NAME) private RestrictedFeature auditTrailFeature;
 
   /**
    * Gets http audit service.
@@ -70,11 +76,11 @@ public class AuditResource {
   @AuthRule(permissionType = AUDIT_VIEWER)
   public RestResponse<PageResponse<AuditHeader>> list(
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<AuditHeader> pageRequest) {
-    // Restrict visibility to one week on UI
-    long oneWeekAgo = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(7);
-    boolean isCommunityAccount = accountService.isCommunityAccount(accountId);
-    if (isCommunityAccount) {
-      pageRequest.addFilter(AuditHeaderKeys.createdAt, Operator.GT, oneWeekAgo);
+    Optional<Integer> retentionPeriodInDays =
+        ((AuditTrailFeature) auditTrailFeature).getRetentionPeriodInDays(accountId);
+    if (retentionPeriodInDays.isPresent()) {
+      long fromInstantInPast = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(retentionPeriodInDays.get());
+      pageRequest.addFilter(AuditHeaderKeys.createdAt, Operator.GT, fromInstantInPast);
     }
 
     pageRequest.addFilter(AuditHeaderKeys.accountId, EQ, accountId);

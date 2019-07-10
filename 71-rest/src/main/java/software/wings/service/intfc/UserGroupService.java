@@ -136,6 +136,8 @@ public interface UserGroupService extends OwnedByAccount {
 
   List<UserGroup> getUserGroupsByAccountId(String accountId, User user);
 
+  List<UserGroup> getUserGroupsByAccountId(String accountId);
+
   List<String> getUserGroupIdsByAccountId(String accountId, User user);
 
   List<String> fetchUserGroupsMemberIds(String accountId, List<String> userGroupIds);
@@ -163,4 +165,6 @@ public interface UserGroupService extends OwnedByAccount {
   UserGroup getAdminUserGroup(String accountId);
 
   boolean deleteNonAdminUserGroups(String accountId);
+
+  boolean deleteUserGroupsByName(String accountId, List<String> userGroupsToRetain);
 }

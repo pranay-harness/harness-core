@@ -294,15 +294,6 @@ public class SSOResource {
     @NotBlank String password;
   }
 
-  @DELETE
-  @Path("settings")
-  public RestResponse<Boolean> deleteSSOSettingsForAccount(@QueryParam("accountId") @NotBlank String accountId,
-      @QueryParam("targetAccountType") @NotBlank String targetAccountType) {
-    logger.info("Received request to delete SSO violations for accountId={} and targetAccountType={}", accountId,
-        targetAccountType);
-    return new RestResponse<>(ssoService.deleteSSOSettingsForAccount(accountId, targetAccountType));
-  }
-
   /**
    * Returns redirect response to SAML authentication provider if SAML credentials exist for user
    * throws error if called when SAML account does not exist

@@ -27,6 +27,7 @@ import software.wings.beans.Account;
 import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.beans.security.access.Whitelist;
 import software.wings.beans.security.access.WhitelistStatus;
+import software.wings.features.api.PremiumFeature;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.WhitelistService;
 
@@ -52,6 +53,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   @Mock private MainConfiguration mainConfig;
 
   @InjectMocks @Inject private WhitelistService whitelistService;
+  @Mock private PremiumFeature ipWhitelistingFeature;
 
   private String accountId = UUIDGenerator.generateUuid();
   private String whitelistId = UUIDGenerator.generateUuid();
@@ -72,6 +74,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   public void setupMocks() {
     when(accountService.get(anyString())).thenReturn(account);
     when(mainConfig.getGlobalWhitelistConfig()).thenReturn(getHarnessDefaults());
+    when(ipWhitelistingFeature.isAvailableForAccount(accountId)).thenReturn(true);
   }
 
   private GlobalWhitelistConfig getHarnessDefaults() {
@@ -151,10 +154,10 @@ public class WhitelistServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testIsValidIpAddressTrueForLite() {
+  public void testIsValidIpAddressTrueIfFeatureIsUnavailable() {
     createWhitelists();
 
-    when(accountService.isCommunityAccount(accountId)).thenReturn(true);
+    when(ipWhitelistingFeature.isAvailableForAccount(accountId)).thenReturn(false);
 
     boolean valid = whitelistService.isValidIPAddress(accountId, IP_ADDRESS_1);
     assertTrue(valid);

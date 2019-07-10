@@ -1,0 +1,131 @@
+  SERVICES:
+   COMMUNITY:
+      maxServicesAllowed: 10
+   TRIAL:
+      maxServicesAllowed: 10
+
+  USERS:
+    COMMUNITY:
+      maxUsersAllowed: 5
+
+  SLACK_NOTIFICATION:
+    ESSENTIALS:
+      available: false
+
+  JIRA_NOTIFICATION:
+    COMMUNITY:
+      available: false
+    ESSENTIALS:
+      available: false
+
+  PAGERDUTY_NOTIFICATION:
+    COMMUNITY:
+      available: false
+    ESSENTIALS:
+      available: false
+
+  SERVICENOW_NOTIFICATION:
+    COMMUNITY:
+      available: false
+    ESSENTIALS:
+      available: false
+
+  SERVICE_GUARD:
+    COMMUNITY:
+      available: false
+    ESSENTIALS:
+      available: false
+
+  TEMPLATE_LIBRARY:
+    COMMUNITY:
+      available: false
+    ESSENTIALS:
+      available: false
+
+  FLOW_CONTROL:
+    COMMUNITY:
+      available: false
+    ESSENTIALS:
+      available: false
+
+  GIT_OPS:
+    COMMUNITY:
+      maxSourceReposAllowed: 1
+    ESSENTIALS:
+      maxSourceReposAllowed: 1
+
+  REST_API:
+    COMMUNITY:
+      available: false
+    ESSENTIALS:
+      available: false
+
+  SECRET_MANAGEMENT:
+    COMMUNITY:
+      isCustomSecretManagerAllowed: false
+    ESSENTIALS:
+      isCustomSecretManagerAllowed: false
+
+  RBAC:
+    COMMUNITY:
+      maxUserGroupsAllowed: 1
+    ESSENTIALS:
+      maxUserGroupsAllowed: 5
+
+  IP_WHITELISTING:
+    COMMUNITY:
+      available: false
+    ESSENTIALS:
+      available: false
+
+  TWO_FACTOR_AUTHENTICATION:
+    COMMUNITY:
+      available: false
+    ESSENTIALS:
+      available: false
+
+  LDAP:
+    COMMUNITY:
+      available: false
+    ESSENTIALS:
+      available: false
+
+  SAML:
+    COMMUNITY:
+      available: false
+    ESSENTIALS:
+      available: false
+
+  GOVERNANCE:
+    COMMUNITY:
+      available: false
+    ESSENTIALS:
+      available: false
+
+  APPROVAL_FLOW:
+    COMMUNITY:
+      allowedApprovalStepTypes: [USER_GROUP]
+    ESSENTIALS:
+      allowedApprovalStepTypes: [USER_GROUP]
+
+  DEPLOYMENT_HISTORY:
+    COMMUNITY:
+      retentionPeriodInDays: 7
+    ESSENTIALS:
+      retentionPeriodInDays: 7
+
+  AUDIT_TRAIL:
+    COMMUNITY:
+      retentionPeriodInDays: 7
+    ESSENTIALS:
+      retentionPeriodInDays: 7
+
+  API_KEYS:
+    COMMUNITY:
+      available: false
+    ESSENTIALS:
+      available: false
+
+  DELEGATES:
+    COMMUNITY:
+      maxDelegatesAllowed: 1

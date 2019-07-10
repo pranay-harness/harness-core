@@ -8,6 +8,7 @@ import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
@@ -28,8 +29,10 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.UuidAware;
 import io.harness.scheduler.PersistentScheduler;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotBlank;
 import org.mongodb.morphia.query.Query;
@@ -45,6 +48,8 @@ import software.wings.beans.security.UserGroup.UserGroupKeys;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SSOType;
 import software.wings.dl.WingsPersistence;
+import software.wings.features.RbacFeature;
+import software.wings.features.api.UsageLimitedFeature;
 import software.wings.scheduler.LdapGroupSyncJob;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserThreadLocal;
@@ -97,20 +102,12 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private UserGroupDeleteEventHandler userGroupDeleteEventHandler;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named(RbacFeature.FEATURE_NAME) private UsageLimitedFeature rbacFeature;
 
   @Override
   public UserGroup save(UserGroup userGroup) {
     Validator.notNullCheck(UserGroup.ACCOUNT_ID_KEY, userGroup.getAccountId());
-    if (accountService.isCommunityAccount(userGroup.getAccountId())) {
-      int numberOfUserGroupsOfAccount =
-          list(userGroup.getAccountId(), aPageRequest().build(), false).getResponse().size();
-      if (numberOfUserGroupsOfAccount >= 1) {
-        logger.warn("Community account {} has {} user groups. The acccount should have exactly 1 user group.",
-            userGroup.getAccountId(), numberOfUserGroupsOfAccount);
-        throw new WingsException(ErrorCode.USAGE_LIMITS_EXCEEDED,
-            "Creation of new user group is not supported in Harness Community Edition.", WingsException.USER);
-      }
-    }
+    checkUserGroupsCountWithinLimit(userGroup.getAccountId());
     UserGroup savedUserGroup = Validator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(UserGroup.class, userGroup), "name", userGroup.getName());
     Account account = accountService.get(userGroup.getAccountId());
@@ -119,6 +116,15 @@ public class UserGroupServiceImpl implements UserGroupService {
     evictUserPermissionInfoCacheForUserGroup(savedUserGroup);
     eventPublishHelper.publishSetupRbacEvent(userGroup.getAccountId(), savedUserGroup.getUuid(), EntityType.USER_GROUP);
     return savedUserGroup;
+  }
+
+  private void checkUserGroupsCountWithinLimit(String accountId) {
+    int maxNumberOfUserGroupsAllowed = rbacFeature.getMaxUsageAllowedForAccount(accountId);
+    int numberOfUserGroupsOfAccount = list(accountId, aPageRequest().build(), false).getResponse().size();
+    if (numberOfUserGroupsOfAccount >= maxNumberOfUserGroupsAllowed) {
+      throw new WingsException(ErrorCode.USAGE_LIMITS_EXCEEDED,
+          String.format("Cannot create more than %d user groups", maxNumberOfUserGroupsAllowed), WingsException.USER);
+    }
   }
 
   @Override
@@ -434,10 +440,10 @@ public class UserGroupServiceImpl implements UserGroupService {
   public UserGroup getDefaultUserGroup(String accountId) {
     return wingsPersistence.createQuery(UserGroup.class)
         .filter(UserGroupKeys.accountId, accountId)
-        .field("name")
+        .field(UserGroup.NAME_KEY)
         .equal(DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME)
-        .field("description")
-        .equal(DEFAULT_USER_GROUP_DESCRIPTION)
+        .field(UserGroup.IS_DEFAULT_KEY)
+        .equal(true)
         .get();
   }
 
@@ -465,9 +471,11 @@ public class UserGroupServiceImpl implements UserGroupService {
                                          .addFilter(UserGroup.ACCOUNT_ID_KEY, Operator.EQ, accountId)
                                          .addFilter("memberIds", Operator.HAS, user.getUuid());
 
-    if (accountService.isCommunityAccount(accountId)) {
-      pageRequest.addFilter(UserGroup.IS_DEFAULT_KEY, Operator.EQ, true);
-    }
+    return list(accountId, pageRequest.build(), true).getResponse();
+  }
+
+  public List<UserGroup> getUserGroupsByAccountId(String accountId) {
+    PageRequestBuilder pageRequest = aPageRequest().addFilter(UserGroup.ACCOUNT_ID_KEY, Operator.EQ, accountId);
 
     return list(accountId, pageRequest.build(), true).getResponse();
   }
@@ -629,6 +637,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     PageRequest<UserGroup> pageRequest =
         aPageRequest()
             .addFilter(UserGroup.NAME_KEY, Operator.EQ, UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME)
+            .addFilter(UserGroup.IS_DEFAULT_KEY, Operator.EQ, true)
             .build();
 
     return list(accountId, pageRequest, true).getResponse().get(0);
@@ -636,12 +645,29 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public boolean deleteNonAdminUserGroups(String accountId) {
-    List<UserGroup> userGroups =
-        wingsPersistence.createQuery(UserGroup.class).filter(UserGroup.ACCOUNT_ID_KEY, accountId).asList();
-
-    return userGroups.stream()
+    return getUserGroupsByAccountId(accountId)
+        .stream()
         .filter(userGroup -> !UserGroupUtils.isAdminUserGroup(userGroup))
         .map(userGroup -> delete(accountId, userGroup.getUuid(), false))
         .reduce(true, (a, b) -> a && b);
+  }
+
+  @Override
+  public boolean deleteUserGroupsByName(String accountId, List<String> userGroupsToRetain) {
+    if (CollectionUtils.isEmpty(userGroupsToRetain)) {
+      throw new IllegalArgumentException("'userGroupsToRetain' is empty");
+    }
+
+    Set<String> userGroupsToDelete = getUserGroupsByAccountId(accountId)
+                                         .stream()
+                                         .filter(userGroup -> !userGroupsToRetain.contains(userGroup.getName()))
+                                         .map(UuidAware::getUuid)
+                                         .collect(toSet());
+
+    for (String userGroupToDelete : userGroupsToDelete) {
+      delete(accountId, userGroupToDelete, false);
+    }
+
+    return true;
   }
 }

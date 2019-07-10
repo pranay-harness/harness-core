@@ -36,7 +36,6 @@ import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.AuthModule;
 import software.wings.app.CacheModule;
 import software.wings.app.DeployMode;
-import software.wings.app.FeatureViolationsModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.GuiceObjectFactory;
 import software.wings.app.MainConfiguration;
@@ -135,7 +134,6 @@ public class MigrationJobApplication extends Application<MainConfiguration> {
     modules.add(new ManagerExecutorModule());
     modules.add(new TemplateModule());
     modules.add(new EventsModule(configuration));
-    modules.add(new FeatureViolationsModule());
     modules.add(new SSOModule());
     modules.add(new AuthModule());
     modules.add(new GcpMarketplaceIntegrationModule());

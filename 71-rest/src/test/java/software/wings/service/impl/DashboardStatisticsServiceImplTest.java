@@ -580,7 +580,6 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
                                                  .triggeredBy(user)
                                                  .build();
 
-      when(accountService.isCommunityAccount(ACCOUNT_1_ID)).thenReturn(false);
       ServiceInstanceDashboard serviceInstanceDashboard =
           dashboardService.getServiceInstanceDashboard(ACCOUNT_1_ID, APP_1_ID, SERVICE_1_ID);
       assertNotNull(serviceInstanceDashboard);

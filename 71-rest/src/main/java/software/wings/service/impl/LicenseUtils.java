@@ -21,6 +21,8 @@ public class LicenseUtils {
 
   private static final int PAID_PERIOD_IN_YEARS = 1;
 
+  private static final int ESSENTIALS_PERIOD_IN_YEARS = 1;
+
   public static String convertToString(LicenseInfo licenseInfo) {
     StringBuilder builder = new StringBuilder();
 
@@ -91,6 +93,8 @@ public class LicenseUtils {
       defaultExpiryTime = getDefaultTrialExpiryTime();
     } else if (AccountType.PAID.equals(accountType)) {
       defaultExpiryTime = getDefaultPaidExpiryTime();
+    } else if (AccountType.ESSENTIALS.equals(accountType)) {
+      defaultExpiryTime = getDefaultEssentialsExpiryTime();
     }
 
     long expiryTime;
@@ -140,6 +144,17 @@ public class LicenseUtils {
   public static long getDefaultPaidExpiryTime() {
     Calendar calendar = Calendar.getInstance();
     calendar.add(Calendar.YEAR, PAID_PERIOD_IN_YEARS);
+    calendar.set(Calendar.HOUR, 11);
+    calendar.set(Calendar.MINUTE, 59);
+    calendar.set(Calendar.SECOND, 59);
+    calendar.set(Calendar.MILLISECOND, 0);
+    calendar.set(Calendar.AM_PM, Calendar.PM);
+    return calendar.getTimeInMillis();
+  }
+
+  public static long getDefaultEssentialsExpiryTime() {
+    Calendar calendar = Calendar.getInstance();
+    calendar.add(Calendar.YEAR, ESSENTIALS_PERIOD_IN_YEARS);
     calendar.set(Calendar.HOUR, 11);
     calendar.set(Calendar.MINUTE, 59);
     calendar.set(Calendar.SECOND, 59);

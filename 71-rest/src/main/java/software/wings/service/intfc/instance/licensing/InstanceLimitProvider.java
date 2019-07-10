@@ -7,8 +7,8 @@ import software.wings.beans.AccountType;
 import java.util.Map;
 
 public interface InstanceLimitProvider {
-  Map<String, Integer> DEFAULT_SI_USAGE_LIMITS =
-      ImmutableMap.of(AccountType.COMMUNITY, 50, AccountType.PAID, 1500, AccountType.TRIAL, 50);
+  Map<String, Integer> DEFAULT_SI_USAGE_LIMITS = ImmutableMap.of(
+      AccountType.COMMUNITY, 50, AccountType.PAID, 1500, AccountType.TRIAL, 50, AccountType.ESSENTIALS, 1500);
 
   static Integer defaults(String accountType) {
     if (!AccountType.isValid(accountType)) {

@@ -7,6 +7,7 @@ import static software.wings.common.NotificationMessageResolver.getDecoratedNoti
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,8 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.notification.SlackNotificationConfiguration;
 import software.wings.common.NotificationMessageResolver;
+import software.wings.features.SlackNotificationFeature;
+import software.wings.features.api.PremiumFeature;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SlackNotificationService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -29,6 +32,7 @@ public class SlackMessageDispatcher {
   @Inject private SettingsService settingsService;
   @Inject private NotificationMessageResolver notificationMessageResolver;
   @Inject private SlackNotificationService slackNotificationService;
+  @Inject @Named(SlackNotificationFeature.FEATURE_NAME) private PremiumFeature slackNotificationFeature;
 
   /**
    * This method is a bit deceiving. It just picks first slack config from DB and notifies that.
@@ -69,7 +73,12 @@ public class SlackMessageDispatcher {
             channel -> slackNotificationService.sendMessage(slackConfig, channel, HARNESS_NAME, message)));
   }
 
-  public void dispatch(List<Notification> notifications, SlackNotificationConfiguration slackConfig) {
+  public void dispatch(String accountId, List<Notification> notifications, SlackNotificationConfiguration slackConfig) {
+    if (!slackNotificationFeature.isAvailableForAccount(accountId)) {
+      log.info("Slack notification will be ignored since it's an unavailable feature for accountId={}", accountId);
+      return;
+    }
+
     if (isEmpty(notifications)) {
       return;
     }

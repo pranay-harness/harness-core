@@ -6,6 +6,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
+import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
 
@@ -30,11 +31,13 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.SchedulerConfig;
+import io.harness.serializer.YamlUtils;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.version.VersionModule;
+import org.apache.commons.io.IOUtils;
 import software.wings.DataStorageMode;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
@@ -69,6 +72,36 @@ import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.dl.exportimport.WingsMongoExportImport;
+import software.wings.features.ApiKeysFeature;
+import software.wings.features.ApprovalFlowFeature;
+import software.wings.features.AuditTrailFeature;
+import software.wings.features.DelegatesFeature;
+import software.wings.features.DeploymentHistoryFeature;
+import software.wings.features.FlowControlFeature;
+import software.wings.features.GitOpsFeature;
+import software.wings.features.GovernanceFeature;
+import software.wings.features.IpWhitelistingFeature;
+import software.wings.features.JiraNotificationFeature;
+import software.wings.features.LdapFeature;
+import software.wings.features.PagerDutyNotificationFeature;
+import software.wings.features.RbacFeature;
+import software.wings.features.RestApiFeature;
+import software.wings.features.SamlFeature;
+import software.wings.features.SecretsManagementFeature;
+import software.wings.features.ServiceNowNotificationFeature;
+import software.wings.features.SlackNotificationFeature;
+import software.wings.features.TemplateLibraryFeature;
+import software.wings.features.TwoFactorAuthenticationFeature;
+import software.wings.features.UsersFeature;
+import software.wings.features.api.ApiBlocker;
+import software.wings.features.api.Feature;
+import software.wings.features.api.FeatureRestrictions;
+import software.wings.features.api.FeatureService;
+import software.wings.features.api.FeatureServiceImpl;
+import software.wings.features.api.PremiumFeature;
+import software.wings.features.api.RestrictedApi;
+import software.wings.features.api.RestrictedFeature;
+import software.wings.features.api.UsageLimitedFeature;
 import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.graphql.utils.nameservice.NameServiceImpl;
 import software.wings.helpers.ext.ami.AmiService;
@@ -442,6 +475,8 @@ import software.wings.utils.CacheManager.CacheManagerConfig;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.HostValidationServiceImpl;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.Objects;
 import java.util.Set;
@@ -768,6 +803,14 @@ public class WingsModule extends DependencyModule {
       configuration.setExecutionLogsStorageMode(DataStorageMode.MONGO);
     }
 
+    bindFeatures();
+
+    bind(FeatureService.class).to(FeatureServiceImpl.class);
+
+    ApiBlocker apiBlocker = new ApiBlocker();
+    requestInjection(apiBlocker);
+    bindInterceptor(Matchers.any(), Matchers.annotatedWith(RestrictedApi.class), apiBlocker);
+
     switch (configuration.getExecutionLogsStorageMode()) {
       case GOOGLE_CLOUD_DATA_STORE:
         bind(DataStoreService.class).to(GoogleDataStoreServiceImpl.class);
@@ -783,9 +826,127 @@ public class WingsModule extends DependencyModule {
     // End of deployment trigger dependencies
   }
 
+  private void bindFeatures() {
+    MapBinder<String, Feature> mapBinder = MapBinder.newMapBinder(binder(), String.class, Feature.class);
+
+    mapBinder.addBinding(IpWhitelistingFeature.FEATURE_NAME).to(IpWhitelistingFeature.class).in(Singleton.class);
+    mapBinder.addBinding(GovernanceFeature.FEATURE_NAME).to(GovernanceFeature.class).in(Singleton.class);
+    mapBinder.addBinding(UsersFeature.FEATURE_NAME).to(UsersFeature.class).in(Singleton.class);
+    mapBinder.addBinding(DelegatesFeature.FEATURE_NAME).to(DelegatesFeature.class).in(Singleton.class);
+    mapBinder.addBinding(TemplateLibraryFeature.FEATURE_NAME).to(TemplateLibraryFeature.class).in(Singleton.class);
+    mapBinder.addBinding(FlowControlFeature.FEATURE_NAME).to(FlowControlFeature.class).in(Singleton.class);
+    mapBinder.addBinding(ApprovalFlowFeature.FEATURE_NAME).to(ApprovalFlowFeature.class).in(Singleton.class);
+    mapBinder.addBinding(ServiceNowNotificationFeature.FEATURE_NAME)
+        .to(ServiceNowNotificationFeature.class)
+        .in(Singleton.class);
+    mapBinder.addBinding(JiraNotificationFeature.FEATURE_NAME).to(JiraNotificationFeature.class).in(Singleton.class);
+    mapBinder.addBinding(SlackNotificationFeature.FEATURE_NAME).to(SlackNotificationFeature.class).in(Singleton.class);
+    mapBinder.addBinding(PagerDutyNotificationFeature.FEATURE_NAME)
+        .to(PagerDutyNotificationFeature.class)
+        .in(Singleton.class);
+    mapBinder.addBinding(ApiKeysFeature.FEATURE_NAME).to(ApiKeysFeature.class).in(Singleton.class);
+    mapBinder.addBinding(TwoFactorAuthenticationFeature.FEATURE_NAME)
+        .to(TwoFactorAuthenticationFeature.class)
+        .in(Singleton.class);
+    mapBinder.addBinding(SamlFeature.FEATURE_NAME).to(SamlFeature.class).in(Singleton.class);
+    mapBinder.addBinding(LdapFeature.FEATURE_NAME).to(LdapFeature.class).in(Singleton.class);
+    mapBinder.addBinding(GitOpsFeature.FEATURE_NAME).to(GitOpsFeature.class).in(Singleton.class);
+    mapBinder.addBinding(RbacFeature.FEATURE_NAME).to(RbacFeature.class).in(Singleton.class);
+    mapBinder.addBinding(SecretsManagementFeature.FEATURE_NAME).to(SecretsManagementFeature.class).in(Singleton.class);
+    mapBinder.addBinding(AuditTrailFeature.FEATURE_NAME).to(AuditTrailFeature.class).in(Singleton.class);
+    mapBinder.addBinding(RestApiFeature.FEATURE_NAME).to(RestApiFeature.class).in(Singleton.class);
+    mapBinder.addBinding(DeploymentHistoryFeature.FEATURE_NAME).to(DeploymentHistoryFeature.class).in(Singleton.class);
+
+    binder()
+        .bind(PremiumFeature.class)
+        .annotatedWith(Names.named(IpWhitelistingFeature.FEATURE_NAME))
+        .to(IpWhitelistingFeature.class);
+    binder()
+        .bind(PremiumFeature.class)
+        .annotatedWith(Names.named(GovernanceFeature.FEATURE_NAME))
+        .to(GovernanceFeature.class);
+    binder()
+        .bind(UsageLimitedFeature.class)
+        .annotatedWith(Names.named(UsersFeature.FEATURE_NAME))
+        .to(UsersFeature.class);
+    binder()
+        .bind(UsageLimitedFeature.class)
+        .annotatedWith(Names.named(DelegatesFeature.FEATURE_NAME))
+        .to(DelegatesFeature.class);
+    binder()
+        .bind(PremiumFeature.class)
+        .annotatedWith(Names.named(TemplateLibraryFeature.FEATURE_NAME))
+        .to(TemplateLibraryFeature.class);
+    binder()
+        .bind(PremiumFeature.class)
+        .annotatedWith(Names.named(FlowControlFeature.FEATURE_NAME))
+        .to(FlowControlFeature.class);
+    binder()
+        .bind(PremiumFeature.class)
+        .annotatedWith(Names.named(ApprovalFlowFeature.FEATURE_NAME))
+        .to(ApprovalFlowFeature.class);
+    binder()
+        .bind(PremiumFeature.class)
+        .annotatedWith(Names.named(ServiceNowNotificationFeature.FEATURE_NAME))
+        .to(ServiceNowNotificationFeature.class);
+    binder()
+        .bind(PremiumFeature.class)
+        .annotatedWith(Names.named(JiraNotificationFeature.FEATURE_NAME))
+        .to(JiraNotificationFeature.class);
+    binder()
+        .bind(PremiumFeature.class)
+        .annotatedWith(Names.named(SlackNotificationFeature.FEATURE_NAME))
+        .to(SlackNotificationFeature.class);
+    binder()
+        .bind(PremiumFeature.class)
+        .annotatedWith(Names.named(PagerDutyNotificationFeature.FEATURE_NAME))
+        .to(PagerDutyNotificationFeature.class);
+    binder()
+        .bind(PremiumFeature.class)
+        .annotatedWith(Names.named(ApiKeysFeature.FEATURE_NAME))
+        .to(ApiKeysFeature.class);
+    binder()
+        .bind(PremiumFeature.class)
+        .annotatedWith(Names.named(TwoFactorAuthenticationFeature.FEATURE_NAME))
+        .to(TwoFactorAuthenticationFeature.class);
+    binder().bind(PremiumFeature.class).annotatedWith(Names.named(SamlFeature.FEATURE_NAME)).to(SamlFeature.class);
+    binder().bind(PremiumFeature.class).annotatedWith(Names.named(LdapFeature.FEATURE_NAME)).to(LdapFeature.class);
+    binder()
+        .bind(PremiumFeature.class)
+        .annotatedWith(Names.named(SecretsManagementFeature.FEATURE_NAME))
+        .to(SecretsManagementFeature.class);
+    binder()
+        .bind(UsageLimitedFeature.class)
+        .annotatedWith(Names.named(GitOpsFeature.FEATURE_NAME))
+        .to(GitOpsFeature.class);
+    binder().bind(UsageLimitedFeature.class).annotatedWith(Names.named(RbacFeature.FEATURE_NAME)).to(RbacFeature.class);
+    binder()
+        .bind(RestrictedFeature.class)
+        .annotatedWith(Names.named(AuditTrailFeature.FEATURE_NAME))
+        .to(AuditTrailFeature.class);
+    binder()
+        .bind(PremiumFeature.class)
+        .annotatedWith(Names.named(RestApiFeature.FEATURE_NAME))
+        .to(RestApiFeature.class);
+    binder()
+        .bind(RestrictedFeature.class)
+        .annotatedWith(Names.named(DeploymentHistoryFeature.FEATURE_NAME))
+        .to(DeploymentHistoryFeature.class);
+  }
+
   @Override
   public Set<DependencyModule> dependencies() {
     return ImmutableSet.<DependencyModule>of(
         TimeModule.getInstance(), VersionModule.getInstance(), OrchestrationModule.getInstance());
+  }
+
+  @Provides
+  @Singleton
+  public FeatureRestrictions featureRestrictions() throws IOException {
+    String featureRestrictions =
+        IOUtils.toString(Thread.currentThread().getContextClassLoader().getResourceAsStream("feature-restrictions.yml"),
+            StandardCharsets.UTF_8);
+
+    return new YamlUtils().read(featureRestrictions, FeatureRestrictions.class);
   }
 }

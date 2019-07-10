@@ -3,8 +3,8 @@ package software.wings.service.impl;
 import static io.harness.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.FEAT_UNAVAILABLE_IN_COMMUNITY_VERSION;
 import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED;
+import static io.harness.exception.WingsException.USER;
 import static java.util.Arrays.asList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.authentication.AuthenticationMechanism.OAUTH;
@@ -12,6 +12,7 @@ import static software.wings.security.authentication.AuthenticationMechanism.USE
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import com.coveo.saml.SamlClient;
 import com.coveo.saml.SamlException;
@@ -23,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.hibernate.validator.constraints.NotBlank;
 import software.wings.beans.Account;
-import software.wings.beans.AccountType;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapSettings;
@@ -32,6 +32,9 @@ import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.features.LdapFeature;
+import software.wings.features.SamlFeature;
+import software.wings.features.api.PremiumFeature;
 import software.wings.helpers.ext.ldap.LdapConstants;
 import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.security.PermissionAttribute;
@@ -73,6 +76,8 @@ public class SSOServiceImpl implements SSOService {
   @Inject private SecretManager secretManager;
   @Inject OauthOptions oauthOptions;
   @Inject private AuthHandler authHandler;
+  @Inject @Named(LdapFeature.FEATURE_NAME) private PremiumFeature ldapFeature;
+  @Inject @Named(SamlFeature.FEATURE_NAME) private PremiumFeature samlFeature;
 
   @Override
   public SSOConfig uploadSamlConfiguration(String accountId, InputStream inputStream, String displayName,
@@ -134,17 +139,9 @@ public class SSOServiceImpl implements SSOService {
 
   @Override
   public SSOConfig setAuthenticationMechanism(String accountId, AuthenticationMechanism mechanism) {
-    Account account = accountService.get(accountId);
-    if (account.isCommunity() && AuthenticationMechanism.DISABLED_FOR_COMMUNITY.contains(mechanism)) {
-      throw new WingsException(FEAT_UNAVAILABLE_IN_COMMUNITY_VERSION,
-          new StringBuilder()
-              .append(mechanism)
-              .append(" authenticationMechanism not supported for accountType=")
-              .append(AccountType.COMMUNITY)
-              .toString(),
-          WingsException.USER);
-    }
+    checkIfOperationIsAllowed(accountId, mechanism);
 
+    Account account = accountService.get(accountId);
     AuthenticationMechanism currentAuthMechanism = account.getAuthenticationMechanism();
     if (null == currentAuthMechanism) {
       currentAuthMechanism = USER_PASSWORD;
@@ -407,27 +404,6 @@ public class SSOServiceImpl implements SSOService {
   }
 
   @Override
-  public Boolean deleteSSOSettingsForAccount(String accountId, String targetAccountType) {
-    boolean violationsRemoved = false;
-    if (AccountType.COMMUNITY.equals(targetAccountType)) {
-      if (AuthenticationMechanism.DISABLED_FOR_COMMUNITY.contains(
-              accountService.get(accountId).getAuthenticationMechanism())) {
-        logger.info("Setting AuthenticationMechanism for accountId={} to {}", accountId, USER_PASSWORD);
-        setAuthenticationMechanism(accountId, USER_PASSWORD);
-      }
-
-      logger.info("Deleting SSO violations for accountId={} and targetAccountType={}", accountId, targetAccountType);
-
-      violationsRemoved =
-          deleteSamlSettings(accountId, targetAccountType) && deleteLdapSettings(accountId, targetAccountType);
-    } else {
-      logger.info("SSO violations deletion is not supported for accountId={} and targetAccountType={}", accountId,
-          targetAccountType);
-    }
-    return violationsRemoved;
-  }
-
-  @Override
   public OauthSettings updateOauthSettings(String accountId, String filter, Set<OauthProviderType> allowedProviders) {
     return ssoSettingService.updateOauthSettings(accountId, filter, allowedProviders);
   }
@@ -450,5 +426,12 @@ public class SSOServiceImpl implements SSOService {
       ldapSettingsDeleted = ssoSettingService.deleteLdapSettings(accountId) != null;
     }
     return ldapSettingsDeleted;
+  }
+
+  private void checkIfOperationIsAllowed(String accountId, AuthenticationMechanism authenticationMechanism) {
+    if (authenticationMechanism == AuthenticationMechanism.LDAP && !ldapFeature.isAvailableForAccount(accountId)
+        || authenticationMechanism == AuthenticationMechanism.SAML && !samlFeature.isAvailableForAccount(accountId)) {
+      throw new InvalidRequestException(String.format("Operation not permitted for account [%s]", accountId), USER);
+    }
   }
 }

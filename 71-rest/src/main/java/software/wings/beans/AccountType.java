@@ -17,6 +17,7 @@ public interface AccountType {
   String TRIAL = "TRIAL";
   String PAID = "PAID";
   String COMMUNITY = "COMMUNITY";
+  String ESSENTIALS = "ESSENTIALS";
 
   static boolean isValid(String type) {
     if (isEmpty(type)) {
@@ -24,6 +25,7 @@ public interface AccountType {
     }
 
     switch (StringUtils.upperCase(type)) {
+      case ESSENTIALS:
       case TRIAL:
       case PAID:
       case COMMUNITY:
@@ -37,25 +39,11 @@ public interface AccountType {
     if (isEmpty(type)) {
       return false;
     }
-
     if (!isValid(type)) {
       log.warn("[INVALID_ACCOUNT_TYPE] type={}", type);
       return false;
     }
 
     return StringUtils.equalsIgnoreCase(COMMUNITY, type);
-  }
-
-  static boolean isTrial(String type) {
-    if (isEmpty(type)) {
-      return false;
-    }
-
-    if (!isValid(type)) {
-      log.warn("[INVALID_ACCOUNT_TYPE] type={}", type);
-      return false;
-    }
-
-    return StringUtils.equalsIgnoreCase(TRIAL, type);
   }
 }

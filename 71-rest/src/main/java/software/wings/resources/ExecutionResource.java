@@ -13,6 +13,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYM
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -42,6 +43,8 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.common.Constants;
+import software.wings.features.DeploymentHistoryFeature;
+import software.wings.features.api.RestrictedFeature;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -49,7 +52,6 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.security.auth.AuthHandler;
-import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -58,6 +60,7 @@ import software.wings.sm.StateExecutionData;
 import software.wings.utils.Validator;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DefaultValue;
@@ -81,7 +84,7 @@ public class ExecutionResource {
   @Inject private StateInspectionService stateInspectionService;
   @Inject private AuthHandler authHandler;
   @Inject private AuthService authService;
-  @Inject private AccountService accountService;
+  @Inject @Named(DeploymentHistoryFeature.FEATURE_NAME) private RestrictedFeature deploymentHistoryFeature;
 
   /**
    * List.
@@ -131,10 +134,11 @@ public class ExecutionResource {
       pageRequest.addFilter("workflowId", Operator.EQ, orchestrationId);
     }
 
-    if (accountService.isCommunityAccount(accountId)) {
-      pageRequest.addFilter(
-          WorkflowExecutionKeys.startTs, GE, EpochUtils.calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(7, "UTC"));
-    }
+    Optional<Integer> retentionPeriodInDays =
+        ((DeploymentHistoryFeature) deploymentHistoryFeature).getRetentionPeriodInDays(accountId);
+    retentionPeriodInDays.ifPresent(val
+        -> pageRequest.addFilter(WorkflowExecutionKeys.startTs, GE,
+            EpochUtils.calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(val, "UTC")));
 
     final PageResponse<WorkflowExecution> workflowExecutions =
         workflowExecutionService.listExecutions(pageRequest, includeGraph, true, true, false);

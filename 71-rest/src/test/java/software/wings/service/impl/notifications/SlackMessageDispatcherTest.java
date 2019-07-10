@@ -25,6 +25,7 @@ import software.wings.beans.InformationNotification;
 import software.wings.beans.Notification;
 import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.common.NotificationMessageResolver;
+import software.wings.features.api.PremiumFeature;
 import software.wings.service.intfc.SlackNotificationService;
 
 import java.util.Collections;
@@ -34,6 +35,7 @@ public class SlackMessageDispatcherTest extends WingsBaseTest {
   @Inject @InjectMocks private SlackMessageDispatcher slackMessageDispatcher;
   @Mock private SlackNotificationService slackNotificationService;
   @Mock private NotificationMessageResolver notificationMessageResolver;
+  @Mock private PremiumFeature slackNotificationFeature;
 
   @Test
   @Category(UnitTests.class)
@@ -53,7 +55,10 @@ public class SlackMessageDispatcherTest extends WingsBaseTest {
     List<Notification> notifications = Collections.singletonList(notification);
 
     SlackNotificationSetting setting = SlackNotificationSetting.emptyConfig();
-    slackMessageDispatcher.dispatch(notifications, setting);
+
+    when(slackNotificationFeature.isAvailableForAccount(ACCOUNT_ID)).thenReturn(true);
+
+    slackMessageDispatcher.dispatch(ACCOUNT_ID, notifications, setting);
     Mockito.verify(slackNotificationService)
         .sendMessage(Mockito.eq(setting), Mockito.anyString(), Mockito.eq(HARNESS_NAME), Mockito.anyString());
   }

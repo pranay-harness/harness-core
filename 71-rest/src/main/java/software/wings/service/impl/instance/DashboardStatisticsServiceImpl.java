@@ -22,11 +22,13 @@ import static org.mongodb.morphia.query.Sort.descending;
 import static software.wings.beans.Base.CREATED_AT_KEY;
 import static software.wings.beans.EntityType.APPLICATION;
 import static software.wings.beans.EntityType.ARTIFACT;
+import static software.wings.features.DeploymentHistoryFeature.FEATURE_NAME;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
@@ -84,6 +86,8 @@ import software.wings.beans.instance.dashboard.service.CurrentActiveInstances;
 import software.wings.beans.instance.dashboard.service.DeploymentHistory;
 import software.wings.beans.instance.dashboard.service.ServiceInstanceDashboard;
 import software.wings.dl.WingsPersistence;
+import software.wings.features.DeploymentHistoryFeature;
+import software.wings.features.api.RestrictedFeature;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.ServiceInstanceCount.EnvType;
@@ -109,6 +113,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -130,6 +135,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   @Inject private InfrastructureMappingService infraMappingService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private AccountService accountService;
+  @Inject @Named(FEATURE_NAME) private RestrictedFeature deploymentHistoryFeature;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   @Override
@@ -880,10 +886,13 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                                                 .addFilter("serviceIds", HAS, serviceId)
                                                 .addOrder(WorkflowExecutionKeys.createdAt, OrderType.DESC)
                                                 .withLimit("10");
-    if (accountService.isCommunityAccount(accountId)) {
-      pageRequestBuilder.addFilter(
-          WorkflowExecutionKeys.startTs, GE, EpochUtils.calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(7, "UTC"));
-    }
+
+    Optional<Integer> retentionPeriodInDays =
+        ((DeploymentHistoryFeature) deploymentHistoryFeature).getRetentionPeriodInDays(accountId);
+    retentionPeriodInDays.ifPresent(val
+        -> pageRequestBuilder.addFilter(WorkflowExecutionKeys.startTs, GE,
+            EpochUtils.calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(val, "UTC")));
+
     PageRequest<WorkflowExecution> pageRequest = pageRequestBuilder.build();
 
     List<WorkflowExecution> workflowExecutionList =

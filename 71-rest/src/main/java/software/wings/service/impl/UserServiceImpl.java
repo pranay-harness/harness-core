@@ -2382,14 +2382,15 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public boolean deleteUsers(String accountId, List<String> usersToRetain) {
+  public boolean deleteUsersByEmailAddress(String accountId, List<String> usersToRetain) {
     if (CollectionUtils.isEmpty(usersToRetain)) {
       throw new IllegalArgumentException("'usersToRetain' is empty");
     }
+
     Set<String> usersToDelete = getUsersOfAccount(accountId)
                                     .stream()
+                                    .filter(user -> !usersToRetain.contains(user.getEmail()))
                                     .map(UuidAware::getUuid)
-                                    .filter(user -> !usersToRetain.contains(user))
                                     .collect(toSet());
 
     for (String userToDelete : usersToDelete) {

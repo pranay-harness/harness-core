@@ -60,6 +60,7 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import com.github.zafarkhaja.semver.Version;
 import com.mongodb.DuplicateKeyException;
@@ -144,6 +145,8 @@ import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerPreExecutionExpressionEvaluator;
 import software.wings.expression.SecretFunctor;
 import software.wings.expression.SecretManagerFunctor;
+import software.wings.features.DelegatesFeature;
+import software.wings.features.api.UsageLimitedFeature;
 import software.wings.licensing.LicenseService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.EventEmitter.Channel;
@@ -198,7 +201,6 @@ import javax.ws.rs.NotFoundException;
 public class DelegateServiceImpl implements DelegateService, Runnable {
   private static final Configuration cfg = new Configuration(VERSION_2_3_23);
   private static final int MAX_DELEGATE_META_INFO_ENTRIES = 10000;
-  public static final int MAX_DELEGATES_ALLOWED_FOR_COMMUNITY_ACCOUNT = 1;
   private static final Set<DelegateTask.Status> TASK_COMPLETED_STATUSES = ImmutableSet.of(FINISHED, ABORTED, ERROR);
   private static final String HARNESS_ECS_DELEGATE = "Harness-ECS-Delegate";
   private static final String DELIMITER = "_";
@@ -235,6 +237,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
   @Inject private PersistentLocker persistentLocker;
+  @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
 
   private final Map<String, Object> syncTaskWaitMap = new ConcurrentHashMap<>();
 
@@ -1037,16 +1040,17 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   public Delegate add(Delegate delegate) {
     Delegate savedDelegate;
     String accountId = delegate.getAccountId();
-    if (accountService.isCommunityAccount(accountId)) {
+    int maxUsageAllowed = delegatesFeature.getMaxUsageAllowedForAccount(accountId);
+    if (maxUsageAllowed != Integer.MAX_VALUE) {
       try (AcquiredLock ignored =
                persistentLocker.acquireLock("delegateCountLock-" + accountId, Duration.ofMinutes(3))) {
         long currentDelegateCount = getTotalNumberOfDelegates(accountId);
-        if (currentDelegateCount < MAX_DELEGATES_ALLOWED_FOR_COMMUNITY_ACCOUNT) {
+        if (currentDelegateCount < maxUsageAllowed) {
           savedDelegate = saveDelegate(delegate);
         } else {
           throw new WingsException(ErrorCode.USAGE_LIMITS_EXCEEDED,
-              String.format("Can not add delegate to the account. Community account supports maximum %d delegates.",
-                  MAX_DELEGATES_ALLOWED_FOR_COMMUNITY_ACCOUNT),
+              String.format(
+                  "Can not add delegate to the account. Maximum [%d] delegates are supported", maxUsageAllowed),
               USER);
         }
       }

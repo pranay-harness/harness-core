@@ -8,9 +8,11 @@ import static io.harness.event.handler.impl.Constants.EMAIL_ID;
 import static io.harness.event.handler.impl.Constants.TECH_CATEGORY_NAME;
 import static io.harness.event.handler.impl.Constants.TECH_NAME;
 import static io.harness.event.handler.impl.Constants.USER_NAME;
+import static io.harness.event.model.EventType.COMMUNITY_TO_ESSENTIALS;
 import static io.harness.event.model.EventType.COMMUNITY_TO_PAID;
 import static io.harness.event.model.EventType.COMPLETE_USER_REGISTRATION;
 import static io.harness.event.model.EventType.CUSTOM;
+import static io.harness.event.model.EventType.ESSENTIALS_TO_PAID;
 import static io.harness.event.model.EventType.FIRST_DELEGATE_REGISTERED;
 import static io.harness.event.model.EventType.FIRST_DEPLOYMENT_EXECUTED;
 import static io.harness.event.model.EventType.FIRST_ROLLED_BACK_DEPLOYMENT;
@@ -19,6 +21,7 @@ import static io.harness.event.model.EventType.FIRST_WORKFLOW_CREATED;
 import static io.harness.event.model.EventType.JOIN_ACCOUNT_REQUEST;
 import static io.harness.event.model.EventType.LICENSE_UPDATE;
 import static io.harness.event.model.EventType.NEW_TRIAL_SIGNUP;
+import static io.harness.event.model.EventType.PAID_TO_ESSENTIALS;
 import static io.harness.event.model.EventType.SETUP_2FA;
 import static io.harness.event.model.EventType.SETUP_CV_24X7;
 import static io.harness.event.model.EventType.SETUP_IP_WHITELISTING;
@@ -26,6 +29,7 @@ import static io.harness.event.model.EventType.SETUP_RBAC;
 import static io.harness.event.model.EventType.SETUP_SSO;
 import static io.harness.event.model.EventType.TECH_STACK;
 import static io.harness.event.model.EventType.TRIAL_TO_COMMUNITY;
+import static io.harness.event.model.EventType.TRIAL_TO_ESSENTIALS;
 import static io.harness.event.model.EventType.TRIAL_TO_PAID;
 import static io.harness.event.model.EventType.USER_INVITED_FROM_EXISTING_ACCOUNT;
 import static io.harness.exception.WingsException.USER;
@@ -98,7 +102,8 @@ public class SegmentHandler implements EventHandler {
         Sets.newHashSet(USER_INVITED_FROM_EXISTING_ACCOUNT, COMPLETE_USER_REGISTRATION, FIRST_DELEGATE_REGISTERED,
             FIRST_WORKFLOW_CREATED, FIRST_DEPLOYMENT_EXECUTED, FIRST_VERIFIED_DEPLOYMENT, FIRST_ROLLED_BACK_DEPLOYMENT,
             SETUP_CV_24X7, SETUP_2FA, SETUP_SSO, SETUP_IP_WHITELISTING, SETUP_RBAC, TRIAL_TO_PAID, TRIAL_TO_COMMUNITY,
-            COMMUNITY_TO_PAID, NEW_TRIAL_SIGNUP, LICENSE_UPDATE, JOIN_ACCOUNT_REQUEST, CUSTOM, TECH_STACK));
+            COMMUNITY_TO_PAID, COMMUNITY_TO_ESSENTIALS, ESSENTIALS_TO_PAID, PAID_TO_ESSENTIALS, TRIAL_TO_ESSENTIALS,
+            NEW_TRIAL_SIGNUP, LICENSE_UPDATE, JOIN_ACCOUNT_REQUEST, CUSTOM, TECH_STACK));
   }
 
   public boolean isSegmentEnabled() {
@@ -155,8 +160,12 @@ public class SegmentHandler implements EventHandler {
 
       switch (eventType) {
         case COMMUNITY_TO_PAID:
+        case COMMUNITY_TO_ESSENTIALS:
         case TRIAL_TO_COMMUNITY:
         case TRIAL_TO_PAID:
+        case ESSENTIALS_TO_PAID:
+        case PAID_TO_ESSENTIALS:
+        case TRIAL_TO_ESSENTIALS:
         case FIRST_DELEGATE_REGISTERED:
           reportToAllUsers(account, eventType);
           return;

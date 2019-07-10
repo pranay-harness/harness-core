@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
@@ -22,6 +23,7 @@ import software.wings.beans.Base;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@FieldNameConstants(innerTypeName = "WhitelistKeys")
 public class Whitelist extends Base {
   @Indexed @NotEmpty private String accountId;
   private String description;

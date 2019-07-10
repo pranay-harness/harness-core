@@ -118,6 +118,6 @@ public class NotificationDispatcherTest extends WingsBaseTest {
     List<Notification> notifications = Collections.singletonList(notification);
     userGroupNotificationDispatcher.dispatch(notifications, userGroup);
     verify(emailDispatcher).dispatch(notifications, toAddresses);
-    verify(slackDispatcher).dispatch(notifications, slackConfig);
+    verify(slackDispatcher).dispatch(ACCOUNT_ID, notifications, slackConfig);
   }
 }
