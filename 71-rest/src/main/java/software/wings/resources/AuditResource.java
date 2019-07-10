@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
 
 import com.google.inject.Inject;
 
@@ -15,6 +16,7 @@ import io.swagger.annotations.Api;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.audit.AuditHeaderYamlResponse;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuditService;
 
@@ -65,6 +67,7 @@ public class AuditResource {
   @Timed
   @ExceptionMetered
   @Produces("application/json")
+  @AuthRule(permissionType = AUDIT_VIEWER)
   public RestResponse<PageResponse<AuditHeader>> list(
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<AuditHeader> pageRequest) {
     // Restrict visibility to one week on UI
@@ -83,6 +86,7 @@ public class AuditResource {
   @Timed
   @ExceptionMetered
   @Produces("application/json")
+  @AuthRule(permissionType = AUDIT_VIEWER)
   public RestResponse<PageResponse<AuditHeader>> listUsingFilter(@QueryParam("accountId") String accountId,
       @QueryParam("filter") String filter, @QueryParam("limit") String limit, @QueryParam("offset") String offset) {
     boolean isCommunityAccount = accountService.isCommunityAccount(accountId);
@@ -95,6 +99,7 @@ public class AuditResource {
   @ExceptionMetered
   @CacheControl(maxAge = 15, maxAgeUnit = TimeUnit.MINUTES)
   @Produces("application/json")
+  @AuthRule(permissionType = AUDIT_VIEWER)
   public RestResponse<AuditHeaderYamlResponse> getAuditHeaderDetails(@PathParam("auditHeaderId") String auditHeaderId,
       @QueryParam("entityId") String entityId, @QueryParam("accountId") String accountId) {
     return new RestResponse<>(httpAuditService.fetchAuditEntityYamls(auditHeaderId, entityId, accountId));

@@ -18,6 +18,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -722,7 +723,9 @@ public class AuthServiceImpl implements AuthService {
                                       .build();
 
     AccountPermissions accountPermissions =
-        AccountPermissions.builder().permissions(Sets.newHashSet(PermissionType.USER_PERMISSION_READ)).build();
+        AccountPermissions.builder()
+            .permissions(Sets.newHashSet(PermissionType.USER_PERMISSION_READ, AUDIT_VIEWER))
+            .build();
     UserGroup userGroup = UserGroup.builder()
                               .accountId(accountId)
                               .accountPermissions(accountPermissions)
