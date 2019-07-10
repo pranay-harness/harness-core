@@ -153,7 +153,9 @@ public class LogLabelingServiceImpl implements LogLabelingService {
       PageRequest<CVFeedbackRecord> feedbackRecordPageRequest, int count) {
     List<CVFeedbackRecord> feedbackRecords = dataStoreService.list(CVFeedbackRecord.class, feedbackRecordPageRequest);
     List<CVFeedbackRecord> returnList =
-        feedbackRecords.stream().filter(record -> isEmpty(record.getSupervisedLabel())).collect(Collectors.toList());
+        feedbackRecords.stream()
+            .filter(record -> isEmpty(record.getSupervisedLabel()) && !record.isDuplicate())
+            .collect(Collectors.toList());
 
     int toIndex = Integer.min(returnList.size(), count);
     return returnList.subList(0, toIndex);

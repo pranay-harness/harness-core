@@ -275,6 +275,10 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
     return entity.contains(fieldName) ? entity.getString(fieldName) : null;
   }
 
+  public static Boolean readBoolean(Entity entity, String fieldName) {
+    return entity.contains(fieldName) && entity.getBoolean(fieldName);
+  }
+
   public static <T> List readList(Entity entity, String fieldName, Class<T> clazz) {
     List list = entity.contains(fieldName) ? entity.getList(fieldName) : null;
     if (list == null) {
@@ -362,6 +366,15 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
 
     ListValue listValue = listBuilder.build();
     builder.set(key, listValue);
+  }
+
+  public static void addFieldIfNotEmpty(
+      com.google.cloud.datastore.Entity.Builder builder, String key, Boolean value, boolean excludeFromIndex) {
+    if (value == null) {
+      return;
+    }
+
+    builder.set(key, BooleanValue.newBuilder(value).setExcludeFromIndexes(excludeFromIndex).build());
   }
 
   public static void addFieldIfNotEmpty(
