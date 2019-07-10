@@ -332,6 +332,11 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
     builder.set(key, LongValue.newBuilder(value).setExcludeFromIndexes(excludeFromIndex).build());
   }
 
+  public static void addFieldIfNotEmpty(
+      com.google.cloud.datastore.Entity.Builder builder, String key, Double value, boolean excludeFromIndex) {
+    builder.set(key, DoubleValue.newBuilder(value).setExcludeFromIndexes(excludeFromIndex).build());
+  }
+
   public static <T> void addFieldIfNotEmpty(com.google.cloud.datastore.Entity.Builder builder, String key, Set value,
       boolean excludeFromIndex, Class<T> clazz) {
     if (isEmpty(value)) {

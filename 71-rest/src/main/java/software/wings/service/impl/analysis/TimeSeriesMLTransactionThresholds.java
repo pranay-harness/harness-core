@@ -3,6 +3,7 @@ package software.wings.service.impl.analysis;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -24,6 +25,7 @@ import software.wings.sm.StateType;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
+@FieldNameConstants(innerTypeName = "TimeSeriesMLTransactionThresholdKeys")
 public class TimeSeriesMLTransactionThresholds extends Base {
   @NotEmpty private String serviceId;
 

@@ -11,6 +11,8 @@ import com.google.common.collect.Sets;
 
 import io.harness.VerificationBaseTest;
 import io.harness.category.element.UnitTests;
+import io.harness.managerclient.VerificationManagerClient;
+import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.resources.TimeSeriesResource;
 import io.harness.rest.RestResponse;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
@@ -19,6 +21,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import software.wings.beans.FeatureName;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.TSRequest;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
@@ -65,6 +68,8 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   private TimeSeriesMLTransactionThresholds timeSeriesMLTransactionThresholds;
 
   @Mock private TimeSeriesAnalysisService timeSeriesAnalysisService;
+  @Mock private VerificationManagerClient managerClient;
+  @Mock private VerificationManagerClientHelper managerClientHelper;
 
   private TimeSeriesResource timeSeriesResource;
 
@@ -88,7 +93,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
     transactionName = UUID.randomUUID().toString();
     metricName = UUID.randomUUID().toString();
 
-    timeSeriesResource = new TimeSeriesResource(timeSeriesAnalysisService);
+    timeSeriesResource = new TimeSeriesResource(timeSeriesAnalysisService, managerClientHelper, managerClient);
 
     tsRequest = new TSRequest(stateExecutionId, workflowExecutionId, nodes, 0, 0);
     timeSeriesMLAnalysisRecord = TimeSeriesMLAnalysisRecord.builder().build();
@@ -163,6 +168,9 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
     when(timeSeriesAnalysisService.getMetricTemplate(
              applicationId, stateType, stateExecutionId, serviceId, cvConfigId, groupName))
         .thenReturn(metricTemplate);
+    when(managerClientHelper.callManagerWithRetry(
+             managerClient.isFeatureEnabled(FeatureName.SUPERVISED_TS_THRESHOLD, accountId)))
+        .thenReturn(new RestResponse<>(false));
     RestResponse<Map<String, Map<String, TimeSeriesMetricDefinition>>> resp = timeSeriesResource.getMetricTemplate(
         accountId, applicationId, stateType, stateExecutionId, serviceId, cvConfigId, groupName);
     assertEquals(metricTemplate, resp.getResource());

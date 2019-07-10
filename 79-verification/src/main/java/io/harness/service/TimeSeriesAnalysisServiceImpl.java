@@ -41,11 +41,15 @@ import org.mongodb.morphia.query.Sort;
 import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.dl.WingsPersistence;
+import software.wings.metrics.MetricType;
 import software.wings.metrics.RiskLevel;
+import software.wings.metrics.Threshold;
+import software.wings.metrics.ThresholdCategory;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.ExperimentalMetricAnalysisRecord;
 import software.wings.service.impl.analysis.MetricAnalysisRecord;
 import software.wings.service.impl.analysis.MetricAnalysisRecord.MetricAnalysisRecordKeys;
+import software.wings.service.impl.analysis.SupervisedTSThreshold;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLHostSummary;
 import software.wings.service.impl.analysis.TimeSeriesMLMetricScores;
@@ -511,6 +515,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
+  @Deprecated
   public Map<String, Map<String, TimeSeriesMetricDefinition>> getMetricTemplate(String appId, StateType stateType,
       String stateExecutionId, String serviceId, String cvConfigId, String groupName) {
     Map<String, Map<String, TimeSeriesMetricDefinition>> result = new HashMap<>();
@@ -532,7 +537,26 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       default:
         throw new WingsException("Invalid Verification StateType.");
     }
+
     result.putAll(getCustomMetricTemplates(appId, stateType, serviceId, cvConfigId, groupName));
+
+    return result;
+  }
+
+  @Override
+  public Map<String, Map<String, TimeSeriesMetricDefinition>> getMetricTemplateWithCategorizedThresholds(String appId,
+      StateType stateType, String stateExecutionId, String serviceId, String cvConfigId, String groupName) {
+    Map<String, Map<String, TimeSeriesMetricDefinition>> result = new HashMap<>();
+
+    // Add supervised metric thresholds
+    addSupervisedMetricThresholds(serviceId, result);
+
+    // Add user defined metric thresholds
+    addUserDefinedMetricThresholds(appId, stateType, serviceId, cvConfigId, groupName, result);
+
+    // Add default metrics under "default" key for all enabled metrics
+    addDefaultMetricThresholds(stateType, appId, stateExecutionId, cvConfigId, result);
+
     return result;
   }
 
@@ -659,6 +683,100 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       }
     }
     return customThresholds;
+  }
+
+  private void addUserDefinedMetricThresholds(String appId, StateType stateType, String serviceId, String cvConfigId,
+      String groupName, Map<String, Map<String, TimeSeriesMetricDefinition>> metricDefinitionMap) {
+    List<TimeSeriesMLTransactionThresholds> thresholds =
+        wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
+            .filter(TimeSeriesMLTransactionThresholds.BaseKeys.appId, appId)
+            .filter(TimeSeriesMLTransactionThresholds.TimeSeriesMLTransactionThresholdKeys.serviceId, serviceId)
+            .filter(TimeSeriesMLTransactionThresholds.TimeSeriesMLTransactionThresholdKeys.stateType, stateType)
+            .filter(TimeSeriesMLTransactionThresholds.TimeSeriesMLTransactionThresholdKeys.groupName, groupName)
+            .filter(TimeSeriesMLTransactionThresholds.TimeSeriesMLTransactionThresholdKeys.cvConfigId, cvConfigId)
+            .asList();
+    if (thresholds != null) {
+      for (TimeSeriesMLTransactionThresholds threshold : thresholds) {
+        updateThresholdDefinitionSkeleton(threshold.getTransactionName(), threshold.getMetricName(),
+            threshold.getThresholds().getMetricType(), metricDefinitionMap);
+        List<Threshold> userDefinedThresholds = threshold.getThresholds().getCustomThresholds();
+        metricDefinitionMap.get(threshold.getTransactionName())
+            .get(threshold.getMetricName())
+            .getCategorizedThresholds()
+            .put(ThresholdCategory.USER_DEFINED, userDefinedThresholds);
+      }
+    }
+  }
+
+  private void addSupervisedMetricThresholds(
+      String serviceId, Map<String, Map<String, TimeSeriesMetricDefinition>> metricDefinitionMap) {
+    try {
+      List<SupervisedTSThreshold> thresholds =
+          dataStoreService
+              .list(SupervisedTSThreshold.class, aPageRequest().addFilter("serviceId", Operator.EQ, serviceId).build())
+              .getResponse();
+      if (isNotEmpty(thresholds)) {
+        for (SupervisedTSThreshold threshold : thresholds) {
+          updateThresholdDefinitionSkeleton(threshold.getTransactionName(), threshold.getMetricName(),
+              threshold.getMetricType(), metricDefinitionMap);
+          List<Threshold> supervisedThresholds = SupervisedTSThreshold.getThresholds(threshold);
+          metricDefinitionMap.get(threshold.getTransactionName())
+              .get(threshold.getMetricName())
+              .getCategorizedThresholds()
+              .put(ThresholdCategory.SUPERVISED, supervisedThresholds);
+        }
+      }
+    } catch (Exception e) {
+      logger.error("Exception while fetching supervised metric thresholds", e);
+    }
+  }
+
+  private void addDefaultMetricThresholds(StateType stateType, String appId, String stateExecutionId, String cvConfigId,
+      Map<String, Map<String, TimeSeriesMetricDefinition>> metricDefinitionMap) {
+    List<TimeSeriesMetricDefinition> metricDefinitions = new ArrayList<>();
+    switch (stateType) {
+      case NEW_RELIC:
+        metricDefinitions.addAll(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.values());
+        break;
+      case DYNA_TRACE:
+        metricDefinitions.addAll(DynaTraceTimeSeries.getDefinitionsToAnalyze().values());
+        break;
+      case APP_DYNAMICS:
+      case PROMETHEUS:
+      case CLOUD_WATCH:
+      case DATA_DOG:
+      case STACK_DRIVER:
+      case APM_VERIFICATION:
+        metricDefinitions.addAll(getMetricTemplates(appId, stateType, stateExecutionId, cvConfigId).values());
+        break;
+      default:
+        throw new WingsException("Invalid Verification StateType.");
+    }
+
+    for (TimeSeriesMetricDefinition metricDefinition : metricDefinitions) {
+      updateThresholdDefinitionSkeleton(ThresholdCategory.DEFAULT.name(), metricDefinition.getMetricName(),
+          metricDefinition.getMetricType(), metricDefinitionMap);
+    }
+  }
+
+  private void updateThresholdDefinitionSkeleton(String transactionName, String metricName, MetricType metricType,
+      Map<String, Map<String, TimeSeriesMetricDefinition>> metricDefinitionMap) {
+    if (!metricDefinitionMap.containsKey(transactionName)) {
+      metricDefinitionMap.put(transactionName, new HashMap<>());
+    }
+    if (!metricDefinitionMap.get(transactionName).containsKey(metricName)) {
+      metricDefinitionMap.get(transactionName)
+          .put(metricName,
+              TimeSeriesMetricDefinition.builder()
+                  .metricName(metricName)
+                  .metricType(metricType)
+                  .categorizedThresholds(new HashMap<>())
+                  .build());
+      metricDefinitionMap.get(transactionName)
+          .get(metricName)
+          .getCategorizedThresholds()
+          .put(ThresholdCategory.DEFAULT, metricType.getThresholds());
+    }
   }
 
   @Override
