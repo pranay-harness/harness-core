@@ -27,7 +27,6 @@ import static software.wings.api.DeploymentType.SSH;
 import static software.wings.api.DeploymentType.WINRM;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
-import static software.wings.common.Constants.REFERENCED_ENTITIES_TO_SHOW;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MAX_INSTANCES;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_NAME;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
@@ -179,6 +178,7 @@ import javax.validation.executable.ValidateOnExecution;
 public class InfrastructureMappingServiceImpl implements InfrastructureMappingService {
   private static final String COMPUTE_PROVIDER_SETTING_ID_KEY = "computeProviderSettingId";
   private static final String INFRA_KUBERNETES_INFRAID_EXPRESSION = "${infra.kubernetes.infraId}";
+  private static final Integer REFERENCED_ENTITIES_TO_SHOW = 10;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private Map<String, InfrastructureProvider> infrastructureProviders;

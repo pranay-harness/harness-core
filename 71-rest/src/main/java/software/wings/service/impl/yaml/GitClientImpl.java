@@ -958,17 +958,19 @@ public class GitClientImpl implements GitClient {
             getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset done for branch " + gitConfig.getBranch());
         // TODO:: log failed commits queued and being ignored.
         return;
-      } catch (IOException | GitAPIException ex) {
+      } catch (Exception ex) {
         executionFailed = true;
         if (ex instanceof IOException) {
           logger.error(
               getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Repo doesn't exist locally [repo: {}], {} ",
               gitConfig.getRepoUrl(), ex);
         } else {
-          logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset failed for branch [{}]",
-              gitConfig.getBranch());
-          logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
-          gitClientHelper.checkIfTransportException(ex);
+          if (ex instanceof GitAPIException) {
+            logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset failed for branch [{}]",
+                gitConfig.getBranch());
+            logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
+            gitClientHelper.checkIfTransportException(ex);
+          }
         }
       } finally {
         if (executionFailed) {

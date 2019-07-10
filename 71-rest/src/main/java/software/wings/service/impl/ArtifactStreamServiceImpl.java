@@ -28,7 +28,6 @@ import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
-import static software.wings.common.Constants.REFERENCED_ENTITIES_TO_SHOW;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
 
 import com.google.common.base.Joiner;
@@ -115,6 +114,8 @@ import javax.ws.rs.NotFoundException;
 @ValidateOnExecution
 @Slf4j
 public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataProvider {
+  private static final Integer REFERENCED_ENTITIES_TO_SHOW = 10;
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
   @Inject private Queue<PruneEvent> pruneQueue;
