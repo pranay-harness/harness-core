@@ -93,6 +93,7 @@ import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingValue;
 import software.wings.stencils.DataProvider;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.RepositoryFormat;
 import software.wings.utils.Utils;
 import software.wings.utils.Validator;
 
@@ -287,6 +288,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       }
     }
 
+    // set metadata-only field for nexus
+    setMetadataOnly(artifactStream);
     // add keywords
     artifactStream.setKeywords(trimStrings(artifactStream.generateKeywords()));
     String id = Validator.duplicateCheck(() -> wingsPersistence.save(artifactStream), "name", artifactStream.getName());
@@ -386,6 +389,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     validateRepositoryType(artifactStream, existingArtifactStream);
     // for nexus
     validateRepositoryFormat(artifactStream, existingArtifactStream);
+    setMetadataOnly(artifactStream);
 
     boolean versionChanged = false;
     List<Variable> oldTemplateVariables = existingArtifactStream.getTemplateVariables();
@@ -484,6 +488,15 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                  .equals(((NexusArtifactStream) existingArtifactStream).getRepositoryFormat())) {
           throw new InvalidRequestException("Repository Format cannot be updated", USER);
         }
+      }
+    }
+  }
+
+  // TODO: move this to NexusArtifactStream instead of handling here
+  private void setMetadataOnly(ArtifactStream artifactStream) {
+    if (artifactStream != null && artifactStream.getArtifactStreamType().equals(NEXUS.name())) {
+      if (((NexusArtifactStream) artifactStream).getRepositoryFormat().equals(RepositoryFormat.docker.name())) {
+        artifactStream.setMetadataOnly(true);
       }
     }
   }

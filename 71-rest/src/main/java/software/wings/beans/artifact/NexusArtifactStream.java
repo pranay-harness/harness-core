@@ -41,9 +41,6 @@ public class NexusArtifactStream extends ArtifactStream {
 
   public NexusArtifactStream() {
     super(NEXUS.name());
-    if (getRepositoryFormat().equals(RepositoryFormat.docker.name())) {
-      this.setMetadataOnly(true);
-    }
   }
 
   @Builder
@@ -127,8 +124,8 @@ public class NexusArtifactStream extends ArtifactStream {
     if (repositoryFormat != null) {
       return repositoryFormat;
     }
-    if (isEmpty(artifactPaths)) {
-      if (isEmpty(packageName)) {
+    if (isEmpty(getArtifactPaths())) {
+      if (isEmpty(getPackageName())) {
         repositoryFormat = RepositoryFormat.docker.name();
       }
     } else {
@@ -201,8 +198,8 @@ public class NexusArtifactStream extends ArtifactStream {
         this.repositoryFormat = repositoryFormat;
         return;
       }
-      if (isEmpty(artifactPaths)) {
-        if (isEmpty(packageName)) {
+      if (isEmpty(getArtifactPaths())) {
+        if (isEmpty(getPackageName())) {
           this.repositoryFormat = RepositoryFormat.docker.name();
         }
       } else {
