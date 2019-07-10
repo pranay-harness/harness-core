@@ -709,12 +709,12 @@
             <dependency>
                 <groupId>de.bwaldvogel</groupId>
                 <artifactId>mongo-java-server-core</artifactId>
-                <version>1.8.0</version>
+                <version>1.16.0</version>
             </dependency>
             <dependency>
                 <groupId>de.bwaldvogel</groupId>
                 <artifactId>mongo-java-server-memory-backend</artifactId>
-                <version>1.8.0</version>
+                <version>1.16.0</version>
             </dependency>
             <dependency>
                 <groupId>de.danielbechler</groupId>
@@ -1224,8 +1224,7 @@
             <dependency>
                 <groupId>de.bwaldvogel</groupId>
                 <artifactId>mongo-java-server</artifactId>
-                <!-- do not move to 1.7.0 - it seems to create intermittent issues with AuditServiceTests -->
-                <version>1.6.0</version>
+                <version>1.16.0</version>
                 <scope>test</scope>
                 <exclusions>
                     <exclusion>
