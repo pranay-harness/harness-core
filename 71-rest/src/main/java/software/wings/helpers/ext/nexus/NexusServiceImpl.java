@@ -220,10 +220,10 @@ public class NexusServiceImpl implements NexusService {
   }
 
   @Override
-  public List<BuildDetails> getVersions(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String packageName) {
+  public List<BuildDetails> getVersions(String repositoryFormat, NexusConfig nexusConfig,
+      List<EncryptedDataDetail> encryptionDetails, String repoId, String packageName) {
     try {
-      return nexusTwoService.getVersions(nexusConfig, encryptionDetails, repoId, packageName);
+      return nexusTwoService.getVersions(repositoryFormat, nexusConfig, encryptionDetails, repoId, packageName);
     } catch (final IOException e) {
       logger.error(
           format("Error occurred while retrieving versions from Nexus server %s for Repository %s under package %s",

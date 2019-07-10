@@ -1,10 +1,12 @@
 package software.wings.helpers.ext.nexus;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.sonatype.nexus.rest.model.ContentListResourceResponse;
 import org.sonatype.nexus.rest.model.RepositoryListResourceResponse;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
+import retrofit2.http.Headers;
 import retrofit2.http.Path;
 import retrofit2.http.QueryMap;
 import retrofit2.http.Url;
@@ -54,6 +56,21 @@ public interface NexusRestClient {
   @GET("service/local/repositories/{repoId}/content/{relativePath}")
   Call<ContentListResourceResponse> getRepositoryContentsWithoutCredentials(
       @Path("repoId") String repoId, @Path("relativePath") String relativePath);
+
+  /**
+   * List  Repository Contents .
+   *
+   * @param authorization the authorization
+   * @return the call
+   */
+  @Headers("Accept: application/json")
+  @GET("content/repositories/{repoId}/{packageName}")
+  Call<JsonNode> getVersions(@Header("Authorization") String authorization, @Path("repoId") String repoId,
+      @Path("packageName") String packageName);
+
+  @Headers("Accept: application/json")
+  @GET("content/repositories/{repoId}/{packageName}")
+  Call<JsonNode> getVersionsWithoutCredentials(@Path("repoId") String repoId, @Path("packageName") String packageName);
 
   /**
    * List Repository contents call.
