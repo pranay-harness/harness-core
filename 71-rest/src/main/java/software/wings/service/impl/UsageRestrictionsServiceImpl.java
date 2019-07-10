@@ -915,7 +915,8 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       if (!newAppEnvMap.containsKey(appId)) {
         Application referredApplication = appService.get(appId);
         String appName = referredApplication == null ? "" : referredApplication.getName();
-        String errorMessage = "Can't update usage scope, application '" + appName + "' is still referring this secret.";
+        String errorMessage =
+            "Can't update usage scope, application '" + appName + "' is still referencing this secret.";
         throw new WingsException(errorMessage, USER);
       }
 
@@ -930,7 +931,8 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       if (!setupEnvIds.isEmpty()) {
         Environment environment = environmentService.get(appId, setupEnvIds.iterator().next());
         String envName = environment == null ? "" : environment.getName();
-        String errorMessage = "Can't update usage scope, environment '" + envName + "' is still referring this secret.";
+        String errorMessage =
+            "Can't update usage scope, environment '" + envName + "' is still referencing this secret.";
         throw new WingsException(errorMessage, USER);
       }
     }
