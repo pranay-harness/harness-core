@@ -361,8 +361,6 @@ public interface Constants {
   String HARNESS_IO_KEY_ = "Harness.io";
   String HARNESS_SUPPORT_EMAIL_KEY = "support@harness.io";
 
-  Integer REFERENCED_ENTITIES_TO_SHOW = 10;
-
   /**
    * Quartz job detail key names
    */
