@@ -32,6 +32,7 @@ public class AmiServiceSetupElement implements ContextElement {
   private String oldAutoScalingGroupName;
   private Integer autoScalingSteadyStateTimeout;
   private Integer maxInstances;
+  private int desiredInstances;
   private int minInstances;
   private List<String> oldAsgNames;
   private AwsAmiPreDeploymentData preDeploymentData;

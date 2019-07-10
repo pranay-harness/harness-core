@@ -12,7 +12,9 @@ import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Log.LogLevel.ERROR;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_DESIRED_INSTANCES;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MAX_INSTANCES;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MIN_INSTANCES;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_NAME;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -606,7 +608,9 @@ public class AwsAsgHelperServiceDelegateImpl
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String infraMappingId) {
     try {
       String asgName = DEFAULT_AMI_ASG_NAME;
+      int asgMin = DEFAULT_AMI_ASG_MIN_INSTANCES;
       int asgMax = DEFAULT_AMI_ASG_MAX_INSTANCES;
+      int asgDesired = DEFAULT_AMI_ASG_DESIRED_INSTANCES;
       List<AutoScalingGroup> groups = listAllAsgs(awsConfig, encryptionDetails, region);
       if (isNotEmpty(groups)) {
         Optional<AutoScalingGroup> first =
@@ -617,11 +621,19 @@ public class AwsAsgHelperServiceDelegateImpl
                 .filter(group -> group.getDesiredCapacity() > 0)
                 .max(Comparator.comparing(AutoScalingGroup::getCreatedTime));
         if (first.isPresent()) {
-          asgName = first.get().getAutoScalingGroupName();
-          asgMax = first.get().getMaxSize();
+          AutoScalingGroup autoScalingGroup = first.get();
+          asgName = autoScalingGroup.getAutoScalingGroupName();
+          asgMin = autoScalingGroup.getMinSize();
+          asgMax = autoScalingGroup.getMaxSize();
+          asgDesired = autoScalingGroup.getDesiredCapacity();
         }
       }
-      return AwsAsgGetRunningCountData.builder().asgMax(asgMax).asgName(asgName).build();
+      return AwsAsgGetRunningCountData.builder()
+          .asgMin(asgMin)
+          .asgMax(asgMax)
+          .asgDesired(asgDesired)
+          .asgName(asgName)
+          .build();
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {

@@ -9,6 +9,7 @@ import static java.util.Collections.singletonList;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.service.impl.aws.model.AwsConstants.AMI_SETUP_COMMAND_NAME;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_DESIRED_INSTANCES;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MAX_INSTANCES;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_TIMEOUT_MIN;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -71,6 +72,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.AsgConvention;
 import software.wings.utils.Misc;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -81,6 +83,7 @@ public class AwsAmiServiceSetup extends State {
   private boolean useCurrentRunningCount;
   private int maxInstances;
   private int minInstances;
+  private int desiredInstances;
   private ResizeStrategy resizeStrategy;
   private boolean blueGreen;
 
@@ -117,6 +120,14 @@ public class AwsAmiServiceSetup extends State {
     }
   }
 
+  private int getNumDesiredInstancesForNewAsg() {
+    if (desiredInstances == 0) {
+      return DEFAULT_AMI_ASG_DESIRED_INSTANCES;
+    } else {
+      return desiredInstances;
+    }
+  }
+
   private int getTimeOut() {
     if (autoScalingSteadyStateTimeout == 0) {
       return DEFAULT_AMI_ASG_TIMEOUT_MIN;
@@ -141,8 +152,9 @@ public class AwsAmiServiceSetup extends State {
         AmiServiceSetupElement.builder()
             .newAutoScalingGroupName(amiServiceSetupResponse.getNewAsgName())
             .oldAutoScalingGroupName(amiServiceSetupResponse.getLastDeployedAsgName())
+            .minInstances(amiServiceSetupResponse.getMinInstances())
             .maxInstances(amiServiceSetupResponse.getMaxInstances())
-            .minInstances(minInstances)
+            .desiredInstances(amiServiceSetupResponse.getDesiredInstances())
             .blueGreen(amiServiceSetupResponse.isBlueGreen())
             .resizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
             .autoScalingSteadyStateTimeout(getTimeOut())
@@ -276,7 +288,9 @@ public class AwsAmiServiceSetup extends State {
           : AsgConvention.getAsgNamePrefix(app.getName(), service.getName(), env.getName());
 
       requestBuilder.newAsgNamePrefix(asgNamePrefix);
+      requestBuilder.minInstances(minInstances);
       requestBuilder.maxInstances(getNumMaxInstancesForNewAsg());
+      requestBuilder.desiredInstances(getNumDesiredInstancesForNewAsg());
       requestBuilder.autoScalingSteadyStateTimeout(getTimeOut());
       requestBuilder.useCurrentRunningCount(useCurrentRunningCount);
       awsAmiExecutionData = AwsAmiSetupExecutionData.builder()
@@ -321,6 +335,26 @@ public class AwsAmiServiceSetup extends State {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
+
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> invalidFields = new HashMap<>();
+    if (!useCurrentRunningCount) {
+      if (maxInstances <= 0) {
+        invalidFields.put("maxInstances", "Max Instance count must be greater than 0");
+      }
+      if (desiredInstances <= 0) {
+        invalidFields.put("desiredInstances", "Desired Instance count must be greater than 0");
+      }
+      if (desiredInstances > maxInstances) {
+        invalidFields.put("desiredInstances", "Desired Instance count must be <= Max Instance count");
+      }
+      if (minInstances > desiredInstances) {
+        invalidFields.put("minInstances", "Min Instance count must be <= Desired Instance count");
+      }
+    }
+    return invalidFields;
+  }
 
   public ResizeStrategy getResizeStrategy() {
     return resizeStrategy;
@@ -384,5 +418,13 @@ public class AwsAmiServiceSetup extends State {
 
   public void setUseCurrentRunningCount(boolean useCurrentRunningCount) {
     this.useCurrentRunningCount = useCurrentRunningCount;
+  }
+
+  public int getDesiredInstances() {
+    return desiredInstances;
+  }
+
+  public void setDesiredInstances(int desiredInstances) {
+    this.desiredInstances = desiredInstances;
   }
 }

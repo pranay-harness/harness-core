@@ -6,6 +6,8 @@ import lombok.Data;
 @Data
 @Builder
 public class AwsAsgGetRunningCountData {
+  private int asgMin;
   private int asgMax;
+  private int asgDesired;
   private String asgName;
 }

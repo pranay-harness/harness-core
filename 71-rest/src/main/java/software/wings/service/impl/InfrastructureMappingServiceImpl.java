@@ -27,7 +27,9 @@ import static software.wings.api.DeploymentType.SSH;
 import static software.wings.api.DeploymentType.WINRM;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_DESIRED_INSTANCES;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MAX_INSTANCES;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MIN_INSTANCES;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_NAME;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AZURE;
@@ -2015,7 +2017,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       // case that could happen since we support dynamic infra for Ami Asg
       return AwsAsgGetRunningCountData.builder()
           .asgName(DEFAULT_AMI_ASG_NAME)
+          .asgMin(DEFAULT_AMI_ASG_MIN_INSTANCES)
           .asgMax(DEFAULT_AMI_ASG_MAX_INSTANCES)
+          .asgDesired(DEFAULT_AMI_ASG_DESIRED_INSTANCES)
           .build();
     }
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);

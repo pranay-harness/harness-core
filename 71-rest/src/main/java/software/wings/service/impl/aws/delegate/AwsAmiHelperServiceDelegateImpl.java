@@ -472,16 +472,26 @@ public class AwsAmiHelperServiceDelegateImpl
       Integer harnessRevision = getNewHarnessVersion(harnessManagedAutoScalingGroups);
       String region = request.getRegion();
       String newAutoScalingGroupName = AsgConvention.getAsgName(request.getNewAsgNamePrefix(), harnessRevision);
+      int minInstances;
       Integer maxInstances;
+      int desiredInstances;
       if (request.isUseCurrentRunningCount()) {
         AwsAsgGetRunningCountData currentlyRunningInstanceCount =
             awsAsgHelperServiceDelegate.getCurrentlyRunningInstanceCount(
                 awsConfig, encryptionDetails, region, request.getInfraMappingId());
-        logCallback.saveExecutionLog(format("Using currently running max: [%d] from Asg: [%s]",
-            currentlyRunningInstanceCount.getAsgMax(), currentlyRunningInstanceCount.getAsgName()));
+        logCallback.saveExecutionLog(
+            format("Using currently running min: [%d], max: [%d], desired: [%d] from Asg: [%s]",
+                currentlyRunningInstanceCount.getAsgMin(), currentlyRunningInstanceCount.getAsgMax(),
+                currentlyRunningInstanceCount.getAsgDesired(), currentlyRunningInstanceCount.getAsgName()));
+        minInstances = currentlyRunningInstanceCount.getAsgMin();
         maxInstances = currentlyRunningInstanceCount.getAsgMax();
+        desiredInstances = currentlyRunningInstanceCount.getAsgDesired();
       } else {
+        logCallback.saveExecutionLog(format("Using workflow input min: [%d], max: [%d] and desired: [%d]",
+            request.getMinInstances(), request.getMaxInstances(), request.getDesiredInstances()));
+        minInstances = request.getMinInstances();
         maxInstances = request.getMaxInstances();
+        desiredInstances = request.getDesiredInstances();
       }
 
       LaunchConfiguration oldLaunchConfiguration = awsAsgHelperServiceDelegate.getLaunchConfiguration(
@@ -509,7 +519,10 @@ public class AwsAmiHelperServiceDelegateImpl
                                                       .lastDeployedAsgName(lastDeployedAsgName)
                                                       .newAsgName(newAutoScalingGroupName)
                                                       .harnessRevision(harnessRevision)
+                                                      .minInstances(minInstances)
                                                       .maxInstances(maxInstances)
+                                                      .desiredInstances(desiredInstances)
+
                                                       .blueGreen(request.isBlueGreen());
       populatePreDeploymentData(harnessManagedAutoScalingGroups, builder);
 
