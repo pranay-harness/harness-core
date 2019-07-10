@@ -80,8 +80,8 @@ public interface NexusService {
   List<BuildDetails> getVersions(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
       String groupId, String artifactName);
 
-  List<BuildDetails> getVersions(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String packageName);
+  List<BuildDetails> getVersions(String repositoryFormat, NexusConfig nexusConfig,
+      List<EncryptedDataDetail> encryptionDetails, String repoId, String packageName);
 
   /**
    * Gets the latest version of the given artifact

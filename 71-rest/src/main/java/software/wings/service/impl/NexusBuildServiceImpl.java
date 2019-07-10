@@ -68,9 +68,10 @@ public class NexusBuildServiceImpl implements NexusBuildService {
       if (artifactStreamAttributes.getArtifactType() != null
           && artifactStreamAttributes.getArtifactType().equals(ArtifactType.DOCKER)) {
         return nexusService.getBuilds(config, encryptionDetails, artifactStreamAttributes, 50);
-      } else if (artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.nuget.name())) {
-        return nexusService.getVersions(config, encryptionDetails, artifactStreamAttributes.getJobName(),
-            artifactStreamAttributes.getNexusPackageName());
+      } else if (artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.nuget.name())
+          || artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.npm.name())) {
+        return nexusService.getVersions(artifactStreamAttributes.getRepositoryFormat(), config, encryptionDetails,
+            artifactStreamAttributes.getJobName(), artifactStreamAttributes.getNexusPackageName());
       } else {
         return nexusService.getVersions(config, encryptionDetails, artifactStreamAttributes.getJobName(),
             artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName());
@@ -78,9 +79,10 @@ public class NexusBuildServiceImpl implements NexusBuildService {
     } else {
       if (artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.docker.name())) {
         return nexusService.getBuilds(config, encryptionDetails, artifactStreamAttributes, 50);
-      } else if (artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.nuget.name())) {
-        return nexusService.getVersions(config, encryptionDetails, artifactStreamAttributes.getJobName(),
-            artifactStreamAttributes.getNexusPackageName());
+      } else if (artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.nuget.name())
+          || artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.npm.name())) {
+        return nexusService.getVersions(artifactStreamAttributes.getRepositoryFormat(), config, encryptionDetails,
+            artifactStreamAttributes.getJobName(), artifactStreamAttributes.getNexusPackageName());
       } else {
         return nexusService.getVersions(config, encryptionDetails, artifactStreamAttributes.getJobName(),
             artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName());

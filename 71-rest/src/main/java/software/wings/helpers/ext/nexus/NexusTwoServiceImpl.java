@@ -16,8 +16,10 @@ import static software.wings.helpers.ext.nexus.NexusServiceImpl.isSuccessful;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.waiter.ListNotifyResponseData;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +32,7 @@ import org.sonatype.nexus.rest.model.RepositoryListResource;
 import org.sonatype.nexus.rest.model.RepositoryListResourceResponse;
 import retrofit2.Call;
 import retrofit2.Response;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -54,6 +57,7 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -96,11 +100,12 @@ public class NexusTwoServiceImpl {
             .stream()
             .filter(repositoryListResource -> "maven2".equals(repositoryListResource.getFormat()))
             .collect(toMap(RepositoryListResource::getId, RepositoryListResource::getName));
-      } else if (RepositoryFormat.nuget.name().equals(repositoryFormat)) {
+      } else if (RepositoryFormat.nuget.name().equals(repositoryFormat)
+          || RepositoryFormat.npm.name().equals(repositoryFormat)) {
         return response.body()
             .getData()
             .stream()
-            .filter(repositoryListResource -> "nuget".equals(repositoryListResource.getFormat()))
+            .filter(repositoryListResource -> repositoryFormat.equals(repositoryListResource.getFormat()))
             .collect(toMap(RepositoryListResource::getId, RepositoryListResource::getName));
       }
       return response.body().getData().stream().collect(
@@ -133,7 +138,8 @@ public class NexusTwoServiceImpl {
       throws ExecutionException, InterruptedException, IOException {
     if (repositoryFormat == null || repositoryFormat.equals(RepositoryFormat.maven.name())) {
       return fetchMavenGroupIds(nexusConfig, encryptionDetails, repoId, groupIds);
-    } else if (repositoryFormat.equals(RepositoryFormat.nuget.name())) {
+    } else if (repositoryFormat.equals(RepositoryFormat.nuget.name())
+        || repositoryFormat.equals(RepositoryFormat.npm.name())) {
       return collectPackageNames(nexusConfig, encryptionDetails, repoId, groupIds);
     }
     return groupIds;
@@ -268,9 +274,22 @@ public class NexusTwoServiceImpl {
         .collect(toList());
   }
 
-  public List<BuildDetails> getVersions(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
+  public List<BuildDetails> getVersions(String repositoryFormat, NexusConfig nexusConfig,
+      List<EncryptedDataDetail> encryptionDetails, String repositoryId, String packageName) throws IOException {
+    switch (repositoryFormat) {
+      case "nuget":
+        return getVersionsForNuGet(nexusConfig, encryptionDetails, repositoryId, packageName);
+      case "npm":
+        return getVersionsForNPM(nexusConfig, encryptionDetails, repositoryId, packageName);
+      default:
+        throw new WingsException("Unsupported format for Nexus 3.x", WingsException.USER);
+    }
+  }
+
+  @NotNull
+  private List<BuildDetails> getVersionsForNuGet(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String repositoryId, String packageName) throws IOException {
-    logger.info("Retrieving versions for repositoryId {} for packageName {}", repositoryId, packageName);
+    logger.info("Retrieving versions for NuGet repositoryId {} for packageName {}", repositoryId, packageName);
     Call<ContentListResourceResponse> request;
     if (nexusConfig.hasCredentials()) {
       request = getRestClient(nexusConfig, encryptionDetails)
@@ -290,7 +309,7 @@ public class NexusTwoServiceImpl {
         versionToArtifactUrls.put(content.getText(), content.getResourceURI());
       });
     }
-    logger.info("Versions oreder come from nexus server {}", versions);
+    logger.info("Versions order come from nexus server {}", versions);
     List<String> sortedVersions = versions.stream().sorted(new AlphanumComparator()).collect(toList());
     logger.info("After sorting alphanumerically versions {}", versions);
 
@@ -300,6 +319,56 @@ public class NexusTwoServiceImpl {
           metadata.put(ArtifactMetadataKeys.repositoryName, repositoryId);
           metadata.put(ArtifactMetadataKeys.nexusPackageName, packageName);
           metadata.put(ArtifactMetadataKeys.version, version);
+          return aBuildDetails()
+              .withNumber(version)
+              .withRevision(version)
+              .withBuildUrl(versionToArtifactUrls.get(version))
+              .withMetadata(metadata)
+              .withUiDisplayName("Version# " + version)
+              .build();
+        })
+        .collect(toList());
+  }
+
+  @NotNull
+  private List<BuildDetails> getVersionsForNPM(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
+      String repositoryId, String packageName) throws IOException {
+    logger.info("Retrieving versions for NPM repositoryId {} for packageName {}", repositoryId, packageName);
+    Call<JsonNode> request;
+    if (nexusConfig.hasCredentials()) {
+      request = getRestClientJacksonConverter(nexusConfig, encryptionDetails)
+                    .getVersions(Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())),
+                        repositoryId, packageName);
+    } else {
+      request = getRestClientJacksonConverter(nexusConfig, encryptionDetails)
+                    .getVersionsWithoutCredentials(repositoryId, packageName);
+    }
+    List<String> versions = new ArrayList<>();
+    final Response<JsonNode> response = request.execute();
+    Map<String, String> versionToArtifactUrls = new HashMap<>();
+
+    if (isSuccessful(response)) {
+      JsonNode resultNode = response.body().at("/versions");
+      if (resultNode != null) {
+        Iterator<JsonNode> iterator = resultNode.elements();
+        while (iterator.hasNext()) {
+          JsonNode next = iterator.next();
+          versions.add(next.at("/version").textValue());
+          versionToArtifactUrls.put(next.at("/version").textValue(), next.at("/dist/tarball").asText());
+        }
+      }
+    }
+    logger.info("Versions order come from nexus server {}", versions);
+    List<String> sortedVersions = versions.stream().sorted(new AlphanumComparator()).collect(toList());
+    logger.info("After sorting alphanumerically versions {}", versions);
+
+    return sortedVersions.stream()
+        .map(version -> {
+          Map<String, String> metadata = new HashMap<>();
+          metadata.put(ArtifactMetadataKeys.repositoryName, repositoryId);
+          metadata.put(ArtifactMetadataKeys.nexusPackageName, packageName);
+          metadata.put(ArtifactMetadataKeys.version, version);
+          metadata.put(ArtifactMetadataKeys.url, versionToArtifactUrls.get(version));
           return aBuildDetails()
               .withNumber(version)
               .withRevision(version)
@@ -356,7 +425,7 @@ public class NexusTwoServiceImpl {
             taskId, accountId, notifyResponseData);
       }
     } else if (repositoryFormat.equals(RepositoryFormat.nuget.name())) {
-      logger.info("Retrieving artifacts of  Repository {}, Package {} of Version {}", repositoryName,
+      logger.info("Retrieving artifacts of NuGet Repository {}, Package {} of Version {}", repositoryName,
           artifactStreamAttributes.getNexusPackageName(), version);
       Call<ContentListResourceResponse> request;
       if (nexusConfig.hasCredentials()) {
@@ -382,6 +451,14 @@ public class NexusTwoServiceImpl {
               artifactName, artifactUrl);
         });
       }
+    } else if (repositoryFormat.equals(RepositoryFormat.npm.name())) {
+      logger.info("Retrieving artifacts of NPM Repository {}, Package {} of Version {}", repositoryName,
+          artifactStreamAttributes.getNexusPackageName(), version);
+      final String artifactUrl = artifactMetadata.get(ArtifactMetadataKeys.url);
+      logger.info("Artifact Download Url {}", artifactUrl);
+      final String artifactName = artifactUrl.substring(artifactUrl.lastIndexOf('/') + 1);
+      downloadArtifactByUrl(
+          nexusConfig, encryptionDetails, delegateId, taskId, accountId, notifyResponseData, artifactName, artifactUrl);
     }
     return null;
   }
@@ -566,6 +643,14 @@ public class NexusTwoServiceImpl {
     }
     return getRetrofit(getBaseUrl(nexusConfig), SimpleXmlConverterFactory.createNonStrict())
         .create(NexusRestClient.class);
+  }
+
+  private NexusRestClient getRestClientJacksonConverter(
+      final NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails) {
+    if (nexusConfig.hasCredentials()) {
+      encryptionService.decrypt(nexusConfig, encryptionDetails);
+    }
+    return getRetrofit(getBaseUrl(nexusConfig), JacksonConverterFactory.create()).create(NexusRestClient.class);
   }
 
   static class MyAuthenticator extends Authenticator {

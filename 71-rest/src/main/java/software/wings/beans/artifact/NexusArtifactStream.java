@@ -77,7 +77,8 @@ public class NexusArtifactStream extends ArtifactStream {
     if (getRepositoryFormat().equals(RepositoryFormat.docker.name())) {
       return format("%s_%s_%s", getJobname() + "/" + getImageName(), buildNo,
           new SimpleDateFormat(dateFormat).format(new Date()));
-    } else if (getRepositoryFormat().equals(RepositoryFormat.nuget.name())) {
+    } else if (getRepositoryFormat().equals(RepositoryFormat.nuget.name())
+        || getRepositoryFormat().equals(RepositoryFormat.npm.name())) {
       return format("%s_%s_%s", getJobname() + "/" + getPackageName(), buildNo,
           new SimpleDateFormat(dateFormat).format(new Date()));
     }
@@ -93,7 +94,8 @@ public class NexusArtifactStream extends ArtifactStream {
     } else {
       if (getRepositoryFormat().equals(RepositoryFormat.docker.name())) {
         builder.append('/').append(getImageName());
-      } else if (getRepositoryFormat().equals(RepositoryFormat.nuget.name())) {
+      } else if (getRepositoryFormat().equals(RepositoryFormat.nuget.name())
+          || getRepositoryFormat().equals(RepositoryFormat.npm.name())) {
         builder.append('/').append(getPackageName());
       }
     }
@@ -202,8 +204,6 @@ public class NexusArtifactStream extends ArtifactStream {
       if (isEmpty(artifactPaths)) {
         if (isEmpty(packageName)) {
           this.repositoryFormat = RepositoryFormat.docker.name();
-        } else {
-          this.repositoryFormat = RepositoryFormat.nuget.name();
         }
       } else {
         this.repositoryFormat = RepositoryFormat.maven.name();
