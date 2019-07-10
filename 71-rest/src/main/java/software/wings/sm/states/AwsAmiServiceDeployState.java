@@ -223,7 +223,7 @@ public class AwsAmiServiceDeployState extends State {
     Integer totalExpectedCount;
     if (getInstanceUnitType() == PERCENTAGE) {
       int percent = Math.min(getInstanceCount(), 100);
-      int instanceCount1 = (int) Math.round((percent * serviceSetupElement.getMaxInstances()) / 100.0);
+      int instanceCount1 = (int) Math.round((percent * serviceSetupElement.getDesiredInstances()) / 100.0);
       totalExpectedCount = Math.max(instanceCount1, 1);
     } else {
       totalExpectedCount = getInstanceCount();

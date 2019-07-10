@@ -332,6 +332,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
                         .withAutoScalingGroupName("Name_1")
                         .withCreatedTime(new Date(10))
                         .withMaxSize(2)
+                        .withMinSize(0)
                         .withDesiredCapacity(1)
                         .withTags(new TagDescription()
                                       .withKey(HARNESS_AUTOSCALING_GROUP_TAG)
@@ -340,6 +341,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
                      .withAutoScalingGroupName("Name_2")
                      .withCreatedTime(new Date(20))
                      .withMaxSize(3)
+                     .withMinSize(0)
                      .withDesiredCapacity(1)
                      .withTags(new TagDescription()
                                    .withKey(HARNESS_AUTOSCALING_GROUP_TAG)
@@ -350,5 +352,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
         AwsConfig.builder().build(), emptyList(), "us-east-1", INFRA_MAPPING_ID);
     assertThat(data.getAsgName()).isEqualTo("Name_2");
     assertThat(data.getAsgMax()).isEqualTo(3);
+    assertThat(data.getAsgMin()).isEqualTo(0);
+    assertThat(data.getAsgDesired()).isEqualTo(1);
   }
 }
