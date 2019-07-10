@@ -54,7 +54,6 @@ import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.WingsTestModule;
 import software.wings.app.AuthModule;
 import software.wings.app.CacheModule;
-import software.wings.app.FeatureViolationsModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.LicenseModule;
 import software.wings.app.MainConfiguration;
@@ -298,7 +297,6 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
     modules.add(new WingsTestModule());
     modules.add(new TemplateModule());
     modules.add(new EventsModule((MainConfiguration) configuration));
-    modules.add(new FeatureViolationsModule());
     modules.add(new SSOModule());
     modules.add(new AuthModule());
     modules.add(new GcpMarketplaceIntegrationModule());

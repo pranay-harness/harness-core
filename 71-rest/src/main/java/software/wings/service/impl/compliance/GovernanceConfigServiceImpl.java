@@ -1,12 +1,18 @@
 package software.wings.service.impl.compliance;
 
+import static io.harness.exception.WingsException.USER;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
+import io.harness.exception.InvalidRequestException;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Event.Type;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.dl.WingsPersistence;
+import software.wings.features.GovernanceFeature;
+import software.wings.features.api.PremiumFeature;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
@@ -20,16 +26,12 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 public class GovernanceConfigServiceImpl implements GovernanceConfigService {
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private GovernanceConfigServiceForCommunity governanceConfigServiceForCommunity;
+  @Inject @Named(GovernanceFeature.FEATURE_NAME) private PremiumFeature governanceFeature;
   @Inject private AccountService accountService;
   @Inject AuditServiceHelper auditServiceHelper;
 
   @Override
   public GovernanceConfig get(String accountId) {
-    if (accountService.isCommunityAccount(accountId)) {
-      return governanceConfigServiceForCommunity.get(accountId);
-    }
-
     GovernanceConfig governanceConfig =
         wingsPersistence.createQuery(GovernanceConfig.class).filter(GovernanceConfig.ACCOUNT_ID_KEY, accountId).get();
     if (governanceConfig == null) {
@@ -44,6 +46,8 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
 
   @Override
   public GovernanceConfig update(String accountId, GovernanceConfig governanceConfig) {
+    checkIfOperationIsAllowed(accountId);
+
     GovernanceConfig governanceConfigInDB = get(accountId);
 
     if (governanceConfig == null) {
@@ -67,6 +71,12 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
     GovernanceConfig config = query.get();
     if (wingsPersistence.delete(query)) {
       auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, config);
+    }
+  }
+
+  private void checkIfOperationIsAllowed(String accountId) {
+    if (!governanceFeature.isAvailableForAccount(accountId)) {
+      throw new InvalidRequestException(String.format("Operation not permitted for account [%s]", accountId), USER);
     }
   }
 }

@@ -32,6 +32,7 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.User;
+import software.wings.features.api.PremiumFeature;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings.TwoFactorAuthenticationSettingsBuilder;
 import software.wings.service.intfc.AccountService;
@@ -50,6 +51,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Inject @InjectMocks TwoFactorAuthenticationManager twoFactorAuthenticationManager;
   @Mock AuthenticationUtils authenticationUtils;
   @Mock AccountService accountService;
+  @Mock private PremiumFeature twoFactorAuthenticationFeature;
 
   @Test
   @Repeat(times = 5, successes = 1)
@@ -159,8 +161,9 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldOverrideTwoFactorAuthentication() {
     Account account = getAccount(AccountType.PAID, false);
+
     TwoFactorAdminOverrideSettings twoFactorAdminOverrideSettings = new TwoFactorAdminOverrideSettings(true);
-    when(accountService.isCommunityAccount(account.getUuid())).thenReturn(false);
+    when(twoFactorAuthenticationFeature.isAvailableForAccount(account.getUuid())).thenReturn(true);
 
     when(userService.overrideTwoFactorforAccount(
              account.getUuid(), twoFactorAdminOverrideSettings.isAdminOverrideTwoFactorEnabled()))
@@ -173,16 +176,17 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldNotEnableTwoFactorAuthenticationForCommunityAccount() {
+  public void shouldNotEnableTwoFactorAuthenticationForAccountWith2FAFeatureUnavailable() {
     Account account = getAccount(AccountType.COMMUNITY, false);
+
     TwoFactorAdminOverrideSettings twoFactorAdminOverrideSettings = new TwoFactorAdminOverrideSettings(true);
-    when(accountService.isCommunityAccount(account.getUuid())).thenReturn(true);
+    when(twoFactorAuthenticationFeature.isAvailableForAccount(account.getUuid())).thenReturn(false);
 
     try {
       twoFactorAuthenticationManager.overrideTwoFactorAuthentication(account.getUuid(), twoFactorAdminOverrideSettings);
       Assert.fail();
     } catch (WingsException e) {
-      assertEquals(ErrorCode.GENERAL_ERROR, e.getCode());
+      assertEquals(ErrorCode.INVALID_REQUEST, e.getCode());
     }
   }
 
@@ -244,15 +248,15 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldNotEnableTwoFactorAuthenticationForUserWhosePrimaryAccountIsCommunity() {
+  public void shouldNotEnableTwoFactorAuthenticationForUserWhosePrimaryAccountHas2FAFeatureUnavailable() {
     Account account1 = getAccount(AccountType.COMMUNITY, false);
     Account account2 = getAccount(AccountType.PAID, false);
 
     User user = getUser(false);
     user.setAccounts(Arrays.asList(account1, account2));
 
-    when(accountService.isCommunityAccount(account1.getUuid())).thenReturn(true);
-    when(accountService.isCommunityAccount(account2.getUuid())).thenReturn(false);
+    when(twoFactorAuthenticationFeature.isAvailableForAccount(account1.getUuid())).thenReturn(false);
+    when(twoFactorAuthenticationFeature.isAvailableForAccount(account2.getUuid())).thenReturn(true);
 
     TwoFactorAuthenticationSettings settings =
         new TwoFactorAuthenticationSettingsBuilder().twoFactorAuthenticationEnabled(true).mechanism(TOTP).build();
@@ -261,7 +265,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
       twoFactorAuthenticationManager.enableTwoFactorAuthenticationSettings(user, settings);
       Assert.fail();
     } catch (WingsException e) {
-      assertEquals(ErrorCode.GENERAL_ERROR, e.getCode());
+      assertEquals(ErrorCode.INVALID_REQUEST, e.getCode());
     }
   }
 

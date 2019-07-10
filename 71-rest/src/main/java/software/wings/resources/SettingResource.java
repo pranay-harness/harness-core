@@ -366,7 +366,7 @@ public class SettingResource {
     logger.info("Retaining the following git connectors for accountId {}: {}", accountId, gitConnectorsToRetain);
     logger.info("Starting deletion of git connectors for accountId {}", accountId);
     boolean gitConnectorsDeleted =
-        settingsService.retainSelectedGitConnectorsAndDeleteRest(appId, accountId, gitConnectorsToRetain);
+        settingsService.retainSelectedGitConnectorsAndDeleteRest(accountId, gitConnectorsToRetain);
     if (gitConnectorsDeleted) {
       logger.info("Deleted remaining of Git Connectors for accountId {}", accountId);
     }

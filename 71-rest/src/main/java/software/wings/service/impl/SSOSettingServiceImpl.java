@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.eraro.ErrorCode.FEAT_UNAVAILABLE_IN_COMMUNITY_VERSION;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
@@ -18,11 +18,9 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.scheduler.PersistentScheduler;
 import org.hibernate.validator.constraints.NotBlank;
 import software.wings.beans.Account;
-import software.wings.beans.AccountType;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.NotificationGroup;
@@ -35,6 +33,9 @@ import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SSOType;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.dl.WingsPersistence;
+import software.wings.features.LdapFeature;
+import software.wings.features.SamlFeature;
+import software.wings.features.api.PremiumFeature;
 import software.wings.scheduler.LdapGroupSyncJob;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.OauthProviderType;
@@ -69,6 +70,8 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private OauthOptions oauthOptions;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named(LdapFeature.FEATURE_NAME) private PremiumFeature ldapFeature;
+  @Inject @Named(SamlFeature.FEATURE_NAME) private PremiumFeature samlFeature;
 
   @Override
   public SamlSettings getSamlSettingsByIdpUrl(String idpUrl) {
@@ -95,7 +98,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
 
   @Override
   public SamlSettings saveSamlSettings(SamlSettings settings) {
-    checkOperationSupportedForAccount(settings.getAccountId(), SSOType.SAML);
+    checkIfOperationIsAllowed(settings.getAccountId(), SSOType.SAML);
     SamlSettings queriedSettings = getSamlSettingsByAccountId(settings.getAccountId());
     SamlSettings savedSettings;
     if (queriedSettings != null) {
@@ -194,7 +197,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
 
   @Override
   public LdapSettings createLdapSettings(@NotNull LdapSettings settings) {
-    checkOperationSupportedForAccount(settings.getAccountId(), SSOType.LDAP);
+    checkIfOperationIsAllowed(settings.getAccountId(), SSOType.LDAP);
     if (getLdapSettingsByAccountId(settings.getAccountId()) != null) {
       throw new InvalidRequestException("Ldap settings already exist for this account.");
     }
@@ -207,7 +210,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
 
   @Override
   public LdapSettings updateLdapSettings(@NotNull LdapSettings settings) {
-    checkOperationSupportedForAccount(settings.getAccountId(), SSOType.LDAP);
+    checkIfOperationIsAllowed(settings.getAccountId(), SSOType.LDAP);
     LdapSettings oldSettings = getLdapSettingsByAccountId(settings.getAccountId());
     if (oldSettings == null) {
       throw new InvalidRequestException("No existing Ldap settings found for this account.");
@@ -356,17 +359,10 @@ public class SSOSettingServiceImpl implements SSOSettingService {
         .asList();
   }
 
-  private boolean checkOperationSupportedForAccount(String accountId, SSOType ssoType) {
-    Account account = accountService.get(accountId);
-    if (account != null && account.isCommunity()) {
-      throw new WingsException(FEAT_UNAVAILABLE_IN_COMMUNITY_VERSION,
-          new StringBuilder()
-              .append(ssoType)
-              .append(" SSO not supported for accountType=")
-              .append(AccountType.COMMUNITY)
-              .toString(),
-          WingsException.USER);
+  private void checkIfOperationIsAllowed(String accountId, SSOType ssoType) {
+    if (ssoType == SSOType.LDAP && !ldapFeature.isAvailableForAccount(accountId)
+        || ssoType == SSOType.SAML && !samlFeature.isAvailableForAccount(accountId)) {
+      throw new InvalidRequestException(String.format("Operation not permitted for account [%s]", accountId), USER);
     }
-    return true;
   }
 }

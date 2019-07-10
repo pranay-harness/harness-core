@@ -24,9 +24,11 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.SecretString;
 import io.harness.network.Http;
@@ -48,6 +50,8 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.KmsSetupAlert;
+import software.wings.features.SecretsManagementFeature;
+import software.wings.features.api.PremiumFeature;
 import software.wings.helpers.ext.vault.VaultSysAuthRestClient;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
@@ -83,6 +87,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
   @Inject private AlertService alertService;
   @Inject private AccountService accountService;
+  @Inject @Named(SecretsManagementFeature.FEATURE_NAME) private PremiumFeature secretsManagementFeature;
 
   @Override
   public EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
@@ -243,7 +248,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
   @Override
   public String saveVaultConfig(String accountId, VaultConfig vaultConfig) {
-    checkIfVaultConfigCanBeCreatedOrUpdated(accountId, vaultConfig);
+    checkIfVaultConfigCanBeCreatedOrUpdated(accountId);
 
     // First normalize the base path value. Set default base path if it has not been specified from input.
     String basePath = isEmpty(vaultConfig.getBasePath()) ? DEFAULT_BASE_PATH : vaultConfig.getBasePath().trim();
@@ -330,7 +335,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     return wingsPersistence.save(encryptedData);
   }
 
-  private void checkIfVaultConfigCanBeCreatedOrUpdated(String accountId, VaultConfig vaultConfig) {
+  private void checkIfVaultConfigCanBeCreatedOrUpdated(String accountId) {
     Account account = accountService.get(accountId);
 
     if (account.isLocalEncryptionEnabled()) {
@@ -339,20 +344,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
           .addParam(REASON_KEY, "Can't create new Vault secret manager for a LOCAL encryption enabled account!");
     }
 
-    String vaultConfigId = vaultConfig.getUuid();
-    boolean isNewVaultConfig = isEmpty(vaultConfigId);
-    boolean isCommunityAccount = accountService.isCommunityAccount(accountId);
-    if (isCommunityAccount) {
-      if (isNewVaultConfig) {
-        throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER)
-            .addParam(REASON_KEY, "Cannot add new HashiCorp Vault Secret Manager in Harness Community.");
-      }
-
-      VaultConfig savedVaultConfig = getSavedVaultConfig(vaultConfigId);
-      if (vaultConfig.isDefault() && !savedVaultConfig.isDefault()) {
-        throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER)
-            .addParam(REASON_KEY, "Cannot change default Secret Manager in Harness Community.");
-      }
+    if (!secretsManagementFeature.isAvailableForAccount(accountId)) {
+      throw new InvalidRequestException(String.format("Operation not permitted for account [%s]", accountId), USER);
     }
   }
 

@@ -10,11 +10,13 @@ import static software.wings.beans.security.access.WhitelistStatus.ACTIVE;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.net.util.SubnetUtils;
@@ -26,10 +28,10 @@ import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.beans.security.access.Whitelist;
 import software.wings.beans.security.access.WhitelistConfig;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.AccountService;
+import software.wings.features.IpWhitelistingFeature;
+import software.wings.features.api.PremiumFeature;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WhitelistService;
-import software.wings.service.intfc.WhitelistServiceForCommunity;
 import software.wings.utils.CacheManager;
 import software.wings.utils.Validator;
 
@@ -50,15 +52,11 @@ public class WhitelistServiceImpl implements WhitelistService {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private CacheManager cacheManager;
   @Inject private EventPublishHelper eventPublishHelper;
-  @Inject private AccountService accountService;
-
-  @Inject private WhitelistServiceForCommunity communityEditionWhiteListService;
+  @Inject @Named(IpWhitelistingFeature.FEATURE_NAME) private PremiumFeature ipWhitelistingFeature;
 
   @Override
   public Whitelist save(Whitelist whitelist) {
-    if (accountService.isCommunityAccount(whitelist.getAccountId())) {
-      return communityEditionWhiteListService.save(whitelist);
-    }
+    checkIfOperationIsAllowed(whitelist.getAccountId());
 
     validate(whitelist);
     Whitelist savedWhitelist = wingsPersistence.saveAndGet(Whitelist.class, whitelist);
@@ -106,8 +104,8 @@ public class WhitelistServiceImpl implements WhitelistService {
 
   @Override
   public boolean isValidIPAddress(String accountId, String ipAddress) {
-    if (accountService.isCommunityAccount(accountId)) {
-      return communityEditionWhiteListService.isValidIPAddress(accountId, ipAddress);
+    if (!ipWhitelistingFeature.isAvailableForAccount(accountId)) {
+      return true;
     }
 
     List<Whitelist> whitelistConfigList = getWhitelistConfig(accountId);
@@ -222,9 +220,7 @@ public class WhitelistServiceImpl implements WhitelistService {
 
   @Override
   public Whitelist update(Whitelist whitelist) {
-    if (accountService.isCommunityAccount(whitelist.getAccountId())) {
-      return communityEditionWhiteListService.update(whitelist);
-    }
+    checkIfOperationIsAllowed(whitelist.getAccountId());
 
     validate(whitelist);
     UpdateOperations<Whitelist> operations = wingsPersistence.createUpdateOperations(Whitelist.class);
@@ -268,6 +264,12 @@ public class WhitelistServiceImpl implements WhitelistService {
         wingsPersistence.createQuery(Whitelist.class).filter(Whitelist.ACCOUNT_ID_KEY, accountId).asList();
     for (Whitelist whitelist : whitelists) {
       delete(accountId, whitelist.getUuid());
+    }
+  }
+
+  private void checkIfOperationIsAllowed(String accountId) {
+    if (!ipWhitelistingFeature.isAvailableForAccount(accountId)) {
+      throw new InvalidRequestException(String.format("Operation not permitted for account [%s]", accountId), USER);
     }
   }
 }

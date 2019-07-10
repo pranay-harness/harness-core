@@ -9,6 +9,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_KEY;
@@ -23,6 +24,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -31,6 +33,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.security.UserGroup;
+import software.wings.features.api.PremiumFeature;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.utils.Validator;
 
@@ -38,11 +41,18 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private UserGroupService userGroupService;
   @Inject @InjectMocks private ApiKeyService apiKeyService;
+  @Mock private PremiumFeature apiKeysFeature;
+
+  @Before
+  public void init() {
+    when(apiKeysFeature.isAvailableForAccount(ACCOUNT_ID)).thenReturn(true);
+  }
 
   @Test
   @Category(UnitTests.class)
   public void testGenerate() {
     ApiKeyEntry savedApiKeyEntry = generateKey();
+
     assertThat(savedApiKeyEntry).isNotNull();
     assertThat(savedApiKeyEntry.getDecryptedKey()).isNotEmpty();
   }

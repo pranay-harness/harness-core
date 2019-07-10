@@ -54,6 +54,4 @@ public interface SSOService {
   OauthSettings updateOauthSettings(String accountId, String filter, Set<OauthProviderType> allowedProviders);
 
   SSOConfig deleteOauthConfiguration(String accountId);
-
-  Boolean deleteSSOSettingsForAccount(@NotBlank String accountId, @NotBlank String targetAccountType);
 }

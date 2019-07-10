@@ -5,6 +5,7 @@ import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import es.moki.ratelimitj.core.limiter.request.RequestLimitRule;
 import es.moki.ratelimitj.core.limiter.request.RequestRateLimiter;
@@ -22,6 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.FeatureName;
 import software.wings.beans.User;
+import software.wings.features.RestApiFeature;
+import software.wings.features.api.PremiumFeature;
 import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
 import software.wings.graphql.provider.QueryLanguageProvider;
 import software.wings.graphql.utils.GraphQLConstants;
@@ -60,19 +63,22 @@ public class GraphQLResource {
   ApiKeyService apiKeyService;
   AuthHandler authHandler;
   AccountService accountService;
+  PremiumFeature restApiFeature;
+
   DataLoaderRegistryHelper dataLoaderRegistryHelper;
 
   @Inject
   public GraphQLResource(@NotNull QueryLanguageProvider<GraphQL> queryLanguageProvider,
       @NotNull FeatureFlagService featureFlagService, @NotNull ApiKeyService apiKeyService,
       @NotNull AuthHandler authHandler, DataLoaderRegistryHelper dataLoaderRegistryHelper,
-      @NotNull AccountService accountService) {
+      @NotNull AccountService accountService, @Named(RestApiFeature.FEATURE_NAME) PremiumFeature restApiFeature) {
     this.graphQL = queryLanguageProvider.getQL();
     this.featureFlagService = featureFlagService;
     this.apiKeyService = apiKeyService;
     this.authHandler = authHandler;
     this.dataLoaderRegistryHelper = dataLoaderRegistryHelper;
     this.accountService = accountService;
+    this.restApiFeature = restApiFeature;
     requestRateLimiter = new InMemorySlidingWindowRequestRateLimiter(Collections.singleton(
         RequestLimitRule.of(Duration.ofMinutes(RATE_LIMIT_DURATION_IN_MINUTE), RATE_LIMIT_QUERY_PER_MINUTE)));
   }
@@ -121,7 +127,8 @@ public class GraphQLResource {
       return getExecutionResultWithError(rateLiteErrorMsg).toSpecification();
     }
 
-    if (!featureFlagService.isEnabled(FeatureName.GRAPHQL, accountId) || accountService.isCommunityAccount(accountId)) {
+    if (!featureFlagService.isEnabled(FeatureName.GRAPHQL, accountId)
+        || !restApiFeature.isAvailableForAccount(accountId)) {
       logger.info(GraphQLConstants.FEATURE_NOT_ENABLED);
       return getExecutionResultWithError(GraphQLConstants.FEATURE_NOT_ENABLED).toSpecification();
     }

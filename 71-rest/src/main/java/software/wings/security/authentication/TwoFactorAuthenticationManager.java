@@ -6,14 +6,17 @@ import static io.harness.exception.WingsException.USER;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
 import software.wings.beans.Account;
 import software.wings.beans.User;
+import software.wings.features.TwoFactorAuthenticationFeature;
+import software.wings.features.api.PremiumFeature;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
@@ -29,6 +32,7 @@ public class TwoFactorAuthenticationManager {
   @Inject private AccountService accountService;
   @Inject private AuthService authService;
   @Inject private EventPublishHelper eventPublishHelper;
+  @Inject @Named(TwoFactorAuthenticationFeature.FEATURE_NAME) private PremiumFeature twoFactorAuthenticationFeature;
 
   public TwoFactorAuthHandler getTwoFactorAuthHandler(TwoFactorAuthenticationMechanism mechanism) {
     switch (mechanism) {
@@ -63,11 +67,8 @@ public class TwoFactorAuthenticationManager {
     if (settings.getMechanism() == null) {
       throw new WingsException(ErrorCode.INVALID_TWO_FACTOR_AUTHENTICATION_CONFIGURATION, USER);
     }
-    if (!isAllowed2FAEnable(user)) {
-      throw new WingsException(GENERAL_ERROR, USER)
-          .addParam("message",
-              "Two Factor Authentication is not supported in Harness Community. Please upgrade to Harness Pro.");
-    }
+    getPrimaryAccount(user).ifPresent(account -> checkIfOperationIsAllowed(account.getUuid()));
+
     settings.setTwoFactorAuthenticationEnabled(true);
     return applyTwoFactorAuthenticationSettings(user, settings);
   }
@@ -99,14 +100,6 @@ public class TwoFactorAuthenticationManager {
     }
   }
 
-  private boolean isAllowed2FAEnable(User user) {
-    return CollectionUtils.isEmpty(user.getAccounts()) || !isPrimaryAccountCommunity(user);
-  }
-
-  private boolean isPrimaryAccountCommunity(User user) {
-    return getPrimaryAccount(user).map(account -> accountService.isCommunityAccount(account.getUuid())).orElse(false);
-  }
-
   private Optional<Account> getPrimaryAccount(User user) {
     return user.getAccounts().stream().findFirst();
   }
@@ -124,26 +117,21 @@ public class TwoFactorAuthenticationManager {
   }
 
   public boolean overrideTwoFactorAuthentication(String accountId, TwoFactorAdminOverrideSettings settings) {
-    try {
-      if (settings != null) {
-        if (accountService.isCommunityAccount(accountId) && settings.isAdminOverrideTwoFactorEnabled()) {
-          throw new WingsException(GENERAL_ERROR, USER)
-              .addParam("message",
-                  "Two Factor Authentication is not supported in Harness Community. Please upgrade to Harness Pro.");
-        }
-        // Update 2FA enforce flag
-        accountService.updateTwoFactorEnforceInfo(accountId, settings.isAdminOverrideTwoFactorEnabled());
+    checkIfOperationIsAllowed(accountId);
 
-        // Enable 2FA for all users if admin enforced
-        if (settings.isAdminOverrideTwoFactorEnabled()) {
-          logger.info("Enabling 2FA for all users in the account who have 2FA disabled ={}", accountId);
-          boolean success =
-              userService.overrideTwoFactorforAccount(accountId, settings.isAdminOverrideTwoFactorEnabled());
-          if (success) {
-            eventPublishHelper.publishSetup2FAEvent(accountId);
-          }
-          return success;
+    try {
+      // Update 2FA enforce flag
+      accountService.updateTwoFactorEnforceInfo(accountId, settings.isAdminOverrideTwoFactorEnabled());
+
+      // Enable 2FA for all users if admin enforced
+      if (settings.isAdminOverrideTwoFactorEnabled()) {
+        logger.info("Enabling 2FA for all users in the account who have 2FA disabled ={}", accountId);
+        boolean success =
+            userService.overrideTwoFactorforAccount(accountId, settings.isAdminOverrideTwoFactorEnabled());
+        if (success) {
+          eventPublishHelper.publishSetup2FAEvent(accountId);
         }
+        return success;
       }
     } catch (Exception ex) {
       throw new WingsException(GENERAL_ERROR, USER)
@@ -168,5 +156,11 @@ public class TwoFactorAuthenticationManager {
     userService.getUsersWithThisAsPrimaryAccount(accountId).forEach(u -> totpHandler.disableTwoFactorAuthentication(u));
 
     return true;
+  }
+
+  private void checkIfOperationIsAllowed(String accountId) {
+    if (!twoFactorAuthenticationFeature.isAvailableForAccount(accountId)) {
+      throw new InvalidRequestException(String.format("Operation not permitted for account [%s]", accountId), USER);
+    }
   }
 }

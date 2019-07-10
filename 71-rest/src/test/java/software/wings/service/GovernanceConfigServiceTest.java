@@ -1,7 +1,7 @@
 package software.wings.service;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -9,6 +9,8 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -17,6 +19,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.governance.GovernanceConfig;
+import software.wings.features.api.PremiumFeature;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
 
@@ -29,6 +32,7 @@ public class GovernanceConfigServiceTest extends WingsBaseTest {
   @Mock private Account account;
 
   @InjectMocks @Inject private GovernanceConfigService governanceConfigService;
+  @Mock private PremiumFeature governanceFeature;
 
   private String accountId = UUIDGenerator.generateUuid();
 
@@ -38,6 +42,7 @@ public class GovernanceConfigServiceTest extends WingsBaseTest {
   @Before
   public void setupMocks() {
     when(accountService.get(anyString())).thenReturn(account);
+    when(governanceFeature.isAvailableForAccount(accountId)).thenReturn(true);
   }
 
   /**
@@ -65,14 +70,16 @@ public class GovernanceConfigServiceTest extends WingsBaseTest {
     savedGovernanceConfig = governanceConfigService.get(accountId);
     compare(inputConfig, savedGovernanceConfig);
 
-    // treat the account as COMMUNITY
-    when(accountService.isCommunityAccount(accountId)).thenReturn(true);
-    savedGovernanceConfig = governanceConfigService.get(accountId);
-    assertFalse(savedGovernanceConfig.isDeploymentFreeze());
+    when(governanceFeature.isAvailableForAccount(accountId)).thenReturn(false);
 
     inputConfig = GovernanceConfig.builder().accountId(accountId).deploymentFreeze(true).build();
-    governanceConfigService.update(accountId, inputConfig);
-    assertFalse(governanceConfigService.get(accountId).isDeploymentFreeze());
+
+    try {
+      governanceConfigService.update(accountId, inputConfig);
+      fail("Saved governance config");
+    } catch (WingsException e) {
+      assertEquals(ErrorCode.INVALID_REQUEST, e.getCode());
+    }
   }
 
   private void compare(GovernanceConfig lhs, GovernanceConfig rhs) {

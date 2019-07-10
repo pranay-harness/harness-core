@@ -47,6 +47,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -84,6 +85,8 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.features.GitOpsFeature;
+import software.wings.features.api.UsageLimitedFeature;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.AccountService;
@@ -144,6 +147,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private CacheManager cacheManager;
   @Inject private EnvironmentService envService;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject @Named(GitOpsFeature.FEATURE_NAME) private UsageLimitedFeature gitOpsFeature;
 
   @Override
   public PageResponse<SettingAttribute> list(
@@ -284,20 +288,18 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   private void checkGitConnectorsUsageWithinLimit(SettingAttribute settingAttribute) {
-    if (accountService.isCommunityAccount(settingAttribute.getAccountId())) {
-      PageRequest<SettingAttribute> request =
-          aPageRequest()
-              .addFilter(SettingAttribute.ACCOUNT_ID_KEY, Operator.EQ, settingAttribute.getAccountId())
-              .addFilter(SettingAttribute.VALUE_TYPE_KEY, Operator.EQ, SettingVariableTypes.GIT)
-              .build();
-      int currentGitConnectorCount = list(request, null, null).getResponse().size();
-      if (currentGitConnectorCount >= 1) {
-        logger.info(
-            "Did not save Setting Attribute of type {} for Community account ID {} because usage limit exceeded",
-            settingAttribute.getValue().getType(), settingAttribute.getAccountId());
-        throw new WingsException(USAGE_LIMITS_EXCEEDED,
-            "Cannot create more than 1 Git Connector in Harness Community Edition.", WingsException.USER);
-      }
+    int maxGitConnectorsAllowed = gitOpsFeature.getMaxUsageAllowedForAccount(settingAttribute.getAccountId());
+    PageRequest<SettingAttribute> request =
+        aPageRequest()
+            .addFilter(SettingAttribute.ACCOUNT_ID_KEY, Operator.EQ, settingAttribute.getAccountId())
+            .addFilter(SettingAttribute.VALUE_TYPE_KEY, Operator.EQ, SettingVariableTypes.GIT)
+            .build();
+    int currentGitConnectorCount = list(request, null, null).getResponse().size();
+    if (currentGitConnectorCount >= maxGitConnectorsAllowed) {
+      logger.info("Did not save Setting Attribute of type {} for account ID {} because usage limit exceeded",
+          settingAttribute.getValue().getType(), settingAttribute.getAccountId());
+      throw new WingsException(USAGE_LIMITS_EXCEEDED,
+          String.format("Cannot create more than %d Git Connector", maxGitConnectorsAllowed), WingsException.USER);
     }
   }
 
@@ -693,17 +695,15 @@ public class SettingsServiceImpl implements SettingsService {
 
   /**
    * Retain only the selected
-   * @param appId Harness App ID
-   * @param selectedGitConnectors List of setting attribute IDs of Git connectors to be retained
+   * @param selectedGitConnectors List of setting attribute Names of Git connectors to be retained
    */
-  public boolean retainSelectedGitConnectorsAndDeleteRest(
-      String appId, String accountId, List<String> selectedGitConnectors) {
+  public boolean retainSelectedGitConnectorsAndDeleteRest(String accountId, List<String> selectedGitConnectors) {
     if (EmptyPredicate.isNotEmpty(selectedGitConnectors)) {
       // Delete git connectors
       wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class)
                                   .filter(SettingAttribute.ACCOUNT_ID_KEY, accountId)
                                   .filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.GIT)
-                                  .field(SettingAttribute.ID_KEY)
+                                  .field(NAME_KEY)
                                   .notIn(selectedGitConnectors));
       return true;
     }

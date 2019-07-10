@@ -63,6 +63,7 @@ import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
+import software.wings.features.api.UsageLimitedFeature;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
@@ -112,6 +113,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   //  @InjectMocks @Inject private AccountService accountService = spy(AccountServiceImpl.class);
   @InjectMocks @Inject private UserService userService;
   @InjectMocks @Inject private UserGroupServiceImpl userGroupService;
+  @Mock private UsageLimitedFeature rbacFeature;
 
   private String accountId = generateUuid();
   private String userGroupId = generateUuid();
@@ -131,6 +133,8 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
     when(roleService.getAccountAdminRole(any()))
         .thenReturn(Role.Builder.aRole().withAccountId(ACCOUNT_ID).withUuid(generateUuid()).build());
+    when(rbacFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
+    when(rbacFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(Integer.MAX_VALUE);
     wingsPersistence.save(user);
   }
 
@@ -349,7 +353,6 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldUpdateNotificationSettings() {
-    String accountId = "some-account-id";
     UserGroup ug = builder().accountId(accountId).name("some-name").build();
     UserGroup saved = userGroupService.save(ug);
 
@@ -368,7 +371,6 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldUpdateOverview() {
-    String accountId = "some-account-id";
     UserGroup ug = builder().accountId(accountId).name("some-name").build();
     UserGroup saved = userGroupService.save(ug);
 
@@ -508,13 +510,6 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
 
     wingsPersistence.save(defaultUserGroup);
     wingsPersistence.save(nonDefaultUserGroup);
-
-    when(accountService.isCommunityAccount(ACCOUNT_ID)).thenReturn(true);
-
-    assertEquals(Collections.singletonList(defaultUserGroup.getUuid()),
-        getIds(userGroupService.getUserGroupsByAccountId(ACCOUNT_ID, user)));
-
-    when(accountService.isCommunityAccount(ACCOUNT_ID)).thenReturn(false);
 
     assertEquals(Arrays.asList(defaultUserGroup.getUuid(), nonDefaultUserGroup.getUuid()),
         getIds(userGroupService.getUserGroupsByAccountId(ACCOUNT_ID, user)));

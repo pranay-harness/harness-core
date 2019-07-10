@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.FEAT_UNAVAILABLE_IN_COMMUNITY_VERSION;
+import static io.harness.eraro.ErrorCode.FEATURE_UNAVAILABLE;
 import static io.harness.exception.WingsException.USER;
 import static java.util.Objects.requireNonNull;
 
@@ -10,14 +10,11 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.Account;
+import software.wings.beans.AccountType;
 import software.wings.beans.Application;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
 import software.wings.licensing.LicenseService;
-import software.wings.licensing.violations.checkers.PipelinePreDeploymentViolationChecker;
-import software.wings.licensing.violations.checkers.WorkflowPreDeploymentViolationChecker;
-import software.wings.licensing.violations.checkers.error.ValidationError;
 import software.wings.service.impl.deployment.checks.AccountExpirationChecker;
 import software.wings.service.impl.deployment.checks.DeploymentFreezeChecker;
 import software.wings.service.intfc.AccountService;
@@ -37,8 +34,8 @@ public class PreDeploymentChecks {
   private LicenseService licenseService;
   private GovernanceConfigService governanceConfigService;
   private AccountService accountService;
-  private WorkflowPreDeploymentViolationChecker workflowPreDeploymentViolationChecker;
-  private PipelinePreDeploymentViolationChecker pipelinePreDeploymentViolationChecker;
+  private WorkflowPreDeploymentValidator workflowPreDeploymentValidator;
+  private PipelinePreDeploymentValidator pipelinePreDeploymentValidator;
 
   enum CheckType { ACCOUNT_EXPIRY, DEPLOYMENT_FREEZE }
 
@@ -47,14 +44,14 @@ public class PreDeploymentChecks {
   @Inject
   public PreDeploymentChecks(AppService appService, LicenseService licenseService,
       GovernanceConfigService governanceConfigService, AccountService accountService,
-      WorkflowPreDeploymentViolationChecker workflowPreDeploymentViolationChecker,
-      PipelinePreDeploymentViolationChecker pipelinePreDeploymentViolationChecker) {
+      WorkflowPreDeploymentValidator workflowPreDeploymentValidator,
+      PipelinePreDeploymentValidator pipelinePreDeploymentValidator) {
     this.appService = appService;
     this.licenseService = licenseService;
     this.governanceConfigService = governanceConfigService;
     this.accountService = accountService;
-    this.workflowPreDeploymentViolationChecker = workflowPreDeploymentViolationChecker;
-    this.pipelinePreDeploymentViolationChecker = pipelinePreDeploymentViolationChecker;
+    this.workflowPreDeploymentValidator = workflowPreDeploymentValidator;
+    this.pipelinePreDeploymentValidator = pipelinePreDeploymentValidator;
 
     populateChecks();
   }
@@ -84,29 +81,24 @@ public class PreDeploymentChecks {
   }
 
   public void checkIfWorkflowUsingRestrictedFeatures(@NotNull Workflow workflow) {
-    Account account = accountService.get(workflow.getAccountId());
-    if (account.isCommunity()) {
-      List<ValidationError> validationErrorList = workflowPreDeploymentViolationChecker.checkViolations(workflow);
-      if (isNotEmpty(validationErrorList)) {
-        String validationMessage = validationErrorList.get(0).getMessage();
-        logger.warn("Pre-deployment restricted features check failed for workflowId ={} with reason={} ",
-            workflow.getUuid(), validationMessage);
-        throw new WingsException(FEAT_UNAVAILABLE_IN_COMMUNITY_VERSION, validationMessage, USER)
-            .addParam("message", validationMessage);
-      }
+    String accountType = accountService.getAccountType(workflow.getAccountId()).orElse(AccountType.PAID);
+    List<ValidationError> validationErrorList = workflowPreDeploymentValidator.validate(accountType, workflow);
+    if (isNotEmpty(validationErrorList)) {
+      String validationMessage = validationErrorList.get(0).getMessage();
+      logger.warn("Pre-deployment restricted features check failed for workflowId ={} with reason={} ",
+          workflow.getUuid(), validationMessage);
+      throw new WingsException(FEATURE_UNAVAILABLE, validationMessage, USER).addParam("message", validationMessage);
     }
   }
 
   public void checkIfPipelineUsingRestrictedFeatures(@NotNull Pipeline pipeline) {
-    Account account = accountService.get(pipeline.getAccountId());
-    if (account.isCommunity()) {
-      List<ValidationError> validationErrorList = pipelinePreDeploymentViolationChecker.checkViolations(pipeline);
-      if (isNotEmpty(validationErrorList)) {
-        String validationMessage = validationErrorList.get(0).getMessage();
-        logger.warn("Pre-deployment restricted features check failed for pipelinedId ={} with reason={} ",
-            pipeline.getUuid(), validationMessage);
-        throw new WingsException(FEAT_UNAVAILABLE_IN_COMMUNITY_VERSION, validationMessage, WingsException.USER);
-      }
+    String accountType = accountService.getAccountType(pipeline.getAccountId()).orElse(AccountType.PAID);
+    List<ValidationError> validationErrorList = pipelinePreDeploymentValidator.validate(accountType, pipeline);
+    if (isNotEmpty(validationErrorList)) {
+      String validationMessage = validationErrorList.get(0).getMessage();
+      logger.warn("Pre-deployment restricted features check failed for pipelinedId ={} with reason={} ",
+          pipeline.getUuid(), validationMessage);
+      throw new WingsException(FEATURE_UNAVAILABLE, validationMessage, WingsException.USER);
     }
   }
 }

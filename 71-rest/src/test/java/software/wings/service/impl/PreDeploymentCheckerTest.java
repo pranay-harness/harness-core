@@ -12,9 +12,10 @@ import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
-import static software.wings.licensing.violations.checkers.PipelinePreDeploymentViolationChecker.APPROVAL_ERROR_MSG;
-import static software.wings.licensing.violations.checkers.WorkflowPreDeploymentViolationChecker.getWorkflowRestrictedFeatureErrorMsg;
+import static software.wings.service.impl.PipelinePreDeploymentValidator.APPROVAL_ERROR_MSG;
+import static software.wings.service.impl.WorkflowPreDeploymentValidator.getWorkflowRestrictedFeatureErrorMsg;
 import static software.wings.sm.states.ApprovalState.APPROVAL_STATE_TYPE_VARIABLE;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
@@ -59,6 +60,7 @@ import software.wings.sm.states.ApprovalState.ApprovalStateType;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 public class PreDeploymentCheckerTest extends WingsBaseTest {
@@ -112,6 +114,7 @@ public class PreDeploymentCheckerTest extends WingsBaseTest {
     Workflow workflow = getWorkflow(true);
     thrown.expect(WingsException.class);
     thrown.expectMessage(getWorkflowRestrictedFeatureErrorMsg(workflow.getName()));
+    when(accountService.getAccountType(ACCOUNT_ID)).thenReturn(Optional.of(AccountType.COMMUNITY));
     preDeploymentChecker.checkIfWorkflowUsingRestrictedFeatures(workflow);
   }
 
@@ -121,6 +124,7 @@ public class PreDeploymentCheckerTest extends WingsBaseTest {
     Pipeline pipeline = getPipeline();
     thrown.expect(WingsException.class);
     thrown.expectMessage(APPROVAL_ERROR_MSG);
+    when(accountService.getAccountType(ACCOUNT_ID)).thenReturn(Optional.of(AccountType.COMMUNITY));
     preDeploymentChecker.checkIfPipelineUsingRestrictedFeatures(pipeline);
   }
 
@@ -167,6 +171,7 @@ public class PreDeploymentCheckerTest extends WingsBaseTest {
   private Pipeline getPipeline() {
     return Pipeline.builder()
         .name("pipeline1")
+        .accountId(ACCOUNT_ID)
         .appId(APP_ID)
         .uuid(PIPELINE_ID)
         .pipelineStages(asList(prepareStage()))

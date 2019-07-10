@@ -15,11 +15,13 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import com.google.common.base.Charsets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
 import org.mindrot.jbcrypt.BCrypt;
 import org.mongodb.morphia.query.Query;
@@ -29,6 +31,8 @@ import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.ApiKeyEntry.ApiKeyEntryKeys;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
+import software.wings.features.ApiKeysFeature;
+import software.wings.features.api.PremiumFeature;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ApiKeyService;
@@ -51,7 +55,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
   @Inject private UserGroupService userGroupService;
-  @Inject private ApiKeyServiceCommunityEdition apiKeyServiceCommunity;
+  @Inject @Named(ApiKeysFeature.FEATURE_NAME) private PremiumFeature apiKeysFeature;
 
   private static String DELIMITER = "::";
 
@@ -63,9 +67,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
   @Override
   public ApiKeyEntry generate(String accountId, ApiKeyEntry apiKeyEntry) {
-    if (accountService.isCommunityAccount(accountId)) {
-      return apiKeyServiceCommunity.generate(accountId, apiKeyEntry);
-    }
+    checkIfOperationIsAllowed(accountId);
 
     int KEY_LEN = 80;
     String randomKey = accountId + DELIMITER + CryptoUtils.secureRandAlphaNumString(KEY_LEN);
@@ -86,9 +88,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
   @Override
   public ApiKeyEntry update(String uuid, String accountId, ApiKeyEntry apiKeyEntry) {
-    if (accountService.isCommunityAccount(accountId)) {
-      return apiKeyServiceCommunity.update(uuid, accountId, apiKeyEntry);
-    }
+    checkIfOperationIsAllowed(accountId);
 
     Validator.notNullCheck("ApiKeyEntry is null", apiKeyEntry, USER);
     Validator.notNullCheck("uuid is null for the given api key entry", uuid, USER);
@@ -235,5 +235,11 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   public void deleteByAccountId(String accountId) {
     wingsPersistence.delete(
         wingsPersistence.createQuery(ApiKeyEntry.class).filter(ApiKeyEntryKeys.accountId, accountId));
+  }
+
+  private void checkIfOperationIsAllowed(String accountId) {
+    if (!apiKeysFeature.isAvailableForAccount(accountId)) {
+      throw new InvalidRequestException(String.format("Operation not permitted for account [%s]", accountId), USER);
+    }
   }
 }

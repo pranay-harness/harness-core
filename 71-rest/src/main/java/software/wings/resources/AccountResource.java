@@ -4,45 +4,46 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.account.ProvisionStep;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.eraro.ResponseMessage;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.marketplace.gcp.GcpMarketPlaceApiHandler;
 import io.harness.rest.RestResponse;
-import io.harness.rest.RestResponse.Builder;
+import io.harness.scheduler.PersistentScheduler;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.http.Body;
 import software.wings.beans.Account;
+import software.wings.beans.AccountMigration;
 import software.wings.beans.AccountSalesContactsInfo;
 import software.wings.beans.AccountType;
-import software.wings.beans.FeatureViolation;
 import software.wings.beans.LicenseInfo;
+import software.wings.beans.LicenseUpdateInfo;
 import software.wings.beans.Service;
 import software.wings.beans.TechStack;
+import software.wings.features.api.FeatureService;
 import software.wings.licensing.LicenseService;
-import software.wings.licensing.violations.FeatureViolationsService;
-import software.wings.licensing.violations.RestrictedFeature;
+import software.wings.scheduler.ServiceInstanceUsageCheckerJob;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.PublicApi;
-import software.wings.service.impl.TransitionToCommunityAccountService;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.AccountPermissionUtils;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -71,8 +72,8 @@ public class AccountResource {
   @Inject private UserService userService;
   @Inject private LicenseService licenseService;
   @Inject private AccountPermissionUtils accountPermissionUtils;
-  @Inject private FeatureViolationsService featureViolationsService;
-  @Inject private TransitionToCommunityAccountService transitionToCommunityAccountService;
+  @Inject private FeatureService featureService;
+  @Inject @Named("BackgroundJobScheduler") private transient PersistentScheduler jobScheduler;
   @Inject private GcpMarketPlaceApiHandler gcpMarketPlaceApiHandler;
 
   @GET
@@ -149,17 +150,54 @@ public class AccountResource {
   }
 
   @PUT
+  @Path("license")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> updateAccountLicense(
+      @QueryParam("accountId") @NotEmpty String accountId, @NotNull LicenseUpdateInfo licenseUpdateInfo) {
+    String fromAccountType = accountService.getAccountType(accountId).orElse(AccountType.PAID);
+    String toAccountType = licenseUpdateInfo.getLicenseInfo().getAccountType();
+
+    AccountMigration migration = null;
+    if (!fromAccountType.equals(toAccountType)) {
+      migration = AccountMigration.from(fromAccountType, toAccountType)
+                      .orElseThrow(() -> new InvalidRequestException("Unsupported migration", WingsException.USER));
+    }
+
+    RestResponse<Boolean> response =
+        accountPermissionUtils.checkIfHarnessUser("User not allowed to update account license");
+    if (response == null || (migration != null && migration.isSelfService() && userService.isAccountAdmin(accountId))) {
+      Map<String, Map<String, Object>> requiredInfoToComply = licenseUpdateInfo.getRequiredInfoToComply() == null
+          ? Collections.emptyMap()
+          : licenseUpdateInfo.getRequiredInfoToComply();
+
+      if (migration != null) {
+        if (!featureService.complyFeatureUsagesWithRestrictions(accountId, toAccountType, requiredInfoToComply)) {
+          throw new WingsException("Can not update account license. Account is using restricted features");
+        }
+      }
+      boolean licenseUpdated = licenseService.updateAccountLicense(accountId, licenseUpdateInfo.getLicenseInfo());
+      if (migration != null) {
+        featureService.complyFeatureUsagesWithRestrictions(accountId, requiredInfoToComply);
+        // Special Case. Enforce Service Instances Limits only for COMMUNITY account
+        if (toAccountType.equals(AccountType.COMMUNITY)) {
+          ServiceInstanceUsageCheckerJob.add(jobScheduler, accountId);
+        }
+      }
+
+      response = new RestResponse<>(licenseUpdated);
+    }
+
+    return response;
+  }
+
+  @PUT
   @Path("license/{accountId}")
   @Timed
   @ExceptionMetered
   public RestResponse<Boolean> updateAccountLicense(
-      @PathParam("accountId") @NotEmpty String accountId, LicenseInfo licenseInfo) {
-    RestResponse<Boolean> response =
-        accountPermissionUtils.checkIfHarnessUser("User not allowed to update account license");
-    if (response == null) {
-      response = new RestResponse<>(licenseService.updateAccountLicense(accountId, licenseInfo));
-    }
-    return response;
+      @PathParam("accountId") @NotEmpty String accountId, @NotNull LicenseInfo licenseInfo) {
+    return updateAccountLicense(accountId, LicenseUpdateInfo.builder().licenseInfo(licenseInfo).build());
   }
 
   @PUT
@@ -263,64 +301,6 @@ public class AccountResource {
   @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<Account> getLatestAccount(@PathParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(accountService.get(accountId));
-  }
-
-  @GET
-  @Path("{accountId}/license-violations")
-  @AuthRule(permissionType = LOGGED_IN)
-  @Timed
-  public RestResponse<List<FeatureViolation>> getLicenseViolations(@PathParam("accountId") @NotEmpty String accountId,
-      @QueryParam("targetAccountType") @NotEmpty String targetAccountType) {
-    return new RestResponse<>(featureViolationsService.getViolations(accountId, targetAccountType));
-  }
-
-  @GET
-  @Path("{accountId}/restricted-features")
-  @AuthRule(permissionType = LOGGED_IN)
-  public RestResponse<List<RestrictedFeature>> getRestrictedFeatures(@QueryParam("accountId") String accountId) {
-    return new RestResponse<>(featureViolationsService.getRestrictedFeatures(accountId));
-  }
-
-  /*
-  This API is used by UI to migrate the account to COMMUNITY license.
-  This API is a wrapper over account/license/{accountId} API.
-  This API enables execution of some actions (like fix account violations) before updating account license to community.
-   */
-  @PUT
-  @Path("transition-to-community/{accountId}")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<Boolean> updateAccountLicenseToCommunity(
-      @PathParam("accountId") @NotEmpty String accountId, @NotNull Map<String, List<String>> properties) {
-    Optional<String> currentAccountType = accountService.getAccountType(accountId);
-    boolean accountTransitionFromTrial =
-        currentAccountType.isPresent() && AccountType.TRIAL.equals(currentAccountType.get());
-    if (!accountTransitionFromTrial) {
-      return new RestResponse<>(false);
-    }
-
-    // Only if the user the account administrator or in the Harness user group can perform the account transition
-    if (!userService.isAccountAdmin(accountId)) {
-      String errorMessage = "User not allowed to update account license";
-      RestResponse<Boolean> restResponse = accountPermissionUtils.checkIfHarnessUser(errorMessage);
-      if (restResponse != null) {
-        logger.error(errorMessage);
-        return Builder.aRestResponse()
-            .withResponseMessages(Lists.newArrayList(ResponseMessage.builder().message(errorMessage).build()))
-            .build();
-      }
-    }
-
-    if (!transitionToCommunityAccountService.canTransition(accountId)) {
-      return Builder.aRestResponse()
-          .withResponseMessages(Lists.newArrayList(
-              ResponseMessage.builder()
-                  .message("Account is using restricted features. Fix the violations before proceeding.")
-                  .build()))
-          .build();
-    }
-
-    return new RestResponse<>(transitionToCommunityAccountService.transition(accountId, properties));
   }
 
   @GET

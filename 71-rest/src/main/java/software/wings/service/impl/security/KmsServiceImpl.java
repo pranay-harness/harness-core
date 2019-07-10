@@ -3,7 +3,6 @@ package software.wings.service.impl.security;
 import static io.harness.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.exception.WingsException.USER;
@@ -22,8 +21,10 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
 import io.harness.expression.SecretString;
@@ -36,6 +37,8 @@ import software.wings.beans.BaseFile;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.SyncTaskContext;
+import software.wings.features.SecretsManagementFeature;
+import software.wings.features.api.PremiumFeature;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.service.intfc.AccountService;
@@ -61,6 +64,7 @@ import java.util.UUID;
 public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsService {
   @Inject private FileService fileService;
   @Inject private AccountService accountService;
+  @Inject @Named(SecretsManagementFeature.FEATURE_NAME) private PremiumFeature secretsManagementFeature;
 
   @Override
   public EncryptedData encrypt(char[] value, String accountId, KmsConfig kmsConfig) {
@@ -113,12 +117,12 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     if (accountId.equals(GLOBAL_ACCOUNT_ID)) {
       return saveGlobalKmsConfig(accountId, kmsConfig);
     }
-    checkIfKmsConfigCanBeCreatedOrUpdated(accountId, kmsConfig);
+    checkIfKmsConfigCanBeCreatedOrUpdated(accountId);
     validateKms(accountId, kmsConfig);
     return saveKmsConfigInternal(accountId, kmsConfig);
   }
 
-  private void checkIfKmsConfigCanBeCreatedOrUpdated(String accountId, KmsConfig kmsConfig) {
+  private void checkIfKmsConfigCanBeCreatedOrUpdated(String accountId) {
     Account account = accountService.get(accountId);
 
     if (account.isLocalEncryptionEnabled()) {
@@ -127,22 +131,9 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
           "Can't create new KMS secret manager for a LOCAL encryption enabled account!", USER_SRE);
     }
 
-    String kmsConfigId = kmsConfig.getUuid();
-    boolean isNewKmsConfig = isEmpty(kmsConfigId);
-    boolean isCommunityAccount = accountService.isCommunityAccount(accountId);
-    if (isCommunityAccount) {
-      if (isNewKmsConfig) {
-        throw new KmsOperationException("Cannot add new KMS Secret Manager in Harness Community.", USER);
-      }
-      KmsConfig savedKmsConfig = getSavedKmsConfig(kmsConfigId);
-      if (kmsConfig.isDefault() && !savedKmsConfig.isDefault()) {
-        throw new KmsOperationException("Cannot change default Secret Manager in Harness Community.", USER);
-      }
+    if (!secretsManagementFeature.isAvailableForAccount(accountId)) {
+      throw new InvalidRequestException(String.format("Operation not permitted for account [%s]", accountId), USER);
     }
-  }
-
-  private KmsConfig getSavedKmsConfig(String id) {
-    return wingsPersistence.get(KmsConfig.class, id);
   }
 
   private String saveKmsConfigInternal(String accountId, KmsConfig kmsConfig) {

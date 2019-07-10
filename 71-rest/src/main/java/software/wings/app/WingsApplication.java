@@ -305,7 +305,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(new EventsModule(configuration));
     modules.add(new GraphQLModule());
-    modules.add(new FeatureViolationsModule());
     modules.add(new SSOModule());
     modules.add(new AuthModule());
     modules.add(new GcpMarketplaceIntegrationModule());

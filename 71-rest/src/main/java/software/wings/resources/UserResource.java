@@ -332,7 +332,7 @@ public class UserResource {
     if (CollectionUtils.isEmpty(usersToRetain)) {
       throw new InvalidRequestException("All users in the account can not be deleted");
     }
-    return new RestResponse<>(userService.deleteUsers(accountId, usersToRetain));
+    return new RestResponse<>(userService.deleteUsersByEmailAddress(accountId, usersToRetain));
   }
 
   /**
@@ -658,7 +658,7 @@ public class UserResource {
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<TwoFactorAdminOverrideSettings> setTwoFactorAuthAtAccountLevel(
-      @PathParam("accountId") @NotEmpty String accountId, TwoFactorAdminOverrideSettings settings) {
+      @PathParam("accountId") @NotEmpty String accountId, @NotNull TwoFactorAdminOverrideSettings settings) {
     // Trying Override = true
     if (settings.isAdminOverrideTwoFactorEnabled()) {
       if (twoFactorAuthenticationManager.isTwoFactorEnabled(accountId, UserThreadLocal.get())) {

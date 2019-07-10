@@ -74,6 +74,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.features.api.PremiumFeature;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
@@ -129,6 +130,7 @@ public class VaultTest extends WingsBaseTest {
   @Inject private Queue<KmsTransitionEvent> transitionKmsQueue;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private SecretManagementDelegateService secretManagementDelegateService;
+  @Mock private PremiumFeature secretsManagementFeature;
   private final String userEmail = "rsingh@harness.io";
   private final String userName = "raghu";
   private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
@@ -191,6 +193,7 @@ public class VaultTest extends WingsBaseTest {
     Account account = getAccount(AccountType.PAID);
     accountId = account.getUuid();
     when(accountService.get(accountId)).thenReturn(account);
+    when(secretsManagementFeature.isAvailableForAccount(accountId)).thenReturn(true);
     numOfEncRecords = numOfEncryptedValsForVault;
     if (isKmsEnabled) {
       final KmsConfig kmsConfig = getKmsConfig();
@@ -327,6 +330,7 @@ public class VaultTest extends WingsBaseTest {
     Account renameAccount = getAccount(AccountType.PAID);
     String renameAccountId = renameAccount.getUuid();
     when(accountService.get(renameAccountId)).thenReturn(renameAccount);
+    when(secretsManagementFeature.isAvailableForAccount(renameAccountId)).thenReturn(true);
 
     String name = UUID.randomUUID().toString();
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
@@ -504,12 +508,12 @@ public class VaultTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testNewVaultConfigForCommunityAccount() {
-    Account account = getAccount(AccountType.COMMUNITY);
+  public void testNewVaultConfigIfUnavailable() {
+    Account account = getAccount(AccountType.PAID);
     String accountId = account.getUuid();
 
     when(accountService.get(accountId)).thenReturn(account);
-    when(accountService.isCommunityAccount(accountId)).thenReturn(true);
+    when(secretsManagementFeature.isAvailableForAccount(accountId)).thenReturn(false);
 
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultConfig.setAccountId(accountId);
@@ -518,96 +522,8 @@ public class VaultTest extends WingsBaseTest {
       vaultService.saveVaultConfig(accountId, vaultConfig);
       fail();
     } catch (WingsException e) {
-      assertEquals(ErrorCode.VAULT_OPERATION_ERROR, e.getCode());
+      assertEquals(ErrorCode.INVALID_REQUEST, e.getCode());
     }
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  public void testUpdateVaultConfigFromNonDefaultToDefaultForCommunityAccount() {
-    Account account = getAccount(AccountType.PAID);
-    String accountId = account.getUuid();
-
-    when(accountService.get(accountId)).thenReturn(account);
-    when(accountService.isCommunityAccount(accountId)).thenReturn(false);
-
-    String vaultConfigId = vaultService.saveVaultConfig(accountId, getNonDefaultVaultConfig());
-
-    account.getLicenseInfo().setAccountType(AccountType.COMMUNITY);
-    when(accountService.isCommunityAccount(accountId)).thenReturn(true);
-
-    VaultConfig updatedVaultConfig = vaultService.getVaultConfig(accountId, vaultConfigId);
-    updatedVaultConfig.setDefault(true);
-
-    try {
-      vaultService.saveVaultConfig(accountId, updatedVaultConfig);
-      fail();
-    } catch (WingsException e) {
-      assertEquals(ErrorCode.VAULT_OPERATION_ERROR, e.getCode());
-    }
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  public void testUpdateVaultConfigFromDefaultToNonDefaultForCommunityAccount() {
-    Account account = getAccount(AccountType.PAID);
-    String accountId = account.getUuid();
-
-    when(accountService.get(accountId)).thenReturn(account);
-    when(accountService.isCommunityAccount(accountId)).thenReturn(false);
-
-    String vaultConfigId = vaultService.saveVaultConfig(accountId, getDefaultVaultConfig());
-
-    account.getLicenseInfo().setAccountType(AccountType.COMMUNITY);
-    when(accountService.isCommunityAccount(accountId)).thenReturn(true);
-
-    VaultConfig updatedVaultConfig = vaultService.getVaultConfig(accountId, vaultConfigId);
-    updatedVaultConfig.setDefault(false);
-
-    vaultService.saveVaultConfig(accountId, updatedVaultConfig);
-
-    assertEquals(updatedVaultConfig.getUuid(), vaultService.getVaultConfig(accountId, vaultConfigId).getUuid());
-    assertEquals(updatedVaultConfig.isDefault(), vaultService.getVaultConfig(accountId, vaultConfigId).isDefault());
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  public void testUpdateVaultConfigFromNonDefaultToDefaultForNonCommunityAccount() {
-    Account account = getAccount(AccountType.PAID);
-    String accountId = account.getUuid();
-
-    when(accountService.get(accountId)).thenReturn(account);
-    when(accountService.isCommunityAccount(accountId)).thenReturn(false);
-
-    String vaultConfigId = vaultService.saveVaultConfig(accountId, getNonDefaultVaultConfig());
-
-    VaultConfig updatedVaultConfig = vaultService.getVaultConfig(accountId, vaultConfigId);
-    updatedVaultConfig.setDefault(true);
-
-    vaultService.saveVaultConfig(accountId, updatedVaultConfig);
-
-    assertEquals(updatedVaultConfig.getUuid(), vaultService.getVaultConfig(accountId, vaultConfigId).getUuid());
-    assertEquals(updatedVaultConfig.isDefault(), vaultService.getVaultConfig(accountId, vaultConfigId).isDefault());
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  public void testUpdateVaultConfigFromDefaultToNonDefaultForNonCommunityAccount() {
-    Account account = getAccount(AccountType.PAID);
-    String accountId = account.getUuid();
-
-    when(accountService.get(accountId)).thenReturn(account);
-    when(accountService.isCommunityAccount(accountId)).thenReturn(false);
-
-    String vaultConfigId = vaultService.saveVaultConfig(accountId, getDefaultVaultConfig());
-
-    VaultConfig updatedVaultConfig = vaultService.getVaultConfig(accountId, vaultConfigId);
-    updatedVaultConfig.setDefault(false);
-
-    vaultService.saveVaultConfig(accountId, updatedVaultConfig);
-
-    assertEquals(updatedVaultConfig.getUuid(), vaultService.getVaultConfig(accountId, vaultConfigId).getUuid());
-    assertEquals(updatedVaultConfig.isDefault(), vaultService.getVaultConfig(accountId, vaultConfigId).isDefault());
   }
 
   @Test

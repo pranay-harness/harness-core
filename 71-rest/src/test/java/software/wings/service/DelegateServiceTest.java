@@ -93,11 +93,11 @@ import software.wings.beans.TaskType;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DelegateProfileErrorAlert;
 import software.wings.dl.WingsPersistence;
+import software.wings.features.api.UsageLimitedFeature;
 import software.wings.licensing.LicenseService;
 import software.wings.rules.Cache;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.impl.infra.InfraDownloadService;
@@ -155,6 +155,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Rule public WireMockRule wireMockRule = new WireMockRule(8888);
 
   @InjectMocks @Inject private DelegateService delegateService;
+  @Mock private UsageLimitedFeature delegatesFeature;
 
   @Inject private WingsPersistence wingsPersistence;
 
@@ -195,6 +196,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     when(broadcasterFactory.lookup(anyString(), anyBoolean())).thenReturn(broadcaster);
     when(versionInfoManager.getVersionInfo()).thenReturn(VersionInfo.builder().version(VERSION).build());
+    when(delegatesFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(Integer.MAX_VALUE);
   }
 
   @Test
@@ -260,21 +262,10 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldAddDelegateForCommunityAccount() {
-    when(accountService.isCommunityAccount(ACCOUNT_ID)).thenReturn(true);
-    Delegate delegate = BUILDER.build();
-    delegate = delegateService.add(delegate);
-    verify(eventEmitter)
-        .send(Channel.DELEGATES,
-            anEvent().withOrgId(ACCOUNT_ID).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  public void shouldNotAddMoreThanAllowedDelegatesForCommunityAccount() {
-    when(accountService.isCommunityAccount(ACCOUNT_ID)).thenReturn(true);
-    IntStream.range(0, DelegateServiceImpl.MAX_DELEGATES_ALLOWED_FOR_COMMUNITY_ACCOUNT)
-        .forEach(i -> delegateService.add(BUILDER.build()));
+  public void shouldNotAddMoreThanAllowedDelegates() {
+    int maxDelegatesAllowed = 1;
+    when(delegatesFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(maxDelegatesAllowed);
+    IntStream.range(0, maxDelegatesAllowed).forEach(i -> delegateService.add(BUILDER.build()));
     try {
       delegateService.add(BUILDER.build());
       fail();
@@ -312,14 +303,14 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldNotRegisterExistingDelegateForDeletedAccount() {
     Delegate delegate = delegateService.add(Delegate.builder()
-                                                .accountId("DELETED_ACCOUNT")
+                                                .accountId(ACCOUNT_ID)
                                                 .ip("127.0.0.1")
                                                 .hostName("localhost")
                                                 .version(VERSION)
                                                 .status(Status.ENABLED)
                                                 .lastHeartBeat(System.currentTimeMillis())
                                                 .build());
-    when(licenseService.isAccountDeleted("DELETED_ACCOUNT")).thenReturn(true);
+    when(licenseService.isAccountDeleted(ACCOUNT_ID)).thenReturn(true);
 
     Delegate registered = delegateService.register(delegate);
     assertThat(registered.getUuid()).isEqualTo(SELF_DESTRUCT);

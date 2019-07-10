@@ -84,6 +84,7 @@ public class LicenseServiceImpl implements LicenseService {
       if (isNotEmpty(accountTypeDefaults)) {
         for (AccountTypeDefault accountTypeDefault : accountTypeDefaults) {
           switch (accountTypeDefault.getAccountType()) {
+            case AccountType.ESSENTIALS:
             case AccountType.PAID:
               paidDefaultContacts = getEmailIds(accountTypeDefault.getEmailIds());
               break;
@@ -123,7 +124,7 @@ public class LicenseServiceImpl implements LicenseService {
           long expiryTime = licenseInfo.getExpiryTime();
           long currentTime = System.currentTimeMillis();
           if (currentTime < expiryTime) {
-            if (accountType.equals(AccountType.PAID)) {
+            if (accountType.equals(AccountType.PAID) || accountType.equals(AccountType.ESSENTIALS)) {
               if (!account.isEmailSentToSales() && ((expiryTime - currentTime) <= Duration.ofDays(30).toMillis())) {
                 sendEmailToSales(account, expiryTime, accountType, EMAIL_SUBJECT_ACCOUNT_ABOUT_TO_EXPIRE,
                     EMAIL_BODY_ACCOUNT_ABOUT_TO_EXPIRE, paidDefaultContacts);
@@ -247,6 +248,8 @@ public class LicenseServiceImpl implements LicenseService {
           licenseInfo.setExpiryTime(LicenseUtils.getDefaultTrialExpiryTime());
         } else if (licenseInfo.getAccountType().equals(AccountType.PAID)) {
           licenseInfo.setExpiryTime(LicenseUtils.getDefaultPaidExpiryTime());
+        } else if (licenseInfo.getAccountType().equals(AccountType.ESSENTIALS)) {
+          licenseInfo.setExpiryTime(LicenseUtils.getDefaultEssentialsExpiryTime());
         }
       }
     }
@@ -312,6 +315,8 @@ public class LicenseServiceImpl implements LicenseService {
           resetExpiryTime = -1L;
         } else if (AccountType.PAID.equals(newLicenseInfo.getAccountType())) {
           resetExpiryTime = LicenseUtils.getDefaultPaidExpiryTime();
+        } else if (AccountType.ESSENTIALS.equals(newLicenseInfo.getAccountType())) {
+          resetExpiryTime = LicenseUtils.getDefaultEssentialsExpiryTime();
         }
       }
       currentLicenseInfo.setAccountType(newLicenseInfo.getAccountType());

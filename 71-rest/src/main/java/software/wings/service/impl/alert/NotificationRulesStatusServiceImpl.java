@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
+import software.wings.beans.AccountType;
 import software.wings.beans.alert.NotificationRulesStatus;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
@@ -22,11 +23,12 @@ public class NotificationRulesStatusServiceImpl implements NotificationRulesStat
     NotificationRulesStatus status = persistence.get(NotificationRulesStatus.class, accountId);
 
     if (null == status) {
+      String accountType = accountService.getAccountType(accountId).orElse(AccountType.PAID);
       // lazily update the status if it's not present in database
-      if (accountService.isCommunityAccount(accountId) || accountService.isTrialAccount(accountId)) {
-        return update(accountId, false);
-      } else {
+      if (accountType.equals(AccountType.PAID)) {
         return update(accountId, true);
+      } else {
+        return update(accountId, false);
       }
     } else {
       return status;

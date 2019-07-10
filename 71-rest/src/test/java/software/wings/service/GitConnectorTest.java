@@ -21,6 +21,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
+import software.wings.features.api.UsageLimitedFeature;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.SettingValidationService;
 import software.wings.service.intfc.AccountService;
@@ -35,12 +36,11 @@ public class GitConnectorTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private GitConfigHelperService gitConfigHelperService;
   @Mock private SettingValidationService settingValidationService;
+  @Mock private UsageLimitedFeature gitOpsFeature;
 
   @InjectMocks @Inject private SettingsService settingsService;
 
   @Rule public ExpectedException exceptionRule = ExpectedException.none();
-
-  private static final int MAX_GIT_CONNECTORS_ALLOWED_IN_COMMUNITY = 1;
 
   private GitConfig createGitConfig(String accountId, String repoUrl) {
     return GitConfig.builder()
@@ -55,11 +55,12 @@ public class GitConnectorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void test_creationOfGitConnectorsWithinLimitInHarnessCommunity_shouldPass() {
     String accountId = "someAccountId";
-    when(accountService.isCommunityAccount(accountId)).thenReturn(true);
+    int maxGitConnectorsAllowed = 1;
+    when(gitOpsFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(maxGitConnectorsAllowed);
 
     when(settingValidationService.validate(Mockito.any(SettingAttribute.class))).thenReturn(true);
 
-    for (int i = 0; i < MAX_GIT_CONNECTORS_ALLOWED_IN_COMMUNITY; i++) {
+    for (int i = 0; i < maxGitConnectorsAllowed; i++) {
       GitConfig gitConfig = createGitConfig(accountId, "https://github.com/someOrg/someRepo" + i + ".git");
       // This save should pass
       settingsService.save(
@@ -71,9 +72,10 @@ public class GitConnectorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void test_creationOfGitConnectorsAboveLimitInHarnessCommunity_shouldFail() {
     String accountId = "someAccountId";
-    when(accountService.isCommunityAccount(accountId)).thenReturn(true);
+    int maxGitConnectorsAllowed = 1;
+    when(gitOpsFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(maxGitConnectorsAllowed);
 
-    for (int i = 0; i < MAX_GIT_CONNECTORS_ALLOWED_IN_COMMUNITY; i++) {
+    for (int i = 0; i < maxGitConnectorsAllowed; i++) {
       GitConfig gitConfig = createGitConfig(accountId, "https://github.com/someOrg/someRepo" + i + ".git");
       // This save should pass
       settingsService.save(
@@ -82,11 +84,11 @@ public class GitConnectorTest extends WingsBaseTest {
 
     boolean failed = false;
     try {
-      GitConfig gitConfig = createGitConfig(
-          accountId, "https://github.com/someOrg/someRepo" + MAX_GIT_CONNECTORS_ALLOWED_IN_COMMUNITY + ".git");
+      GitConfig gitConfig =
+          createGitConfig(accountId, "https://github.com/someOrg/someRepo" + maxGitConnectorsAllowed + ".git");
       // This save should throw WingsException
       settingsService.save(aSettingAttribute()
-                               .withName("Git Connector " + MAX_GIT_CONNECTORS_ALLOWED_IN_COMMUNITY)
+                               .withName("Git Connector " + maxGitConnectorsAllowed)
                                .withAccountId(accountId)
                                .withValue(gitConfig)
                                .build());

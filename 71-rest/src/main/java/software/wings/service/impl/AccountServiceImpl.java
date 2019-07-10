@@ -565,21 +565,6 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public Account update(@Valid Account account) {
-    // Need to update the account status if the account status is not null.
-    if (account.getLicenseInfo() != null) {
-      LicenseInfo licenseInfo = account.getLicenseInfo();
-
-      AuthenticationMechanism authMechanism = account.getAuthenticationMechanism();
-      boolean shouldisableAuthMechanism = AuthenticationMechanism.DISABLED_FOR_COMMUNITY.contains(authMechanism);
-      boolean isCommunity = AccountType.isCommunity(licenseInfo.getAccountType());
-
-      if (isCommunity && shouldisableAuthMechanism) {
-        logger.info("[COMMUNITY_DOWNGRADE] Auth Mechanism. current={} new={} accountId={}",
-            account.getAuthenticationMechanism(), AuthenticationMechanism.USER_PASSWORD, account.getUuid());
-        account.setAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD);
-      }
-    }
-
     UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class)
                                                      .set("companyName", account.getCompanyName())
                                                      .set("twoFactorAdminEnforced", account.isTwoFactorAdminEnforced())
@@ -756,11 +741,6 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public boolean isCommunityAccount(String accountId) {
     return getAccountType(accountId).map(AccountType::isCommunity).orElse(false);
-  }
-
-  @Override
-  public boolean isTrialAccount(String accountId) {
-    return getAccountType(accountId).map(AccountType::isTrial).orElse(false);
   }
 
   @Override

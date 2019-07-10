@@ -124,6 +124,14 @@ public class EventPublishHelper {
       eventType = EventType.TRIAL_TO_COMMUNITY;
     } else if (AccountType.COMMUNITY.equals(oldAccountType) && AccountType.PAID.equals(newAccountType)) {
       eventType = EventType.COMMUNITY_TO_PAID;
+    } else if (AccountType.COMMUNITY.equals(oldAccountType) && AccountType.ESSENTIALS.equals(newAccountType)) {
+      eventType = EventType.COMMUNITY_TO_ESSENTIALS;
+    } else if (AccountType.ESSENTIALS.equals(oldAccountType) && AccountType.PAID.equals(newAccountType)) {
+      eventType = EventType.ESSENTIALS_TO_PAID;
+    } else if (AccountType.PAID.equals(oldAccountType) && AccountType.ESSENTIALS.equals(newAccountType)) {
+      eventType = EventType.PAID_TO_ESSENTIALS;
+    } else if (AccountType.TRIAL.equals(oldAccountType) && AccountType.ESSENTIALS.equals(newAccountType)) {
+      eventType = EventType.TRIAL_TO_ESSENTIALS;
     }
 
     if (eventType != null) {
