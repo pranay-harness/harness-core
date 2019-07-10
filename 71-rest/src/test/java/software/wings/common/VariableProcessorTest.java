@@ -15,6 +15,7 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,7 +34,7 @@ import java.util.ArrayDeque;
 /**
  * Created by peeyushaggarwal on 9/27/16.
  */
-public class VariableProcessorTest {
+public class VariableProcessorTest extends CategoryTest {
   /**
    * The Mockito rule.
    */

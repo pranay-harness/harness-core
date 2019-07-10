@@ -34,6 +34,7 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import io.harness.CategoryTest;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
@@ -102,7 +103,7 @@ import java.util.stream.Collectors;
  * @author rktummala on 06/08/18
  */
 @RunWith(MockitoJUnitRunner.class)
-public class UsageRestrictionsServiceImplTest {
+public class UsageRestrictionsServiceImplTest extends CategoryTest {
   @Mock private WingsPersistence mockWingsPersistence;
   @Mock private AppService appService;
   @Mock private AuthHandler authHandler;

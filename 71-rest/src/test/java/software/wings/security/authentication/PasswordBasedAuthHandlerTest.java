@@ -13,6 +13,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import com.google.inject.Inject;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -32,7 +33,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 
-public class PasswordBasedAuthHandlerTest {
+public class PasswordBasedAuthHandlerTest extends CategoryTest {
   @Mock private MainConfiguration configuration;
 
   @Mock private UserService userService;

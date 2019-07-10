@@ -10,6 +10,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import com.google.common.collect.Lists;
 
+import io.harness.CategoryTest;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
@@ -43,7 +44,7 @@ import java.util.List;
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({SecretManagementDelegateServiceImpl.class, Http.class, VaultRestClientFactory.class})
-public class NewRelicTaskScopeValidationTest {
+public class NewRelicTaskScopeValidationTest extends CategoryTest {
   @Mock private VaultRestClient vaultRestClient;
   private String newRelicUrl = "https://api.newrelic.com";
 

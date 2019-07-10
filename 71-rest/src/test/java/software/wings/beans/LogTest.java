@@ -13,11 +13,12 @@ import static software.wings.beans.Log.NO_FORMATTING;
 import static software.wings.beans.Log.color;
 import static software.wings.beans.Log.doneColoring;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class LogTest {
+public class LogTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testLogColor() {

@@ -21,6 +21,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
+import io.harness.CategoryTest;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -51,7 +52,7 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-public class ArtifactResourceTest {
+public class ArtifactResourceTest extends CategoryTest {
   /**
    * The constant ARTIFACT_SERVICE.
    */

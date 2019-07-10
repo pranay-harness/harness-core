@@ -2,12 +2,13 @@ package software.wings.core.winrm.executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
-public class WinRmExecutorFactoryTest {
+public class WinRmExecutorFactoryTest extends CategoryTest {
   @Mock WinRmExecutorFactory winRmExecutorFactory = new WinRmExecutorFactory();
   @Mock WinRmSessionConfig winRmSessionConfig;
 

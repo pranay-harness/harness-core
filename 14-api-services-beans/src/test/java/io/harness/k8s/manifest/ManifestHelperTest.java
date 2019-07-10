@@ -14,6 +14,7 @@ import static org.assertj.core.api.Assertions.fail;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.exception.WingsException;
@@ -28,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class ManifestHelperTest {
+public class ManifestHelperTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void toYamlSmokeTest() throws Exception {

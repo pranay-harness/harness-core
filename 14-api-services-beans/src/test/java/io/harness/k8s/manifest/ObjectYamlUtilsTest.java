@@ -17,6 +17,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -25,7 +26,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
-public class ObjectYamlUtilsTest {
+public class ObjectYamlUtilsTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void encodeDotTest() {

@@ -33,6 +33,7 @@ import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import com.amazonaws.services.ecs.model.UpdateServiceResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.harness.CategoryTest;
 import io.harness.category.element.IntegrationTests;
 import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +50,7 @@ import java.util.List;
  */
 
 @Slf4j
-public class EcsIntegrationTest {
+public class EcsIntegrationTest extends CategoryTest {
   private AmazonECSClient ecsClient =
       new AmazonECSClient(new BasicAWSCredentials("AKIAJLEKM45P4PO5QUFQ", "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE"));
   private ObjectMapper mapper = new ObjectMapper();

@@ -13,6 +13,7 @@ import com.openpojo.validation.rule.impl.SerializableMustHaveSerialVersionUIDRul
 import com.openpojo.validation.rule.impl.TestClassMustBeProperlyNamedRule;
 import com.openpojo.validation.test.impl.GetterTester;
 import com.openpojo.validation.test.impl.SetterTester;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -24,7 +25,7 @@ import java.util.regex.Pattern;
 /**
  * Created by peeyushaggarwal on 5/18/16.
  */
-public class MiscellaneousTest {
+public class MiscellaneousTest extends CategoryTest {
   private static final Pattern NO_TEST_PATTERN = Pattern.compile("^((?!test-classes/$).)*$");
   private static final Pattern EXCLUDE_APP_PACKAGE = Pattern.compile("^((?!software\\.wings\\.app).)*$");
   private static final Pattern EXCLUDE_BEANS_PACKAGE = Pattern.compile("^((?!software\\.wings\\.beans).)*$");

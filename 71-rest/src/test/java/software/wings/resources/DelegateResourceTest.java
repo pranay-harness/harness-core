@@ -16,6 +16,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
+import io.harness.CategoryTest;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -63,7 +64,7 @@ import javax.ws.rs.core.Response;
  */
 @RunWith(Parameterized.class)
 @Slf4j
-public class DelegateResourceTest {
+public class DelegateResourceTest extends CategoryTest {
   private static DelegateService DELEGATE_SERVICE = mock(DelegateService.class);
   private static DelegateScopeService DELEGATE_SCOPE_SERVICE = mock(DelegateScopeService.class);
   private static DownloadTokenService DOWNLOAD_TOKEN_SERVICE = mock(DownloadTokenService.class);

@@ -6,6 +6,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.FunctorException;
 import org.junit.Before;
@@ -15,7 +16,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ServiceTemplateService;
 
-public class ConfigFileFunctorTest {
+public class ConfigFileFunctorTest extends CategoryTest {
   private static final String APP_ID = "app-id";
   private static final String SERVICE_TEMPLATE_ID = "service-template-id";
   private static final String ENV_ID = "env-id";

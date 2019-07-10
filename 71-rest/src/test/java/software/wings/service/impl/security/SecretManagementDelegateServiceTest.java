@@ -6,6 +6,7 @@ import static org.junit.Assert.assertEquals;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.rule.OwnerRule.Owner;
@@ -22,7 +23,7 @@ import software.wings.security.encryption.EncryptedData;
 /**
  * @author marklu on 2019-03-06
  */
-public class SecretManagementDelegateServiceTest {
+public class SecretManagementDelegateServiceTest extends CategoryTest {
   private SecretManagementDelegateServiceImpl secretManagementDelegateService;
   private TimeLimiter timeLimiter = new SimpleTimeLimiter();
 

@@ -22,6 +22,7 @@ import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 
 import com.google.inject.Inject;
 
+import io.harness.CategoryTest;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -57,7 +58,7 @@ import software.wings.settings.UsageRestrictions;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SecretManagerTest {
+public class SecretManagerTest extends CategoryTest {
   @Mock private WingsPersistence wingsPersistence;
   @Mock private UsageRestrictionsService usageRestrictionsService;
   @Mock private AppService appService;

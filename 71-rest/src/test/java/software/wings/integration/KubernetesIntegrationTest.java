@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableMap;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.harness.CategoryTest;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesConfig;
@@ -24,7 +25,7 @@ import java.util.Optional;
 
 @Integration
 @Slf4j
-public class KubernetesIntegrationTest {
+public class KubernetesIntegrationTest extends CategoryTest {
   private static final SettingAttribute COMPUTE_PROVIDER_SETTING =
       aSettingAttribute()
           .withUuid("GCP_ID")

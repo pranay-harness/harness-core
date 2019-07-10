@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -11,7 +12,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.util.List;
 
-public class BuildDetailsComparatorTest {
+public class BuildDetailsComparatorTest extends CategoryTest {
   private BuildDetails.Builder buildDetails = BuildDetails.Builder.aBuildDetails();
 
   @Test

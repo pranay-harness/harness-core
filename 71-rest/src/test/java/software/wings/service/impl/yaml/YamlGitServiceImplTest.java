@@ -12,6 +12,7 @@ import static org.mockito.Mockito.verify;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import org.junit.Before;
@@ -32,7 +33,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class YamlGitServiceImplTest {
+public class YamlGitServiceImplTest extends CategoryTest {
   @InjectMocks private YamlGitServiceImpl yamlGitService = spy(YamlGitServiceImpl.class);
   @Mock private DelegateService delegateService;
   @Mock private AlertService alertService;

@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.fail;
 
 import com.google.common.collect.ImmutableList;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.KubernetesResourceId;
@@ -15,7 +16,7 @@ import io.harness.k8s.model.ReleaseHistory;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class ReleaseHistoryTest {
+public class ReleaseHistoryTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void smokeTest() throws Exception {

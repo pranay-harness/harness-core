@@ -3,13 +3,14 @@ package software.wings.beans.artifact;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.artifact.AmiArtifactStream.FilterClass;
 import software.wings.beans.artifact.AmiArtifactStream.Tag;
 
-public class AmiArtifactStreamTest {
+public class AmiArtifactStreamTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testSourceName() {

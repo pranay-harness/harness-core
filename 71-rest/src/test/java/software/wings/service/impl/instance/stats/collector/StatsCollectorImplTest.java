@@ -2,13 +2,14 @@ package software.wings.service.impl.instance.stats.collector;
 
 import static org.junit.Assert.assertEquals;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.time.Instant;
 
-public class StatsCollectorImplTest {
+public class StatsCollectorImplTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void alignedWith10thMinute() {

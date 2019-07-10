@@ -2,6 +2,7 @@ package software.wings.security.encryption;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +19,7 @@ import javax.crypto.Cipher;
  * Created by mike@ on 4/24/17.
  */
 @Slf4j
-public class SimpleEncryptionTest {
+public class SimpleEncryptionTest extends CategoryTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test

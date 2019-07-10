@@ -2,11 +2,12 @@ package software.wings.beans.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class ArtifactoryConfigTest {
+public class ArtifactoryConfigTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void shouldDefaultUserNameEmpty() {

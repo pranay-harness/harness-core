@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.model.KubernetesResource;
 import org.junit.Test;
@@ -15,7 +16,7 @@ import org.junit.experimental.categories.Category;
 import java.net.URL;
 import java.util.List;
 
-public class VersionUtilsTest {
+public class VersionUtilsTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void configMapAndPodEnvTest() throws Exception {

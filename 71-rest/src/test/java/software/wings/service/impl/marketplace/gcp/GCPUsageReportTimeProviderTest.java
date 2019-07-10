@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -13,7 +14,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 
-public class GCPUsageReportTimeProviderTest {
+public class GCPUsageReportTimeProviderTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testProvider() {

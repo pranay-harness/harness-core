@@ -17,6 +17,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.common.collect.Lists;
 
+import io.harness.CategoryTest;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -40,7 +41,7 @@ import java.util.List;
  *
  * @author Rishi
  */
-public class ServiceExpressionProcessorTest {
+public class ServiceExpressionProcessorTest extends CategoryTest {
   /**
    * The Mockito rule.
    */

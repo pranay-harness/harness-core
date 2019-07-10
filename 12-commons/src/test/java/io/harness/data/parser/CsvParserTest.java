@@ -2,13 +2,14 @@ package io.harness.data.parser;
 
 import static org.junit.Assert.assertEquals;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.util.List;
 
-public class CsvParserTest {
+public class CsvParserTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testCsvParseCommaSeparatedString() {

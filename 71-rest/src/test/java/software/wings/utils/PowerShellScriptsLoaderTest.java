@@ -2,6 +2,7 @@ package software.wings.utils;
 
 import static org.junit.Assert.assertFalse;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.EmptyPredicate;
 import org.junit.Test;
@@ -10,7 +11,7 @@ import software.wings.utils.PowerShellScriptsLoader.PsScript;
 
 import java.util.Map;
 
-public class PowerShellScriptsLoaderTest {
+public class PowerShellScriptsLoaderTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void smokeTest() {

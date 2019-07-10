@@ -7,6 +7,7 @@ import static software.wings.utils.ArtifactType.WAR;
 import com.google.common.collect.ImmutableMap;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.waiter.ListNotifyResponseData;
@@ -32,7 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ArtifactoryServiceTest {
+public class ArtifactoryServiceTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @InjectMocks ArtifactoryService artifactoryService = new ArtifactoryServiceImpl();

@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Sets;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
@@ -16,7 +17,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import java.util.concurrent.TimeUnit;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ElkLogFetchRequestTest {
+public class ElkLogFetchRequestTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void simpleQuery() {

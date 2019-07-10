@@ -10,6 +10,7 @@ import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
@@ -30,7 +31,7 @@ import software.wings.service.intfc.AppService;
 /**
  * Created by peeyushaggarwal on 8/16/16.
  */
-public class EventEmitterTest {
+public class EventEmitterTest extends CategoryTest {
   /**
    * The Mockito rule.
    */

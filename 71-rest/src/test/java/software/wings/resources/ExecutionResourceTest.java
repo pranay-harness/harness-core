@@ -12,6 +12,7 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 
+import io.harness.CategoryTest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
@@ -30,7 +31,7 @@ import software.wings.utils.ResourceTestRule;
 
 import javax.ws.rs.core.GenericType;
 
-public class ExecutionResourceTest {
+public class ExecutionResourceTest extends CategoryTest {
   private static final AppService appService = mock(AppService.class);
   private static final WorkflowExecutionService workflowExecutionService = mock(WorkflowExecutionService.class);
   private static final AuthHandler authHandler = mock(AuthHandler.class);

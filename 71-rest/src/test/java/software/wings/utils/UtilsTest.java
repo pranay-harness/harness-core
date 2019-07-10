@@ -7,6 +7,7 @@ import static software.wings.utils.Utils.getNameWithNextRevision;
 
 import com.google.common.collect.ImmutableList;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -16,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class UtilsTest {
+public class UtilsTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testToProperties() {

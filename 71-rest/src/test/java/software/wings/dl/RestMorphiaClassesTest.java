@@ -1,12 +1,10 @@
-package io.harness.dl;
+package software.wings.dl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
-import io.harness.OrchestrationMorphiaClasses;
-import io.harness.app.VerificationServiceApplication;
 import io.harness.category.element.UnitTests;
-import io.harness.entities.VerificationMorphiaClasses;
+import io.harness.limits.LimitsMorphiaClasses;
 import io.harness.mongo.HObjectFactory;
 import io.harness.reflection.CodeUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +12,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.mapping.MappedClass;
+import software.wings.app.WingsApplication;
+import software.wings.beans.ManagerMorphiaClasses;
 import software.wings.integration.common.MongoDBTest.MongoEntity;
 import software.wings.integration.dl.PageRequestTest.Dummy;
 
@@ -21,7 +21,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Slf4j
-public class MorphiaClassesTest extends CategoryTest {
+public class RestMorphiaClassesTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testSearchAndList() {
@@ -32,11 +32,9 @@ public class MorphiaClassesTest extends CategoryTest {
     morphia.mapPackage("io.harness");
 
     Set<Class> classes = new HashSet();
-    classes.addAll(VerificationServiceApplication.morphiaClasses);
+    classes.addAll(WingsApplication.morphiaClasses);
     classes.add(Dummy.class);
     classes.add(MongoEntity.class);
-
-    classes.addAll(OrchestrationMorphiaClasses.classes);
 
     boolean success = true;
     for (MappedClass cls : morphia.getMapper().getMappedClasses()) {
@@ -51,8 +49,15 @@ public class MorphiaClassesTest extends CategoryTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testModule() {
+  public void testLimitsModule() {
     CodeUtils.checkHarnessClassBelongToModule(
-        CodeUtils.location(VerificationMorphiaClasses.class), VerificationMorphiaClasses.classes);
+        CodeUtils.location(LimitsMorphiaClasses.class), LimitsMorphiaClasses.classes);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testManagerModule() {
+    CodeUtils.checkHarnessClassBelongToModule(
+        CodeUtils.location(ManagerMorphiaClasses.class), ManagerMorphiaClasses.classes);
   }
 }

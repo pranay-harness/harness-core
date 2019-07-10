@@ -9,6 +9,7 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.CategoryTest;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
@@ -18,7 +19,7 @@ import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 
 import java.util.List;
 
-public class ArtifactComparatorTest {
+public class ArtifactComparatorTest extends CategoryTest {
   private Artifact.Builder artifactBuilder = anArtifact()
                                                  .withAppId(APP_ID)
                                                  .withArtifactStreamId(ARTIFACT_STREAM_ID)

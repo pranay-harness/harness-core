@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -38,7 +39,7 @@ import software.wings.verification.apm.APMCVServiceConfiguration.APMCVConfigurat
 import java.util.ArrayList;
 import java.util.List;
 
-public class APMCVConfigurationYamlHandlerTest {
+public class APMCVConfigurationYamlHandlerTest extends CategoryTest {
   @Mock YamlHelper yamlHelper;
   @Mock CVConfigurationService cvConfigurationService;
   @Mock EnvironmentService environmentService;

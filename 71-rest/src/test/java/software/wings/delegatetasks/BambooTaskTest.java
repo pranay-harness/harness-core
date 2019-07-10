@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Maps;
 
+import io.harness.CategoryTest;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
@@ -34,7 +35,7 @@ import java.util.Map;
 /**
  * Created by sgurubelli on 8/30/17.
  */
-public class BambooTaskTest {
+public class BambooTaskTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Mock BambooService bambooService;

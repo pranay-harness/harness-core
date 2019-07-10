@@ -7,6 +7,7 @@ package software.wings.common;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import org.assertj.core.util.Lists;
@@ -24,7 +25,7 @@ import java.util.Map;
  *
  * @author Rishi
  */
-public class PartitionProcessorTest {
+public class PartitionProcessorTest extends CategoryTest {
   /**
    * Should partition by count.
    */

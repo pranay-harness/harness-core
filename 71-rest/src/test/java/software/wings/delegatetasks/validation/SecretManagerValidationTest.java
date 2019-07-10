@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
@@ -24,7 +25,7 @@ import java.util.function.Consumer;
 /**
  * @author marklu on 2019-06-12
  */
-public class SecretManagerValidationTest {
+public class SecretManagerValidationTest extends CategoryTest {
   @Data
   public static class TestSecretManagerValidation extends AbstractSecretManagerValidation {
     Object[] parameters;

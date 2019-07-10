@@ -2,13 +2,14 @@ package software.wings.core.ssh.executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.io.File;
 
-public class SshSessionFactoryTest {
+public class SshSessionFactoryTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void getKeyPath() {

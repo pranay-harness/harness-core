@@ -12,6 +12,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.CategoryTest;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
@@ -30,7 +31,7 @@ import software.wings.helpers.ext.artifactory.ArtifactoryService;
 /**
  * Created by sgurubelli on 10/1/17.
  */
-public class ArtifactoryCollectionTaskTest {
+public class ArtifactoryCollectionTaskTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Mock ArtifactoryService artifactoryService;

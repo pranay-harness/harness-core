@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.CategoryTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import org.junit.Before;
@@ -13,7 +14,7 @@ import org.junit.experimental.categories.Category;
 /**
  * Created by peeyushaggarwal on 10/25/16.
  */
-public class JenkinsExecutionDataTest {
+public class JenkinsExecutionDataTest extends CategoryTest {
   private JenkinsExecutionData jenkinsExecutionData =
       JenkinsExecutionData.builder().jobName("testjob").buildUrl("http://jenkins/testjob/11").build();
 

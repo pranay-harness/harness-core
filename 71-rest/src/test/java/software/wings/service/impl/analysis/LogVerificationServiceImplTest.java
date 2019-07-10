@@ -5,6 +5,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import org.junit.Before;
@@ -28,7 +29,7 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class LogVerificationServiceImplTest {
+public class LogVerificationServiceImplTest extends CategoryTest {
   @Mock private SettingsService mockSettingsService;
   @Mock private DelegateProxyFactory mockDelegateProxyFactory;
   @Mock private BugsnagDelegateService mockBugsnagDelegateService;

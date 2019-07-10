@@ -44,6 +44,7 @@ import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.crypto.DirectEncrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.exception.WingsException;
@@ -110,7 +111,7 @@ import javax.ws.rs.core.Response;
  * Created by anubhaw on 8/31/16.
  */
 @Slf4j
-public class SecureResourceTest {
+public class SecureResourceTest extends CategoryTest {
   /**
    * The constant TOKEN_EXPIRY_IN_MILLIS.
    */

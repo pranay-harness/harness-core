@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.serializer.JsonUtils;
 import org.apache.commons.io.FileUtils;
@@ -31,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class MessageServiceTest {
+public class MessageServiceTest extends CategoryTest {
   private final MessengerType MESSENGER_TYPE = DELEGATE;
   private final MessengerType OTHER_MESSENGER_TYPE = WATCHER;
 

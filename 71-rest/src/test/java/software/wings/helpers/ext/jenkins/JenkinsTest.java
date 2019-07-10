@@ -18,6 +18,7 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import com.offbytwo.jenkins.model.QueueReference;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
@@ -37,7 +38,7 @@ import java.util.Objects;
 /**
  * The Class JenkinsTest.
  */
-public class JenkinsTest {
+public class JenkinsTest extends CategoryTest {
   /**
    * The Wire mock rule.
    */

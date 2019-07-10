@@ -6,6 +6,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.manifest.ManifestHelper;
 import org.junit.Test;
@@ -16,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.UnaryOperator;
 
-public class KubernetesResourceTest {
+public class KubernetesResourceTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void setAndGetTest() throws Exception {

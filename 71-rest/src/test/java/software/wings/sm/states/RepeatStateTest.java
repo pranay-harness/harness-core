@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +33,7 @@ import java.util.List;
  * @author Rishi
  */
 @Slf4j
-public class RepeatStateTest {
+public class RepeatStateTest extends CategoryTest {
   /**
    * Should execute serial.
    */

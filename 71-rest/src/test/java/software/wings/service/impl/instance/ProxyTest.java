@@ -1,8 +1,10 @@
 package software.wings.service.impl.instance;
 
+import io.harness.CategoryTest;
+
 import java.io.IOException;
 
-public class ProxyTest {
+public class ProxyTest extends CategoryTest {
   public void get(String path) throws IOException {
     //    HttpGet getMethod = new HttpGet(this.api(path));
     //    HttpResponse response = this.client.execute(getMethod, this.localContext);
