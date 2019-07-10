@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.System.currentTimeMillis;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.addFieldIfNotEmpty;
+import static software.wings.service.impl.GoogleDataStoreServiceImpl.readBoolean;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.readLong;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.readString;
 
@@ -67,6 +68,8 @@ public class CVFeedbackRecord implements GoogleDataStoreAware {
 
   private FeedbackAction actionTaken;
 
+  private boolean isDuplicate;
+
   private long createdAt;
   private long lastUpdatedAt;
 
@@ -123,6 +126,7 @@ public class CVFeedbackRecord implements GoogleDataStoreAware {
     addFieldIfNotEmpty(recordBuilder, CVFeedbackRecordKeys.lastUpdatedAt, lastUpdatedAt, true);
     addFieldIfNotEmpty(recordBuilder, CVFeedbackRecordKeys.createdBy, JsonUtils.asJson(createdBy), true);
     addFieldIfNotEmpty(recordBuilder, CVFeedbackRecordKeys.lastUpdatedBy, JsonUtils.asJson(lastUpdatedBy), true);
+    addFieldIfNotEmpty(recordBuilder, CVFeedbackRecordKeys.isDuplicate, isDuplicate, true);
     return recordBuilder.build();
   }
 
@@ -147,6 +151,7 @@ public class CVFeedbackRecord implements GoogleDataStoreAware {
             .lastUpdatedAt(readLong(entity, CVFeedbackRecordKeys.lastUpdatedAt))
             .supervisedLabel(readString(entity, CVFeedbackRecordKeys.supervisedLabel))
             .accountId(readString(entity, CVFeedbackRecordKeys.accountId))
+            .isDuplicate(readBoolean(entity, CVFeedbackRecordKeys.isDuplicate))
             .build();
 
     String createdBy = readString(entity, CVFeedbackRecordKeys.createdBy);
