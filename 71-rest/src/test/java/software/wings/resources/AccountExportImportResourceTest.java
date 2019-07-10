@@ -11,6 +11,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.scheduler.PersistentScheduler;
@@ -40,7 +41,7 @@ import java.util.Map;
  * @author marklu on 2019-03-01
  */
 @Slf4j
-public class AccountExportImportResourceTest {
+public class AccountExportImportResourceTest extends CategoryTest {
   @Mock private WingsMongoPersistence wingsMongoPersistence;
   @Mock private Morphia morphia;
   @Mock private WingsMongoExportImport wingsMongoExportImport;

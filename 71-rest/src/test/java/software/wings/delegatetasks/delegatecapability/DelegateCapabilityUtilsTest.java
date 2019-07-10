@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.CapabilityUtils;
 import org.junit.Test;
@@ -15,7 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class DelegateCapabilityUtilsTest {
+public class DelegateCapabilityUtilsTest extends CategoryTest {
   private static Set<String> taskGroupsMoved =
       new HashSet<>(Arrays.asList("JENKINS", "BAMBOO", "GCS", "DOCKER", "NEXUS", "ARTIFACTORY"));
 

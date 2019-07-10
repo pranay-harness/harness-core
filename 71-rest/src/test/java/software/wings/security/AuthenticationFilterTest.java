@@ -17,6 +17,7 @@ import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
 import static software.wings.security.AuthenticationFilter.USER_IDENTITY_HEADER;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -48,7 +49,7 @@ import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
-public class AuthenticationFilterTest {
+public class AuthenticationFilterTest extends CategoryTest {
   @Mock MainConfiguration configuration = mock(MainConfiguration.class);
   @Mock AuthService authService = mock(AuthService.class);
   @Mock UserService userService = mock(UserService.class);

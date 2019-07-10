@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -34,7 +35,7 @@ import software.wings.verification.newrelic.NewRelicCVServiceConfiguration.NewRe
 
 import java.util.Arrays;
 
-public class NewRelicCVConfigurationYamlHandlerTest {
+public class NewRelicCVConfigurationYamlHandlerTest extends CategoryTest {
   @Mock YamlHelper yamlHelper;
   @Mock CVConfigurationService cvConfigurationService;
   @Mock EnvironmentService environmentService;

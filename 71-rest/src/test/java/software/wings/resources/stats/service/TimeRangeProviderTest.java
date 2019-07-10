@@ -2,6 +2,7 @@ package software.wings.resources.stats.service;
 
 import static org.junit.Assert.assertEquals;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -11,7 +12,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 
-public class TimeRangeProviderTest {
+public class TimeRangeProviderTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void monthlyRanges() {

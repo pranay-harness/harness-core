@@ -2,6 +2,7 @@ package io.harness.k8s.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -10,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class KubernetesResourceComparerTest {
+public class KubernetesResourceComparerTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void OrderTest1() {

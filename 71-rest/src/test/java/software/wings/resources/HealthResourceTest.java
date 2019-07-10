@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.configuration.ConfigurationType;
 import io.harness.mongo.MongoConfig;
@@ -18,7 +19,7 @@ import software.wings.utils.ResourceTestRule;
 
 import javax.ws.rs.core.GenericType;
 
-public class HealthResourceTest {
+public class HealthResourceTest extends CategoryTest {
   public static final MainConfiguration configuration = mock(MainConfiguration.class);
   public static final AsymmetricEncryptor asymmetricEncryptor = mock(AsymmetricEncryptor.class);
 

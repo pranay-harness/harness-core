@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.IntegrationTests;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
@@ -27,7 +28,7 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.util.Properties;
 
-public class ProxyTest {
+public class ProxyTest extends CategoryTest {
   private String proxyHost;
   private int proxyPort;
   private String proxyHostNoAuth;

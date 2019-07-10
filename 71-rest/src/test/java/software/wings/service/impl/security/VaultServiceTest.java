@@ -2,6 +2,7 @@ package software.wings.service.impl.security;
 
 import static org.junit.Assert.assertEquals;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -11,7 +12,7 @@ import org.junit.experimental.categories.Category;
  *
  * @author mark.lu on 10/11/18
  */
-public class VaultServiceTest {
+public class VaultServiceTest extends CategoryTest {
   private static final String SYS_MOUNTS_JSON_RESPONSE_V1 =
       "{\"secret/\":{\"accessor\":\"kv_290803b3\",\"description\":\"key/value secret storage\",\"type\":\"kv\"}}";
   private static final String SYS_MOUNTS_JSON_RESPONSE_V2 =

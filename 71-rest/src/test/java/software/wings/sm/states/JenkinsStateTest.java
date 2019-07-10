@@ -17,6 +17,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.CategoryTest;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
@@ -46,7 +47,7 @@ import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
-public class JenkinsStateTest {
+public class JenkinsStateTest extends CategoryTest {
   private static final Activity ACTIVITY_WITH_ID = Activity.builder().build();
 
   static {

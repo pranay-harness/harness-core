@@ -2,6 +2,7 @@ package software.wings.beans.container;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -9,7 +10,7 @@ import org.junit.experimental.categories.Category;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class KubernetesContainerTaskTest {
+public class KubernetesContainerTaskTest extends CategoryTest {
   static final String DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_NAME}";
   static final String DOCKER_IMAGE_NAME_REGEX = "(\\s*\"?image\"?\\s*:\\s*\"?)";
 

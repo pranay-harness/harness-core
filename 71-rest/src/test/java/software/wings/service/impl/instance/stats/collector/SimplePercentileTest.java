@@ -2,6 +2,7 @@ package software.wings.service.impl.instance.stats.collector;
 
 import static org.junit.Assert.assertEquals;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class SimplePercentileTest {
+public class SimplePercentileTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testPercentile() {

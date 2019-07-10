@@ -2,6 +2,7 @@ package software.wings.service.impl.analysis;
 
 import static org.junit.Assert.assertEquals;
 
+import io.harness.CategoryTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
@@ -14,7 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TimeSeriesRawDataTest {
+public class TimeSeriesRawDataTest extends CategoryTest {
   private String accountId = "accountId";
   private String stateExecutionId = "stateExecutionId";
   private String serviceId = "serviceId";

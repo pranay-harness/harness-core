@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.User.Builder.anUser;
 
+import io.harness.CategoryTest;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -43,7 +44,7 @@ import javax.ws.rs.core.GenericType;
 /**
  * Created by peeyushaggarwal on 4/1/16.
  */
-public class UserResourceTest {
+public class UserResourceTest extends CategoryTest {
   public static final UserService USER_SERVICE = mock(UserService.class);
   public static final HarnessUserGroupService HARNESS_USER_GROUP_SERVICE = mock(HarnessUserGroupService.class);
   public static final UserGroupService USER_GROUP_SERVICE = mock(UserGroupService.class);

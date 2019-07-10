@@ -1,3 +1,5 @@
 package software.wings.yaml;
 
-public class ConfigAsCodeDirectoryResourceTest {}
+import io.harness.CategoryTest;
+
+public class ConfigAsCodeDirectoryResourceTest extends CategoryTest {}

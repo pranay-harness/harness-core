@@ -8,6 +8,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.COMMAND_UNIT_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,7 +18,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import software.wings.delegatetasks.DelegateLogService;
 
-public class ExecutionLogWriterTest {
+public class ExecutionLogWriterTest extends CategoryTest {
   @Mock private DelegateLogService logService;
 
   @Before

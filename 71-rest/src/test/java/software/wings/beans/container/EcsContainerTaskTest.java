@@ -6,11 +6,12 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.amazonaws.services.ecs.model.TaskDefinition;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class EcsContainerTaskTest {
+public class EcsContainerTaskTest extends CategoryTest {
   public static final String CONTAINER_NAME = "containerName";
   public static final String IMAGE_NAME = "imageName";
   public static final String EXEC_ROLE = "exec_role";

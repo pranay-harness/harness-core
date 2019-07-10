@@ -19,6 +19,7 @@ import static software.wings.utils.WingsTestConstants.LOG_ID;
 
 import com.google.common.collect.Lists;
 
+import io.harness.CategoryTest;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -51,7 +52,7 @@ import javax.ws.rs.core.Response;
 /**
  * Created by peeyushaggarwal on 4/1/16.
  */
-public class ActivityResourceTest {
+public class ActivityResourceTest extends CategoryTest {
   private static final ActivityService ACTIVITY_SERVICE = mock(ActivityService.class);
   private static final LogService LOG_SERVICE = mock(LogService.class);
   private static final DataStoreService LOG_DATA_STORE_SERVICE = mock(DataStoreService.class);

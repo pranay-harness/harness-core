@@ -5,6 +5,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static software.wings.beans.Application.Builder.anApplication;
 
+import io.harness.CategoryTest;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import software.wings.beans.Application;
@@ -23,7 +24,7 @@ import java.util.List;
  * @author bsollish
  */
 @Slf4j
-public class SetupYamlResourceTest {
+public class SetupYamlResourceTest extends CategoryTest {
   // create mocks
   private static final AppService appService = mock(AppService.class);
   private static final SettingsService settingsService = mock(SettingsService.class);

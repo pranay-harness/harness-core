@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.services.ec2.model.Filter;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -12,7 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class AmiServiceImplTest {
+public class AmiServiceImplTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testGetFiltersWithNullEmptyValues() {

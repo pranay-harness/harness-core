@@ -10,6 +10,7 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
@@ -28,7 +29,7 @@ import software.wings.sm.StateType;
 
 import java.util.UUID;
 
-public class LogAnalysisGeneratorTest {
+public class LogAnalysisGeneratorTest extends CategoryTest {
   private String accountId;
   private String applicationId;
   private String workflowId;

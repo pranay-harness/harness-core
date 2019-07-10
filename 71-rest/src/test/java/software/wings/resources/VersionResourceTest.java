@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
+import io.harness.CategoryTest;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -27,7 +28,7 @@ import javax.ws.rs.core.GenericType;
 /**
  * Created by peeyushaggarwal on 11/2/16.
  */
-public class VersionResourceTest {
+public class VersionResourceTest extends CategoryTest {
   private static EntityVersionService ENTITY_VERSION_SERVICE = mock(EntityVersionService.class);
 
   @ClassRule

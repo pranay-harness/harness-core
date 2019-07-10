@@ -6,6 +6,7 @@ import io.cloudsoft.winrm4j.client.ShellCommand;
 import io.cloudsoft.winrm4j.client.WinRmClient;
 import io.cloudsoft.winrm4j.client.WinRmClientContext;
 import io.cloudsoft.winrm4j.winrm.WinRmTool;
+import io.harness.CategoryTest;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.rules.Integration;
 
@@ -17,7 +18,7 @@ This test class is making calls to WinRM. The purpose is to do directed testing 
 This is not to be run as an automated test[hence the @Ignore].
  */
 @Slf4j
-public class WinRmToolIntegrationTest {
+public class WinRmToolIntegrationTest extends CategoryTest {
   private static void setUp() {}
 
   public static void main(String[] args) {

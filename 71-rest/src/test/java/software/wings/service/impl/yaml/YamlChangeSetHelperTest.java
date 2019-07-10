@@ -9,6 +9,7 @@ import static software.wings.utils.WingsTestConstants.USER_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
@@ -38,7 +39,7 @@ import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;
 
 import java.util.List;
 
-public class YamlChangeSetHelperTest {
+public class YamlChangeSetHelperTest extends CategoryTest {
   public static final String ACCOUNTID = "000111";
   public static final String OLD = "old";
   public static final String NEW = "new";

@@ -2,13 +2,14 @@ package io.harness.scheduler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.quartz.JobDetail;
 import org.quartz.Trigger;
 
-public class HQuartzSchedulerTest {
+public class HQuartzSchedulerTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testJobCompare() {

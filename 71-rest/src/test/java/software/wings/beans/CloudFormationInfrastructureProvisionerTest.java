@@ -2,12 +2,13 @@ package software.wings.beans;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.CloudFormationInfrastructureProvisioner.CloudFormationInfrastructureProvisionerBuilder;
 
-public class CloudFormationInfrastructureProvisionerTest {
+public class CloudFormationInfrastructureProvisionerTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testCloudFormationProvisioner() {

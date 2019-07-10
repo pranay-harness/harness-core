@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -27,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by rsingh on 8/3/17.
  */
-public class ElkLogFetchRequestTest {
+public class ElkLogFetchRequestTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testJsonFormat() {

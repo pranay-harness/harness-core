@@ -5,6 +5,7 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import org.junit.Before;
@@ -25,7 +26,7 @@ import javax.ws.rs.core.GenericType;
 /**
  * Created by peeyushaggarwal on 10/21/16.
  */
-public class PluginResourceTest {
+public class PluginResourceTest extends CategoryTest {
   public static final PluginService PLUGIN_SERVICE = mock(PluginService.class);
 
   @ClassRule

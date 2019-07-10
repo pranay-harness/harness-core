@@ -9,6 +9,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.eraro.ErrorCode;
@@ -27,7 +28,7 @@ import software.wings.service.intfc.yaml.YamlGitService;
 import java.util.HashMap;
 import java.util.Map;
 
-public class GitCommandCallbackTest {
+public class GitCommandCallbackTest extends CategoryTest {
   @Mock private YamlChangeSetService yamlChangeSetService;
   @Mock private YamlGitService yamlGitService;
   @InjectMocks

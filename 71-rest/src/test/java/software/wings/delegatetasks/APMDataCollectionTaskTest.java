@@ -6,6 +6,7 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.CategoryTest;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
@@ -28,7 +29,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class APMDataCollectionTaskTest {
+public class APMDataCollectionTaskTest extends CategoryTest {
   APMDataCollectionInfo dataCollectionInfo;
   private APMDataCollectionTask dataCollectionTask;
 

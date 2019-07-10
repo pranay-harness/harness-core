@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rest.RestResponse;
@@ -25,7 +26,7 @@ import javax.ws.rs.core.GenericType;
  * The Class AppResourceTest.
  */
 @Slf4j
-public class AppResourceTest {
+public class AppResourceTest extends CategoryTest {
   private static final AppService appService = mock(AppService.class);
   private static final LimitCheckerFactory limitCheckerFactory = mock(LimitCheckerFactory.class);
 

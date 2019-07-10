@@ -2,13 +2,14 @@ package io.harness.delegate.beans.executioncapability;
 
 import static org.junit.Assert.assertEquals;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class HttpConnectionExecutionCapabilityTest {
+public class HttpConnectionExecutionCapabilityTest extends CategoryTest {
   public static final String HOST_NAME = "SOME_HOST";
   private static final String PORT_HTTP = "80";
   private static final String PORT_HTTPS = "443";

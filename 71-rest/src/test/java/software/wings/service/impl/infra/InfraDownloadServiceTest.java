@@ -10,6 +10,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import com.google.inject.Inject;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
@@ -24,7 +25,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.utils.GcsUtils;
 
-public class InfraDownloadServiceTest {
+public class InfraDownloadServiceTest extends CategoryTest {
   @Inject @InjectMocks GcsUtils gcsUtil;
   @Mock MainConfiguration mainConfiguration;
   @Spy @Inject InfraDownloadServiceImpl infraDownloadService;

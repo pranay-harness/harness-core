@@ -2,12 +2,13 @@ package software.wings.expression;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.expression.RegexFunctor;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class RegexFunctorTest {
+public class RegexFunctorTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testExtract() {

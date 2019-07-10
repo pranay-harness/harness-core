@@ -17,7 +17,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Slf4j
-public class MorphiaClassesTest extends CategoryTest {
+public class ModelGenMorphiaClassesTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testSearchAndList() {

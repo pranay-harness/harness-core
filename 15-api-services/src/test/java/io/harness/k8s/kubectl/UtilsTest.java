@@ -4,11 +4,12 @@ import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.k8s.kubectl.Utils.parseLatestRevisionNumberFromRolloutHistory;
 import static org.junit.Assert.assertEquals;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class UtilsTest {
+public class UtilsTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void latestRevisionTest() {

@@ -2,12 +2,13 @@ package software.wings.beans.sso;
 
 import static org.junit.Assert.assertEquals;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class LdapUserResponseTest {
+public class LdapUserResponseTest extends CategoryTest {
   private LdapUserResponse ldapUserResponse;
   private String capitalLettersEmail = "XYZ@harness.io";
 

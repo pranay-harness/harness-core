@@ -6,6 +6,7 @@ import static org.junit.Assert.assertEquals;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
@@ -20,7 +21,7 @@ import java.util.Map;
 /**
  * For every email action, this class tests if the template matches to the expected output.
  */
-public class OutgoingEmailTest {
+public class OutgoingEmailTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testEmailTemplates() throws Exception {

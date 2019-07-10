@@ -21,6 +21,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.CategoryTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutput;
 import io.harness.category.element.UnitTests;
@@ -51,7 +52,7 @@ import software.wings.sm.ExecutionResponse;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ShellScriptStateTest {
+public class ShellScriptStateTest extends CategoryTest {
   private static final Activity ACTIVITY_WITH_ID = Activity.builder().build();
 
   static {

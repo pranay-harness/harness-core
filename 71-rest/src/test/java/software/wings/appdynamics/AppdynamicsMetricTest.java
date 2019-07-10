@@ -3,6 +3,7 @@ package software.wings.appdynamics;
 import static org.junit.Assert.assertEquals;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.serializer.JsonUtils;
 import org.junit.Test;
@@ -15,7 +16,7 @@ import java.util.List;
 /**
  * Created by rsingh on 4/19/17.
  */
-public class AppdynamicsMetricTest {
+public class AppdynamicsMetricTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testAppdynamicsMetricParse() throws Exception {

@@ -16,6 +16,7 @@ import static software.wings.utils.ArtifactType.JAR;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
+import io.harness.CategoryTest;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -37,7 +38,7 @@ import javax.ws.rs.core.Response;
 /**
  * Created by anubhaw on 5/23/16.
  */
-public class ServiceResourceTest {
+public class ServiceResourceTest extends CategoryTest {
   private static final ServiceResourceService RESOURCE_SERVICE = mock(ServiceResourceService.class);
 
   /**

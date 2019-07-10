@@ -13,6 +13,7 @@ import static software.wings.beans.PluginCategory.LoadBalancer;
 import static software.wings.beans.PluginCategory.SourceRepo;
 import static software.wings.beans.PluginCategory.Verification;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -64,7 +65,7 @@ import java.io.IOException;
 /**
  * Created by peeyushaggarwal on 10/21/16.
  */
-public class PluginServiceTest {
+public class PluginServiceTest extends CategoryTest {
   private PluginService pluginService = new PluginServiceImpl();
 
   private String accountId = "ACCOUNT_ID";

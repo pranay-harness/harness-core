@@ -4,6 +4,7 @@ import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -16,7 +17,7 @@ import org.junit.runner.RunWith;
  * Created by peeyushaggarwal on 6/6/16.
  */
 @RunWith(JUnitParamsRunner.class)
-public class StateTypeTest {
+public class StateTypeTest extends CategoryTest {
   private Object[][] getData() {
     Object[][] data = new Object[StateType.values().length][1];
 

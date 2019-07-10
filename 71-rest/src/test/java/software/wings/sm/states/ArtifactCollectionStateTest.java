@@ -23,6 +23,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.CategoryTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
@@ -60,7 +61,7 @@ import software.wings.sm.WorkflowStandardParams.Builder;
 
 import java.util.concurrent.TimeUnit;
 
-public class ArtifactCollectionStateTest {
+public class ArtifactCollectionStateTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private ArtifactService artifactService;

@@ -4,11 +4,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class ApplyCommandTest {
+public class ApplyCommandTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void smokeTest() {

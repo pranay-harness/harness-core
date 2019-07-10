@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -32,7 +33,7 @@ import software.wings.verification.log.ElkCVConfiguration.ElkCVConfigurationYaml
 import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration.LogsCVConfigurationYaml;
 
-public class ElkCVConfigurationYamlHandlerTest {
+public class ElkCVConfigurationYamlHandlerTest extends CategoryTest {
   @Mock YamlHelper yamlHelper;
   @Mock CVConfigurationService cvConfigurationService;
   @Mock EnvironmentService environmentService;

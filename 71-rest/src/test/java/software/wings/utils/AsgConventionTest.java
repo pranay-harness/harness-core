@@ -2,11 +2,12 @@ package software.wings.utils;
 
 import static org.junit.Assert.assertEquals;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class AsgConventionTest {
+public class AsgConventionTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testGetRevisionFromTag() {

@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static io.harness.rule.OwnerRule.ANUBHAW;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +22,7 @@ import java.util.concurrent.TimeoutException;
  * Created by anubhaw on 3/22/18.
  */
 @Slf4j
-public class HelmClientTest {
+public class HelmClientTest extends CategoryTest {
   private HelmClient helmClient = new HelmClientImpl();
   @Test
   @Owner(emails = ANUBHAW)
