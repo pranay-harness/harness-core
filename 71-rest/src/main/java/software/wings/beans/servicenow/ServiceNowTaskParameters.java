@@ -26,6 +26,7 @@ public class ServiceNowTaskParameters implements TaskParameters, ExecutionCapabi
   List<EncryptedDataDetail> encryptionDetails;
   private ServiceNowTicketType ticketType;
   private Map<ServiceNowFields, String> fields;
+  private Map<String, String> additionalFields;
   private boolean updateMultiple;
 
   @Override

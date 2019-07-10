@@ -69,4 +69,14 @@ public class ServiceNowResource {
       @PathParam("connectorId") String connectorId) {
     return new RestResponse<>(serviceNowService.getCreateMeta(ticketType, accountId, connectorId, appId));
   }
+
+  @GET
+  @Path("{connectorId}/additionalFields")
+  @Timed
+  @ExceptionMetered
+  public RestResponse getAdditionalFields(@QueryParam("appId") String appId,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("ticketType") ServiceNowTicketType ticketType,
+      @PathParam("connectorId") String connectorId) {
+    return new RestResponse<>(serviceNowService.getAdditionalFields(ticketType, accountId, connectorId, appId));
+  }
 }

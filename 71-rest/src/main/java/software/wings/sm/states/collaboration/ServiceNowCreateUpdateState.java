@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutput;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
@@ -109,6 +110,7 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
             .updateMultiple(serviceNowCreateUpdateParams.isUpdateMultiple())
             .accountId(accountId)
             .fields(serviceNowCreateUpdateParams.fetchFields())
+            .additionalFields(serviceNowCreateUpdateParams.fetchAdditionalFields())
             .build();
 
     DelegateTask delegateTask = DelegateTask.builder()
@@ -135,10 +137,19 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
   private void renderExpressions(ExecutionContext context, ServiceNowCreateUpdateParams params) {
     params.setIssueNumber(context.renderExpression(params.getIssueNumber()));
     Map<ServiceNowFields, String> renderedFields = new HashMap<>();
-    for (Entry<ServiceNowFields, String> entry : params.fetchFields().entrySet()) {
-      renderedFields.put(entry.getKey(), context.renderExpression(entry.getValue()));
+    if (EmptyPredicate.isNotEmpty(params.fetchFields())) {
+      params.fetchFields().forEach((key, value) -> renderedFields.put(key, context.renderExpression(value)));
     }
+
     params.setFields(renderedFields);
+
+    Map<String, String> renderedAdditionalFields = new HashMap<>();
+    if (EmptyPredicate.isNotEmpty(params.fetchAdditionalFields())) {
+      params.fetchAdditionalFields().forEach(
+          (key, value) -> renderedAdditionalFields.put(key, context.renderExpression(value)));
+    }
+
+    params.setAdditionalFields(renderedAdditionalFields);
   }
 
   private ServiceNowConfig getSnowConfig(String snowConnectorId) {

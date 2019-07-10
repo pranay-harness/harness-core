@@ -11,11 +11,15 @@ public class ServiceNowCreateUpdateParams {
   @Getter @Setter String snowConnectorId;
   @Getter @Setter private String ticketType;
   @Setter private Map<ServiceNowFields, String> fields;
+  @Setter private Map<String, String> additionalFields;
   @Getter @Setter private String issueNumber;
   @Getter @Setter private String ticketId;
   @Getter @Setter private boolean updateMultiple;
 
   public Map<ServiceNowFields, String> fetchFields() {
     return fields;
+  }
+  public Map<String, String> fetchAdditionalFields() {
+    return additionalFields;
   }
 }
