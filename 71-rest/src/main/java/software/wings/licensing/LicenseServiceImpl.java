@@ -15,21 +15,18 @@ import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
-import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.DefaultSalesContacts;
 import software.wings.beans.DefaultSalesContacts.AccountTypeDefault;
 import software.wings.beans.License;
 import software.wings.beans.LicenseInfo;
-import software.wings.beans.User;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
@@ -37,7 +34,6 @@ import software.wings.security.encryption.EncryptionUtils;
 import software.wings.service.impl.LicenseUtils;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.EmailNotificationService;
-import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.instance.licensing.InstanceLimitProvider;
 import software.wings.utils.Validator;
 
@@ -53,7 +49,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 
 /**
  *
@@ -76,7 +71,6 @@ public class LicenseServiceImpl implements LicenseService {
   @Inject private EmailNotificationService emailNotificationService;
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private MainConfiguration mainConfiguration;
-  @Inject private UserGroupService userGroupService;
 
   @Override
   public void checkForLicenseExpiry() {
@@ -136,13 +130,6 @@ public class LicenseServiceImpl implements LicenseService {
               }
             } else if (accountType.equals(AccountType.TRIAL)) {
               boolean lessThan7DaysLeftForLicenseExpiry = (expiryTime - currentTime) <= Duration.ofDays(7).toMillis();
-              boolean daySinceLastExpiryReminderSent =
-                  (currentTime - account.getLastLicenseExpiryReminderSentAt()) >= Duration.ofDays(1).toMillis();
-
-              if (lessThan7DaysLeftForLicenseExpiry && daySinceLastExpiryReminderSent) {
-                sendEmailToAdminBeforeLicenseExpiration(account);
-              }
-
               if (!account.isEmailSentToSales() && lessThan7DaysLeftForLicenseExpiry) {
                 sendEmailToSales(account, expiryTime, accountType, EMAIL_SUBJECT_ACCOUNT_ABOUT_TO_EXPIRE,
                     EMAIL_BODY_ACCOUNT_ABOUT_TO_EXPIRE, trialDefaultContacts);
@@ -153,23 +140,12 @@ public class LicenseServiceImpl implements LicenseService {
             sendEmailToSales(account, expiryTime, accountType, EMAIL_SUBJECT_ACCOUNT_EXPIRED,
                 EMAIL_BODY_ACCOUNT_EXPIRED,
                 accountType.equals(AccountType.PAID) ? paidDefaultContacts : trialDefaultContacts);
-            if (accountType.equals(AccountType.TRIAL)) {
-              sendEmailToAdminAfterLicenseExpiration(account);
-            }
           }
         } catch (Exception e) {
           logger.warn("Failed to check license info for account id {}", account.getUuid(), e);
         }
       }
     }
-  }
-
-  private List<String> getContactAddressesOfAccountAdmins(String accountId) {
-    return userGroupService.getAdminUserGroup(accountId)
-        .getMembers()
-        .stream()
-        .map(User::getEmail)
-        .collect(Collectors.toList());
   }
 
   private List<String> getEmailIds(String emailIdsStr) {
@@ -226,86 +202,6 @@ public class LicenseServiceImpl implements LicenseService {
     } else {
       updateEmailSentToSales(account.getUuid(), false);
       logger.warn("Couldn't send email to sales for account {}", account.getUuid());
-    }
-  }
-
-  private void sendEmailToAdminBeforeLicenseExpiration(Account account) {
-    List<String> accountAdminsContacts = getContactAddressesOfAccountAdmins(account.getUuid());
-
-    if (isEmpty(accountAdminsContacts)) {
-      logger.info(
-          "Skipping the sending of reminder email about license expiration for account {} since no admin contacts are configured",
-          account.getUuid());
-      return;
-    }
-
-    LicenseInfo licenseInfo = account.getLicenseInfo();
-
-    Date expiryDate = new Date(licenseInfo.getExpiryTime());
-    Map<String, String> templateModel = new HashMap<>();
-    templateModel.put("emailSubject", "Harness license about to expire!");
-    templateModel.put("emailBody", "Your license is about to expire");
-    templateModel.put("accountName", account.getAccountName());
-    templateModel.put("companyName", account.getCompanyName());
-    templateModel.put("accountType", StringUtils.capitalize(licenseInfo.getAccountType()));
-    templateModel.put("expiry", expiryDate.toString());
-
-    EmailData emailData = EmailData.builder()
-                              .system(true)
-                              .to(accountAdminsContacts)
-                              .templateName("license_expiration_reminder")
-                              .templateModel(templateModel)
-                              .accountId(account.getUuid())
-                              .build();
-    emailData.setCc(Collections.emptyList());
-    emailData.setRetries(3);
-    boolean sent = emailNotificationService.send(emailData);
-    if (sent) {
-      updateLastReminderSentToAdminBeforeLicenseExpiration(account.getUuid());
-    } else {
-      logger.warn("Couldn't send reminder email to admins for account {}", account.getUuid());
-    }
-  }
-
-  private void updateLastReminderSentToAdminBeforeLicenseExpiration(String accountId) {
-    wingsPersistence.updateField(
-        Account.class, accountId, AccountKeys.lastLicenseExpiryReminderSentAt, System.currentTimeMillis());
-  }
-
-  private void sendEmailToAdminAfterLicenseExpiration(Account account) {
-    List<String> accountAdminsContacts = getContactAddressesOfAccountAdmins(account.getUuid());
-
-    if (isEmpty(accountAdminsContacts)) {
-      logger.info(
-          "Skipping the sending of email after license expiration for account {} since no admin contacts are configured",
-          account.getUuid());
-
-      return;
-    }
-
-    LicenseInfo licenseInfo = account.getLicenseInfo();
-
-    Date expiryDate = new Date(licenseInfo.getExpiryTime());
-    Map<String, String> templateModel = new HashMap<>();
-    templateModel.put("emailSubject", "Harness license has expired, please renew");
-    templateModel.put("emailBody", "Your license has expired");
-    templateModel.put("accountName", account.getAccountName());
-    templateModel.put("companyName", account.getCompanyName());
-    templateModel.put("accountType", StringUtils.capitalize(licenseInfo.getAccountType()));
-    templateModel.put("expiry", expiryDate.toString());
-
-    EmailData emailData = EmailData.builder()
-                              .system(true)
-                              .to(accountAdminsContacts)
-                              .templateName("license_expired")
-                              .templateModel(templateModel)
-                              .accountId(account.getUuid())
-                              .build();
-    emailData.setCc(Collections.emptyList());
-    emailData.setRetries(3);
-    boolean sent = emailNotificationService.send(emailData);
-    if (!sent) {
-      logger.warn("Couldn't send email after license expiration to admins for account {}", account.getUuid());
     }
   }
 

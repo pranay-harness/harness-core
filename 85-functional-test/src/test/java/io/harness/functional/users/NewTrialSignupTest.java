@@ -22,6 +22,7 @@ import io.harness.testframework.framework.utils.TestUtils;
 import io.harness.testframework.restutils.UserRestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.SettingAttribute;
@@ -52,8 +53,9 @@ public class NewTrialSignupTest extends AbstractFunctionalTest {
   }
 
   @Test()
-  @Owner(emails = RAMA, resent = false)
+  @Owner(emails = RAMA, intermittent = true)
   @Category(FunctionalTests.class)
+  @Ignore("TODO - Rama will look into this test")
   public void verifyTrialUserSignup() {
     UserInvite invite = constructInvite("password");
     Boolean isTrialInviteDone = urUtil.createNewTrialInvite(invite);
@@ -65,8 +67,9 @@ public class NewTrialSignupTest extends AbstractFunctionalTest {
   }
 
   @Test()
-  @Owner(emails = RAMA, resent = false)
+  @Owner(emails = RAMA, intermittent = true)
   @Category(FunctionalTests.class)
+  @Ignore("TODO - Rama will look into this test")
   public void verifyTrialUserSignupInvalidPassword() {
     UserInvite invite = constructInvite("pass");
 
