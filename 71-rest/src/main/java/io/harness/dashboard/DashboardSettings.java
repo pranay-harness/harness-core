@@ -15,7 +15,10 @@ import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Transient;
 
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @Entity(value = "dashboardSettings", noClassnameStored = true)
@@ -28,9 +31,13 @@ public class DashboardSettings
   private EmbeddedUser lastUpdatedBy;
   private long createdAt;
   private long lastUpdatedAt;
-  private String accountId;
+  @Indexed private String accountId;
   private String data;
   private String description;
   private String name;
+  @Transient private boolean isOwner;
+  @Transient private boolean canUpdate;
+  @Transient private boolean canDelete;
+  private List<DashboardAccessPermissions> permissions;
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
 }

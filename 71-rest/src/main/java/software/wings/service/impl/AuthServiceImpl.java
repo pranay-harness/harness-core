@@ -81,6 +81,7 @@ import software.wings.security.UserRestrictionInfo;
 import software.wings.security.UserRestrictionInfo.UserRestrictionInfoBuilder;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.impl.security.auth.DashboardAuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
@@ -134,6 +135,7 @@ public class AuthServiceImpl implements AuthService {
   private SSOSettingService ssoSettingService;
   @Inject private ExecutorService executorService;
   private AppService appService;
+  private DashboardAuthHandler dashboardAuthHandler;
 
   @Inject
   public AuthServiceImpl(GenericDbCache dbCache, WingsPersistence wingsPersistence, UserService userService,
@@ -142,7 +144,8 @@ public class AuthServiceImpl implements AuthService {
       MainConfiguration configuration, LearningEngineService learningEngineService, AuthHandler authHandler,
       FeatureFlagService featureFlagService, HarnessUserGroupService harnessUserGroupService,
       SecretManager secretManager, UsageMetricsEventPublisher usageMetricsEventPublisher,
-      WhitelistService whitelistService, SSOSettingService ssoSettingService, AppService appService) {
+      WhitelistService whitelistService, SSOSettingService ssoSettingService, AppService appService,
+      DashboardAuthHandler dashboardAuthHandler) {
     this.dbCache = dbCache;
     this.wingsPersistence = wingsPersistence;
     this.userService = userService;
@@ -161,6 +164,7 @@ public class AuthServiceImpl implements AuthService {
     this.whitelistService = whitelistService;
     this.ssoSettingService = ssoSettingService;
     this.appService = appService;
+    this.dashboardAuthHandler = dashboardAuthHandler;
   }
 
   @Override
@@ -686,7 +690,11 @@ public class AuthServiceImpl implements AuthService {
       }
     }
 
-    return authHandler.getUserPermissionInfo(accountId, userGroups);
+    UserPermissionInfo userPermissionInfo = authHandler.getUserPermissionInfo(accountId, userGroups);
+    Map<String, Set<io.harness.dashboard.Action>> dashboardPermissions =
+        dashboardAuthHandler.getDashboardAccessPermissions(user, accountId, userPermissionInfo);
+    userPermissionInfo.setDashboardPermissions(dashboardPermissions);
+    return userPermissionInfo;
   }
 
   private UserRestrictionInfo getUserRestrictionInfoFromDB(
@@ -958,6 +966,26 @@ public class AuthServiceImpl implements AuthService {
     if (!envCreatePermissions.contains(envType)) {
       throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
     }
+  }
+
+  @Override
+  public void checkIfUserCanPerformDashboardAction(String dashboardId, Action action) {
+    User user = UserThreadLocal.get();
+    if (user == null) {
+      return;
+    }
+
+    Map<String, Set<io.harness.dashboard.Action>> dashboardPermissions =
+        user.getUserRequestContext().getUserPermissionInfo().getDashboardPermissions();
+    if (dashboardPermissions != null) {
+      Set<io.harness.dashboard.Action> actions = dashboardPermissions.get(dashboardId);
+      if (isNotEmpty(actions)) {
+        if (actions.contains(action)) {
+          return;
+        }
+      }
+    }
+    throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
   }
 
   @Override

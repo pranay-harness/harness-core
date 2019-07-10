@@ -1,5 +1,7 @@
 package software.wings.resources.dashboard;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.exception.WingsException.USER;
 import static software.wings.security.PermissionAttribute.ResourceType.CUSTOM_DASHBOARD;
 
 import com.google.inject.Inject;
@@ -8,6 +10,9 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.PageResponse.PageResponseBuilder;
+import io.harness.beans.SearchFilter.Operator;
+import io.harness.dashboard.Action;
 import io.harness.dashboard.DashboardSettings;
 import io.harness.dashboard.DashboardSettingsService;
 import io.harness.eraro.ErrorCode;
@@ -17,10 +22,15 @@ import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotBlank;
 import software.wings.beans.Application;
 import software.wings.beans.FeatureName;
+import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ListAPI;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.security.auth.DashboardAuthHandler;
 import software.wings.service.intfc.FeatureFlagService;
 
+import java.util.Collections;
+import java.util.Set;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -36,26 +46,30 @@ import javax.ws.rs.core.MediaType;
 @Path("/custom-dashboard")
 @Scope(CUSTOM_DASHBOARD)
 @Produces(MediaType.APPLICATION_JSON)
-public class DashboardResource {
+public class CustomDashboardResource {
   private DashboardSettingsService dashboardSettingsService;
   private FeatureFlagService featureFlagService;
+  private DashboardAuthHandler dashboardAuthHandler;
 
   @Inject
-  public DashboardResource(DashboardSettingsService dashboardSettingsService, FeatureFlagService featureFlagService) {
+  public CustomDashboardResource(DashboardSettingsService dashboardSettingsService,
+      FeatureFlagService featureFlagService, DashboardAuthHandler dashboardAuthHandler) {
     this.dashboardSettingsService = dashboardSettingsService;
     this.featureFlagService = featureFlagService;
+    this.dashboardAuthHandler = dashboardAuthHandler;
   }
 
   @POST
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<DashboardSettings> createDashboardSetting(
       @QueryParam("accountId") @NotBlank String accountId, DashboardSettings settings) {
     if (!featureFlagService.isEnabled(FeatureName.CUSTOM_DASHBOARD, settings.getAccountId())) {
       throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED);
     }
     settings.setAccountId(accountId);
-    return new RestResponse<DashboardSettings>(dashboardSettingsService.createDashboardSettings(accountId, settings));
+    return new RestResponse<>(dashboardSettingsService.createDashboardSettings(accountId, settings));
   }
 
   @PUT
@@ -64,10 +78,13 @@ public class DashboardResource {
   public RestResponse<DashboardSettings> updateDashboardSettings(
       @QueryParam("accountId") @NotBlank String accountId, DashboardSettings settings) {
     if (!featureFlagService.isEnabled(FeatureName.CUSTOM_DASHBOARD, settings.getAccountId())) {
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED);
+      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
     }
+
+    DashboardSettings existingDashboardSetting = dashboardSettingsService.get(accountId, settings.getUuid());
+    dashboardAuthHandler.authorize(existingDashboardSetting, accountId, Action.UPDATE);
     settings.setAccountId(accountId);
-    return new RestResponse<DashboardSettings>(dashboardSettingsService.updateDashboardSettings(accountId, settings));
+    return new RestResponse<>(dashboardSettingsService.updateDashboardSettings(accountId, settings));
   }
 
   @DELETE
@@ -76,9 +93,12 @@ public class DashboardResource {
   public RestResponse<Boolean> deleteDashboardSettings(
       @QueryParam("accountId") @NotBlank String accountId, @QueryParam("dashboardId") @NotBlank String id) {
     if (!featureFlagService.isEnabled(FeatureName.CUSTOM_DASHBOARD, accountId)) {
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED);
+      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
     }
-    return new RestResponse<Boolean>(dashboardSettingsService.deleteDashboardSettings(accountId, id));
+
+    DashboardSettings existingDashboardSetting = dashboardSettingsService.get(accountId, id);
+    dashboardAuthHandler.authorize(existingDashboardSetting, accountId, Action.DELETE);
+    return new RestResponse<>(dashboardSettingsService.deleteDashboardSettings(accountId, id));
   }
 
   @GET
@@ -88,10 +108,17 @@ public class DashboardResource {
   public RestResponse<PageResponse<DashboardSettings>> getDashboardSettings(
       @QueryParam("accountId") @NotBlank String accountId, @BeanParam PageRequest<Application> pageRequest) {
     if (!featureFlagService.isEnabled(FeatureName.CUSTOM_DASHBOARD, accountId)) {
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED);
+      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
     }
-    return new RestResponse<PageResponse<DashboardSettings>>(
-        dashboardSettingsService.getDashboardSettingSummary(accountId, pageRequest));
+    Set<String> allowedDashboardSettingIds = dashboardAuthHandler.getAllowedDashboardSettingIds();
+
+    if (isEmpty(allowedDashboardSettingIds)) {
+      return new RestResponse<>(
+          PageResponseBuilder.aPageResponse().withTotal(0).withResponse(Collections.emptyList()).build());
+    }
+
+    pageRequest.addFilter("_id", Operator.IN, allowedDashboardSettingIds.toArray());
+    return new RestResponse<>(dashboardSettingsService.getDashboardSettingSummary(accountId, pageRequest));
   }
 
   @GET
@@ -103,6 +130,9 @@ public class DashboardResource {
     if (!featureFlagService.isEnabled(FeatureName.CUSTOM_DASHBOARD, accountId)) {
       throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED);
     }
-    return new RestResponse<DashboardSettings>(dashboardSettingsService.get(accountId, dashboardId));
+
+    DashboardSettings dashboardSetting = dashboardSettingsService.get(accountId, dashboardId);
+    dashboardAuthHandler.authorize(dashboardSetting, accountId, Action.DELETE);
+    return new RestResponse<>(dashboardSetting);
   }
 }

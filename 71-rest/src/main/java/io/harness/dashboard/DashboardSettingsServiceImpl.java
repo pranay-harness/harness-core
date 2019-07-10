@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.DEFAULT_PAGE_SIZE;
 import static io.harness.beans.PageRequest.DEFAULT_UNLIMITED;
 import static io.harness.beans.PageRequest.PageRequestBuilder;
 import static io.harness.exception.WingsException.USER;
+import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -16,6 +17,7 @@ import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.security.auth.DashboardAuthHandler;
 
 import javax.validation.constraints.NotNull;
 
@@ -23,12 +25,12 @@ import javax.validation.constraints.NotNull;
 @Singleton
 public class DashboardSettingsServiceImpl implements DashboardSettingsService {
   @Inject private WingsPersistence persistence;
+  @Inject private DashboardAuthHandler dashboardAuthHandler;
+
   @Override
   public DashboardSettings get(@NotNull String accountId, @NotNull String id) {
     DashboardSettings dashboardSettings = persistence.get(DashboardSettings.class, id);
-    if (dashboardSettings != null && !dashboardSettings.getAccountId().equals(accountId)) {
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED);
-    }
+    dashboardAuthHandler.setAccessFlags(asList(dashboardSettings));
     return dashboardSettings;
   }
 
@@ -69,7 +71,9 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
     pageRequest = sanitizePageRequest(pageRequest);
     pageRequest.addFilter(DashboardSettings.keys.accountId, Operator.EQ, accountId);
     pageRequest.addFieldsExcluded(DashboardSettings.keys.data);
-    return persistence.query(DashboardSettings.class, pageRequest);
+    PageResponse pageResponse = persistence.query(DashboardSettings.class, pageRequest);
+    dashboardAuthHandler.setAccessFlags(pageResponse.getResponse());
+    return pageResponse;
   }
 
   private PageRequest sanitizePageRequest(PageRequest pageRequest) {

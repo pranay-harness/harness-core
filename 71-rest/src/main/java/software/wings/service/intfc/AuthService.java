@@ -112,6 +112,8 @@ public interface AuthService extends OwnedByAccount {
 
   void checkIfUserCanCreateEnv(String appId, EnvironmentType envType);
 
+  void checkIfUserCanPerformDashboardAction(String dashboardId, Action action);
+
   void checkWorkflowPermissionsForEnv(String appId, Workflow workflow, Action action);
 
   void checkIfUserCanCloneWorkflowToOtherApp(String targetAppId, Workflow workflow);

@@ -31,6 +31,7 @@ public class AuthResponseFilter implements ContainerResponseFilter {
   private static final String RESOURCE_URI_CREATE_ENVIRONMENT = "/api/environments";
   private static final String RESOURCE_URI_CREATE_WORKFLOW = "/api/workflows";
   private static final String RESOURCE_URI_CREATE_PIPELINE = "/api/pipelines";
+  private static final String RESOURCE_URI_CREATE_DASHBOARD = "/api/custom-dashboard";
 
   private static final String RESOURCE_URI_CLONE_APP = "/api/apps/[^/]+/clone";
   private static final String RESOURCE_URI_CLONE_SERVICE = "/api/services/[^/]+/clone";
@@ -46,9 +47,9 @@ public class AuthResponseFilter implements ContainerResponseFilter {
   private static final String RESOURCE_URI_DELETE_APP = "/api/apps/[^/]+";
   private static final String RESOURCE_URI_DELETE_ENVIRONMENT = "/api/environments/[^/]+";
 
-  private static final Set<String> restResourcesCreateURIs =
-      Sets.newHashSet(RESOURCE_URI_CREATE_APP, RESOURCE_URI_CREATE_SERVICE, RESOURCE_URI_CREATE_PROVISIONER,
-          RESOURCE_URI_CREATE_ENVIRONMENT, RESOURCE_URI_CREATE_WORKFLOW, RESOURCE_URI_CREATE_PIPELINE);
+  private static final Set<String> restResourcesCreateURIs = Sets.newHashSet(RESOURCE_URI_CREATE_APP,
+      RESOURCE_URI_CREATE_SERVICE, RESOURCE_URI_CREATE_PROVISIONER, RESOURCE_URI_CREATE_ENVIRONMENT,
+      RESOURCE_URI_CREATE_WORKFLOW, RESOURCE_URI_CREATE_PIPELINE, RESOURCE_URI_CREATE_DASHBOARD);
   private static final Set<String> restResourcesCloneURIs =
       Sets.newHashSet(RESOURCE_URI_CLONE_APP, RESOURCE_URI_CLONE_SERVICE, RESOURCE_URI_CLONE_PROVISIONER,
           RESOURCE_URI_CLONE_ENVIRONMENT, RESOURCE_URI_CLONE_WORKFLOW, RESOURCE_URI_CLONE_PIPELINE);

@@ -473,6 +473,24 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
+  public List<String> getUserGroupIdsByAccountId(String accountId, User user) {
+    PageRequestBuilder pageRequest = aPageRequest()
+                                         .addFilter(UserGroup.ACCOUNT_ID_KEY, Operator.EQ, accountId)
+                                         .addFilter("memberIds", Operator.HAS, user.getUuid())
+                                         .addFieldsIncluded("_id");
+
+    if (accountService.isCommunityAccount(accountId)) {
+      pageRequest.addFilter(UserGroup.IS_DEFAULT_KEY, Operator.EQ, true);
+    }
+
+    List<UserGroup> response = list(accountId, pageRequest.build(), false).getResponse();
+    if (response == null) {
+      return Collections.emptyList();
+    }
+    return response.stream().map(UserGroup::getUuid).collect(toList());
+  }
+
+  @Override
   public List<String> fetchUserGroupsMemberIds(String accountId, List<String> userGroupIds) {
     if (isEmpty(userGroupIds)) {
       return asList();
