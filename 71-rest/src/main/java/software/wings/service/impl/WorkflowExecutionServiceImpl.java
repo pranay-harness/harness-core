@@ -917,7 +917,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   WorkflowExecution triggerPipelineExecution(String appId, String pipelineId, ExecutionArgs executionArgs,
       WorkflowExecutionUpdate workflowExecutionUpdate, Trigger trigger) {
     String accountId = appService.getAccountIdByAppId(appId);
-    logger.info("Execution Triggered. Type: {}, accountId={}", executionArgs.getWorkflowType(), accountId);
     checkPreDeploymentConditions(accountId, appId);
 
     Pipeline pipeline =
@@ -1009,7 +1008,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   // validations to check is a deployment should be allowed or not
   private void checkPreDeploymentConditions(String accountId, String appId) {
     preDeploymentChecks.isDeploymentAllowed(appId);
-    checkDeploymentRateLimit(accountId, appId);
     checkInstanceUsageLimit(accountId, appId);
   }
 
@@ -1037,7 +1035,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       String pipelineExecutionId, @NotNull ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate,
       Trigger trigger) {
     String accountId = appService.getAccountIdByAppId(appId);
-    logger.info("Execution Triggered. Type: {}, accountId={}", executionArgs.getWorkflowType(), accountId);
     checkPreDeploymentConditions(accountId, appId);
 
     // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
@@ -1664,6 +1661,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   WorkflowExecution triggerEnvExecution(String appId, String envId, ExecutionArgs executionArgs,
       WorkflowExecutionUpdate workflowExecutionUpdate, Trigger trigger) {
+    String accountId = this.appService.getAccountIdByAppId(appId);
+    logger.info("Execution Triggered. Type: {}, accountId={}", executionArgs.getWorkflowType(), accountId);
+    checkDeploymentRateLimit(accountId, appId);
+
     switch (executionArgs.getWorkflowType()) {
       case PIPELINE: {
         logger.debug("Received an pipeline execution request");
