@@ -20,6 +20,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.api.ServiceNowExecutionData;
 import software.wings.beans.ServiceNowConfig;
+import software.wings.beans.servicenow.ServiceNowFields;
 import software.wings.beans.servicenow.ServiceNowTaskParameters;
 import software.wings.helpers.ext.servicenow.ServiceNowRestClient;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowMetaDTO;
@@ -29,9 +30,11 @@ import software.wings.service.intfc.servicenow.ServiceNowDelegateService;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
@@ -145,6 +148,50 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
       default:
         throw new WingsException(SERVICENOW_ERROR, USER)
             .addParam("message", "Invalid ticket type : " + taskParameters.getTicketType());
+    }
+  }
+
+  @Override
+  public List<ServiceNowMetaDTO> getAdditionalFields(ServiceNowTaskParameters taskParameters) {
+    ServiceNowConfig config = taskParameters.getServiceNowConfig();
+    List<String> alreadySupportedFieldNames =
+        Arrays.stream(ServiceNowFields.values()).map(ServiceNowFields::getJsonBodyName).collect(Collectors.toList());
+
+    Call<JsonNode> request =
+        getRestClient(taskParameters)
+            .getAdditionalFields(Credentials.basic(config.getUsername(), new String(config.getPassword())),
+                taskParameters.getTicketType().toString().toLowerCase());
+    Response<JsonNode> response = null;
+    List<ServiceNowMetaDTO> fields = new ArrayList<>();
+    try {
+      response = request.execute();
+      logger.info("Response received from serviceNow: {}", response);
+      handleResponse(response,
+          "Failed to fetch Additional fields for ticketType : " + taskParameters.getTicketType() + " from serviceNow");
+      JsonNode responseObj = response.body().get("result");
+      if (responseObj.isArray()) {
+        for (JsonNode fieldObj : responseObj) {
+          if (!alreadySupportedFieldNames.contains(fieldObj.get("name").textValue())) {
+            ServiceNowMetaDTO field = ServiceNowMetaDTO.builder()
+                                          .displayName(fieldObj.get("label").textValue())
+                                          .id(fieldObj.get("name").textValue())
+                                          .build();
+            fields.add(field);
+          }
+        }
+        return fields;
+      } else {
+        throw new WingsException(SERVICENOW_ERROR, USER)
+            .addParam("message",
+                "Failed to fetch additional fields for ticket type " + taskParameters.getTicketType()
+                    + " response: " + response);
+      }
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      String errorMsg = "Failed to fetch additional fields for ticket type " + taskParameters.getTicketType();
+      throw new WingsException(SERVICENOW_ERROR, USER, e)
+          .addParam("message", errorMsg + " " + ExceptionUtils.getMessage(e));
     }
   }
 

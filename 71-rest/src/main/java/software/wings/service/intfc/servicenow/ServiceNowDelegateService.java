@@ -16,6 +16,8 @@ public interface ServiceNowDelegateService {
   @DelegateTaskType(TaskType.SERVICENOW_SYNC)
   Map<String, List<ServiceNowMetaDTO>> getCreateMeta(ServiceNowTaskParameters taskParameters);
   @DelegateTaskType(TaskType.SERVICENOW_SYNC)
+  List<ServiceNowMetaDTO> getAdditionalFields(ServiceNowTaskParameters taskParameters);
+  @DelegateTaskType(TaskType.SERVICENOW_SYNC)
   ServiceNowExecutionData getIssueUrl(ServiceNowTaskParameters taskParameters);
   @DelegateTaskType(TaskType.SERVICENOW_SYNC) String getIssueStatus(ServiceNowTaskParameters taskParameters);
 }

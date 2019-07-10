@@ -132,6 +132,31 @@ public class ServiceNowServiceImpl implements ServiceNowService {
     return delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext).getCreateMeta(taskParameters);
   }
 
+  @Override
+  public List<ServiceNowMetaDTO> getAdditionalFields(
+      ServiceNowTicketType ticketType, String accountId, String connectorId, String appId) {
+    ServiceNowConfig serviceNowConfig;
+    try {
+      serviceNowConfig = (ServiceNowConfig) settingService.get(connectorId).getValue();
+    } catch (Exception e) {
+      logger.error("Error getting ServiceNow connector for ID: {}", connectorId);
+      throw new WingsException(ErrorCode.SERVICENOW_ERROR, WingsException.USER)
+          .addParam("message", ExceptionUtils.getMessage(e));
+    }
+    ServiceNowTaskParameters taskParameters =
+        ServiceNowTaskParameters.builder()
+            .accountId(accountId)
+            .ticketType(ticketType)
+            .serviceNowConfig(serviceNowConfig)
+            .encryptionDetails(secretManager.getEncryptionDetails(serviceNowConfig, appId, WORKFLOW_EXECUTION_ID))
+            .build();
+    SyncTaskContext snowTaskContext =
+        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+
+    return delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext)
+        .getAdditionalFields(taskParameters);
+  }
+
   public ServiceNowExecutionData getIssueUrl(
       String issueNumber, String connectorId, ServiceNowTicketType ticketType, String appId, String accountId) {
     ServiceNowConfig serviceNowConfig;

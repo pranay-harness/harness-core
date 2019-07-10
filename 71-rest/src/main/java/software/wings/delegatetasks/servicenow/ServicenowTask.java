@@ -37,7 +37,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -84,9 +83,16 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
     ServiceNowConfig config = parameters.getServiceNowConfig();
 
     Map<String, String> body = new HashMap<>();
-    for (Entry<ServiceNowFields, String> entry : parameters.getFields().entrySet()) {
-      body.put(entry.getKey().getJsonBodyName(), entry.getValue());
-    }
+    parameters.getFields().forEach((key, value) -> {
+      if (EmptyPredicate.isNotEmpty(value)) {
+        body.put(key.getJsonBodyName(), value);
+      }
+    });
+    parameters.getAdditionalFields().forEach((key, value) -> {
+      if (EmptyPredicate.isNotEmpty(value)) {
+        body.put(key, value);
+      }
+    });
 
     final Call<JsonNode> request;
     request = getRestClient(parameters)
@@ -128,9 +134,16 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
     ServiceNowConfig config = parameters.getServiceNowConfig();
     Map<String, String> body = new HashMap<>();
 
-    for (Entry<ServiceNowFields, String> entry : parameters.getFields().entrySet()) {
-      body.put(entry.getKey().getJsonBodyName(), entry.getValue());
-    }
+    parameters.getFields().forEach((key, value) -> {
+      if (EmptyPredicate.isNotEmpty(value)) {
+        body.put(key.getJsonBodyName(), value);
+      }
+    });
+    parameters.getAdditionalFields().forEach((key, value) -> {
+      if (EmptyPredicate.isNotEmpty(value)) {
+        body.put(key, value);
+      }
+    });
 
     if (parameters.getIssueId() == null && parameters.getIssueNumber() != null) {
       setIssueIdFromIssueNumber(parameters, config);
@@ -187,11 +200,19 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
           .build();
     }
     Map<String, String> body = new HashMap<>();
-    for (Entry<ServiceNowFields, String> entry : parameters.getFields().entrySet()) {
-      body.put(entry.getKey().getJsonBodyName(), entry.getValue());
-    }
+    parameters.getFields().forEach((key, value) -> {
+      if (EmptyPredicate.isNotEmpty(value)) {
+        body.put(key.getJsonBodyName(), value);
+      }
+    });
+    parameters.getAdditionalFields().forEach((key, value) -> {
+      if (EmptyPredicate.isNotEmpty(value)) {
+        body.put(key, value);
+      }
+    });
     body.remove(ServiceNowFields.CHANGE_REQUEST_NUMBER.getJsonBodyName());
     body.remove(ServiceNowFields.CHANGE_TASK_TYPE.getJsonBodyName());
+    parameters.getAdditionalFields().forEach(body::put);
 
     ServiceNowConfig config = parameters.getServiceNowConfig();
 

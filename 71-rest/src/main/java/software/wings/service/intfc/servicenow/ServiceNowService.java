@@ -15,6 +15,8 @@ public interface ServiceNowService {
       ServiceNowTicketType ticketType, String accountId, String connectorId, String appId);
   Map<String, List<ServiceNowMetaDTO>> getCreateMeta(
       ServiceNowTicketType ticketType, String accountId, String connectorId, String appId);
+  List<ServiceNowMetaDTO> getAdditionalFields(
+      ServiceNowTicketType ticketType, String accountId, String connectorId, String appId);
   ServiceNowExecutionData getIssueUrl(
       String issueNumber, String connectorId, ServiceNowTicketType ticketType, String appId, String accountId);
   ServiceNowExecutionData getApprovalStatus(String connectorId, String accountId, String appId, String issueNumber,
