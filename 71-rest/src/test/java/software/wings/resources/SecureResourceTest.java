@@ -78,6 +78,7 @@ import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AuthServiceImpl;
 import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.impl.security.auth.DashboardAuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AppService;
@@ -144,11 +145,12 @@ public class SecureResourceTest {
   private static SecretManager secretManager = mock(SecretManager.class);
   private static UsageMetricsEventPublisher usageMetricsEventPublisher = mock(UsageMetricsEventPublisher.class);
   private static SSOSettingService ssoSettingService = mock(SSOSettingService.class);
+  private static DashboardAuthHandler dashboardAuthHandler = mock(DashboardAuthHandler.class);
 
   private static AuthService authService = new AuthServiceImpl(genericDbCache, wingsPersistence, userService,
       userGroupService, usageRestrictionsService, workflowService, envService, cacheManager, configuration,
       learningEngineService, authHandler, featureFlagService, harnessUserGroupService, secretManager,
-      usageMetricsEventPublisher, whitelistService, ssoSettingService, appService);
+      usageMetricsEventPublisher, whitelistService, ssoSettingService, appService, dashboardAuthHandler);
 
   private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(
       authService, authHandler, appService, userService, apiKeyService, whitelistService, harnessUserGroupService);

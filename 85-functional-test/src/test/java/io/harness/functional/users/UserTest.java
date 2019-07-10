@@ -74,7 +74,7 @@ public class UserTest extends AbstractFunctionalTest {
   }
 
   @Test()
-  @Owner(emails = SWAMY, resent = false)
+  @Owner(emails = SWAMY, intermittent = true)
   @Category(FunctionalTests.class)
   public void testUserInvite() throws IOException, MessagingException {
     Account account = this.getAccount();
