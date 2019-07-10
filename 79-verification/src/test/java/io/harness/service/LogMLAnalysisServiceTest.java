@@ -1,12 +1,14 @@
 package io.harness.service;
 
 import static io.harness.data.encoding.EncodingUtils.compressString;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.service.LearningEngineAnalysisServiceImpl.BACKOFF_LIMIT;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -63,6 +65,7 @@ import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRecordKeys;
+import software.wings.service.impl.analysis.LogMLAnalysisStatus;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterSummary;
 import software.wings.service.impl.analysis.LogMLFeedback;
@@ -1542,6 +1545,62 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
 
     // verify
     assertEquals(BACKOFF_LIMIT, nextCount);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCreateFeedbackAnalysis() {
+    String cvConfigId = generateUuid();
+    LogMLAnalysisRecord analysisRecord =
+        LogMLAnalysisRecord.builder().logCollectionMinute(10).appId(appId).cvConfigId(cvConfigId).uuid("uuid1").build();
+    analysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+    wingsPersistence.save(analysisRecord);
+
+    boolean created =
+        analysisService.createAndUpdateFeedbackAnalysis(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId, 10);
+
+    LogMLAnalysisRecord feedbackRecord =
+        wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+            .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
+            .filter(LogMLAnalysisRecordKeys.logCollectionMinute, 10)
+            .filter(LogMLAnalysisRecordKeys.analysisStatus, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE)
+            .get();
+
+    List<LogMLAnalysisRecord> records = wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+                                            .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
+                                            .filter(LogMLAnalysisRecordKeys.logCollectionMinute, 10)
+                                            .asList();
+
+    assertTrue(created);
+    assertNotNull(feedbackRecord);
+    assertNotNull(records);
+    assertEquals(2, records.size());
+    assertNotEquals("uuid1", feedbackRecord.getUuid());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCreateFeedbackAnalysisNoLEAnalysis() {
+    String cvConfigId = generateUuid();
+
+    boolean created =
+        analysisService.createAndUpdateFeedbackAnalysis(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId, 10);
+
+    LogMLAnalysisRecord feedbackRecord =
+        wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+            .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
+            .filter(LogMLAnalysisRecordKeys.logCollectionMinute, 10)
+            .filter(LogMLAnalysisRecordKeys.analysisStatus, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE)
+            .get();
+
+    List<LogMLAnalysisRecord> records = wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+                                            .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
+                                            .filter(LogMLAnalysisRecordKeys.logCollectionMinute, 10)
+                                            .asList();
+
+    assertFalse(created);
+    assertNull(feedbackRecord);
+    assertTrue(isEmpty(records));
   }
 
   private void createLETaskForBackoffTest(int analysisMinute, int backoffCount) {

@@ -877,8 +877,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               }
             });
             if (isEmptyFeedbacks.get()) {
-              logAnalysisService.updateAnalysisStatus(LogMLAnalysisRecordKeys.cvConfigId, cvConfiguration.getUuid(),
-                  lastLogMLAnalysisMinute, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
+              logAnalysisService.createAndUpdateFeedbackAnalysis(
+                  LogMLAnalysisRecordKeys.cvConfigId, cvConfiguration.getUuid(), lastLogMLAnalysisMinute);
             } else {
               createFeedbackAnalysisTask(logsCVConfiguration, minuteForFeedbackAnalysis);
               logger.info("Created Feedback analysis task for {} and minute {}", logsCVConfiguration.getUuid(),
