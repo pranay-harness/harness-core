@@ -8,7 +8,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -358,7 +357,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
 
     UserGroup fetchedGroup = userGroupService.get(accountId, saved.getUuid(), false);
     assertNotNull(fetchedGroup);
-    assertNull(fetchedGroup.getNotificationSettings());
+    assertNotNull(fetchedGroup.getNotificationSettings());
 
     NotificationSettings settings =
         new NotificationSettings(true, true, Collections.emptyList(), SlackNotificationSetting.emptyConfig(), null);
