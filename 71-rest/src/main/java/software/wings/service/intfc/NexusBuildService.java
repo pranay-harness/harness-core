@@ -37,6 +37,10 @@ public interface NexusBuildService extends BuildService<NexusConfig> {
   List<String> getArtifactPaths(
       String jobName, String groupId, NexusConfig config, List<EncryptedDataDetail> encryptionDetails);
 
+  @DelegateTaskType(TaskType.NEXUS_GET_ARTIFACT_PATHS)
+  List<String> getArtifactPaths(String jobName, String groupId, NexusConfig config,
+      List<EncryptedDataDetail> encryptionDetails, String repositoryFormat);
+
   @DelegateTaskType(TaskType.NEXUS_GET_GROUP_IDS)
   List<String> getGroupIds(String repositoryName, NexusConfig config, List<EncryptedDataDetail> encryptionDetails);
 

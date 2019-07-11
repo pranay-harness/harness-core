@@ -78,6 +78,7 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.RepositoryType;
 
 import java.io.File;
 import java.util.List;
@@ -694,6 +695,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
                         .appId(APP_ID)
                         .sourceName("ARTIFACT_SOURCE")
                         .serviceId(SERVICE_ID)
+                        .repositoryType(RepositoryType.maven.name())
                         .build());
     assertThat(artifactService.getArtifactContentStatus(artifact)).isEqualTo(NOT_DOWNLOADED);
     assertThat(artifact.getStatus()).isEqualTo(APPROVED);

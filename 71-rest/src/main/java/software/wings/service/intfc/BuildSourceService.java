@@ -118,6 +118,22 @@ public interface BuildSourceService {
   }
 
   /**
+   * Gets artifact paths.
+   *
+   * @param appId     the app id
+   * @param jobName   the job name
+   * @param settingId the setting id
+   * @param groupId   the group id
+   * @param artifactStreamType artifact stream type
+   * @param repositoryFormat repository format
+   * @return the artifact paths
+   */
+  default Set<String> getArtifactPaths(@NotEmpty String appId, @NotEmpty String jobName, @NotEmpty String settingId,
+      String groupId, String artifactStreamType, String repositoryFormat) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
    * Gets builds.
    *
    * @param appId            the app id
@@ -166,6 +182,20 @@ public interface BuildSourceService {
    * @return the groupId paths
    */
   default Set<String> getGroupIds(@NotEmpty String appId, @NotEmpty String jobName, @NotEmpty String settingId) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Gets group Id paths.
+   *
+   * @param appId     the app id
+   * @param jobName   the job name
+   * @param settingId the setting id
+   * @param repositoryFormat the repositoryFormat
+   * @return the groupId paths
+   */
+  default Set<String> getGroupIds(
+      @NotEmpty String appId, @NotEmpty String jobName, @NotEmpty String settingId, @NotEmpty String repositoryFormat) {
     throw new UnsupportedOperationException();
   }
 

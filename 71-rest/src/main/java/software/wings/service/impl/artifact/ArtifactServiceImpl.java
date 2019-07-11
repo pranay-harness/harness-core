@@ -219,8 +219,14 @@ public class ArtifactServiceImpl implements ArtifactService {
     String appId = artifact.fetchAppId();
     if (NEXUS.name().equals(artifactStream.getArtifactStreamType())) { // TODO: if (isNotEmpty(artifactPaths) ||not
       if (appId != null && !appId.equals(GLOBAL_APP_ID)) { // Null) ->not_downloaded
-        artifact.setContentStatus(
-            getArtifactType(appId, artifactStream.getUuid()).equals(DOCKER) ? METADATA_ONLY : NOT_DOWNLOADED);
+        if (((NexusArtifactStream) artifactStream).getRepositoryType() == null) { // for backward compatibility
+          artifact.setContentStatus(
+              getArtifactType(appId, artifactStream.getUuid()).equals(DOCKER) ? METADATA_ONLY : NOT_DOWNLOADED);
+        } else if (((NexusArtifactStream) artifactStream).getRepositoryType().equals(RepositoryType.docker.name())) {
+          artifact.setContentStatus(METADATA_ONLY);
+        } else {
+          artifact.setContentStatus(NOT_DOWNLOADED); // for nexus 3 - nuget and maven2
+        }
         artifact.setStatus(APPROVED);
         return;
       } else {

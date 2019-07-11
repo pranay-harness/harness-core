@@ -1,5 +1,6 @@
 package io.harness.functional.artifactstream;
 
+import static io.harness.rule.OwnerRule.AADITI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -13,9 +14,11 @@ import io.harness.generator.Randomizer;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.SettingGenerator.Settings;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.testframework.framework.Setup;
 import io.restassured.http.ContentType;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
@@ -220,7 +223,9 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = AADITI)
   @Category(FunctionalTests.class)
+  @Ignore("TODO - Will be enabled when connector level apis are changed to account for nexus3 support")
   public void getGroupIdsForNexus3() {
     GenericType<RestResponse<Set<String>>> artifactStreamType = new GenericType<RestResponse<Set<String>>>() {
 
