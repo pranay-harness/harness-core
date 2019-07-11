@@ -79,7 +79,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Category(IntegrationTests.class)
   public void testGetTimeseriesRecordsForWorkflowWithoutServerConfigId() {
-    DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(true);
+    DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(true, StateType.DATA_DOG);
 
     WebTarget target = client.target(API_BASE + "/"
         + "datadog" + LogAnalysisResource.TEST_NODE_DATA + "?accountId=" + accountId + "&serverConfigId=" + null);
@@ -96,7 +96,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Category(IntegrationTests.class)
   public void testGetTimeseriesRecordsForWorkflow() {
-    DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(true);
+    DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(true, StateType.DATA_DOG);
 
     WebTarget target = client.target(API_BASE + "/"
         + "datadog" + LogAnalysisResource.TEST_NODE_DATA + "?accountId=" + accountId + "&serverConfigId=" + settingId);
@@ -113,7 +113,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Category(IntegrationTests.class)
   public void testGetTimeseriesRecordsForServiceGuard() {
-    DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(false);
+    DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(false, StateType.DATA_DOG);
 
     WebTarget target = client.target(API_BASE + "/"
         + "datadog" + LogAnalysisResource.TEST_NODE_DATA + "?accountId=" + accountId + "&serverConfigId=" + settingId);
@@ -130,7 +130,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   @Category(IntegrationTests.class)
   public void testGetTimeseriesRecordsForServiceGuardWithoutServerConfigId() {
-    DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(false);
+    DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(false, StateType.DATA_DOG);
 
     WebTarget target = client.target(API_BASE + "/"
         + "datadog" + LogAnalysisResource.TEST_NODE_DATA + "?accountId=" + accountId + "&serverConfigId=" + null);
@@ -144,53 +144,97 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
     assertTrue("provider is not reachable", Boolean.valueOf(response.get("providerReachable").toString()));
   }
 
-  private DataDogSetupTestNodeData getDatadogSetupTestNodedata(boolean isWorkflowConfig) {
+  @Test
+  @Category(IntegrationTests.class)
+  public void testDatadogLogsForWorkflow() {
+    DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(true, StateType.DATA_DOG_LOG);
+
+    WebTarget target = client.target(API_BASE + "/"
+        + "datadog" + LogAnalysisResource.TEST_NODE_DATA + "?accountId=" + accountId + "&serverConfigId=" + null);
+    Response restResponse =
+        getRequestBuilderWithAuthHeader(target).post(entity(fetchConfig, MediaType.APPLICATION_JSON));
+    String responseString = restResponse.readEntity(String.class);
+    JSONObject jsonResponseObject = new JSONObject(responseString);
+
+    JSONObject response = jsonResponseObject.getJSONObject("resource");
+    assertEquals("Request failed", restResponse.getStatus(), HttpStatus.SC_OK);
+    assertTrue(response.getString("dataForNode").contains("logs"));
+    assertTrue("provider is not reachable", Boolean.valueOf(response.get("providerReachable").toString()));
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public void testDatadogLogsForServiceGuard() {
+    DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(false, StateType.DATA_DOG_LOG);
+
+    WebTarget target = client.target(API_BASE + "/"
+        + "datadog" + LogAnalysisResource.TEST_NODE_DATA + "?accountId=" + accountId + "&serverConfigId=" + null);
+    Response restResponse =
+        getRequestBuilderWithAuthHeader(target).post(entity(fetchConfig, MediaType.APPLICATION_JSON));
+    String responseString = restResponse.readEntity(String.class);
+    JSONObject jsonResponseObject = new JSONObject(responseString);
+
+    JSONObject response = jsonResponseObject.getJSONObject("resource");
+    assertEquals("Request failed", restResponse.getStatus(), HttpStatus.SC_OK);
+    assertTrue(response.getString("dataForNode").contains("logs"));
+    assertTrue("provider is not reachable", Boolean.valueOf(response.get("providerReachable").toString()));
+  }
+
+  private DataDogSetupTestNodeData getDatadogSetupTestNodedata(boolean isWorkflowConfig, StateType stateType) {
     long toTime = System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1);
     long fromTime = toTime - TimeUnit.MINUTES.toMillis(20) / TimeUnit.SECONDS.toMillis(1);
 
-    DataDogSetupTestNodeData dataDogSetupTestNodeData =
-        DataDogSetupTestNodeData.builder()
-            .appId(appId)
-            .settingId(settingId)
-            .instanceName("testHost")
-            .deploymentType(DeploymentType.KUBERNETES.name())
-            .toTime(toTime)
-            .fromTime(fromTime)
-            .instanceElement(anInstanceElement()
-                                 .withUuid("8cec1e1b0d16")
-                                 .withDisplayName("8cec1e1b0d16")
-                                 .withHostName("testHost")
-                                 .withDockerId("8cec1e1b0d16")
-                                 .withHost(aHostElement()
-                                               .withUuid("8cec1e1b0d16")
-                                               .withHostName("testHost")
-                                               .withIp("1.1.1.1")
-                                               .withInstanceId(null)
-                                               .withPublicDns(null)
-                                               .withEc2Instance(null)
-                                               .build())
-                                 .withServiceTemplateElement(
-                                     aServiceTemplateElement().withUuid("8cec1e1b0d16").withName(null).build())
-                                 .withPodName("testHost")
-                                 .withWorkloadName("testHost")
-                                 .build())
-            .workflowId(workflowId)
-            .build();
+    DataDogSetupTestNodeData dataDogSetupTestNodeData = DataDogSetupTestNodeData.builder()
+                                                            .stateType(stateType)
+                                                            .appId(appId)
+                                                            .settingId(settingId)
+                                                            .instanceName("testHost")
+                                                            .deploymentType(DeploymentType.KUBERNETES.name())
+                                                            .toTime(toTime)
+                                                            .fromTime(fromTime)
+                                                            .workflowId(workflowId)
+                                                            .build();
 
     if (isWorkflowConfig) {
-      dataDogSetupTestNodeData.setMetrics("docker.cpu.usage,docker.mem.rss");
-      dataDogSetupTestNodeData.setDatadogServiceName("test");
+      dataDogSetupTestNodeData.setInstanceElement(
+          anInstanceElement()
+              .withUuid("8cec1e1b0d16")
+              .withDisplayName("8cec1e1b0d16")
+              .withHostName("testHost")
+              .withDockerId("8cec1e1b0d16")
+              .withHost(aHostElement()
+                            .withUuid("8cec1e1b0d16")
+                            .withHostName("testHost")
+                            .withIp("1.1.1.1")
+                            .withInstanceId(null)
+                            .withPublicDns(null)
+                            .withEc2Instance(null)
+                            .build())
+              .withServiceTemplateElement(aServiceTemplateElement().withUuid("8cec1e1b0d16").withName(null).build())
+              .withPodName("testHost")
+              .withWorkloadName("testHost")
+              .build());
+      if (stateType.equals(StateType.DATA_DOG)) {
+        dataDogSetupTestNodeData.setMetrics("docker.cpu.usage,docker.mem.rss");
+        dataDogSetupTestNodeData.setDatadogServiceName("test");
+      } else {
+        dataDogSetupTestNodeData.setQuery("exception");
+        dataDogSetupTestNodeData.setHostNameField("pod");
+      }
     } else {
-      Map<String, String> dockerMetrics = new HashMap<>();
-      dockerMetrics.put("cluster-name:harness-test", "docker.cpu.usage,docker.mem.rss");
-      dataDogSetupTestNodeData.setDockerMetrics(dockerMetrics);
+      if (stateType.equals(StateType.DATA_DOG)) {
+        Map<String, String> dockerMetrics = new HashMap<>();
+        dockerMetrics.put("cluster-name:harness-test", "docker.cpu.usage,docker.mem.rss");
+        dataDogSetupTestNodeData.setDockerMetrics(dockerMetrics);
 
-      Map<String, String> ecsMetrics = new HashMap<>();
-      ecsMetrics.put("cluster_name:sdktesting", "ecs.fargate.cpu.user");
-      dataDogSetupTestNodeData.setEcsMetrics(ecsMetrics);
-
-      dataDogSetupTestNodeData.setServiceLevel(true);
+        Map<String, String> ecsMetrics = new HashMap<>();
+        ecsMetrics.put("cluster_name:sdktesting", "ecs.fargate.cpu.user");
+        dataDogSetupTestNodeData.setEcsMetrics(ecsMetrics);
+      } else {
+        dataDogSetupTestNodeData.setQuery("exception");
+      }
     }
+    dataDogSetupTestNodeData.setServiceLevel(!isWorkflowConfig);
     return dataDogSetupTestNodeData;
   }
 }

@@ -18,7 +18,7 @@ public class VerificationNodeDataSetupResponse {
   public static class VerificationLoadResponse {
     private boolean isLoadPresent;
     private Object loadResponse;
-    private long totalHits;
-    private long totalHitsThreshold;
+    private Long totalHits;
+    private Long totalHitsThreshold;
   }
 }

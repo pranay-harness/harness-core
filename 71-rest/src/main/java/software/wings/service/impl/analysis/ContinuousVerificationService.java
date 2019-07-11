@@ -45,7 +45,7 @@ public interface ContinuousVerificationService {
   Map<String, Map<String, TimeSeriesOfMetric>> fetchObservedTimeSeries(
       long startTime, long endTime, CVConfiguration cvConfiguration, long historyStartTime);
 
-  VerificationNodeDataSetupResponse getMetricsWithDataForNode(
+  VerificationNodeDataSetupResponse getDataForNode(
       String accountId, String serverConfigId, Object fetchConfig, StateType type);
 
   boolean notifyVerificationState(String correlationId, VerificationDataAnalysisResponse response);

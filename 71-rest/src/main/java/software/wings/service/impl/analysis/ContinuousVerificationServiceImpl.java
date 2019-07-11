@@ -124,6 +124,7 @@ import software.wings.settings.SettingValue;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
+import software.wings.sm.states.APMVerificationState.Method;
 import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.BugsnagState;
 import software.wings.sm.states.DatadogLogState;
@@ -1255,75 +1256,22 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   @Override
-  public VerificationNodeDataSetupResponse getMetricsWithDataForNode(
+  public VerificationNodeDataSetupResponse getDataForNode(
       String accountId, String serverConfigId, Object fetchConfig, StateType type) {
     try {
-      APMValidateCollectorConfig apmValidateCollectorConfig;
       switch (type) {
         case DATA_DOG:
-          DataDogSetupTestNodeData config = (DataDogSetupTestNodeData) fetchConfig;
-          SettingAttribute settingAttribute = settingsService.get(config.getSettingId());
-          DatadogConfig datadogConfig = (DatadogConfig) settingAttribute.getValue();
-          List<EncryptedDataDetail> encryptedDataDetails =
-              secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
-
-          apmValidateCollectorConfig = datadogConfig.createAPMValidateCollectorConfig();
-          apmValidateCollectorConfig.setEncryptedDataDetails(encryptedDataDetails);
-          apmValidateCollectorConfig.getOptions().put("from", String.valueOf(config.getFromTime()));
-          apmValidateCollectorConfig.getOptions().put("to", String.valueOf(config.getToTime()));
-
-          Map<String, List<APMMetricInfo>> metricInfoByQuery;
-          if (!config.isServiceLevel()) {
-            metricInfoByQuery = metricEndpointsInfo(Optional.ofNullable(config.getDatadogServiceName()),
-                Optional.of(new ArrayList<>(Arrays.asList(config.getMetrics().split(",")))), Optional.empty(),
-                Optional.empty(),
-                isEmpty(config.getDeploymentType()) ? Optional.empty()
-                                                    : Optional.of(DeploymentType.valueOf(config.getDeploymentType())));
-          } else {
-            metricInfoByQuery = createDatadogMetricEndPointMap(config.getDockerMetrics(), config.getEcsMetrics(),
-                config.getDatadogServiceName(), config.getCustomMetricsMap());
-          }
-
-          List<Object> loadResponse = new ArrayList<>();
-
-          // loop for each metric
-          for (Entry<String, List<APMMetricInfo>> entry : metricInfoByQuery.entrySet()) {
-            String url = entry.getKey();
-            if (url.contains("${host}")) {
-              url = url.replace("${host}", config.getInstanceElement().getHostName());
-            }
-            apmValidateCollectorConfig.setUrl(url);
-            VerificationNodeDataSetupResponse verificationNodeDataSetupResponse =
-                getVerificationNodeDataResponse(accountId, apmValidateCollectorConfig);
-            if (!verificationNodeDataSetupResponse.isProviderReachable()) {
-              // if not reachable then directly return. no need to process further
-              return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
-            }
-            // add load response only for metrics containing nodedata.
-            if (verificationNodeDataSetupResponse.getLoadResponse().isLoadPresent()) {
-              loadResponse.add(verificationNodeDataSetupResponse);
-            }
-          }
-
-          VerificationLoadResponse response = VerificationLoadResponse.builder()
-                                                  .loadResponse(loadResponse)
-                                                  .isLoadPresent(!isEmpty(loadResponse))
-                                                  .build();
-
-          return VerificationNodeDataSetupResponse.builder()
-              .providerReachable(true)
-              .loadResponse(response)
-              .dataForNode(loadResponse)
-              .build();
-
+          return getMetricsNodeDataForDatadog(accountId, (DataDogSetupTestNodeData) fetchConfig);
+        case DATA_DOG_LOG:
+          return getLogNodeDataForDatadog(accountId, (DataDogSetupTestNodeData) fetchConfig);
         case APM_VERIFICATION:
           if (isEmpty(serverConfigId) || fetchConfig == null) {
             throw new WingsException("Invalid Parameters passed while trying to get test data for APM");
           }
-          settingAttribute = settingsService.get(serverConfigId);
+          SettingAttribute settingAttribute = settingsService.get(serverConfigId);
           APMFetchConfig apmFetchConfig = (APMFetchConfig) fetchConfig;
           APMVerificationConfig apmVerificationConfig = (APMVerificationConfig) settingAttribute.getValue();
-          apmValidateCollectorConfig =
+          APMValidateCollectorConfig apmValidateCollectorConfig =
               APMValidateCollectorConfig.builder()
                   .baseUrl(apmVerificationConfig.getUrl())
                   .headers(apmVerificationConfig.collectionHeaders())
@@ -1341,6 +1289,98 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       String errorMsg = e.getCause() != null ? ExceptionUtils.getMessage(e.getCause()) : ExceptionUtils.getMessage(e);
       throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR, USER).addParam("reason", errorMsg);
     }
+  }
+
+  private VerificationNodeDataSetupResponse getMetricsNodeDataForDatadog(
+      String accountId, DataDogSetupTestNodeData config) {
+    SettingAttribute settingAttribute = settingsService.get(config.getSettingId());
+    DatadogConfig datadogConfig = (DatadogConfig) settingAttribute.getValue();
+    List<EncryptedDataDetail> encryptedDataDetails =
+        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
+    APMValidateCollectorConfig apmValidateCollectorConfig = datadogConfig.createAPMValidateCollectorConfig();
+    apmValidateCollectorConfig.setEncryptedDataDetails(encryptedDataDetails);
+    apmValidateCollectorConfig.getOptions().put("from", String.valueOf(config.getFromTime()));
+    apmValidateCollectorConfig.getOptions().put("to", String.valueOf(config.getToTime()));
+
+    Map<String, List<APMMetricInfo>> metricInfoByQuery;
+    if (!config.isServiceLevel()) {
+      metricInfoByQuery = metricEndpointsInfo(Optional.ofNullable(config.getDatadogServiceName()),
+          Optional.of(new ArrayList<>(Arrays.asList(config.getMetrics().split(",")))), Optional.empty(),
+          Optional.empty(),
+          isEmpty(config.getDeploymentType()) ? Optional.empty()
+                                              : Optional.of(DeploymentType.valueOf(config.getDeploymentType())));
+    } else {
+      metricInfoByQuery = createDatadogMetricEndPointMap(config.getDockerMetrics(), config.getEcsMetrics(),
+          config.getDatadogServiceName(), config.getCustomMetricsMap());
+    }
+
+    List<Object> loadResponse = new ArrayList<>();
+
+    // loop for each metric
+    for (Entry<String, List<APMMetricInfo>> entry : metricInfoByQuery.entrySet()) {
+      String url = entry.getKey();
+      if (url.contains("${host}")) {
+        url = url.replace("${host}", config.getInstanceElement().getHostName());
+      }
+      apmValidateCollectorConfig.setUrl(url);
+      VerificationNodeDataSetupResponse verificationNodeDataSetupResponse =
+          getVerificationNodeDataResponse(accountId, apmValidateCollectorConfig);
+      if (!verificationNodeDataSetupResponse.isProviderReachable()) {
+        // if not reachable then directly return. no need to process further
+        return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
+      }
+      // add load response only for metrics containing nodedata.
+      if (verificationNodeDataSetupResponse.getLoadResponse().isLoadPresent()) {
+        loadResponse.add(verificationNodeDataSetupResponse);
+      }
+    }
+
+    VerificationLoadResponse response =
+        VerificationLoadResponse.builder().loadResponse(loadResponse).isLoadPresent(!isEmpty(loadResponse)).build();
+
+    return VerificationNodeDataSetupResponse.builder()
+        .providerReachable(true)
+        .loadResponse(response)
+        .dataForNode(loadResponse)
+        .build();
+  }
+
+  private VerificationNodeDataSetupResponse getLogNodeDataForDatadog(
+      String accountId, DataDogSetupTestNodeData config) {
+    SettingAttribute settingAttribute = settingsService.get(config.getSettingId());
+    DatadogConfig datadogConfig = (DatadogConfig) settingAttribute.getValue();
+    List<EncryptedDataDetail> encryptedDataDetails =
+        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
+    APMValidateCollectorConfig apmValidateCollectorConfig = datadogConfig.createLogAPMValidateCollectorConfig();
+    apmValidateCollectorConfig.setEncryptedDataDetails(encryptedDataDetails);
+    Optional<String> hostName = Optional.empty();
+    if (config.getInstanceElement() != null) {
+      hostName = Optional.ofNullable(config.getInstanceElement().getHostName());
+    }
+    long from = Instant.now().minus(17, ChronoUnit.MINUTES).toEpochMilli();
+    long to = Instant.now().minus(2, ChronoUnit.MINUTES).toEpochMilli();
+    Map<String, Object> body = createDatadogBodyMapForLogsApi(
+        config.getQuery(), from, to, Optional.ofNullable(config.getHostNameField()), hostName);
+    apmValidateCollectorConfig.setUrl(DatadogConfig.LOG_API_PATH_SUFFIX);
+    apmValidateCollectorConfig.setCollectionMethod(Method.POST);
+    apmValidateCollectorConfig.setBody(new JSONObject(body).toString());
+    return getVerificationNodeDataResponse(accountId, apmValidateCollectorConfig);
+  }
+
+  private Map<String, Object> createDatadogBodyMapForLogsApi(
+      String query, long from, long to, Optional<String> hostNameField, Optional<String> host) {
+    Map<String, Object> body = new HashMap<>();
+    if (hostNameField.isPresent() && host.isPresent()) {
+      body.put("query", String.format("%s:(%s) %s", hostNameField.get(), host.get(), query));
+    } else {
+      body.put("query", query);
+    }
+    Map<String, String> timeMap = new HashMap<>();
+    timeMap.put("from", String.valueOf(from));
+    timeMap.put("to", String.valueOf(to));
+    body.put("time", timeMap);
+    body.put("limit", 5);
+    return body;
   }
 
   @Override
@@ -1788,7 +1828,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             CustomLogDataCollectionInfo.builder()
                 .baseUrl(datadogConfig.getUrl())
                 .validationUrl(DatadogConfig.validationUrl)
-                .dataUrl(DatadogConfig.logAnalysisUrl)
+                .dataUrl(DatadogConfig.LOG_API_PATH_SUFFIX)
                 .headers(new HashMap<>())
                 .options(datadogConfig.fetchLogOptionsMap())
                 .query(config.getQuery())

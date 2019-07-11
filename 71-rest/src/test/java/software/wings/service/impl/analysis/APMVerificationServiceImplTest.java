@@ -102,7 +102,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
 
     // execute
     VerificationNodeDataSetupResponse response =
-        service.getMetricsWithDataForNode("accountId", "serverConfigId", fetchConfig, StateType.APM_VERIFICATION);
+        service.getDataForNode("accountId", "serverConfigId", fetchConfig, StateType.APM_VERIFICATION);
 
     // verify
     assertNotNull(response);
@@ -129,7 +129,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
 
     // execute
     VerificationNodeDataSetupResponse response =
-        service.getMetricsWithDataForNode("accountId", "serverConfigId", fetchConfig, StateType.APM_VERIFICATION);
+        service.getDataForNode("accountId", "serverConfigId", fetchConfig, StateType.APM_VERIFICATION);
 
     // verify
     assertNotNull(response);
@@ -155,7 +155,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
 
     // execute
     VerificationNodeDataSetupResponse response =
-        service.getMetricsWithDataForNode("accountId", null, fetchConfig, StateType.APM_VERIFICATION);
+        service.getDataForNode("accountId", null, fetchConfig, StateType.APM_VERIFICATION);
   }
 
   @Test(expected = WingsException.class)
@@ -177,7 +177,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
 
     // execute
     VerificationNodeDataSetupResponse response =
-        service.getMetricsWithDataForNode("accountId", "serverId", null, StateType.APM_VERIFICATION);
+        service.getDataForNode("accountId", "serverId", null, StateType.APM_VERIFICATION);
   }
 
   @Test(expected = WingsException.class)
@@ -199,7 +199,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
 
     // execute
     VerificationNodeDataSetupResponse response =
-        service.getMetricsWithDataForNode("accountId", "serverId", null, StateType.APM_VERIFICATION);
+        service.getDataForNode("accountId", "serverId", null, StateType.APM_VERIFICATION);
   }
 
   @Test

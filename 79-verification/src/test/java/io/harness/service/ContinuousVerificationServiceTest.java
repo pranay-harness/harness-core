@@ -1355,7 +1355,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     CustomLogDataCollectionInfo dataCollectionInfo = CustomLogDataCollectionInfo.builder()
                                                          .baseUrl(datadogConfig.getUrl())
                                                          .validationUrl(DatadogConfig.validationUrl)
-                                                         .dataUrl(DatadogConfig.logAnalysisUrl)
+                                                         .dataUrl(DatadogConfig.LOG_API_PATH_SUFFIX)
                                                          .headers(new HashMap<>())
                                                          .options(datadogConfig.fetchLogOptionsMap())
                                                          .query("test query")
