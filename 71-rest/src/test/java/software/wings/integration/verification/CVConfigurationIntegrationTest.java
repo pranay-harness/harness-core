@@ -2,6 +2,8 @@ package software.wings.integration.verification;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.threading.Morpheus.sleep;
+import static java.time.Duration.ofMillis;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertEquals;
@@ -1355,6 +1357,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertNotEquals(savedObjectUuid, updateResponse.getResource());
     savedObjectUuid = updateResponse.getResource();
 
+    sleep(ofMillis(5000));
     url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
         + "&serviceConfigurationId=" + savedObjectUuid;
 

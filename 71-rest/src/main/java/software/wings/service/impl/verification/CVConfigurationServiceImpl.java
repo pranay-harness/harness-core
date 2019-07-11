@@ -69,6 +69,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 /**
@@ -81,6 +82,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   @Inject WingsPersistence wingsPersistence;
   @Inject CvValidationService cvValidationService;
   @Inject private YamlPushService yamlPushService;
+  @Inject private ExecutorService executorService;
 
   @Override
   public String saveConfiguration(String accountId, String appId, StateType stateType, Object params) {
@@ -398,12 +400,6 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
                                 .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
                                 .field(LogMLAnalysisRecordKeys.logCollectionMinute)
                                 .greaterThanOrEq(logsCVConfiguration.getBaselineStartMinute()));
-    wingsPersistence.update(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
-                                .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
-                                .field(LogMLAnalysisRecordKeys.logCollectionMinute)
-                                .lessThanOrEq(logsCVConfiguration.getBaselineStartMinute()),
-        wingsPersistence.createUpdateOperations(LogMLAnalysisRecord.class)
-            .set(LogMLAnalysisRecordKeys.deprecated, true));
     wingsPersistence.delete(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
                                 .filter(LearningEngineAnalysisTaskKeys.cvConfigId, cvConfigId));
     cvConfiguration.setBaselineStartMinute(logsCVConfiguration.getBaselineStartMinute());
@@ -412,10 +408,21 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     deleteConfiguration(logsCVConfiguration.getAccountId(), logsCVConfiguration.getAppId(), cvConfigId);
     final String newCvConfigId = saveConfiguration(
         cvConfiguration.getAccountId(), cvConfiguration.getAppId(), cvConfiguration.getStateType(), cvConfiguration);
-    wingsPersistence.update(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
-                                .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId),
-        wingsPersistence.createUpdateOperations(LogMLAnalysisRecord.class)
-            .set(LogMLAnalysisRecordKeys.cvConfigId, newCvConfigId));
+
+    executorService.submit(() -> {
+      wingsPersistence.update(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
+                                  .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId)
+                                  .filter(LogMLAnalysisRecordKeys.deprecated, false)
+                                  .field(LogMLAnalysisRecordKeys.logCollectionMinute)
+                                  .lessThanOrEq(logsCVConfiguration.getBaselineStartMinute())
+                                  .project(LogMLAnalysisRecordKeys.protoSerializedAnalyisDetails, false),
+          wingsPersistence.createUpdateOperations(LogMLAnalysisRecord.class)
+              .set(LogMLAnalysisRecordKeys.deprecated, true));
+      wingsPersistence.update(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
+                                  .filter(LogMLAnalysisRecordKeys.cvConfigId, cvConfigId),
+          wingsPersistence.createUpdateOperations(LogMLAnalysisRecord.class)
+              .set(LogMLAnalysisRecordKeys.cvConfigId, newCvConfigId));
+    });
     return newCvConfigId;
   }
 
