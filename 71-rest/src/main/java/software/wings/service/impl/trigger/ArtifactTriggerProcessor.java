@@ -12,11 +12,13 @@ import software.wings.beans.trigger.ArtifactCondition;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
+import software.wings.service.intfc.ServiceResourceService;
 
 @Singleton
 public class ArtifactTriggerProcessor implements TriggerProcessor {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Inject ServiceResourceService serviceResourceService;
 
   @Override
   public void validateTriggerCondition(DeploymentTrigger trigger) {
@@ -30,6 +32,24 @@ public class ArtifactTriggerProcessor implements TriggerProcessor {
         artifactStreamServiceBindingService.getService(trigger.getAppId(), artifactStream.getUuid(), false);
     notNullCheck("Service associated to the artifact source [" + artifactStream.getSourceName() + "] does not exist",
         service, USER);
-    artifactCondition.setArtifactSourceName(artifactStream.getSourceName() + " (" + service.getName() + ")");
+
+    trigger.setCondition(ArtifactCondition.builder()
+                             .artifactStreamId(artifactCondition.getArtifactStreamId())
+                             .artifactSourceName(artifactStream.getSourceName())
+                             .artifactFilter(artifactCondition.getArtifactFilter())
+                             .build());
+  }
+
+  @Override
+  public void updateTriggerCondition(DeploymentTrigger deploymentTrigger) {
+    ArtifactCondition artifactCondition = (ArtifactCondition) deploymentTrigger.getCondition();
+    ArtifactStream artifactStream = artifactStreamService.get(artifactCondition.getArtifactStreamId());
+
+    deploymentTrigger.setCondition(ArtifactCondition.builder()
+                                       .artifactStreamId(artifactCondition.getArtifactStreamId())
+                                       .artifactSourceName(artifactStream.getSourceName())
+                                       .artifactStreamType(artifactStream.getArtifactStreamType())
+                                       .artifactFilter(artifactCondition.getArtifactFilter())
+                                       .build());
   }
 }

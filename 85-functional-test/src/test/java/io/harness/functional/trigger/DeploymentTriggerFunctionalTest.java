@@ -30,8 +30,8 @@ import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.trigger.ArtifactCondition;
-import software.wings.beans.trigger.Condition.Type;
 import software.wings.beans.trigger.DeploymentTrigger;
+import software.wings.beans.trigger.TriggerArgs;
 import software.wings.beans.trigger.WorkflowAction;
 
 import javax.ws.rs.core.GenericType;
@@ -73,11 +73,13 @@ public class DeploymentTriggerFunctionalTest extends AbstractFunctionalTest {
     String name = "New Artifact Trigger" + System.currentTimeMillis();
     DeploymentTrigger trigger =
         DeploymentTrigger.builder()
-            .action(WorkflowAction.builder().workflowId(buildWorkflow.getUuid()).build())
+            .action(WorkflowAction.builder()
+                        .triggerArgs(TriggerArgs.builder().build())
+                        .workflowId(buildWorkflow.getUuid())
+                        .build())
             .name(name)
             .appId(application.getAppId())
-            .condition(
-                ArtifactCondition.builder().type(Type.NEW_ARTIFACT).artifactStreamId(artifactStream.getUuid()).build())
+            .condition(ArtifactCondition.builder().artifactStreamId(artifactStream.getUuid()).build())
             .build();
 
     RestResponse<DeploymentTrigger> savedTriggerResponse = Setup.portal()

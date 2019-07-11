@@ -54,6 +54,8 @@ public class DeploymentTriggerGenerator {
       final ArtifactConditionBuilder artifactConditionBuilder = ArtifactCondition.builder();
       if (artifactCondition.getArtifactStreamId() == null) {
         artifactConditionBuilder.artifactStreamId(ARTIFACT_STREAM_ID);
+      } else {
+        artifactConditionBuilder.artifactStreamId(artifactCondition.getArtifactStreamId());
       }
       triggerBuilder.condition(artifactConditionBuilder.build());
     }
