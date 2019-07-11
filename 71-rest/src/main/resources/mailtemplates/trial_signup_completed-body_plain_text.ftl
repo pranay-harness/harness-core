@@ -1,6 +1,6 @@
 Hi ${(name!"there")?capitalize},
 
-You have already completed the sign-up on Harness platform. Please use the following link to get to the login page. If you forgot your password, you can easily reset it using the forgot password link on the login page.
+You have already signed up on Harness. Please log in using the link below. If you forgot your password, you can reset it on the login page.
 
 ${url!}
 
