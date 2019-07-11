@@ -345,12 +345,15 @@ public class AccountServiceImpl implements AccountService {
   public String getAccountStatus(String accountId) {
     Account account = dbCache.get(Account.class, accountId);
     if (account == null) {
+      // Some false nulls have been observed. Verify by querying directly from db.
+      account = wingsPersistence.get(Account.class, accountId);
+    }
+    if (account == null) {
       // Account was hard/physically deleted case
       return AccountStatus.DELETED;
-    } else {
-      LicenseInfo licenseInfo = account.getLicenseInfo();
-      return licenseInfo == null ? AccountStatus.ACTIVE : licenseInfo.getAccountStatus();
     }
+    LicenseInfo licenseInfo = account.getLicenseInfo();
+    return licenseInfo == null ? AccountStatus.ACTIVE : licenseInfo.getAccountStatus();
   }
 
   private void decryptLicenseInfo(List<Account> accounts) {
