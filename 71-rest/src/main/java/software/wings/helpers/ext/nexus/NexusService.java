@@ -70,6 +70,17 @@ public interface NexusService {
   List<String> getArtifactNames(
       NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String path);
 
+  /***
+   *
+   * @param nexusConfig
+   * @param repoId the repoId
+   * @param path the path
+   * @param repositoryFormat the repositoryFormat
+   * @return
+   */
+  List<String> getArtifactNames(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
+      String path, String repositoryFormat);
+
   /**
    * @param nexusConfig
    * @param repoId       Repository Type

@@ -66,7 +66,8 @@ public class NexusBuildServiceImpl implements NexusBuildService {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.NEXUS.name());
     if (!appId.equals(GLOBAL_APP_ID)) {
       if (artifactStreamAttributes.getArtifactType() != null
-          && artifactStreamAttributes.getArtifactType().equals(ArtifactType.DOCKER)) {
+              && artifactStreamAttributes.getArtifactType().equals(ArtifactType.DOCKER)
+          || (artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.docker.name()))) {
         return nexusService.getBuilds(config, encryptionDetails, artifactStreamAttributes, 50);
       } else if (artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.nuget.name())
           || artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.npm.name())) {
@@ -104,6 +105,15 @@ public class NexusBuildServiceImpl implements NexusBuildService {
       return nexusService.getArtifactPaths(config, encryptionDetails, repoId);
     }
     return nexusService.getArtifactNames(config, encryptionDetails, repoId, groupId);
+  }
+
+  @Override
+  public List<String> getArtifactPaths(String repoId, String groupId, NexusConfig config,
+      List<EncryptedDataDetail> encryptionDetails, String repositoryFormat) {
+    if (isBlank(groupId)) {
+      return nexusService.getArtifactPaths(config, encryptionDetails, repoId);
+    }
+    return nexusService.getArtifactNames(config, encryptionDetails, repoId, groupId, repositoryFormat);
   }
 
   @Override

@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.waiter.ListNotifyResponseData;
@@ -23,7 +24,9 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryFormat;
+import software.wings.utils.RepositoryType;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -98,8 +101,8 @@ public class NexusServiceImpl implements NexusService {
           }
           return nexusTwoService.getRepositories(nexusConfig, encryptionDetails, repositoryFormat);
         } else {
-          if (repositoryFormat == null || !repositoryFormat.equals(RepositoryFormat.docker.name())) {
-            throw new WingsException("Not supported for nexus 3.x", USER);
+          if (repositoryFormat == null) {
+            throw new InvalidRequestException("Not supported for nexus 3.x", USER);
           }
           return nexusThreeService.getRepositories(nexusConfig, encryptionDetails, repositoryFormat);
         }
@@ -125,11 +128,41 @@ public class NexusServiceImpl implements NexusService {
     List<String> groupIds = new ArrayList<>();
     try {
       boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
-      timeLimiter.callWithTimeout(()
-                                      -> isNexusTwo
-              ? nexusTwoService.collectGroupIds(nexusConfig, encryptionDetails, repoId, groupIds, repositoryFormat)
-              : nexusThreeService.getDockerImages(nexusConfig, encryptionDetails, repoId, groupIds),
-          20L, TimeUnit.SECONDS, true);
+      if (isNexusTwo) {
+        timeLimiter.callWithTimeout(
+            ()
+                -> nexusTwoService.collectGroupIds(nexusConfig, encryptionDetails, repoId, groupIds, repositoryFormat),
+            20L, TimeUnit.SECONDS, true);
+      } else {
+        if (repositoryFormat != null) {
+          switch (repositoryFormat) {
+            case "nuget":
+            case "npm":
+              return timeLimiter.callWithTimeout(()
+                                                     -> nexusThreeService.getPackageNames(nexusConfig,
+                                                         encryptionDetails, repoId, repositoryFormat, groupIds),
+                  20L, TimeUnit.SECONDS, true);
+            case "maven":
+              return timeLimiter.callWithTimeout(()
+                                                     -> nexusThreeService.getGroupIds(nexusConfig, encryptionDetails,
+                                                         repoId, repositoryFormat, groupIds),
+                  20L, TimeUnit.SECONDS, true);
+            case "docker":
+              return timeLimiter.callWithTimeout(
+                  ()
+                      -> nexusThreeService.getDockerImages(nexusConfig, encryptionDetails, repoId, groupIds),
+                  20L, TimeUnit.SECONDS, true);
+            default:
+              throw new WingsException("Unsupported repositoryFormat for Nexus 3.x");
+          }
+        } else {
+          // for backward compatibility  with old UI when repositoryFormat is null
+          return timeLimiter.callWithTimeout(
+              ()
+                  -> nexusThreeService.getDockerImages(nexusConfig, encryptionDetails, repoId, groupIds),
+              20L, TimeUnit.SECONDS, true);
+        }
+      }
     } catch (UncheckedTimeoutException e) {
       logger.warn("Nexus server request did not succeed within 20 secs. Returning the list so far", e);
     } catch (WingsException e) {
@@ -179,9 +212,29 @@ public class NexusServiceImpl implements NexusService {
       Map<String, String> artifactMetadata, String delegateId, String taskId, String accountId,
       ListNotifyResponseData notifyResponseData) {
     try {
-      return nexusTwoService.downloadArtifact(nexusConfig, encryptionDetails, artifactStreamAttributes,
-          artifactMetadata, delegateId, taskId, accountId, notifyResponseData);
-
+      boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
+      if (isNexusTwo) {
+        return nexusTwoService.downloadArtifact(nexusConfig, encryptionDetails, artifactStreamAttributes,
+            artifactMetadata, delegateId, taskId, accountId, notifyResponseData);
+      } else {
+        return nexusThreeService.downloadArtifact(nexusConfig, encryptionDetails, artifactStreamAttributes,
+            artifactMetadata, delegateId, taskId, accountId, notifyResponseData);
+        // for nexus3 nuget:
+        // repoType-> corresponds to repoName
+        // groupId-> corresponds to null
+        // artifactName-> corresponds to packageName
+        // version-> corresponds to buildNo
+        // case: nuget
+        //        if (groupId == null) {
+        //          return nexusThreeService.downloadArtifact(nexusConfig, encryptionDetails, repoType, artifactName,
+        //          version,
+        //              delegateId, taskId, accountId, notifyResponseData);
+        //        } else {
+        //          return nexusThreeService.downloadArtifact(nexusConfig, encryptionDetails, repoType, groupId,
+        //          artifactName,
+        //              version, delegateId, taskId, accountId, notifyResponseData);
+        //        }
+      }
     } catch (IOException e) {
       logger.error("Error occurred while downloading the artifact", e);
       throw new WingsException(ARTIFACT_SERVER_ERROR, USER).addParam("message", ExceptionUtils.getMessage(e));
@@ -204,10 +257,32 @@ public class NexusServiceImpl implements NexusService {
   }
 
   @Override
+  public List<String> getArtifactNames(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
+      String repoId, String path, String repositoryFormat) {
+    try {
+      if (repositoryFormat.equals(RepositoryFormat.maven.name())) {
+        return nexusThreeService.getArtifactNames(nexusConfig, encryptionDetails, repoId, path);
+      }
+    } catch (final IOException e) {
+      logger.error(
+          format("Error occurred while retrieving artifact names from Nexus server %s for Repository %s under path %s",
+              nexusConfig.getNexusUrl(), repoId, path),
+          e);
+      handleException(e);
+    }
+    return new ArrayList<>();
+  }
+
+  @Override
   public List<BuildDetails> getVersions(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String repoId, String groupId, String artifactName) {
     try {
-      return nexusTwoService.getVersions(nexusConfig, encryptionDetails, repoId, groupId, artifactName);
+      boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
+      if (isNexusTwo) {
+        return nexusTwoService.getVersions(nexusConfig, encryptionDetails, repoId, groupId, artifactName);
+      } else {
+        return nexusThreeService.getVersions(nexusConfig, encryptionDetails, repoId, groupId, artifactName);
+      }
     } catch (final IOException e) {
       logger.error(
           format(
@@ -223,7 +298,12 @@ public class NexusServiceImpl implements NexusService {
   public List<BuildDetails> getVersions(String repositoryFormat, NexusConfig nexusConfig,
       List<EncryptedDataDetail> encryptionDetails, String repoId, String packageName) {
     try {
-      return nexusTwoService.getVersions(repositoryFormat, nexusConfig, encryptionDetails, repoId, packageName);
+      boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
+      if (isNexusTwo) {
+        return nexusTwoService.getVersions(repositoryFormat, nexusConfig, encryptionDetails, repoId, packageName);
+      } else {
+        return nexusThreeService.getPackageVersions(nexusConfig, encryptionDetails, repoId, packageName);
+      }
     } catch (final IOException e) {
       logger.error(
           format("Error occurred while retrieving versions from Nexus server %s for Repository %s under package %s",
@@ -244,7 +324,12 @@ public class NexusServiceImpl implements NexusService {
   public List<BuildDetails> getBuilds(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes, int maxNumberOfBuilds) {
     try {
-      return nexusThreeService.getDockerTags(nexusConfig, encryptionDetails, artifactStreamAttributes);
+      if ((artifactStreamAttributes.getArtifactType() != null
+              && artifactStreamAttributes.getArtifactType().equals(ArtifactType.DOCKER))
+          || (artifactStreamAttributes.getRepositoryType() != null
+                 && artifactStreamAttributes.getRepositoryType().equals(RepositoryType.docker.name()))) {
+        return nexusThreeService.getDockerTags(nexusConfig, encryptionDetails, artifactStreamAttributes);
+      }
     } catch (IOException e) {
       logger.error(format("Error occurred while retrieving tags from Nexus server %s for repository %s under image %s",
                        nexusConfig.getNexusUrl(), artifactStreamAttributes.getJobName(),

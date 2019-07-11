@@ -82,6 +82,20 @@ public interface BuildService<T> {
   }
 
   /**
+   * Gets artifact paths.
+   *
+   * @param jobName the job name
+   * @param groupId the Group Id
+   * @param config  the jenkins config
+   * @param config  the repositoryType
+   * @return the artifact paths
+   */
+  default List<String> getArtifactPaths(
+      String jobName, String groupId, T config, List<EncryptedDataDetail> encryptionDetails, String repositoryType) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
    * Gets last successful build.
    *
    * @param appId                    the app id

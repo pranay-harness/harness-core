@@ -617,6 +617,7 @@ public class NexusServiceTest extends WingsBaseTest {
                        .jobName("docker-group")
                        .imageName("wingsplugins/todolist")
                        .nexusDockerPort("5000")
+                       .repositoryType("docker")
                        .build(),
                    10))
         .hasSize(3)

@@ -36,7 +36,7 @@ public class NexusArtifactStream extends ArtifactStream {
   private List<String> artifactPaths;
   private String dockerPort;
   private String dockerRegistryUrl;
-  private String packageName;
+  private String packageName; // field for nuget and npm
   private String repositoryFormat;
 
   public NexusArtifactStream() {

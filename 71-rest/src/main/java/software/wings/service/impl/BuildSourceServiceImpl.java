@@ -168,6 +168,16 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   }
 
   @Override
+  public Set<String> getArtifactPaths(String appId, String jobName, String settingId, String groupId,
+      String artifactStreamType, String repositoryFormat) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue value = getSettingValue(settingAttribute);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) value);
+    return Sets.newTreeSet(getBuildService(settingAttribute, appId, artifactStreamType)
+                               .getArtifactPaths(jobName, groupId, value, encryptedDataDetails, repositoryFormat));
+  }
+
+  @Override
   public List<BuildDetails> getBuilds(String appId, String artifactStreamId, String settingId) {
     return getBuilds(appId, artifactStreamId, settingId, -1);
   }
@@ -269,6 +279,15 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
     return Sets.newTreeSet(
         getBuildService(settingAttribute, appId).getGroupIds(repoType, null, settingValue, encryptedDataDetails));
+  }
+
+  @Override
+  public Set<String> getGroupIds(String appId, String repoType, String settingId, String repositoryFormat) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    return Sets.newTreeSet(getBuildService(settingAttribute, appId)
+                               .getGroupIds(repoType, repositoryFormat, settingValue, encryptedDataDetails));
   }
 
   @Override

@@ -125,7 +125,12 @@ public class BuildSourceResource {
   @ExceptionMetered
   public RestResponse<Set<String>> getArtifactPaths(@QueryParam("appId") String appId,
       @PathParam("jobName") String jobName, @QueryParam("settingId") String settingId,
-      @QueryParam("groupId") String groupId, @QueryParam("streamType") String streamType) {
+      @QueryParam("groupId") String groupId, @QueryParam("streamType") String streamType,
+      @QueryParam("repositoryFormat") String repositoryFormat) {
+    if (isNotEmpty(repositoryFormat)) {
+      return new RestResponse<>(
+          buildSourceService.getArtifactPaths(appId, jobName, settingId, groupId, streamType, repositoryFormat));
+    }
     return new RestResponse<>(buildSourceService.getArtifactPaths(appId, jobName, settingId, groupId, streamType));
   }
 
@@ -171,7 +176,10 @@ public class BuildSourceResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Set<String>> getGroupIds(@QueryParam("appId") String appId, @PathParam("jobName") String jobName,
-      @QueryParam("settingId") String settingId) {
+      @QueryParam("settingId") String settingId, @QueryParam("repositoryFormat") String repositoryFormat) {
+    if (isNotEmpty(repositoryFormat)) {
+      return new RestResponse<>(buildSourceService.getGroupIds(appId, jobName, settingId, repositoryFormat));
+    }
     return new RestResponse<>(buildSourceService.getGroupIds(appId, jobName, settingId));
   }
 
