@@ -2,7 +2,7 @@ package io.harness.generator;
 
 import static io.harness.generator.SettingGenerator.Settings.GCP_PLAYGROUND;
 import static io.harness.govern.Switch.unhandled;
-import static software.wings.sm.StateType.STACK_DRIVER;
+import static software.wings.sm.StateType.STACK_DRIVER_LOG;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -34,7 +34,7 @@ public class ServiceGuardGenerator {
 
   public CVConfiguration ensurePredefined(Randomizer.Seed seed, Owners owners, StateType stateType) {
     switch (stateType) {
-      case STACK_DRIVER:
+      case STACK_DRIVER_LOG:
         return ensureStackDriverConfiguration(seed, owners);
       default:
         unhandled(stateType);
@@ -67,7 +67,7 @@ public class ServiceGuardGenerator {
     stackdriverCVConfiguration.setConnectorId(gcpCloudProvider.getUuid());
 
     stackdriverCVConfiguration.setLogsConfiguration(true);
-    stackdriverCVConfiguration.setQuery("severity:ERROR AND resource.labels.project_id=exploration-161417");
+    stackdriverCVConfiguration.setQuery("textPayload:exception AND resource.labels.project_id=exploration-161417");
 
     stackdriverCVConfiguration.setEnabled24x7(false);
     stackdriverCVConfiguration.setBaselineStartMinute(currentTime - 30);
@@ -76,10 +76,10 @@ public class ServiceGuardGenerator {
     stackdriverCVConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
     stackdriverCVConfiguration.setAlertEnabled(false);
     stackdriverCVConfiguration.setAlertThreshold(0.1);
-    stackdriverCVConfiguration.setStateType(STACK_DRIVER);
+    stackdriverCVConfiguration.setStateType(STACK_DRIVER_LOG);
 
     cvConfigurationService.saveConfiguration(
-        service.getAccountId(), service.getAppId(), StateType.STACK_DRIVER, stackdriverCVConfiguration);
+        service.getAccountId(), service.getAppId(), StateType.STACK_DRIVER_LOG, stackdriverCVConfiguration);
     return stackdriverCVConfiguration;
   }
 }

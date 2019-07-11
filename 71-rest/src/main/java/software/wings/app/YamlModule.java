@@ -326,7 +326,7 @@ public class YamlModule extends AbstractModule {
     cvConfigYamlHelperMapBinder.addBinding(StateType.CLOUD_WATCH.name()).to(CloudWatchCVConfigurationYamlHandler.class);
     cvConfigYamlHelperMapBinder.addBinding(StateType.DATA_DOG_LOG.name()).to(LogsCVConfigurationYamlHandler.class);
     cvConfigYamlHelperMapBinder.addBinding(StateType.APM_VERIFICATION.name()).to(APMCVConfigurationYamlHandler.class);
-    cvConfigYamlHelperMapBinder.addBinding(StateType.STACK_DRIVER.name())
+    cvConfigYamlHelperMapBinder.addBinding(StateType.STACK_DRIVER_LOG.name())
         .to(StackdriverCVConfigurationYamlHandler.class);
 
     MapBinder<String, CollaborationProviderYamlHandler> collaborationProviderYamlHelperMapBinder =

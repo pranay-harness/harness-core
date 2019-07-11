@@ -21,7 +21,9 @@ public class CvValidationServiceImpl implements CvValidationService {
 
   @Override
   public Boolean validateStackdriverQuery(String accountId, String appId, String connectorId, String query) {
-    // todo: validate stackdriver query
-    return true;
+    if (query.contains("textPayload:")) {
+      return true;
+    }
+    return false;
   }
 }

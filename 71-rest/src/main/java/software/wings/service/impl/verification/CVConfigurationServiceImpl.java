@@ -8,6 +8,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
+import static software.wings.sm.StateType.STACK_DRIVER_LOG;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -144,12 +145,16 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), BugsnagCVConfiguration.class);
         break;
 
-      case STACK_DRIVER:
+      case STACK_DRIVER_LOG:
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), StackdriverCVConfiguration.class);
         StackdriverCVConfiguration stackdriverCVConfiguration = (StackdriverCVConfiguration) cvConfiguration;
         if (stackdriverCVConfiguration.isLogsConfiguration()) {
-          cvValidationService.validateStackdriverQuery(
-              accountId, appId, stackdriverCVConfiguration.getConnectorId(), stackdriverCVConfiguration.getQuery());
+          stackdriverCVConfiguration.setStateType(STACK_DRIVER_LOG);
+          if (!cvValidationService.validateStackdriverQuery(accountId, appId,
+                  stackdriverCVConfiguration.getConnectorId(), stackdriverCVConfiguration.getQuery())) {
+            throw new WingsException(
+                "Invalid Query, Please provide textPayload in query " + stackdriverCVConfiguration.getQuery());
+          }
         }
         break;
 
@@ -302,12 +307,16 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       case DATA_DOG_LOG:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), LogsCVConfiguration.class);
         break;
-      case STACK_DRIVER:
+      case STACK_DRIVER_LOG:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), StackdriverCVConfiguration.class);
         StackdriverCVConfiguration stackdriverCVConfiguration = (StackdriverCVConfiguration) updatedConfig;
         if (stackdriverCVConfiguration.isLogsConfiguration()) {
-          cvValidationService.validateStackdriverQuery(
-              accountId, appId, stackdriverCVConfiguration.getConnectorId(), stackdriverCVConfiguration.getQuery());
+          updatedConfig.setStateType(STACK_DRIVER_LOG);
+          if (!cvValidationService.validateStackdriverQuery(accountId, appId,
+                  stackdriverCVConfiguration.getConnectorId(), stackdriverCVConfiguration.getQuery())) {
+            throw new WingsException(
+                "Invalid Query, Please provide textPayload in query " + stackdriverCVConfiguration.getQuery());
+          }
         }
         break;
       case ELK:
@@ -542,7 +551,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             .set("baselineEndMinute", logsCVConfiguration.getBaselineEndMinute());
         resetBaselineIfNecessary(logsCVConfiguration, (LogsCVConfiguration) savedConfiguration);
         break;
-      case STACK_DRIVER:
+      case STACK_DRIVER_LOG:
         StackdriverCVConfiguration stackdriverCVConfiguration = (StackdriverCVConfiguration) cvConfiguration;
         updateOperations.set("query", stackdriverCVConfiguration.getQuery())
             .set("isLogsConfiguration", stackdriverCVConfiguration.isLogsConfiguration())

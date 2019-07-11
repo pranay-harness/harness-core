@@ -30,7 +30,7 @@ public class LogsCVConfigurationYamlHandler
       case BUG_SNAG:
         yaml = new BugsnagCVConfigurationYaml();
         break;
-      case STACK_DRIVER:
+      case STACK_DRIVER_LOG:
         yaml = new StackdriverCVConfigurationYaml();
         break;
       default:

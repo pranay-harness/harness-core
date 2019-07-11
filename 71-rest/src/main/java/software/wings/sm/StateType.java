@@ -152,6 +152,7 @@ import software.wings.sm.states.RollingNodeSelectState;
 import software.wings.sm.states.ShellScriptState;
 import software.wings.sm.states.SplunkState;
 import software.wings.sm.states.SplunkV2State;
+import software.wings.sm.states.StackDriverLogState;
 import software.wings.sm.states.StackDriverState;
 import software.wings.sm.states.SubWorkflowState;
 import software.wings.sm.states.SumoLogicAnalysisState;
@@ -340,6 +341,12 @@ public enum StateType implements StateTypeDescriptor {
    */
   STACK_DRIVER(
       StackDriverState.class, VERIFICATIONS, 19, "Stackdriver", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+
+  /**
+   * StackDriver log state type.
+   */
+  STACK_DRIVER_LOG(
+      StackDriverLogState.class, VERIFICATIONS, 20, "Stackdriver Log", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Env state state type.

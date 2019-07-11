@@ -167,6 +167,7 @@ public class WorkflowLogClusterJob implements Job {
           case BUG_SNAG:
           case LOG_VERIFICATION:
           case DATA_DOG_LOG:
+          case STACK_DRIVER_LOG:
             cluster();
             break;
           case SPLUNKV2:

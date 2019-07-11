@@ -216,6 +216,8 @@ public enum TaskType {
   STACKDRIVER_LIST_FORWARDING_RULES(TaskGroup.STACKDRIVER, ServiceImplDelegateTask.class, StackDriverValidation.class),
   STACKDRIVER_COLLECT_24_7_METRIC_DATA(
       TaskGroup.STACKDRIVER, StackDriverDataCollectionTask.class, StackDriverValidation.class),
+  STACKDRIVER_COLLECT_LOG_DATA(
+      TaskGroup.STACKDRIVER, StackDriverLogDataCollectionTask.class, StackDriverValidation.class),
   STACKDRIVER_COLLECT_24_7_LOG_DATA(
       TaskGroup.STACKDRIVER, StackDriverLogDataCollectionTask.class, StackDriverValidation.class),
   SPLUNK(TaskGroup.SPLUNK, HttpTask.class, SplunkValidation.class),

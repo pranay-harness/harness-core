@@ -20,7 +20,7 @@ import static software.wings.sm.StateType.DYNA_TRACE;
 import static software.wings.sm.StateType.ELK;
 import static software.wings.sm.StateType.NEW_RELIC;
 import static software.wings.sm.StateType.PROMETHEUS;
-import static software.wings.sm.StateType.STACK_DRIVER;
+import static software.wings.sm.StateType.STACK_DRIVER_LOG;
 import static software.wings.sm.StateType.SUMO;
 import static software.wings.utils.WingsTestConstants.mockChecker;
 
@@ -42,6 +42,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.beans.ElkConfig;
+import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Builder;
@@ -61,6 +62,7 @@ import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
@@ -97,6 +99,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   private String appId, envId, serviceId, appDynamicsApplicationId;
   @Inject private WingsPersistence wingsPersistence;
   @Inject @InjectMocks private AppService appService;
+  @Inject @InjectMocks private EnvironmentService environmentService;
   @Mock private LimitCheckerFactory limitCheckerFactory;
   private NewRelicCVServiceConfiguration newRelicCVServiceConfiguration;
   private AppDynamicsCVServiceConfiguration appDynamicsCVServiceConfiguration;
@@ -120,7 +123,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     loginAdminUser();
 
     appId = appService.save(anApplication().name(generateUuid()).accountId(accountId).build()).getUuid();
-    envId = generateUuid();
+    envId = environmentService.save(Environment.Builder.anEnvironment().appId(appId).name("Developmenet").build())
+                .getUuid();
     appDynamicsApplicationId = generateUuid();
 
     settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -338,7 +342,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     stackdriverCVConfiguration.setBaselineEndMinute(200);
     stackdriverCVConfiguration.setAlertEnabled(false);
     stackdriverCVConfiguration.setAlertThreshold(0.1);
-    stackdriverCVConfiguration.setStateType(STACK_DRIVER);
+    stackdriverCVConfiguration.setStateType(STACK_DRIVER_LOG);
   }
 
   @Test
@@ -824,16 +828,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     BugsnagCVConfiguration fetchedObject = getRequestResponse.getResource();
 
     BugsnagCVConfiguration cvConfiguration = fetchedObject;
-    assertEquals(savedObjectUuid, fetchedObject.getUuid());
-    assertEquals(accountId, fetchedObject.getAccountId());
-    assertEquals(appId, fetchedObject.getAppId());
-    assertEquals(envId, fetchedObject.getEnvId());
-    assertEquals(serviceId, fetchedObject.getServiceId());
-    assertEquals(BUG_SNAG, fetchedObject.getStateType());
-    assertEquals(AnalysisTolerance.MEDIUM, fetchedObject.getAnalysisTolerance());
-    assertEquals("someServiceName", cvConfiguration.getServiceName());
 
-    assertEquals("*exception*", fetchedObject.getQuery());
+    validateConfiguration(savedObjectUuid, cvConfiguration);
 
     url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId;
     target = client.target(url);
@@ -897,7 +893,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
     String url =
-        API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + STACK_DRIVER;
+        API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + STACK_DRIVER_LOG;
     logger.info("POST " + url);
     WebTarget target = client.target(url);
     RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
@@ -913,16 +909,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     StackdriverCVConfiguration fetchedObject = getRequestResponse.getResource();
 
     StackdriverCVConfiguration cvConfiguration = fetchedObject;
-    assertEquals(savedObjectUuid, fetchedObject.getUuid());
-    assertEquals(accountId, fetchedObject.getAccountId());
-    assertEquals(appId, fetchedObject.getAppId());
-    assertEquals(envId, fetchedObject.getEnvId());
-    assertEquals(serviceId, fetchedObject.getServiceId());
-    assertEquals(STACK_DRIVER, fetchedObject.getStateType());
-    assertEquals(AnalysisTolerance.MEDIUM, fetchedObject.getAnalysisTolerance());
-    assertEquals("someServiceName", cvConfiguration.getServiceName());
-
-    assertEquals("*exception*", fetchedObject.getQuery());
+    assertEquals(STACK_DRIVER_LOG, fetchedObject.getStateType());
+    validateConfiguration(savedObjectUuid, cvConfiguration);
 
     url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId;
     target = client.target(url);
@@ -941,12 +929,12 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(appId, obj.getAppId());
     assertEquals(envId, obj.getEnvId());
     assertEquals(serviceId, obj.getServiceId());
-    assertEquals(STACK_DRIVER, obj.getStateType());
+    assertEquals(STACK_DRIVER_LOG, obj.getStateType());
     assertEquals(AnalysisTolerance.MEDIUM, obj.getAnalysisTolerance());
     assertEquals("Config 1", obj.getName());
 
     url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId
-        + "&stateType=" + STACK_DRIVER + "&serviceConfigurationId=" + savedObjectUuid;
+        + "&stateType=" + STACK_DRIVER_LOG + "&serviceConfigurationId=" + savedObjectUuid;
     target = client.target(url);
     cvConfiguration.setName("Config 2");
     cvConfiguration.setEnabled24x7(false);
@@ -975,6 +963,18 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     target = client.target(delete_url);
     response = getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {});
     assertEquals(false, response.getResource());
+  }
+
+  private void validateConfiguration(String savedObjectUuid, LogsCVConfiguration cvConfiguration) {
+    assertEquals(savedObjectUuid, cvConfiguration.getUuid());
+    assertEquals(accountId, cvConfiguration.getAccountId());
+    assertEquals(appId, cvConfiguration.getAppId());
+    assertEquals(envId, cvConfiguration.getEnvId());
+    assertEquals(serviceId, cvConfiguration.getServiceId());
+    assertEquals(AnalysisTolerance.MEDIUM, cvConfiguration.getAnalysisTolerance());
+    assertEquals("someServiceName", cvConfiguration.getServiceName());
+
+    assertEquals("*exception*", cvConfiguration.getQuery());
   }
 
   @Test
