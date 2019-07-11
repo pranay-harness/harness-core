@@ -27,6 +27,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.EnvStateExecutionData;
@@ -64,6 +65,7 @@ import java.util.Map;
  */
 @Attributes(title = "Env")
 @Slf4j
+@FieldNameConstants(innerTypeName = "EnvStateKeys")
 public class EnvState extends State {
   @Expand(dataProvider = EnvironmentServiceImpl.class)
   @EnumData(enumDataProvider = EnvironmentServiceImpl.class)

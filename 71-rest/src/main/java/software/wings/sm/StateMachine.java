@@ -43,6 +43,7 @@ import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Workflow;
 import software.wings.common.Constants;
 import software.wings.common.WingsExpressionProcessorFactory;
+import software.wings.sm.states.EnvState.EnvStateKeys;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.RepeatState;
 import software.wings.sm.states.SubWorkflowState;
@@ -69,10 +70,6 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "StateMachineKeys")
 @Slf4j
 public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware {
-  public static final String APP_ID_KEY = "appId";
-  public static final String ORIGIN_ID_KEY = "originId";
-  public static final String ORIGIN_VERSION_KEY = "originVersion";
-
   @Id private String uuid;
   @Indexed @NotNull protected String appId;
   @Indexed private long createdAt;
@@ -253,12 +250,12 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
 
     Map<String, Object> properties = pipelineStageElement.getProperties();
 
-    properties = MapUtils.putToImmutable("pipelineId", pipeline.getUuid(), properties);
-    properties.put("pipelineStageElementId", pipelineStageElement.getUuid());
-    properties.put("disable", pipelineStageElement.isDisable());
+    properties = MapUtils.putToImmutable(EnvStateKeys.pipelineId, pipeline.getUuid(), properties);
+    properties.put(EnvStateKeys.pipelineStageElementId, pipelineStageElement.getUuid());
+    properties.put(EnvStateKeys.disable, pipelineStageElement.isDisable());
 
     if (pipelineStageElement.getWorkflowVariables() != null) {
-      properties.put("workflowVariables", pipelineStageElement.getWorkflowVariables());
+      properties.put(EnvStateKeys.workflowVariables, pipelineStageElement.getWorkflowVariables());
     }
 
     // populate properties
