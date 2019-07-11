@@ -23,6 +23,7 @@ import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.trigger.ArtifactCondition;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.PipelineAction;
+import software.wings.beans.trigger.TriggerArgs;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.PipelineService;
@@ -55,11 +56,12 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
     when(artifactStreamServiceBindingService.getService(APP_ID, ARTIFACT_STREAM_ID, false))
         .thenReturn(Service.builder().name(SERVICE_NAME).build());
 
-    DeploymentTrigger trigger = DeploymentTrigger.builder()
-                                    .name("New Artifact Pipeline")
-                                    .action(PipelineAction.builder().pipelineId(PIPELINE_ID).build())
-                                    .condition(ArtifactCondition.builder().build())
-                                    .build();
+    DeploymentTrigger trigger =
+        DeploymentTrigger.builder()
+            .name("New Artifact Pipeline")
+            .action(PipelineAction.builder().pipelineId(PIPELINE_ID).triggerArgs(TriggerArgs.builder().build()).build())
+            .condition(ArtifactCondition.builder().artifactStreamId(ARTIFACT_STREAM_ID).build())
+            .build();
 
     DeploymentTrigger savedTrigger =
         deploymentTriggerService.save(deploymentTriggerGenerator.ensureDeploymentTrigger(trigger));
@@ -72,7 +74,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
 
     assertThat(((ArtifactCondition) savedTrigger.getCondition()).getArtifactSourceName())
         .isNotNull()
-        .isEqualTo(ARTIFACT_SOURCE_NAME + " (" + SERVICE_NAME + ")");
+        .isEqualTo(ARTIFACT_SOURCE_NAME);
 
     savedTrigger = deploymentTriggerService.get(savedTrigger.getAppId(), savedTrigger.getUuid());
 

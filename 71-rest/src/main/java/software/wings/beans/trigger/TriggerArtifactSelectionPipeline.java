@@ -8,9 +8,10 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Value
 @Builder
 @JsonTypeName("PIPELINE")
-public class PipelineAction implements Action {
+public class TriggerArtifactSelectionPipeline implements TriggerArtifactSelectionValue {
+  @NotEmpty private ArtifactVariableType artifactVariableType = ArtifactVariableType.PIPELINE;
+
   @NotEmpty private String pipelineId;
-  @NotEmpty private ActionType actionType = ActionType.PIPELINE;
-  private TriggerArgs triggerArgs;
   private transient String pipelineName;
+  private String variableName;
 }
