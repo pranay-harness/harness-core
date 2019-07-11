@@ -2,7 +2,7 @@ package software.wings.sm.states;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.VerificationConstants.DATA_DOG_DEFAULT_HOSTNAME;
-import static software.wings.common.VerificationConstants.DATA_DOG_KUBERNETES_HOSTNAME;
+import static software.wings.common.VerificationConstants.KUBERNETES_HOSTNAME;
 import static software.wings.utils.Misc.replaceDotWithUnicode;
 
 import com.github.reinert.jjschema.Attributes;
@@ -107,7 +107,7 @@ public class DatadogLogState extends AbstractLogAnalysisState {
       return hostnameField;
     }
     if (getDeploymentType(executionContext).equals(DeploymentType.KUBERNETES)) {
-      return DATA_DOG_KUBERNETES_HOSTNAME;
+      return KUBERNETES_HOSTNAME;
     } else {
       return DATA_DOG_DEFAULT_HOSTNAME;
     }

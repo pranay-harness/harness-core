@@ -22,7 +22,7 @@ import static software.wings.beans.SystemCatalog.Builder.aSystemCatalog;
 import static software.wings.beans.SystemCatalog.CatalogType.APPSTACK;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 import static software.wings.sm.StateType.ENV_STATE;
-import static software.wings.sm.StateType.STACK_DRIVER;
+import static software.wings.sm.StateType.STACK_DRIVER_LOG;
 import static software.wings.utils.ContainerFamily.TOMCAT;
 import static software.wings.utils.UsageRestrictionsUtils.getAllAppAllEnvUsageRestrictions;
 
@@ -353,7 +353,7 @@ public class DataGenService {
 
     infrastructureMappingGenerator.ensurePredefined(seed, owners, AWS_SSH_TEST);
 
-    serviceGuardGenerator.ensurePredefined(seed, owners, STACK_DRIVER);
+    serviceGuardGenerator.ensurePredefined(seed, owners, STACK_DRIVER_LOG);
 
     Workflow workflow2 = workflowGenerator.ensurePredefined(seed, owners, Workflows.BASIC_10_NODES);
 

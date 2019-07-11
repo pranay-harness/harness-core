@@ -90,13 +90,14 @@ public class WorkflowLogAnalysisJob implements Job {
                                   .build();
 
       switch (context.getStateType()) {
+        case ELK:
         case SUMO:
         case DATA_DOG_LOG:
+        case STACK_DRIVER_LOG:
           new LogMLClusterGenerator(learningEngineService, context.getClusterContext(), ClusterLevel.L1,
               ClusterLevel.L2, logRequest, (int) context.getStartDataCollectionMinute())
               .run();
           break;
-        case ELK:
         case LOGZ:
         case BUG_SNAG:
         case LOG_VERIFICATION:

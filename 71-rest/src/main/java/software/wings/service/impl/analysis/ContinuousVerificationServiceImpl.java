@@ -15,7 +15,7 @@ import static java.util.Collections.emptySet;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.TaskType.CUSTOM_LOG_COLLECTION_TASK;
 import static software.wings.beans.TaskType.ELK_COLLECT_LOG_DATA;
-import static software.wings.beans.TaskType.STACKDRIVER_COLLECT_METRIC_DATA;
+import static software.wings.beans.TaskType.STACKDRIVER_COLLECT_LOG_DATA;
 import static software.wings.beans.TaskType.SUMO_COLLECT_LOG_DATA;
 import static software.wings.beans.alert.AlertType.CONTINUOUS_VERIFICATION_ALERT;
 import static software.wings.common.VerificationConstants.APPDYNAMICS_DEEPLINK_FORMAT;
@@ -107,7 +107,6 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord.NewRelicMetricDataRecordKeys;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
-import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.service.intfc.AlertService;
@@ -621,6 +620,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     List<CVConfiguration> cvConfigurations = wingsPersistence.createQuery(CVConfiguration.class)
                                                  .filter("appId", appId)
                                                  .filter(CVConfigurationKeys.serviceId, serviceId)
+                                                 .filter(CVConfigurationKeys.enabled24x7, true)
                                                  .asList();
 
     if (isEmpty(cvConfigurations)) {
@@ -1447,12 +1447,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         BugsnagCVConfiguration bugsnagCVConfiguration = (BugsnagCVConfiguration) cvConfiguration;
         task = createBugSnagDelegateTask(bugsnagCVConfiguration, waitId, startTime, endTime);
         break;
-      case STACK_DRIVER:
+      case STACK_DRIVER_LOG:
         StackdriverCVConfiguration stackdriverCVConfiguration = (StackdriverCVConfiguration) cvConfiguration;
         task = createDataCollectionDelegateTask(stackdriverCVConfiguration, waitId, startTime, endTime);
         break;
       default:
-        logger.error("Calling collect 24x7 data for an unsupported state");
+        logger.error("Calling collect 24x7 data for an unsupported state : {}", stateType);
         return false;
     }
     waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
@@ -1478,7 +1478,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       case SUMO:
       case ELK:
       case DATA_DOG_LOG:
-      case STACK_DRIVER:
+      case STACK_DRIVER_LOG:
         return createDataCollectionDelegateTask(context, collectionMinute);
       default:
         logger.error("Calling collect data for an unsupported state");
@@ -1807,7 +1807,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 .build();
         return createDelegateTask(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA, config.getAccountId(), config.getAppId(),
             waitId, new Object[] {customLogDataCollectionInfo}, config.getEnvId());
-      case STACK_DRIVER:
+      case STACK_DRIVER_LOG:
         StackdriverCVConfiguration stackdriverCVConfiguration = (StackdriverCVConfiguration) config;
         GcpConfig gcpConfig = (GcpConfig) settingsService.get(config.getConnectorId()).getValue();
         if (stackdriverCVConfiguration.isLogsConfiguration()) {
@@ -1825,7 +1825,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                   .collectionTime((int) duration)
                   .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
                   .cvConfigId(config.getUuid())
-                  .stateType(StateType.STACK_DRIVER)
+                  .stateType(StateType.STACK_DRIVER_LOG)
                   .encryptedDataDetails(
                       secretManager.getEncryptionDetails(gcpConfig, stackdriverCVConfiguration.getAppId(), null))
                   .build();
@@ -1903,13 +1903,15 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           throw new WingsException("log analysis state failed ", ex);
         }
         break;
-      case STACK_DRIVER:
+      case STACK_DRIVER_LOG:
         try {
           GcpConfig gcpConfig = (GcpConfig) settingsService.get(context.getAnalysisServerConfigId()).getValue();
-          final StackDriverDataCollectionInfo dataCollectionInfo =
-              createStackdriverDataCollectionInfo(gcpConfig, context, collectionStartMinute, hostsToBeCollected);
-          delegateTasks.add(createDelegateTaskAndNotify(
-              dataCollectionInfo, STACKDRIVER_COLLECT_METRIC_DATA, executionData, context, true));
+          for (List<String> hostBatch : Lists.partition(hostList, HOST_BATCH_SIZE)) {
+            final StackDriverLogDataCollectionInfo dataCollectionInfo = createStackDriverLogDataCollectionInfo(
+                gcpConfig, context, collectionStartMinute, new HashSet<>(hostBatch));
+            delegateTasks.add(createDelegateTaskAndNotify(
+                dataCollectionInfo, STACKDRIVER_COLLECT_LOG_DATA, executionData, context, true));
+          }
           for (DelegateTask task : delegateTasks) {
             delegateService.queueTask(task);
           }
@@ -1976,17 +1978,18 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return savedDataCollectionInfo;
   }
 
-  private StackDriverDataCollectionInfo createStackdriverDataCollectionInfo(
-      GcpConfig gcpConfig, AnalysisContext context, long collectionStartMinute, Map<String, String> hostBatch) {
-    StackDriverDataCollectionInfo savedDataCollectionInfo =
-        (StackDriverDataCollectionInfo) context.getDataCollectionInfo();
+  private StackDriverLogDataCollectionInfo createStackDriverLogDataCollectionInfo(
+      GcpConfig gcpConfig, AnalysisContext context, long collectionStartMinute, Set<String> hostBatch) {
+    StackDriverLogDataCollectionInfo savedDataCollectionInfo =
+        (StackDriverLogDataCollectionInfo) context.getDataCollectionInfo();
     savedDataCollectionInfo.setHosts(hostBatch);
 
     savedDataCollectionInfo.setStartMinute((int) collectionStartMinute);
     savedDataCollectionInfo.setStartTime(collectionStartMinute * TimeUnit.MINUTES.toMillis(1));
     savedDataCollectionInfo.setEndTime((collectionStartMinute + 1) * TimeUnit.MINUTES.toMillis(1));
     savedDataCollectionInfo.setCollectionTime(1);
-
+    savedDataCollectionInfo.setEncryptedDataDetails(
+        secretManager.getEncryptionDetails(gcpConfig, context.getAppId(), context.getWorkflowExecutionId()));
     return savedDataCollectionInfo;
   }
 

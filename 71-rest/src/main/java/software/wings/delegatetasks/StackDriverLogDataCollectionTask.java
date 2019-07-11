@@ -57,7 +57,7 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
 
   @Override
   protected StateType getStateType() {
-    return StateType.STACK_DRIVER;
+    return StateType.STACK_DRIVER_LOG;
   }
 
   @Override
@@ -66,7 +66,7 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
     logger.info("metric collection - dataCollectionInfo: {}", dataCollectionInfo);
     return DataCollectionTaskResult.builder()
         .status(DataCollectionTaskResult.DataCollectionTaskStatus.SUCCESS)
-        .stateType(StateType.STACK_DRIVER)
+        .stateType(StateType.STACK_DRIVER_LOG)
         .build();
   }
 
@@ -171,7 +171,7 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
               + " application: " + dataCollectionInfo.getApplicationId()
               + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute);
 
-          boolean response = logAnalysisStoreService.save(StateType.STACK_DRIVER, dataCollectionInfo.getAccountId(),
+          boolean response = logAnalysisStoreService.save(StateType.STACK_DRIVER_LOG, dataCollectionInfo.getAccountId(),
               dataCollectionInfo.getApplicationId(), dataCollectionInfo.getCvConfigId(),
               dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getWorkflowId(),
               dataCollectionInfo.getWorkflowExecutionId(), dataCollectionInfo.getServiceId(), delegateTaskId,
@@ -255,8 +255,7 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
         apiCallLog.addFieldToResponse(
             HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), ThirdPartyApiCallLog.FieldType.TEXT);
         delegateLogService.save(dataCollectionInfo.getGcpConfig().getAccountId(), apiCallLog);
-        throw new WingsException(
-            "Unsuccessful response while fetching data from StackDriver. Error message: " + e.getMessage());
+        throw new WingsException("Unsuccessful response while fetching data from StackDriver. Error message: " + e);
       }
       apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
       apiCallLog.addFieldToResponse(HttpStatus.SC_OK, response, ThirdPartyApiCallLog.FieldType.JSON);

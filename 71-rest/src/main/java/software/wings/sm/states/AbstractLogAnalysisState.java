@@ -28,6 +28,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.FeatureName;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.SumoConfig;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisContext;
@@ -38,6 +39,7 @@ import software.wings.service.impl.analysis.DataCollectionInfo;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
+import software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
@@ -447,6 +449,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       case ELK:
         return context.renderExpression(((ElkAnalysisState) this).getHostnameField());
       case DATA_DOG_LOG:
+      case STACK_DRIVER_LOG:
         return this.getHostnameField(context);
       default:
         return null;
@@ -518,6 +521,21 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .collectionFrequency(1)
             .collectionTime(Integer.parseInt(getTimeDuration()))
             .accountId(analysisContext.getAccountId())
+            .build();
+      case STACK_DRIVER_LOG:
+        GcpConfig gcpConfig = (GcpConfig) settingsService.get(getAnalysisServerConfigId()).getValue();
+        return StackDriverLogDataCollectionInfo.builder()
+            .gcpConfig(gcpConfig)
+            .hostnameField(analysisContext.getHostNameField())
+            .stateType(StateType.STACK_DRIVER_LOG)
+            .applicationId(analysisContext.getAppId())
+            .stateExecutionId(analysisContext.getStateExecutionId())
+            .workflowId(analysisContext.getWorkflowId())
+            .workflowExecutionId(analysisContext.getWorkflowExecutionId())
+            .serviceId(analysisContext.getServiceId())
+            .collectionTime(Integer.parseInt(getTimeDuration()))
+            .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
+            .query(getRenderedQuery())
             .build();
       default:
         return null;

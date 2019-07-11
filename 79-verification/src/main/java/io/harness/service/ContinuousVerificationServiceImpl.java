@@ -16,7 +16,6 @@ import static software.wings.common.VerificationConstants.GET_LOG_FEEDBACKS;
 import static software.wings.common.VerificationConstants.IS_EXPERIMENTAL;
 import static software.wings.common.VerificationConstants.TIME_DELAY_QUERY_MINS;
 import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_BASE_URL;
-import static software.wings.common.VerificationConstants.getDuelAnalysisStates;
 import static software.wings.common.VerificationConstants.getLogAnalysisStates;
 import static software.wings.common.VerificationConstants.getMetricAnalysisStates;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
@@ -79,7 +78,6 @@ import software.wings.verification.CVConfiguration;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.log.LogsCVConfiguration;
-import software.wings.verification.log.StackdriverCVConfiguration;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -121,10 +119,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         .filter(cvConfiguration
             -> cvConfiguration.isEnabled24x7() && getMetricAnalysisStates().contains(cvConfiguration.getStateType()))
         .forEach(cvConfiguration -> {
-          if (getDuelAnalysisStates().contains(cvConfiguration.getStateType())
-              && isLogDuelAnalysisState(cvConfiguration)) {
-            return;
-          }
           long maxCVCollectionMinute =
               timeSeriesAnalysisService.getMaxCVCollectionMinute(cvConfiguration.getAppId(), cvConfiguration.getUuid());
           long startTime = maxCVCollectionMinute <= 0 || endMinute - maxCVCollectionMinute > PREDECTIVE_HISTORY_MINUTES
@@ -144,16 +138,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return true;
   }
 
-  private boolean isLogDuelAnalysisState(CVConfiguration cvConfiguration) {
-    StateType stateType = cvConfiguration.getStateType();
-    switch (stateType) {
-      case STACK_DRIVER:
-        return ((StackdriverCVConfiguration) cvConfiguration).isLogsConfiguration();
-      default:
-        return false;
-    }
-  }
-
   @Override
   @Counted
   @Timed
@@ -169,10 +153,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         .filter(cvConfiguration
             -> cvConfiguration.isEnabled24x7() && getMetricAnalysisStates().contains(cvConfiguration.getStateType()))
         .forEach(cvConfiguration -> {
-          if (getDuelAnalysisStates().contains(cvConfiguration.getStateType())
-              && isLogDuelAnalysisState(cvConfiguration)) {
-            return;
-          }
           try {
             logger.info("Executing APM data analysis Job for accountId {} and configId {}", accountId,
                 cvConfiguration.getUuid());
