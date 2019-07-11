@@ -7,6 +7,7 @@ public enum EncryptionType {
   LOCAL("safeharness"),
   KMS("amazonkms"),
   AWS_SECRETS_MANAGER("awssecretsmanager"),
+  AZURE_VAULT("azurevault"),
   VAULT("hashicorpvault");
 
   private final String yamlName;

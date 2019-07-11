@@ -198,8 +198,8 @@ public class ManagerMorphiaClasses {
       HarnessTagLink.class, CVFeedbackRecord.class, SecretManagerConfig.class, VaultLegacyConfig.class,
       KmsLegacyConfig.class, AwsSecretsManagerLegacyConfig.class, LocalEncryptionConfig.class, ResourceLookup.class,
       LoginSettings.class, GCPUsageReport.class, GCPBillingJobEntity.class, DashboardSettings.class,
-      InfrastructureDefinition.class, GcpMarketplaceEvent.class, SupervisedTSThreshold.class, TimeSeriesRawData.class);
-
+      InfrastructureDefinition.class, GcpMarketplaceEvent.class, SupervisedTSThreshold.class, TimeSeriesRawData.class,
+      AzureVaultConfig.class);
   public static final Set<Class> dependentClasses =
       ImmutableSet.<Class>of(EncryptionConfig.class, EncryptedRecord.class, ExecutionCapabilityDemander.class);
 }

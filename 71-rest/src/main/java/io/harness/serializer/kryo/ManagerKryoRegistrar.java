@@ -110,6 +110,7 @@ import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureKubernetesCluster;
+import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
 import software.wings.beans.BastionConnectionAttributes;
@@ -1287,5 +1288,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ArtifactStreamSummary.class, 7202);
     kryo.register(AwsCrossAccountAttributes.class, 7203);
     kryo.register(RepositoryFormat.class, 7204);
+    kryo.register(AzureVaultConfig.class, 7205);
   }
 }

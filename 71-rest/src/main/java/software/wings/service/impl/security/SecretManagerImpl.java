@@ -62,6 +62,7 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Account;
 import software.wings.beans.AwsSecretsManagerConfig;
+import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigFileKeys;
@@ -100,6 +101,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.security.AwsSecretsManagerService;
+import software.wings.service.intfc.security.AzureSecretsManagerService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalEncryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -143,6 +145,7 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private KmsService kmsService;
   @Inject private VaultService vaultService;
   @Inject private AwsSecretsManagerService secretsManagerService;
+  @Inject private AzureVaultService azureVaultService;
   @Inject private AlertService alertService;
   @Inject private FileService fileService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
@@ -156,6 +159,7 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private LocalEncryptionService localEncryptionService;
   @Inject private UserService userService;
   @Inject private SecretManagerConfigService secretManagerConfigService;
+  @Inject private AzureSecretsManagerService azureSecretsManagerService;
 
   @Override
   public EncryptionType getEncryptionType(String accountId) {
@@ -204,6 +208,7 @@ public class SecretManagerImpl implements SecretManager {
         rv = vaultService.encrypt(secretName, toEncrypt, accountId, settingType, vaultConfig, encryptedData);
         rv.setKmsId(vaultConfig.getUuid());
         break;
+
       case AWS_SECRETS_MANAGER:
         final AwsSecretsManagerConfig secretsManagerConfig =
             (AwsSecretsManagerConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
@@ -224,6 +229,26 @@ public class SecretManagerImpl implements SecretManager {
         rv = secretsManagerService.encrypt(
             secretName, toEncrypt, accountId, settingType, secretsManagerConfig, encryptedData);
         rv.setKmsId(secretsManagerConfig.getUuid());
+        break;
+
+      case AZURE_VAULT:
+        final AzureVaultConfig azureConfig =
+            (AzureVaultConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
+        toEncrypt = secret == null ? null : String.valueOf(secret);
+
+        if (encryptedData == null) {
+          encryptedData = EncryptedData.builder()
+                              .name(secretName)
+                              .encryptionType(encryptionType)
+                              .accountId(accountId)
+                              .type(settingType)
+                              .enabled(true)
+                              .parentIds(new HashSet<>())
+                              .kmsId(azureConfig.getUuid())
+                              .build();
+        }
+        rv = azureVaultService.encrypt(secretName, toEncrypt, accountId, settingType, azureConfig, encryptedData);
+        rv.setKmsId(azureConfig.getUuid());
         break;
 
       default:
@@ -759,6 +784,17 @@ public class SecretManagerImpl implements SecretManager {
             isEmpty(encryptedData.getPath()) ? encryptedData.getEncryptionKey() : encryptedData.getPath();
         secretsManagerService.deleteSecret(accountId, awsSecretName, (AwsSecretsManagerConfig) fromConfig);
         break;
+      case AZURE_VAULT:
+        decrypted = azureVaultService.decrypt(encryptedData, accountId, (AzureVaultConfig) fromConfig);
+        // delete the Azure secret since it's transitioning out. TODO Discuss with mark to delete after the secret
+        // has been moved to a new vault
+
+        String azureSecretName =
+            isEmpty(encryptedData.getPath()) ? encryptedData.getEncryptionKey() : encryptedData.getPath();
+        logger.info("Deleting encrypted data name {} from Azure config {} in account {}", azureSecretName,
+            fromConfig.getUuid(), accountId);
+        azureVaultService.delete(accountId, azureSecretName, (AzureVaultConfig) fromConfig);
+        break;
       default:
         throw new IllegalStateException("Invalid type : " + fromEncryptionType);
     }
@@ -785,6 +821,12 @@ public class SecretManagerImpl implements SecretManager {
         encrypted =
             secretsManagerService.encrypt(encryptedData.getName(), secretValue, accountId, encryptedData.getType(),
                 (AwsSecretsManagerConfig) toConfig, EncryptedData.builder().encryptionKey(encryptionKey).build());
+        break;
+      case AZURE_VAULT:
+        encryptionKey = encryptedData.getEncryptionKey();
+        secretValue = decrypted == null ? null : String.valueOf(decrypted);
+        encrypted = azureVaultService.encrypt(encryptedData.getName(), secretValue, accountId, encryptedData.getType(),
+            (AzureVaultConfig) toConfig, EncryptedData.builder().encryptionKey(encryptionKey).build());
         break;
       default:
         throw new IllegalStateException("Invalid type : " + toEncryptionType);
@@ -825,6 +867,11 @@ public class SecretManagerImpl implements SecretManager {
       case AWS_SECRETS_MANAGER:
         encryptedFileData = secretsManagerService.encryptFile(accountId, (AwsSecretsManagerConfig) toConfig,
             encryptedData.getName(), decryptedFileContent, encryptedData);
+        break;
+
+      case AZURE_VAULT:
+        encryptedFileData = azureVaultService.encryptFile(
+            accountId, (AzureVaultConfig) toConfig, encryptedData.getName(), decryptedFileContent, encryptedData);
         break;
 
       default:
@@ -995,6 +1042,13 @@ public class SecretManagerImpl implements SecretManager {
           awsConfig.setDefault(false);
           secretsManagerService.saveAwsSecretsManagerConfig(accountId, awsConfig);
           break;
+
+        case AZURE_VAULT:
+          AzureVaultConfig azureConfig = azureSecretsManagerService.getEncryptionConfig(accountId, config.getUuid());
+          azureConfig.setDefault(false);
+          azureSecretsManagerService.saveAzureSecretsManagerConfig(accountId, azureConfig);
+          break;
+
         default:
           throw new IllegalStateException("Unexpected value: " + config.getEncryptionType());
       }
@@ -1117,6 +1171,16 @@ public class SecretManagerImpl implements SecretManager {
                 secretValue = secretsManagerService.decrypt(savedData, accountId, secretsManagerConfig);
               }
               secretsManagerService.deleteSecret(accountId, secretName, secretsManagerConfig);
+              break;
+            case AZURE_VAULT:
+              needReencryption = true;
+              AzureVaultConfig azureVaultConfig =
+                  azureSecretsManagerService.getEncryptionConfig(accountId, savedData.getKmsId());
+              if (!valueChanged) {
+                // retrieve/decrypt the old secret value.
+                secretValue = azureVaultService.decrypt(savedData, accountId, azureVaultConfig);
+              }
+              azureVaultService.delete(accountId, secretName, azureVaultConfig);
               break;
             default:
               // Not relevant for other secret manager types
@@ -1249,6 +1313,12 @@ public class SecretManagerImpl implements SecretManager {
           vaultService.deleteSecret(accountId, keyName, vaultConfig);
         }
         break;
+      case AZURE_VAULT:
+        String keyName = encryptedData.getEncryptionKey();
+        AzureVaultConfig encryptionConfig =
+            azureSecretsManagerService.getEncryptionConfig(accountId, encryptedData.getKmsId());
+        azureVaultService.delete(accountId, keyName, encryptionConfig);
+        break;
       default:
         break;
     }
@@ -1288,6 +1358,9 @@ public class SecretManagerImpl implements SecretManager {
       case AWS_SECRETS_MANAGER:
         return secretsManagerService.decryptFile(readInto, accountId, encryptedData);
 
+      case AZURE_VAULT:
+        return secretsManagerService.decryptFile(readInto, accountId, encryptedData);
+
       default:
         throw new IllegalArgumentException("Invalid type " + encryptionType);
     }
@@ -1322,6 +1395,10 @@ public class SecretManagerImpl implements SecretManager {
 
         case AWS_SECRETS_MANAGER:
           secretsManagerService.decryptToStream(accountId, encryptedData, output);
+          break;
+
+        case AZURE_VAULT:
+          azureVaultService.decryptToStream(accountId, encryptedData, output);
           break;
 
         default:
@@ -1446,6 +1523,19 @@ public class SecretManagerImpl implements SecretManager {
           newEncryptedFile.setKmsId(secretsManagerConfig.getUuid());
           break;
 
+        case AZURE_VAULT:
+          // if it's an update call, we need to update the secret value in the same secret store.
+          // Otherwise it should be saved in the default secret store of the account.
+          encryptionConfig = update
+              ? azureSecretsManagerService.getEncryptionConfig(accountId, encryptedData.getKmsId())
+              : secretManagerConfigService.getDefaultSecretManager(accountId);
+          AzureVaultConfig azureConfig = (AzureVaultConfig) encryptionConfig;
+          logger.info("Creating file in azure vault with secret name: {}, in vault: {}, in accountName: {}", name,
+              azureConfig.getName(), accountId);
+          newEncryptedFile = azureVaultService.encryptFile(accountId, azureConfig, name, inputBytes, encryptedData);
+          newEncryptedFile.setKmsId(azureConfig.getUuid());
+          break;
+
         default:
           throw new IllegalArgumentException("Invalid type " + encryptionType);
       }
@@ -1468,6 +1558,13 @@ public class SecretManagerImpl implements SecretManager {
               AwsSecretsManagerConfig secretsManagerConfig =
                   secretsManagerService.getAwsSecretsManagerConfig(accountId, encryptedData.getKmsId());
               secretsManagerService.deleteSecret(accountId, secretName, secretsManagerConfig);
+              break;
+            case AZURE_VAULT:
+              AzureVaultConfig azureConfig =
+                  azureSecretsManagerService.getEncryptionConfig(accountId, encryptedData.getKmsId());
+              azureVaultService.delete(accountId, secretName, azureConfig);
+              logger.info("Deleting file {} after update from vault {} in accountid {}", secretName,
+                  azureConfig.getName(), accountId);
               break;
             default:
               // Does not apply to other secret manager types
@@ -1587,6 +1684,10 @@ public class SecretManagerImpl implements SecretManager {
       case AWS_SECRETS_MANAGER:
         secretsManagerService.deleteSecret(accountId, encryptedData.getEncryptionKey(),
             secretsManagerService.getAwsSecretsManagerConfig(accountId, encryptedData.getKmsId()));
+        break;
+      case AZURE_VAULT:
+        azureVaultService.delete(accountId, encryptedData.getEncryptionKey(),
+            azureSecretsManagerService.getEncryptionConfig(accountId, encryptedData.getKmsId()));
         break;
       default:
         throw new IllegalStateException("Invalid type " + encryptedData.getEncryptionType());
@@ -1771,6 +1872,8 @@ public class SecretManagerImpl implements SecretManager {
         return vaultService.getVaultConfig(accountId, entityId);
       case AWS_SECRETS_MANAGER:
         return secretsManagerService.getAwsSecretsManagerConfig(accountId, entityId);
+      case AZURE_VAULT:
+        return azureSecretsManagerService.getEncryptionConfig(accountId, entityId);
       default:
         throw new IllegalStateException("invalid type: " + encryptionType);
     }
@@ -1944,6 +2047,12 @@ public class SecretManagerImpl implements SecretManager {
         Preconditions.checkNotNull(secretsManagerConfig,
             "could not find kmsId " + kmsId + " for " + type + " id: " + parentId + " encryptionType" + encryptionType);
         return secretsManagerConfig.getName();
+      case AZURE_VAULT:
+        AzureVaultConfig azureConfig = wingsPersistence.get(AzureVaultConfig.class, kmsId);
+        Preconditions.checkNotNull(azureConfig,
+            "could not find azureid " + kmsId + " for " + type + " id: " + parentId + " encryptionType"
+                + encryptionType);
+        return azureConfig.getName();
       default:
         throw new IllegalArgumentException("Invalid type: " + encryptionType);
     }
@@ -1969,6 +2078,9 @@ public class SecretManagerImpl implements SecretManager {
             break;
           case AWS_SECRETS_MANAGER:
             secretsManagerService.validateSecretsManagerConfig((AwsSecretsManagerConfig) encryptionConfig);
+            break;
+          case AZURE_VAULT:
+            azureSecretsManagerService.validateSecretsManagerConfig((AzureVaultConfig) encryptionConfig);
             break;
           default:
             break;

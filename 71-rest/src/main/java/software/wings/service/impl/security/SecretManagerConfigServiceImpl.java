@@ -17,6 +17,7 @@ import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
 import software.wings.beans.AwsSecretsManagerConfig;
+import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.VaultConfig;
@@ -24,6 +25,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.service.intfc.security.AwsSecretsManagerService;
+import software.wings.service.intfc.security.AzureSecretsManagerService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalEncryptionService;
 import software.wings.service.intfc.security.SecretManagerConfigService;
@@ -44,6 +46,7 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
   @Inject private VaultService vaultService;
   @Inject private AwsSecretsManagerService secretsManagerService;
   @Inject private LocalEncryptionService localEncryptionService;
+  @Inject private AzureSecretsManagerService azureSecretsManagerService;
 
   @Override
   public String save(SecretManagerConfig secretManagerConfig) {
@@ -107,6 +110,9 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
         break;
       case LOCAL:
         encryptionConfig = localEncryptionService.getEncryptionConfig(accountId);
+        break;
+      case AZURE_VAULT:
+        encryptionConfig = azureSecretsManagerService.getEncryptionConfig(accountId, secretManagerConfig.getUuid());
         break;
       default:
         throw new IllegalArgumentException("Encryption type " + encryptionType + " is not valid");
@@ -183,6 +189,9 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
               break;
             case VAULT:
               vaultService.decryptVaultConfigSecrets(accountId, (VaultConfig) secretManagerConfig, maskSecret);
+              break;
+            case AZURE_VAULT:
+              azureSecretsManagerService.decryptAzureConfigSecrets((AzureVaultConfig) secretManagerConfig, maskSecret);
               break;
             default:
               // Do nothing;

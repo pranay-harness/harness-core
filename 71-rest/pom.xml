@@ -271,6 +271,11 @@
             <artifactId>azure</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.microsoft.azure</groupId>
+            <artifactId>azure-keyvault</artifactId>
+            <version>1.2.1</version>
+        </dependency>
+        <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
         </dependency>

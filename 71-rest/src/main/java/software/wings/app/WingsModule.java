@@ -275,6 +275,9 @@ import software.wings.service.impl.notifications.UserGroupBasedDispatcher;
 import software.wings.service.impl.personalization.PersonalizationServiceImpl;
 import software.wings.service.impl.prometheus.PrometheusAnalysisServiceImpl;
 import software.wings.service.impl.security.AwsSecretsManagerServiceImpl;
+import software.wings.service.impl.security.AzureSecretsManagerServiceImpl;
+import software.wings.service.impl.security.AzureVaultService;
+import software.wings.service.impl.security.AzureVaultServiceImpl;
 import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.service.impl.security.KmsServiceImpl;
 import software.wings.service.impl.security.LocalEncryptionServiceImpl;
@@ -442,6 +445,7 @@ import software.wings.service.intfc.pagerduty.PagerDutyService;
 import software.wings.service.intfc.personalization.PersonalizationService;
 import software.wings.service.intfc.prometheus.PrometheusAnalysisService;
 import software.wings.service.intfc.security.AwsSecretsManagerService;
+import software.wings.service.intfc.security.AzureSecretsManagerService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalEncryptionService;
@@ -663,6 +667,8 @@ public class WingsModule extends DependencyModule {
     bind(K8sGlobalConfigService.class).to(K8sGlobalConfigServiceUnsupported.class);
 
     bind(SamlUserGroupSync.class);
+    bind(AzureVaultService.class).to(AzureVaultServiceImpl.class);
+    bind(AzureSecretsManagerService.class).to(AzureSecretsManagerServiceImpl.class);
     bind(SmbService.class).to(SmbServiceImpl.class);
     bind(SmbBuildService.class).to(SmbBuildServiceImpl.class);
     bind(SftpService.class).to(SftpServiceImpl.class);

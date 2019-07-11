@@ -4,6 +4,7 @@ import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.AZURE_KEY_VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
@@ -43,6 +44,10 @@ import com.amazonaws.services.secretsmanager.model.UpdateSecretRequest;
 import com.amazonaws.services.secretsmanager.model.UpdateSecretResult;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.microsoft.azure.keyvault.KeyVaultClient;
+import com.microsoft.azure.keyvault.models.DeletedSecretBundle;
+import com.microsoft.azure.keyvault.models.SecretBundle;
+import com.microsoft.azure.keyvault.requests.SetSecretRequest;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
@@ -56,6 +61,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsSecretsManagerConfig;
+import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.helpers.ext.vault.VaultRestClientFactory;
@@ -74,6 +80,7 @@ import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
@@ -645,6 +652,151 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       logger.error(errorMsg);
       throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER).addParam(REASON_KEY, errorMsg);
     }
+  }
+
+  public EncryptedRecord encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
+      AzureVaultConfig azureConfig, EncryptedRecord savedEncryptedData) {
+    int failedAttempts = 0;
+    while (true) {
+      try {
+        return timeLimiter.callWithTimeout(
+            ()
+                -> encryptInternal(name, value, accountId, settingType, azureConfig, savedEncryptedData),
+            15, TimeUnit.SECONDS, true);
+      } catch (Exception e) {
+        failedAttempts++;
+        logger.warn(format("encryption failed. trial num: %d", failedAttempts), e);
+        if (isRetryable(e)) {
+          if (failedAttempts == NUM_OF_RETRIES) {
+            throw new WingsException(AZURE_KEY_VAULT_OPERATION_ERROR, USER, e)
+                .addParam(REASON_KEY, "encryption failed after " + NUM_OF_RETRIES + " retries");
+          }
+          sleep(ofMillis(1000));
+        } else {
+          throw new WingsException(AZURE_KEY_VAULT_OPERATION_ERROR, e.getMessage(), USER)
+              .addParam(REASON_KEY, "Failed to encrypt Vault secret " + name);
+        }
+      }
+    }
+  }
+
+  public char[] decrypt(EncryptedRecord data, AzureVaultConfig azureConfig) {
+    if (data.getEncryptedValue() == null) {
+      return null;
+    }
+
+    int failedAttempts = 0;
+    while (true) {
+      try {
+        logger.info("Trying to decrypt record {} by {}", data.getEncryptionKey(), azureConfig.getVaultName());
+        return timeLimiter.callWithTimeout(() -> decryptInternal(data, azureConfig), 15, TimeUnit.SECONDS, true);
+      } catch (Exception e) {
+        failedAttempts++;
+        logger.warn(format("decryption failed. trial num: %d", failedAttempts), e);
+        if (isRetryable(e)) {
+          if (failedAttempts == NUM_OF_RETRIES) {
+            throw new WingsException(AZURE_KEY_VAULT_OPERATION_ERROR, USER, e)
+                .addParam(REASON_KEY, "Decryption failed after " + NUM_OF_RETRIES + " retries");
+          }
+          sleep(ofMillis(1000));
+        } else {
+          throw new WingsException(AZURE_KEY_VAULT_OPERATION_ERROR, USER, e)
+              .addParam(REASON_KEY, "Failed to decrypt secret " + data.getName());
+        }
+      }
+    }
+  }
+
+  private EncryptedRecord encryptInternal(String fullSecretName, String value, String accountId,
+      SettingVariableTypes type, AzureVaultConfig secretsManagerConfig, EncryptedRecord savedEncryptedData)
+      throws WingsException {
+    logger.info("Saving secret '{}' into Azure Secrets Manager: {}", fullSecretName, secretsManagerConfig.getName());
+
+    long startTime = System.currentTimeMillis();
+
+    EncryptedRecord encryptedData = savedEncryptedData != null ? savedEncryptedData
+                                                               : EncryptedData.builder()
+                                                                     .encryptionKey(fullSecretName)
+                                                                     .encryptionType(EncryptionType.AZURE_VAULT)
+                                                                     .enabled(true)
+                                                                     .accountId(accountId)
+                                                                     .parentIds(new HashSet<>())
+                                                                     .kmsId(secretsManagerConfig.getUuid())
+                                                                     .build();
+
+    KeyVaultClient azureVaultClient = getAzureVaultClient(secretsManagerConfig);
+
+    try {
+      SecretBundle secret = azureVaultClient.getSecret(secretsManagerConfig.getEncryptionServiceUrl(), fullSecretName);
+      logger.info("Updating the key: {} in account Id: {}", fullSecretName, accountId);
+    } catch (Exception ex) {
+      // reaching here means the value doesn't exists.
+      logger.info("Couldn't find any existing keys with name: {} in account Id: {}. Trying to create a new one.",
+          fullSecretName, accountId, ex);
+    }
+
+    // Create and updates are done in Azure using the same API. A set call will update the secret
+    SetSecretRequest setSecretRequest =
+        new SetSecretRequest.Builder(secretsManagerConfig.getEncryptionServiceUrl(), fullSecretName, value)
+            .withTags(getMetadata(type))
+            .build();
+
+    SecretBundle secretBundle = null;
+    try {
+      secretBundle = azureVaultClient.setSecret(setSecretRequest);
+    } catch (Exception ex) {
+      logger.info("Failed to save secret in Azure Vault. Secret name: {}, Vault name: {}, accountId: {}",
+          fullSecretName, secretsManagerConfig.getVaultName(), accountId, ex);
+      throw new WingsException(AZURE_KEY_VAULT_OPERATION_ERROR);
+    }
+    encryptedData.setEncryptedValue(secretBundle.id().toCharArray());
+    encryptedData.setEncryptionKey(fullSecretName);
+
+    logger.info("Done saving secret {} into Azure Secrets Manager for {} in {} ms", fullSecretName,
+        encryptedData.getUuid(), System.currentTimeMillis() - startTime);
+    return encryptedData;
+  }
+
+  private char[] decryptInternal(EncryptedRecord data, AzureVaultConfig azureConfig) {
+    long startTime = System.currentTimeMillis();
+
+    KeyVaultClient azureVaultClient = getAzureVaultClient(azureConfig);
+    String secretName = data.getEncryptionKey();
+    try {
+      SecretBundle secret = azureVaultClient.getSecret(azureConfig.getEncryptionServiceUrl(), secretName);
+      logger.info("Done decrypting Azure secret {} in {} ms", secretName, System.currentTimeMillis() - startTime);
+      return secret.value().toCharArray();
+    } catch (Exception ex) {
+      logger.error("Failed to decrypt secret {} in vault: {} in account {}", secretName, azureConfig.getName(),
+          azureConfig.getAccountId(), ex);
+      throw new WingsException(AZURE_KEY_VAULT_OPERATION_ERROR);
+    }
+  }
+
+  @Override
+  public boolean delete(AzureVaultConfig config, String key) {
+    KeyVaultClient azureVaultClient = getAzureVaultClient(config);
+    try {
+      DeletedSecretBundle deletedSecretBundle = azureVaultClient.deleteSecret(config.getEncryptionServiceUrl(), key);
+      logger.info("deletion of key {} in azure vault {} was successful.", key, config.getVaultName());
+      return true;
+    } catch (Exception ex) {
+      logger.error("Failed to delete key {} from azure vault: {}", key, config.getVaultName(), ex);
+      return false;
+    }
+  }
+
+  private HashMap<String, String> getMetadata(SettingVariableTypes type) {
+    return new HashMap<String, String>() {
+      {
+        put("createdBy", "Harness");
+        put("type", type.name());
+      }
+    };
+  }
+
+  private KeyVaultClient getAzureVaultClient(AzureVaultConfig azureVaultConfig) {
+    return KeyVaultADALAuthenticator.getClient(azureVaultConfig.getClientId(), azureVaultConfig.getSecretKey());
   }
 
   public static char[] encrypt(String src, Key key) throws NoSuchAlgorithmException, NoSuchPaddingException,
