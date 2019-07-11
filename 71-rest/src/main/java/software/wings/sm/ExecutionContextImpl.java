@@ -762,8 +762,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   @Override
-  public String getPipelineStateElementId() {
-    return stateExecutionInstance.getPipelineStateElementId();
+  public String getPipelineStageElementId() {
+    return stateExecutionInstance.getPipelineStageElementId();
   }
 
   @Override

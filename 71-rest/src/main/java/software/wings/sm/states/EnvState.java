@@ -75,7 +75,7 @@ public class EnvState extends State {
   private String workflowId;
 
   @SchemaIgnore private String pipelineId;
-  @SchemaIgnore private String pipelineStateElementId;
+  @SchemaIgnore private String pipelineStageElementId;
 
   @JsonIgnore @SchemaIgnore private Map<String, String> workflowVariables;
 
@@ -135,7 +135,7 @@ public class EnvState extends State {
     executionArgs.setExecutionCredential(aSSHExecutionCredential().withExecutionType(SSH).build());
     executionArgs.setTriggeredFromPipeline(true);
     executionArgs.setPipelineId(pipelineId);
-    executionArgs.setPipelinePhaseElementId(context.getPipelineStateElementId());
+    executionArgs.setPipelinePhaseElementId(context.getPipelineStageElementId());
     executionArgs.setWorkflowVariables(populatePipelineVariables(workflow, workflowStandardParams));
     executionArgs.setExcludeHostsWithSameArtifact(workflowStandardParams.isExcludeHostsWithSameArtifact());
     executionArgs.setNotifyTriggeredUserOnly(workflowStandardParams.isNotifyTriggeredUserOnly());
@@ -247,11 +247,11 @@ public class EnvState extends State {
     this.pipelineId = pipelineId;
   }
 
-  public String getPipelineStateElementId() {
-    return pipelineStateElementId;
+  public String getPipelineStageElementId() {
+    return pipelineStageElementId;
   }
-  public void setPipelineStateElementId(String pipelineStateElementId) {
-    this.pipelineStateElementId = pipelineStateElementId;
+  public void setPipelineStageElementId(String pipelineStageElementId) {
+    this.pipelineStageElementId = pipelineStageElementId;
   }
 
   public Map<String, String> getWorkflowVariables() {

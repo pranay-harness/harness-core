@@ -63,7 +63,7 @@ public class BarrierServiceTest extends WingsBaseTest {
     final List<BarrierInstance> barrierInstances = barrierService.obtainInstances(APP_ID,
         asList(OrchestrationWorkflowInfo.builder()
                    .workflowId("foo")
-                   .pipelineStateId("bar")
+                   .pipelineStageId("bar")
                    .orchestrationWorkflow(orchestrationWorkflow)
                    .build()),
         generateUuid());
@@ -98,7 +98,7 @@ public class BarrierServiceTest extends WingsBaseTest {
     final List<BarrierInstance> barrierInstances = barrierService.obtainInstances(APP_ID,
         asList(OrchestrationWorkflowInfo.builder()
                    .workflowId("foo")
-                   .pipelineStateId("bar")
+                   .pipelineStageId("bar")
                    .orchestrationWorkflow(orchestrationWorkflow)
                    .build()),
         generateUuid());
@@ -154,12 +154,12 @@ public class BarrierServiceTest extends WingsBaseTest {
     final List<BarrierInstance> barrierInstances = barrierService.obtainInstances(APP_ID,
         asList(OrchestrationWorkflowInfo.builder()
                    .workflowId("foo1")
-                   .pipelineStateId("bar1")
+                   .pipelineStageId("bar1")
                    .orchestrationWorkflow(orchestrationWorkflow1)
                    .build(),
             OrchestrationWorkflowInfo.builder()
                 .workflowId("foo2")
-                .pipelineStateId("bar2")
+                .pipelineStageId("bar2")
                 .orchestrationWorkflow(orchestrationWorkflow2)
                 .build()),
         pipelineExecution);
@@ -173,7 +173,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                            -> barrierService.obtainInstances(APP_ID,
                                asList(OrchestrationWorkflowInfo.builder()
                                           .workflowId("foo1")
-                                          .pipelineStateId("bar1")
+                                          .pipelineStageId("bar1")
                                           .orchestrationWorkflow(orchestrationWorkflow)
                                           .build()),
                                generateUuid()))
@@ -289,7 +289,7 @@ public class BarrierServiceTest extends WingsBaseTest {
     final List<BarrierInstance> barrierInstances = barrierService.obtainInstances(APP_ID,
         asList(OrchestrationWorkflowInfo.builder()
                    .workflowId("foo1")
-                   .pipelineStateId("bar1")
+                   .pipelineStageId("bar1")
                    .orchestrationWorkflow(orchestrationWorkflow)
                    .build()),
         generateUuid());
