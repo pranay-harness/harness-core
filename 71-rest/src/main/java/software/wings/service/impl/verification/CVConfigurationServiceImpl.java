@@ -694,7 +694,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       case SUMO:
       case ELK:
       case BUG_SNAG:
-      case STACK_DRIVER:
+      case STACK_DRIVER_LOG:
       case DATA_DOG_LOG:
         return;
 
