@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
+import io.harness.limits.ActionType;
 import io.harness.limits.Counter;
 import io.harness.limits.impl.model.StaticLimit;
 import org.junit.Before;
@@ -29,7 +30,7 @@ public class StaticLimitVicinityCheckerMongoImplIntegrationTest extends BaseInte
   @Test
   @Category(IntegrationTests.class)
   public void testCrossed() {
-    String key = "some-key-" + NAMESPACE;
+    String key = "some-key-" + NAMESPACE + ":" + ActionType.DEPLOY;
     Counter counter = new Counter(key, 10);
     wingsPersistence.save(counter);
     StaticLimitVicinityChecker checker = new StaticLimitVicinityCheckerMongoImpl(new StaticLimit(12), key, persistence);
