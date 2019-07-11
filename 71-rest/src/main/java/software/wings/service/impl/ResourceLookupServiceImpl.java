@@ -66,7 +66,7 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
   @Inject private YamlResourceService yamlResourceService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
-  @Inject private HarnessTagFilterHelper harnessTagFilterHelper;
+  @Inject private ResourceLookupFilterHelper resourceLookupFilterHelper;
 
   private static List<String> applicationLevelResource =
       Arrays.asList(APPLICATION.name(), SERVICE.name(), ENVIRONMENT.name(), WORKFLOW.name(), PIPELINE.name(),
@@ -269,7 +269,7 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
     pageRequest.setLimit(limit);
     pageRequest.setOffset(offset);
 
-    harnessTagFilterHelper.addHarnessTagFiltersToPageRequest(pageRequest, filter);
+    resourceLookupFilterHelper.addResourceLookupFiltersToPageRequest(pageRequest, filter);
     return wingsPersistence.query(ResourceLookup.class, pageRequest);
   }
 }
