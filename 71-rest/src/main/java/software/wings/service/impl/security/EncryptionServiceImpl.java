@@ -15,6 +15,7 @@ import io.harness.exception.KmsOperationException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AwsSecretsManagerConfig;
+import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -87,7 +88,9 @@ public class EncryptionServiceImpl implements EncryptionService {
       case AWS_SECRETS_MANAGER:
         return secretManagementDelegateService.decrypt(encryptedDataDetail.getEncryptedData(),
             (AwsSecretsManagerConfig) encryptedDataDetail.getEncryptionConfig());
-
+      case AZURE_VAULT:
+        return secretManagementDelegateService.decrypt(
+            encryptedDataDetail.getEncryptedData(), (AzureVaultConfig) encryptedDataDetail.getEncryptionConfig());
       default:
         throw new IllegalStateException("invalid encryption type: " + encryptedDataDetail.getEncryptionType());
     }

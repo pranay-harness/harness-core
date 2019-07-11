@@ -2,6 +2,7 @@ package software.wings.service.intfc.security;
 
 import io.harness.security.encryption.EncryptedRecord;
 import software.wings.beans.AwsSecretsManagerConfig;
+import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.VaultConfig;
@@ -78,4 +79,23 @@ public interface SecretManagementDelegateService {
    */
   @DelegateTaskType(TaskType.ASM_DELETE_SECRET)
   boolean deleteSecret(String secretName, AwsSecretsManagerConfig secretsManagerConfig);
+
+  /**
+   * Encrypt the name-value setting in the specified account using Azure vault Secrets Manager. A {@link
+   * EncryptedRecord} instance will be returned.
+   */
+  @DelegateTaskType(TaskType.AZURE_VAULT_ENCRYPT)
+  EncryptedRecord encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
+      AzureVaultConfig azureConfig, EncryptedRecord savedEncryptedData);
+
+  /**
+   * Decrypt the previously encrypted data using Azure Vault Secrets Manager. The decrypted value will be returned.
+   */
+  @DelegateTaskType(TaskType.AZURE_VAULT_DECRYPT) char[] decrypt(EncryptedRecord data, AzureVaultConfig azureConfig);
+
+  /**
+   * Delete the previously saved secret from Azure Vault. Return true if the deletion is successful; Return false
+   * if the deletion failed (e.g. The specified path is non-existent)
+   */
+  @DelegateTaskType(TaskType.AZURE_VAULT_DELETE) boolean delete(AzureVaultConfig config, String key);
 }

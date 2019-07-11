@@ -7,6 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.CLUSTER_NOT_FOUND;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
+import static io.harness.eraro.ErrorCode.INVALID_AZURE_VAULT_CONFIGURATION;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
@@ -25,10 +26,12 @@ import com.microsoft.aad.adal4j.AuthenticationException;
 import com.microsoft.azure.AzureEnvironment;
 import com.microsoft.azure.credentials.ApplicationTokenCredentials;
 import com.microsoft.azure.management.Azure;
+import com.microsoft.azure.management.Azure.Authenticated;
 import com.microsoft.azure.management.compute.VirtualMachine;
 import com.microsoft.azure.management.containerregistry.Registry;
 import com.microsoft.azure.management.containerservice.KubernetesCluster;
 import com.microsoft.azure.management.containerservice.OSType;
+import com.microsoft.azure.management.keyvault.Vault;
 import com.microsoft.azure.management.resources.ResourceGroup;
 import com.microsoft.rest.LogLevel;
 import io.fabric8.kubernetes.api.model.AuthInfo;
@@ -53,6 +56,7 @@ import software.wings.beans.AzureInfrastructureMapping;
 import software.wings.beans.AzureKubernetesCluster;
 import software.wings.beans.AzureTag;
 import software.wings.beans.AzureTagDetails;
+import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.AzureVirtualMachineScaleSet;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
@@ -60,6 +64,7 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -585,5 +590,36 @@ public class AzureHelperService {
     }
 
     throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", ExceptionUtils.getMessage(e));
+  }
+
+  public List<Vault> listVaults(String accountId, AzureVaultConfig azureVaultConfig) {
+    try {
+      return listVaultsInternal(accountId, azureVaultConfig);
+    } catch (Exception ex) {
+      logger.error("Listing vaults failed for account Id {}", accountId, ex);
+      throw new WingsException(INVALID_AZURE_VAULT_CONFIGURATION);
+    }
+  }
+
+  public List<Vault> listVaultsInternal(String accountId, AzureVaultConfig azureVaultConfig) throws IOException {
+    Azure azure = null;
+    List<Vault> vaultList = new ArrayList<>();
+    ApplicationTokenCredentials credentials = new ApplicationTokenCredentials(azureVaultConfig.getClientId(),
+        azureVaultConfig.getTenantId(), azureVaultConfig.getSecretKey(), AzureEnvironment.AZURE);
+
+    Authenticated authenticate = Azure.configure().authenticate(credentials);
+
+    if (isEmpty(azureVaultConfig.getSubscription())) {
+      azure = authenticate.withDefaultSubscription();
+    } else {
+      azure = authenticate.withSubscription(azureVaultConfig.getSubscription());
+    }
+    logger.info("Subscription {} is being used for account Id {}", azure.subscriptionId(), accountId);
+
+    for (ResourceGroup rGroup : azure.resourceGroups().list()) {
+      vaultList.addAll(azure.vaults().listByResourceGroup(rGroup.name()));
+    }
+    logger.info("Found azure vaults {} or account id: {}", vaultList, accountId);
+    return vaultList;
   }
 }
