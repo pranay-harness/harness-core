@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 @EqualsAndHashCode(callSuper = false)
 public class DatadogConfig extends SettingValue implements EncryptableSetting {
   public static final String validationUrl = "metrics";
-  public static final String logAnalysisUrl = "logs-queries/list";
+  public static final String LOG_API_PATH_SUFFIX = "logs-queries/list";
 
   @Attributes(title = "URL", required = true) @NotEmpty private String url;
 
@@ -67,6 +67,11 @@ public class DatadogConfig extends SettingValue implements EncryptableSetting {
     paramsMap.put("api_key", apiKey != null ? new String(apiKey) : "${apiKey}");
     // check for applicationKey. If not empty populate the value else populate default value.
     paramsMap.put("application_key", applicationKey != null ? new String(applicationKey) : "${applicationKey}");
+
+    return paramsMap;
+  }
+  private Map<String, String> optionsMapAPM() {
+    Map<String, String> paramsMap = optionsMap();
     paramsMap.put("from", String.valueOf(System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1)));
     paramsMap.put("to", String.valueOf(System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1)));
     return paramsMap;
@@ -96,6 +101,15 @@ public class DatadogConfig extends SettingValue implements EncryptableSetting {
   }
 
   public APMValidateCollectorConfig createAPMValidateCollectorConfig() {
+    return APMValidateCollectorConfig.builder()
+        .baseUrl(url)
+        .url(validationUrl)
+        .options(optionsMapAPM())
+        .headers(new HashMap<>())
+        .build();
+  }
+
+  public APMValidateCollectorConfig createLogAPMValidateCollectorConfig() {
     return APMValidateCollectorConfig.builder()
         .baseUrl(url)
         .url(validationUrl)

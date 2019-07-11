@@ -134,7 +134,7 @@ public class DatadogLogState extends AbstractLogAnalysisState {
           "host", CustomLogVerificationState.ResponseMapper.builder().fieldName("host").jsonPath(pathList3).build());
     }
 
-    String eventsUrl = datadogConfig.getUrl() + DatadogConfig.logAnalysisUrl;
+    String eventsUrl = datadogConfig.getUrl() + DatadogConfig.LOG_API_PATH_SUFFIX;
     logDefinition.put(replaceDotWithUnicode(eventsUrl), responseMappers);
     return logDefinition;
   }

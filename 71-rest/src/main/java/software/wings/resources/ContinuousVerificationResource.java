@@ -51,7 +51,7 @@ public class ContinuousVerificationResource {
       @QueryParam("accountId") final String accountId, @QueryParam("serverConfigId") String serverConfigId,
       APMFetchConfig fetchConfig) {
     return new RestResponse<>(
-        cvManagerService.getMetricsWithDataForNode(accountId, serverConfigId, fetchConfig, StateType.APM_VERIFICATION));
+        cvManagerService.getDataForNode(accountId, serverConfigId, fetchConfig, StateType.APM_VERIFICATION));
   }
 
   @POST

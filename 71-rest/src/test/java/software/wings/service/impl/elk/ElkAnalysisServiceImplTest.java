@@ -75,9 +75,9 @@ public class ElkAnalysisServiceImplTest extends WingsBaseTest {
 
     VerificationNodeDataSetupResponse verificationNodeDataSetupResponse =
         service.getLogDataByHost(accountId, elkSetupTestNodeData);
-    assertEquals(201, verificationNodeDataSetupResponse.getLoadResponse().getTotalHits());
+    assertEquals(201, (long) verificationNodeDataSetupResponse.getLoadResponse().getTotalHits());
     assertEquals(VerificationConstants.TOTAL_HITS_PER_MIN_THRESHOLD,
-        verificationNodeDataSetupResponse.getLoadResponse().getTotalHitsThreshold());
+        (long) verificationNodeDataSetupResponse.getLoadResponse().getTotalHitsThreshold());
   }
 
   @Test

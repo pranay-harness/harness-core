@@ -500,7 +500,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         return CustomLogDataCollectionInfo.builder()
             .baseUrl(datadogConfig.getUrl())
             .validationUrl(DatadogConfig.validationUrl)
-            .dataUrl(DatadogConfig.logAnalysisUrl)
+            .dataUrl(DatadogConfig.LOG_API_PATH_SUFFIX)
             .headers(new HashMap<>())
             .options(datadogConfig.fetchLogOptionsMap())
             .body(DatadogLogState.resolveHostnameField(

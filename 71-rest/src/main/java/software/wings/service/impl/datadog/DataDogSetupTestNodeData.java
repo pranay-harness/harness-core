@@ -27,6 +27,8 @@ public class DataDogSetupTestNodeData extends SetupTestNodeData {
   private Map<String, String> ecsMetrics;
   private Map<String, Set<Metric>> customMetricsMap;
   private String metrics;
+  private String hostNameField;
+  private String query;
   private List<Metric> customMetrics;
   private String deploymentType;
 
@@ -34,9 +36,10 @@ public class DataDogSetupTestNodeData extends SetupTestNodeData {
   public DataDogSetupTestNodeData(String appId, String settingId, String instanceName, boolean isServiceLevel,
       InstanceElement instanceElement, String hostExpression, String workflowId, String guid, long fromTime,
       long toTime, String datadogServiceName, Map<String, String> dockerMetrics, Map<String, String> ecsMetrics,
-      Map<String, Set<Metric>> customMetricsMap, String metrics, List<Metric> customMetrics, String deploymentType) {
-    super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
-        StateType.DATA_DOG, fromTime, toTime);
+      Map<String, Set<Metric>> customMetricsMap, StateType stateType, String metrics, String query,
+      String hostNameField, List<Metric> customMetrics, String deploymentType) {
+    super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid, stateType,
+        fromTime, toTime);
     this.datadogServiceName = datadogServiceName;
     this.dockerMetrics = dockerMetrics;
     this.ecsMetrics = ecsMetrics;
@@ -44,5 +47,7 @@ public class DataDogSetupTestNodeData extends SetupTestNodeData {
     this.metrics = metrics;
     this.customMetrics = customMetrics;
     this.deploymentType = deploymentType;
+    this.query = query;
+    this.hostNameField = hostNameField;
   }
 }
