@@ -61,6 +61,7 @@ import migrations.all.K8sV2ServiceInfraReleaseNameMigration;
 import migrations.all.LdapSettingsMigration;
 import migrations.all.LearningEngineTaskGroupNameMigration;
 import migrations.all.LicenseDataMigration;
+import migrations.all.LimitCounterAccountIdMigration;
 import migrations.all.LogAnalysisDeprecatedRecordMigration;
 import migrations.all.LogAnalysisExperimentalRecordsMigration;
 import migrations.all.MarketoLeadDataMigration;
@@ -257,6 +258,7 @@ public class MigrationList {
         .add(Pair.of(264, BaseMigration.class))
         .add(Pair.of(265, AuditViewerPermissionMigration.class))
         .add(Pair.of(266, AwsAmiAsgDesiredInstancesMigration.class))
+        .add(Pair.of(267, LimitCounterAccountIdMigration.class))
         .build();
   }
 }
