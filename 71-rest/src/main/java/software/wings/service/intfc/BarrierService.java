@@ -14,12 +14,12 @@ public interface BarrierService {
   BarrierInstance update(String appId, String barrierId);
   BarrierInstance update(BarrierInstance barrierInstance);
 
-  String findByStep(String appId, String pipelineStateId, String workflowExecutionId, String identifier);
+  String findByStep(String appId, String pipelineStageId, String workflowExecutionId, String identifier);
 
   @Value
   @Builder
   class OrchestrationWorkflowInfo {
-    private String pipelineStateId;
+    private String pipelineStageId;
     private String workflowId;
     private OrchestrationWorkflow orchestrationWorkflow;
   }

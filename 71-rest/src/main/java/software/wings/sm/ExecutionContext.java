@@ -62,7 +62,7 @@ public interface ExecutionContext {
 
   String getStateExecutionInstanceId();
 
-  String getPipelineStateElementId();
+  String getPipelineStageElementId();
 
   String getAppId();
 

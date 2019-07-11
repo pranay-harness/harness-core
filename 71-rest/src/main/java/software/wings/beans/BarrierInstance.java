@@ -63,8 +63,8 @@ public class BarrierInstance implements PersistentEntity, UuidAware, PersistentI
   public static class Workflow {
     private String uuid;
 
-    private String pipelineStateId;
-    private String pipelineStateExecutionId;
+    private String pipelineStageId;
+    private String pipelineStageExecutionId;
 
     private String workflowExecutionId;
 
@@ -93,7 +93,7 @@ public class BarrierInstance implements PersistentEntity, UuidAware, PersistentI
 
   public static final class BarrierInstanceKeys {
     public static final String pipeline_executionId = pipeline + "." + PipelineKeys.executionId;
-    public static final String pipeline_workflows_pipelineStateId =
-        pipeline + "." + PipelineKeys.workflows + "." + WorkflowKeys.pipelineStateId;
+    public static final String pipeline_workflows_pipelineStageId =
+        pipeline + "." + PipelineKeys.workflows + "." + WorkflowKeys.pipelineStageId;
   }
 }

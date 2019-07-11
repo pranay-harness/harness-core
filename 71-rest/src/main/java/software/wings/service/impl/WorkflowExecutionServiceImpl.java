@@ -892,7 +892,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       if (workflow.getOrchestrationWorkflow() != null) {
         orchestrationWorkflows.add(OrchestrationWorkflowInfo.builder()
                                        .workflowId(workflow.getUuid())
-                                       .pipelineStateId(element.getUuid())
+                                       .pipelineStageId(element.getUuid())
                                        .orchestrationWorkflow(workflow.getOrchestrationWorkflow())
                                        .build());
       }
@@ -1237,7 +1237,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     stateExecutionInstance.setExecutionType(workflowExecution.getWorkflowType());
     stateExecutionInstance.setOrchestrationWorkflowType(workflowExecution.getOrchestrationType());
     stateExecutionInstance.setWorkflowId(workflowExecution.getWorkflowId());
-    stateExecutionInstance.setPipelineStateElementId(executionArgs.getPipelinePhaseElementId());
+    stateExecutionInstance.setPipelineStageElementId(executionArgs.getPipelinePhaseElementId());
 
     if (workflowExecutionUpdate == null) {
       workflowExecutionUpdate = new WorkflowExecutionUpdate();

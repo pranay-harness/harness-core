@@ -125,19 +125,19 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
     final BarrierInstance.Pipeline pipeline = barrierInstance.getPipeline();
     for (int index = 0; index < pipeline.getWorkflows().size(); ++index) {
       BarrierInstance.Workflow workflow = pipeline.getWorkflows().get(index);
-      if (workflow.getPipelineStateExecutionId() == null) {
+      if (workflow.getPipelineStageExecutionId() == null) {
         try (HKeyIterator<StateExecutionInstance> keys = new HKeyIterator(
                  wingsPersistence.createQuery(StateExecutionInstance.class)
                      .filter(StateExecutionInstanceKeys.appId, barrierInstance.getAppId())
                      .filter(StateExecutionInstanceKeys.executionUuid, pipeline.getExecutionId())
                      .filter(StateExecutionInstanceKeys.stateType, ENV_STATE.name())
-                     .filter(StateExecutionInstanceKeys.pipelineStateElementId, workflow.getPipelineStateId())
+                     .filter(StateExecutionInstanceKeys.pipelineStageElementId, workflow.getPipelineStageId())
                      .fetchKeys())) {
           if (!keys.hasNext()) {
             continue;
           }
 
-          workflow.setPipelineStateExecutionId(keys.next().getId().toString());
+          workflow.setPipelineStageExecutionId(keys.next().getId().toString());
 
           if (keys.hasNext()) {
             logger.error("More than one execution instance for the same pipeline state");
@@ -150,7 +150,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
                  wingsPersistence.createQuery(WorkflowExecution.class)
                      .filter(WorkflowExecutionKeys.appId, barrierInstance.getAppId())
                      .filter(WorkflowExecutionKeys.pipelineExecutionId, pipeline.getExecutionId())
-                     .filter(WorkflowExecutionKeys.executionArgs_pipelinePhaseElementId, workflow.getPipelineStateId())
+                     .filter(WorkflowExecutionKeys.executionArgs_pipelinePhaseElementId, workflow.getPipelineStageId())
                      .filter(WorkflowExecutionKeys.workflowId, workflow.getUuid())
                      .fetchKeys())) {
           if (!keys.hasNext()) {
@@ -246,7 +246,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
                                                  .children(asList(step))
                                                  .build();
                         return Forcer.builder()
-                            .id(new ForcerId(workflow.getPipelineStateExecutionId()))
+                            .id(new ForcerId(workflow.getPipelineStageExecutionId()))
                             .metadata(ImmutableMap.of(LEVEL, "workflow", APP_ID, appId))
                             .children(asList(phase))
                             .build();
@@ -296,7 +296,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   }
 
   @Override
-  public String findByStep(String appId, String pipelineStateId, String workflowExecutionId, String identifier) {
+  public String findByStep(String appId, String pipelineStageId, String workflowExecutionId, String identifier) {
     final String pipelineExecutionId = wingsPersistence.createQuery(WorkflowExecution.class)
                                            .filter(WorkflowExecutionKeys.appId, appId)
                                            .filter(WorkflowExecutionKeys.uuid, workflowExecutionId)
@@ -309,7 +309,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
                                   .filter(BarrierInstanceKeys.appId, appId)
                                   .filter(BarrierInstanceKeys.name, identifier)
                                   .filter(BarrierInstanceKeys.pipeline_executionId, pipelineExecutionId)
-                                  .filter(BarrierInstanceKeys.pipeline_workflows_pipelineStateId, pipelineStateId)
+                                  .filter(BarrierInstanceKeys.pipeline_workflows_pipelineStageId, pipelineStageId)
                                   .fetchKeys())) {
       if (!keys.hasNext()) {
         // We would not be able to find a barrier for if it is noop
@@ -382,7 +382,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
         .map(entry -> {
           final List<BarrierDetail> value = entry.getValue();
           final long count =
-              value.stream().map(details -> details.getWorkflow().getPipelineStateId()).distinct().count();
+              value.stream().map(details -> details.getWorkflow().getPipelineStageId()).distinct().count();
 
           // All items should be in different concurrentTrack
           if (count < value.size()) {
@@ -420,7 +420,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
         .name((String) node.getProperties().get("identifier"))
         .workflow(BarrierInstance.Workflow.builder()
                       .uuid(workflow.getWorkflowId())
-                      .pipelineStateId(workflow.getPipelineStateId())
+                      .pipelineStageId(workflow.getPipelineStageId())
                       .phaseUuid(phaseUuid)
                       .stepUuid(node.getId())
                       .build())

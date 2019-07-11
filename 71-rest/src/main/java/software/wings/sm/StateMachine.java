@@ -254,7 +254,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
     Map<String, Object> properties = pipelineStageElement.getProperties();
 
     properties = MapUtils.putToImmutable("pipelineId", pipeline.getUuid(), properties);
-    properties.put("pipelineStateElementId", pipelineStageElement.getUuid());
+    properties.put("pipelineStageElementId", pipelineStageElement.getUuid());
     properties.put("disable", pipelineStageElement.isDisable());
 
     if (pipelineStageElement.getWorkflowVariables() != null) {

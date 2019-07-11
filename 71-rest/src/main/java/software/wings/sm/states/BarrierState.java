@@ -132,7 +132,7 @@ public class BarrierState extends State {
 
   private BarrierInstance updateBarrier(ExecutionContext context) {
     final String barrierId = barrierService.findByStep(
-        context.getAppId(), context.getPipelineStateElementId(), context.getWorkflowExecutionId(), getIdentifier());
+        context.getAppId(), context.getPipelineStageElementId(), context.getWorkflowExecutionId(), getIdentifier());
 
     // If this is noop barrier
     if (barrierId == null) {
