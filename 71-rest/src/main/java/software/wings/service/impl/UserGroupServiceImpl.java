@@ -108,6 +108,13 @@ public class UserGroupServiceImpl implements UserGroupService {
   public UserGroup save(UserGroup userGroup) {
     Validator.notNullCheck(UserGroup.ACCOUNT_ID_KEY, userGroup.getAccountId());
     checkUserGroupsCountWithinLimit(userGroup.getAccountId());
+
+    if (null == userGroup.getNotificationSettings()) {
+      NotificationSettings notificationSettings =
+          new NotificationSettings(false, true, Collections.emptyList(), null, "");
+      userGroup.setNotificationSettings(notificationSettings);
+    }
+
     UserGroup savedUserGroup = Validator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(UserGroup.class, userGroup), "name", userGroup.getName());
     Account account = accountService.get(userGroup.getAccountId());
