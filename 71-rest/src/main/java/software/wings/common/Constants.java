@@ -358,9 +358,6 @@ public interface Constants {
 
   long ML_RECORDS_TTL_MONTHS = 6;
 
-  String HARNESS_IO_KEY_ = "Harness.io";
-  String HARNESS_SUPPORT_EMAIL_KEY = "support@harness.io";
-
   /**
    * Quartz job detail key names
    */

@@ -20,6 +20,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.ResourceLookup.ResourceLookupKeys;
 
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @Entity(value = "resourceLookup", noClassnameStored = true)
@@ -42,10 +43,20 @@ import javax.validation.constraints.NotNull;
                 @Field(ResourceLookupKeys.resourceName)
           }),
 
-      @Index(options = @IndexOptions(name = "resourceIndex_3"), fields = {
-        @Field(ResourceLookupKeys.accountId)
-        , @Field(ResourceLookupKeys.resourceName), @Field(ResourceLookupKeys.resourceType)
-      })
+      @Index(options = @IndexOptions(name = "resourceIndex_3"),
+          fields =
+          {
+            @Field(ResourceLookupKeys.accountId)
+            , @Field(ResourceLookupKeys.resourceName), @Field(ResourceLookupKeys.resourceType)
+          }),
+
+      @Index(options = @IndexOptions(name = "tagsNameResourceLookupIndex"),
+          fields = { @Field(ResourceLookupKeys.accountId)
+                     , @Field("tags.name") }),
+
+      @Index(options = @IndexOptions(name = "resourceIdResourceLookupIndex"), fields = {
+        @Field(ResourceLookupKeys.accountId), @Field(ResourceLookupKeys.resourceId)
+      }),
 })
 @Data
 @Builder
@@ -58,6 +69,7 @@ public class ResourceLookup implements PersistentEntity, UuidAware, CreatedAtAwa
   @Indexed @NotEmpty private String resourceId;
   @NotEmpty private String resourceType;
   private String resourceName;
+  private List<NameValuePair> tags;
   private long createdAt;
   private long lastUpdatedAt;
 }

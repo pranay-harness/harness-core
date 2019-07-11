@@ -183,6 +183,9 @@ public class HarnessTagServiceImpl implements HarnessTagService {
       }
       wingsPersistence.save(tagLink);
     }
+
+    resourceLookupService.updateResourceLookupRecordWithTags(
+        tagLink.getAccountId(), tagLink.getEntityId(), tagLink.getKey(), tagLink.getValue(), true);
   }
 
   @Override
@@ -197,6 +200,8 @@ public class HarnessTagServiceImpl implements HarnessTagService {
                                 .filter(HarnessTagLinkKeys.accountId, accountId)
                                 .filter(HarnessTagLinkKeys.entityId, entityId)
                                 .filter(HarnessTagLinkKeys.key, key.trim()));
+
+    resourceLookupService.updateResourceLookupRecordWithTags(accountId, entityId, key, null, false);
   }
 
   @Override

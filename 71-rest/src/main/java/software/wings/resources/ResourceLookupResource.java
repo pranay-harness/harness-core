@@ -63,4 +63,14 @@ public class ResourceLookupResource {
   public RestResponse<List<String>> listAppResourceTypes(@QueryParam("accountId") String accountId) {
     return new RestResponse<>(resourceLookupService.listApplicationLevelResourceTypes());
   }
+
+  @GET
+  @Path("tags")
+  @Timed
+  @ExceptionMetered
+  @Produces("application/json")
+  public PageResponse<ResourceLookup> listResourcesWithTag(@QueryParam("accountId") String accountId,
+      @QueryParam("filter") String filter, @QueryParam("limit") String limit, @QueryParam("offset") String offset) {
+    return resourceLookupService.listResourceLookupRecordsWithTags(accountId, filter, limit, offset);
+  }
 }
