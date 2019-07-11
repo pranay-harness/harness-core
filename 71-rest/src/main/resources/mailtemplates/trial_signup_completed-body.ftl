@@ -44,13 +44,13 @@
                     <tr>
                         <td align="center" valign="top" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%; width: 87.5%; font-size: 17px; font-weight: 400; line-height: 160%; padding-top: 25px; padding-bottom: 25px; color: #000000; font-family: 'Source Sans Pro', Tahoma, Verdana, Segoe, sans-serif; border-collapse: collapse;" class="paragraph" width="87.5%">
                            <p style="font: Source Sans Pro; font-size: 17px; color: #77787b; line-height: 20px; font-weight: normal; text-align: left;">Hi ${name},</p>
-                           <p style="font: Source Sans Pro; font-size: 17px; color: #77787b; line-height: 20px; font-weight: normal; text-align: left;">You have already completed the sign-up on Harness platform. Please use the following link to get to the login page. If you forgot your password, you can easily reset it using the forgot password link on the login page.</p>
+                           <p style="font: Source Sans Pro; font-size: 17px; color: #77787b; line-height: 20px; font-weight: normal; text-align: left;">You have already signed up on Harness. Please log in using the link below. If you forgot your password, you can reset it on the login page.</p>
                         </td>
                     </tr>
                     <tr>
                         <td align="left" valign="middle" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%; width: 87.5%; padding-top: 0px; height: 70px; border-collapse: collapse;" height="70" class="button" width="87.5%">
                             <a href="${url!}" target="_blank" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; padding: 12px 24px; text-decoration: none; background-color: #000000; color: #FFFFFF; font-family: 'Source Sans Pro', Tahoma, Verdana, Segoe, sans-serif; font-size: 16px; font-weight: bold; line-height: 120%; border-radius: 4px; -webkit-border-radius: 4px; -moz-border-radius: 4px; -khtml-border-radius: 4px;">
-                                LOGIN
+                                LOG IN
                             </a>
                         </td>
                     </tr>
