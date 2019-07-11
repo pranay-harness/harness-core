@@ -1303,8 +1303,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public StateMachine readLatestStateMachine(String appId, String originId) {
     return wingsPersistence.createQuery(StateMachine.class)
-        .filter(StateMachine.APP_ID_KEY, appId)
-        .filter(StateMachine.ORIGIN_ID_KEY, originId)
+        .filter(StateMachineKeys.appId, appId)
+        .filter(StateMachineKeys.originId, originId)
         .order(Sort.descending(StateMachineKeys.createdAt))
         .get();
   }
@@ -1312,9 +1312,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public StateMachine readStateMachine(String appId, String originId, Integer version) {
     return wingsPersistence.createQuery(StateMachine.class)
-        .filter(StateMachine.APP_ID_KEY, appId)
-        .filter(StateMachine.ORIGIN_ID_KEY, originId)
-        .filter(StateMachine.ORIGIN_VERSION_KEY, version)
+        .filter(StateMachineKeys.appId, appId)
+        .filter(StateMachineKeys.originId, originId)
+        .filter(StateMachineKeys.originVersion, version)
         .get();
   }
 
