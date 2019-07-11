@@ -39,6 +39,9 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false, exclude = {"sshSettingAttribute"})
 @Slf4j
 public class GitConfig extends SettingValue implements EncryptableSetting {
+  public static final String HARNESS_IO_KEY_ = "Harness.io";
+  public static final String HARNESS_SUPPORT_EMAIL_KEY = "support@harness.io";
+
   @Attributes(title = "Username", required = true) private String username;
   @Attributes(title = "Password", required = true) @Encrypted private char[] password;
   @NotEmpty @Trimmed @Attributes(title = "Git Repo Url", required = true) private String repoUrl;

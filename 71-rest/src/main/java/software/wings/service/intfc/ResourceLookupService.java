@@ -39,4 +39,10 @@ public interface ResourceLookupService {
   void saveResourceLookupRecordIfNeeded(EntityAuditRecord record, String accountId);
 
   ResourceLookup getWithResourceId(String accountId, String resourceId);
+
+  void updateResourceLookupRecordWithTags(
+      String accountId, String entityId, String tagKey, String tagValue, boolean addTag);
+
+  PageResponse<ResourceLookup> listResourceLookupRecordsWithTags(
+      String accountId, String filter, String limit, String offset);
 }
