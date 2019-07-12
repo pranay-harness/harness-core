@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 
 import migrations.all.AddAccountToCVFeedbackRecordMigration;
 import migrations.all.AddAnalysisStatusMigration;
-import migrations.all.AddDuplicateFieldToCVFeedbacks;
 import migrations.all.AddInfraMappingNameToInstanceData;
 import migrations.all.AddIsDefaultFlagToUserGroup;
 import migrations.all.AddOrchestrationToWorkflows;
@@ -81,7 +80,6 @@ public class MigrationBackgroundList {
         .add(Pair.of(36, DeleteStaleThirdPartyApiCallLogsMigration.class))
         .add(Pair.of(37, AddAccountToCVFeedbackRecordMigration.class))
         .add(Pair.of(38, MigrateTimeSeriesRawDataToGoogle.class))
-        .add(Pair.of(39, AddDuplicateFieldToCVFeedbacks.class))
         .build();
   }
 }
