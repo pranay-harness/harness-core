@@ -39,8 +39,7 @@ public class RemoveDupInstanceStats implements Migration {
       Set<UniqueKey> statsSnapshotSet = new HashSet<>();
 
       int deleteCount = 0;
-      while (stats.hasNext()) {
-        InstanceStatsSnapshot stat = stats.next();
+      for (InstanceStatsSnapshot stat : stats) {
         boolean added = statsSnapshotSet.add(new UniqueKey(stat.getTimestamp(), stat.getAccountId()));
         if (!added) {
           persistence.delete(stat);

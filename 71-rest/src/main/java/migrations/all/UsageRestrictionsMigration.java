@@ -45,8 +45,7 @@ public class UsageRestrictionsMigration implements Migration {
     Query<SettingAttribute> settingAttributeQuery =
         wingsPersistence.createQuery(SettingAttribute.class, excludeAuthority);
     try (HIterator<SettingAttribute> records = new HIterator<>(settingAttributeQuery.fetch())) {
-      while (records.hasNext()) {
-        SettingAttribute settingAttribute = null;
+      for (SettingAttribute settingAttribute : records) {
         try {
           settingAttribute = records.next();
 
@@ -74,8 +73,7 @@ public class UsageRestrictionsMigration implements Migration {
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority);
     query.field("type").in(asList(SettingVariableTypes.SECRET_TEXT, SettingVariableTypes.CONFIG_FILE));
     try (HIterator<EncryptedData> records = new HIterator<>(query.fetch())) {
-      while (records.hasNext()) {
-        EncryptedData encryptedData = null;
+      for (EncryptedData encryptedData : records) {
         try {
           encryptedData = records.next();
 

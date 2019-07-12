@@ -99,9 +99,8 @@ public class AccountIdAdditionJob implements Job {
     query.project("appId", true);
 
     try (HIterator<T> entities = new HIterator<>(query.fetch())) {
-      while (entities.hasNext()) {
+      for (T entity : entities) {
         try {
-          final T entity = entities.next();
           String appId = entity.getAppId();
           String entityId = entity.getUuid();
           String accountId = appService.getAccountIdByAppId(appId);

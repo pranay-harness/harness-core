@@ -26,8 +26,7 @@ public class AddOrchestrationToWorkflows implements Migration {
                                  .project(Workflow.ID_KEY, true)
                                  .project(Workflow.APP_ID_KEY, true)
                                  .fetch())) {
-      while (workflowIterator.hasNext()) {
-        Workflow workflow = workflowIterator.next();
+      for (Workflow workflow : workflowIterator) {
         try {
           Workflow readWorkflow = workflowService.readWorkflow(workflow.getAppId(), workflow.getUuid());
           workflowService.updateWorkflow(readWorkflow);

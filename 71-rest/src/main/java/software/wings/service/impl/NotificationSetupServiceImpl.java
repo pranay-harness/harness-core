@@ -177,8 +177,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
         .forEach(appId -> {
           try (HIterator<Workflow> workflows =
                    new HIterator<>(wingsPersistence.createQuery(Workflow.class).filter(APP_ID_KEY, appId).fetch())) {
-            while (workflows.hasNext()) {
-              Workflow workflow = workflows.next();
+            for (Workflow workflow : workflows) {
               if (workflow.getOrchestrationWorkflow() != null
                   && workflow.getOrchestrationWorkflow().getNotificationRules().stream().anyMatch(notificationRule
                          -> notificationRule.getNotificationGroups().stream().anyMatch(
@@ -262,8 +261,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
                                                               .field(User.ROLES_KEY)
                                                               .in(asList(role))
                                                               .fetch())) {
-            while (iterator.hasNext()) {
-              User user = iterator.next();
+            for (User user : iterator) {
               if (user.isEmailVerified()) {
                 emailAddresses.add(user.getEmail());
               }

@@ -1007,8 +1007,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     Set<IdNameReference> secrets = new LinkedHashSet<>();
 
     try (HIterator<SettingAttribute> iterator = getSettingAttributesWithUsageRestrictionsIterator(accountId)) {
-      while (iterator.hasNext()) {
-        SettingAttribute settingAttribute = iterator.next();
+      for (SettingAttribute settingAttribute : iterator) {
         UsageRestrictions usageRestrictions = settingAttribute.getUsageRestrictions();
         for (AppEnvRestriction appEnvRestriction : usageRestrictions.getAppEnvRestrictions()) {
           GenericEntityFilter appFilter = appEnvRestriction.getAppFilter();
@@ -1021,8 +1020,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     }
 
     try (HIterator<EncryptedData> iterator = getEncryptedDataWithUsageRestrictionsIterator(accountId)) {
-      while (iterator.hasNext()) {
-        EncryptedData encryptedData = iterator.next();
+      for (EncryptedData encryptedData : iterator) {
         UsageRestrictions usageRestrictions = encryptedData.getUsageRestrictions();
         for (AppEnvRestriction appEnvRestriction : usageRestrictions.getAppEnvRestrictions()) {
           GenericEntityFilter appFilter = appEnvRestriction.getAppFilter();
@@ -1050,8 +1048,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     Set<IdNameReference> secrets = new LinkedHashSet<>();
 
     try (HIterator<SettingAttribute> iterator = getSettingAttributesWithUsageRestrictionsIterator(accountId)) {
-      while (iterator.hasNext()) {
-        SettingAttribute settingAttribute = iterator.next();
+      for (SettingAttribute settingAttribute : iterator) {
         UsageRestrictions usageRestrictions = settingAttribute.getUsageRestrictions();
         for (AppEnvRestriction appEnvRestriction : usageRestrictions.getAppEnvRestrictions()) {
           EnvFilter envFilter = appEnvRestriction.getEnvFilter();
@@ -1064,8 +1061,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     }
 
     try (HIterator<EncryptedData> iterator = getEncryptedDataWithUsageRestrictionsIterator(accountId)) {
-      while (iterator.hasNext()) {
-        EncryptedData encryptedData = iterator.next();
+      for (EncryptedData encryptedData : iterator) {
         UsageRestrictions usageRestrictions = encryptedData.getUsageRestrictions();
         for (AppEnvRestriction appEnvRestriction : usageRestrictions.getAppEnvRestrictions()) {
           EnvFilter envFilter = appEnvRestriction.getEnvFilter();
@@ -1098,8 +1094,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     }
 
     try (HIterator<SettingAttribute> iterator = getSettingAttributesWithUsageRestrictionsIterator(accountId)) {
-      while (iterator.hasNext()) {
-        SettingAttribute settingAttribute = iterator.next();
+      for (SettingAttribute settingAttribute : iterator) {
         UsageRestrictions usageRestrictions = settingAttribute.getUsageRestrictions();
         count += purgeDanglingAppEnvReferenceInternal(usageRestrictions, existingAppIds, existingEnvIds);
 
@@ -1112,8 +1107,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     }
 
     try (HIterator<EncryptedData> iterator = getEncryptedDataWithUsageRestrictionsIterator(accountId)) {
-      while (iterator.hasNext()) {
-        EncryptedData encryptedData = iterator.next();
+      for (EncryptedData encryptedData : iterator) {
         UsageRestrictions usageRestrictions = encryptedData.getUsageRestrictions();
         count += purgeDanglingAppEnvReferenceInternal(usageRestrictions, existingAppIds, existingEnvIds);
 
@@ -1133,8 +1127,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     int count = 0;
 
     try (HIterator<SettingAttribute> iterator = getSettingAttributesWithUsageRestrictionsIterator(accountId)) {
-      while (iterator.hasNext()) {
-        SettingAttribute settingAttribute = iterator.next();
+      for (SettingAttribute settingAttribute : iterator) {
         UsageRestrictions usageRestrictions = settingAttribute.getUsageRestrictions();
         count += removeAppEnvReferencesInternal(usageRestrictions, appId, envId);
 
@@ -1149,8 +1142,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     }
 
     try (HIterator<EncryptedData> iterator = getEncryptedDataWithUsageRestrictionsIterator(accountId)) {
-      while (iterator.hasNext()) {
-        EncryptedData encryptedData = iterator.next();
+      for (EncryptedData encryptedData : iterator) {
         UsageRestrictions usageRestrictions = encryptedData.getUsageRestrictions();
         count += removeAppEnvReferencesInternal(usageRestrictions, appId, envId);
 

@@ -156,8 +156,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
 
     Set<String> constraintIds = new HashSet<>();
     try (HIterator<ResourceConstraintInstance> iterator = new HIterator<ResourceConstraintInstance>(query.fetch())) {
-      while (iterator.hasNext()) {
-        ResourceConstraintInstance instance = iterator.next();
+      for (ResourceConstraintInstance instance : iterator) {
         final HoldingScope holdingScope = HoldingScope.valueOf(instance.getReleaseEntityType());
         switch (holdingScope) {
           case WORKFLOW:
@@ -193,8 +192,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
                  .field(ResourceConstraintInstanceKeys.state)
                  .notEqual(State.FINISHED.name())
                  .fetch())) {
-      while (iterator.hasNext()) {
-        ResourceConstraintInstance instance = iterator.next();
+      for (ResourceConstraintInstance instance : iterator) {
         if (State.ACTIVE.name().equals(instance.getState())) {
           excludeConstraintIds.add(instance.getResourceConstraintId());
           constraintIds.remove(instance.getResourceConstraintId());
@@ -223,8 +221,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
     Set<String> units = new HashSet<>();
     try (HIterator<ResourceConstraintInstance> iterator = new HIterator<ResourceConstraintInstance>(
              runnableQuery(constraint.getUuid()).project(ResourceConstraintInstanceKeys.resourceUnit, true).fetch())) {
-      while (iterator.hasNext()) {
-        ResourceConstraintInstance instance = iterator.next();
+      for (ResourceConstraintInstance instance : iterator) {
         units.add(instance.getResourceUnit());
       }
     }
@@ -242,8 +239,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
                                                    .field(ResourceConstraintKeys.uuid)
                                                    .in(constraintIds)
                                                    .fetch())) {
-      while (iterator.hasNext()) {
-        ResourceConstraint instance = iterator.next();
+      for (ResourceConstraint instance : iterator) {
         final Constraint constraint = createAbstraction(instance);
         final List<ConstraintUnit> units = units(instance);
         if (isEmpty(units)) {
@@ -275,8 +271,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
                  .filter(ResourceConstraintInstanceKeys.state, State.ACTIVE.name())
                  .order(Sort.ascending(ResourceConstraintInstanceKeys.order))
                  .fetch())) {
-      while (iterator.hasNext()) {
-        ResourceConstraintInstance instance = iterator.next();
+      for (ResourceConstraintInstance instance : iterator) {
         final List<ActiveScope> activeScopes =
             map.computeIfAbsent(instance.getResourceConstraintId(), key -> new ArrayList<ActiveScope>());
 
@@ -350,8 +345,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
                  .filter(ResourceConstraintInstanceKeys.resourceUnit, unit.getValue())
                  .order(Sort.ascending(ResourceConstraintInstanceKeys.order))
                  .fetch())) {
-      while (iterator.hasNext()) {
-        ResourceConstraintInstance instance = iterator.next();
+      for (ResourceConstraintInstance instance : iterator) {
         consumers.add(Consumer.builder()
                           .id(new ConsumerId(instance.getUuid()))
                           .state(State.valueOf(instance.getState()))

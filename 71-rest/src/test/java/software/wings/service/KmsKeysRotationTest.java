@@ -158,8 +158,7 @@ public class KmsKeysRotationTest extends WingsBaseTest {
                                 .count();
     logger.info("total of {} will be migrated", secretsToMigrate);
     try (HIterator<Account> records = new HIterator<>(query.fetch())) {
-      while (records.hasNext()) {
-        Account account = records.next();
+      for (Account account : records) {
         logger.info("rotating kms for {} id {}", account.getAccountName(), account.getUuid());
 
         secretManager.transitionSecrets(

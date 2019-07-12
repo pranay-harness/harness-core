@@ -31,8 +31,7 @@ public class ServiceNameMigrationIfEmpty implements Migration {
     logger.info("Migrating Services with No Name");
     try (HIterator<Service> services =
              new HIterator<>(wingsPersistence.createQuery(Service.class).project(ServiceKeys.name, true).fetch())) {
-      while (services.hasNext()) {
-        Service service = services.next();
+      for (Service service : services) {
         if (i % 50 == 0) {
           bulkWriteOperation.execute();
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();

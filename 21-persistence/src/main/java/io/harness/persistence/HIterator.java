@@ -5,7 +5,7 @@ import org.mongodb.morphia.query.MorphiaIterator;
 import java.util.Iterator;
 
 // This is a simple wrapper around MorphiaIterator to provide AutoCloseable implementation
-public class HIterator<T> implements AutoCloseable, Iterator<T> {
+public class HIterator<T> implements AutoCloseable, Iterable<T>, Iterator<T> {
   private MorphiaIterator<T, T> iterator;
 
   public HIterator(MorphiaIterator<T, T> iterator) {
@@ -25,5 +25,10 @@ public class HIterator<T> implements AutoCloseable, Iterator<T> {
   @Override
   public T next() {
     return iterator.next();
+  }
+
+  @Override
+  public Iterator<T> iterator() {
+    return this;
   }
 }

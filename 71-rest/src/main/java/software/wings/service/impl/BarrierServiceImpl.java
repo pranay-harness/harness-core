@@ -434,8 +434,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
                                  .filter(BarrierInstanceKeys.appId, appId)
                                  .filter(BarrierInstanceKeys.state, STANDING.name())
                                  .fetch())) {
-      while (barrierInstances.hasNext()) {
-        BarrierInstance barrierInstance = barrierInstances.next();
+      for (BarrierInstance barrierInstance : barrierInstances) {
         update(barrierInstance);
       }
     }

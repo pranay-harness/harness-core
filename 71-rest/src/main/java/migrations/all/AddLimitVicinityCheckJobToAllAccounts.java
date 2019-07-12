@@ -24,8 +24,7 @@ public class AddLimitVicinityCheckJobToAllAccounts implements Migration {
     Query<Account> query = wingsPersistence.createQuery(Account.class);
 
     try (HIterator<Account> records = new HIterator<>(query.fetch())) {
-      while (records.hasNext()) {
-        Account account = records.next();
+      for (Account account : records) {
         if (GLOBAL_ACCOUNT_ID.equals(account.getUuid())) {
           continue;
         }

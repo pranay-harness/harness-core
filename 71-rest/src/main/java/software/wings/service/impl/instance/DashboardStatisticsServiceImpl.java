@@ -342,8 +342,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
     int counter = 0;
     try (HIterator<Instance> iterator = new HIterator<>(query.fetch())) {
-      while (iterator.hasNext()) {
-        Instance instance = iterator.next();
+      for (Instance instance : iterator) {
         counter++;
         instanceList.add(instance);
       }
@@ -854,8 +853,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
     List<Instance> instanceList = new ArrayList<>();
     try (HIterator<Instance> iterator = new HIterator<>(query.fetch())) {
-      while (iterator.hasNext()) {
-        Instance instance = iterator.next();
+      for (Instance instance : iterator) {
         instanceList.add(instance);
       }
     }

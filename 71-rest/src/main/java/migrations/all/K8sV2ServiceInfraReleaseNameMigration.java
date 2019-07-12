@@ -69,9 +69,7 @@ public class K8sV2ServiceInfraReleaseNameMigration implements Migration {
                                    .field(INFRA_MAPPING_TYPE_KEY)
                                    .in(allowedInfraMappingTypes)
                                    .fetch())) {
-        while (infrastructureMappingHIterator.hasNext()) {
-          InfrastructureMapping infraMapping = infrastructureMappingHIterator.next();
-
+        for (InfrastructureMapping infraMapping : infrastructureMappingHIterator) {
           if (infraMapping instanceof AzureKubernetesInfrastructureMapping
               || infraMapping instanceof DirectKubernetesInfrastructureMapping
               || infraMapping instanceof GcpKubernetesInfrastructureMapping) {

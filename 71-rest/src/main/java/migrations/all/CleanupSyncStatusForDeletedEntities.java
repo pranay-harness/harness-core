@@ -59,8 +59,7 @@ public class CleanupSyncStatusForDeletedEntities implements Migration {
 
       Set<String> orphanInfraSyncSet = new HashSet<>();
       try (HIterator<SyncStatus> iterator = new HIterator<>(query.fetch())) {
-        while (iterator.hasNext()) {
-          SyncStatus infraSyncStatus = iterator.next();
+        for (SyncStatus infraSyncStatus : iterator) {
           if (!apps.contains(infraSyncStatus.getAppId()) || !services.contains(infraSyncStatus.getServiceId())
               || !envs.contains(infraSyncStatus.getEnvId())
               || !infraMappings.contains(infraSyncStatus.getInfraMappingId())) {

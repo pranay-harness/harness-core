@@ -20,8 +20,7 @@ public class SecretTextNameKeyWordsMigration implements Migration {
              new HIterator<>(wingsPersistence.createQuery(EncryptedData.class)
                                  .filter(EncryptedDataKeys.type, SettingVariableTypes.SECRET_TEXT)
                                  .fetch())) {
-      while (iterator.hasNext()) {
-        EncryptedData encryptedData = iterator.next();
+      for (EncryptedData encryptedData : iterator) {
         logger.info("updating {} id {}", encryptedData.getName(), encryptedData.getUuid());
         encryptedData.addSearchTag(Misc.replaceDotWithUnicode(encryptedData.getName()));
         logger.info("updating search tags for {} to {}", encryptedData.getName(), encryptedData.getSearchTags());

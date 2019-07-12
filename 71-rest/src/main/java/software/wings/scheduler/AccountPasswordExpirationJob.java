@@ -75,10 +75,8 @@ public class AccountPasswordExpirationJob implements Job {
       HIterator<User> userIterator =
           new HIterator<>(wingsPersistence.createQuery(User.class, excludeAuthority).fetch());
 
-      User user = null;
       Account account;
-      while (userIterator.hasNext()) {
-        user = userIterator.next();
+      for (User user : userIterator) {
         try {
           account = accountService.get(user.getDefaultAccountId());
           LoginSettings loginSettings = loginSettingsService.getLoginSettings(account.getUuid());

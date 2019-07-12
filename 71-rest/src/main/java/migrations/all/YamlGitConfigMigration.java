@@ -28,8 +28,7 @@ public class YamlGitConfigMigration implements Migration {
 
     try (HIterator<YamlGitConfig> yamlGitConfigHIterator =
              new HIterator<>(wingsPersistence.createQuery(YamlGitConfig.class).fetch())) {
-      while (yamlGitConfigHIterator.hasNext()) {
-        YamlGitConfig yamlGitConfig = yamlGitConfigHIterator.next();
+      for (YamlGitConfig yamlGitConfig : yamlGitConfigHIterator) {
         updateYamlGitConfig(yamlGitConfig);
       }
     }

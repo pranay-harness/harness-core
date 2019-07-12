@@ -33,8 +33,7 @@ public class FixMaxInstancesFieldInContainerSetup implements Migration {
   public void migrate() {
     logger.info("Retrieving applications");
     try (HIterator<Application> iterator = new HIterator<>(wingsPersistence.createQuery(Application.class).fetch())) {
-      while (iterator.hasNext()) {
-        Application app = iterator.next();
+      for (Application app : iterator) {
         List<Workflow> workflows =
             workflowService
                 .listWorkflows(aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, app.getUuid()).build())

@@ -433,8 +433,7 @@ public class ArtifactServiceImpl implements ArtifactService {
     List<String> artifactIdsWithFiles = new ArrayList<>();
     List<String> artifactFileIds = new ArrayList<>();
     try (HIterator<Artifact> iterator = new HIterator<>(artifactQuery.fetch())) {
-      while (iterator.hasNext()) {
-        Artifact artifact = iterator.next();
+      for (Artifact artifact : iterator) {
         if (isNotEmpty(artifact.getArtifactFiles())) {
           artifactIdsWithFiles.add(artifact.getUuid());
           List<String> ids = collectArtifactFileIds(artifact);
@@ -580,8 +579,7 @@ public class ArtifactServiceImpl implements ArtifactService {
                                .project(ArtifactStreamKeys.artifactStreamType, true)
                                .project(ArtifactStreamKeys.metadataOnly, true)
                                .fetch())) {
-      while (artifactStreams.hasNext()) {
-        ArtifactStream artifactStream = artifactStreams.next();
+      for (ArtifactStream artifactStream : artifactStreams) {
         deleteArtifactsWithContents(retentionSize, artifactStream);
       }
     }

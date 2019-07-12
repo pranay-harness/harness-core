@@ -24,8 +24,7 @@ public class SetLastLoginTimeToAllUsers implements Migration {
     logger.info("Start - Setting user last login time for users");
     long currentTime = System.currentTimeMillis();
     try (HIterator<User> users = new HIterator<>(wingsPersistence.createQuery(User.class).fetch())) {
-      while (users.hasNext()) {
-        User user = null;
+      for (User user : users) {
         try {
           user = users.next();
           user.setLastLogin(currentTime);

@@ -991,8 +991,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
     try (HIterator<Application> apps = new HIterator<>(
              wingsPersistence.createQuery(Application.class).filter(ACCOUNT_ID_KEY, accountId).fetch())) {
-      while (apps.hasNext()) {
-        Application application = apps.next();
+      for (Application application : apps) {
         fullSync(accountId, application.getUuid(), EntityType.APPLICATION, false);
       }
     }

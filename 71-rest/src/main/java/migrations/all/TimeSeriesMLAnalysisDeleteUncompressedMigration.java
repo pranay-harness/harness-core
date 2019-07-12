@@ -23,8 +23,7 @@ public class TimeSeriesMLAnalysisDeleteUncompressedMigration implements Migratio
     int processed = 0;
     try (HIterator<TimeSeriesMLAnalysisRecord> iterator =
              new HIterator<>(wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class).fetch())) {
-      while (iterator.hasNext()) {
-        TimeSeriesMLAnalysisRecord mlAnalysisRecord = iterator.next();
+      for (TimeSeriesMLAnalysisRecord mlAnalysisRecord : iterator) {
         processed++;
         logger.info("saving " + mlAnalysisRecord.getUuid());
         bulkWriteOperation
