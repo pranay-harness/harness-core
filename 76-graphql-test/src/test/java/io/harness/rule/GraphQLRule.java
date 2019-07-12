@@ -78,7 +78,7 @@ public class GraphQLRule
     }
     final QueryLanguageProvider<GraphQL> instance =
         injector.getInstance(Key.get(new TypeLiteral<QueryLanguageProvider<GraphQL>>() {}));
-    graphQL = instance.getQL();
+    graphQL = instance.getPrivateGraphQL();
     injector.getInstance(HPersistence.class).registerUserProvider(new ThreadLocalUserProvider());
     initializeLogging();
   }

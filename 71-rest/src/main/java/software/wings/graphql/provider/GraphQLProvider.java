@@ -14,7 +14,6 @@ import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
-import software.wings.beans.FeatureName;
 import software.wings.graphql.directive.DataFetcherDirective;
 import software.wings.graphql.instrumentation.QueryDepthInstrumentation;
 import software.wings.graphql.scalar.GraphQLDateTimeScalar;
@@ -30,30 +29,37 @@ import java.util.regex.Pattern;
 
 @Singleton
 public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
-  private static final String GRAPHQL_SCHEMA_PROD_DIRECTORY_PATH = "graphql/prod/";
-  private static final String GRAPHQL_SCHEMA_DEV_DIRECTORY_PATH = "graphql/dev/";
+  private static final String GRAPHQL_SCHEMA_PUBLIC_DIRECTORY_PATH = "graphql/public/";
+  private static final String GRAPHQL_SCHEMA_PRIVATE_DIRECTORY_PATH = "graphql/private/";
   private static final Pattern GRAPHQL_FILE_PATTERN = Pattern.compile(".*\\.graphql$");
 
-  private GraphQL graphQL;
+  private GraphQL privateGraphQL;
+  private GraphQL publicGraphQL;
+
   @Inject private TypeResolverManager typeResolverManager;
   @Inject private DataFetcherDirective dataFetcherDirective;
   @Inject FeatureFlagService featureFlagService;
 
   @Inject
   public void init() {
-    if (graphQL != null) {
-      return;
+    if (privateGraphQL == null) {
+      String[] allPaths = new String[] {GRAPHQL_SCHEMA_PRIVATE_DIRECTORY_PATH, GRAPHQL_SCHEMA_PUBLIC_DIRECTORY_PATH};
+      privateGraphQL = getGraphQL(allPaths);
     }
 
+    if (publicGraphQL == null) {
+      String[] allPaths = new String[] {GRAPHQL_SCHEMA_PUBLIC_DIRECTORY_PATH};
+      publicGraphQL = getGraphQL(allPaths);
+    }
+  }
+
+  private GraphQL getGraphQL(String[] paths) {
     SchemaParser schemaParser = new SchemaParser();
     TypeDefinitionRegistry typeDefinitionRegistry = new TypeDefinitionRegistry();
 
-    loadSchemaForEnv(GRAPHQL_SCHEMA_PROD_DIRECTORY_PATH, typeDefinitionRegistry, schemaParser);
-
-    if (featureFlagService.isEnabled(FeatureName.GRAPHQL_DEV, null)) {
-      loadSchemaForEnv(GRAPHQL_SCHEMA_DEV_DIRECTORY_PATH, typeDefinitionRegistry, schemaParser);
+    for (String path : paths) {
+      loadSchemaForEnv(path, typeDefinitionRegistry, schemaParser);
     }
-
     RuntimeWiring runtimeWiring = buildRuntimeWiring();
 
     SchemaGenerator schemaGenerator = new SchemaGenerator();
@@ -65,10 +71,10 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
 
     DataLoaderDispatcherInstrumentation dispatcherInstrumentation = new DataLoaderDispatcherInstrumentation(options);
 
-    graphQL = GraphQL.newGraphQL(graphQLSchema)
-                  .instrumentation(dispatcherInstrumentation)
-                  .instrumentation(new QueryDepthInstrumentation())
-                  .build();
+    return GraphQL.newGraphQL(graphQLSchema)
+        .instrumentation(dispatcherInstrumentation)
+        .instrumentation(new QueryDepthInstrumentation())
+        .build();
   }
 
   private void loadSchemaForEnv(
@@ -101,7 +107,12 @@ public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
   }
 
   @Override
-  public GraphQL getQL() {
-    return graphQL;
+  public GraphQL getPrivateGraphQL() {
+    return privateGraphQL;
+  }
+
+  @Override
+  public GraphQL getPublicGraphQL() {
+    return publicGraphQL;
   }
 }
