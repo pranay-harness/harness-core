@@ -14,6 +14,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.CommandCategory;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.Service;
@@ -785,5 +786,14 @@ public class ServiceResource {
       @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId, @PathParam("name") String name) {
     artifactStreamServiceBindingService.delete(appId, serviceId, name);
     return new RestResponse();
+  }
+
+  @GET
+  @Path("forDeployment")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<Service>> getServices(
+      @QueryParam("appId") String appId, @NotEmpty @QueryParam("deploymentType") String deploymentType) {
+    return new RestResponse<>(serviceResourceService.listByDeploymentType(appId, deploymentType));
   }
 }

@@ -507,4 +507,6 @@ public interface ServiceResourceService extends OwnedByApplication {
   List<Service> listByArtifactStreamId(String appId, String artifactStreamId);
 
   List<Service> listByArtifactStreamId(String artifactStreamId);
+
+  List<Service> listByDeploymentType(String appId, String deploymentType);
 }
