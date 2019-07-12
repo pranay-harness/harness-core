@@ -132,8 +132,7 @@ public abstract class AbstractTemplateProcessor {
                                  .field(Workflow.LINKED_TEMPLATE_UUIDS_KEY)
                                  .contains(template.getUuid())
                                  .fetch())) {
-      while (workflowIterator.hasNext()) {
-        Workflow workflow = workflowIterator.next();
+      for (Workflow workflow : workflowIterator) {
         try {
           workflow = workflowService.readWorkflow(workflow.getAppId(), workflow.getUuid());
           CanaryOrchestrationWorkflow orchestrationWorkflow =

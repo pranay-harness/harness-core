@@ -211,8 +211,7 @@ public class TriggerServiceHelper {
     try (HIterator<Trigger> triggerHIterator =
              new HIterator<>(wingsPersistence.createQuery(Trigger.class).filter(APP_ID_KEY, appId).fetch())) {
       if (triggerHIterator != null) {
-        while (triggerHIterator.hasNext()) {
-          Trigger trigger = triggerHIterator.next();
+        for (Trigger trigger : triggerHIterator) {
           if (trigger.getWorkflowVariables() != null && trigger.getWorkflowVariables().values().contains(envId)) {
             referencedTriggers.add(trigger.getName());
           }

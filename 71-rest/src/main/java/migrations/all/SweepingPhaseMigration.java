@@ -21,8 +21,7 @@ public class SweepingPhaseMigration implements Migration {
                                                .field(SweepingOutputKeys.phaseExecutionId)
                                                .doesNotExist()
                                                .fetch())) {
-      while (iterator.hasNext()) {
-        SweepingOutput sweepingOutput = iterator.next();
+      for (SweepingOutput sweepingOutput : iterator) {
         final UpdateOperations<SweepingOutput> updateOperations =
             wingsPersistence.createUpdateOperations(SweepingOutput.class)
                 .set(SweepingOutputKeys.phaseExecutionId, generateUuid());

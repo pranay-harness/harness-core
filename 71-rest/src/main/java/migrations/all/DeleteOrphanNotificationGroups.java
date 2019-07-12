@@ -49,8 +49,7 @@ public class DeleteOrphanNotificationGroups implements Migration {
       Query<Workflow> query = persistence.createQuery(Workflow.class, HQuery.excludeAuthority);
 
       try (HIterator<Workflow> iterator = new HIterator<>(query.fetch())) {
-        while (iterator.hasNext()) {
-          Workflow workflow = iterator.next();
+        for (Workflow workflow : iterator) {
           workflow = workflowService.readWorkflow(workflow.getAppId(), workflow.getUuid());
 
           OrchestrationWorkflow owf = workflow.getOrchestrationWorkflow();

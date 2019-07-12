@@ -64,8 +64,7 @@ public class StateExecutionServiceImpl implements StateExecutionService {
                                  .project(StateExecutionInstanceKeys.status, true)
                                  .project(StateExecutionInstanceKeys.hasInspection, true)
                                  .fetch())) {
-      while (stateExecutionInstances.hasNext()) {
-        StateExecutionInstance stateExecutionInstance = stateExecutionInstances.next();
+      for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
         stateExecutionInstance.getStateExecutionMap().entrySet().removeIf(
             entry -> !entry.getKey().equals(stateExecutionInstance.getDisplayName()));
         allInstancesIdMap.put(stateExecutionInstance.getUuid(), stateExecutionInstance);
@@ -83,8 +82,7 @@ public class StateExecutionServiceImpl implements StateExecutionService {
                                  .filter(StateExecutionInstanceKeys.stateType, PHASE.name())
                                  .project(StateExecutionInstanceKeys.displayName, true)
                                  .fetch())) {
-      while (stateExecutionInstances.hasNext()) {
-        StateExecutionInstance stateExecutionInstance = stateExecutionInstances.next();
+      for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
         names.add(stateExecutionInstance.getDisplayName());
       }
     }
@@ -105,8 +103,7 @@ public class StateExecutionServiceImpl implements StateExecutionService {
                                  .project(StateExecutionInstanceKeys.stateExecutionMap, true)
                                  .project(StateExecutionInstanceKeys.uuid, true)
                                  .fetch())) {
-      while (stateExecutionInstances.hasNext()) {
-        StateExecutionInstance stateExecutionInstance = stateExecutionInstances.next();
+      for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
         StateExecutionData stateExecutionData = stateExecutionInstance.fetchStateExecutionData();
         if (CurrentPhase.EXCLUDE.equals(curentPhase) && stateExecutionInstance.getDisplayName().equals(phaseName)) {
           return executionDataList;

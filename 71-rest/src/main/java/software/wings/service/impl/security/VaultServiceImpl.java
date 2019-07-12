@@ -168,8 +168,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     logger.info("renewing vault token for {}", accountId);
     try (HIterator<SecretManagerConfig> query = new HIterator<>(
              wingsPersistence.createQuery(SecretManagerConfig.class).filter(ACCOUNT_ID_KEY, accountId).fetch())) {
-      while (query.hasNext()) {
-        SecretManagerConfig secretManagerConfig = query.next();
+      for (SecretManagerConfig secretManagerConfig : query) {
         if (!(secretManagerConfig instanceof VaultConfig)) {
           continue;
         }
@@ -219,8 +218,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     logger.info("Renewing Vault AppRole client token for {}", accountId);
     try (HIterator<SecretManagerConfig> query = new HIterator<>(
              wingsPersistence.createQuery(SecretManagerConfig.class).filter(ACCOUNT_ID_KEY, accountId).fetch())) {
-      while (query.hasNext()) {
-        SecretManagerConfig secretManagerConfig = query.next();
+      for (SecretManagerConfig secretManagerConfig : query) {
         if (!(secretManagerConfig instanceof VaultConfig)) {
           continue;
         }

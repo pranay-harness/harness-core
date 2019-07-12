@@ -34,8 +34,7 @@ public class LdapSettingsMigration implements Migration {
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
     try (HIterator<LdapSettings> ldapSettingsHIterator =
              new HIterator<>(wingsPersistence.createQuery(LdapSettings.class).filter("type", SSOType.LDAP).fetch())) {
-      while (ldapSettingsHIterator.hasNext()) {
-        LdapSettings ldapSettings = ldapSettingsHIterator.next();
+      for (LdapSettings ldapSettings : ldapSettingsHIterator) {
         if (ldapSettings.getUserSettings() != null && CollectionUtils.isEmpty(ldapSettings.getUserSettingsList())) {
           logger.info("Migrating Ldap UserSettings for accountId: {}", ldapSettings.getAccountId());
           ldapSettings.setUserSettingsList(Lists.newArrayList(ldapSettings.getUserSettings()));

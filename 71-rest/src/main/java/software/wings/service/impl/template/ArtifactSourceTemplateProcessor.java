@@ -88,8 +88,7 @@ public class ArtifactSourceTemplateProcessor extends AbstractTemplateProcessor {
              new HIterator<>(wingsPersistence.createQuery(ArtifactStream.class, excludeAuthority)
                                  .filter(ArtifactStreamKeys.templateUuid, template.getUuid())
                                  .fetch())) {
-      while (iterator.hasNext()) {
-        ArtifactStream artifactStream = iterator.next();
+      for (ArtifactStream artifactStream : iterator) {
         try {
           String templateVersion = artifactStream.getTemplateVersion();
           if (templateVersion == null || templateVersion.equalsIgnoreCase(LATEST_TAG)) {

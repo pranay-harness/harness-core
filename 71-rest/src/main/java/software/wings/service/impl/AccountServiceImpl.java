@@ -636,8 +636,7 @@ public class AccountServiceImpl implements AccountService {
 
     List<Account> accountList = new ArrayList<>();
     try (HIterator<Account> iterator = new HIterator<>(query.fetch())) {
-      while (iterator.hasNext()) {
-        Account account = iterator.next();
+      for (Account account : iterator) {
         licenseService.decryptLicenseInfo(account, false);
         accountList.add(account);
       }
@@ -756,8 +755,7 @@ public class AccountServiceImpl implements AccountService {
     Query<User> query =
         wingsPersistence.createQuery(User.class, excludeAuthority).field("accounts").contains(accountId);
     try (HIterator<User> records = new HIterator<>(query.fetch())) {
-      while (records.hasNext()) {
-        User user = records.next();
+      for (User user : records) {
         user.setDisabled(!enable);
         wingsPersistence.save(user);
         userService.evictUserFromCache(user.getUuid());
@@ -982,11 +980,11 @@ public class AccountServiceImpl implements AccountService {
   private List<Trigger> getAllScheduledTriggersForAccount(List<String> appIds) {
     List<Trigger> triggers = new ArrayList<>();
     Query<Trigger> query = wingsPersistence.createQuery(Trigger.class).filter("appId in", appIds);
-    Iterator<Trigger> iterator = query.iterator();
-    while (iterator.hasNext()) {
-      Trigger trigger = iterator.next();
-      if (trigger.getCondition().getConditionType() == TriggerConditionType.SCHEDULED) {
-        triggers.add(trigger);
+    try (HIterator<Trigger> iterator = new HIterator<>(query.fetch())) {
+      for (Trigger trigger : iterator) {
+        if (trigger.getCondition().getConditionType() == TriggerConditionType.SCHEDULED) {
+          triggers.add(trigger);
+        }
       }
     }
 

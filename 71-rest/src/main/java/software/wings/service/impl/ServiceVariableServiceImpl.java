@@ -360,8 +360,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
                                      .filter(EncryptedDataKeys.accountId, accountId)
                                      .filter(EncryptedDataKeys.type, SettingVariableTypes.SECRET_TEXT);
     try (HIterator<EncryptedData> records = new HIterator<>(query.fetch())) {
-      while (records.hasNext()) {
-        EncryptedData savedData = records.next();
+      for (EncryptedData savedData : records) {
         List<String> appIds = savedData.getAppIds() == null ? null : new ArrayList<>(savedData.getAppIds());
         List<String> serviceIds = savedData.getServiceIds() == null ? null : new ArrayList<>(savedData.getServiceIds());
         List<String> envIds = savedData.getEnvIds() == null ? null : new ArrayList<>(savedData.getEnvIds());

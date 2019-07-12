@@ -466,8 +466,7 @@ public class SecretManagerImpl implements SecretManager {
                  .field(EncryptedDataKeys.type)
                  .hasNoneOf(Lists.newArrayList(SettingVariableTypes.SECRET_TEXT, SettingVariableTypes.CONFIG_FILE))
                  .fetch())) {
-      while (query.hasNext()) {
-        EncryptedData data = query.next();
+      for (EncryptedData data : query) {
         if (!isEmpty(data.getParentIds()) && data.getType() != SettingVariableTypes.KMS) {
           data.getParentIds().forEach(parentId
               -> parents.add(Parent.builder()
@@ -721,8 +720,7 @@ public class SecretManagerImpl implements SecretManager {
     }
 
     try (HIterator<EncryptedData> iterator = new HIterator<>(query.fetch())) {
-      while (iterator.hasNext()) {
-        EncryptedData dataToTransition = iterator.next();
+      for (EncryptedData dataToTransition : iterator) {
         transitionKmsQueue.send(KmsTransitionEvent.builder()
                                     .accountId(accountId)
                                     .entityId(dataToTransition.getUuid())
@@ -916,8 +914,7 @@ public class SecretManagerImpl implements SecretManager {
   public void checkAndAlertForInvalidManagers() {
     Query<Account> query = wingsPersistence.createQuery(Account.class, excludeAuthority);
     try (HIterator<Account> records = new HIterator<>(query.fetch())) {
-      while (records.hasNext()) {
-        Account account = records.next();
+      for (Account account : records) {
         try {
           validateSecretManagerConfigs(account.getUuid());
           vaultService.renewTokens(account.getUuid());

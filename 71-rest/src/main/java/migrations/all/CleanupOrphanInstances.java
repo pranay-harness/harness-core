@@ -60,8 +60,7 @@ public class CleanupOrphanInstances implements Migration {
 
       Set<String> orphanInstances = new HashSet<>();
       try (HIterator<Instance> iterator = new HIterator<>(query.fetch())) {
-        while (iterator.hasNext()) {
-          Instance instance = iterator.next();
+        for (Instance instance : iterator) {
           if (!apps.contains(instance.getAppId()) || !services.contains(instance.getServiceId())
               || !envs.contains(instance.getEnvId()) || !infraMappings.contains(instance.getInfraMappingId())) {
             orphanInstances.add(instance.getUuid());

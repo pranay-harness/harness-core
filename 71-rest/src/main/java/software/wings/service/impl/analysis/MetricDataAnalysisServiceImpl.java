@@ -605,8 +605,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
         Map<String, Map<String, TimeSeriesRawData>> rawDataMap = new HashMap<>();
         try (HIterator<TimeSeriesMLAnalysisRecord> records = new HIterator<>(query.fetch())) {
-          while (records.hasNext()) {
-            TimeSeriesMLAnalysisRecord record = records.next();
+          for (TimeSeriesMLAnalysisRecord record : records) {
             TimeSeriesRawData.populateRawDataFromAnalysisRecords(
                 record, accountId, executionStatus, rawDataMap, serviceId);
           }

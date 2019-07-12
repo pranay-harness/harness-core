@@ -161,8 +161,7 @@ public class MigrationServiceImpl implements MigrationService {
           try (
               HIterator<Account> accounts = new HIterator<>(
                   wingsPersistence.createQuery(Account.class, excludeAuthority).project("accountName", true).fetch())) {
-            while (accounts.hasNext()) {
-              Account account = accounts.next();
+            for (Account account : accounts) {
               try {
                 yamlGitService.fullSyncForEntireAccount(account.getUuid());
               } catch (Exception ex) {

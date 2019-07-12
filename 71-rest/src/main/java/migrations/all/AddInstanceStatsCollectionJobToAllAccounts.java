@@ -25,8 +25,7 @@ public class AddInstanceStatsCollectionJobToAllAccounts implements Migration {
     Query<Account> query = wingsPersistence.createQuery(Account.class);
 
     try (HIterator<Account> records = new HIterator<>(query.fetch())) {
-      while (records.hasNext()) {
-        Account account = records.next();
+      for (Account account : records) {
         InstanceStatsCollectorJob.delete(jobScheduler, account.getUuid());
         InstanceStatsCollectorJob.add(jobScheduler, account.getUuid());
         logger.info("Added InstanceStatsCollectorJob for account {}", account.getUuid());

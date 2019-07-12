@@ -3286,8 +3286,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     try (HIterator<Workflow> workflowHIterator =
              new HIterator<>(wingsPersistence.createQuery(Workflow.class).filter(APP_ID_KEY, appId).fetch())) {
       if (workflowHIterator != null) {
-        while (workflowHIterator.hasNext()) {
-          Workflow workflow = workflowHIterator.next();
+        for (Workflow workflow : workflowHIterator) {
           if (workflow.getEnvId() != null && !workflow.checkEnvironmentTemplatized()
               && workflow.getEnvId().equals(envId)) {
             referencedWorkflows.add(workflow.getName());

@@ -32,8 +32,7 @@ public class NewRelicMetricDataBaselineMigration implements Migration {
 
     try (HIterator<WorkflowExecutionBaseline> iterator =
              new HIterator<>(wingsPersistence.createQuery(WorkflowExecutionBaseline.class).fetch())) {
-      while (iterator.hasNext()) {
-        WorkflowExecutionBaseline baseline = iterator.next();
+      for (WorkflowExecutionBaseline baseline : iterator) {
         logger.info("marking baseline for {} ", baseline);
         PageRequest<NewRelicMetricDataRecord> pageRequest =
             aPageRequest().addFilter("workflowExecutionId", Operator.EQ, baseline.getWorkflowExecutionId()).build();

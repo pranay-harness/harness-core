@@ -37,8 +37,7 @@ public class HelmReleaseNamePrefixMigration implements Migration {
     logger.info("Retrieving applications");
 
     try (HIterator<Application> apps = new HIterator<>(wingsPersistence.createQuery(Application.class).fetch())) {
-      while (apps.hasNext()) {
-        Application application = apps.next();
+      for (Application application : apps) {
         logger.info("Updating app {}", application.getUuid());
         List<Workflow> workflows =
             workflowService

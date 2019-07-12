@@ -47,8 +47,7 @@ public class TemplateGalleryDefaultTemplatesMigration implements SeedDataMigrati
 
   private void copyHarnessTemplateToAccounts() {
     try (HIterator<Account> records = new HIterator<>(wingsPersistence.createQuery(Account.class).fetch())) {
-      while (records.hasNext()) {
-        Account account = records.next();
+      for (Account account : records) {
         try {
           logger.info("TemplateGalleryDefaultTemplatesMigration started for account [{}]", account.getUuid());
           boolean templateGalleryDoesNotExist = wingsPersistence.createQuery(TemplateGallery.class)

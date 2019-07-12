@@ -21,8 +21,7 @@ public class UpdatePipelineParallelIndexes implements Migration {
   public void migrate() {
     try (HIterator<Application> iterator =
              new HIterator<>(wingsPersistence.createQuery(Application.class, excludeAuthority).fetch())) {
-      while (iterator.hasNext()) {
-        Application application = iterator.next();
+      for (Application application : iterator) {
         migrate(application);
       }
     }
@@ -31,8 +30,7 @@ public class UpdatePipelineParallelIndexes implements Migration {
   public void migrate(Application application) {
     try (HIterator<Pipeline> iterator = new HIterator<>(
              wingsPersistence.createQuery(Pipeline.class).filter(PipelineKeys.appId, application.getUuid()).fetch())) {
-      while (iterator.hasNext()) {
-        Pipeline pipeline = iterator.next();
+      for (Pipeline pipeline : iterator) {
         migrate(pipeline);
       }
     }

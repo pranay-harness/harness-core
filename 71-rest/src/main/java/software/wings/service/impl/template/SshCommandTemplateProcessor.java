@@ -220,8 +220,7 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
              new HIterator<>(wingsPersistence.createQuery(ServiceCommand.class, excludeAuthority)
                                  .filter(ServiceCommand.TEMPLATE_UUID_KEY, template.getUuid())
                                  .fetch())) {
-      while (iterator.hasNext()) {
-        ServiceCommand serviceCommand = iterator.next();
+      for (ServiceCommand serviceCommand : iterator) {
         try {
           String templateVersion = serviceCommand.getTemplateVersion();
           if (templateVersion == null || templateVersion.equalsIgnoreCase(LATEST_TAG)) {
