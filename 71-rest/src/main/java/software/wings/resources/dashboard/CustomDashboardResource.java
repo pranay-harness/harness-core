@@ -132,7 +132,7 @@ public class CustomDashboardResource {
     }
 
     DashboardSettings dashboardSetting = dashboardSettingsService.get(accountId, dashboardId);
-    dashboardAuthHandler.authorize(dashboardSetting, accountId, Action.DELETE);
+    dashboardAuthHandler.authorize(dashboardSetting, accountId, Action.READ);
     return new RestResponse<>(dashboardSetting);
   }
 }
