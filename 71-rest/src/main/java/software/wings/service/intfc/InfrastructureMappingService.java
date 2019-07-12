@@ -37,6 +37,8 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
   PageResponse<InfrastructureMapping> list(
       PageRequest<InfrastructureMapping> pageRequest, Set<QueryChecks> queryChecks);
 
+  void validateInfraMapping(@Valid InfrastructureMapping infraMapping, boolean fromYaml);
+
   @ValidationGroups(Create.class) InfrastructureMapping save(@Valid InfrastructureMapping infrastructureMapping);
   @ValidationGroups(Create.class)
   InfrastructureMapping save(@Valid InfrastructureMapping infrastructureMapping, boolean fromYaml);

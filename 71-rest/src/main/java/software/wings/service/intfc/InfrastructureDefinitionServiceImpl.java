@@ -12,21 +12,34 @@ import static software.wings.api.DeploymentType.PCF;
 import static software.wings.api.DeploymentType.WINRM;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
+import com.mongodb.DuplicateKeyException;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import software.wings.api.DeploymentType;
+import software.wings.beans.GcpKubernetesInfrastructureMapping;
+import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureMappingType;
 import software.wings.dl.WingsPersistence;
+import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.validation.Valid;
+import javax.validation.executable.ValidateOnExecution;
 
+@Singleton
+@ValidateOnExecution
 public class InfrastructureDefinitionServiceImpl implements InfrastructureDefinitionService {
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private AppService appService;
 
   @Override
   public PageResponse<InfrastructureDefinition> list(PageRequest<InfrastructureDefinition> pageRequest) {
@@ -36,12 +49,46 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Override
   public InfrastructureDefinition save(InfrastructureDefinition infrastructureDefinition) {
     validate(infrastructureDefinition);
-    String uuid = wingsPersistence.save(infrastructureDefinition);
+    String uuid;
+    try {
+      uuid = wingsPersistence.save(infrastructureDefinition);
+    } catch (DuplicateKeyException ex) {
+      throw new InvalidRequestException(
+          format("Infra definition already exists with the name : [%s]", infrastructureDefinition.getName()),
+          WingsException.USER);
+    }
     infrastructureDefinition.setUuid(uuid);
     return infrastructureDefinition;
   }
 
-  private void validate(InfrastructureDefinition infrastructureDefinition) {}
+  private void validate(@Valid InfrastructureDefinition infraDefinition) {
+    InfrastructureMapping infrastructureMapping = getInfraMapping(infraDefinition);
+    infrastructureMappingService.validateInfraMapping(infrastructureMapping, false);
+  }
+
+  private InfrastructureMapping getInfraMapping(InfrastructureDefinition infraDefinition) {
+    InfrastructureMapping infrastructureMapping;
+    if (infraDefinition.getInfrastructure() instanceof GoogleKubernetesEngine) {
+      infrastructureMapping =
+          GcpKubernetesInfrastructureMapping.builder()
+              .appId(infraDefinition.getAppId())
+              .envId(infraDefinition.getEnvId())
+              .deploymentType(infraDefinition.getDeploymentType().name())
+              .computeProviderName(infraDefinition.getCloudProviderType().name())
+              .computeProviderSettingId(infraDefinition.getInfrastructure().getCloudProviderId())
+              .clusterName(((GoogleKubernetesEngine) infraDefinition.getInfrastructure()).getClusterName())
+              .name(((GoogleKubernetesEngine) infraDefinition.getInfrastructure()).getNamespace())
+              .releaseName(((GoogleKubernetesEngine) infraDefinition.getInfrastructure()).getReleaseName())
+              .provisionerId(infraDefinition.getProvisionerId())
+              .accountId(appService.getAccountIdByAppId(infraDefinition.getAppId()))
+              .type(InfrastructureMappingType.GCP_KUBERNETES.getName())
+              .serviceTemplateId("dummy")
+              .build();
+    } else {
+      throw new InvalidRequestException("Only k8s gcp infra definition is supported");
+    }
+    return infrastructureMapping;
+  }
 
   @Override
   public InfrastructureDefinition get(String appId, String infraDefinitionId) {
@@ -58,7 +105,13 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
           format("Infra Definition does not exist with id: [%s]", infrastructureDefinition.getUuid()));
     }
 
-    wingsPersistence.save(infrastructureDefinition);
+    try {
+      wingsPersistence.save(infrastructureDefinition);
+    } catch (DuplicateKeyException ex) {
+      throw new InvalidRequestException(
+          format("Infra definition already exists with the name : [%s]", infrastructureDefinition.getName()),
+          WingsException.USER);
+    }
     return infrastructureDefinition;
   }
 

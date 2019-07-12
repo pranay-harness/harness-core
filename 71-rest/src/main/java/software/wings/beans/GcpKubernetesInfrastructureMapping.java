@@ -38,6 +38,20 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
     super(InfrastructureMappingType.GCP_KUBERNETES.name());
   }
 
+  @lombok.Builder
+  public GcpKubernetesInfrastructureMapping(String entityYamlPath, String appId, String accountId, String type,
+      String uuid, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt,
+      String computeProviderSettingId, String envId, String serviceTemplateId, String serviceId,
+      String computeProviderType, String infraMappingType, String deploymentType, String computeProviderName,
+      String name, boolean autoPopulateName, Map<String, Object> blueprints, String clusterName, String namespace,
+      String releaseName, String provisionerId) {
+    super(entityYamlPath, appId, accountId, type, uuid, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt,
+        computeProviderSettingId, envId, serviceTemplateId, serviceId, computeProviderType, infraMappingType,
+        deploymentType, computeProviderName, name, autoPopulateName, blueprints, clusterName, provisionerId);
+    this.namespace = namespace;
+    this.releaseName = releaseName;
+  }
+
   @Override
   public void applyProvisionerVariables(
       Map<String, Object> map, NodeFilteringType nodeFilteringType, boolean featureFlagEnabled) {

@@ -249,7 +249,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
   }
 
-  private void validateInfraMapping(@Valid InfrastructureMapping infraMapping, boolean fromYaml) {
+  @Override
+  public void validateInfraMapping(@Valid InfrastructureMapping infraMapping, boolean fromYaml) {
     if (fromYaml) {
       logger.info("Ignore validation for InfraMapping created from yaml");
       return;
@@ -755,14 +756,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     List<EncryptedDataDetail> encryptionDetails =
         secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
 
-    Application app = appService.get(infraMapping.getAppId());
-    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                          .accountId(app.getAccountId())
-                                          .appId(app.getUuid())
-                                          .envId(infraMapping.getEnvId())
-                                          .infrastructureMappingId(infraMapping.getUuid())
-                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                          .build();
+    SyncTaskContext syncTaskContext = getSyncTaskContext(infraMapping);
     ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
                                                         .settingAttribute(settingAttribute)
                                                         .encryptionDetails(encryptionDetails)
@@ -828,22 +822,22 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       return;
     }
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
-    notNullCheck("SettingAttribute", settingAttribute, USER);
+    notNullCheck(format("No cloud provider found with given id : [%s]", infraMapping.getComputeProviderSettingId()),
+        settingAttribute, USER);
     String clusterName = infraMapping.getClusterName();
     String namespace = infraMapping.getNamespace();
+    if (isEmpty(clusterName)) {
+      throw new InvalidRequestException("Cluster name can't be empty");
+    }
+    if (isEmpty(namespace)) {
+      throw new InvalidRequestException("Namespace can't be empty");
+    }
     KubernetesHelperService.validateNamespace(namespace);
 
     List<EncryptedDataDetail> encryptionDetails =
         secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
 
-    Application app = appService.get(infraMapping.getAppId());
-    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                          .accountId(app.getAccountId())
-                                          .appId(app.getUuid())
-                                          .envId(infraMapping.getEnvId())
-                                          .infrastructureMappingId(infraMapping.getUuid())
-                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                          .build();
+    SyncTaskContext syncTaskContext = getSyncTaskContext(infraMapping);
     ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
                                                         .settingAttribute(settingAttribute)
                                                         .encryptionDetails(encryptionDetails)
@@ -894,14 +888,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     List<EncryptedDataDetail> encryptionDetails =
         secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
 
-    Application app = appService.get(infraMapping.getAppId());
-    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                          .accountId(app.getAccountId())
-                                          .appId(app.getUuid())
-                                          .envId(infraMapping.getEnvId())
-                                          .infrastructureMappingId(infraMapping.getUuid())
-                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                          .build();
+    SyncTaskContext syncTaskContext = getSyncTaskContext(infraMapping);
     ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
                                                         .settingAttribute(settingAttribute)
                                                         .encryptionDetails(encryptionDetails)
@@ -918,6 +905,17 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
   }
 
+  private SyncTaskContext getSyncTaskContext(InfrastructureMapping infraMapping) {
+    Application app = appService.get(infraMapping.getAppId());
+    return SyncTaskContext.builder()
+        .accountId(app.getAccountId())
+        .appId(app.getUuid())
+        .envId(infraMapping.getEnvId())
+        .infrastructureMappingId(infraMapping.getUuid())
+        .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+        .build();
+  }
+
   private void validateDirectKubernetesInfraMapping(DirectKubernetesInfrastructureMapping infraMapping) {
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
     String namespace = infraMapping.getNamespace();
@@ -926,14 +924,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     List<EncryptedDataDetail> encryptionDetails =
         secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
 
-    Application app = appService.get(infraMapping.getAppId());
-    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                          .accountId(app.getAccountId())
-                                          .appId(app.getUuid())
-                                          .envId(infraMapping.getEnvId())
-                                          .infrastructureMappingId(infraMapping.getUuid())
-                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                          .build();
+    SyncTaskContext syncTaskContext = getSyncTaskContext(infraMapping);
     ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
                                                         .settingAttribute(settingAttribute)
                                                         .encryptionDetails(encryptionDetails)
