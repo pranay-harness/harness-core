@@ -10,8 +10,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.common.VerificationConstants.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.Lists;
@@ -46,12 +49,14 @@ import org.quartz.Scheduler;
 import software.wings.api.PhaseElement.PhaseElementBuilder;
 import software.wings.api.ServiceElement;
 import software.wings.beans.CountsByStatuses;
+import software.wings.beans.EntityType;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.AppServiceImpl;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
@@ -69,10 +74,13 @@ import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster.MessageFrequency;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DataStoreService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
+import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
@@ -133,7 +141,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     hosts.add("ip-172-31-12-51");
     hosts.add("ip-172-31-12-78");
     hosts.add("ip-172-31-15-177");
-    appId = UUID.randomUUID().toString();
+    appId = wingsPersistence.save(anApplication().name(generateUuid()).accountId(accountId).build());
     stateExecutionId = UUID.randomUUID().toString();
     workflowId = UUID.randomUUID().toString();
     workflowExecutionId = UUID.randomUUID().toString();
@@ -143,6 +151,17 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     FieldUtils.writeField(mgrAnalysisService, "wingsPersistence", wingsPersistence, true);
     FieldUtils.writeField(
         mgrAnalysisService, "dataStoreService", new MongoDataStoreServiceImpl(wingsPersistence), true);
+
+    AppService appService = new AppServiceImpl();
+    FieldUtils.writeField(appService, "wingsPersistence", wingsPersistence, true);
+    final YamlGitService yamlGitService = mock(YamlGitService.class);
+    when(yamlGitService.get(anyString(), anyString(), any(EntityType.class))).thenReturn(null);
+    FieldUtils.writeField(appService, "yamlGitService", yamlGitService, true);
+    FieldUtils.writeField(mgrAnalysisService, "appService", appService, true);
+
+    final FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
+    when(featureFlagService.isEnabled(any(FeatureName.class), anyString())).thenReturn(false);
+    FieldUtils.writeField(mgrAnalysisService, "featureFlagService", featureFlagService, true);
   }
 
   private SplunkAnalysisCluster getRandomClusterEvent() {
@@ -515,27 +534,30 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
             .build();
     String workflowExecutionId = wingsPersistence.save(workflowExecution);
 
-    List<LogElement> logElements = new ArrayList<>();
-
+    List<SplunkAnalysisCluster> analysisClusters = new ArrayList<>();
+    final long timeStamp = System.currentTimeMillis();
+    final String logMessage = generateUuid();
     final String query = UUID.randomUUID().toString();
     final String host = UUID.randomUUID().toString();
-    final int logCollectionMinute = 0;
-    LogElement splunkHeartBeatElement = new LogElement();
-    splunkHeartBeatElement.setQuery(query);
-    splunkHeartBeatElement.setClusterLabel("-3");
-    splunkHeartBeatElement.setHost(host);
-    splunkHeartBeatElement.setCount(0);
-    splunkHeartBeatElement.setLogMessage("");
-    splunkHeartBeatElement.setTimeStamp(0);
-    splunkHeartBeatElement.setLogCollectionMinute(logCollectionMinute);
+    SplunkAnalysisCluster splunkAnalysisCluster = new SplunkAnalysisCluster();
+    splunkAnalysisCluster.setMessage_frequencies(
+        Lists.newArrayList(MessageFrequency.builder().count(5).host(host).time(timeStamp).build()));
+    splunkAnalysisCluster.setText(logMessage);
+    splunkAnalysisCluster.setCluster_label(10);
+    analysisClusters.add(splunkAnalysisCluster);
 
-    logElements.add(splunkHeartBeatElement);
+    LogMLAnalysisRecord logMLAnalysisRecord = LogMLAnalysisRecord.builder()
+                                                  .stateType(StateType.SPLUNKV2)
+                                                  .workflowExecutionId(workflowExecutionId)
+                                                  .stateExecutionId(generateUuid())
+                                                  .query(query)
+                                                  .build();
+    logMLAnalysisRecord.setTest_events(new HashMap<>());
+    logMLAnalysisRecord.getTest_events().put(generateUuid(), analysisClusters);
+    logMLAnalysisRecord.compressLogAnalysisRecord();
+    wingsPersistence.save(logMLAnalysisRecord);
 
-    LogElement logElement = new LogElement(query, "0", host, 0, 0, "Hello World", logCollectionMinute);
-    logElements.add(logElement);
-
-    analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, prevStateExecutionId, workflowId,
-        workflowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements);
+    List<LogElement> logElements = new ArrayList<>();
 
     stateExecutionInstance.setStatus(ExecutionStatus.SUCCESS);
     wingsPersistence.save(stateExecutionInstance);
@@ -557,6 +579,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
     logElements = new ArrayList<>();
 
+    LogElement splunkHeartBeatElement = new LogElement();
     splunkHeartBeatElement = new LogElement();
     splunkHeartBeatElement.setQuery(query);
     splunkHeartBeatElement.setClusterLabel("-3");
@@ -564,7 +587,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     splunkHeartBeatElement.setCount(0);
     splunkHeartBeatElement.setLogMessage("");
     splunkHeartBeatElement.setTimeStamp(0);
-    splunkHeartBeatElement.setLogCollectionMinute(logCollectionMinute);
+    splunkHeartBeatElement.setLogCollectionMinute(0);
 
     logElements.add(splunkHeartBeatElement);
 
@@ -664,6 +687,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     stateExecutionInstance.setAppId(appId);
     stateExecutionInstance.setUuid(stateExecutionId);
     stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
+    stateExecutionInstance.setExecutionUuid(workflowExecutionId);
     stateExecutionInstance.getContextElements().push(
         PhaseElementBuilder.aPhaseElement()
             .withServiceElement(ServiceElement.Builder.aServiceElement().withUuid(serviceId).build())
@@ -944,6 +968,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   @Test
   @Category(IntegrationTests.class)
   public void withControlAndTest() throws IOException, InterruptedException {
+    int numOfNodes = 5;
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     String prevStateExecutionId = UUID.randomUUID().toString();
     stateExecutionInstance.setAppId(appId);
@@ -966,31 +991,36 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     final String query = UUID.randomUUID().toString();
     Map<String, String> hosts = new HashMap<>();
 
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < numOfNodes; i++) {
       hosts.put("host-" + i, DEFAULT_GROUP_NAME);
     }
 
-    for (int i = 0; i < 5; i++) {
-      for (int j = 0; j < 5; j++) {
-        LogElement splunkHeartBeatElement = new LogElement();
-        splunkHeartBeatElement.setQuery(query);
-        splunkHeartBeatElement.setClusterLabel("-3");
-        splunkHeartBeatElement.setHost("host-" + j);
-        splunkHeartBeatElement.setCount(0);
-        splunkHeartBeatElement.setLogMessage("");
-        splunkHeartBeatElement.setTimeStamp(0);
-        splunkHeartBeatElement.setLogCollectionMinute(i);
-
-        logElements.add(splunkHeartBeatElement);
-        if (i % 2 == 0) {
-          LogElement logElement = new LogElement(query, "0", "host-" + j, 0, 1, "Hello World " + i, i);
-          logElements.add(logElement);
-        }
-      }
+    List<SplunkAnalysisCluster> analysisClusters = new ArrayList<>();
+    final long timeStamp = System.currentTimeMillis();
+    final String host = UUID.randomUUID().toString();
+    int messageCount = 3;
+    for (int i = 0; i < numOfNodes; i++) {
+      SplunkAnalysisCluster splunkAnalysisCluster = new SplunkAnalysisCluster();
+      splunkAnalysisCluster.setMessage_frequencies(
+          Lists.newArrayList(MessageFrequency.builder().count(messageCount).host("host-" + i).time(timeStamp).build()));
+      splunkAnalysisCluster.setText("Hello World");
+      splunkAnalysisCluster.setCluster_label(10);
+      analysisClusters.add(splunkAnalysisCluster);
     }
 
-    analysisService.saveLogData(StateType.SUMO, accountId, appId, null, prevStateExecutionId, workflowId,
-        prevWorkflowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements);
+    LogMLAnalysisRecord logMLAnalysisRecord = LogMLAnalysisRecord.builder()
+                                                  .stateType(StateType.SPLUNKV2)
+                                                  .workflowExecutionId(prevWorkflowExecutionId)
+                                                  .stateExecutionId(prevStateExecutionId)
+                                                  .query(query)
+                                                  .build();
+    logMLAnalysisRecord.setTest_events(new HashMap<>());
+    logMLAnalysisRecord.getTest_events().put(generateUuid(), analysisClusters);
+    logMLAnalysisRecord.compressLogAnalysisRecord();
+    wingsPersistence.save(logMLAnalysisRecord);
+
+    //    analysisService.saveLogData(StateType.SUMO, accountId, appId, null, prevStateExecutionId, workflowId,
+    //        prevWorkflowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements);
 
     stateExecutionInstance.setStatus(ExecutionStatus.SUCCESS);
     wingsPersistence.save(stateExecutionInstance);
@@ -1075,8 +1105,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     assertEquals(0, logMLAnalysisSummary.getUnknownClusters().size());
     assertEquals(5, logMLAnalysisSummary.getControlClusters().get(0).getHostSummary().size());
     assertEquals(5, logMLAnalysisSummary.getTestClusters().get(0).getHostSummary().size());
-    assertEquals(
-        3, logMLAnalysisSummary.getControlClusters().get(0).getHostSummary().values().iterator().next().getCount());
+    assertEquals(numOfNodes * messageCount,
+        logMLAnalysisSummary.getControlClusters().get(0).getHostSummary().values().iterator().next().getCount());
   }
 
   @Test
@@ -1257,6 +1287,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   public void testGetLastExecutionLogs() throws Exception {
     final Random r = new Random();
     final int numOfExecutions = 1;
+    final int numOfClusters = 10;
     final int numOfHosts = 1 + r.nextInt(5);
     final int numOfMinutes = 1 + r.nextInt(10);
     final int numOfRecords = 1 + r.nextInt(10);
@@ -1280,63 +1311,51 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
                                               .stateMachine(stateMachine)
                                               .build();
     wingsPersistence.save(workflowExecution);
+    Set<LogDataRecord> expected = new HashSet<>();
     Set<String> hosts = new HashSet<>();
 
-    for (int executionNumber = 1; executionNumber <= numOfExecutions; executionNumber++) {
-      final String stateExecutionId = "se" + executionNumber;
-      for (int hostNumber = 0; hostNumber < numOfHosts; hostNumber++) {
-        final String host = "host" + hostNumber;
-        hosts.add(host);
-        for (int logCollectionMinute = 0; logCollectionMinute < numOfMinutes; logCollectionMinute++) {
-          final long timeStamp = System.currentTimeMillis();
-          for (int recordNumber = 0; recordNumber < numOfRecords; recordNumber++) {
-            final int count = r.nextInt();
-            final String logMessage = UUID.randomUUID().toString();
-            final String logMD5Hash = UUID.randomUUID().toString();
-            final String clusterLabel = UUID.randomUUID().toString();
+    List<SplunkAnalysisCluster> analysisClusters = new ArrayList<>();
+    for (int i = 0; i < numOfClusters; i++) {
+      final long timeStamp = System.currentTimeMillis();
+      final String logMessage = generateUuid();
+      SplunkAnalysisCluster splunkAnalysisCluster = new SplunkAnalysisCluster();
+      splunkAnalysisCluster.setMessage_frequencies(
+          Lists.newArrayList(MessageFrequency.builder().count(i).host("host-" + i).time(timeStamp).build()));
+      splunkAnalysisCluster.setText(logMessage);
+      splunkAnalysisCluster.setCluster_label(i);
+      analysisClusters.add(splunkAnalysisCluster);
 
-            final LogDataRecord logDataRecord = new LogDataRecord();
-            logDataRecord.setStateType(StateType.SPLUNKV2);
-            logDataRecord.setWorkflowId(workflowId);
-            logDataRecord.setStateExecutionId(stateExecutionId);
-            logDataRecord.setQuery(query);
-            logDataRecord.setAppId(appId);
-            logDataRecord.setClusterLabel(clusterLabel);
-            logDataRecord.setHost(host);
-            logDataRecord.setTimeStamp(timeStamp);
-            logDataRecord.setCount(count);
-            logDataRecord.setLogMessage(logMessage);
-            logDataRecord.setLogMD5Hash(logMD5Hash);
-            logDataRecord.setClusterLevel(ClusterLevel.L0);
-            logDataRecord.setLogCollectionMinute(logCollectionMinute);
-            logDataRecord.setCreatedAt(timeStamp);
-            logDataRecord.setServiceId(serviceId);
-            logDataRecord.setWorkflowExecutionId(workflowExecution.getUuid());
-            wingsPersistence.save(logDataRecord);
-
-            if (addedMessages.get(executionNumber, logCollectionMinute) == null) {
-              addedMessages.put(executionNumber, logCollectionMinute, new HashSet<>());
-            }
-
-            addedMessages.get(executionNumber, logCollectionMinute).add(logDataRecord);
-          }
-          Thread.sleep(10);
-        }
-      }
+      expected.add(LogDataRecord.builder()
+                       .stateType(StateType.SPLUNKV2)
+                       .workflowExecutionId(workflowExecutionId)
+                       .stateExecutionId(stateExecutionId)
+                       .query(query)
+                       .clusterLabel(Integer.toString(i))
+                       .host("host-" + i)
+                       .timeStamp(timeStamp)
+                       .logMessage(logMessage)
+                       .count(i)
+                       .build());
     }
+    LogMLAnalysisRecord logMLAnalysisRecord = LogMLAnalysisRecord.builder()
+                                                  .stateType(StateType.SPLUNKV2)
+                                                  .workflowExecutionId(workflowExecutionId)
+                                                  .stateExecutionId(stateExecutionId)
+                                                  .query(query)
+                                                  .build();
+    logMLAnalysisRecord.setTest_events(new HashMap<>());
+    logMLAnalysisRecord.getTest_events().put(generateUuid(), analysisClusters);
+    logMLAnalysisRecord.compressLogAnalysisRecord();
+    wingsPersistence.save(logMLAnalysisRecord);
 
-    for (int collectionMinute = 0; collectionMinute < numOfMinutes; collectionMinute++) {
-      WebTarget target = client.target(VERIFICATION_API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS
-          + "/get-logs?accountId=" + accountId + "&clusterLevel=" + ClusterLevel.L0.name()
-          + "&compareCurrent=false&workflowExecutionId=" + workflowExecution.getUuid()
-          + "&stateType=" + StateType.SPLUNKV2);
-      final LogRequest logRequest = new LogRequest(
-          query, appId, UUID.randomUUID().toString(), workflowId, serviceId, hosts, collectionMinute, false);
-      RestResponse<Set<LogDataRecord>> restResponse = getRequestBuilderWithLearningAuthHeader(target).post(
-          entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<Set<LogDataRecord>>>() {});
-      assertEquals("failed for minute " + collectionMinute, addedMessages.get(numOfExecutions, collectionMinute),
-          restResponse.getResource());
-    }
+    WebTarget target = client.target(VERIFICATION_API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS
+        + "/get-logs?accountId=" + accountId + "&clusterLevel=" + ClusterLevel.L0.name()
+        + "&compareCurrent=false&workflowExecutionId=" + workflowExecutionId + "&stateType=" + StateType.SPLUNKV2);
+    final LogRequest logRequest =
+        new LogRequest(query, appId, UUID.randomUUID().toString(), workflowId, serviceId, hosts, 10, false);
+    RestResponse<Set<LogDataRecord>> restResponse = getRequestBuilderWithLearningAuthHeader(target).post(
+        entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<Set<LogDataRecord>>>() {});
+    assertEquals(expected, restResponse.getResource());
   }
 
   private class LogAnalysisTestJob extends LogAnalysisTask {
@@ -1518,7 +1537,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     LogMLAnalysisRecord logAnalysisRecord =
         analysisService.getLogAnalysisRecords(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId, 0, false);
     assertEquals(1, logAnalysisRecord.getControl_events().size());
-    assertEquals(0, logAnalysisRecord.getTest_events().size());
     assertEquals("ignore", logAnalysisRecord.getControl_events().get("20000").get(0).getText());
+    assertTrue(isEmpty(logAnalysisRecord.getTest_events()));
   }
 }
