@@ -24,6 +24,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.service.DelegateService;
 import io.harness.managerclient.ManagerClientModule;
+import io.harness.publisher.PublisherModule;
 import io.harness.serializer.YamlUtils;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
@@ -103,6 +104,8 @@ public class DelegateApplication {
         configuration.getManagerUrl(), configuration.getAccountId(), configuration.getAccountSecret()));
     modules.addAll(new DelegateModule().cumulativeDependencies());
     modules.add(new VerificationServiceClientModule(configuration.getVerificationServiceUrl()));
+    modules.add(new PublisherModule(
+        configuration.getPublishTarget(), configuration.getAccountId(), configuration.getAccountSecret()));
 
     Injector injector = Guice.createInjector(modules);
     final MessageService messageService = injector.getInstance(MessageService.class);

@@ -19,6 +19,7 @@ import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ecs.model.AmazonECSException;
+import com.amazonaws.services.ecs.model.Service;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.task.aws.AwsElbListener;
@@ -283,6 +284,13 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     return awsEcsHelperServiceManager.listClusters(
         awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, null);
+  }
+
+  public List<Service> listECSClusterServiceNames(
+      SettingAttribute computeProviderSetting, String region, String cluster) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    return awsEcsHelperServiceManager.listClusterServices(
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, null, cluster);
   }
 
   private void handleAmazonServiceException(AmazonServiceException amazonServiceException) {

@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import com.amazonaws.services.ecs.model.Service;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.cloudwatch.AwsNameSpace;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
@@ -63,4 +64,6 @@ public interface CloudWatchService {
   Map<String, String> getEC2Instances(String settingId, String region);
 
   List<String> getECSClusterNames(String settingId, String region);
+
+  List<Service> getECSClusterServices(String settingId, String region, String clusterName);
 }

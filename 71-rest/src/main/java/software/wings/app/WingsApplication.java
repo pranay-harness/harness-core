@@ -126,6 +126,7 @@ import software.wings.scheduler.WorkflowExecutionMonitorJob;
 import software.wings.scheduler.YamlChangeSetPruneJob;
 import software.wings.scheduler.ZombieHunterJob;
 import software.wings.scheduler.approval.ApprovalPollingHandler;
+import software.wings.scheduler.ecs.ECSPollingHandler;
 import software.wings.scheduler.instance.InstanceSyncHandler;
 import software.wings.scheduler.marketplace.gcp.GCPBillingHandler;
 import software.wings.security.AuthResponseFilter;
@@ -240,7 +241,7 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   @Override
-  public void run(final MainConfiguration configuration, Environment environment) {
+  public void run(final MainConfiguration configuration, Environment environment) throws Exception {
     logger.info("Starting app ...");
 
     logger.info("Entering startup maintenance mode");
@@ -308,6 +309,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new SSOModule());
     modules.add(new AuthModule());
     modules.add(new GcpMarketplaceIntegrationModule());
+    modules.add(new GrpcServerModule(configuration.getGrpcServerConfig()));
 
     Injector injector = Guice.createInjector(modules);
 
@@ -416,6 +418,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     }
 
     injector.getInstance(EventsModuleHelper.class).initialize();
+    //    injector.getInstance(GrpcServer.class).initalize();
     logger.info("Leaving startup maintenance mode");
     MaintenanceController.resetForceMaintenance();
 
@@ -601,6 +604,7 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     InstanceSyncHandler.InstanceSyncExecutor.registerIterators(injector);
     ApprovalPollingHandler.ApprovalPollingExecutor.registerIterators(injector);
+    ECSPollingHandler.ECSPollingExecutor.registerIterators(injector);
     GCPBillingHandler.GCPBillingExecutor.registerIterators(injector);
     BarrierServiceImpl.registerIterators(injector);
   }

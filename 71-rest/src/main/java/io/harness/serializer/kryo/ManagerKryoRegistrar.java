@@ -1,5 +1,9 @@
 package io.harness.serializer.kryo;
 
+import com.amazonaws.services.ecs.model.Deployment;
+import com.amazonaws.services.ecs.model.DeploymentConfiguration;
+import com.amazonaws.services.ecs.model.Service;
+import com.amazonaws.services.ecs.model.ServiceEvent;
 import com.amazonaws.services.secretsmanager.model.AWSSecretsManagerException;
 import com.esotericsoftware.kryo.Kryo;
 import io.harness.serializer.KryoRegistrar;
@@ -503,6 +507,8 @@ import software.wings.service.impl.aws.model.AwsEcrGetImageUrlRequest;
 import software.wings.service.impl.aws.model.AwsEcrGetImageUrlResponse;
 import software.wings.service.impl.aws.model.AwsEcrRequest;
 import software.wings.service.impl.aws.model.AwsEcrRequest.AwsEcrRequestType;
+import software.wings.service.impl.aws.model.AwsEcsListClusterServicesRequest;
+import software.wings.service.impl.aws.model.AwsEcsListClusterServicesResponse;
 import software.wings.service.impl.aws.model.AwsEcsListClustersRequest;
 import software.wings.service.impl.aws.model.AwsEcsListClustersResponse;
 import software.wings.service.impl.aws.model.AwsEcsRequest;
@@ -1289,5 +1295,11 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsCrossAccountAttributes.class, 7203);
     kryo.register(RepositoryFormat.class, 7204);
     kryo.register(AzureVaultConfig.class, 7205);
+    kryo.register(AwsEcsListClusterServicesRequest.class, 7206);
+    kryo.register(AwsEcsListClusterServicesResponse.class, 7207);
+    kryo.register(Deployment.class, 7208);
+    kryo.register(ServiceEvent.class, 7209);
+    kryo.register(Service.class, 7210);
+    kryo.register(DeploymentConfiguration.class, 7211);
   }
 }
