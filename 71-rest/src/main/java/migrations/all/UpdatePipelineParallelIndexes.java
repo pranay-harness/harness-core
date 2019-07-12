@@ -1,0 +1,45 @@
+package migrations.all;
+
+import static io.harness.persistence.HQuery.excludeAuthority;
+
+import com.google.inject.Inject;
+
+import io.harness.persistence.HIterator;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
+import software.wings.beans.Application;
+import software.wings.beans.Pipeline;
+import software.wings.beans.Pipeline.PipelineKeys;
+import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.PipelineServiceImpl;
+
+@Slf4j
+public class UpdatePipelineParallelIndexes implements Migration {
+  @Inject private WingsPersistence wingsPersistence;
+
+  @Override
+  public void migrate() {
+    try (HIterator<Application> iterator =
+             new HIterator<>(wingsPersistence.createQuery(Application.class, excludeAuthority).fetch())) {
+      while (iterator.hasNext()) {
+        Application application = iterator.next();
+        migrate(application);
+      }
+    }
+  }
+
+  public void migrate(Application application) {
+    try (HIterator<Pipeline> iterator = new HIterator<>(
+             wingsPersistence.createQuery(Pipeline.class).filter(PipelineKeys.appId, application.getUuid()).fetch())) {
+      while (iterator.hasNext()) {
+        Pipeline pipeline = iterator.next();
+        migrate(pipeline);
+      }
+    }
+  }
+
+  public void migrate(Pipeline pipeline) {
+    PipelineServiceImpl.ensurePipelineStageUuidAndParallelIndex(pipeline);
+    wingsPersistence.save(pipeline);
+  }
+}

@@ -103,6 +103,7 @@ import migrations.all.TimeSeriesMLScoresMigration;
 import migrations.all.UnregisteredUserNameMigration;
 import migrations.all.UpdateBitBucketTriggers;
 import migrations.all.UpdateGitSyncErrorMigration;
+import migrations.all.UpdatePipelineParallelIndexes;
 import migrations.all.UsageRestrictionsMigration;
 import migrations.all.UserPermissionReadMigration;
 import migrations.all.VerificationMetricJobMigration;
@@ -259,6 +260,7 @@ public class MigrationList {
         .add(Pair.of(265, AuditViewerPermissionMigration.class))
         .add(Pair.of(266, AwsAmiAsgDesiredInstancesMigration.class))
         .add(Pair.of(267, LimitCounterAccountIdMigration.class))
+        .add(Pair.of(268, UpdatePipelineParallelIndexes.class))
         .build();
   }
 }

@@ -36,6 +36,7 @@ public class PipelineStage {
     private String uuid;
     private String name;
     private String type;
+    private int parallelIndex;
     private Map<String, Object> properties = new HashMap<>();
     private Map<String, String> workflowVariables = new HashMap<>();
     private boolean disable;
