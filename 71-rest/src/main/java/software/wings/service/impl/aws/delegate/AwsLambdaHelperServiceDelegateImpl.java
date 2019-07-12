@@ -230,11 +230,23 @@ public class AwsLambdaHelperServiceDelegateImpl
     });
   }
 
+  /**
+   * Intially Aws Lambda did not allow for _ to be in the function name. So on the
+   * Harness side we were normalizing it to -. But now _ is allowed. So now we need
+   * special handling in case we may be updating existing name where _ may have
+   * been normalized to -.
+   */
+  @VisibleForTesting
+  String getAlternateNormalizedFunctionName(String functionName) {
+    return functionName.replace('_', '-');
+  }
+
   private AwsLambdaFunctionResult executeFunctionDeployment(AWSLambdaClient lambdaClient, String roleArn,
       List<String> evaluatedAliases, Map<String, String> serviceVariables, AwsLambdaVpcConfig lambdaVpcConfig,
       AwsLambdaFunctionParams functionParams, ExecutionLogCallback logCallback) {
+    String functionName = functionParams.getFunctionName();
     logCallback.saveExecutionLog("Deploying Lambda with following configuration", INFO);
-    logCallback.saveExecutionLog("Function Name: " + functionParams.getFunctionName(), INFO);
+    logCallback.saveExecutionLog("Function Name: " + functionName, INFO);
     logCallback.saveExecutionLog("S3 Bucket: " + functionParams.getBucket(), INFO);
     logCallback.saveExecutionLog("Bucket Key: " + functionParams.getKey(), INFO);
     logCallback.saveExecutionLog("Function handler: " + functionParams.getHandler(), INFO);
@@ -258,19 +270,40 @@ public class AwsLambdaHelperServiceDelegateImpl
     VpcConfig vpcConfig = getVpcConfig(lambdaVpcConfig);
     GetFunctionResult functionResult = null;
     try {
-      functionResult =
-          lambdaClient.getFunction(new GetFunctionRequest().withFunctionName(functionParams.getFunctionName()));
+      logCallback.saveExecutionLog(format("Testing existence of function with name: [%s]", functionName));
+      functionResult = lambdaClient.getFunction(new GetFunctionRequest().withFunctionName(functionName));
     } catch (ResourceNotFoundException exception) {
       // Function does not exist
+      logCallback.saveExecutionLog(format("Function: [%s] not found.", functionName));
     }
 
     if (functionResult == null) {
-      logCallback.saveExecutionLog("Function: " + functionParams.getFunctionName() + " does not exist.", INFO);
+      String alternateNormalizedFunctionName = getAlternateNormalizedFunctionName(functionName);
+      if (!alternateNormalizedFunctionName.equals(functionName)) {
+        try {
+          logCallback.saveExecutionLog(
+              format("Testing alternate function name: [%s] for existence", alternateNormalizedFunctionName));
+          functionResult =
+              lambdaClient.getFunction(new GetFunctionRequest().withFunctionName(alternateNormalizedFunctionName));
+        } catch (ResourceNotFoundException exception) {
+          // Function does not exist
+          logCallback.saveExecutionLog(format("Function: [%s] not found.", alternateNormalizedFunctionName));
+        }
+        if (functionResult != null) {
+          logCallback.saveExecutionLog(
+              format("Found existing function with name: [%s]. Using this.", alternateNormalizedFunctionName));
+          functionName = alternateNormalizedFunctionName;
+        }
+      }
+    }
+
+    if (functionResult == null) {
+      logCallback.saveExecutionLog("Function: " + functionName + " does not exist.", INFO);
       CreateFunctionRequest createFunctionRequest =
           new CreateFunctionRequest()
               .withEnvironment(new Environment().withVariables(serviceVariables))
               .withRuntime(functionParams.getRuntime())
-              .withFunctionName(functionParams.getFunctionName())
+              .withFunctionName(functionName)
               .withHandler(functionParams.getHandler())
               .withRole(roleArn)
               .withCode(new FunctionCode().withS3Bucket(functionParams.getBucket()).withS3Key(functionParams.getKey()))
@@ -280,27 +313,25 @@ public class AwsLambdaHelperServiceDelegateImpl
               .withMemorySize(functionParams.getMemory())
               .withVpcConfig(vpcConfig);
       CreateFunctionResult createFunctionResult = lambdaClient.createFunction(createFunctionRequest);
-      logCallback.saveExecutionLog(format("Function [%s] published with version [%s] successfully",
-                                       functionParams.getFunctionName(), createFunctionResult.getVersion()),
+      logCallback.saveExecutionLog(format("Function [%s] published with version [%s] successfully", functionName,
+                                       createFunctionResult.getVersion()),
           INFO);
       logCallback.saveExecutionLog(
           format("Created Function Code Sha256: [%s]", createFunctionResult.getCodeSha256()), INFO);
       logCallback.saveExecutionLog(format("Created Function ARN: [%s]", createFunctionResult.getFunctionArn()), INFO);
-      createFunctionAlias(lambdaClient, functionParams.getFunctionName(), createFunctionResult.getVersion(),
-          evaluatedAliases, logCallback);
+      createFunctionAlias(lambdaClient, functionName, createFunctionResult.getVersion(), evaluatedAliases, logCallback);
       functionMeta = FunctionMeta.newBuilder()
                          .withFunctionArn(createFunctionResult.getFunctionArn())
                          .withFunctionName(createFunctionResult.getFunctionName())
                          .withVersion(createFunctionResult.getVersion())
                          .build();
     } else {
-      logCallback.saveExecutionLog(
-          format("Function: [%s] exists. Update and Publish", functionParams.getFunctionName()));
+      logCallback.saveExecutionLog(format("Function: [%s] exists. Update and Publish", functionName));
       logCallback.saveExecutionLog(
           format("Existing Lambda Function Code Sha256: [%s].", functionResult.getConfiguration().getCodeSha256()));
       UpdateFunctionCodeResult updateFunctionCodeResultDryRun =
           lambdaClient.updateFunctionCode(new UpdateFunctionCodeRequest()
-                                              .withFunctionName(functionParams.getFunctionName())
+                                              .withFunctionName(functionName)
                                               .withPublish(true)
                                               .withS3Bucket(functionParams.getBucket())
                                               .withS3Key(functionParams.getKey()));
@@ -310,7 +341,7 @@ public class AwsLambdaHelperServiceDelegateImpl
         logCallback.saveExecutionLog("Function code didn't change. Skip function code update", INFO);
       } else {
         UpdateFunctionCodeRequest updateFunctionCodeRequest = new UpdateFunctionCodeRequest()
-                                                                  .withFunctionName(functionParams.getFunctionName())
+                                                                  .withFunctionName(functionName)
                                                                   .withS3Bucket(functionParams.getBucket())
                                                                   .withS3Key(functionParams.getKey());
         UpdateFunctionCodeResult updateFunctionCodeResult = lambdaClient.updateFunctionCode(updateFunctionCodeRequest);
@@ -325,7 +356,7 @@ public class AwsLambdaHelperServiceDelegateImpl
           new UpdateFunctionConfigurationRequest()
               .withEnvironment(new Environment().withVariables(serviceVariables))
               .withRuntime(functionParams.getRuntime())
-              .withFunctionName(functionParams.getFunctionName())
+              .withFunctionName(functionName)
               .withHandler(functionParams.getHandler())
               .withRole(roleArn)
               .withTimeout(functionParams.getTimeout())
@@ -343,7 +374,7 @@ public class AwsLambdaHelperServiceDelegateImpl
       logCallback.saveExecutionLog(format("Published new version: [%s]", publishVersionResult.getVersion()));
       logCallback.saveExecutionLog(format("Published function ARN: [%s]", publishVersionResult.getFunctionArn()));
       ListAliasesResult listAliasesResult =
-          lambdaClient.listAliases(new ListAliasesRequest().withFunctionName(functionParams.getFunctionName()));
+          lambdaClient.listAliases(new ListAliasesRequest().withFunctionName(functionName));
 
       List<String> newAliases = new ArrayList<>();
       if (isNotEmpty(evaluatedAliases)) {
@@ -354,8 +385,7 @@ public class AwsLambdaHelperServiceDelegateImpl
                               .collect(toList()));
       }
       if (isNotEmpty(newAliases)) {
-        createFunctionAlias(
-            lambdaClient, functionParams.getFunctionName(), publishVersionResult.getVersion(), newAliases, logCallback);
+        createFunctionAlias(lambdaClient, functionName, publishVersionResult.getVersion(), newAliases, logCallback);
       }
 
       List<String> updateAlias = new ArrayList<>();
@@ -366,8 +396,7 @@ public class AwsLambdaHelperServiceDelegateImpl
                 .collect(toList()));
       }
       if (isNotEmpty(updateAlias)) {
-        updateFunctionAlias(lambdaClient, functionParams.getFunctionName(), publishVersionResult.getVersion(),
-            updateAlias, logCallback);
+        updateFunctionAlias(lambdaClient, functionName, publishVersionResult.getVersion(), updateAlias, logCallback);
       }
       tagExistingFunction(functionResult, functionParams.getFunctionTags(), logCallback, lambdaClient);
 
@@ -377,8 +406,7 @@ public class AwsLambdaHelperServiceDelegateImpl
                          .withVersion(publishVersionResult.getVersion())
                          .build();
     }
-    logCallback.saveExecutionLog(
-        format("Successfully deployed lambda function: [%s]", functionParams.getFunctionName()));
+    logCallback.saveExecutionLog(format("Successfully deployed lambda function: [%s]", functionName));
     logCallback.saveExecutionLog("=================");
     return AwsLambdaFunctionResult.builder().success(true).functionMeta(functionMeta).build();
   }
