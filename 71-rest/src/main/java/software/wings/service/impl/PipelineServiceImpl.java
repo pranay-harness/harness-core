@@ -167,7 +167,7 @@ public class PipelineServiceImpl implements PipelineService {
     notNullCheck("Pipeline not saved", savedPipeline, USER);
 
     List<String> keywords = pipeline.generateKeywords();
-    ensurePipelineStageUuids(pipeline);
+    ensurePipelineStageUuidAndParallelIndex(pipeline);
 
     validatePipeline(pipeline, keywords);
     UpdateOperations<Pipeline> ops = wingsPersistence.createUpdateOperations(Pipeline.class);
@@ -200,16 +200,26 @@ public class PipelineServiceImpl implements PipelineService {
     return updatedPipeline;
   }
 
-  private void ensurePipelineStageUuids(Pipeline pipeline) {
-    // The UI or other agents my try to update the pipeline with new stages without uuids. This makes sure that
-    // they all will have one.
+  public static void ensurePipelineStageUuidAndParallelIndex(Pipeline pipeline) {
     List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
-    if (pipelineStages != null) {
-      pipelineStages.stream().flatMap(stage -> stage.getPipelineStageElements().stream()).forEach(element -> {
+    if (isEmpty(pipelineStages)) {
+      return;
+    }
+
+    int parallelIndex = 0;
+    for (PipelineStage stage : pipelineStages) {
+      if (!stage.isParallel()) {
+        ++parallelIndex;
+      }
+      for (PipelineStageElement element : stage.getPipelineStageElements()) {
+        // The UI or other agents my try to update the pipeline with new stages without uuid. This makes sure that
+        // they all will have one.
         if (element.getUuid() == null) {
           element.setUuid(generateUuid());
         }
-      });
+        // The parallel index is important to be correct, lets enforce it
+        element.setParallelIndex(parallelIndex);
+      }
     }
   }
 
@@ -739,7 +749,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Override
   @ValidationGroups(Create.class)
   public Pipeline save(Pipeline pipeline) {
-    ensurePipelineStageUuids(pipeline);
+    ensurePipelineStageUuidAndParallelIndex(pipeline);
     String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
     pipeline.setAccountId(accountId);
     StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
@@ -768,7 +778,7 @@ public class PipelineServiceImpl implements PipelineService {
              new HIterator<>(wingsPersistence.createQuery(Pipeline.class).filter(APP_ID_KEY, appId).fetch())) {
       while (pipelineHIterator.hasNext()) {
         Pipeline pipeline = pipelineHIterator.next();
-        // Templated Id in workflow variables
+        // Templatized Id in workflow variables
         if (pipeline.getPipelineStages()
                 .stream()
                 .flatMap(pipelineStage -> pipelineStage.getPipelineStageElements().stream())
