@@ -44,8 +44,6 @@ public class GcpMarketplaceMessageReceiver implements MessageReceiver {
         createAccountEventHandler.handle(pubsubMessage.getMessageId(), event);
         break;
       case ENTITLEMENT_CREATION_REQUESTED:
-        Switch.noop();
-        break;
       case ENTITLEMENT_ACTIVE:
         Switch.noop();
         break;
