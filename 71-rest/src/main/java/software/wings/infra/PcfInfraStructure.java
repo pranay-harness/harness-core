@@ -1,9 +1,11 @@
 package software.wings.infra;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
 
 import java.util.List;
 
+@JsonTypeName("PCF_PCF")
 @Data
 public class PcfInfraStructure implements CloudProviderInfrastructure {
   private String cloudProviderId;

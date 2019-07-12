@@ -5,7 +5,7 @@ import lombok.Data;
 
 import java.util.List;
 
-@JsonTypeName("AWS_LAMBDA")
+@JsonTypeName("AWS_AWS_LAMBDA")
 @Data
 public class AwsLambdaInfrastructure implements CloudProviderInfrastructure {
   private String cloudProviderId;
