@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -24,6 +25,17 @@ public abstract class ContainerInfrastructureMapping extends InfrastructureMappi
    */
   public ContainerInfrastructureMapping(String infraMappingType) {
     super(infraMappingType);
+  }
+
+  public ContainerInfrastructureMapping(String entityYamlPath, String appId, String accountId, String type, String uuid,
+      EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt,
+      String computeProviderSettingId, String envId, String serviceTemplateId, String serviceId,
+      String computeProviderType, String infraMappingType, String deploymentType, String computeProviderName,
+      String name, boolean autoPopulateName, Map<String, Object> blueprints, String clusterName, String provisionerId) {
+    super(entityYamlPath, appId, accountId, type, uuid, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt,
+        computeProviderSettingId, envId, serviceTemplateId, serviceId, computeProviderType, infraMappingType,
+        deploymentType, computeProviderName, name, autoPopulateName, blueprints, provisionerId);
+    this.clusterName = clusterName;
   }
 
   /**

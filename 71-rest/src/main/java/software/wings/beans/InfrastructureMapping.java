@@ -96,7 +96,7 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
       EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt,
       String computeProviderSettingId, String envId, String serviceTemplateId, String serviceId,
       String computeProviderType, String infraMappingType, String deploymentType, String computeProviderName,
-      String name, boolean autoPopulateName, Map<String, Object> blueprints) {
+      String name, boolean autoPopulateName, Map<String, Object> blueprints, String provisionerId) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.computeProviderSettingId = computeProviderSettingId;
     this.envId = envId;
@@ -110,6 +110,7 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
     this.autoPopulate = autoPopulateName;
     this.accountId = accountId;
     this.blueprints = blueprints;
+    this.provisionerId = provisionerId;
   }
 
   public abstract void applyProvisionerVariables(
