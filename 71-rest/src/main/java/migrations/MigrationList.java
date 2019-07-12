@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import migrations.all.AddAccountIdToAppEntities;
 import migrations.all.AddAccountIdToArtifactStreamsMigration;
 import migrations.all.AddAccountIdToArtifactsMigration;
+import migrations.all.AddDuplicateFieldToCVFeedbacks;
 import migrations.all.AddInstanceStatsCollectionJobToAllAccounts;
 import migrations.all.AddLimitVicinityCheckJobToAllAccounts;
 import migrations.all.AddLoginSettingsToAccountMigration;
@@ -261,6 +262,7 @@ public class MigrationList {
         .add(Pair.of(266, AwsAmiAsgDesiredInstancesMigration.class))
         .add(Pair.of(267, LimitCounterAccountIdMigration.class))
         .add(Pair.of(268, UpdatePipelineParallelIndexes.class))
+        .add(Pair.of(269, AddDuplicateFieldToCVFeedbacks.class))
         .build();
   }
 }
