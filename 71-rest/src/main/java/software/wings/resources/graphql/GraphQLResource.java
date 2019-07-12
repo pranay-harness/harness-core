@@ -1,5 +1,7 @@
 package software.wings.resources.graphql;
 
+import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
+import static io.harness.exception.WingsException.USER_ADMIN;
 import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
 
 import com.google.common.collect.Maps;
@@ -16,6 +18,7 @@ import graphql.ExecutionResultImpl;
 import graphql.GraphQL;
 import graphql.GraphQLContext;
 import graphql.GraphqlErrorBuilder;
+import io.harness.exception.WingsException;
 import io.swagger.annotations.Api;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -28,8 +31,10 @@ import software.wings.features.api.PremiumFeature;
 import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
 import software.wings.graphql.provider.QueryLanguageProvider;
 import software.wings.graphql.utils.GraphQLConstants;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserThreadLocal;
+import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
@@ -50,7 +55,6 @@ import javax.ws.rs.core.MediaType;
 @Api("/graphql")
 @Path("/graphql")
 @Produces("application/json")
-@ExternalFacingApiAuth
 @Singleton
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -58,21 +62,21 @@ public class GraphQLResource {
   private static final long RATE_LIMIT_QUERY_PER_MINUTE = 100;
   private static final long RATE_LIMIT_DURATION_IN_MINUTE = 1;
   RequestRateLimiter requestRateLimiter;
-  GraphQL graphQL;
+  GraphQL privateGraphQL;
+  GraphQL publicGraphQL;
   FeatureFlagService featureFlagService;
   ApiKeyService apiKeyService;
   AuthHandler authHandler;
   AccountService accountService;
   PremiumFeature restApiFeature;
-
   DataLoaderRegistryHelper dataLoaderRegistryHelper;
-
   @Inject
   public GraphQLResource(@NotNull QueryLanguageProvider<GraphQL> queryLanguageProvider,
       @NotNull FeatureFlagService featureFlagService, @NotNull ApiKeyService apiKeyService,
       @NotNull AuthHandler authHandler, DataLoaderRegistryHelper dataLoaderRegistryHelper,
       @NotNull AccountService accountService, @Named(RestApiFeature.FEATURE_NAME) PremiumFeature restApiFeature) {
-    this.graphQL = queryLanguageProvider.getQL();
+    this.privateGraphQL = queryLanguageProvider.getPrivateGraphQL();
+    this.publicGraphQL = queryLanguageProvider.getPublicGraphQL();
     this.featureFlagService = featureFlagService;
     this.apiKeyService = apiKeyService;
     this.authHandler = authHandler;
@@ -85,10 +89,11 @@ public class GraphQLResource {
 
   @POST
   @Consumes(MediaType.TEXT_PLAIN)
+  @ExternalFacingApiAuth
   public Map<String, Object> execute(@HeaderParam(API_KEY_HEADER) String apiKey, String query) {
     GraphQLQuery graphQLQuery = new GraphQLQuery();
     graphQLQuery.setQuery(query);
-    return executeInternal(apiKey, graphQLQuery);
+    return executeExternal(apiKey, graphQLQuery);
   }
 
   /**
@@ -101,11 +106,38 @@ public class GraphQLResource {
    */
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
+  @ExternalFacingApiAuth
   public Map<String, Object> execute(@HeaderParam(API_KEY_HEADER) String apiKey, GraphQLQuery graphQLQuery) {
-    return executeInternal(apiKey, graphQLQuery);
+    return executeExternal(apiKey, graphQLQuery);
   }
 
-  private Map<String, Object> executeInternal(String apiKey, GraphQLQuery graphQLQuery) {
+  @Path("int")
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @POST
+  @Consumes(MediaType.TEXT_PLAIN)
+  public Map<String, Object> execute(String query) {
+    GraphQLQuery graphQLQuery = new GraphQLQuery();
+    graphQLQuery.setQuery(query);
+    return executeInternal(graphQLQuery);
+  }
+
+  /**
+   * GraphQL graphQLQuery can be sent as plain text
+   * or as JSON hence I have added overloaded methods
+   * to handle both cases.
+   *
+   * @param graphQLQuery
+   * @return
+   */
+  @Path("int")
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @POST
+  @Consumes(MediaType.APPLICATION_JSON)
+  public Map<String, Object> execute(GraphQLQuery graphQLQuery) {
+    return executeInternal(graphQLQuery);
+  }
+
+  private Map<String, Object> executeExternal(String apiKey, GraphQLQuery graphQLQuery) {
     String accountId;
     boolean hasUserContext = false;
     UserPermissionInfo userPermissionInfo = null;
@@ -121,10 +153,9 @@ public class GraphQLResource {
       }
     }
 
-    boolean isOverRateLimit = requestRateLimiter.overLimitWhenIncremented(accountId);
-    if (isOverRateLimit) {
-      String rateLiteErrorMsg = String.format(GraphQLConstants.RATE_LIMIT_REACHED, accountId);
-      return getExecutionResultWithError(rateLiteErrorMsg).toSpecification();
+    if (checkRateLimit(accountId)) {
+      return getExecutionResultWithError(String.format(GraphQLConstants.RATE_LIMIT_REACHED, accountId))
+          .toSpecification();
     }
 
     if (!featureFlagService.isEnabled(FeatureName.GRAPHQL, accountId)
@@ -135,41 +166,94 @@ public class GraphQLResource {
 
     ExecutionResult executionResult;
     try {
+      GraphQL graphQL;
+      if (featureFlagService.isEnabled(FeatureName.GRAPHQL_DEV, accountId)) {
+        graphQL = privateGraphQL;
+      } else {
+        graphQL = publicGraphQL;
+      }
       if (hasUserContext && userPermissionInfo != null) {
-        executionResult = graphQL.execute(getExecutionInput(userPermissionInfo, accountId, graphQLQuery));
+        executionResult =
+            graphQL.execute(getExecutionInput(userPermissionInfo, accountId, graphQLQuery, dataLoaderRegistryHelper));
       } else {
         ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(apiKey, accountId, true);
         if (apiKeyEntry == null) {
           executionResult = getExecutionResultWithError(GraphQLConstants.INVALID_API_KEY);
         } else {
           userPermissionInfo = authHandler.getUserPermissionInfo(accountId, apiKeyEntry.getUserGroups());
-          executionResult = graphQL.execute(getExecutionInput(userPermissionInfo, accountId, graphQLQuery));
+          executionResult =
+              graphQL.execute(getExecutionInput(userPermissionInfo, accountId, graphQLQuery, dataLoaderRegistryHelper));
         }
       }
     } catch (Exception ex) {
-      String errorMsg = String.format(
-          "Error while handling api request for Graphql api for accountId %s : %s", accountId, ex.getMessage());
-      logger.warn(errorMsg);
-      executionResult = getExecutionResultWithError(errorMsg);
+      executionResult = handleException(accountId, ex);
     }
 
     return executionResult.toSpecification();
   }
 
-  private ExecutionInput getExecutionInput(
-      UserPermissionInfo userPermissionInfo, String accountId, GraphQLQuery graphQLQuery) {
+  private ExecutionResult handleException(String accountId, Exception ex) {
+    String errorMsg = String.format(
+        "Error while handling api request for Graphql api for accountId %s : %s", accountId, ex.getMessage());
+    logger.warn(errorMsg);
+    return getExecutionResultWithError(errorMsg);
+  }
+
+  private boolean checkRateLimit(String accountId) {
+    if (requestRateLimiter.overLimitWhenIncremented(accountId)) {
+      return true;
+    }
+    return false;
+  }
+
+  private Map<String, Object> executeInternal(GraphQLQuery graphQLQuery) {
+    String accountId;
+    boolean hasUserContext = false;
+    UserPermissionInfo userPermissionInfo = null;
+    User user = UserThreadLocal.get();
+    if (user != null) {
+      accountId = user.getUserRequestContext().getAccountId();
+      userPermissionInfo = user.getUserRequestContext().getUserPermissionInfo();
+      hasUserContext = true;
+    } else {
+      throw new WingsException(INVALID_TOKEN, USER_ADMIN);
+    }
+
+    if (checkRateLimit(accountId)) {
+      return getExecutionResultWithError(String.format(GraphQLConstants.RATE_LIMIT_REACHED, accountId))
+          .toSpecification();
+    }
+
+    ExecutionResult executionResult;
+    try {
+      GraphQL graphQL = privateGraphQL;
+      if (hasUserContext && userPermissionInfo != null) {
+        executionResult =
+            graphQL.execute(getExecutionInput(userPermissionInfo, accountId, graphQLQuery, dataLoaderRegistryHelper));
+      } else {
+        throw new WingsException(INVALID_TOKEN, USER_ADMIN);
+      }
+    } catch (Exception ex) {
+      executionResult = handleException(accountId, ex);
+    }
+
+    return executionResult.toSpecification();
+  }
+
+  private ExecutionResultImpl getExecutionResultWithError(String message) {
+    return ExecutionResultImpl.newExecutionResult()
+        .addError(GraphqlErrorBuilder.newError().message(message).build())
+        .build();
+  }
+
+  private ExecutionInput getExecutionInput(UserPermissionInfo userPermissionInfo, String accountId,
+      GraphQLQuery graphQLQuery, DataLoaderRegistryHelper dataLoaderRegistryHelper) {
     return ExecutionInput.newExecutionInput()
         .query(graphQLQuery.getQuery())
         .variables(graphQLQuery.getVariables() == null ? Maps.newHashMap() : graphQLQuery.getVariables())
         .operationName(graphQLQuery.getOperationName())
         .dataLoaderRegistry(dataLoaderRegistryHelper.getDataLoaderRegistry())
         .context(GraphQLContext.newContext().of("auth", userPermissionInfo, "accountId", accountId))
-        .build();
-  }
-
-  private ExecutionResultImpl getExecutionResultWithError(String message) {
-    return ExecutionResultImpl.newExecutionResult()
-        .addError(GraphqlErrorBuilder.newError().message(message).build())
         .build();
   }
 }

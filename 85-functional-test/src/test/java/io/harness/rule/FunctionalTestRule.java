@@ -167,7 +167,7 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
 
     final QueryLanguageProvider<GraphQL> instance =
         injector.getInstance(Key.get(new TypeLiteral<QueryLanguageProvider<GraphQL>>() {}));
-    graphQL = instance.getQL();
+    graphQL = instance.getPrivateGraphQL();
 
     final HPersistence persistence = injector.getInstance(HPersistence.class);
     persistence.registerUserProvider(new ThreadLocalUserProvider());
