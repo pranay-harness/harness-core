@@ -265,7 +265,7 @@ public class LdapGroupSyncJob implements Job {
   }
 
   private void executeInternal(String accountId, String ssoId) {
-    if (ldapFeature.isAvailableForAccount(accountId)) {
+    if (!ldapFeature.isAvailableForAccount(accountId)) {
       logger.info("Skipping LDAP sync. accountId={} ssoId={}", accountId, ssoId);
       return;
     }
