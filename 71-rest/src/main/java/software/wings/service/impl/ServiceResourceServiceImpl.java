@@ -2398,4 +2398,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         .contains(artifactStreamId)
         .asList();
   }
+
+  @Override
+  public List<Service> listByDeploymentType(String appId, String deploymentType) {
+    return wingsPersistence.createQuery(Service.class)
+        .filter(ServiceKeys.appId, appId)
+        .filter(ServiceKeys.deploymentType, deploymentType)
+        .asList();
+  }
 }
