@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 
 import io.harness.data.structure.EmptyPredicate;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Notification;
@@ -32,10 +31,6 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
 
   @Override
   public void dispatch(List<Notification> notifications, UserGroup userGroup) {
-    // added to logs for some debugging purpose,
-    // remove this and it's usages if it's been more than a month since this was added
-    String randLogId = RandomStringUtils.randomAlphabetic(6);
-
     if (isEmpty(notifications)) {
       return;
     }
@@ -46,8 +41,8 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
       return;
     }
 
+    log.info("User group to notify. id={} name={}", userGroup.getUuid(), userGroup.getName());
     NotificationSettings notificationSettings = userGroup.getNotificationSettings();
-
     String accountId = notifications.get(0).getAccountId();
 
     // if `isUseIndividualEmails` is true, then notify all "members" of group
@@ -62,37 +57,37 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
 
     if (CollectionUtils.isNotEmpty(userGroup.getEmailAddresses())) {
       try {
-        log.info("{} - Trying to send email. emails: {}", randLogId, userGroup.getEmailAddresses());
+        log.info("Trying to send email. emails: {}", userGroup.getEmailAddresses());
         emailDispatcher.dispatch(notifications, userGroup.getEmailAddresses());
       } catch (Exception e) {
-        log.error("{} - Error sending email. Email Addresses: {}", randLogId, userGroup.getEmailAddresses(), e);
+        log.error("Error sending email. Email Addresses: {}", userGroup.getEmailAddresses(), e);
       }
     }
 
+    // recommended to *not* log Slack Webhook urls and pager duty keys.
+    // see discussion here: https://harness.slack.com/archives/C838QA2CW/p1562774945009400
+
     if (null != userGroup.getSlackConfig()) {
       try {
-        log.info("{} - Trying to send slack message. slack configuration: {}", randLogId, userGroup.getSlackConfig());
+        log.info("Trying to send slack message. slack configuration: {}", userGroup.getSlackConfig());
         slackMessageDispatcher.dispatch(accountId, notifications, userGroup.getSlackConfig());
       } catch (Exception e) {
-        log.error("{} - Error sending slack message. Slack Config: {}", randLogId, userGroup.getSlackConfig(), e);
+        log.error("Error sending slack message. Slack Config: {}", userGroup.getSlackConfig(), e);
       }
     }
 
     boolean isCommunityAccount = accountService.isCommunityAccount(accountId);
     if (isCommunityAccount) {
-      log.info("{} - Pager duty Configuration will be ignored since it's a community account. accountId={}", randLogId,
-          accountId);
+      log.info("Pager duty Configuration will be ignored since it's a community account. accountId={}", accountId);
       return;
     }
 
     if (EmptyPredicate.isNotEmpty(userGroup.getPagerDutyIntegrationKey())) {
       try {
-        log.info("{} - Trying to send pager duty event. pagerDutyKey: {}", randLogId,
-            userGroup.getPagerDutyIntegrationKey());
+        log.info("Trying to send pager duty event. userGroupId={} accountId={}", userGroup.getUuid(), accountId);
         pagerDutyEventDispatcher.dispatch(accountId, notifications, userGroup.getPagerDutyIntegrationKey());
       } catch (Exception e) {
-        log.error("{} - Error sending pager duty event. pagerDutyKey: {}", randLogId,
-            userGroup.getPagerDutyIntegrationKey(), e);
+        log.error("Error sending pager duty event. userGroupId={} accountId={}", userGroup.getUuid(), accountId, e);
       }
     }
   }

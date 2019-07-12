@@ -10,4 +10,11 @@ public class SlackNotificationSetting implements SlackNotificationConfiguration 
   public static SlackNotificationSetting emptyConfig() {
     return new SlackNotificationSetting("", "");
   }
+
+  @Override
+  public String toString() {
+    return "SlackNotificationSetting{"
+        + "name='" + name + '\'' + ", outgoingWebhookUrl='"
+        + "<redacted-for-security>" + '\'' + '}';
+  }
 }
