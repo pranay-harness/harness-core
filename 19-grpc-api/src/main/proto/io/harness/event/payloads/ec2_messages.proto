@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package io.harness.event.payloads;
+import "io/harness/event/payloads/common_messages.proto";
+option java_multiple_files = true;
+
+message Ec2InstanceInfo {
+  string instance_id = 1;
+  string instance_type = 2;
+  string capacity_reservation_id = 3;
+  string spot_instance_request_id = 4;
+  string instance_lifecycle = 5;
+  InstanceState instance_state = 6;
+}
+
+message InstanceState {
+  int32 code = 1;
+  string name = 2;
+}
+
+message Ec2Lifecycle {
+  Lifecycle lifecycle = 1;
+}

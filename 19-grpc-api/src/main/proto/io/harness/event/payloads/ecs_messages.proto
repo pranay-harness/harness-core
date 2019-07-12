@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package io.harness.event.payloads;
+import "io/harness/event/payloads/common_messages.proto";
+option java_multiple_files = true;
+
+message EcsTaskDescription {
+  EcsTaskInfo ecs_task_info = 1;
+  ReservedResource ecs_task_resource = 2;
+}
+
+message EcsTaskInfo {
+  string task_arn = 1;
+  string cluster_arn = 2;
+  string service_name = 3;
+  string container_instance_arn = 4;
+  string launch_type = 5;
+  string desired_status = 6;
+}
+
+message EcsTaskLifecycle {
+  Lifecycle lifecycle = 1;
+}
+
+message ReservedResource {
+  int32 cpu = 1;
+  int32 memory = 2;
+}
+
+message EcsContainerInstanceInfo {
+  string container_instance_arn = 1;
+  string cluster_arn = 2;
+  string ec2_instance_id = 3;
+}
+
+message EcsContainerInstanceDescription {
+  EcsContainerInstanceInfo ecs_container_instance_info = 1;
+  ReservedResource ecs_container_instance_resource = 2;
+}
+
+message EcsContainerInstanceLifecycle {
+  Lifecycle lifecycle = 1;
+}

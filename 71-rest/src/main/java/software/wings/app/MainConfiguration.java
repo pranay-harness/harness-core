@@ -21,6 +21,7 @@ import io.dropwizard.request.logging.RequestLogFactory;
 import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.event.grpc.GrpcServerConfig;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.mongo.MongoConfig;
@@ -100,6 +101,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("sampleTargetEnv") private String sampleTargetEnv;
   @JsonProperty("sampleTargetStatusHost") private String sampleTargetStatusHost;
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
+  @JsonProperty("grpcServerConfig") private GrpcServerConfig grpcServerConfig;
 
   @JsonProperty("disabledCache") private Set<String> disabledCache;
   @JsonProperty("techStacks") private Map<String, UrlInfo> techStackLinks;

@@ -18,6 +18,7 @@ import com.amazonaws.services.cloudwatch.model.DimensionFilter;
 import com.amazonaws.services.cloudwatch.model.ListMetricsRequest;
 import com.amazonaws.services.cloudwatch.model.Metric;
 import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ecs.model.Service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -170,6 +171,15 @@ public class CloudWatchServiceImpl implements CloudWatchService {
       throw new WingsException("AWS account setting not found " + settingId);
     }
     return awsInfrastructureProvider.listECSClusterNames(settingAttribute, region);
+  }
+
+  @Override
+  public List<Service> getECSClusterServices(String settingId, String region, String clusterName) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    if (settingAttribute == null || !(settingAttribute.getValue() instanceof AwsConfig)) {
+      throw new WingsException("AWS account setting not found " + settingId);
+    }
+    return awsInfrastructureProvider.listECSClusterServiceNames(settingAttribute, region, clusterName);
   }
 
   @Override

@@ -36,4 +36,6 @@ public class DelegateConfiguration {
   private String kubectlPath;
 
   private String helmPath;
+
+  private String publishTarget;
 }

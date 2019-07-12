@@ -4,6 +4,7 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 
 import com.google.inject.Inject;
 
+import com.amazonaws.services.ecs.model.Service;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
@@ -12,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
+import software.wings.service.impl.aws.model.AwsEcsListClusterServicesRequest;
+import software.wings.service.impl.aws.model.AwsEcsListClusterServicesResponse;
 import software.wings.service.impl.aws.model.AwsEcsListClustersResponse;
 import software.wings.service.impl.aws.model.AwsEcsRequest;
 import software.wings.service.impl.aws.model.AwsEcsRequest.AwsEcsRequestType;
@@ -46,6 +49,14 @@ public class AwsEcsTask extends AbstractDelegateRunnableTask {
           List<String> clusters = ecsHelperServiceDelegate.listClusters(
               request.getAwsConfig(), request.getEncryptionDetails(), request.getRegion());
           return AwsEcsListClustersResponse.builder().clusters(clusters).executionStatus(SUCCESS).build();
+        }
+        case LIST_CLUSTER_SERVICES: {
+          AwsEcsListClusterServicesRequest awsEcsListClusterServicesRequest =
+              (AwsEcsListClusterServicesRequest) parameters;
+          List<Service> services = ecsHelperServiceDelegate.listServicesForCluster(
+              awsEcsListClusterServicesRequest.getAwsConfig(), awsEcsListClusterServicesRequest.getEncryptionDetails(),
+              awsEcsListClusterServicesRequest.getRegion(), awsEcsListClusterServicesRequest.getCluster());
+          return AwsEcsListClusterServicesResponse.builder().services(services).executionStatus(SUCCESS).build();
         }
         default: {
           throw new InvalidRequestException("Invalid request type [" + requestType + "]", WingsException.USER);

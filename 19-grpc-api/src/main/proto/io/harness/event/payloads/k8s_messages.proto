@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package io.harness.event.payloads;
+option java_multiple_files = true;
+
+message K8sPodInfo {
+  string pod_name = 1;
+}
+
+message K8sPodLifecycle {
+}
+
+message K8sNodeInfo {
+}
+
+message K8sNodeLifecycle {
+}

@@ -631,6 +631,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>19-grpc-api</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>21-persistence</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

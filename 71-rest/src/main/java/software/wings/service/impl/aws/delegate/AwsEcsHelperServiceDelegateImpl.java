@@ -13,13 +13,27 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.ecs.AmazonECSClient;
 import com.amazonaws.services.ecs.AmazonECSClientBuilder;
+import com.amazonaws.services.ecs.model.ContainerInstance;
+import com.amazonaws.services.ecs.model.ContainerInstanceField;
+import com.amazonaws.services.ecs.model.ContainerInstanceStatus;
+import com.amazonaws.services.ecs.model.DescribeContainerInstancesRequest;
+import com.amazonaws.services.ecs.model.DescribeContainerInstancesResult;
 import com.amazonaws.services.ecs.model.DescribeServicesRequest;
 import com.amazonaws.services.ecs.model.DescribeServicesResult;
+import com.amazonaws.services.ecs.model.DescribeTasksRequest;
+import com.amazonaws.services.ecs.model.DescribeTasksResult;
+import com.amazonaws.services.ecs.model.DesiredStatus;
 import com.amazonaws.services.ecs.model.ListClustersRequest;
 import com.amazonaws.services.ecs.model.ListClustersResult;
+import com.amazonaws.services.ecs.model.ListContainerInstancesRequest;
+import com.amazonaws.services.ecs.model.ListContainerInstancesResult;
 import com.amazonaws.services.ecs.model.ListServicesRequest;
 import com.amazonaws.services.ecs.model.ListServicesResult;
+import com.amazonaws.services.ecs.model.ListTasksRequest;
+import com.amazonaws.services.ecs.model.ListTasksResult;
 import com.amazonaws.services.ecs.model.Service;
+import com.amazonaws.services.ecs.model.Task;
+import com.amazonaws.services.ecs.model.TaskField;
 import software.wings.beans.AwsConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
@@ -95,6 +109,114 @@ public class AwsEcsHelperServiceDelegateImpl
         allServices.addAll(describeServicesResult.getServices());
       }
       return allServices;
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
+    return emptyList();
+  }
+
+  @Override
+  public List<String> listTasksArnForService(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, String cluster, String service, DesiredStatus desiredStatus) {
+    List<String> taskArns = newArrayList();
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AmazonECSClient client = getAmazonEcsClient(region, awsConfig);
+      String nextToken = null;
+      do {
+        ListTasksRequest listTasksRequest =
+            new ListTasksRequest().withCluster(cluster).withDesiredStatus(desiredStatus).withNextToken(nextToken);
+        if (null != service) {
+          listTasksRequest.withServiceName(service);
+        }
+        ListTasksResult listTasksResult = client.listTasks(listTasksRequest);
+        List<String> arnsBatch = listTasksResult.getTaskArns();
+        if (isNotEmpty(arnsBatch)) {
+          taskArns.addAll(arnsBatch);
+        }
+        nextToken = listTasksResult.getNextToken();
+      } while (nextToken != null);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
+    return taskArns;
+  }
+
+  @Override
+  public List<Task> listTasksForService(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String cluster, String service, DesiredStatus desiredStatus) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AmazonECSClient client = getAmazonEcsClient(region, awsConfig);
+      List<String> taskArns =
+          listTasksArnForService(awsConfig, encryptionDetails, region, cluster, service, desiredStatus);
+      int counter = 0;
+      List<Task> allTasks = newArrayList();
+      while (counter < taskArns.size()) {
+        // We can ONLY describe 100 tasks at a time.
+        List<String> arnsBatch = newArrayList();
+        for (int i = 0; i < 100 && counter < taskArns.size(); i++) {
+          arnsBatch.add(taskArns.get(counter));
+          counter++;
+        }
+        DescribeTasksRequest describeTasksRequest =
+            new DescribeTasksRequest().withCluster(cluster).withTasks(arnsBatch).withInclude(TaskField.TAGS);
+        DescribeTasksResult describeTasksResult = client.describeTasks(describeTasksRequest);
+        allTasks.addAll(describeTasksResult.getTasks());
+      }
+      return allTasks;
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
+    return emptyList();
+  }
+
+  @Override
+  public List<ContainerInstance> listContainerInstancesForCluster(AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, String region, String cluster,
+      ContainerInstanceStatus containerInstanceStatus) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AmazonECSClient client = getAmazonEcsClient(region, awsConfig);
+      List<String> containerInstanceArns = newArrayList();
+      String nextToken = null;
+      do {
+        ListContainerInstancesRequest listContainerInstancesRequest = new ListContainerInstancesRequest()
+                                                                          .withCluster(cluster)
+                                                                          .withStatus(containerInstanceStatus)
+                                                                          .withNextToken(nextToken);
+        ListContainerInstancesResult listContainerInstancesResult =
+            client.listContainerInstances(listContainerInstancesRequest);
+        List<String> arnsBatch = listContainerInstancesResult.getContainerInstanceArns();
+        if (isNotEmpty(arnsBatch)) {
+          containerInstanceArns.addAll(arnsBatch);
+        }
+        nextToken = listContainerInstancesResult.getNextToken();
+      } while (nextToken != null);
+
+      int counter = 0;
+      List<ContainerInstance> allContainerInstance = newArrayList();
+      while (counter < containerInstanceArns.size()) {
+        // We can ONLY describe 100 container instances at a time.
+        List<String> arnsBatch = newArrayList();
+        for (int i = 0; i < 100 && counter < containerInstanceArns.size(); i++) {
+          arnsBatch.add(containerInstanceArns.get(counter));
+          counter++;
+        }
+        DescribeContainerInstancesRequest describeContainerInstancesRequest =
+            new DescribeContainerInstancesRequest().withCluster(cluster).withContainerInstances(arnsBatch).withInclude(
+                ContainerInstanceField.TAGS);
+        DescribeContainerInstancesResult describeContainerInstancesResult =
+            client.describeContainerInstances(describeContainerInstancesRequest);
+        allContainerInstance.addAll(describeContainerInstancesResult.getContainerInstances());
+      }
+      return allContainerInstance;
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {

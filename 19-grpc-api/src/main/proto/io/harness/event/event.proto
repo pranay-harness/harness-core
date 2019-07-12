@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package io.harness.event;
+
+import "google/protobuf/any.proto";
+option java_multiple_files = true;
+
+service EventPublisher {
+  rpc Publish(PublishRequest) returns (PublishResponse);
+}
+
+message PublishRequest {
+  repeated PublishMessage messages = 1;
+}
+
+message PublishMessage {
+  google.protobuf.Any payload = 1;
+  map<string, string> attributes = 2;
+}
+
+message PublishResponse {
+}

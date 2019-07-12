@@ -12,9 +12,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import javax.crypto.spec.SecretKeySpec;
 
 @Slf4j
@@ -28,13 +29,18 @@ public class TokenGenerator {
   }
 
   public String getToken(String scheme, String host, int port, String issuer) {
+    return getToken(scheme + "://" + host + ":" + port, issuer);
+  }
+
+  public String getToken(String audience, String issuer) {
+    Instant now = Instant.now();
     JWTClaimsSet jwtClaims = new JWTClaimsSet.Builder()
                                  .issuer(issuer)
                                  .subject(accountId)
-                                 .audience(scheme + "://" + host + ":" + port)
-                                 .expirationTime(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(5)))
-                                 .notBeforeTime(new Date())
-                                 .issueTime(new Date())
+                                 .audience(audience)
+                                 .expirationTime(Date.from(now.plus(5, ChronoUnit.MINUTES)))
+                                 .notBeforeTime(Date.from(now))
+                                 .issueTime(Date.from(now))
                                  .jwtID(UUID.randomUUID().toString())
                                  .build();
 

@@ -7,6 +7,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.amazonaws.services.ecs.model.Service;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -16,6 +17,8 @@ import io.harness.waiter.ErrorNotifyResponseData;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.TaskType;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.aws.model.AwsEcsListClusterServicesRequest;
+import software.wings.service.impl.aws.model.AwsEcsListClusterServicesResponse;
 import software.wings.service.impl.aws.model.AwsEcsListClustersRequest;
 import software.wings.service.impl.aws.model.AwsEcsListClustersResponse;
 import software.wings.service.impl.aws.model.AwsEcsRequest;
@@ -42,6 +45,20 @@ public class AwsEcsHelperServiceManagerImpl implements AwsEcsHelperServiceManage
             .build(),
         appId);
     return ((AwsEcsListClustersResponse) response).getClusters();
+  }
+
+  @Override
+  public List<Service> listClusterServices(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String appId, String cluster) {
+    AwsResponse response = executeTask(awsConfig.getAccountId(),
+        AwsEcsListClusterServicesRequest.builder()
+            .awsConfig(awsConfig)
+            .encryptionDetails(encryptionDetails)
+            .region(region)
+            .cluster(cluster)
+            .build(),
+        appId);
+    return ((AwsEcsListClusterServicesResponse) response).getServices();
   }
 
   private AwsResponse executeTask(String accountId, AwsEcsRequest request, String appId) {
