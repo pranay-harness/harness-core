@@ -1,10 +1,12 @@
 package software.wings.infra;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 
 import java.util.List;
 
+@JsonTypeName("AWS_ECS")
 @Data
 public class AwsEcsInfrastructure implements CloudProviderInfrastructure {
   private String cloudProviderId;
