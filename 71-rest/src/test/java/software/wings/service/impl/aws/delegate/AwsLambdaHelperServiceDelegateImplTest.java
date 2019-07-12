@@ -2,6 +2,7 @@ package software.wings.service.impl.aws.delegate;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -85,16 +86,17 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(new CreateAliasResult().withName("aliasName").withAliasArn("aliasArn"))
         .when(mockClient)
         .createAlias(any());
-    AwsLambdaExecuteWfRequest request = AwsLambdaExecuteWfRequest.builder()
-                                            .awsConfig(AwsConfig.builder().build())
-                                            .encryptionDetails(emptyList())
-                                            .region("use-east-1")
-                                            .roleArn("arn")
-                                            .evaluatedAliases(singletonList("eval"))
-                                            .serviceVariables(ImmutableMap.of("k1", "v1"))
-                                            .lambdaVpcConfig(AwsLambdaVpcConfig.builder().build())
-                                            .functionParams(singletonList(AwsLambdaFunctionParams.builder().build()))
-                                            .build();
+    AwsLambdaExecuteWfRequest request =
+        AwsLambdaExecuteWfRequest.builder()
+            .awsConfig(AwsConfig.builder().build())
+            .encryptionDetails(emptyList())
+            .region("use-east-1")
+            .roleArn("arn")
+            .evaluatedAliases(singletonList("eval"))
+            .serviceVariables(ImmutableMap.of("k1", "v1"))
+            .lambdaVpcConfig(AwsLambdaVpcConfig.builder().build())
+            .functionParams(singletonList(AwsLambdaFunctionParams.builder().functionName("fxName").build()))
+            .build();
     awsLambdaHelperServiceDelegate.executeWf(request, mockCallBack);
     verify(mockClient).createFunction(any());
     verify(mockClient).createAlias(any());
@@ -157,5 +159,11 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
     awsLambdaHelperServiceDelegate.tagExistingFunction(getFunctionResult, finalTags, mockCallBack, mockClient);
     verify(mockClient).untagResource(any());
     verify(mockClient).tagResource(any());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetAlternateNormalizedFunctionName() {
+    assertThat(awsLambdaHelperServiceDelegate.getAlternateNormalizedFunctionName("foo_bar")).isEqualTo("foo-bar");
   }
 }
