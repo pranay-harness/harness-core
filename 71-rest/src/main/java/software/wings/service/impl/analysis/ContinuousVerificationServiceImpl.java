@@ -46,7 +46,6 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.time.Timestamp;
@@ -1286,8 +1285,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           throw new WingsException("Invalid StateType provided" + type);
       }
     } catch (Exception e) {
-      String errorMsg = e.getCause() != null ? ExceptionUtils.getMessage(e.getCause()) : ExceptionUtils.getMessage(e);
-      throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR, USER).addParam("reason", errorMsg);
+      throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR, USER).addParam("reason", e.getMessage());
     }
   }
 
