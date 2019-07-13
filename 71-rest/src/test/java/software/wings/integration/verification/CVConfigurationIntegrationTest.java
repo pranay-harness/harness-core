@@ -1048,8 +1048,14 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     logsCVConfiguration.setBaselineStartMinute(106);
     logsCVConfiguration.setBaselineEndMinute(210);
 
-    getRequestBuilderWithAuthHeader(target).put(
+    restResponse = getRequestBuilderWithAuthHeader(target).put(
         entity(logsCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+
+    savedObjectUuid = restResponse.getResource();
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId
+        + "&stateType=" + SUMO + "&serviceConfigurationId=" + savedObjectUuid;
+    target = client.target(url);
+
     getRequestResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<LogsCVConfiguration>>() {});
     fetchedObject = getRequestResponse.getResource();
