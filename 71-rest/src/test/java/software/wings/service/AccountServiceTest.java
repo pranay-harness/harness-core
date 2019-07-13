@@ -500,7 +500,7 @@ public class AccountServiceTest extends WingsBaseTest {
       { put(appId, buildAppPermissionSummary(serviceId, workflowId, envId)); }
     });
 
-    when(authService.getUserPermissionInfo(accountId, user)).thenReturn(mockUserPermissionInfo);
+    when(authService.getUserPermissionInfo(accountId, user, false)).thenReturn(mockUserPermissionInfo);
   }
 
   private AppPermissionSummary buildAppPermissionSummary(String serviceId, String workflowId, String envId) {

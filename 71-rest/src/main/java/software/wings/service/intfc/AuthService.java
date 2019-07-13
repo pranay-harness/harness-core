@@ -86,9 +86,10 @@ public interface AuthService extends OwnedByAccount {
 
   void validateLearningEngineServiceToken(String learningEngineServiceToken);
 
-  UserPermissionInfo getUserPermissionInfo(String accountId, User user);
+  UserPermissionInfo getUserPermissionInfo(String accountId, User user, boolean cacheOnly);
 
-  UserRestrictionInfo getUserRestrictionInfo(String accountId, User user, UserPermissionInfo userPermissionInfo);
+  UserRestrictionInfo getUserRestrictionInfo(
+      String accountId, User user, UserPermissionInfo userPermissionInfo, boolean cacheOnly);
 
   Set<String> getAppPermissionsForUser(
       String userId, String accountId, String appId, PermissionType permissionType, Action action);

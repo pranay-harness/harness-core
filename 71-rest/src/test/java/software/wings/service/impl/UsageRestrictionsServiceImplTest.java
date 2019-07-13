@@ -156,17 +156,18 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
     when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
   }
 
-  private void setUserGroupMocks(AppPermission appPermission, List<String> appIds) {
-    setUserGroupMocks(asList(appPermission), appIds);
+  private List<UserGroup> setUserGroupMocks(AppPermission appPermission, List<String> appIds) {
+    return setUserGroupMocks(asList(appPermission), appIds);
   }
 
-  private void setUserGroupMocks(List<AppPermission> appPermissions, List<String> appIds) {
+  private List<UserGroup> setUserGroupMocks(List<AppPermission> appPermissions, List<String> appIds) {
     List<UserGroup> userGroups =
         asList(UserGroup.builder().accountId(ACCOUNT_ID).appPermissions(newHashSet(appPermissions)).build());
     pageResponse = aPageResponse().withResponse(userGroups).build();
     when(userGroupService.getUserGroupsByAccountId(anyString(), any(User.class))).thenReturn(userGroups);
     when(userGroupService.list(anyString(), any(PageRequest.class), anyBoolean())).thenReturn(pageResponse);
     when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class))).thenReturn(newHashSet(appIds));
+    return userGroups;
   }
 
   private void shouldGetDefaultRestrictionsWithUserAndSelectedAppsAndSelectedEnvs(boolean isAccountAdmin) {
@@ -181,10 +182,10 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
               .actions(newHashSet(allActions))
               .entityFilter(EnvFilter.builder().filterTypes(newHashSet(SELECTED)).ids(newHashSet(envIds)).build())
               .build();
-      setUserGroupMocks(appPermission, appIds);
+      List<UserGroup> userGroups = setUserGroupMocks(appPermission, appIds);
       Set<Action> actions = allActions;
 
-      setPermissions(appIds, envIds, actions, isAccountAdmin);
+      setPermissions(appIds, envIds, actions, isAccountAdmin, userGroups);
 
       UsageRestrictions expected = getUsageRestrictionsForAppIdAndEnvId(APP_ID_1, ENV_ID_1);
       UsageRestrictions defaultUsageRestrictions =
@@ -214,8 +215,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testHasAllEnvAccessOfType() {
     UsageRestrictions usageRestrictions = null;
-    GenericEntityFilter appFilter = null;
-    EnvFilter envFilter = null;
+    GenericEntityFilter appFilter;
+    EnvFilter envFilter;
 
     assertFalse(
         UsageRestrictionsServiceImpl.hasAllEnvAccessOfType(usageRestrictions, APP_ID, EnvFilter.FilterType.NON_PROD));
@@ -291,10 +292,11 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
               .actions(newHashSet(allActions))
               .entityFilter(EnvFilter.builder().filterTypes(newHashSet(NON_PROD)).build())
               .build();
-      setUserGroupMocks(asList(allAppPermissions, prodAppPermission, nonProdAppPermission), appIds);
+      List<UserGroup> userGroups =
+          setUserGroupMocks(asList(allAppPermissions, prodAppPermission, nonProdAppPermission), appIds);
       Set<Action> actions = allActions;
 
-      setPermissions(appIds, envIds, actions, false);
+      setPermissions(appIds, envIds, actions, false, userGroups);
 
       GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
       HashSet<String> prodEnvFilters = newHashSet(PROD);
@@ -346,12 +348,12 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
               .actions(newHashSet(updateAndReadAction))
               .entityFilter(EnvFilter.builder().filterTypes(newHashSet(SELECTED)).ids(newHashSet(ENV_ID_1)).build())
               .build();
-      setUserGroupMocks(appPermission, appIds);
+      List<UserGroup> userGroups = setUserGroupMocks(appPermission, appIds);
 
       List<String> envIds = asList(ENV_ID_1, ENV_ID_2, ENV_ID_3);
       Set<Action> actions = updateAndReadAction;
 
-      setPermissions(appIds, envIds, actions, isAccountAdmin);
+      setPermissions(appIds, envIds, actions, isAccountAdmin, userGroups);
 
       UsageRestrictions restrictionsFromPermissionsForUpdateAction =
           UserThreadLocal.get().getUserRequestContext().getUserRestrictionInfo().getUsageRestrictionsForUpdateAction();
@@ -453,12 +455,12 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
               .actions(newHashSet(allActions))
               .entityFilter(EnvFilter.builder().filterTypes(newHashSet(SELECTED)).ids(newHashSet(ENV_ID_1)).build())
               .build();
-      setUserGroupMocks(appPermission, appIds);
+      List<UserGroup> userGroups = setUserGroupMocks(appPermission, appIds);
 
       List<String> envIds = asList(ENV_ID_1, ENV_ID_2, ENV_ID_3);
       Set<Action> actions = allActions;
 
-      setPermissions(appIds, envIds, actions, true);
+      setPermissions(appIds, envIds, actions, true, userGroups);
 
       UsageRestrictions restrictionsFromPermissionsForUpdateAction =
           UserThreadLocal.get().getUserRequestContext().getUserRestrictionInfo().getUsageRestrictionsForUpdateAction();
@@ -506,12 +508,12 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
               .actions(newHashSet(allActions))
               .entityFilter(EnvFilter.builder().filterTypes(newHashSet(SELECTED)).ids(newHashSet(ENV_ID_1)).build())
               .build();
-      setUserGroupMocks(appPermission, appIds);
+      List<UserGroup> userGroups = setUserGroupMocks(appPermission, appIds);
 
       List<String> envIds = asList(ENV_ID_1, ENV_ID_2, ENV_ID_3);
       Set<Action> actions = allActions;
 
-      setPermissions(appIds, envIds, actions, false);
+      setPermissions(appIds, envIds, actions, false, userGroups);
 
       UsageRestrictions restrictionsFromPermissionsForUpdateAction =
           UserThreadLocal.get().getUserRequestContext().getUserRestrictionInfo().getUsageRestrictionsForUpdateAction();
@@ -556,12 +558,12 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
                                         .actions(allActions)
                                         .entityFilter(EnvFilter.builder().filterTypes(newHashSet(NON_PROD)).build())
                                         .build();
-      setUserGroupMocks(appPermission, appIds);
+      List<UserGroup> userGroups = setUserGroupMocks(appPermission, appIds);
 
       List<String> envIds = new ArrayList<>();
       Set<Action> actions = newHashSet(Action.UPDATE);
 
-      setPermissions(appIds, envIds, actions, false);
+      setPermissions(appIds, envIds, actions, false, userGroups);
 
       UsageRestrictions entityUsageRestrictions =
           getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet(PROD, NON_PROD));
@@ -588,12 +590,11 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
               .actions(allActions)
               .entityFilter(EnvFilter.builder().filterTypes(newHashSet(NON_PROD)).build())
               .build();
-      setUserGroupMocks(appPermission, appIds);
+      List<UserGroup> userGroups = setUserGroupMocks(appPermission, appIds);
 
-      List<String> envIds = new ArrayList<>();
       Set<Action> actions = newHashSet(Action.UPDATE);
 
-      setPermissions(asList(APP_ID_1), asList(ENV_ID_1), actions, false);
+      setPermissions(asList(APP_ID_1), asList(ENV_ID_1), actions, false, userGroups);
 
       UsageRestrictions entityUsageRestrictions =
           getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet(PROD, NON_PROD));
@@ -622,12 +623,12 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
               .actions(newHashSet(readAction))
               .entityFilter(EnvFilter.builder().filterTypes(newHashSet(SELECTED)).ids(newHashSet(ENV_ID_1)).build())
               .build();
-      setUserGroupMocks(appPermission, appIds);
+      List<UserGroup> userGroups = setUserGroupMocks(appPermission, appIds);
 
       List<String> envIds = asList(ENV_ID_1, ENV_ID_2, ENV_ID_3);
       Set<Action> actions = newHashSet(Action.READ);
 
-      setPermissions(appIds, envIds, actions, isAccountAdmin);
+      setPermissions(appIds, envIds, actions, isAccountAdmin, userGroups);
 
       UsageRestrictions restrictionsFromPermissionsForUpdateAction =
           UserThreadLocal.get().getUserRequestContext().getUserRestrictionInfo().getUsageRestrictionsForUpdateAction();
@@ -811,12 +812,12 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
               .actions(newHashSet(allActions))
               .entityFilter(EnvFilter.builder().filterTypes(newHashSet(SELECTED)).ids(newHashSet(ENV_ID_1)).build())
               .build();
-      setUserGroupMocks(appPermission, appIds);
+      List<UserGroup> userGroups = setUserGroupMocks(appPermission, appIds);
 
       List<String> envIds = asList(ENV_ID_1, ENV_ID_2, ENV_ID_3);
       Set<Action> actions = allActions;
 
-      setPermissions(appIds, envIds, actions, isAccountAdmin);
+      setPermissions(appIds, envIds, actions, isAccountAdmin, userGroups);
 
       UsageRestrictions usageRestrictions = getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet(PROD));
 
@@ -863,12 +864,12 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
               .actions(newHashSet(allActions))
               .entityFilter(EnvFilter.builder().filterTypes(newHashSet(SELECTED)).ids(newHashSet(ENV_ID_1)).build())
               .build();
-      setUserGroupMocks(appPermission, appIds);
+      List<UserGroup> userGroups = setUserGroupMocks(appPermission, appIds);
 
       List<String> envIds = asList(ENV_ID_1, ENV_ID_2, ENV_ID_3);
       Set<Action> actions = allActions;
 
-      setPermissions(appIds, envIds, actions, true);
+      setPermissions(appIds, envIds, actions, true, userGroups);
       when(userService.isAccountAdmin(ACCOUNT_ID)).thenReturn(true);
 
       // Valid Scenarios
@@ -998,7 +999,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
     }
   }
 
-  private void setPermissions(List<String> appIds, List<String> envIds, Set<Action> actions, boolean isAccountAdmin) {
+  private void setPermissions(List<String> appIds, List<String> envIds, Set<Action> actions, boolean isAccountAdmin,
+      List<UserGroup> userGroupList) {
     UserPermissionInfo userPermissionInfo = getUserPermissionInfo(appIds, envIds, actions);
 
     UserRestrictionInfoBuilder restrictionInfoBuilder = UserRestrictionInfo.builder();
@@ -1011,13 +1013,11 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
     }
 
     UsageRestrictions restrictionsFromUserPermissionsForUpdate =
-        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(
-            ACCOUNT_ID, userPermissionInfo, user, Action.UPDATE);
+        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(Action.UPDATE, userGroupList);
     restrictionInfoBuilder.usageRestrictionsForUpdateAction(restrictionsFromUserPermissionsForUpdate);
 
     UsageRestrictions restrictionsFromUserPermissionsForRead =
-        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(
-            ACCOUNT_ID, userPermissionInfo, user, Action.READ);
+        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(Action.READ, userGroupList);
     restrictionInfoBuilder.usageRestrictionsForReadAction(restrictionsFromUserPermissionsForRead);
 
     Map<String, Set<String>> appEnvMapForUpdate =

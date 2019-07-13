@@ -1105,7 +1105,7 @@ public class AccountServiceImpl implements AccountService {
 
     // fetch the list of apps, services and environments that the user has permissions to.
     Map<String, AppPermissionSummary> userAppPermissions =
-        authService.getUserPermissionInfo(accountId, user).getAppPermissionMapInternal();
+        authService.getUserPermissionInfo(accountId, user, false).getAppPermissionMapInternal();
 
     final List<String> services = new ArrayList<>();
     Set<EnvInfo> envInfoSet = new HashSet<>();

@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -16,42 +17,46 @@ import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.User;
+import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.AccountPermissionSummary;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserThreadLocal;
-import software.wings.service.intfc.UserGroupService;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author rktummala on 07/01/19
  */
 @Singleton
 public class DashboardAuthHandler {
-  @Inject private UserGroupService userGroupService;
   @Inject private WingsPersistence wingsPersistence;
   private Set<Action> allActions = Sets.newHashSet(Action.READ, Action.UPDATE, Action.DELETE);
 
   public Map<String, Set<Action>> getDashboardAccessPermissions(
-      User user, String accountId, UserPermissionInfo userPermissionInfo) {
+      User user, String accountId, UserPermissionInfo userPermissionInfo, List<UserGroup> userGroups) {
+    if (user == null) {
+      return Maps.newHashMap();
+    }
+
     boolean accountAdmin = isAccountAdmin(userPermissionInfo);
 
     Map<String, Set<Action>> dashboardActionMap = new HashMap<>();
     Query<DashboardSettings> query = wingsPersistence.createQuery(DashboardSettings.class);
     query.filter("accountId", accountId);
     if (!accountAdmin) {
-      List<String> userGroupIdList = userGroupService.getUserGroupIdsByAccountId(accountId, user);
-      if (isNotEmpty(userGroupIdList)) {
-        query.or(query.criteria("createdBy.uuid").equal(user.getUuid()),
-            query.criteria("permissions.userGroups").in(userGroupIdList));
-      } else {
+      if (isEmpty(userGroups)) {
         query.filter("createdBy", user.getUuid());
+      } else {
+        Set<String> userGroupIdSet = userGroups.stream().map(UserGroup::getUuid).collect(Collectors.toSet());
+        query.or(query.criteria("createdBy.uuid").equal(user.getUuid()),
+            query.criteria("permissions.userGroups").in(userGroupIdSet));
       }
     }
 

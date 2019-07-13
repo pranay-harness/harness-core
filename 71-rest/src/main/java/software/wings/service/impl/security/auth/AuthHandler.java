@@ -134,8 +134,9 @@ public class AuthHandler {
   @Inject private UserGroupService userGroupService;
   @Inject private AuthService authService;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private DashboardAuthHandler dashboardAuthHandler;
 
-  public UserPermissionInfo getUserPermissionInfo(String accountId, List<UserGroup> userGroups) {
+  public UserPermissionInfo evaluateUserPermissionInfo(String accountId, List<UserGroup> userGroups, User user) {
     UserPermissionInfoBuilder userPermissionInfoBuilder = UserPermissionInfo.builder().accountId(accountId);
 
     Set<PermissionType> accountPermissionSet = new HashSet<>();
@@ -163,6 +164,11 @@ public class AuthHandler {
 
     UserPermissionInfo userPermissionInfo = userPermissionInfoBuilder.build();
     setAppPermissionMap(userPermissionInfo);
+
+    Map<String, Set<io.harness.dashboard.Action>> dashboardPermissions =
+        dashboardAuthHandler.getDashboardAccessPermissions(user, accountId, userPermissionInfo, userGroups);
+    userPermissionInfo.setDashboardPermissions(dashboardPermissions);
+
     return userPermissionInfo;
   }
 

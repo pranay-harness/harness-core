@@ -139,7 +139,7 @@ public class APMStateVerificationTestBase extends WingsBaseTest {
       { put(appId, buildAppPermissionSummary()); }
     });
 
-    when(mockAuthService.getUserPermissionInfo(accountId, user)).thenReturn(mockUserPermissionInfo);
+    when(mockAuthService.getUserPermissionInfo(accountId, user, false)).thenReturn(mockUserPermissionInfo);
   }
 
   private AppPermissionSummary buildAppPermissionSummary() {
