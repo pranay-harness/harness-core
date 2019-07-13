@@ -1,6 +1,7 @@
 package software.wings.integration;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.PRANJAL;
 import static javax.ws.rs.client.Entity.entity;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
@@ -15,11 +16,13 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.IntegrationTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.api.DeploymentType;
@@ -77,7 +80,9 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = PRANJAL)
   @Category(IntegrationTests.class)
+  @Ignore("Disabled due to rate limit issue on Datadog")
   public void testGetTimeseriesRecordsForWorkflowWithoutServerConfigId() {
     DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(true, StateType.DATA_DOG);
 
@@ -94,7 +99,9 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = PRANJAL)
   @Category(IntegrationTests.class)
+  @Ignore("Disabled due to rate limit issue on Datadog")
   public void testGetTimeseriesRecordsForWorkflow() {
     DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(true, StateType.DATA_DOG);
 
@@ -128,7 +135,9 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = PRANJAL)
   @Category(IntegrationTests.class)
+  @Ignore("Disabled due to rate limit issue on Datadog")
   public void testGetTimeseriesRecordsForServiceGuardWithoutServerConfigId() {
     DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(false, StateType.DATA_DOG);
 
