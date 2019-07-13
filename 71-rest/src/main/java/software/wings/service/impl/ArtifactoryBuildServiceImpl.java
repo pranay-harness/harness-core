@@ -125,6 +125,15 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   }
 
   @Override
+  public List<String> getGroupIds(String repositoryName, String repositoryType, ArtifactoryConfig config,
+      List<EncryptedDataDetail> encryptionDetails) {
+    logger.info("Retrieving {} docker images.", repositoryName);
+    List<String> repoPaths = artifactoryService.getRepoPaths(config, encryptionDetails, repositoryName);
+    logger.info("Retrieved {} docker images.", repoPaths.size());
+    return repoPaths;
+  }
+
+  @Override
   public boolean validateArtifactServer(ArtifactoryConfig config, List<EncryptedDataDetail> encryptedDataDetails) {
     if (!connectableHttpUrl(config.getArtifactoryUrl())) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)

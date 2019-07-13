@@ -49,6 +49,10 @@ public interface ArtifactoryBuildService extends BuildService<ArtifactoryConfig>
   List<String> getGroupIds(
       String repoType, ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails);
 
+  @DelegateTaskType(TaskType.ARTIFACTORY_GET_GROUP_IDS)
+  List<String> getGroupIds(String repositoryName, String repositoryType, ArtifactoryConfig config,
+      List<EncryptedDataDetail> encryptionDetails);
+
   @DelegateTaskType(TaskType.ARTIFACTORY_LAST_SUCCSSFUL_BUILD)
   BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails);
