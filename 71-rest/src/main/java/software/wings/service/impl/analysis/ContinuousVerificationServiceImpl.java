@@ -529,7 +529,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       final String accountId, final List<ContinuousVerificationExecutionMetaData> executionMetaDataList) {
     List<ContinuousVerificationExecutionMetaData> finalList = new ArrayList<>();
     Map<String, AppPermissionSummary> userAppPermissions =
-        authService.getUserPermissionInfo(accountId, user).getAppPermissionMapInternal();
+        authService.getUserPermissionInfo(accountId, user, false).getAppPermissionMapInternal();
     //"Cache" it by applicationId.
     Map<String, Set<String>> servicePermissionsByApp = new HashMap<>();
     Map<String, Set<String>> envPermissionsByApp = new HashMap<>();
@@ -608,7 +608,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
   private List<String> getAllowedApplicationsForUser(final User user, final String accountId) {
     Map<String, AppPermissionSummary> userApps =
-        authService.getUserPermissionInfo(accountId, user).getAppPermissionMapInternal();
+        authService.getUserPermissionInfo(accountId, user, false).getAppPermissionMapInternal();
     return new ArrayList<>(userApps.keySet());
   }
 

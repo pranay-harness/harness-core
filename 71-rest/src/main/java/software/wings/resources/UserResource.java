@@ -463,7 +463,8 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   public RestResponse<UserPermissionInfo> getUserPermissionInfo(@PathParam("accountId") String accountId) {
-    return new RestResponse<>(authService.getUserPermissionInfo(accountId, UserThreadLocal.get().getPublicUser()));
+    return new RestResponse<>(
+        authService.getUserPermissionInfo(accountId, UserThreadLocal.get().getPublicUser(), false));
   }
 
   /**

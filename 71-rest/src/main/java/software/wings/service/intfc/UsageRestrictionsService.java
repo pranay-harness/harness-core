@@ -1,7 +1,7 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.Base;
-import software.wings.beans.User;
+import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.restrictions.RestrictionsSummary;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserPermissionInfo;
@@ -31,12 +31,10 @@ public interface UsageRestrictionsService {
 
   /**
    * Derive the user restrictions from user permissions.
-   * @param accountId account Id
    * @param action
    * @return Usage restrictions
    */
-  UsageRestrictions getUsageRestrictionsFromUserPermissions(
-      String accountId, UserPermissionInfo userPermissionInfo, User user, Action action);
+  UsageRestrictions getUsageRestrictionsFromUserPermissions(Action action, List<UserGroup> userGroupList);
 
   /**
    * Check if the user has access to an entity from the given context.

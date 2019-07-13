@@ -73,7 +73,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
     workflowExecutionId = UUID.randomUUID().toString();
 
     Map<String, AppPermissionSummary> appsMap =
-        authService.getUserPermissionInfo(accountId, user).getAppPermissionMapInternal();
+        authService.getUserPermissionInfo(accountId, user, false).getAppPermissionMapInternal();
 
     // we need to user the testApplication, it has workflows defined under it by Datagen.
     appId = appService.getAppByName(accountId, "Test Application").getUuid();

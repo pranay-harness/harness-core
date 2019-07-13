@@ -18,7 +18,18 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+
+import static software.wings.security.PermissionAttribute.Action.CREATE;
+import static software.wings.security.PermissionAttribute.Action.DELETE;
+import static software.wings.security.PermissionAttribute.Action.EXECUTE;
+import static software.wings.security.PermissionAttribute.Action.READ;
+import static software.wings.security.PermissionAttribute.Action.UPDATE;
+import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.APPLICATION_CREATE_DELETE;
 import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
+import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -486,9 +497,12 @@ public class AuthServiceImpl implements AuthService {
   }
 
   @Override
-  public UserPermissionInfo getUserPermissionInfo(String accountId, User user) {
+  public UserPermissionInfo getUserPermissionInfo(String accountId, User user, boolean cacheOnly) {
     Cache<String, UserPermissionInfo> cache = cacheManager.getUserPermissionInfoCache();
     if (cache == null) {
+      if (cacheOnly) {
+        return null;
+      }
       logger.error("UserInfoCache is null. This should not happen. Fall back to DB");
       return getUserPermissionInfoFromDB(accountId, user);
     }
@@ -498,6 +512,10 @@ public class AuthServiceImpl implements AuthService {
     try {
       value = cache.get(key);
       if (value == null) {
+        if (cacheOnly) {
+          return null;
+        }
+
         value = getUserPermissionInfoFromDB(accountId, user);
         cache.put(key, value);
       }
@@ -512,9 +530,12 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public UserRestrictionInfo getUserRestrictionInfo(
-      String accountId, User user, UserPermissionInfo userPermissionInfo) {
+      String accountId, User user, UserPermissionInfo userPermissionInfo, boolean cacheOnly) {
     Cache<String, UserRestrictionInfo> cache = cacheManager.getUserRestrictionInfoCache();
     if (cache == null) {
+      if (cacheOnly) {
+        return null;
+      }
       logger.error("UserInfoCache is null. This should not happen. Fall back to DB");
       return getUserRestrictionInfoFromDB(accountId, user, userPermissionInfo);
     }
@@ -524,6 +545,9 @@ public class AuthServiceImpl implements AuthService {
     try {
       value = cache.get(key);
       if (value == null) {
+        if (cacheOnly) {
+          return null;
+        }
         value = getUserRestrictionInfoFromDB(accountId, user, userPermissionInfo);
         cache.put(key, value);
       }
@@ -587,7 +611,8 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public AppPermissionSummary getAppPermissionSummaryForUser(String userId, String accountId, String appId) {
-    UserPermissionInfo userPermissionInfo = getUserPermissionInfo(accountId, userService.getUserFromCacheOrDB(userId));
+    UserPermissionInfo userPermissionInfo =
+        getUserPermissionInfo(accountId, userService.getUserFromCacheOrDB(userId), false);
     return userPermissionInfo.getAppPermissionMapInternal().get(appId);
   }
 
@@ -641,14 +666,23 @@ public class AuthServiceImpl implements AuthService {
             return;
           }
 
-          // This call reloads the cache from db, if some user request does that first, this simply makes sure the
-          // cache is rebuilt.
-          UserPermissionInfo userPermissionInfo = getUserPermissionInfo(accountId, user);
+          List<UserGroup> userGroups = getUserGroups(accountId, user);
+
+          // This call gets the userPermissionInfo from cache, if present.
+          UserPermissionInfo userPermissionInfo = getUserPermissionInfo(accountId, user, true);
+          if (userPermissionInfo == null) {
+            userPermissionInfo = authHandler.evaluateUserPermissionInfo(accountId, userGroups, user);
+            cacheManager.getUserPermissionInfoCache().put(key, userPermissionInfo);
+          }
 
           if (infoClass.getSimpleName().equals("UserRestrictionInfo")) {
             // This call reloads the cache from db, if some user request does that first, this simply makes sure the
             // cache is rebuilt.
-            getUserRestrictionInfo(accountId, user, userPermissionInfo);
+            UserRestrictionInfo userRestrictionInfo = getUserRestrictionInfo(accountId, user, userPermissionInfo, true);
+            if (userRestrictionInfo == null) {
+              userRestrictionInfo = getUserRestrictionInfoFromDB(accountId, userPermissionInfo, userGroups);
+              cacheManager.getUserRestrictionInfoCache().put(key, userRestrictionInfo);
+            }
           }
         }));
       }
@@ -680,6 +714,11 @@ public class AuthServiceImpl implements AuthService {
   }
 
   private UserPermissionInfo getUserPermissionInfoFromDB(String accountId, User user) {
+    List<UserGroup> userGroups = getUserGroups(accountId, user);
+    return authHandler.evaluateUserPermissionInfo(accountId, userGroups, user);
+  }
+
+  private List<UserGroup> getUserGroups(String accountId, User user) {
     List<UserGroup> userGroups = userGroupService.getUserGroupsByAccountId(accountId, user);
 
     if (isEmpty(userGroups) && !userService.isUserAssignedToAccount(user, accountId)) {
@@ -689,31 +728,43 @@ public class AuthServiceImpl implements AuthService {
         userGroups = Lists.newArrayList(harnessUserGroup.get());
       }
     }
-
-    UserPermissionInfo userPermissionInfo = authHandler.getUserPermissionInfo(accountId, userGroups);
-    Map<String, Set<io.harness.dashboard.Action>> dashboardPermissions =
-        dashboardAuthHandler.getDashboardAccessPermissions(user, accountId, userPermissionInfo);
-    userPermissionInfo.setDashboardPermissions(dashboardPermissions);
-    return userPermissionInfo;
+    return userGroups;
   }
 
   private UserRestrictionInfo getUserRestrictionInfoFromDB(
       String accountId, User user, UserPermissionInfo userPermissionInfo) {
     UserRestrictionInfoBuilder userRestrictionInfoBuilder = UserRestrictionInfo.builder();
-
+    List<UserGroup> userGroups = getUserGroups(accountId, user);
     // Restrictions for update permissions
     userRestrictionInfoBuilder.appEnvMapForUpdateAction(
-        usageRestrictionsService.getAppEnvMapFromUserPermissions(accountId, userPermissionInfo, Action.UPDATE));
+        usageRestrictionsService.getAppEnvMapFromUserPermissions(accountId, userPermissionInfo, UPDATE));
     userRestrictionInfoBuilder.usageRestrictionsForUpdateAction(
-        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(
-            accountId, userPermissionInfo, user, Action.UPDATE));
+        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(UPDATE, userGroups));
 
     // Restrictions for read permissions
     userRestrictionInfoBuilder.appEnvMapForReadAction(
-        usageRestrictionsService.getAppEnvMapFromUserPermissions(accountId, userPermissionInfo, Action.READ));
+        usageRestrictionsService.getAppEnvMapFromUserPermissions(accountId, userPermissionInfo, READ));
     userRestrictionInfoBuilder.usageRestrictionsForReadAction(
-        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(
-            accountId, userPermissionInfo, user, Action.READ));
+        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(READ, userGroups));
+
+    return userRestrictionInfoBuilder.build();
+  }
+
+  private UserRestrictionInfo getUserRestrictionInfoFromDB(
+      String accountId, UserPermissionInfo userPermissionInfo, List<UserGroup> userGroupList) {
+    UserRestrictionInfoBuilder userRestrictionInfoBuilder = UserRestrictionInfo.builder();
+
+    // Restrictions for update permissions
+    userRestrictionInfoBuilder.appEnvMapForUpdateAction(
+        usageRestrictionsService.getAppEnvMapFromUserPermissions(accountId, userPermissionInfo, UPDATE));
+    userRestrictionInfoBuilder.usageRestrictionsForUpdateAction(
+        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(UPDATE, userGroupList));
+
+    // Restrictions for read permissions
+    userRestrictionInfoBuilder.appEnvMapForReadAction(
+        usageRestrictionsService.getAppEnvMapFromUserPermissions(accountId, userPermissionInfo, READ));
+    userRestrictionInfoBuilder.usageRestrictionsForReadAction(
+        usageRestrictionsService.getUsageRestrictionsFromUserPermissions(READ, userGroupList));
 
     return userRestrictionInfoBuilder.build();
   }
@@ -727,12 +778,13 @@ public class AuthServiceImpl implements AuthService {
     AppPermission appPermission = AppPermission.builder()
                                       .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
                                       .permissionType(PermissionType.ALL_APP_ENTITIES)
-                                      .actions(actions)
+                                      .actions(Sets.newHashSet(READ, UPDATE, DELETE, CREATE, EXECUTE))
                                       .build();
 
     AccountPermissions accountPermissions =
         AccountPermissions.builder()
-            .permissions(Sets.newHashSet(PermissionType.USER_PERMISSION_READ, AUDIT_VIEWER))
+            .permissions(Sets.newHashSet(USER_PERMISSION_READ, ACCOUNT_MANAGEMENT, USER_PERMISSION_MANAGEMENT,
+                TEMPLATE_MANAGEMENT, APPLICATION_CREATE_DELETE, AUDIT_VIEWER))
             .build();
     UserGroup userGroup = UserGroup.builder()
                               .accountId(accountId)
@@ -758,7 +810,7 @@ public class AuthServiceImpl implements AuthService {
       return false;
     }
 
-    if (Action.CREATE == requiredAction) {
+    if (CREATE == requiredAction) {
       if (requiredPermissionType == PermissionType.SERVICE) {
         return appPermissionSummary.isCanCreateService();
       } else if (requiredPermissionType == PermissionType.PROVISIONER) {

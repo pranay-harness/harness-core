@@ -191,7 +191,7 @@ public class AuthHandlerTest extends WingsBaseTest {
                                             .accountPermissions(accountPermissions)
                                             .appPermissions(new HashSet(asList(allAppPermission)))
                                             .build());
-    UserPermissionInfo userPermissionInfo = authHandler.getUserPermissionInfo(ACCOUNT_ID, userGroups);
+    UserPermissionInfo userPermissionInfo = authHandler.evaluateUserPermissionInfo(ACCOUNT_ID, userGroups, null);
 
     assertThat(userPermissionInfo).isNotNull().hasFieldOrPropertyWithValue("accountId", ACCOUNT_ID);
     AccountPermissionSummary accountPermissionSummary = userPermissionInfo.getAccountPermissionSummary();
@@ -213,7 +213,7 @@ public class AuthHandlerTest extends WingsBaseTest {
                                             .accountPermissions(accountPermissions)
                                             .appPermissions(new HashSet(asList(allAppPermission)))
                                             .build());
-    UserPermissionInfo userPermissionInfo = authHandler.getUserPermissionInfo(ACCOUNT_ID, userGroups);
+    UserPermissionInfo userPermissionInfo = authHandler.evaluateUserPermissionInfo(ACCOUNT_ID, userGroups, null);
 
     assertThat(userPermissionInfo).isNotNull().hasFieldOrPropertyWithValue("accountId", ACCOUNT_ID);
     AccountPermissionSummary accountPermissionSummary = userPermissionInfo.getAccountPermissionSummary();
@@ -373,7 +373,7 @@ public class AuthHandlerTest extends WingsBaseTest {
     setupForAllApp();
     List<UserGroup> userGroups =
         asList(UserGroup.builder().accountId(ACCOUNT_ID).appPermissions(new HashSet(asList(allAppPermission))).build());
-    UserPermissionInfo userPermissionInfo = authHandler.getUserPermissionInfo(ACCOUNT_ID, userGroups);
+    UserPermissionInfo userPermissionInfo = authHandler.evaluateUserPermissionInfo(ACCOUNT_ID, userGroups, null);
 
     assertThat(userPermissionInfo).isNotNull().hasFieldOrPropertyWithValue("accountId", ACCOUNT_ID);
     AccountPermissionSummary accountPermissionSummary = userPermissionInfo.getAccountPermissionSummary();
@@ -426,7 +426,7 @@ public class AuthHandlerTest extends WingsBaseTest {
                    .appPermissions(
                        new HashSet(asList(envPermission, workflowPermission, pipelinePermission, deploymentPermission)))
                    .build());
-    UserPermissionInfo userPermissionInfo = authHandler.getUserPermissionInfo(ACCOUNT_ID, userGroups);
+    UserPermissionInfo userPermissionInfo = authHandler.evaluateUserPermissionInfo(ACCOUNT_ID, userGroups, null);
 
     assertThat(userPermissionInfo).isNotNull().hasFieldOrPropertyWithValue("accountId", ACCOUNT_ID);
     AccountPermissionSummary accountPermissionSummary = userPermissionInfo.getAccountPermissionSummary();
@@ -503,7 +503,7 @@ public class AuthHandlerTest extends WingsBaseTest {
                    .appPermissions(
                        new HashSet(asList(envPermission, workflowPermission, pipelinePermission, deploymentPermission)))
                    .build());
-    UserPermissionInfo userPermissionInfo = authHandler.getUserPermissionInfo(ACCOUNT_ID, userGroups);
+    UserPermissionInfo userPermissionInfo = authHandler.evaluateUserPermissionInfo(ACCOUNT_ID, userGroups, null);
 
     assertThat(userPermissionInfo).isNotNull().hasFieldOrPropertyWithValue("accountId", ACCOUNT_ID);
     AccountPermissionSummary accountPermissionSummary = userPermissionInfo.getAccountPermissionSummary();
@@ -581,7 +581,7 @@ public class AuthHandlerTest extends WingsBaseTest {
                                             .appPermissions(new HashSet(asList(envPermission, workflowPermission,
                                                 workflowPermission1, pipelinePermission, deploymentPermission)))
                                             .build());
-    UserPermissionInfo userPermissionInfo = authHandler.getUserPermissionInfo(ACCOUNT_ID, userGroups);
+    UserPermissionInfo userPermissionInfo = authHandler.evaluateUserPermissionInfo(ACCOUNT_ID, userGroups, null);
 
     assertThat(userPermissionInfo).isNotNull().hasFieldOrPropertyWithValue("accountId", ACCOUNT_ID);
     AccountPermissionSummary accountPermissionSummary = userPermissionInfo.getAccountPermissionSummary();
@@ -644,7 +644,7 @@ public class AuthHandlerTest extends WingsBaseTest {
                    .appPermissions(
                        new HashSet(asList(envPermission, workflowPermission, pipelinePermission, deploymentPermission)))
                    .build());
-    UserPermissionInfo userPermissionInfo = authHandler.getUserPermissionInfo(ACCOUNT_ID, userGroups);
+    UserPermissionInfo userPermissionInfo = authHandler.evaluateUserPermissionInfo(ACCOUNT_ID, userGroups, null);
 
     assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getWorkflowPermissions())
         .isNotNull()
@@ -684,7 +684,7 @@ public class AuthHandlerTest extends WingsBaseTest {
                    .appPermissions(
                        new HashSet(asList(envPermission, workflowPermission, pipelinePermission, deploymentPermission)))
                    .build());
-    UserPermissionInfo userPermissionInfo = authHandler.getUserPermissionInfo(ACCOUNT_ID, userGroups);
+    UserPermissionInfo userPermissionInfo = authHandler.evaluateUserPermissionInfo(ACCOUNT_ID, userGroups, null);
 
     assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getWorkflowPermissions())
         .isNotNull()
@@ -754,7 +754,7 @@ public class AuthHandlerTest extends WingsBaseTest {
     // Scenario 1
     List<UserGroup> userGroups = asList(devUserGroup, prodUserGroup);
 
-    UserPermissionInfo userPermissionInfo = authHandler.getUserPermissionInfo(ACCOUNT_ID, userGroups);
+    UserPermissionInfo userPermissionInfo = authHandler.evaluateUserPermissionInfo(ACCOUNT_ID, userGroups, null);
 
     assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getPipelinePermissions())
         .isNotNull()
@@ -767,7 +767,7 @@ public class AuthHandlerTest extends WingsBaseTest {
     // Scenario 2
     userGroups = asList(prodUserGroup);
 
-    userPermissionInfo = authHandler.getUserPermissionInfo(ACCOUNT_ID, userGroups);
+    userPermissionInfo = authHandler.evaluateUserPermissionInfo(ACCOUNT_ID, userGroups, null);
 
     assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getPipelinePermissions())
         .isNotNull()
@@ -781,7 +781,7 @@ public class AuthHandlerTest extends WingsBaseTest {
     // Scenario 3
     userGroups = asList(devAndProdUserGroup);
 
-    userPermissionInfo = authHandler.getUserPermissionInfo(ACCOUNT_ID, userGroups);
+    userPermissionInfo = authHandler.evaluateUserPermissionInfo(ACCOUNT_ID, userGroups, null);
 
     assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getPipelinePermissions())
         .isNotNull()
@@ -794,7 +794,7 @@ public class AuthHandlerTest extends WingsBaseTest {
     // Scenario 4
     userGroups = asList(devUserGroup);
 
-    userPermissionInfo = authHandler.getUserPermissionInfo(ACCOUNT_ID, userGroups);
+    userPermissionInfo = authHandler.evaluateUserPermissionInfo(ACCOUNT_ID, userGroups, null);
 
     assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getPipelinePermissions()).isNull();
 

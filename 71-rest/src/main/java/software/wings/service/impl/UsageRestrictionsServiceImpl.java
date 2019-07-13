@@ -421,13 +421,10 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   }
 
   @Override
-  public UsageRestrictions getUsageRestrictionsFromUserPermissions(
-      String accountId, UserPermissionInfo userPermissionInfo, User user, Action action) {
+  public UsageRestrictions getUsageRestrictionsFromUserPermissions(Action action, List<UserGroup> userGroupList) {
     Set<AppEnvRestriction> appEnvRestrictions = Sets.newHashSet();
 
-    List<UserGroup> userGroupsByAccountId =
-        userGroupService.getUserGroupsByAccountId(userPermissionInfo.getAccountId(), user);
-    userGroupsByAccountId.forEach(userGroup -> {
+    userGroupList.forEach(userGroup -> {
       Set<AppPermission> appPermissions = userGroup.getAppPermissions();
       if (isEmpty(appPermissions)) {
         return;

@@ -176,7 +176,8 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   public ExecutionInput getExecutionInput(String query, String accountId) {
     User user = User.Builder.anUser().withUuid("user1Id").build();
     UserGroup userGroup = authHandler.buildDefaultAdminUserGroup(accountId, user);
-    UserPermissionInfo userPermissionInfo = authHandler.getUserPermissionInfo(accountId, Arrays.asList(userGroup));
+    UserPermissionInfo userPermissionInfo =
+        authHandler.evaluateUserPermissionInfo(accountId, Arrays.asList(userGroup), user);
     return ExecutionInput.newExecutionInput()
         .query(query)
         .dataLoaderRegistry(getDataLoaderRegistry())

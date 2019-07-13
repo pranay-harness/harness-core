@@ -341,10 +341,11 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     UserRequestContextBuilder userRequestContextBuilder =
         UserRequestContext.builder().accountId(accountId).entityInfoMap(Maps.newHashMap());
 
-    UserPermissionInfo userPermissionInfo = authService.getUserPermissionInfo(accountId, user);
+    UserPermissionInfo userPermissionInfo = authService.getUserPermissionInfo(accountId, user, false);
     userRequestContextBuilder.userPermissionInfo(userPermissionInfo);
 
-    UserRestrictionInfo userRestrictionInfo = authService.getUserRestrictionInfo(accountId, user, userPermissionInfo);
+    UserRestrictionInfo userRestrictionInfo =
+        authService.getUserRestrictionInfo(accountId, user, userPermissionInfo, false);
     userRequestContextBuilder.userRestrictionInfo(userRestrictionInfo);
 
     Set<String> allowedAppIds = getAllowedAppIds(userPermissionInfo);

@@ -138,8 +138,6 @@ public interface UserGroupService extends OwnedByAccount {
 
   List<UserGroup> getUserGroupsByAccountId(String accountId);
 
-  List<String> getUserGroupIdsByAccountId(String accountId, User user);
-
   List<String> fetchUserGroupsMemberIds(String accountId, List<String> userGroupIds);
 
   List<UserGroup> fetchUserGroupNamesFromIds(List<String> userGroupIds);

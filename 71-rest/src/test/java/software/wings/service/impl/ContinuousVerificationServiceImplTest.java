@@ -84,7 +84,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
       { put(appId, buildAppPermissionSummary()); }
     });
 
-    when(mockAuthService.getUserPermissionInfo(accountId, user)).thenReturn(mockUserPermissionInfo);
+    when(mockAuthService.getUserPermissionInfo(accountId, user, false)).thenReturn(mockUserPermissionInfo);
   }
 
   private ContinuousVerificationExecutionMetaData getExecutionMetadata() {

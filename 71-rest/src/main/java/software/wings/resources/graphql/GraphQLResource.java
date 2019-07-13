@@ -180,7 +180,7 @@ public class GraphQLResource {
         if (apiKeyEntry == null) {
           executionResult = getExecutionResultWithError(GraphQLConstants.INVALID_API_KEY);
         } else {
-          userPermissionInfo = authHandler.getUserPermissionInfo(accountId, apiKeyEntry.getUserGroups());
+          userPermissionInfo = authHandler.evaluateUserPermissionInfo(accountId, apiKeyEntry.getUserGroups(), null);
           executionResult =
               graphQL.execute(getExecutionInput(userPermissionInfo, accountId, graphQLQuery, dataLoaderRegistryHelper));
         }
