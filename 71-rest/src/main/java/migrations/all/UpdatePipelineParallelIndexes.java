@@ -4,6 +4,9 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
+import io.harness.exception.WingsException.ExecutionContext;
+import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
@@ -37,7 +40,14 @@ public class UpdatePipelineParallelIndexes implements Migration {
   }
 
   public void migrate(Pipeline pipeline) {
-    PipelineServiceImpl.ensurePipelineStageUuidAndParallelIndex(pipeline);
-    wingsPersistence.save(pipeline);
+    try {
+      PipelineServiceImpl.ensurePipelineStageUuidAndParallelIndex(pipeline);
+      wingsPersistence.save(pipeline);
+    } catch (WingsException exception) {
+      exception.addContext(Pipeline.class, pipeline.getUuid());
+      ExceptionLogger.logProcessedMessages(exception, ExecutionContext.MANAGER, logger);
+    } catch (RuntimeException exception) {
+      logger.error("", exception);
+    }
   }
 }
