@@ -134,7 +134,7 @@ public class BugsnagResourceIntegrationTest extends BaseIntegrationTest {
         .browserApplication(true)
         .appId(appId)
         .orgId("5c524cedbd0fa2001672ad26")
-        .projectId("5c524d12a47e04000dd60aa9")
+        .projectId("5ccb6cbfe837a900163d315b")
         .settingId(settingId)
         .instanceName("testHost")
         .stateType(StateType.BUG_SNAG)
