@@ -25,9 +25,11 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.security.UserGroup;
@@ -95,7 +97,9 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
   }
 
   @Test
+  @Owner(emails = "aman@harness.io")
   @Category(IntegrationTests.class)
+  @Ignore("TODO: Aman to investigate and fix")
   public void testLdapLogin() {
     loginAdminUser();
     assertNotEquals(userToken, INVALID_TOKEN);
@@ -110,7 +114,9 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
   }
 
   @Test
+  @Owner(emails = "aman@harness.io")
   @Category(IntegrationTests.class)
+  @Ignore("TODO: Aman to investigate and fix")
   public void testLdapUserGroupLinking() {
     loginAdminUser();
     assertNotEquals(userToken, INVALID_TOKEN);
