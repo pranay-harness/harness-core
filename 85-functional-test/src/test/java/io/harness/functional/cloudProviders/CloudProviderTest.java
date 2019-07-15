@@ -47,11 +47,12 @@ public class CloudProviderTest extends AbstractFunctionalTest {
             .withCategory(SettingCategory.CLOUD_PROVIDER)
             .withName(CONNECTOR_NAME)
             .withAccountId(getAccount().getUuid())
-            .withValue(AwsConfig.builder()
-                           .accessKey(new ScmSecret().decryptToString(new SecretName("aws_playground_access_key")))
-                           .secretKey(new ScmSecret().decryptToCharArray(new SecretName("aws_playground_secret_key")))
-                           .accountId(getAccount().getUuid())
-                           .build())
+            .withValue(
+                AwsConfig.builder()
+                    .accessKey(new ScmSecret().decryptToString(new SecretName("qe_aws_playground_access_key")))
+                    .secretKey(new ScmSecret().decryptToCharArray(new SecretName("qe_aws_playground_secret_key")))
+                    .accountId(getAccount().getUuid())
+                    .build())
             .build();
 
     JsonPath setAttrResponse = SettingsUtils.create(bearerToken, getAccount().getUuid(), settingAttribute);
