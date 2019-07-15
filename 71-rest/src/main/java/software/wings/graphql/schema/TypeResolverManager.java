@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import graphql.schema.TypeResolver;
 import software.wings.graphql.schema.type.QLDeploymentOutcome;
 import software.wings.graphql.schema.type.QLExecutedAlongPipeline;
+import software.wings.graphql.schema.type.QLExecutedByTrigger;
 import software.wings.graphql.schema.type.QLExecutedByUser;
 import software.wings.graphql.schema.type.QLPipelineExecution;
 import software.wings.graphql.schema.type.QLWorkflowExecution;
@@ -61,6 +62,7 @@ public class TypeResolverManager {
     public static final String Ec2Instance = "Ec2Instance";
     public static final String EcsContainerInstance = "EcsContainerInstance";
     public static final String ExecutedAlongPipeline = "ExecutedAlongPipeline";
+    public static final String ExecutedByTrigger = "ExecutedByTrigger";
     public static final String ExecutedByUser = "ExecutedByUser";
     public static final String GcpCloudProvider = "GcpCloudProvider";
     public static final String K8sPodInstance = "K8sPodInstance";
@@ -95,6 +97,7 @@ public class TypeResolverManager {
                 ImmutableMap.<Class, String>builder()
                     .put(QLExecutedByUser.class, TypeResolverManagerTypes.ExecutedByUser)
                     .put(QLExecutedAlongPipeline.class, TypeResolverManagerTypes.ExecutedAlongPipeline)
+                    .put(QLExecutedByTrigger.class, TypeResolverManagerTypes.ExecutedByTrigger)
                     .build()))
         .put(TypeResolverManagerUnifaces.CloudProvider,
             getResultTypeResolver(

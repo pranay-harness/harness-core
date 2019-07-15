@@ -3,17 +3,30 @@ extend type Query {
   execution(executionId: String!): Execution @dataFetcher(name: execution)
 
   # Get the list of executions.
-  executions(
-    applicationId: String
-    workflowId: String
-    pipelineId: String
-    serviceId: String
-    limit: Int!
-    offset: Int
-    statuses: [ExecutionStatus]
-    from: DateTime
-    to: DateTime
-  ): ExecutionConnection @dataFetcher(name: executionConnection)
+  executions(filters: [ExecutionFilter], limit: Int!, offset: Int): ExecutionConnection
+    @dataFetcher(name: executionConnection)
+}
+
+enum ExecutionFilterType {
+  Application
+  Service
+  Environment
+  CloudProvider
+  Status
+  EndTime
+  CreatedAt
+  StartTime
+  Duration
+  Triggered_By
+  Trigger
+  Workflow
+  Pipeline
+}
+
+input ExecutionFilter {
+  type: ExecutionFilterType
+  stringFilter: StringFilter
+  numberFilter: NumberFilter
 }
 
 enum ExecutionStatus {
@@ -44,14 +57,18 @@ type ExecutedAlongPipeline {
   execution: PipelineExecution @dataFetcher(name: execution)
 }
 
-union Cause = ExecutedByUser | ExecutedAlongPipeline
+type ExecutedByTrigger {
+  trigger: Trigger @dataFetcher(name: trigger)
+}
+
+union Cause = ExecutedByUser | ExecutedAlongPipeline | ExecutedByTrigger
 
 interface Execution {
   id: String
   application: Application
-  createdAt: DateTime
-  startedAt: DateTime
-  endedAt: DateTime
+  createdAt: Number
+  startedAt: Number
+  endedAt: Number
   status: ExecutionStatus
   cause: Cause
   notes: String
@@ -71,13 +88,13 @@ type WorkflowExecution implements Execution {
     @dataFetcher(name: application, useBatch: true, contextFieldArgsMap: "{ \"executionId\": \"id\"}")
 
   # DateTime when execution started
-  createdAt: DateTime
+  createdAt: Number
 
   # DateTime when execution started
-  startedAt: DateTime
+  startedAt: Number
 
   # DateTime when execution ended
-  endedAt: DateTime
+  endedAt: Number
 
   # Status of the workflow
   status: ExecutionStatus
@@ -99,13 +116,13 @@ type PipelineExecution implements Execution {
   application: Application @dataFetcher(name: application, contextFieldArgsMap: "{ \"executionId\": \"id\"}")
 
   # DateTime when execution started
-  createdAt: DateTime
+  createdAt: Number
 
   # DateTime when execution started
-  startedAt: DateTime
+  startedAt: Number
 
   # DateTime when execution ended
-  endedAt: DateTime
+  endedAt: Number
 
   # Status of the workflow
   status: ExecutionStatus

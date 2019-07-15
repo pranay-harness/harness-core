@@ -3,4 +3,4 @@ package software.wings.graphql.schema.type.aggregation;
 /**
  * @author rktummala
  */
-public enum QLDataType { STRING, NUMBER }
+public enum QLDataType { STRING, NUMBER, DATETIME }
