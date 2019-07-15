@@ -152,8 +152,10 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         StackdriverCVConfiguration stackdriverCVConfiguration = (StackdriverCVConfiguration) cvConfiguration;
         if (stackdriverCVConfiguration.isLogsConfiguration()) {
           stackdriverCVConfiguration.setStateType(STACK_DRIVER_LOG);
-          if (!cvValidationService.validateStackdriverQuery(accountId, appId,
-                  stackdriverCVConfiguration.getConnectorId(), stackdriverCVConfiguration.getQuery())) {
+          if (stackdriverCVConfiguration.isEnabled24x7()
+              && !cvValidationService.validateStackdriverQuery(accountId, appId,
+                     stackdriverCVConfiguration.getConnectorId(), stackdriverCVConfiguration.getQuery(),
+                     stackdriverCVConfiguration.getHostnameField())) {
             throw new WingsException(
                 "Invalid Query, Please provide textPayload in query " + stackdriverCVConfiguration.getQuery());
           }
@@ -314,8 +316,10 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         StackdriverCVConfiguration stackdriverCVConfiguration = (StackdriverCVConfiguration) updatedConfig;
         if (stackdriverCVConfiguration.isLogsConfiguration()) {
           updatedConfig.setStateType(STACK_DRIVER_LOG);
-          if (!cvValidationService.validateStackdriverQuery(accountId, appId,
-                  stackdriverCVConfiguration.getConnectorId(), stackdriverCVConfiguration.getQuery())) {
+          if (stackdriverCVConfiguration.isEnabled24x7()
+              && !cvValidationService.validateStackdriverQuery(accountId, appId,
+                     stackdriverCVConfiguration.getConnectorId(), stackdriverCVConfiguration.getQuery(),
+                     stackdriverCVConfiguration.getHostnameField())) {
             throw new WingsException(
                 "Invalid Query, Please provide textPayload in query " + stackdriverCVConfiguration.getQuery());
           }

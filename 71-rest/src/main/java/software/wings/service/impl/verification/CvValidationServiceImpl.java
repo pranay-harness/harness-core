@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import software.wings.service.intfc.elk.ElkAnalysisService;
+import software.wings.service.intfc.stackdriver.StackDriverService;
 
 /**
  * Created by Pranjal on 03/14/2019
@@ -11,6 +12,7 @@ import software.wings.service.intfc.elk.ElkAnalysisService;
 @Singleton
 public class CvValidationServiceImpl implements CvValidationService {
   @Inject private ElkAnalysisService elkAnalysisService;
+  @Inject private StackDriverService stackDriverService;
 
   @Override
   public Boolean validateELKQuery(String accountId, String appId, String settingId, String query, String index,
@@ -20,10 +22,8 @@ public class CvValidationServiceImpl implements CvValidationService {
   }
 
   @Override
-  public Boolean validateStackdriverQuery(String accountId, String appId, String connectorId, String query) {
-    if (query.contains("textPayload:")) {
-      return true;
-    }
-    return false;
+  public Boolean validateStackdriverQuery(
+      String accountId, String appId, String connectorId, String query, String hostNameField) {
+    return stackDriverService.validateQuery(accountId, appId, connectorId, query, hostNameField);
   }
 }

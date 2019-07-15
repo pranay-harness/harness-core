@@ -29,4 +29,6 @@ public interface StackDriverService {
   List<String> listRegions(String settingId) throws IOException;
 
   Map<String, String> listForwardingRules(String settingId, String region) throws IOException;
+
+  Boolean validateQuery(String accountId, String appId, String connectorId, String query, String hostNameField);
 }
