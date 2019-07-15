@@ -129,7 +129,7 @@ public class OauthBasedAuthHandler implements AuthHandler {
   }
 
   private void matchOauthProvider(final User user, final OauthClient oauthClient) {
-    String primaryAccountId = authenticationUtils.getPrimaryAccount(user).getUuid();
+    String primaryAccountId = authenticationUtils.getDefaultAccount(user).getUuid();
     OauthSettings oauthSettings = ssoSettingService.getOauthSettingsByAccountId(primaryAccountId);
     if (oauthSettings == null) {
       return;

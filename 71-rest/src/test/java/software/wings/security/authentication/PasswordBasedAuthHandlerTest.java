@@ -133,7 +133,7 @@ public class PasswordBasedAuthHandlerTest extends CategoryTest {
     mockUser.setDefaultAccountId("accountId");
     mockUser.setPasswordHash("$2a$10$Rf/.q4HvUkS7uG2Utdkk7.jLnqnkck5ruH/vMrHjGVk4R9mL8nQE2");
     when(configuration.getPortal()).thenReturn(mock(PortalConfig.class));
-    when(authenticationUtils.getPrimaryAccount(any(User.class))).thenReturn(new Account());
+    when(authenticationUtils.getDefaultAccount(any(User.class))).thenReturn(new Account());
     when(loginSettingsService.isUserLocked(any(User.class), any(Account.class))).thenReturn(false);
     doNothing().when(loginSettingsService).updateUserLockoutInfo(any(User.class), any(Account.class), anyInt());
     doReturn(mockUser).when(authHandler).getUser(anyString());

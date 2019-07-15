@@ -26,7 +26,7 @@ public class DomainWhitelistCheckerService {
   @Inject private AuthenticationUtils authenticationUtils;
 
   public boolean isDomainWhitelisted(User user) {
-    Account primaryAccount = authenticationUtils.getPrimaryAccount(user);
+    Account primaryAccount = authenticationUtils.getDefaultAccount(user);
     if (null == primaryAccount) {
       logger.warn("User with UUID {} has null primary account", user.getUuid());
       return false;

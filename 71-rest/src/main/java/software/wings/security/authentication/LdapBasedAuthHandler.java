@@ -53,7 +53,7 @@ public class LdapBasedAuthHandler implements AuthHandler {
       throw new WingsException(USER_DOES_NOT_EXIST, USER);
     }
 
-    Account account = authenticationUtils.getPrimaryAccount(user);
+    Account account = authenticationUtils.getDefaultAccount(user);
     if (!domainWhitelistCheckerService.isDomainWhitelisted(user, account)) {
       domainWhitelistCheckerService.throwDomainWhitelistFilterException();
     }

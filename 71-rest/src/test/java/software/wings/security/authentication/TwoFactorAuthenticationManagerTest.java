@@ -147,7 +147,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
     User user = spy(new User());
     Account account = mock(Account.class);
     when(account.getCompanyName()).thenReturn("TestCompany");
-    when(authenticationUtils.getPrimaryAccount(user)).thenReturn(account);
+    when(authenticationUtils.getDefaultAccount(user)).thenReturn(account);
 
     TwoFactorAuthenticationSettings settings =
         twoFactorAuthenticationManager.createTwoFactorAuthenticationSettings(user, TOTP);

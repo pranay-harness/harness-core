@@ -64,12 +64,12 @@ public class AuthenticationUtils {
     return wingsPersistence.createQuery(User.class).field("email").equal(userName.trim().toLowerCase()).get();
   }
 
-  public Account getPrimaryAccount(User user) {
-    String primaryAccountId = user.getDefaultAccountId();
-    if (isEmpty(primaryAccountId)) {
+  public Account getDefaultAccount(User user) {
+    String defaultAccountId = user.getDefaultAccountId();
+    if (isEmpty(defaultAccountId)) {
       return user.getAccounts().get(0);
     } else {
-      return accountService.get(primaryAccountId);
+      return accountService.get(defaultAccountId);
     }
   }
 
