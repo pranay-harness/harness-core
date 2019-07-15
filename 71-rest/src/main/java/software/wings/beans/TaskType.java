@@ -194,18 +194,18 @@ public enum TaskType {
   APPDYNAMICS_COLLECT_METRIC_DATA(
       TaskGroup.APPDYNAMICS, AppdynamicsDataCollectionTask.class, AppdynamicsValidation.class),
   APPDYNAMICS_COLLECT_24_7_METRIC_DATA(
-      TaskGroup.APPDYNAMICS, AppdynamicsDataCollectionTask.class, AppdynamicsValidation.class),
+      TaskGroup.GUARD_24x7, AppdynamicsDataCollectionTask.class, AppdynamicsValidation.class),
   APPDYNAMICS_METRIC_DATA_FOR_NODE(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class),
   NEWRELIC_VALIDATE_CONFIGURATION_TASK(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),
   BUGSNAG_GET_APP_TASK(TaskGroup.LOG, ServiceImplDelegateTask.class, APMValidation.class),
   BUGSNAG_GET_RECORDS(TaskGroup.LOG, ServiceImplDelegateTask.class, APMValidation.class),
-  CUSTOM_COLLECT_24_7_LOG_DATA(TaskGroup.LOG, LogDataCollectionTask.class, APMValidation.class),
+  CUSTOM_COLLECT_24_7_LOG_DATA(TaskGroup.GUARD_24x7, LogDataCollectionTask.class, APMValidation.class),
   NEWRELIC_GET_APP_TASK(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),
   NEWRELIC_RESOLVE_APP_TASK(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),
   NEWRELIC_RESOLVE_APP_ID_TASK(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),
   NEWRELIC_GET_APP_INSTANCES_TASK(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),
   NEWRELIC_COLLECT_METRIC_DATA(TaskGroup.NEWRELIC, NewRelicDataCollectionTask.class, NewRelicValidation.class),
-  NEWRELIC_COLLECT_24_7_METRIC_DATA(TaskGroup.NEWRELIC, NewRelicDataCollectionTask.class, NewRelicValidation.class),
+  NEWRELIC_COLLECT_24_7_METRIC_DATA(TaskGroup.GUARD_24x7, NewRelicDataCollectionTask.class, NewRelicValidation.class),
   NEWRELIC_GET_TXNS_WITH_DATA(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),
   NEWRELIC_GET_TXNS_WITH_DATA_FOR_NODE(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),
   NEWRELIC_POST_DEPLOYMENT_MARKER(TaskGroup.NEWRELIC, NewRelicDeploymentMarkerTask.class, NewRelicValidation.class),
@@ -216,11 +216,11 @@ public enum TaskType {
   STACKDRIVER_LIST_REGIONS(TaskGroup.STACKDRIVER, ServiceImplDelegateTask.class, StackDriverValidation.class),
   STACKDRIVER_LIST_FORWARDING_RULES(TaskGroup.STACKDRIVER, ServiceImplDelegateTask.class, StackDriverValidation.class),
   STACKDRIVER_COLLECT_24_7_METRIC_DATA(
-      TaskGroup.STACKDRIVER, StackDriverDataCollectionTask.class, StackDriverValidation.class),
+      TaskGroup.GUARD_24x7, StackDriverDataCollectionTask.class, StackDriverValidation.class),
   STACKDRIVER_COLLECT_LOG_DATA(
       TaskGroup.STACKDRIVER, StackDriverLogDataCollectionTask.class, StackDriverValidation.class),
   STACKDRIVER_COLLECT_24_7_LOG_DATA(
-      TaskGroup.STACKDRIVER, StackDriverLogDataCollectionTask.class, StackDriverValidation.class),
+      TaskGroup.GUARD_24x7, StackDriverLogDataCollectionTask.class, StackDriverValidation.class),
   SPLUNK(TaskGroup.SPLUNK, HttpTask.class, SplunkValidation.class),
   SPLUNK_CONFIGURATION_VALIDATE_TASK(TaskGroup.SPLUNK, ServiceImplDelegateTask.class, SplunkValidation.class),
   SPLUNK_GET_HOST_RECORDS(TaskGroup.SPLUNK, ServiceImplDelegateTask.class, SplunkValidation.class),
@@ -229,14 +229,14 @@ public enum TaskType {
   SUMO_VALIDATE_CONFIGURATION_TASK(TaskGroup.SUMO, ServiceImplDelegateTask.class, SumoValidation.class),
   SUMO_GET_HOST_RECORDS(TaskGroup.SUMO, ServiceImplDelegateTask.class, SumoValidation.class),
   SUMO_GET_LOG_DATA_BY_HOST(TaskGroup.SUMO, ServiceImplDelegateTask.class, SumoValidation.class),
-  SUMO_COLLECT_24_7_LOG_DATA(TaskGroup.SUMO, SumoDataCollectionTask.class, SumoValidation.class),
+  SUMO_COLLECT_24_7_LOG_DATA(TaskGroup.GUARD_24x7, SumoDataCollectionTask.class, SumoValidation.class),
   ELK_CONFIGURATION_VALIDATE_TASK(TaskGroup.ELK, ServiceImplDelegateTask.class, ElkValidation.class),
   ELK_COLLECT_LOG_DATA(TaskGroup.ELK, ElkLogzDataCollectionTask.class, ElkValidation.class),
   ELK_COLLECT_INDICES(TaskGroup.ELK, ServiceImplDelegateTask.class, ElkValidation.class),
   ELK_GET_LOG_SAMPLE(TaskGroup.ELK, ServiceImplDelegateTask.class, ElkValidation.class),
   ELK_GET_HOST_RECORDS(TaskGroup.ELK, ServiceImplDelegateTask.class, ElkValidation.class),
   KIBANA_GET_VERSION(TaskGroup.ELK, ServiceImplDelegateTask.class, ElkValidation.class),
-  ELK_COLLECT_24_7_LOG_DATA(TaskGroup.ELK, ElkLogzDataCollectionTask.class, ElkValidation.class),
+  ELK_COLLECT_24_7_LOG_DATA(TaskGroup.GUARD_24x7, ElkLogzDataCollectionTask.class, ElkValidation.class),
   LOGZ_CONFIGURATION_VALIDATE_TASK(TaskGroup.LOGZ, ServiceImplDelegateTask.class, LogzValidation.class),
   LOGZ_COLLECT_LOG_DATA(TaskGroup.LOGZ, ElkLogzDataCollectionTask.class, LogzValidation.class),
   LOGZ_GET_LOG_SAMPLE(TaskGroup.LOGZ, ServiceImplDelegateTask.class, LogzValidation.class),
@@ -285,7 +285,7 @@ public enum TaskType {
   DYNA_TRACE_GET_TXNS_WITH_DATA_FOR_NODE(
       TaskGroup.DYNA_TRACE, ServiceImplDelegateTask.class, DynaTraceValidation.class),
   DYNATRACE_COLLECT_24_7_METRIC_DATA(
-      TaskGroup.DYNA_TRACE, DynaTraceDataCollectionTask.class, DynaTraceValidation.class),
+      TaskGroup.GUARD_24x7, DynaTraceDataCollectionTask.class, DynaTraceValidation.class),
   HELM_COMMAND_TASK(TaskGroup.HELM, HelmCommandTask.class, HelmCommandValidation.class),
   KUBERNETES_STEADY_STATE_CHECK_TASK(
       TaskGroup.CONTAINER, KubernetesSteadyStateCheckTask.class, KubernetesSteadyStateCheckValidation.class),
@@ -299,15 +299,15 @@ public enum TaskType {
       TaskGroup.PROMETHEUS, PrometheusDataCollectionTask.class, PrometheusValidation.class),
   PROMETHEUS_METRIC_DATA_PER_HOST(TaskGroup.PROMETHEUS, ServiceImplDelegateTask.class, PrometheusValidation.class),
   PROMETHEUS_COLLECT_24_7_METRIC_DATA(
-      TaskGroup.PROMETHEUS, PrometheusDataCollectionTask.class, PrometheusValidation.class),
+      TaskGroup.GUARD_24x7, PrometheusDataCollectionTask.class, PrometheusValidation.class),
   CLOUD_WATCH_COLLECT_METRIC_DATA(
       TaskGroup.CLOUD_WATCH, CloudWatchDataCollectionTask.class, AwsConnectionValidation.class),
   CLOUD_WATCH_METRIC_DATA_FOR_NODE(TaskGroup.CLOUD_WATCH, ServiceImplDelegateTask.class, AwsConnectionValidation.class),
   CLOUD_WATCH_COLLECT_24_7_METRIC_DATA(
-      TaskGroup.CLOUD_WATCH, CloudWatchDataCollectionTask.class, AwsConnectionValidation.class),
+      TaskGroup.GUARD_24x7, CloudWatchDataCollectionTask.class, AwsConnectionValidation.class),
   APM_METRIC_DATA_COLLECTION_TASK(TaskGroup.APM, APMDataCollectionTask.class, APMValidation.class),
 
-  APM_24_7_METRIC_DATA_COLLECTION_TASK(TaskGroup.APM, APMDataCollectionTask.class, APMValidation.class),
+  APM_24_7_METRIC_DATA_COLLECTION_TASK(TaskGroup.GUARD_24x7, APMDataCollectionTask.class, APMValidation.class),
 
   CUSTOM_LOG_COLLECTION_TASK(TaskGroup.LOG, LogDataCollectionTask.class, APMValidation.class),
   CLOUD_FORMATION_TASK(TaskGroup.CLOUD_FORMATION, CloudFormationCommandTask.class, AwsConnectionValidation.class),

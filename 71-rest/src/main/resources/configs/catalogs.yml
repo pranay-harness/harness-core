@@ -429,6 +429,8 @@ TASK_TYPES:
       value: TRIGGER
     - name: Connectivity Validation
       value: CONNECTIVITY_VALIDATION
+    - name: Service Guard
+      value: GUARD_24x7
 
 EXECUTION_STATUS:
     - name: Aborted
