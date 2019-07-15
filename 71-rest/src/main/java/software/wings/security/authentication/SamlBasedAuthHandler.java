@@ -51,7 +51,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
       String samlResponseString = credentials[1];
 
       User user = decodeResponseAndReturnUser(idpUrl, samlResponseString);
-      Account account = authenticationUtils.getPrimaryAccount(user);
+      Account account = authenticationUtils.getDefaultAccount(user);
       if (!domainWhitelistCheckerService.isDomainWhitelisted(user, account)) {
         domainWhitelistCheckerService.throwDomainWhitelistFilterException();
       }

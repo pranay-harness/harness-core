@@ -335,7 +335,7 @@ public class AuthenticationManager {
       throw new WingsException(USER_DISABLED, USER);
     }
 
-    String accountId = authenticationUtils.getPrimaryAccount(user).getUuid();
+    String accountId = authenticationUtils.getDefaultAccount(user).getUuid();
 
     if (!userService.isUserAccountAdmin(authService.getUserPermissionInfo(accountId, user, false), accountId)) {
       throw new WingsException(USER_NOT_AUTHORIZED, USER);
