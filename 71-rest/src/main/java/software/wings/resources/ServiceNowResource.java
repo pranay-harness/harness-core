@@ -11,8 +11,9 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
 import software.wings.service.intfc.servicenow.ServiceNowService;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -31,23 +32,16 @@ public class ServiceNowResource {
     String name;
   }
 
-  /**
-   * List.
-   *
-   * @param accountId the account id
-   * @param appId the account id
-   * @return the rest response
-   */
   @GET
   @Path("ticket-types")
   @Timed
   @ExceptionMetered
   public RestResponse getTicketTypes(
       @QueryParam("appId") String appId, @QueryParam("accountId") @NotEmpty String accountId) {
-    List<ServiceNowTicketTypeDTO> response = new ArrayList<>();
-    for (ServiceNowTicketType ticketType : ServiceNowTicketType.values()) {
-      response.add(new ServiceNowTicketTypeDTO(ticketType.name(), ticketType.getDisplayName()));
-    }
+    List<ServiceNowTicketTypeDTO> response;
+    response = Arrays.stream(ServiceNowTicketType.values())
+                   .map(ticketType -> new ServiceNowTicketTypeDTO(ticketType.name(), ticketType.getDisplayName()))
+                   .collect(Collectors.toList());
     return new RestResponse<>(response);
   }
 

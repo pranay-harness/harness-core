@@ -7,9 +7,11 @@ import static software.wings.service.impl.servicenow.ServiceNowDelegateServiceIm
 import static software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl.handleResponse;
 import static software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType.CHANGE_TASK;
 
+import com.google.gson.Gson;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
@@ -25,6 +27,8 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.api.ServiceNowExecutionData;
+import software.wings.api.ServiceNowImportSetResponse;
+import software.wings.api.ServiceNowImportSetResult;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.servicenow.ServiceNowFields;
@@ -34,6 +38,7 @@ import software.wings.helpers.ext.servicenow.ServiceNowRestClient;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,6 +77,8 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
 
       case UPDATE:
         return updateServiceNowTicket(parameters);
+      case IMPORT_SET:
+        return createImportSets(parameters);
       default:
         String errorMsg = "Invalid ServiceNow delegate Task Action " + parameters.getAction();
         logger.error(errorMsg);
@@ -122,6 +129,49 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
       throw we;
     } catch (Exception e) {
       String errorMsg = "Error while creating serviceNow ticket: ";
+      throw new WingsException(SERVICENOW_ERROR, USER, e).addParam("message", errorMsg + ExceptionUtils.getMessage(e));
+    }
+  }
+
+  private ResponseData createImportSets(ServiceNowTaskParameters parameters) {
+    Gson gson = new Gson();
+    Map body = gson.fromJson(parameters.getJsonBody(), HashMap.class);
+    ServiceNowConfig config = parameters.getServiceNowConfig();
+    final Call<JsonNode> request;
+    request = getRestClient(parameters)
+                  .createImportSet(Credentials.basic(config.getUsername(), new String(config.getPassword())),
+                      parameters.getImportSetTableName(), "all", body);
+
+    Response<JsonNode> apiResponse = null;
+    try {
+      apiResponse = request.execute();
+      logger.info("Response received from serviceNow: {}", apiResponse);
+      handleResponse(apiResponse, "Failed to create ServiceNow ticket");
+      JsonNode responseObj = apiResponse.body().get("result");
+      String importSetNumber = apiResponse.body().get("import_set").textValue();
+      ObjectMapper mapper = new ObjectMapper();
+
+      ServiceNowImportSetResponse response =
+          mapper.readValue(apiResponse.body().toString(), ServiceNowImportSetResponse.class);
+      List<String> transformationValues = new ArrayList<>();
+
+      for (ServiceNowImportSetResult result : response.getResult()) {
+        transformationValues.add(result.getDisplayValue());
+      }
+      Collections.sort(transformationValues);
+
+      String responseMsg = "Created import Set : " + importSetNumber;
+      return ServiceNowExecutionData.builder()
+          .ticketType(parameters.getTicketType())
+          .transformationDetails(response)
+          .transformationValues(transformationValues)
+          .responseMsg(responseMsg)
+          .executionStatus(ExecutionStatus.SUCCESS)
+          .build();
+    } catch (WingsException we) {
+      throw we;
+    } catch (Exception e) {
+      String errorMsg = "Error while creating import set: ";
       throw new WingsException(SERVICENOW_ERROR, USER, e).addParam("message", errorMsg + ExceptionUtils.getMessage(e));
     }
   }

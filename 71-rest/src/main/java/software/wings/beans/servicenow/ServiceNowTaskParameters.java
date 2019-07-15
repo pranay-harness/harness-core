@@ -28,6 +28,9 @@ public class ServiceNowTaskParameters implements TaskParameters, ExecutionCapabi
   private Map<ServiceNowFields, String> fields;
   private Map<String, String> additionalFields;
   private boolean updateMultiple;
+  // import set fields
+  private String importSetTableName;
+  private String jsonBody;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {

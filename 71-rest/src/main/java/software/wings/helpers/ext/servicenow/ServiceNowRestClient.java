@@ -22,6 +22,12 @@ public interface ServiceNowRestClient {
       @Body Object jsonBody);
 
   @Headers("Content-Type: application/json")
+  @POST("api/now/import/{staging-table-name}")
+  Call<JsonNode> createImportSet(@Header("Authorization") String authorization,
+      @Path("staging-table-name") String stagingTableName, @Query("sysparm_display_value") String displayValue,
+      @Body Object jsonBody);
+
+  @Headers("Content-Type: application/json")
   @PATCH("api/now/table/{ticket-type}/{ticket-id}")
   Call<JsonNode> updateTicket(@Header("Authorization") String authorization, @Path("ticket-type") String ticketType,
       @Path("ticket-id") String ticketId, @Query("sysparm_display_value") String displayValue,
