@@ -1,11 +1,13 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
@@ -26,6 +28,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import software.wings.beans.AccountType;
+import software.wings.beans.Application;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
@@ -38,6 +42,8 @@ import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.elk.ElkQueryType;
+import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.sm.ExecutionResponse;
@@ -51,6 +57,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -67,6 +74,14 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
     setupCommon();
     MockitoAnnotations.initMocks(this);
     setupCommonMocks();
+
+    AppService appService = mock(AppService.class);
+    when(appService.getAccountIdByAppId(anyString())).thenReturn(generateUuid());
+    when(appService.get(anyString()))
+        .thenReturn(Application.Builder.anApplication().name(generateUuid()).accountId(accountId).build());
+
+    AccountService accountService = mock(AccountService.class);
+    when(accountService.getAccountType(anyString())).thenReturn(Optional.of(AccountType.PAID));
 
     elkAnalysisState = new ElkAnalysisState("ElkAnalysisState");
     elkAnalysisState.setQuery("exception");
@@ -85,6 +100,8 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
     FieldUtils.writeField(elkAnalysisState, "featureFlagService", featureFlagService, true);
     FieldUtils.writeField(elkAnalysisState, "versionInfoManager", versionInfoManager, true);
     FieldUtils.writeField(elkAnalysisState, "elkAnalysisService", elkAnalysisService, true);
+    FieldUtils.writeField(elkAnalysisState, "appService", appService, true);
+    FieldUtils.writeField(elkAnalysisState, "accountService", accountService, true);
   }
 
   @Test

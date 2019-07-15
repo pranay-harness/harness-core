@@ -84,6 +84,11 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
+    if (!checkLicense(appService.getAccountIdByAppId(context.getAppId()), StateType.valueOf(getStateType()),
+            context.getStateExecutionInstanceId())) {
+      return generateAnalysisResponse(context, ExecutionStatus.SUCCESS,
+          "Your license type does not support running this verification. Skipping Analysis");
+    }
     String corelationId = UUID.randomUUID().toString();
     String delegateTaskId = null;
     VerificationStateAnalysisExecutionData executionData;

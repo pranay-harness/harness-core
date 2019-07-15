@@ -1,9 +1,12 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
@@ -22,6 +25,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
+import software.wings.beans.AccountType;
+import software.wings.beans.Application;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
@@ -30,6 +35,8 @@ import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
+import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.ExecutionResponse;
 import software.wings.verification.VerificationDataAnalysisResponse;
@@ -42,6 +49,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -58,6 +66,14 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     setupCommon();
     MockitoAnnotations.initMocks(this);
     setupCommonMocks();
+
+    AppService appService = mock(AppService.class);
+    when(appService.getAccountIdByAppId(anyString())).thenReturn(generateUuid());
+    when(appService.get(anyString()))
+        .thenReturn(Application.Builder.anApplication().name(generateUuid()).accountId(accountId).build());
+
+    AccountService accountService = mock(AccountService.class);
+    when(accountService.getAccountType(anyString())).thenReturn(Optional.of(AccountType.PAID));
 
     dynatraceState = new DynatraceState("DynatraceState");
     String serviceMethodsString = serviceMethods.get(0) + "\n" + serviceMethods.get(1);
@@ -76,6 +92,8 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     FieldUtils.writeField(dynatraceState, "workflowExecutionBaselineService", workflowExecutionBaselineService, true);
     FieldUtils.writeField(dynatraceState, "featureFlagService", featureFlagService, true);
     FieldUtils.writeField(dynatraceState, "versionInfoManager", versionInfoManager, true);
+    FieldUtils.writeField(dynatraceState, "appService", appService, true);
+    FieldUtils.writeField(dynatraceState, "accountService", accountService, true);
   }
 
   @Test

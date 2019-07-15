@@ -10,6 +10,7 @@ import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
@@ -30,7 +31,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
+import software.wings.beans.AccountType;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
@@ -40,6 +43,8 @@ import software.wings.metrics.MetricType;
 import software.wings.metrics.appdynamics.AppdynamicsConstants;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
+import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -53,6 +58,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -76,6 +82,14 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
 
     MockitoAnnotations.initMocks(this);
     infraMappingId = generateUuid();
+
+    AppService appService = mock(AppService.class);
+    when(appService.getAccountIdByAppId(anyString())).thenReturn(generateUuid());
+    when(appService.get(anyString()))
+        .thenReturn(Application.Builder.anApplication().name(generateUuid()).accountId(accountId).build());
+
+    AccountService accountService = mock(AccountService.class);
+    when(accountService.getAccountType(anyString())).thenReturn(Optional.of(AccountType.PAID));
 
     appDynamicsState = new AppDynamicsState("AppDynamicsState");
     appDynamicsState.setApplicationId("30444");
@@ -101,6 +115,8 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     FieldUtils.writeField(appDynamicsState, "infraMappingService", infraMappingService, true);
     FieldUtils.writeField(appDynamicsState, "versionInfoManager", versionInfoManager, true);
     FieldUtils.writeField(appDynamicsState, "serviceResourceService", serviceResourceService, true);
+    FieldUtils.writeField(appDynamicsState, "appService", appService, true);
+    FieldUtils.writeField(appDynamicsState, "accountService", accountService, true);
 
     when(executionContext.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM)).thenReturn(phaseElement);
     when(phaseElement.getInfraMappingId()).thenReturn(infraMappingId);
