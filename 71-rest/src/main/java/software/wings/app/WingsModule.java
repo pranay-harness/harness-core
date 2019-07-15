@@ -89,7 +89,6 @@ import software.wings.features.RestApiFeature;
 import software.wings.features.SamlFeature;
 import software.wings.features.SecretsManagementFeature;
 import software.wings.features.ServiceNowNotificationFeature;
-import software.wings.features.SlackNotificationFeature;
 import software.wings.features.TemplateLibraryFeature;
 import software.wings.features.TwoFactorAuthenticationFeature;
 import software.wings.features.UsersFeature;
@@ -846,7 +845,6 @@ public class WingsModule extends DependencyModule {
         .to(ServiceNowNotificationFeature.class)
         .in(Singleton.class);
     mapBinder.addBinding(JiraNotificationFeature.FEATURE_NAME).to(JiraNotificationFeature.class).in(Singleton.class);
-    mapBinder.addBinding(SlackNotificationFeature.FEATURE_NAME).to(SlackNotificationFeature.class).in(Singleton.class);
     mapBinder.addBinding(PagerDutyNotificationFeature.FEATURE_NAME)
         .to(PagerDutyNotificationFeature.class)
         .in(Singleton.class);
@@ -899,10 +897,6 @@ public class WingsModule extends DependencyModule {
         .bind(PremiumFeature.class)
         .annotatedWith(Names.named(JiraNotificationFeature.FEATURE_NAME))
         .to(JiraNotificationFeature.class);
-    binder()
-        .bind(PremiumFeature.class)
-        .annotatedWith(Names.named(SlackNotificationFeature.FEATURE_NAME))
-        .to(SlackNotificationFeature.class);
     binder()
         .bind(PremiumFeature.class)
         .annotatedWith(Names.named(PagerDutyNotificationFeature.FEATURE_NAME))

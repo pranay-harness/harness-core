@@ -8,10 +8,6 @@
     COMMUNITY:
       maxUsersAllowed: 5
 
-  SLACK_NOTIFICATION:
-    ESSENTIALS:
-      available: false
-
   JIRA_NOTIFICATION:
     COMMUNITY:
       available: false
@@ -112,7 +108,7 @@
     COMMUNITY:
       retentionPeriodInDays: 7
     ESSENTIALS:
-      retentionPeriodInDays: 7
+      retentionPeriodInDays: 30
 
   AUDIT_TRAIL:
     COMMUNITY:
