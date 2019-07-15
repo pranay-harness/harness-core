@@ -5,12 +5,15 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.govern.Switch.noop;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.beans.AccountType.COMMUNITY;
+import static software.wings.beans.AccountType.ESSENTIALS;
 import static software.wings.beans.FeatureName.CV_SUCCEED_FOR_ANOMALY;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
@@ -77,6 +80,7 @@ import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaD
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataBuilder;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.impl.instance.ContainerInstanceHandler;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.DelegateService;
@@ -110,6 +114,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -170,6 +175,8 @@ public abstract class AbstractAnalysisState extends State {
   @Transient @Inject @SchemaIgnore protected K8sStateHelper k8sStateHelper;
 
   @Inject private transient ExpressionEvaluator evaluator;
+
+  @Inject private AccountService accountService;
 
   protected String hostnameField;
 
@@ -762,5 +769,26 @@ public abstract class AbstractAnalysisState extends State {
     }
 
     return instanceElement.getWorkloadName();
+  }
+
+  protected boolean checkLicense(String accountId, StateType stateType, String stateExecutionId) {
+    switch (stateType) {
+      case PROMETHEUS:
+      case STACK_DRIVER:
+      case STACK_DRIVER_LOG:
+      case CLOUD_WATCH:
+        return true;
+      default:
+        noop();
+    }
+
+    final Optional<String> accountType = accountService.getAccountType(accountId);
+    if (!accountType.isPresent() || COMMUNITY.equals(accountType.get()) || ESSENTIALS.equals(accountType.get())) {
+      getLogger().info("for id {}, stateType {} the account type {} does not have license to run. Skipping analysis",
+          stateExecutionId, stateType, accountType.get());
+      return false;
+    }
+
+    return true;
   }
 }

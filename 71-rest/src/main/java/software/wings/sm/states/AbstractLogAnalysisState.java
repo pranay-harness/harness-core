@@ -123,6 +123,13 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       cleanUpForRetry(executionContext);
       AnalysisContext analysisContext = getLogAnalysisContext(executionContext, corelationId);
       getLogger().info("id: {} context: {}", executionContext.getStateExecutionInstanceId(), analysisContext);
+
+      if (!checkLicense(appService.getAccountIdByAppId(executionContext.getAppId()), StateType.valueOf(getStateType()),
+              executionContext.getStateExecutionInstanceId())) {
+        return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
+            "Your license type does not support running this verification. Skipping Analysis");
+      }
+
       saveMetaDataForDashboard(analysisContext.getAccountId(), executionContext);
 
       Set<String> canaryNewHostNames = analysisContext.getTestNodes().keySet();

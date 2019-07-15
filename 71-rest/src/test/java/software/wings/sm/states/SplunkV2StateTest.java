@@ -1,11 +1,13 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
@@ -24,6 +26,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
+import software.wings.beans.AccountType;
+import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
@@ -33,6 +37,8 @@ import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
+import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
@@ -47,6 +53,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -62,10 +69,18 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     MockitoAnnotations.initMocks(this);
     setupCommonMocks();
 
+    AppService appService = mock(AppService.class);
+    when(appService.getAccountIdByAppId(anyString())).thenReturn(generateUuid());
+    when(appService.get(anyString()))
+        .thenReturn(Application.Builder.anApplication().name(generateUuid()).accountId(accountId).build());
+
+    AccountService accountService = mock(AccountService.class);
+    when(accountService.getAccountType(anyString())).thenReturn(Optional.of(AccountType.PAID));
+
     splunkState = new SplunkV2State("SplunkState");
     splunkState.setQuery("exception");
     splunkState.setTimeDuration("15");
-    FieldUtils.writeField(splunkState, "appService", appService, true);
+    FieldUtils.writeField(splunkState, "appService", this.appService, true);
     FieldUtils.writeField(splunkState, "configuration", configuration, true);
     FieldUtils.writeField(splunkState, "analysisService", analysisService, true);
     FieldUtils.writeField(splunkState, "settingsService", settingsService, true);
@@ -78,6 +93,8 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     FieldUtils.writeField(splunkState, "workflowExecutionBaselineService", workflowExecutionBaselineService, true);
     FieldUtils.writeField(splunkState, "featureFlagService", featureFlagService, true);
     FieldUtils.writeField(splunkState, "versionInfoManager", versionInfoManager, true);
+    FieldUtils.writeField(splunkState, "appService", appService, true);
+    FieldUtils.writeField(splunkState, "accountService", accountService, true);
   }
 
   @Test
@@ -168,7 +185,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
 
   @Test
   @Category(UnitTests.class)
-  public void testTriggerCollection() throws ParseException {
+  public void testTriggerCollection() throws ParseException, IllegalAccessException {
     assertEquals(0, wingsPersistence.createQuery(DelegateTask.class).count());
     SplunkConfig splunkConfig = SplunkConfig.builder()
                                     .accountId(accountId)
