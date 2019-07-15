@@ -17,11 +17,12 @@ public class CloudProviderUtils {
             .withCategory(SettingCategory.CLOUD_PROVIDER)
             .withName(cloudPrividerName)
             .withAccountId(accountId)
-            .withValue(AwsConfig.builder()
-                           .accessKey(new ScmSecret().decryptToString(new SecretName("aws_playground_access_key")))
-                           .secretKey(new ScmSecret().decryptToCharArray(new SecretName("aws_playground_secret_key")))
-                           .accountId(accountId)
-                           .build())
+            .withValue(
+                AwsConfig.builder()
+                    .accessKey(new ScmSecret().decryptToString(new SecretName("qe_aws_playground_access_key")))
+                    .secretKey(new ScmSecret().decryptToCharArray(new SecretName("qe_aws_playground_secret_key")))
+                    .accountId(accountId)
+                    .build())
             .build();
 
     JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
