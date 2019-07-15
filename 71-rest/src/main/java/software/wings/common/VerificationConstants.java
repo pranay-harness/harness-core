@@ -105,6 +105,7 @@ public class VerificationConstants {
   public static final int DEFAULT_DATA_COLLECTION_INTERVAL_IN_SECONDS = 60;
   public static final int DEFAULT_LE_AUTOSCALE_DATA_COLLECTION_INTERVAL_IN_SECONDS = 60;
   public static final int CV_CONFIGURATION_VALID_LIMIT_IN_DAYS = 7;
+  public static final int TIME_DURATION_FOR_LOGS_IN_MINUTES = 15;
 
   public static final String DATA_COLLECTION_TASKS_PER_MINUTE = "data_collection_tasks_per_min";
   public static final String LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS =

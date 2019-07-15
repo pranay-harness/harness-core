@@ -2,6 +2,7 @@ package software.wings.service.impl.elk;
 
 import static io.harness.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.common.VerificationConstants.TIME_DURATION_FOR_LOGS_IN_MINUTES;
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
@@ -42,8 +43,6 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 @Slf4j
 public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAnalysisService {
-  private static final int FETCH_ELK_LOGS_FOR_MINUTES = 15;
-
   @Inject private MLServiceUtils mlServiceUtils;
 
   @Override
@@ -96,7 +95,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
             .messageField(elkSetupTestNodeData.getMessageField())
             .timestampField(elkSetupTestNodeData.getTimeStampField())
             .startTime(TimeUnit.SECONDS.toMillis(
-                OffsetDateTime.now().minusMinutes(FETCH_ELK_LOGS_FOR_MINUTES + 2).toEpochSecond()))
+                OffsetDateTime.now().minusMinutes(TIME_DURATION_FOR_LOGS_IN_MINUTES + 2).toEpochSecond()))
             .endTime(TimeUnit.SECONDS.toMillis(OffsetDateTime.now().minusMinutes(2).toEpochSecond()))
             .queryType(elkSetupTestNodeData.getQueryType())
             .build();
@@ -117,7 +116,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
       return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
     }
 
-    long totalHitsPerMinute = parseTotalHits(responseWithoutHost) / FETCH_ELK_LOGS_FOR_MINUTES;
+    long totalHitsPerMinute = parseTotalHits(responseWithoutHost) / TIME_DURATION_FOR_LOGS_IN_MINUTES;
     List<LogElement> logElementsWithoutHost = parseElkResponse(responseWithoutHost, elkSetupTestNodeData.getQuery(),
         elkSetupTestNodeData.getTimeStampField(), elkSetupTestNodeData.getTimeStampFieldFormat(),
         elkSetupTestNodeData.getHostNameField(),
@@ -223,7 +222,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
               .messageField(messageField)
               .timestampField(timestampField)
               .startTime(TimeUnit.SECONDS.toMillis(
-                  OffsetDateTime.now().minusMinutes(FETCH_ELK_LOGS_FOR_MINUTES + 2).toEpochSecond()))
+                  OffsetDateTime.now().minusMinutes(TIME_DURATION_FOR_LOGS_IN_MINUTES + 2).toEpochSecond()))
               .endTime(TimeUnit.SECONDS.toMillis(OffsetDateTime.now().minusMinutes(2).toEpochSecond()))
               .queryType(ElkQueryType.MATCH)
               .build();
@@ -238,7 +237,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
           delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
               .search((ElkConfig) settingAttribute.getValue(), encryptedDataDetails, elkFetchRequestWithoutHost,
                   createApiCallLog(settingAttribute.getAccountId(), appId, guid), 5);
-      long totalHitsPerMinute = parseTotalHits(responseWithoutHost) / FETCH_ELK_LOGS_FOR_MINUTES;
+      long totalHitsPerMinute = parseTotalHits(responseWithoutHost) / TIME_DURATION_FOR_LOGS_IN_MINUTES;
       if (totalHitsPerMinute >= VerificationConstants.TOTAL_HITS_PER_MIN_THRESHOLD) {
         throw new WingsException(
             ErrorCode.ELK_CONFIGURATION_ERROR, "Too many logs to process, please refine your query")

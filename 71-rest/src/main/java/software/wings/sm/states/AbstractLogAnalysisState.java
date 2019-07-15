@@ -543,6 +543,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .collectionTime(Integer.parseInt(getTimeDuration()))
             .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
             .query(getRenderedQuery())
+            .initialDelayMinutes(0)
             .build();
       default:
         return null;

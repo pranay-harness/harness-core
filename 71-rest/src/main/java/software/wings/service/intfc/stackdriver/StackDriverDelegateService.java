@@ -1,10 +1,13 @@
 package software.wings.service.intfc.stackdriver;
 
+import com.google.api.services.logging.v2.model.LogEntry;
+
 import software.wings.beans.GcpConfig;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.stackdriver.StackDriverNameSpace;
 import software.wings.service.impl.stackdriver.StackDriverSetupTestNodeData;
@@ -12,6 +15,7 @@ import software.wings.service.impl.stackdriver.StackDriverSetupTestNodeData;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -37,4 +41,13 @@ public interface StackDriverDelegateService {
   long getTimeStamp(String data);
 
   String getDateFormatTime(long time);
+
+  List<LogEntry> fetchLogs(String query, long startTime, long endTime, ThirdPartyApiCallLog apiCallLog,
+      Set<String> hosts, String hostnameField, GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
+      boolean is24X7Task);
+
+  @DelegateTaskType(TaskType.STACKDRIVER_LOG_DATA_FOR_NODE)
+  List<LogElement> getLogWithDataForNode(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String query,
+      long startTime, long endTime, ThirdPartyApiCallLog apiCallLog, Set<String> hosts, String hostnameField,
+      long logCollectionMinute, boolean is24X7Task);
 }

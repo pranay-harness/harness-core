@@ -212,6 +212,7 @@ public enum TaskType {
   STACKDRIVER_COLLECT_METRIC_DATA(
       TaskGroup.STACKDRIVER, StackDriverDataCollectionTask.class, StackDriverValidation.class),
   STACKDRIVER_METRIC_DATA_FOR_NODE(TaskGroup.STACKDRIVER, ServiceImplDelegateTask.class, StackDriverValidation.class),
+  STACKDRIVER_LOG_DATA_FOR_NODE(TaskGroup.STACKDRIVER, ServiceImplDelegateTask.class, StackDriverValidation.class),
   STACKDRIVER_LIST_REGIONS(TaskGroup.STACKDRIVER, ServiceImplDelegateTask.class, StackDriverValidation.class),
   STACKDRIVER_LIST_FORWARDING_RULES(TaskGroup.STACKDRIVER, ServiceImplDelegateTask.class, StackDriverValidation.class),
   STACKDRIVER_COLLECT_24_7_METRIC_DATA(

@@ -7,5 +7,6 @@ public interface CvValidationService {
   Boolean validateELKQuery(String accountId, String appId, String settingId, String query, String index,
       String hostnameField, String messageField, String timestampField);
 
-  Boolean validateStackdriverQuery(String accountId, String appId, String connectorId, String query);
+  Boolean validateStackdriverQuery(
+      String accountId, String appId, String connectorId, String query, String hostNameField);
 }
