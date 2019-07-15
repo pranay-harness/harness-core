@@ -27,6 +27,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.rules.SetupScheduler;
+import software.wings.service.impl.yaml.HarnessTagYamlHelper;
 import software.wings.service.impl.yaml.handler.app.ApplicationYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
@@ -42,6 +43,7 @@ public class ApplicationYamlHandlerTest extends BaseYamlHandlerTest {
   @InjectMocks @Inject AppService appService;
   @InjectMocks @Inject private ApplicationYamlHandler yamlHandler;
   @Mock private LimitCheckerFactory limitCheckerFactory;
+  @Mock private HarnessTagYamlHelper harnessTagYamlHelper;
 
   private final String APP_NAME = "app1";
   private Application application;

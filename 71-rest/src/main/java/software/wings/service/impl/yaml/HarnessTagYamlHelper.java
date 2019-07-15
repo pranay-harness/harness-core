@@ -2,21 +2,29 @@ package software.wings.service.impl.yaml;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.tags.TagAware;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.Application;
 import software.wings.beans.EntityType;
+import software.wings.beans.Environment;
 import software.wings.beans.HarnessTagLink;
+import software.wings.beans.InfrastructureProvisioner;
+import software.wings.beans.Pipeline;
+import software.wings.beans.Service;
+import software.wings.beans.Workflow;
+import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.HarnessTagService;
-import software.wings.service.intfc.ResourceLookupService;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
@@ -30,7 +38,6 @@ import java.util.Map.Entry;
 @Slf4j
 public class HarnessTagYamlHelper {
   @Inject HarnessTagService harnessTagService;
-  @Inject ResourceLookupService resourceLookupService;
   @Inject AppService appService;
 
   public void updateYamlWithHarnessTags(PersistentEntity entity, String appId, BaseEntityYaml yaml) {
@@ -75,7 +82,6 @@ public class HarnessTagYamlHelper {
 
     String entityId = ((UuidAware) entity).getUuid();
     List<HarnessTagLink> tagLinks = harnessTagService.getTagLinksWithEntityId(accountId, entityId);
-    String entityType = resourceLookupService.getWithResourceId(accountId, entityId).getResourceType();
 
     Map<String, String> tagsFromDB = new HashMap<>();
     tagLinks.forEach(harnessTagLink -> tagsFromDB.put(harnessTagLink.getKey(), harnessTagLink.getValue()));
@@ -108,10 +114,12 @@ public class HarnessTagYamlHelper {
       String tagKey = entry.getKey();
       String tagValue = entry.getValue();
 
+      EntityType entityType = getEntityType(entity);
+
       HarnessTagLink harnessTagLink = HarnessTagLink.builder()
                                           .accountId(accountId)
                                           .entityId(entityId)
-                                          .entityType(EntityType.valueOf(entityType))
+                                          .entityType(entityType)
                                           .key(tagKey)
                                           .value(tagValue)
                                           .build();
@@ -130,5 +138,25 @@ public class HarnessTagYamlHelper {
 
     boolean syncFromGit = changeContext.getChange().isSyncFromGit();
     harnessTagService.pushToGit(accountId, entityId, syncFromGit);
+  }
+
+  private EntityType getEntityType(PersistentEntity entity) {
+    if (entity instanceof Application) {
+      return EntityType.APPLICATION;
+    } else if (entity instanceof Service) {
+      return EntityType.SERVICE;
+    } else if (entity instanceof Environment) {
+      return EntityType.ENVIRONMENT;
+    } else if (entity instanceof Workflow) {
+      return EntityType.WORKFLOW;
+    } else if (entity instanceof Pipeline) {
+      return EntityType.PIPELINE;
+    } else if (entity instanceof Trigger) {
+      return EntityType.TRIGGER;
+    } else if (entity instanceof InfrastructureProvisioner) {
+      return EntityType.PROVISIONER;
+    } else {
+      throw new InvalidRequestException("Unhandled entity " + entity.getClass().getSimpleName(), USER);
+    }
   }
 }

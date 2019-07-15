@@ -120,4 +120,6 @@ public interface AuthService extends OwnedByAccount {
   void checkIfUserCanCloneWorkflowToOtherApp(String targetAppId, Workflow workflow);
 
   void checkPipelinePermissionsForEnv(String appId, Pipeline pipeline, Action action);
+
+  void authorizeAppAccess(String accountId, String appId, User user, Action action);
 }
