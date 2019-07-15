@@ -47,66 +47,70 @@ public class MigrateTimeSeriesRawDataToGoogle implements Migration {
     long startTime = Timestamp.currentMinuteBoundary() - TimeUnit.DAYS.toMillis(180);
     List<TimeSeriesRawData> rawData = new ArrayList<>();
 
-    Query<ContinuousVerificationExecutionMetaData> cvExecutionQuery =
-        wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class, excludeAuthority)
-            .field(ContinuousVerificationExecutionMetaDataKeys.workflowStartTs)
-            .greaterThanOrEq(startTime);
+    try {
+      Query<ContinuousVerificationExecutionMetaData> cvExecutionQuery =
+          wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class, excludeAuthority)
+              .field(ContinuousVerificationExecutionMetaDataKeys.workflowStartTs)
+              .greaterThanOrEq(startTime);
 
-    // Map of (account id, Map of (state execution id, Pair (execution status, service id)))
-    Map<String, Map<String, Pair<ExecutionStatus, String>>> cvExecutionRecordMap = new HashMap<>();
-    try (HIterator<ContinuousVerificationExecutionMetaData> records = new HIterator<>(cvExecutionQuery.fetch())) {
-      while (records.hasNext()) {
-        ContinuousVerificationExecutionMetaData record = records.next();
-        if (VerificationConstants.getMetricAnalysisStates().contains(record.getStateType())) {
-          if (!cvExecutionRecordMap.containsKey(record.getAccountId())) {
-            cvExecutionRecordMap.put(record.getAccountId(), new HashMap<>());
-          }
-          cvExecutionRecordMap.get(record.getAccountId())
-              .put(record.getStateExecutionId(), new Pair<>(record.getExecutionStatus(), record.getServiceId()));
-        }
-      }
-    }
-
-    for (Map.Entry<String, Map<String, Pair<ExecutionStatus, String>>> executionRecords :
-        cvExecutionRecordMap.entrySet()) {
-      String accountId = executionRecords.getKey();
-      Query<TimeSeriesMLAnalysisRecord> query =
-          wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
-              .field("stateExecutionId")
-              .in(executionRecords.getValue().keySet())
-              .order("stateExecutionId");
-
-      Map<String, Map<String, TimeSeriesRawData>> rawDataMap = new HashMap<>();
-      String previousStateExecutionId = null;
-
-      try (HIterator<TimeSeriesMLAnalysisRecord> records = new HIterator<>(query.fetch())) {
+      // Map of (account id, Map of (state execution id, Pair (execution status, service id)))
+      Map<String, Map<String, Pair<ExecutionStatus, String>>> cvExecutionRecordMap = new HashMap<>();
+      try (HIterator<ContinuousVerificationExecutionMetaData> records = new HIterator<>(cvExecutionQuery.fetch())) {
         while (records.hasNext()) {
-          TimeSeriesMLAnalysisRecord record = records.next();
-
-          if (previousStateExecutionId == null) {
-            previousStateExecutionId = record.getStateExecutionId();
-          }
-
-          if (!previousStateExecutionId.equals(record.getStateExecutionId())) {
-            rawDataMap.values().forEach(metricMap -> rawData.addAll(metricMap.values()));
-            rawDataMap = new HashMap<>();
-            previousStateExecutionId = record.getStateExecutionId();
-          }
-
-          Pair<ExecutionStatus, String> cvMetaData = executionRecords.getValue().get(record.getStateExecutionId());
-          TimeSeriesRawData.populateRawDataFromAnalysisRecords(
-              record, accountId, cvMetaData.getKey(), rawDataMap, cvMetaData.getValue());
-          // rawData.addAll(rawDataForCurrentRecord);
-          if (rawData.size() >= 1000) {
-            dataStoreService.save(TimeSeriesRawData.class, rawData, true);
-            logger.info("Copied {} raw data records from Mongo to GoogleDataStore", rawData.size());
-            rawData.clear();
-            sleep(ofMillis(1500));
+          ContinuousVerificationExecutionMetaData record = records.next();
+          if (VerificationConstants.getMetricAnalysisStates().contains(record.getStateType())) {
+            if (!cvExecutionRecordMap.containsKey(record.getAccountId())) {
+              cvExecutionRecordMap.put(record.getAccountId(), new HashMap<>());
+            }
+            cvExecutionRecordMap.get(record.getAccountId())
+                .put(record.getStateExecutionId(), new Pair<>(record.getExecutionStatus(), record.getServiceId()));
           }
         }
       }
+
+      for (Map.Entry<String, Map<String, Pair<ExecutionStatus, String>>> executionRecords :
+          cvExecutionRecordMap.entrySet()) {
+        String accountId = executionRecords.getKey();
+        Query<TimeSeriesMLAnalysisRecord> query =
+            wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
+                .field("stateExecutionId")
+                .in(executionRecords.getValue().keySet())
+                .order("stateExecutionId");
+
+        Map<String, Map<String, TimeSeriesRawData>> rawDataMap = new HashMap<>();
+        String previousStateExecutionId = null;
+
+        try (HIterator<TimeSeriesMLAnalysisRecord> records = new HIterator<>(query.fetch())) {
+          while (records.hasNext()) {
+            TimeSeriesMLAnalysisRecord record = records.next();
+
+            if (previousStateExecutionId == null) {
+              previousStateExecutionId = record.getStateExecutionId();
+            }
+
+            if (!previousStateExecutionId.equals(record.getStateExecutionId())) {
+              rawDataMap.values().forEach(metricMap -> rawData.addAll(metricMap.values()));
+              rawDataMap = new HashMap<>();
+              previousStateExecutionId = record.getStateExecutionId();
+            }
+
+            Pair<ExecutionStatus, String> cvMetaData = executionRecords.getValue().get(record.getStateExecutionId());
+            TimeSeriesRawData.populateRawDataFromAnalysisRecords(
+                record, accountId, cvMetaData.getKey(), rawDataMap, cvMetaData.getValue());
+            // rawData.addAll(rawDataForCurrentRecord);
+            if (rawData.size() >= 1000) {
+              dataStoreService.save(TimeSeriesRawData.class, rawData, true);
+              logger.info("Copied {} raw data records from Mongo to GoogleDataStore", rawData.size());
+              rawData.clear();
+              sleep(ofMillis(1500));
+            }
+          }
+        }
+      }
+      dataStoreService.save(TimeSeriesRawData.class, rawData, true);
+      logger.info("Copied {} raw data records from Mongo to GoogleDataStore", rawData.size());
+    } catch (Exception e) {
+      logger.error("Exception occurred while migrate time series raw data to GDS", e);
     }
-    dataStoreService.save(TimeSeriesRawData.class, rawData, true);
-    logger.info("Copied {} raw data records from Mongo to GoogleDataStore", rawData.size());
   }
 }
