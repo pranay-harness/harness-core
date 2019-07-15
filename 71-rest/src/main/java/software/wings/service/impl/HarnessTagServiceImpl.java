@@ -7,6 +7,7 @@ import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.beans.EntityType.APPLICATION;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.PIPELINE;
 import static software.wings.beans.EntityType.PROVISIONER;
@@ -34,12 +35,16 @@ import software.wings.beans.HarnessTag.HarnessTagKeys;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.HarnessTagLink.HarnessTagLinkKeys;
 import software.wings.beans.ResourceLookup;
+import software.wings.beans.User;
 import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
@@ -71,9 +76,11 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   @Inject private PipelineService pipelineService;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject private TriggerService triggerService;
+  @Inject private AuthService authService;
+  @Inject private AppService appService;
 
   private static final Set<EntityType> supportedEntityTypes =
-      ImmutableSet.of(SERVICE, ENVIRONMENT, WORKFLOW, PROVISIONER, PIPELINE, TRIGGER);
+      ImmutableSet.of(SERVICE, ENVIRONMENT, WORKFLOW, PROVISIONER, PIPELINE, TRIGGER, APPLICATION);
 
   private static int MAX_TAG_KEY_LENGTH = 128;
   private static int MAX_TAG_VALUE_LENGTH = 256;
@@ -370,10 +377,20 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   private void validateResourceAccess(String appId, HarnessTagLink tagLink, Action action) {
     notNullCheck("appId cannot be null", appId);
 
+    if (EntityType.APPLICATION.equals(tagLink.getEntityType())) {
+      authorizeApplication(appId, tagLink, action);
+      return;
+    }
+
     if (EntityType.TRIGGER.equals(tagLink.getEntityType())) {
-      // ToDo anshul We check for deployment permission for update and read action type.
-      // For Read action (list tags), this should use different authorization
-      authorizeTriggers(appId, tagLink);
+      // For Read action, we check if the user has access to App or not.
+      // This is consistent with what is done in trigger resource list
+      if (Action.READ.equals(action)) {
+        authorizeApplication(appId, tagLink, action);
+      } else {
+        authorizeTriggers(appId, tagLink);
+      }
+
       return;
     }
 
@@ -389,6 +406,12 @@ public class HarnessTagServiceImpl implements HarnessTagService {
       throw new WingsException("Trigger does not exist", USER);
     }
     triggerService.authorize(existingTrigger, true);
+  }
+
+  private void authorizeApplication(String appId, HarnessTagLink tagLink, Action action) {
+    User user = UserThreadLocal.get();
+
+    authService.authorizeAppAccess(tagLink.getAccountId(), appId, user, action);
   }
 
   private PermissionType getPermissionType(EntityType entityType) {
@@ -461,6 +484,9 @@ public class HarnessTagServiceImpl implements HarnessTagService {
 
       case TRIGGER:
         return triggerService.get(resourceLookup.getAppId(), resourceLookup.getResourceId());
+
+      case APPLICATION:
+        return appService.get(resourceLookup.getResourceId(), false);
 
       default:
         unhandled(entityType);

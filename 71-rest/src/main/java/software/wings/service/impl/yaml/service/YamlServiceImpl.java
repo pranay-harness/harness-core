@@ -632,7 +632,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       yamlSyncHandler.upsertFromYaml(changeContext, changeContextList);
 
       // Handling for tags
-      // harnessTagYamlHelper.upsertTagsIfRequired(changeContext);
+      harnessTagYamlHelper.upsertTagsIfRequired(changeContext);
 
     } catch (WingsException e) {
       if (e.getCode() == ErrorCode.USAGE_LIMITS_EXCEEDED) {

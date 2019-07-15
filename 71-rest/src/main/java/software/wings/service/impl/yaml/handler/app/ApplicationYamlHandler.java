@@ -41,11 +41,14 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
 
   @Override
   public Application.Yaml toYaml(Application application, String appId) {
-    return Application.Yaml.builder()
-        .type(APPLICATION.name())
-        .description(application.getDescription())
-        .harnessApiVersion(getHarnessApiVersion())
-        .build();
+    Yaml yaml = Yaml.builder()
+                    .type(APPLICATION.name())
+                    .description(application.getDescription())
+                    .harnessApiVersion(getHarnessApiVersion())
+                    .build();
+
+    updateYamlWithAdditionalInfo(application, appId, yaml);
+    return yaml;
   }
 
   @Override
@@ -61,6 +64,7 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
 
     current.setSyncFromGit(changeContext.getChange().isSyncFromGit());
 
+    Application updatedApplication;
     if (previous != null) {
       current.setUuid(previous.getUuid());
       current.setAppId(previous.getUuid());
@@ -69,7 +73,7 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
       YamlGitConfig yamlGitConfig = yamlGitService.get(accountId, current.getUuid(), EntityType.APPLICATION);
       current.setYamlGitConfig(yamlGitConfig);
 
-      return appService.update(current);
+      updatedApplication = appService.update(current);
     } else {
       YamlGitConfig yamlGitConfig = null;
 
@@ -78,8 +82,11 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
       }
       current.setYamlGitConfig(createAppYamlGitConfig(accountId, yamlGitConfig));
 
-      return appService.save(current);
+      updatedApplication = appService.save(current);
     }
+
+    changeContext.setEntity(updatedApplication);
+    return updatedApplication;
   }
 
   @Override

@@ -57,6 +57,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.Key;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
@@ -76,8 +77,10 @@ import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.AccountPermissionSummary;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
+import software.wings.security.AppPermissionSummaryForUI;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.GenericEntityFilter.FilterType;
 import software.wings.security.PermissionAttribute;
@@ -290,6 +293,19 @@ public class AuthServiceImpl implements AuthService {
 
   private void authorize(String accountId, String appId, String entityId, User user,
       List<PermissionAttribute> permissionAttributes, boolean accountNullCheck) {
+    UserPermissionInfo userPermissionInfo = authorizeAndGetUserPermissionInfo(accountId, appId, user, accountNullCheck);
+
+    for (PermissionAttribute permissionAttribute : permissionAttributes) {
+      if (!authorizeAccessType(appId, entityId, permissionAttribute, userPermissionInfo)) {
+        logger.warn("User {} not authorized to access requested resource: {}", user.getName(), entityId);
+        throw new WingsException(ACCESS_DENIED, USER);
+      }
+    }
+  }
+
+  @NotNull
+  private UserPermissionInfo authorizeAndGetUserPermissionInfo(
+      String accountId, String appId, User user, boolean accountNullCheck) {
     if (!accountNullCheck) {
       if (accountId == null || dbCache.get(Account.class, accountId) == null) {
         logger.error("Auth Failure: non-existing accountId: {}", accountId);
@@ -318,13 +334,7 @@ public class AuthServiceImpl implements AuthService {
       logger.error("User permission info null for User {}", user.getName());
       throw new WingsException(ACCESS_DENIED, USER);
     }
-
-    for (PermissionAttribute permissionAttribute : permissionAttributes) {
-      if (!authorizeAccessType(appId, entityId, permissionAttribute, userPermissionInfo)) {
-        logger.warn("User {} not authorized to access requested resource: {}", user.getName(), entityId);
-        throw new WingsException(ACCESS_DENIED, USER);
-      }
-    }
+    return userPermissionInfo;
   }
 
   @Override
@@ -1136,6 +1146,27 @@ public class AuthServiceImpl implements AuthService {
 
     if (!authHandler.checkIfPipelineHasOnlyGivenEnvs(pipeline, allowedEnvIds)) {
       throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
+    }
+  }
+
+  @Override
+  public void authorizeAppAccess(String accountId, String appId, User user, Action action) {
+    UserPermissionInfo userPermissionInfo = authorizeAndGetUserPermissionInfo(accountId, appId, user, false);
+
+    Map<String, AppPermissionSummaryForUI> appPermissionMap = userPermissionInfo.getAppPermissionMap();
+    if (appPermissionMap == null || !appPermissionMap.containsKey(appId)) {
+      logger.error("Auth Failure: User does not have access to app {}", appId);
+      throw new WingsException(ACCESS_DENIED, USER);
+    }
+
+    if (Action.UPDATE.equals(action)) {
+      AccountPermissionSummary accountPermissionSummary = userPermissionInfo.getAccountPermissionSummary();
+
+      if (accountPermissionSummary == null || isEmpty(accountPermissionSummary.getPermissions())
+          || !accountPermissionSummary.getPermissions().contains(APPLICATION_CREATE_DELETE)) {
+        logger.error("Auth Failure: User does not have access to update {}", appId);
+        throw new WingsException(ACCESS_DENIED, USER);
+      }
     }
   }
 }
