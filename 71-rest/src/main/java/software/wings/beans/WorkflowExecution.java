@@ -117,6 +117,8 @@ public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAt
 
   private Long startTs;
   private Long endTs;
+  // Pre-calculated difference from endTs and startTs for indexing purposes
+  private Long duration;
 
   private EmbeddedUser triggeredBy;
 

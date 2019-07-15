@@ -6,6 +6,7 @@ package software.wings.service.impl;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.mongo.MongoUtils.setUnset;
 import static java.util.Collections.emptySet;
 
 import com.google.inject.Inject;
@@ -127,34 +128,28 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
 
   @Override
   public void callback(ExecutionContext context, ExecutionStatus status, Exception ex) {
+    final WorkflowExecution execution = wingsPersistence.createQuery(WorkflowExecution.class)
+                                            .filter(WorkflowExecutionKeys.appId, appId)
+                                            .filter(WorkflowExecutionKeys.uuid, workflowExecutionId)
+                                            .project(WorkflowExecutionKeys.startTs, true)
+                                            .get();
+
+    Long startTs = execution == null ? null : execution.getStartTs();
+    Long endTs = startTs == null ? null : System.currentTimeMillis();
+    Long duration = startTs == null ? null : endTs - startTs;
+
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
                                          .filter(WorkflowExecutionKeys.appId, appId)
                                          .filter(WorkflowExecutionKeys.uuid, workflowExecutionId)
-                                         .field(WorkflowExecutionKeys.startTs)
-                                         .exists()
                                          .field(WorkflowExecutionKeys.status)
                                          .in(ExecutionStatus.runningStatuses());
 
-    UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
-                                                        .set(WorkflowExecutionKeys.status, status)
-                                                        .set(WorkflowExecutionKeys.endTs, System.currentTimeMillis());
+    UpdateOperations<WorkflowExecution> updateOps =
+        wingsPersistence.createUpdateOperations(WorkflowExecution.class).set(WorkflowExecutionKeys.status, status);
+    setUnset(updateOps, WorkflowExecutionKeys.endTs, endTs);
+    setUnset(updateOps, WorkflowExecutionKeys.duration, duration);
 
-    // Lets optimistically try to update the workflow status and the end ts, but if we failed, likely the workflow
-    // did not even started
-    if (wingsPersistence.findAndModify(query, updateOps, callbackFindAndModifyOptions) == null) {
-      query = wingsPersistence.createQuery(WorkflowExecution.class)
-                  .filter(WorkflowExecutionKeys.appId, appId)
-                  .filter(WorkflowExecutionKeys.uuid, workflowExecutionId)
-                  .field(WorkflowExecutionKeys.status)
-                  .in(ExecutionStatus.runningStatuses());
-
-      updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
-                      .set(WorkflowExecutionKeys.status, status)
-                      .unset(WorkflowExecutionKeys.startTs)
-                      .unset(WorkflowExecutionKeys.endTs);
-
-      wingsPersistence.update(query, updateOps);
-    }
+    wingsPersistence.findAndModify(query, updateOps, callbackFindAndModifyOptions);
 
     handlePostExecution(context);
 
