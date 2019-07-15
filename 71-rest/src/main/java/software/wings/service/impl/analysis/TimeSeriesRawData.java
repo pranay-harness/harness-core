@@ -2,7 +2,6 @@ package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.addFieldIfNotEmpty;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.readList;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.readLong;
@@ -36,6 +35,8 @@ import java.util.Map;
 @FieldNameConstants(innerTypeName = "TimeSeriesRawDataKeys")
 @Slf4j
 public class TimeSeriesRawData implements GoogleDataStoreAware {
+  public static final String connector = ":";
+
   @Inject private DataStoreService dataStoreService;
 
   @Id private String uuid;
@@ -55,11 +56,15 @@ public class TimeSeriesRawData implements GoogleDataStoreAware {
   private Long createdAt;
   private Long lastUpdatedAt;
 
+  private String getKey() {
+    return String.join(connector, stateExecutionId, transactionName, metricName);
+  }
+
   @Override
   public Entity convertToCloudStorageEntity(Datastore datastore) {
     Key taskKey = datastore.newKeyFactory()
                       .setKind(this.getClass().getAnnotation(org.mongodb.morphia.annotations.Entity.class).value())
-                      .newKey(generateUuid());
+                      .newKey(getKey());
     com.google.cloud.datastore.Entity.Builder recordBuilder = com.google.cloud.datastore.Entity.newBuilder(taskKey);
     addFieldIfNotEmpty(recordBuilder, TimeSeriesRawDataKeys.accountId, accountId, false);
     addFieldIfNotEmpty(recordBuilder, TimeSeriesRawDataKeys.appId, appId, false);
