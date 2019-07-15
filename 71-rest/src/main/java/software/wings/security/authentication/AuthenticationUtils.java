@@ -1,5 +1,6 @@
 package software.wings.security.authentication;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.USER_DISABLED;
 import static io.harness.exception.WingsException.USER;
@@ -17,6 +18,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 
 import java.net.URI;
@@ -30,6 +32,7 @@ public class AuthenticationUtils {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;
   @Inject private MainConfiguration configuration;
+  @Inject private AccountService accountService;
 
   public User getUserOrReturnNullIfUserDoesNotExists(String userName) {
     if (Strings.isNullOrEmpty(userName)) {
@@ -62,7 +65,12 @@ public class AuthenticationUtils {
   }
 
   public Account getPrimaryAccount(User user) {
-    return user.getAccounts().get(0);
+    String primaryAccountId = user.getDefaultAccountId();
+    if (isEmpty(primaryAccountId)) {
+      return user.getAccounts().get(0);
+    } else {
+      return accountService.get(primaryAccountId);
+    }
   }
 
   public URI buildAbsoluteUrl(String baseUrl, String path, Map<String, String> params) {
