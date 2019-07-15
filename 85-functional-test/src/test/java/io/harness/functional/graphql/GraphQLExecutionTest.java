@@ -9,7 +9,6 @@ import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
-import static software.wings.graphql.scalar.GraphQLDateTimeScalar.convertToString;
 import static software.wings.sm.StateType.ENV_STATE;
 
 import com.google.common.collect.ImmutableMap;
@@ -106,20 +105,19 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
     WorkflowExecution workflowExecution2 = executeWorkflow(workflow, application, environment);
 
     {
-      String query = $GQL(/*
+      String query =
+          $GQL(/*
 {
-  executions(workflowId: "%s", limit: 5, from: "%s", to: "%s") {
-     pageInfo {
-       total
-     }
-     nodes {
-       id
-     }
-  }
-}*/ workflow.getUuid(), convertToString(workflowExecution1.getCreatedAt()),
-          convertToString(workflowExecution2.getCreatedAt()));
+executions(filters:[{type:Workflow,stringFilter:{operator:EQUALS,values:["%s"]}},{type:CreatedAt,numberFilter:{operator:GREATER_THAN_OR_EQUALS,values:[%s]}},{type:CreatedAt,numberFilter:{operator:LESS_THAN_OR_EQUALS,values:[%s]}}]
+limit: 5) { pageInfo { total
+}
+nodes {
+id
+}
+}
+}*/ workflow.getUuid(), workflowExecution1.getCreatedAt(), workflowExecution2.getCreatedAt());
       final QLTestObject qlTestObject = qlExecute(query, application.getAccountId());
-      assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total)).isEqualTo(1);
+      assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total)).isEqualTo(2);
     }
   }
 
@@ -199,7 +197,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
     {
       String query = $GQL(/*
 {
-  executions(workflowId: "%s", limit: 5) {
+  executions(filters:[{type:Workflow,stringFilter:{operator:EQUALS,values:["%s"]}}], limit: 5) {
     pageInfo {
       total
     }
@@ -218,7 +216,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
     {
       String query = $GQL(/*
 {
-  executions(workflowId: "%s", limit: 5) {
+  executions(filters:[{type:Workflow,stringFilter:{operator:EQUALS,values:["%s"]}}], limit: 5) {
     pageInfo {
       total
     }
@@ -230,23 +228,6 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
 
       final QLTestObject qlTestObject = qlExecute(query, accountId);
       assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total)).isEqualTo(2);
-    }
-
-    {
-      String query = $GQL(/*
-{
-  workflow(workflowId: "%s") {
-    executions(limit: 2) {
-      nodes {
-        id
-      }
-    }
-  }
-}*/ workflow.getUuid());
-
-      final QLTestObject qlTestObject = qlExecute(query, accountId);
-
-      assertThat(qlTestObject.sub("executions").sub("nodes").size()).isEqualTo(2);
     }
   }
 
@@ -345,7 +326,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
     {
       String query = $GQL(/*
 {
-  executions(pipelineId: "%s", limit: 5) {
+  executions(filters:[{type:Pipeline,stringFilter:{operator:EQUALS,values:["%s"]}}], limit: 5) {
     pageInfo {
       total
     }
@@ -364,7 +345,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
     {
       String query = $GQL(/*
 {
-  executions(pipelineId: "%s", limit: 5) {
+  executions(filters:[{type:Pipeline,stringFilter:{operator:EQUALS,values:["%s"]}}], limit: 5) {
     pageInfo {
       total
     }
@@ -376,23 +357,6 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
 
       final QLTestObject qlTestObject = qlExecute(query, accountId);
       assertThat(qlTestObject.sub(QLExecutionConnectionKeys.pageInfo).get(QLPageInfoKeys.total)).isEqualTo(2);
-    }
-
-    {
-      String query = $GQL(/*
-{
-  pipeline(pipelineId: "%s") {
-    executions(limit: 2) {
-      nodes {
-        id
-      }
-    }
-  }
-}*/ pipeline.getUuid());
-
-      final QLTestObject qlTestObject = qlExecute(query, accountId);
-
-      assertThat(qlTestObject.sub("executions").sub("nodes").size()).isEqualTo(2);
     }
 
     {

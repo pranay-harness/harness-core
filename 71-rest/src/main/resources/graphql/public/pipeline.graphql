@@ -28,9 +28,6 @@ type Pipeline {
 
   createdAt: DateTime
   createdBy: User
-
-  executions(limit: Int!, offset: Int, statuses: [ExecutionStatus], from: DateTime, to: DateTime): ExecutionConnection
-    @dataFetcher(name: executionConnection, contextFieldArgsMap: "{ \"pipelineId\": \"id\"}")
 }
 
 type PipelineConnection {
