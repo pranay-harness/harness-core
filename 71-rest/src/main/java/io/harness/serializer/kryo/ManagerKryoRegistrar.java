@@ -68,6 +68,8 @@ import software.wings.api.ServiceElement;
 import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.api.ServiceNowExecutionData;
+import software.wings.api.ServiceNowImportSetResponse;
+import software.wings.api.ServiceNowImportSetResult;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.ShellScriptApprovalExecutionData;
 import software.wings.api.SimpleWorkflowParam;
@@ -1301,5 +1303,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ServiceEvent.class, 7209);
     kryo.register(Service.class, 7210);
     kryo.register(DeploymentConfiguration.class, 7211);
+    kryo.register(ServiceNowImportSetResponse.class, 7212);
+    kryo.register(ServiceNowImportSetResult.class, 7213);
   }
 }

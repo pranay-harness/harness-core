@@ -13,6 +13,7 @@ import io.harness.network.Http;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.text.WordUtils;
 import retrofit2.Call;
 import retrofit2.Converter;
 import retrofit2.Response;
@@ -173,7 +174,7 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
         for (JsonNode fieldObj : responseObj) {
           if (!alreadySupportedFieldNames.contains(fieldObj.get("name").textValue())) {
             ServiceNowMetaDTO field = ServiceNowMetaDTO.builder()
-                                          .displayName(fieldObj.get("label").textValue())
+                                          .displayName(WordUtils.capitalizeFully(fieldObj.get("label").textValue()))
                                           .id(fieldObj.get("name").textValue())
                                           .build();
             fields.add(field);

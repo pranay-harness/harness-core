@@ -15,6 +15,9 @@ public class ServiceNowCreateUpdateParams {
   @Getter @Setter private String issueNumber;
   @Getter @Setter private String ticketId;
   @Getter @Setter private boolean updateMultiple;
+  // Import set fields
+  @Getter @Setter private String importSetTableName;
+  @Getter @Setter private String jsonBody;
 
   public Map<ServiceNowFields, String> fetchFields() {
     return fields;

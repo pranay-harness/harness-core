@@ -12,8 +12,13 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import software.wings.api.ServiceNowExecutionData;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.ServiceNowConfig;
@@ -21,6 +26,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.servicenow.ServiceNowCreateUpdateParams;
 import software.wings.beans.servicenow.ServiceNowFields;
 import software.wings.beans.servicenow.ServiceNowTaskParameters;
+import software.wings.delegatetasks.servicenow.ServiceNowAction;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
@@ -42,6 +48,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+@Slf4j
 public class ServiceNowCreateUpdateState extends State implements SweepingOutputStateMixin {
   @Getter @Setter private SweepingOutput.Scope sweepingOutputScope;
   @Getter @Setter private String sweepingOutputName;
@@ -56,6 +63,7 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
   private static final long ASYNC_TASK_TIMEOUT_MILLIS = 60 * 1000;
   private static final String ISSUE_NUMBER = "issueNumber";
   private static final String ISSUE_ID = "issueId";
+  private static final String TRANSFORMATION_VALUES = "transformationValues";
   public ServiceNowCreateUpdateState(String name) {
     super(name, StateType.SERVICENOW_CREATE_UPDATE.name());
   }
@@ -79,9 +87,12 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
     snowExecutionData.setActivityId(activityId);
 
     if (snowExecutionData.getExecutionStatus() == ExecutionStatus.SUCCESS) {
-      Map<String, String> sweepingOutputMap = new HashMap<>();
+      Map<String, Object> sweepingOutputMap = new HashMap<>();
       sweepingOutputMap.put(ISSUE_ID, snowExecutionData.getIssueId());
       sweepingOutputMap.put(ISSUE_NUMBER, snowExecutionData.getIssueNumber());
+      if (EmptyPredicate.isNotEmpty(snowExecutionData.getTransformationValues())) {
+        sweepingOutputMap.put(TRANSFORMATION_VALUES, snowExecutionData.getTransformationValues());
+      }
       handleSweepingOutput(sweepingOutputService, context, sweepingOutputMap);
     }
 
@@ -98,20 +109,37 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
     renderExpressions(context, serviceNowCreateUpdateParams);
 
     String accountId = executionContext.getApp().getAccountId();
-    ServiceNowTaskParameters serviceNowTaskParameters =
-        ServiceNowTaskParameters.builder()
-            .serviceNowConfig(config)
-            .encryptionDetails(secretManager.getEncryptionDetails(
-                config, executionContext.getAppId(), executionContext.getWorkflowExecutionId()))
-            .ticketType(ServiceNowTicketType.valueOf(serviceNowCreateUpdateParams.getTicketType()))
-            .issueNumber(serviceNowCreateUpdateParams.getIssueNumber())
-            .issueId(serviceNowCreateUpdateParams.getTicketId())
-            .action(serviceNowCreateUpdateParams.getAction())
-            .updateMultiple(serviceNowCreateUpdateParams.isUpdateMultiple())
-            .accountId(accountId)
-            .fields(serviceNowCreateUpdateParams.fetchFields())
-            .additionalFields(serviceNowCreateUpdateParams.fetchAdditionalFields())
-            .build();
+    ServiceNowTaskParameters serviceNowTaskParameters;
+    if (serviceNowCreateUpdateParams.getAction().equals(ServiceNowAction.IMPORT_SET)) {
+      if (!isJSONValid(serviceNowCreateUpdateParams.getJsonBody())) {
+        throw new WingsException(
+            "Json Body is not a valid Json: " + serviceNowCreateUpdateParams.getJsonBody(), WingsException.USER);
+      }
+      serviceNowTaskParameters = ServiceNowTaskParameters.builder()
+                                     .serviceNowConfig(config)
+                                     .encryptionDetails(secretManager.getEncryptionDetails(config,
+                                         executionContext.getAppId(), executionContext.getWorkflowExecutionId()))
+                                     .action(serviceNowCreateUpdateParams.getAction())
+                                     .accountId(accountId)
+                                     .importSetTableName(serviceNowCreateUpdateParams.getImportSetTableName())
+                                     .jsonBody(serviceNowCreateUpdateParams.getJsonBody())
+                                     .build();
+    } else {
+      serviceNowTaskParameters =
+          ServiceNowTaskParameters.builder()
+              .serviceNowConfig(config)
+              .encryptionDetails(secretManager.getEncryptionDetails(
+                  config, executionContext.getAppId(), executionContext.getWorkflowExecutionId()))
+              .ticketType(ServiceNowTicketType.valueOf(serviceNowCreateUpdateParams.getTicketType()))
+              .issueNumber(serviceNowCreateUpdateParams.getIssueNumber())
+              .issueId(serviceNowCreateUpdateParams.getTicketId())
+              .action(serviceNowCreateUpdateParams.getAction())
+              .updateMultiple(serviceNowCreateUpdateParams.isUpdateMultiple())
+              .accountId(accountId)
+              .fields(serviceNowCreateUpdateParams.fetchFields())
+              .additionalFields(serviceNowCreateUpdateParams.fetchAdditionalFields())
+              .build();
+    }
 
     DelegateTask delegateTask = DelegateTask.builder()
                                     .async(true)
@@ -138,15 +166,16 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
     params.setIssueNumber(context.renderExpression(params.getIssueNumber()));
     Map<ServiceNowFields, String> renderedFields = new HashMap<>();
     if (EmptyPredicate.isNotEmpty(params.fetchFields())) {
-      params.fetchFields().forEach((key, value) -> renderedFields.put(key, context.renderExpression(value)));
+      for (Entry<ServiceNowFields, String> entry : params.fetchFields().entrySet()) {
+        renderedFields.put(entry.getKey(), context.renderExpression(entry.getValue()));
+      }
     }
-
     params.setFields(renderedFields);
-
     Map<String, String> renderedAdditionalFields = new HashMap<>();
     if (EmptyPredicate.isNotEmpty(params.fetchAdditionalFields())) {
-      params.fetchAdditionalFields().forEach(
-          (key, value) -> renderedAdditionalFields.put(key, context.renderExpression(value)));
+      for (Entry<String, String> entry : params.fetchAdditionalFields().entrySet()) {
+        renderedAdditionalFields.put(entry.getKey(), context.renderExpression(entry.getValue()));
+      }
     }
 
     params.setAdditionalFields(renderedAdditionalFields);
@@ -161,5 +190,18 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
     }
 
     return (ServiceNowConfig) snowSettingAttribute.getValue();
+  }
+
+  public boolean isJSONValid(String test) {
+    try {
+      new JSONObject(test);
+    } catch (JSONException ex) {
+      try {
+        new JSONArray(test);
+      } catch (JSONException ex1) {
+        return false;
+      }
+    }
+    return true;
   }
 }
