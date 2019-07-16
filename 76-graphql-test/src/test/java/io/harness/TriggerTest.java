@@ -174,7 +174,7 @@ public class TriggerTest extends GraphQLTest {
     {
       String query = $GQL(/*
 {
-  triggers(filters:[{type:Application,stringFilter:{operator:EQUALS,values:["%s"]}}]  limit: 2) {
+  triggers(filters:[{application:{operator:EQUALS,values:["%s"]}}]  limit: 2) {
     nodes {
       id
     }
@@ -191,7 +191,7 @@ public class TriggerTest extends GraphQLTest {
     {
       String query = $GQL(/*
 {
-  triggers(filters:[{type:Application,stringFilter:{operator:EQUALS,values:["%s"]}}]  limit: 2 offset: 1) {
+  triggers(filters:[{application:{operator:EQUALS,values:["%s"]}}]  limit: 2 offset: 1) {
     nodes {
       id
     }

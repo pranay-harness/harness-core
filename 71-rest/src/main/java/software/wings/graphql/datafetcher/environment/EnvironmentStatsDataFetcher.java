@@ -2,26 +2,30 @@ package software.wings.graphql.datafetcher.environment;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import com.google.inject.Inject;
+
 import io.harness.exception.WingsException;
+import org.mongodb.morphia.query.Query;
 import software.wings.beans.Environment;
 import software.wings.graphql.datafetcher.RealTimeStatsDataFetcher;
-import software.wings.graphql.schema.type.aggregation.QLAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLData;
+import software.wings.graphql.schema.type.aggregation.QLNoOpAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentAggregation;
 import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentFilter;
-import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentFilterType;
 import software.wings.graphql.utils.nameservice.NameService;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class EnvironmentStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggregateFunction, QLEnvironmentFilter,
+public class EnvironmentStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOpAggregateFunction, QLEnvironmentFilter,
     QLEnvironmentAggregation, QLTimeSeriesAggregation, QLNoOpSortCriteria> {
+  @Inject EnvironmentQueryHelper environmentQueryHelper;
+
   @Override
-  protected QLData fetch(String accountId, QLAggregateFunction aggregateFunction, List<QLEnvironmentFilter> filters,
+  protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction, List<QLEnvironmentFilter> filters,
       List<QLEnvironmentAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
       List<QLNoOpSortCriteria> sortCriteria) {
     final Class entityClass = Environment.class;
@@ -30,20 +34,6 @@ public class EnvironmentStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggr
       groupByList = groupBy.stream().map(g -> g.name()).collect(Collectors.toList());
     }
     return getQLData(accountId, filters, entityClass, groupByList);
-  }
-
-  protected String getFilterFieldName(String filterType) {
-    QLEnvironmentFilterType qlFilterType = QLEnvironmentFilterType.valueOf(filterType);
-    switch (qlFilterType) {
-      case Application:
-        return "appId";
-      case Environment:
-        return "_id";
-      case EnvironmentType:
-        return "environmentType";
-      default:
-        throw new WingsException("Unknown filter type" + filterType);
-    }
   }
 
   protected String getAggregationFieldName(String aggregation) {
@@ -58,16 +48,9 @@ public class EnvironmentStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggr
     }
   }
 
-  protected String getAggregationNameField(String aggregation) {
-    QLEnvironmentAggregation qlEnvironmentAggregation = QLEnvironmentAggregation.valueOf(aggregation);
-    switch (qlEnvironmentAggregation) {
-      case Application:
-        return "appName";
-      case EnvironmentType:
-        return "environmentType";
-      default:
-        throw new WingsException("Unknown aggregation type" + aggregation);
-    }
+  @Override
+  protected void populateFilters(List<QLEnvironmentFilter> filters, Query query) {
+    environmentQueryHelper.setQuery(filters, query);
   }
 
   @Override

@@ -3,6 +3,7 @@ package io.harness.dashboard;
 import static io.harness.beans.PageRequest.DEFAULT_PAGE_SIZE;
 import static io.harness.beans.PageRequest.DEFAULT_UNLIMITED;
 import static io.harness.beans.PageRequest.PageRequestBuilder;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.util.Arrays.asList;
 
@@ -12,6 +13,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.dashboard.DashboardSettings.keys;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +54,12 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
     updateOperations.set(DashboardSettings.keys.data, dashboardSettings.getData());
     updateOperations.set(DashboardSettings.keys.name, dashboardSettings.getName());
     updateOperations.set(DashboardSettings.keys.description, dashboardSettings.getDescription());
+    if (isNotEmpty(dashboardSettings.getPermissions())) {
+      updateOperations.set(keys.permissions, dashboardSettings.getPermissions());
+    } else {
+      updateOperations.unset(keys.permissions);
+    }
+
     persistence.update(dashboardSettings, updateOperations);
     return get(accountId, id);
   }

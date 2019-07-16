@@ -20,10 +20,14 @@ import software.wings.graphql.directive.DataFetcherDirective.DataFetcherDirectiv
 import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.graphql.schema.type.QLPageInfo;
 import software.wings.graphql.schema.type.QLPageInfo.QLPageInfoBuilder;
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
 import software.wings.graphql.schema.type.aggregation.QLNumberOperator;
 import software.wings.graphql.schema.type.aggregation.QLStringFilter;
 import software.wings.graphql.schema.type.aggregation.QLStringOperator;
+import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
+import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -84,6 +88,10 @@ public class DataFetcherUtils {
 
   public interface Controller<T> { void populate(T entity); }
 
+  public void setStringFilter(FieldEnd<? extends Query<?>> field, String value) {
+    field.equal(value);
+  }
+
   public void setStringFilter(FieldEnd<? extends Query<?>> field, QLStringFilter stringFilter) {
     if (stringFilter == null) {
       throw new WingsException("Filter is null");
@@ -94,34 +102,69 @@ public class DataFetcherUtils {
       throw new WingsException("String Operator cannot be null");
     }
 
-    String[] values = stringFilter.getValues();
+    String[] stringFilterValues = stringFilter.getValues();
 
-    if (isEmpty(values)) {
+    if (isEmpty(stringFilterValues)) {
       throw new WingsException("Values cannot be empty");
     }
 
     switch (operator) {
       case IN:
-        field.in(Arrays.asList(values));
-        break;
-      case NOT_IN:
-        field.notIn(Arrays.asList(values));
+        field.in(Arrays.asList(stringFilterValues));
         break;
       case EQUALS:
-        if (values.length > 1) {
+        if (stringFilterValues.length > 1) {
           throw new WingsException("Only one value needs to be inputted for operator EQUALS");
         }
-        field.equal(values[0]);
+        field.equal(stringFilterValues[0]);
         break;
       case NOT_EQUALS:
-        if (values.length > 1) {
+        if (stringFilterValues.length > 1) {
           throw new WingsException("Only one value needs to be inputted for operator NOT_EQUALS");
         }
-        field.notEqual(values[0]);
+        field.notEqual(stringFilterValues[0]);
         break;
 
       default:
         throw new WingsException("Unknown String operator " + operator);
+    }
+  }
+
+  public void setIdFilter(FieldEnd<? extends Query<?>> field, QLIdFilter idFilter) {
+    if (idFilter == null) {
+      return;
+    }
+
+    QLIdOperator operator = idFilter.getOperator();
+    if (operator == null) {
+      throw new WingsException("Id Operator cannot be null");
+    }
+
+    String[] idFilterValues = idFilter.getValues();
+
+    if (isEmpty(idFilterValues)) {
+      throw new WingsException("Values cannot be empty");
+    }
+
+    switch (operator) {
+      case IN:
+        field.in(Arrays.asList(idFilterValues));
+        break;
+      case EQUALS:
+        if (idFilterValues.length > 1) {
+          throw new WingsException("Only one value needs to be inputted for operator EQUALS");
+        }
+        field.equal(idFilterValues[0]);
+        break;
+      case NOT_EQUALS:
+        if (idFilterValues.length > 1) {
+          throw new WingsException("Only one value needs to be inputted for operator NOT_EQUALS");
+        }
+        field.notEqual(idFilterValues[0]);
+        break;
+
+      default:
+        throw new WingsException("Unknown Id operator " + operator);
     }
   }
 
@@ -135,9 +178,9 @@ public class DataFetcherUtils {
       throw new WingsException("Number operator is null");
     }
 
-    Number[] values = numberFilter.getValues();
+    Number[] numberFilterValues = numberFilter.getValues();
 
-    if (isEmpty(values)) {
+    if (isEmpty(numberFilterValues)) {
       throw new WingsException("Values cannot be empty");
     }
 
@@ -148,6 +191,61 @@ public class DataFetcherUtils {
       case LESS_THAN_OR_EQUALS:
       case GREATER_THAN:
       case GREATER_THAN_OR_EQUALS:
+        if (numberFilterValues.length > 1) {
+          throw new WingsException("Only one value is expected for operator " + operator);
+        }
+        break;
+      default:
+        break;
+    }
+
+    switch (operator) {
+      case EQUALS:
+        field.equal(numberFilterValues[0]);
+        break;
+      case IN:
+        field.in(Arrays.asList(numberFilterValues));
+        break;
+      case NOT_EQUALS:
+        field.notEqual(numberFilterValues[0]);
+        break;
+      case LESS_THAN:
+        field.lessThan(numberFilterValues[0]);
+        break;
+      case LESS_THAN_OR_EQUALS:
+        field.lessThanOrEq(numberFilterValues[0]);
+        break;
+      case GREATER_THAN:
+        field.greaterThan(numberFilterValues[0]);
+        break;
+      case GREATER_THAN_OR_EQUALS:
+        field.greaterThanOrEq(numberFilterValues[0]);
+        break;
+      default:
+        throw new WingsException("Unknown Number operator " + operator);
+    }
+  }
+
+  public void setTimeFilter(FieldEnd<? extends Query<?>> field, QLTimeFilter timeFilter) {
+    if (timeFilter == null) {
+      throw new WingsException("Filter is null");
+    }
+
+    QLTimeOperator operator = timeFilter.getOperator();
+    if (operator == null) {
+      throw new WingsException("Time operator is null");
+    }
+
+    Number[] values = timeFilter.getValues();
+
+    if (isEmpty(values)) {
+      throw new WingsException("Values cannot be empty");
+    }
+
+    switch (operator) {
+      case EQUALS:
+      case BEFORE:
+      case AFTER:
         if (values.length > 1) {
           throw new WingsException("Only one value is expected for operator " + operator);
         }
@@ -160,29 +258,14 @@ public class DataFetcherUtils {
       case EQUALS:
         field.equal(values[0]);
         break;
-      case IN:
-        field.in(Arrays.asList(values));
-        break;
-      case NOT_EQUALS:
-        field.notEqual(values[0]);
-        break;
-      case NOT_IN:
-        field.notIn(Arrays.asList(values));
-        break;
-      case LESS_THAN:
+      case BEFORE:
         field.lessThan(values[0]);
         break;
-      case LESS_THAN_OR_EQUALS:
-        field.lessThanOrEq(values[0]);
-        break;
-      case GREATER_THAN:
+      case AFTER:
         field.greaterThan(values[0]);
         break;
-      case GREATER_THAN_OR_EQUALS:
-        field.greaterThanOrEq(values[0]);
-        break;
       default:
-        throw new WingsException("Unknown Number operator " + operator);
+        throw new WingsException("Unknown Time operator " + operator);
     }
   }
 

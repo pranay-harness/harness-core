@@ -1,5 +1,11 @@
 package software.wings.graphql.datafetcher.workflow;
 
+import static software.wings.graphql.utils.nameservice.NameService.application;
+import static software.wings.graphql.utils.nameservice.NameService.workflow;
+
+import com.google.inject.Inject;
+
+import graphql.schema.DataFetchingEnvironment;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -12,9 +18,10 @@ import software.wings.graphql.schema.type.QLWorkflow;
 import software.wings.graphql.schema.type.QLWorkflow.QLWorkflowBuilder;
 import software.wings.graphql.schema.type.QLWorkflowConnection;
 import software.wings.graphql.schema.type.QLWorkflowConnection.QLWorkflowConnectionBuilder;
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.workflow.QLWorkflowFilter;
-import software.wings.graphql.schema.type.aggregation.workflow.QLWorkflowFilterType;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
@@ -24,6 +31,8 @@ import java.util.List;
 @Slf4j
 public class WorkflowConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLWorkflowFilter, QLNoOpSortCriteria, QLWorkflowConnection> {
+  @Inject WorkflowQueryHelper workflowQueryHelper;
+
   @Override
   @AuthRule(permissionType = PermissionType.WORKFLOW, action = Action.READ)
   public QLWorkflowConnection fetchConnection(List<QLWorkflowFilter> serviceFilters,
@@ -40,15 +49,22 @@ public class WorkflowConnectionDataFetcher
     return connectionBuilder.build();
   }
 
-  protected String getFilterFieldName(String filterType) {
-    QLWorkflowFilterType workflowType = QLWorkflowFilterType.valueOf(filterType);
-    switch (workflowType) {
-      case Application:
-        return WorkflowKeys.appId;
-      case Workflow:
-        return WorkflowKeys.uuid;
-      default:
-        throw new WingsException("Unknown filter type" + filterType);
+  @Override
+  protected void populateFilters(List<QLWorkflowFilter> filters, Query query) {
+    workflowQueryHelper.setQuery(filters, query);
+  }
+
+  @Override
+  protected QLWorkflowFilter generateFilter(DataFetchingEnvironment environment, String key, String value) {
+    QLIdFilter idFilter = QLIdFilter.builder()
+                              .operator(QLIdOperator.EQUALS)
+                              .values(new String[] {(String) utils.getFieldValue(environment.getSource(), value)})
+                              .build();
+    if (application.equals(key)) {
+      return QLWorkflowFilter.builder().application(idFilter).build();
+    } else if (workflow.equals(key)) {
+      return QLWorkflowFilter.builder().workflow(idFilter).build();
     }
+    throw new WingsException("Unsupported field " + key + " while generating filter");
   }
 }

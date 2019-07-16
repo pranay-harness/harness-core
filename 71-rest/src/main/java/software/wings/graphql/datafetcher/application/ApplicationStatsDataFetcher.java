@@ -3,8 +3,8 @@ package software.wings.graphql.datafetcher.application;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Application;
 import software.wings.graphql.datafetcher.RealTimeStatsDataFetcher;
-import software.wings.graphql.schema.type.aggregation.QLAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLData;
+import software.wings.graphql.schema.type.aggregation.QLNoOpAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.application.QLApplicationAggregation;
@@ -13,10 +13,10 @@ import software.wings.graphql.utils.nameservice.NameService;
 
 import java.util.List;
 
-public class ApplicationStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggregateFunction, QLApplicationFilter,
+public class ApplicationStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOpAggregateFunction, QLApplicationFilter,
     QLApplicationAggregation, QLTimeSeriesAggregation, QLNoOpSortCriteria> {
   @Override
-  protected QLData fetch(String accountId, QLAggregateFunction aggregateFunction, List<QLApplicationFilter> filters,
+  protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction, List<QLApplicationFilter> filters,
       List<QLApplicationAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
       List<QLNoOpSortCriteria> sortCriteria) {
     Query<Application> query = wingsPersistence.createQuery(Application.class);
@@ -26,8 +26,8 @@ public class ApplicationStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggr
   }
 
   @Override
-  protected String getFilterFieldName(String filterType) {
-    return null;
+  protected void populateFilters(List<QLApplicationFilter> filters, Query query) {
+    // do nothing
   }
 
   @Override

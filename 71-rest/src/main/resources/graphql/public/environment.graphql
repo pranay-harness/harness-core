@@ -13,8 +13,9 @@ enum EnvironmentFilterType {
 }
 
 input EnvironmentFilter {
-  type: EnvironmentFilterType
-  stringFilter: StringFilter
+  application: IdFilter
+  environment: IdFilter
+  environmentType: EnvironmentType
 }
 
 type Environment {

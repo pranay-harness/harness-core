@@ -8,7 +8,6 @@ public enum QLNumberOperator {
   GREATER_THAN,
   GREATER_THAN_OR_EQUALS,
   IN,
-  NOT_IN,
   LESS_THAN,
   LESS_THAN_OR_EQUALS,
   NOT_EQUALS

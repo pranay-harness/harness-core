@@ -33,6 +33,6 @@ enum WorkflowFilterType {
 }
 
 input WorkflowFilter {
-  type: WorkflowFilterType
-  stringFilter: StringFilter
+  application: IdFilter
+  workflow: IdFilter
 }

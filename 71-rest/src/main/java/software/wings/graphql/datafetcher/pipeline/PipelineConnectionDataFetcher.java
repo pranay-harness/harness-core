@@ -1,5 +1,11 @@
 package software.wings.graphql.datafetcher.pipeline;
 
+import static software.wings.graphql.utils.nameservice.NameService.application;
+import static software.wings.graphql.utils.nameservice.NameService.pipeline;
+
+import com.google.inject.Inject;
+
+import graphql.schema.DataFetchingEnvironment;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -12,9 +18,10 @@ import software.wings.graphql.schema.type.QLPipeline;
 import software.wings.graphql.schema.type.QLPipeline.QLPipelineBuilder;
 import software.wings.graphql.schema.type.QLPipelineConnection;
 import software.wings.graphql.schema.type.QLPipelineConnection.QLPipelineConnectionBuilder;
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.pipeline.QLPipelineFilter;
-import software.wings.graphql.schema.type.aggregation.pipeline.QLPipelineFilterType;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
@@ -24,6 +31,8 @@ import java.util.List;
 @Slf4j
 public class PipelineConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLPipelineFilter, QLNoOpSortCriteria, QLPipelineConnection> {
+  @Inject PipelineQueryHelper pipelineQueryHelper;
+
   @Override
   @AuthRule(permissionType = PermissionType.PIPELINE, action = Action.READ)
   public QLPipelineConnection fetchConnection(List<QLPipelineFilter> pipelineFilters,
@@ -40,15 +49,22 @@ public class PipelineConnectionDataFetcher
     return connectionBuilder.build();
   }
 
-  protected String getFilterFieldName(String filterType) {
-    QLPipelineFilterType pipelineFilterType = QLPipelineFilterType.valueOf(filterType);
-    switch (pipelineFilterType) {
-      case Application:
-        return PipelineKeys.appId;
-      case Pipeline:
-        return PipelineKeys.uuid;
-      default:
-        throw new WingsException("Unknown filter type" + filterType);
+  @Override
+  protected void populateFilters(List<QLPipelineFilter> filters, Query query) {
+    pipelineQueryHelper.setQuery(filters, query);
+  }
+
+  @Override
+  protected QLPipelineFilter generateFilter(DataFetchingEnvironment environment, String key, String value) {
+    QLIdFilter idFilter = QLIdFilter.builder()
+                              .operator(QLIdOperator.EQUALS)
+                              .values(new String[] {(String) utils.getFieldValue(environment.getSource(), value)})
+                              .build();
+    if (application.equals(key)) {
+      return QLPipelineFilter.builder().application(idFilter).build();
+    } else if (pipeline.equals(key)) {
+      return QLPipelineFilter.builder().pipeline(idFilter).build();
     }
+    throw new WingsException("Unsupported field " + key + " while generating filter");
   }
 }

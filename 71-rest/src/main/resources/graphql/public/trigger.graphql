@@ -22,12 +22,7 @@ type TriggerConnection {
   nodes: [Trigger]
 }
 
-enum TriggerFilterType {
-  Trigger
-  Application
-}
-
 input TriggerFilter {
-  type: TriggerFilterType
-  stringFilter: StringFilter
+  trigger: IdFilter
+  application: IdFilter
 }

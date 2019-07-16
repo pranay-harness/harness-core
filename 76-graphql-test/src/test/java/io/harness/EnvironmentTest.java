@@ -107,7 +107,7 @@ public class EnvironmentTest extends GraphQLTest {
     {
       String query = $GQL(/*
 {
-  environments(filters:[{type:Application,stringFilter:{operator:EQUALS,values:["%s"]}}]  limit: 2) {
+  environments(filters:[{application:{operator:EQUALS,values:["%s"]}}]  limit: 2) {
     nodes {
       id
     }
@@ -125,7 +125,7 @@ public class EnvironmentTest extends GraphQLTest {
     {
       String query = $GQL(/*
 {
-  environments(filters:[{type:Application,stringFilter:{operator:EQUALS,values:["%s"]}}]  limit: 2 offset: 1) {
+  environments(filters:[{application:{operator:EQUALS,values:["%s"]}}]  limit: 2 offset: 1) {
     nodes {
       id
     }

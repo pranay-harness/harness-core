@@ -2,25 +2,18 @@ package software.wings.graphql.schema.type.aggregation.instance;
 
 import lombok.Builder;
 import lombok.Value;
-import software.wings.graphql.schema.type.aggregation.QLDataType;
-import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
-import software.wings.graphql.schema.type.aggregation.QLNumberFilterType;
-import software.wings.graphql.schema.type.aggregation.QLStringFilter;
-import software.wings.graphql.schema.type.aggregation.QLStringFilterType;
+import software.wings.graphql.schema.type.aggregation.EntityFilter;
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
+import software.wings.graphql.schema.type.instance.QLInstanceType;
 
 @Value
 @Builder
-public class QLInstanceFilter implements QLStringFilterType, QLNumberFilterType {
-  private QLInstanceFilterType type;
-  private QLStringFilter stringFilter;
-  private QLNumberFilter numberFilter;
-
-  @Override
-  public QLDataType getDataType() {
-    return type.getDataType();
-  }
-
-  public String getFilterType() {
-    return type != null ? type.name() : null;
-  }
+public class QLInstanceFilter implements EntityFilter {
+  private QLTimeFilter createdAt;
+  private QLIdFilter application;
+  private QLIdFilter service;
+  private QLIdFilter environment;
+  private QLIdFilter cloudProvider;
+  private QLInstanceType instanceType;
 }

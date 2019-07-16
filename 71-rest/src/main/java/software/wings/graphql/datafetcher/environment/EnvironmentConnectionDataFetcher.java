@@ -1,5 +1,10 @@
 package software.wings.graphql.datafetcher.environment;
 
+import static software.wings.graphql.utils.nameservice.NameService.application;
+
+import com.google.inject.Inject;
+
+import graphql.schema.DataFetchingEnvironment;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -12,9 +17,11 @@ import software.wings.graphql.schema.type.QLEnvironment;
 import software.wings.graphql.schema.type.QLEnvironment.QLEnvironmentBuilder;
 import software.wings.graphql.schema.type.QLEnvironmentConnection;
 import software.wings.graphql.schema.type.QLEnvironmentConnection.QLEnvironmentConnectionBuilder;
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentFilter;
-import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentFilterType;
+import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
@@ -24,6 +31,8 @@ import java.util.List;
 @Slf4j
 public class EnvironmentConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLEnvironmentFilter, QLNoOpSortCriteria, QLEnvironmentConnection> {
+  @Inject EnvironmentQueryHelper environmentQueryHelper;
+
   @Override
   @AuthRule(permissionType = PermissionType.ENV, action = Action.READ)
   public QLEnvironmentConnection fetchConnection(List<QLEnvironmentFilter> filters,
@@ -40,17 +49,22 @@ public class EnvironmentConnectionDataFetcher
     return connectionBuilder.build();
   }
 
-  protected String getFilterFieldName(String filterType) {
-    QLEnvironmentFilterType environmentFilterType = QLEnvironmentFilterType.valueOf(filterType);
-    switch (environmentFilterType) {
-      case Application:
-        return EnvironmentKeys.appId;
-      case Environment:
-        return EnvironmentKeys.uuid;
-      case EnvironmentType:
-        return EnvironmentKeys.environmentType;
-      default:
-        throw new WingsException("Unknown filter type" + filterType);
+  @Override
+  protected void populateFilters(List<QLEnvironmentFilter> filters, Query query) {
+    environmentQueryHelper.setQuery(filters, query);
+  }
+
+  @Override
+  protected QLEnvironmentFilter generateFilter(DataFetchingEnvironment environment, String key, String value) {
+    QLIdFilter idFilter = QLIdFilter.builder()
+                              .operator(QLIdOperator.EQUALS)
+                              .values(new String[] {(String) utils.getFieldValue(environment.getSource(), value)})
+                              .build();
+    if (application.equals(key)) {
+      return QLEnvironmentFilter.builder().application(idFilter).build();
+    } else if (NameService.environment.equals(key)) {
+      return QLEnvironmentFilter.builder().environment(idFilter).build();
     }
+    throw new WingsException("Unsupported field " + key + " while generating filter");
   }
 }

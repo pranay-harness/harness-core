@@ -2,26 +2,30 @@ package software.wings.graphql.datafetcher.workflow;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import com.google.inject.Inject;
+
 import io.harness.exception.WingsException;
+import org.mongodb.morphia.query.Query;
 import software.wings.beans.Workflow;
 import software.wings.graphql.datafetcher.RealTimeStatsDataFetcher;
-import software.wings.graphql.schema.type.aggregation.QLAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLData;
+import software.wings.graphql.schema.type.aggregation.QLNoOpAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.workflow.QLWorkflowAggregation;
 import software.wings.graphql.schema.type.aggregation.workflow.QLWorkflowFilter;
-import software.wings.graphql.schema.type.aggregation.workflow.QLWorkflowFilterType;
 import software.wings.graphql.utils.nameservice.NameService;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class WorkflowStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggregateFunction, QLWorkflowFilter,
+public class WorkflowStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOpAggregateFunction, QLWorkflowFilter,
     QLWorkflowAggregation, QLTimeSeriesAggregation, QLNoOpSortCriteria> {
+  @Inject WorkflowQueryHelper workflowQueryHelper;
+
   @Override
-  protected QLData fetch(String accountId, QLAggregateFunction aggregateFunction, List<QLWorkflowFilter> filters,
+  protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction, List<QLWorkflowFilter> filters,
       List<QLWorkflowAggregation> groupBy, QLTimeSeriesAggregation groupByTime, List<QLNoOpSortCriteria> sortCriteria) {
     final Class entityClass = Workflow.class;
     List<String> groupByList = new ArrayList<>();
@@ -29,18 +33,6 @@ public class WorkflowStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggrega
       groupByList = groupBy.stream().map(g -> g.name()).collect(Collectors.toList());
     }
     return getQLData(accountId, filters, entityClass, groupByList);
-  }
-
-  protected String getFilterFieldName(String filterType) {
-    QLWorkflowFilterType qlFilterType = QLWorkflowFilterType.valueOf(filterType);
-    switch (qlFilterType) {
-      case Application:
-        return "appId";
-      case Workflow:
-        return "_id";
-      default:
-        throw new WingsException("Unknown filter type" + filterType);
-    }
   }
 
   protected String getAggregationFieldName(String aggregation) {
@@ -51,6 +43,11 @@ public class WorkflowStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggrega
       default:
         throw new WingsException("Unknown aggregation type" + aggregation);
     }
+  }
+
+  @Override
+  protected void populateFilters(List<QLWorkflowFilter> filters, Query query) {
+    workflowQueryHelper.setQuery(filters, query);
   }
 
   @Override

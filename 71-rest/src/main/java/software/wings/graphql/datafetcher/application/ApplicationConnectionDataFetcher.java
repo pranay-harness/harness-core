@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.application;
 
-import io.harness.exception.WingsException;
+import graphql.schema.DataFetchingEnvironment;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -24,7 +24,7 @@ public class ApplicationConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLApplicationFilter, QLNoOpSortCriteria, QLApplicationConnection> {
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
-  public QLApplicationConnection fetchConnection(List<QLApplicationFilter> serviceFilters,
+  public QLApplicationConnection fetchConnection(List<QLApplicationFilter> appFilters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
     Query<Application> query =
         populateFilters(wingsPersistence, null, Application.class).order(Sort.descending(ApplicationKeys.createdAt));
@@ -38,7 +38,13 @@ public class ApplicationConnectionDataFetcher
     return connectionBuilder.build();
   }
 
-  protected String getFilterFieldName(String filterType) {
-    throw new WingsException("Unknown filter type" + filterType);
+  @Override
+  protected void populateFilters(List<QLApplicationFilter> filters, Query query) {
+    // do nothing
+  }
+
+  @Override
+  protected QLApplicationFilter generateFilter(DataFetchingEnvironment environment, String key, String value) {
+    return null;
   }
 }

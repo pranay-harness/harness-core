@@ -12,23 +12,19 @@ import com.google.inject.Inject;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.aggregation.Group;
-import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.RealTimeStatsDataFetcher;
-import software.wings.graphql.schema.type.aggregation.QLAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLAggregatedData;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
-import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
 import software.wings.graphql.schema.type.aggregation.QLSinglePointData;
-import software.wings.graphql.schema.type.aggregation.QLStringFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
+import software.wings.graphql.schema.type.aggregation.instance.QLInstanceAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceAggregation;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceFilter;
-import software.wings.graphql.schema.type.aggregation.instance.QLInstanceFilterType;
 import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.FlatEntitySummaryStats;
 
@@ -36,14 +32,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggregateFunction, QLInstanceFilter,
+public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLInstanceAggregateFunction, QLInstanceFilter,
     QLInstanceAggregation, QLTimeSeriesAggregation, QLNoOpSortCriteria> {
   @Inject private WingsPersistence wingsPersistence;
   @Inject InstanceTimeSeriesDataHelper timeSeriesDataHelper;
+  @Inject InstanceQueryHelper instanceMongoHelper;
 
   @Override
-  protected QLData fetch(String accountId, QLAggregateFunction aggregateFunction, List<QLInstanceFilter> filters,
-      List<QLInstanceAggregation> groupBy, QLTimeSeriesAggregation groupByTime, List<QLNoOpSortCriteria> sortCriteria) {
+  protected QLData fetch(String accountId, QLInstanceAggregateFunction aggregateFunction,
+      List<QLInstanceFilter> filters, List<QLInstanceAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
+      List<QLNoOpSortCriteria> sortCriteria) {
     if (groupByTime != null) {
       if (isNotEmpty(groupBy)) {
         if (groupBy.size() == 1) {
@@ -61,39 +59,13 @@ public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggrega
       query.filter("accountId", accountId);
       query.filter("isDeleted", false);
 
-      if (isNotEmpty(filters)) {
-        filters.forEach(filter -> {
-          QLStringFilter stringFilter = filter.getStringFilter();
-          QLNumberFilter numberFilter = filter.getNumberFilter();
-
-          if (stringFilter != null && numberFilter != null) {
-            throw new WingsException("Only one filter should be set");
-          }
-
-          if (stringFilter == null && numberFilter == null) {
-            throw new WingsException("All filters are null");
-          }
-
-          QLInstanceFilterType filterType = filter.getType();
-          String columnName = getMongoFieldName(filterType);
-          FieldEnd<? extends Query<Instance>> field = query.field(columnName);
-
-          if (stringFilter != null) {
-            utils.setStringFilter(field, stringFilter);
-          }
-
-          if (numberFilter != null) {
-            utils.setNumberFilter(field, numberFilter);
-          }
-        });
-      }
+      instanceMongoHelper.setQuery(filters, query);
 
       if (isNotEmpty(groupBy)) {
         if (groupBy.size() == 1) {
           QLInstanceAggregation firstLevelAggregation = groupBy.get(0);
           String entityIdColumn = getMongoFieldName(firstLevelAggregation);
           String entityNameColumn = getNameField(firstLevelAggregation);
-          String function = getMongoAggregateOperation(aggregateFunction);
           List<QLDataPoint> dataPoints = new ArrayList<>();
 
           wingsPersistence.getDatastore(Instance.class)
@@ -116,7 +88,6 @@ public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggrega
           String entityNameColumn = getNameField(firstLevelAggregation);
           String secondLevelEntityIdColumn = getMongoFieldName(secondLevelAggregation);
           String secondLevelEntityNameColumn = getNameField(secondLevelAggregation);
-          String function = getMongoAggregateOperation(aggregateFunction);
 
           List<TwoLevelAggregatedData> aggregatedDataList = new ArrayList<>();
           wingsPersistence.getDatastore(query.getEntityClass())
@@ -147,23 +118,9 @@ public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggrega
     }
   }
 
-  private String getMongoFieldName(QLInstanceFilterType filterType) {
-    switch (filterType) {
-      case CreatedAt:
-        return "createdAt";
-      case Application:
-        return "appId";
-      case Service:
-        return "serviceId";
-      case Environment:
-        return "envId";
-      case CloudProvider:
-        return "computeProviderId";
-      case InstanceType:
-        return "instanceType";
-      default:
-        throw new WingsException("Unknown filter type" + filterType);
-    }
+  @Override
+  protected void populateFilters(List<QLInstanceFilter> filters, Query query) {
+    instanceMongoHelper.setQuery(filters, query);
   }
 
   private String getMongoFieldName(QLInstanceAggregation aggregation) {
@@ -198,11 +155,6 @@ public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggrega
       default:
         throw new WingsException("Unknown aggregation type" + aggregation);
     }
-  }
-
-  @Override
-  protected String getFilterFieldName(String filterType) {
-    return null;
   }
 
   @Override

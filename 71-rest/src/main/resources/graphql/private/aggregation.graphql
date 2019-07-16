@@ -16,6 +16,10 @@ enum AggregateOperation {
   MIN
 }
 
+enum CountAggregateOperation {
+  SUM
+}
+
 type Request {
   entityType: EntityType
   filters: [Filter]
