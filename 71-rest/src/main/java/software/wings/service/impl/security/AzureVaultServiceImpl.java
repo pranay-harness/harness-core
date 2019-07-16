@@ -39,13 +39,14 @@ public class AzureVaultServiceImpl extends AbstractSecretServiceImpl implements 
   // limit mentioned at
   // https://docs.microsoft.com/en-us/azure/key-vault/about-keys-secrets-and-certificates#working-with-secrets
   private static final int AZURE_SECRET_CONTENT_SIZE_LIMIT = 24000;
-  private static final Pattern AZURE_KEYVAULT_NAME_PATTERN = Pattern.compile("^[\\w-/_+=.@!]+$");
+  // only allow a-z, A-Z digits and - in the name of azure secret.
+  private static final Pattern AZURE_KEY_VAULT_NAME_PATTERN = Pattern.compile("^[\\da-zA-Z-]+$");
   @Inject AzureSecretsManagerService azureSecretsManagerService;
 
   private void validateSecretName(String name) {
-    if (!AZURE_KEYVAULT_NAME_PATTERN.matcher(name).find()) {
+    if (!AZURE_KEY_VAULT_NAME_PATTERN.matcher(name).find()) {
       throw new WingsException(AWS_SECRETS_MANAGER_OPERATION_ERROR, USER_SRE)
-          .addParam(REASON_KEY, "Secret name can only contain alphanumeric characters, or any of: -_");
+          .addParam(REASON_KEY, "Secret name can only contain alphanumeric characters, or -");
     }
   }
 
