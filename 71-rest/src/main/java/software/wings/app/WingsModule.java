@@ -921,7 +921,7 @@ public class WingsModule extends DependencyModule {
         .to(GitOpsFeature.class);
     binder().bind(UsageLimitedFeature.class).annotatedWith(Names.named(RbacFeature.FEATURE_NAME)).to(RbacFeature.class);
     binder()
-        .bind(RestrictedFeature.class)
+        .bind(PremiumFeature.class)
         .annotatedWith(Names.named(AuditTrailFeature.FEATURE_NAME))
         .to(AuditTrailFeature.class);
     binder()
