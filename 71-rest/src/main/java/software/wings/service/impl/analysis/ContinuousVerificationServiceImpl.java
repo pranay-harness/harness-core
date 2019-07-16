@@ -116,6 +116,7 @@ import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CV24x7DashboardService;
 import software.wings.service.intfc.verification.CVConfigurationService;
@@ -199,6 +200,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private DataCollectionExecutorService dataCollectionService;
   @Inject private AlertService alertService;
   @Inject private MainConfiguration mainConfiguration;
+  @Inject private WorkflowExecutionService workflowExecutionService;
 
   private static final int PAGE_LIMIT = 999;
   private static final int START_OFFSET = 0;
@@ -487,22 +489,13 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       return results;
     }
 
-    // TODO: use workflowExecutionService instead querying the database directly
-    Query<WorkflowExecution> workflowExecutionQuery =
-        wingsPersistence.createQuery(WorkflowExecution.class)
-            .filter(WorkflowExecutionKeys.appId, service.getAppId())
-            .field(WorkflowExecutionKeys.startTs)
-            .greaterThanOrEq(startTime)
-            .field(WorkflowExecutionKeys.startTs)
-            .lessThan(endTime)
-            .project(WorkflowExecutionKeys.serviceExecutionSummaries, false)
-            .project(WorkflowExecutionKeys.keywords, false)
-            .project(WorkflowExecutionKeys.breakdown, false)
-            .project(WorkflowExecutionKeys.statusInstanceBreakdownMap, false)
-            .project(WorkflowExecutionKeys.stateMachine, false)
-            .project(WorkflowExecutionKeys.executionArgs, false);
+    Set<String> fieldsNeeded = Sets.newHashSet(WorkflowExecutionKeys.startTs, WorkflowExecutionKeys.endTs,
+        WorkflowExecutionKeys.name, WorkflowExecutionKeys.pipelineExecutionId, WorkflowExecutionKeys.appId,
+        WorkflowExecutionKeys.serviceIds, WorkflowExecutionKeys.pipelineSummary, WorkflowExecutionKeys.status,
+        WorkflowExecutionKeys.uuid, WorkflowExecutionKeys.workflowId);
 
-    try (HIterator<WorkflowExecution> records = new HIterator<>(workflowExecutionQuery.fetch())) {
+    try (HIterator<WorkflowExecution> records =
+             workflowExecutionService.executions(service.getAppId(), startTime, endTime, fieldsNeeded)) {
       while (records.hasNext()) {
         results.add(records.next());
       }
