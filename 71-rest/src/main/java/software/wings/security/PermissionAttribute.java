@@ -358,6 +358,8 @@ public class PermissionAttribute {
     /**
      * View Audit Page
      */
-    AUDIT_VIEWER
+    AUDIT_VIEWER,
+
+    TAG_MANAGEMENT
   }
 }

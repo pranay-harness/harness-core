@@ -40,7 +40,7 @@ public class HarnessTagResource {
   @POST
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = PermissionType.TAG_MANAGEMENT)
   public RestResponse<HarnessTag> create(@QueryParam("accountId") String accountId, HarnessTag tag) {
     tag.setAccountId(accountId);
     return new RestResponse<>(harnessTagService.create(tag));
@@ -50,7 +50,7 @@ public class HarnessTagResource {
   @Path("{key}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = PermissionType.TAG_MANAGEMENT)
   public RestResponse<HarnessTag> update(
       @QueryParam("accountId") String accountId, @PathParam("key") String key, HarnessTag tag) {
     tag.setAccountId(accountId);
@@ -75,7 +75,7 @@ public class HarnessTagResource {
   @Path("{key}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = PermissionType.TAG_MANAGEMENT)
   public RestResponse delete(@QueryParam("accountId") String accountId, @PathParam("key") String key) {
     harnessTagService.delete(accountId, key);
     return new RestResponse();
