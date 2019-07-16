@@ -1,5 +1,6 @@
 package software.wings.utils;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.k8s.manifest.ManifestHelper.getMapFromValuesFileContent;
 import static io.harness.k8s.manifest.ManifestHelper.getValuesExpressionKeysFromMap;
@@ -170,7 +171,7 @@ public class ApplicationManifestUtils {
         (GitFetchFilesFromMultipleRepoResult) executionResponse.getGitCommandResult();
 
     Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
-    if (gitCommandResult == null) {
+    if (gitCommandResult == null || isEmpty(gitCommandResult.getFilesFromMultipleRepo())) {
       return valuesFiles;
     }
 
