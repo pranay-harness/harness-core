@@ -10,8 +10,12 @@ import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
+import static software.wings.utils.UsageRestrictionsUtils.getAllAppAllEnvUsageRestrictions;
 
 import com.google.inject.Inject;
 
@@ -20,6 +24,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.IntegrationTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.RepeatRule.Repeat;
+import io.harness.scm.SecretName;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -28,15 +33,19 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import software.wings.beans.Application;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.WorkflowExecution;
 import software.wings.service.impl.cloudwatch.AwsNameSpace;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.impl.cloudwatch.CloudWatchSetupTestNodeData;
 import software.wings.service.intfc.SettingsService;
+import software.wings.settings.UsageRestrictions;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +62,9 @@ import javax.ws.rs.core.Response;
 public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   @Inject private SettingsService settingsService;
   public static final String AWS_PLAY_GROUND = "aws-playground";
+  public static final String AWS_PLAY_GROUND_NO_LAMBDA = "aws-playground_no_lambda";
   private String awsConfigId;
+  private String awsConfigNoLambdaId;
   private String appId;
   private String workflowId;
   private String workflowExecutionId;
@@ -68,6 +79,41 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
     workflowId = wingsPersistence.save(aWorkflow().appId(appId).name(generateUuid()).build());
     workflowExecutionId = wingsPersistence.save(
         WorkflowExecution.builder().appId(appId).workflowId(workflowId).status(ExecutionStatus.SUCCESS).build());
+    UsageRestrictions defaultUsageRestrictions = getAllAppAllEnvUsageRestrictions();
+
+    SettingAttribute awsNonProdAttribute =
+        aSettingAttribute()
+            .withCategory(SettingCategory.CLOUD_PROVIDER)
+            .withName(AWS_PLAY_GROUND)
+            .withAppId(GLOBAL_APP_ID)
+            .withEnvId(GLOBAL_ENV_ID)
+            .withAccountId(accountId)
+            .withValue(AwsConfig.builder()
+                           .accessKey(scmSecret.decryptToString(new SecretName("aws_playground_access_key")))
+                           .secretKey(scmSecret.decryptToCharArray(new SecretName("aws_playground_secret_key")))
+                           .accountId(accountId)
+                           .build())
+            .withUsageRestrictions(defaultUsageRestrictions)
+            .build();
+    wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(awsNonProdAttribute));
+
+    SettingAttribute awsNonLambdaProdAttribute =
+        aSettingAttribute()
+            .withCategory(SettingCategory.CLOUD_PROVIDER)
+            .withName(AWS_PLAY_GROUND_NO_LAMBDA)
+            .withAppId(GLOBAL_APP_ID)
+            .withEnvId(GLOBAL_ENV_ID)
+            .withAccountId(accountId)
+            .withValue(
+                AwsConfig.builder()
+                    .accessKey(scmSecret.decryptToString(new SecretName("aws_playground_no_lambda_access_key")))
+                    .secretKey(scmSecret.decryptToCharArray(new SecretName("aws_playground_no_lambda_secret_key")))
+                    .accountId(accountId)
+                    .build())
+            .withUsageRestrictions(defaultUsageRestrictions)
+            .build();
+    wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(awsNonLambdaProdAttribute));
+
     wingsPersistence.save(aStateExecutionInstance()
                               .executionUuid(workflowExecutionId)
                               .stateType(StateType.PHASE.name())
@@ -78,6 +124,12 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
         settingsService.getByName(accountId, Application.GLOBAL_APP_ID, AWS_PLAY_GROUND);
     assertNotNull(settingAttribute);
     awsConfigId = settingAttribute.getUuid();
+
+    SettingAttribute settingAttribute1 =
+        settingsService.getByName(accountId, Application.GLOBAL_APP_ID, AWS_PLAY_GROUND_NO_LAMBDA);
+    assertNotNull(settingAttribute1);
+    awsConfigNoLambdaId = settingAttribute1.getUuid();
+
     assertTrue(isNotEmpty(awsConfigId));
   }
 
@@ -124,7 +176,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   @Category(IntegrationTests.class)
   public void testGetLambdaFunctionNamesPermissionsNotAvailable() throws Exception {
     WebTarget target = client.target(API_BASE + "/cloudwatch/get-lambda-functions?accountId=" + accountId
-        + "&settingId=" + awsConfigId + "&region=" + Regions.US_EAST_1.getName());
+        + "&settingId=" + awsConfigNoLambdaId + "&region=" + Regions.US_EAST_1.getName());
     thrown.expect(Exception.class);
     getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<String>>>() {});
   }
