@@ -1,10 +1,8 @@
 package software.wings.service.impl.trigger;
 
-import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.stream.Collectors.toList;
-import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.utils.Validator.equalCheck;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -18,11 +16,8 @@ import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event;
-import software.wings.beans.ServiceVariable;
-import software.wings.beans.Variable;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.trigger.Action;
-import software.wings.beans.trigger.Action.ActionType;
 import software.wings.beans.trigger.Condition;
 import software.wings.beans.trigger.Condition.Type;
 import software.wings.beans.trigger.DeploymentTrigger;
@@ -40,7 +35,6 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.service.intfc.yaml.YamlPushService;
@@ -54,16 +48,16 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Slf4j
 public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
-  @Inject private Map<String, TriggerProcessor> triggerProcessorMapBinder;
-  @Inject private WingsPersistence wingsPersistence;
-  @Inject private PipelineService pipelineService;
-  @Inject private WorkflowService workflowService;
-  @Inject private YamlPushService yamlPushService;
-  @Inject private ArtifactStreamService artifactStreamService;
-  @Inject private AppService appService;
-  @Inject private EnvironmentService environmentService;
-  @Inject private ServiceResourceService serviceResourceService;
-  @Inject private ServiceVariableService serviceVariablesService;
+  @Inject private transient Map<String, TriggerProcessor> triggerProcessorMapBinder;
+  @Inject private transient WingsPersistence wingsPersistence;
+  @Inject private transient PipelineService pipelineService;
+  @Inject private transient WorkflowService workflowService;
+  @Inject private transient YamlPushService yamlPushService;
+  @Inject private transient ArtifactStreamService artifactStreamService;
+  @Inject private transient DeploymentTriggerServiceHelper triggerServiceHelper;
+  @Inject private transient AppService appService;
+  @Inject private transient EnvironmentService environmentService;
+  @Inject private transient ServiceResourceService serviceResourceService;
 
   @Override
   public DeploymentTrigger save(DeploymentTrigger trigger) {
@@ -104,7 +98,7 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
     notNullCheck("Trigger not exist ", triggerId, USER);
     TriggerProcessor triggerProcessor = obtainTriggerProcessor(deploymentTrigger);
     triggerProcessor.updateTriggerCondition(deploymentTrigger);
-    updateTriggerAction(deploymentTrigger);
+    setTriggerAction(deploymentTrigger);
     return deploymentTrigger;
   }
 
@@ -112,95 +106,23 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
   public PageResponse<DeploymentTrigger> list(PageRequest<DeploymentTrigger> pageRequest) {
     return wingsPersistence.query(DeploymentTrigger.class, pageRequest);
   }
-  private void validateTriggerAction(DeploymentTrigger trigger) {
-    Action action = trigger.getAction();
-    if (action.getActionType() == ActionType.PIPELINE) {
-      PipelineAction pipelineAction = (PipelineAction) action;
-      validateTriggerArgs(trigger.getAppId(), pipelineAction.getTriggerArgs());
-    } else if (action.getActionType() == ActionType.ORCHESTRATION) {
-      WorkflowAction workflowAction = (WorkflowAction) action;
-      validateTriggerArgs(trigger.getAppId(), workflowAction.getTriggerArgs());
-    }
+
+  @Override
+  public void triggerExecutionPostArtifactCollectionAsync(
+      String accountId, String appId, String artifactStreamId, List<Artifact> artifacts) {
+    ArtifactTriggerProcessor triggerProcessor =
+        (ArtifactTriggerProcessor) triggerProcessorMapBinder.get(Type.NEW_ARTIFACT.name());
+
+    triggerProcessor.triggerExecutionPostArtifactCollection(appId, artifactStreamId, artifacts);
   }
 
-  private void validateTriggerArgs(String appId, TriggerArgs triggerArgs) {
-    notNullCheck("Trigger args not exist ", triggerArgs, USER);
-    List<TriggerArtifactVariable> triggerArtifactVariables = triggerArgs.getTriggerArtifactVariables();
-
-    if (triggerArtifactVariables != null) {
-      triggerArtifactVariables.forEach(triggerArtifactVariable -> {
-        String entityId = triggerArtifactVariable.getEntityId();
-        EntityType entityType = triggerArtifactVariable.getEntityType();
-        validateVariableName(appId, entityId, entityType, triggerArtifactVariable.getVariableName());
-        validateVariableValue(
-            appId, triggerArtifactVariable.getVariableValue(), triggerArtifactVariable.getVariableName());
-      });
-    }
-  }
-
-  private void validateVariableValue(String appId, TriggerArtifactSelectionValue variableValue, String variableName) {
-    switch (variableValue.getArtifactVariableType()) {
-      case ORCHESTRATION:
-        TriggerArtifactSelectionWorkflow workflowVar = (TriggerArtifactSelectionWorkflow) variableValue;
-        try {
-          workflowService.fetchWorkflowName(appId, workflowVar.getWorkflowId());
-        } catch (WingsException exception) {
-          throw new WingsException("workflow does not exist for variable " + variableName);
-        }
-        break;
-      case PIPELINE:
-        TriggerArtifactSelectionPipeline pipelineVar = (TriggerArtifactSelectionPipeline) variableValue;
-        try {
-          pipelineService.fetchPipelineName(appId, pipelineVar.getPipelineId());
-        } catch (WingsException exception) {
-          throw new WingsException("pipeline does not exist for variable " + variableName);
-        }
-        break;
-      case ARTIFACT:
-        TriggerArtifactSelectionArtifact artifactVar = (TriggerArtifactSelectionArtifact) variableValue;
-        ArtifactStream artifactStream = artifactStreamService.get(artifactVar.getArtifactStreamId());
-        notNullCheck("artifactStream does not exist for id " + artifactVar.getArtifactStreamId(), artifactStream);
-        break;
-      default:
-        unhandled(variableValue.getArtifactVariableType());
-    }
-  }
-
-  private void validateVariableName(String appId, String entityId, EntityType entityType, String variableName) {
-    switch (entityType) {
-      case SERVICE:
-      case SERVICE_TEMPLATE:
-      case ENVIRONMENT:
-        List<ServiceVariable> serviceVariables =
-            serviceVariablesService.getServiceVariablesForEntity(appId, entityId, OBTAIN_VALUE);
-        boolean variableExists =
-            serviceVariables.stream().anyMatch(serviceVariable -> serviceVariable.getName().equals(variableName));
-        if (!variableExists) {
-          throw new WingsException(GENERAL_ERROR)
-              .addParam("variable name " + variableName + " does not exists", variableName);
-        }
-
-        break;
-      case WORKFLOW:
-        List<Variable> variables = workflowService.readWorkflow(appId, entityId).getOrchestration().getUserVariables();
-        boolean wfVariableExists = variables.stream().anyMatch(variable -> variable.getName().equals(variableName));
-        if (!wfVariableExists) {
-          throw new WingsException(GENERAL_ERROR)
-              .addParam("variable name " + variableName + " does not exists", variableName);
-        }
-        break;
-      default:
-        unhandled(entityType);
-    }
-  }
-
-  private void updateTriggerAction(DeploymentTrigger deploymentTrigger) {
+  private void setTriggerAction(DeploymentTrigger deploymentTrigger) {
     switch (deploymentTrigger.getAction().getActionType()) {
       case PIPELINE:
         PipelineAction pipelineAction = (PipelineAction) deploymentTrigger.getAction();
         TriggerArgs triggerArgs = pipelineAction.getTriggerArgs();
         List<TriggerArtifactVariable> triggerArtifactVariables =
-            updateTriggerArtifactVariables(deploymentTrigger.getAppId(), triggerArgs.getTriggerArtifactVariables());
+            setTriggerArtifactVariables(deploymentTrigger.getAppId(), triggerArgs.getTriggerArtifactVariables());
 
         deploymentTrigger.setAction(
             PipelineAction.builder()
@@ -218,7 +140,7 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
         WorkflowAction workflowAction = (WorkflowAction) deploymentTrigger.getAction();
         TriggerArgs wfTriggerArgs = workflowAction.getTriggerArgs();
         List<TriggerArtifactVariable> wfTriggerArtifactVariables =
-            updateTriggerArtifactVariables(deploymentTrigger.getAppId(), wfTriggerArgs.getTriggerArtifactVariables());
+            setTriggerArtifactVariables(deploymentTrigger.getAppId(), wfTriggerArgs.getTriggerArtifactVariables());
         deploymentTrigger.setAction(
             WorkflowAction.builder()
                 .workflowId(workflowAction.getWorkflowId())
@@ -236,7 +158,7 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
     }
   }
 
-  private List<TriggerArtifactVariable> updateTriggerArtifactVariables(
+  private List<TriggerArtifactVariable> setTriggerArtifactVariables(
       String appId, List<TriggerArtifactVariable> inputTriggerArtifactVariables) {
     if (inputTriggerArtifactVariables != null) {
       return inputTriggerArtifactVariables.stream()
@@ -249,7 +171,7 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
             return TriggerArtifactVariable.builder()
                 .type(triggerArtifactVariable.getType())
                 .variableName(triggerArtifactVariable.getVariableName())
-                .variableValue(updateVariableValue(appId, triggerArtifactVariable.getVariableValue()))
+                .variableValue(setVariableValue(appId, triggerArtifactVariable.getVariableValue()))
                 .entityId(triggerArtifactVariable.getEntityId())
                 .entityType(triggerArtifactVariable.getEntityType())
                 .entityName(fetchEntityName(
@@ -262,7 +184,11 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
     }
   }
 
-  private TriggerArtifactSelectionValue updateVariableValue(String appId, TriggerArtifactSelectionValue inputValue) {
+  private TriggerArtifactSelectionValue setVariableValue(String appId, TriggerArtifactSelectionValue inputValue) {
+    if (inputValue == null) {
+      return null;
+    }
+
     switch (inputValue.getArtifactVariableType()) {
       case PIPELINE:
         TriggerArtifactSelectionPipeline pipelineVar = (TriggerArtifactSelectionPipeline) inputValue;
@@ -324,7 +250,7 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
     TriggerProcessor triggerProcessor = obtainTriggerProcessor(trigger);
 
     triggerProcessor.validateTriggerCondition(trigger);
-    validateTriggerAction(trigger);
+    triggerServiceHelper.validateTriggerAction(trigger);
   }
 
   private TriggerProcessor obtainTriggerProcessor(DeploymentTrigger deploymentTrigger) {
@@ -363,7 +289,7 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
     yamlPushService.pushYamlChangeSet(accountId, existingTrigger, updatedTrigger, Event.Type.UPDATE, false, isRename);
   }
 
-  public void setWorkflowName(DeploymentTrigger trigger) {
+  private void setWorkflowName(DeploymentTrigger trigger) {
     switch (trigger.getAction().getActionType()) {
       case PIPELINE:
         PipelineAction pipelineAction = (PipelineAction) trigger.getAction();

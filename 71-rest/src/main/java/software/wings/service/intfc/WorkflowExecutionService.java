@@ -9,6 +9,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.ApprovalAuthorization;
 import software.wings.beans.ApprovalDetails;
+import software.wings.beans.ArtifactVariable;
 import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
@@ -136,6 +137,8 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   HIterator<WorkflowExecution> obtainWorkflowExecutionIterator(List<String> appIds, long epochMilli);
 
   List<Artifact> obtainLastGoodDeployedArtifacts(@NotEmpty String appId, @NotEmpty String workflowId);
+
+  List<ArtifactVariable> obtainLastGoodDeployedArtifactsVariables(String appId, String workflowId);
 
   WorkflowExecution fetchWorkflowExecution(
       String appId, List<String> serviceIds, List<String> envIds, String workflowId);

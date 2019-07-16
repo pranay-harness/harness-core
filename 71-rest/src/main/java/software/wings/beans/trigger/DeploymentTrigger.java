@@ -15,6 +15,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -30,7 +31,7 @@ import javax.validation.constraints.NotNull;
  * Created by sgurubelli on 10/25/17.
  */
 
-@Entity(value = "deploymentTriggers")
+@Entity(value = "deploymentTriggers", noClassnameStored = true)
 @Data
 @Builder
 @NoArgsConstructor
@@ -39,6 +40,7 @@ import javax.validation.constraints.NotNull;
     options = @IndexOptions(name = "uniqueTriggerIdx", unique = true), fields = { @Field("appId")
                                                                                   , @Field("name") }))
 @HarnessExportableEntity
+@FieldNameConstants(innerTypeName = "DeploymentTriggerKeys")
 public class DeploymentTrigger
     implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
   @Id @NotNull(groups = {DeploymentTrigger.class}) @SchemaIgnore private String uuid;

@@ -2745,6 +2745,18 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return new ArrayList<>();
   }
 
+  @Override
+  public List<ArtifactVariable> obtainLastGoodDeployedArtifactsVariables(String appId, String workflowId) {
+    WorkflowExecution workflowExecution = fetchLastSuccessDeployment(appId, workflowId);
+    if (workflowExecution != null) {
+      ExecutionArgs executionArgs = workflowExecution.getExecutionArgs();
+      if (executionArgs != null) {
+        return executionArgs.getArtifactVariables();
+      }
+    }
+    return new ArrayList<>();
+  }
+
   private WorkflowExecution fetchLastSuccessDeployment(String appId, String workflowId) {
     return wingsPersistence.createQuery(WorkflowExecution.class)
         .filter(WorkflowExecutionKeys.workflowId, workflowId)
