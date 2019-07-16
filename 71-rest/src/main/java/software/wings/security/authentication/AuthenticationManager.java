@@ -70,7 +70,7 @@ public class AuthenticationManager {
   @Inject private LicenseService licenseService;
   @Inject private MainConfiguration mainConfiguration;
 
-  private static final String LOGIN_ERROR_CODE_INVALIDSSO = "#/login?errorCode=LOGIN_ERROR_CODE_INVALIDSSO";
+  private static final String LOGIN_ERROR_CODE_INVALIDSSO = "#/login?errorCode=invalidsso";
   private static final String LOGIN_ERROR_CODE_SAMLTESTSUCCESS = "#/login?errorCode=samltestsuccess";
 
   public AuthHandler getAuthHandler(AuthenticationMechanism mechanism) {
