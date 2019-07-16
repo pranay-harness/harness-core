@@ -11,21 +11,20 @@ import com.google.inject.Singleton;
 import io.harness.exception.WingsException;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.graphql.schema.type.aggregation.QLAggregateFunction;
+import software.wings.graphql.schema.type.aggregation.QLCountAggregateOperation;
 import software.wings.graphql.schema.type.aggregation.QLDataPoint;
-import software.wings.graphql.schema.type.aggregation.QLDataType;
-import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLReference;
 import software.wings.graphql.schema.type.aggregation.QLStackedTimeSeriesData;
 import software.wings.graphql.schema.type.aggregation.QLStackedTimeSeriesDataPoint;
-import software.wings.graphql.schema.type.aggregation.QLStringFilter;
+import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesData;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesDataPoint.QLTimeSeriesDataPointBuilder;
+import software.wings.graphql.schema.type.aggregation.instance.QLInstanceAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceAggregation;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceFilter;
-import software.wings.graphql.schema.type.aggregation.instance.QLInstanceFilterType;
 import software.wings.graphql.utils.nameservice.NameResult;
 import software.wings.graphql.utils.nameservice.NameService;
 
@@ -48,10 +47,11 @@ public class InstanceTimeSeriesDataHelper {
   @Inject NameService nameService;
   @Inject InstanceStatsDataFetcher instanceStatsDataFetcher;
 
-  public QLStackedTimeSeriesData getTimeSeriesAggregatedData(String accountId, QLAggregateFunction aggregateFunction,
-      List<QLInstanceFilter> filters, QLTimeSeriesAggregation groupByTime, QLInstanceAggregation groupBy) {
+  public QLStackedTimeSeriesData getTimeSeriesAggregatedData(String accountId,
+      QLInstanceAggregateFunction aggregateFunction, List<QLInstanceFilter> filters,
+      QLTimeSeriesAggregation groupByTime, QLInstanceAggregation groupBy) {
     try {
-      String aggregateOperation = instanceStatsDataFetcher.getSqlAggregateOperation(aggregateFunction);
+      String aggregateOperation = getAggregateOperation(aggregateFunction);
       StringBuilder queryBuilder = new StringBuilder(150);
       queryBuilder.append("SELECT ").append(aggregateOperation).append("(INSTANCECOUNT) AS CNT, ");
       String timeQuerySegment = instanceStatsDataFetcher.getGroupByTimeQuery(groupByTime, "REPORTEDAT");
@@ -79,11 +79,20 @@ public class InstanceTimeSeriesDataHelper {
     }
   }
 
-  public QLTimeSeriesData getTimeSeriesData(String accountId, QLAggregateFunction aggregateFunction,
+  private String getAggregateOperation(QLInstanceAggregateFunction aggregateFunction) {
+    String aggregateOperation;
+    if (aggregateFunction == null || aggregateFunction.getCount() == null) {
+      aggregateOperation = QLCountAggregateOperation.SUM.name();
+    } else {
+      aggregateOperation = aggregateFunction.getCount().name();
+    }
+    return aggregateOperation;
+  }
+
+  public QLTimeSeriesData getTimeSeriesData(String accountId, QLInstanceAggregateFunction aggregateFunction,
       List<QLInstanceFilter> filters, QLTimeSeriesAggregation groupByTime) {
     try {
-      String aggregateOperation = instanceStatsDataFetcher.getSqlAggregateOperation(aggregateFunction);
-
+      String aggregateOperation = getAggregateOperation(aggregateFunction);
       StringBuilder queryBuilder = new StringBuilder(120);
       queryBuilder.append("SELECT ").append(aggregateOperation).append("(INSTANCECOUNT) AS CNT, ");
 
@@ -205,57 +214,69 @@ public class InstanceTimeSeriesDataHelper {
   }
 
   private String getSqlFilter(QLInstanceFilter filter) {
-    QLInstanceFilterType type = filter.getType();
-    QLDataType dataType = type.getDataType();
-    String dbFieldName = type.getSqlDbFieldName();
-    StringBuilder queryBuilder = new StringBuilder(dbFieldName);
-    switch (dataType) {
-      case NUMBER:
-        QLNumberFilter numberFilter = filter.getNumberFilter();
-        addNumberFilter(queryBuilder, numberFilter);
-        break;
-      case STRING:
-        QLStringFilter stringFilter = filter.getStringFilter();
-        addStringFilter(queryBuilder, stringFilter);
-        break;
-      default:
-        throw new WingsException("Unknown instance filter type " + dataType);
+    StringBuilder queryBuilder = new StringBuilder(56);
+    boolean multipleCriteria = false;
+    if (filter.getApplication() != null) {
+      multipleCriteria = setMultipleCriteria(multipleCriteria, queryBuilder);
+      queryBuilder.append(" APPID ");
+      addIdQuery(queryBuilder, filter.getApplication());
     }
+
+    if (filter.getCloudProvider() != null) {
+      queryBuilder.append(" COMPUTEPROVIDERID ");
+      multipleCriteria = setMultipleCriteria(multipleCriteria, queryBuilder);
+      addIdQuery(queryBuilder, filter.getCloudProvider());
+    }
+
+    if (filter.getEnvironment() != null) {
+      queryBuilder.append(" ENVID ");
+      multipleCriteria = setMultipleCriteria(multipleCriteria, queryBuilder);
+      addIdQuery(queryBuilder, filter.getEnvironment());
+    }
+
+    if (filter.getService() != null) {
+      queryBuilder.append(" SERVICEID ");
+      multipleCriteria = setMultipleCriteria(multipleCriteria, queryBuilder);
+      addIdQuery(queryBuilder, filter.getService());
+    }
+
+    if (filter.getCreatedAt() != null) {
+      queryBuilder.append(" CREATEDAT ");
+      multipleCriteria = setMultipleCriteria(multipleCriteria, queryBuilder);
+      addTimeQuery(queryBuilder, filter.getCreatedAt());
+    }
+
+    if (filter.getInstanceType() != null) {
+      setMultipleCriteria(multipleCriteria, queryBuilder);
+      queryBuilder.append("INSTANCETYPE = '");
+      queryBuilder.append(filter.getInstanceType().name());
+      queryBuilder.append('\'');
+    }
+
     return queryBuilder.toString();
   }
 
-  private void addNumberFilter(StringBuilder queryBuilder, QLNumberFilter filter) {
+  private boolean setMultipleCriteria(boolean multipleCriteria, StringBuilder queryBuilder) {
+    if (multipleCriteria) {
+      queryBuilder.append(" AND ");
+    } else {
+      multipleCriteria = true;
+    }
+    return multipleCriteria;
+  }
+
+  private void addTimeQuery(StringBuilder queryBuilder, QLTimeFilter filter) {
     switch (filter.getOperator()) {
       case EQUALS:
         queryBuilder.append(" = ");
         queryBuilder.append(filter.getValues()[0]);
         break;
-      case NOT_EQUALS:
-        queryBuilder.append(" != ");
-        queryBuilder.append(filter.getValues()[0]);
-        break;
-      case IN:
-        queryBuilder.append(" IN (");
-        instanceStatsDataFetcher.generateSqlInQuery(queryBuilder, filter.getValues());
-        break;
-      case NOT_IN:
-        queryBuilder.append(" NOT IN (");
-        instanceStatsDataFetcher.generateSqlInQuery(queryBuilder, filter.getValues());
-        break;
-      case LESS_THAN:
+      case BEFORE:
         queryBuilder.append(" < ");
         queryBuilder.append(filter.getValues()[0]);
         break;
-      case LESS_THAN_OR_EQUALS:
-        queryBuilder.append(" <= ");
-        queryBuilder.append(filter.getValues()[0]);
-        break;
-      case GREATER_THAN:
+      case AFTER:
         queryBuilder.append(" > ");
-        queryBuilder.append(filter.getValues()[0]);
-        break;
-      case GREATER_THAN_OR_EQUALS:
-        queryBuilder.append(" >= ");
         queryBuilder.append(filter.getValues()[0]);
         break;
       default:
@@ -263,7 +284,7 @@ public class InstanceTimeSeriesDataHelper {
     }
   }
 
-  private void addStringFilter(StringBuilder queryBuilder, QLStringFilter filter) {
+  private void addIdQuery(StringBuilder queryBuilder, QLIdFilter filter) {
     switch (filter.getOperator()) {
       case EQUALS:
         queryBuilder.append(" = '");
@@ -280,13 +301,74 @@ public class InstanceTimeSeriesDataHelper {
         instanceStatsDataFetcher.generateSqlInQuery(queryBuilder, filter.getValues());
         queryBuilder.append(')');
         break;
-      case NOT_IN:
-        queryBuilder.append(" NOT IN (");
-        instanceStatsDataFetcher.generateSqlInQuery(queryBuilder, filter.getValues());
-        queryBuilder.append(')');
-        break;
       default:
-        throw new WingsException("String operator not supported" + filter.getOperator());
+        throw new WingsException("Id operator not supported" + filter.getOperator());
     }
   }
+
+  //  private void addNumberFilter(StringBuilder queryBuilder, QLNumberFilter filter) {
+  //    switch (filter.getOperator()) {
+  //      case EQUALS:
+  //        queryBuilder.append(" = ");
+  //        queryBuilder.append(filter.getValues()[0]);
+  //        break;
+  //      case NOT_EQUALS:
+  //        queryBuilder.append(" != ");
+  //        queryBuilder.append(filter.getValues()[0]);
+  //        break;
+  //      case IN:
+  //        queryBuilder.append(" IN (");
+  //        instanceStatsDataFetcher.generateSqlInQuery(queryBuilder, filter.getValues());
+  //        break;
+  //      case NOT_IN:
+  //        queryBuilder.append(" NOT IN (");
+  //        instanceStatsDataFetcher.generateSqlInQuery(queryBuilder, filter.getValues());
+  //        break;
+  //      case LESS_THAN:
+  //        queryBuilder.append(" < ");
+  //        queryBuilder.append(filter.getValues()[0]);
+  //        break;
+  //      case LESS_THAN_OR_EQUALS:
+  //        queryBuilder.append(" <= ");
+  //        queryBuilder.append(filter.getValues()[0]);
+  //        break;
+  //      case GREATER_THAN:
+  //        queryBuilder.append(" > ");
+  //        queryBuilder.append(filter.getValues()[0]);
+  //        break;
+  //      case GREATER_THAN_OR_EQUALS:
+  //        queryBuilder.append(" >= ");
+  //        queryBuilder.append(filter.getValues()[0]);
+  //        break;
+  //      default:
+  //        throw new RuntimeException("Number operator not supported" + filter.getOperator());
+  //    }
+  //  }
+  //
+  //  private void addStringFilter(StringBuilder queryBuilder, QLStringFilter filter) {
+  //    switch (filter.getOperator()) {
+  //      case EQUALS:
+  //        queryBuilder.append(" = '");
+  //        queryBuilder.append(filter.getValues()[0]);
+  //        queryBuilder.append('\'');
+  //        break;
+  //      case NOT_EQUALS:
+  //        queryBuilder.append(" != '");
+  //        queryBuilder.append(filter.getValues()[0]);
+  //        queryBuilder.append('\'');AbstractStatsV2DataFetcher
+  //        break;
+  //      case IN:
+  //        queryBuilder.append(" IN (");
+  //        instanceStatsDataFetcher.generateSqlInQuery(queryBuilder, filter.getValues());
+  //        queryBuilder.append(')');
+  //        break;
+  //      case NOT_IN:
+  //        queryBuilder.append(" NOT IN (");
+  //        instanceStatsDataFetcher.generateSqlInQuery(queryBuilder, filter.getValues());
+  //        queryBuilder.append(')');
+  //        break;
+  //      default:
+  //        throw new WingsException("String operator not supported" + filter.getOperator());
+  //    }
+  //  }
 }

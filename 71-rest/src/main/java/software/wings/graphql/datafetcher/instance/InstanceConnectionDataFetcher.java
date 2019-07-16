@@ -1,7 +1,10 @@
 package software.wings.graphql.datafetcher.instance;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.inject.Inject;
 
+import graphql.schema.DataFetchingEnvironment;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -12,10 +15,12 @@ import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.graphql.schema.type.QLInstanceConnection;
 import software.wings.graphql.schema.type.QLInstanceConnection.QLInstanceConnectionBuilder;
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceFilter;
-import software.wings.graphql.schema.type.aggregation.instance.QLInstanceFilterType;
 import software.wings.graphql.schema.type.instance.QLInstance;
+import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 
@@ -25,6 +30,7 @@ import java.util.List;
 public class InstanceConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLInstanceFilter, QLNoOpSortCriteria, QLInstanceConnection> {
   @Inject private InstanceControllerManager instanceControllerManager;
+  @Inject private InstanceQueryHelper instanceMongoHelper;
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
@@ -44,23 +50,28 @@ public class InstanceConnectionDataFetcher
   }
 
   @Override
-  protected String getFilterFieldName(String filterType) {
-    QLInstanceFilterType type = QLInstanceFilterType.valueOf(filterType);
-    switch (type) {
-      case CreatedAt:
-        return "createdAt";
-      case Application:
-        return "appId";
-      case Service:
-        return "serviceId";
-      case Environment:
-        return "envId";
-      case CloudProvider:
-        return "computeProviderId";
-      case InstanceType:
-        return "instanceType";
-      default:
-        throw new WingsException("Unknown filter type" + filterType);
+  protected void populateFilters(List<QLInstanceFilter> filters, Query query) {
+    if (isEmpty(filters)) {
+      return;
     }
+    instanceMongoHelper.setQuery(filters, query);
+  }
+
+  @Override
+  protected QLInstanceFilter generateFilter(DataFetchingEnvironment environment, String key, String value) {
+    QLIdFilter idFilter = QLIdFilter.builder()
+                              .operator(QLIdOperator.EQUALS)
+                              .values(new String[] {(String) utils.getFieldValue(environment.getSource(), value)})
+                              .build();
+    if (NameService.application.equals(key)) {
+      return QLInstanceFilter.builder().application(idFilter).build();
+    } else if (NameService.service.equals(key)) {
+      return QLInstanceFilter.builder().service(idFilter).build();
+    } else if (NameService.environment.equals(key)) {
+      return QLInstanceFilter.builder().environment(idFilter).build();
+    } else if (NameService.cloudProvider.equals(key)) {
+      return QLInstanceFilter.builder().cloudProvider(idFilter).build();
+    }
+    throw new WingsException("Unsupported field " + key + " while generating filter");
   }
 }

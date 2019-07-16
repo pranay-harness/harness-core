@@ -10,13 +10,12 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.Trigger.TriggerKeys;
 import software.wings.graphql.datafetcher.RealTimeStatsDataFetcher;
-import software.wings.graphql.schema.type.aggregation.QLAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLData;
+import software.wings.graphql.schema.type.aggregation.QLNoOpAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.trigger.QLTriggerAggregation;
 import software.wings.graphql.schema.type.aggregation.trigger.QLTriggerFilter;
-import software.wings.graphql.schema.type.aggregation.trigger.QLTriggerFilterType;
 import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.service.intfc.AppService;
 
@@ -24,12 +23,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class TriggerStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggregateFunction, QLTriggerFilter,
+public class TriggerStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOpAggregateFunction, QLTriggerFilter,
     QLTriggerAggregation, QLTimeSeriesAggregation, QLNoOpSortCriteria> {
   @Inject private AppService appService;
+  @Inject TriggerQueryHelper triggerQueryHelper;
 
   @Override
-  protected QLData fetch(String accountId, QLAggregateFunction aggregateFunction, List<QLTriggerFilter> filters,
+  protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction, List<QLTriggerFilter> filters,
       List<QLTriggerAggregation> groupBy, QLTimeSeriesAggregation groupByTime, List<QLNoOpSortCriteria> sortCriteria) {
     final Class entityClass = Trigger.class;
     List<String> groupByList = new ArrayList<>();
@@ -47,18 +47,6 @@ public class TriggerStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggregat
     return query;
   }
 
-  protected String getFilterFieldName(String filterType) {
-    QLTriggerFilterType triggerFilterType = QLTriggerFilterType.valueOf(filterType);
-    switch (triggerFilterType) {
-      case Application:
-        return "appId";
-      case Trigger:
-        return "_id";
-      default:
-        throw new WingsException("Unknown filter type" + filterType);
-    }
-  }
-
   protected String getAggregationFieldName(String aggregation) {
     QLTriggerAggregation triggerAggregation = QLTriggerAggregation.valueOf(aggregation);
     switch (triggerAggregation) {
@@ -69,14 +57,9 @@ public class TriggerStatsDataFetcher extends RealTimeStatsDataFetcher<QLAggregat
     }
   }
 
-  protected String getAggregationNameField(String aggregation) {
-    QLTriggerAggregation triggerAggregation = QLTriggerAggregation.valueOf(aggregation);
-    switch (triggerAggregation) {
-      case Application:
-        return "appName";
-      default:
-        throw new WingsException("Unknown aggregation type" + aggregation);
-    }
+  @Override
+  protected void populateFilters(List<QLTriggerFilter> filters, Query query) {
+    triggerQueryHelper.setQuery(filters, query);
   }
 
   @Override

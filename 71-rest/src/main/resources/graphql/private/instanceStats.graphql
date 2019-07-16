@@ -6,12 +6,15 @@ enum InstanceAggregation {
   InstanceType
 }
 
+input InstanceAggregateFunction {
+  count: CountAggregateOperation
+}
+
 extend type Query {
   # Get instance stats.
   # select * from Instance where applicationid = 123 group by
   instanceStats(
-    aggregateFunction: AggregateFunction
-    timeRange: TimeRange
+    aggregateFunction: InstanceAggregateFunction
     filters: [InstanceFilter]
     groupBy: [InstanceAggregation]
     groupByTime: TimeSeriesAggregation

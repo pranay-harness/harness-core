@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Inject;
 
+import graphql.schema.DataFetchingEnvironment;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -14,11 +15,13 @@ import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.graphql.schema.type.QLPageInfo;
 import software.wings.graphql.schema.type.QLPageInfo.QLPageInfoBuilder;
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.connector.QLConnectorFilter;
-import software.wings.graphql.schema.type.aggregation.connector.QLConnectorFilterType;
 import software.wings.graphql.schema.type.connector.QLConnectorsConnection;
 import software.wings.graphql.schema.type.connector.QLConnectorsConnection.QLConnectorsConnectionBuilder;
+import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.SettingsService;
@@ -29,6 +32,7 @@ import java.util.List;
 public class ConnectorConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLConnectorFilter, QLNoOpSortCriteria, QLConnectorsConnection> {
   @Inject private SettingsService settingsService;
+  @Inject ConnectorQueryHelper connectorQueryHelper;
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
@@ -56,21 +60,24 @@ public class ConnectorConnectionDataFetcher
                 .build());
       }
     }
-
     return connectorsConnectionBuilder.build();
   }
 
-  protected String getFilterFieldName(String filterType) {
-    QLConnectorFilterType qlFilterType = QLConnectorFilterType.valueOf(filterType);
-    switch (qlFilterType) {
-      case Type:
-        return "value.type";
-      case Connector:
-        return "_id";
-      case CreatedAt:
-        return "createdAt";
-      default:
-        throw new WingsException("Unknown filter type" + filterType);
+  @Override
+  protected void populateFilters(List<QLConnectorFilter> filters, Query query) {
+    connectorQueryHelper.setQuery(filters, query);
+  }
+
+  @Override
+  protected QLConnectorFilter generateFilter(DataFetchingEnvironment environment, String key, String value) {
+    if (NameService.connector.equals(key)) {
+      return QLConnectorFilter.builder()
+          .connector(QLIdFilter.builder()
+                         .operator(QLIdOperator.EQUALS)
+                         .values(new String[] {(String) utils.getFieldValue(environment.getSource(), value)})
+                         .build())
+          .build();
     }
+    throw new WingsException("Unsupported field " + key + " while generating filter");
   }
 }

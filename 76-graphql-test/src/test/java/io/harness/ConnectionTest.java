@@ -36,7 +36,7 @@ public class ConnectionTest extends GraphQLTest {
 
   private static final String pattern = $.GQL(/*
 {
-  pipelines(filters:[{type:Application,stringFilter:{operator:EQUALS,values:["%s"]}}] limit: %d offset: %d) {
+  pipelines(filters:[{application:{operator:EQUALS,values:["%s"]}}] limit: %d offset: %d) {
     nodes {
       id
     }
@@ -51,7 +51,7 @@ public class ConnectionTest extends GraphQLTest {
 
   private static final String patternNoHasMore = $.GQL(/*
 {
-  pipelines(filters:[{type:Application,stringFilter:{operator:EQUALS,values:["%s"]}}] limit: %d offset: %d) {
+  pipelines(filters:[{application:{operator:EQUALS,values:["%s"]}}] limit: %d offset: %d) {
     nodes {
       id
     }

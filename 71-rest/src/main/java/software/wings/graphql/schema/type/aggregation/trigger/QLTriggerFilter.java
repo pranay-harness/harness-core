@@ -2,17 +2,12 @@ package software.wings.graphql.schema.type.aggregation.trigger;
 
 import lombok.Builder;
 import lombok.Value;
-import software.wings.graphql.schema.type.aggregation.QLStringFilter;
-import software.wings.graphql.schema.type.aggregation.QLStringFilterType;
+import software.wings.graphql.schema.type.aggregation.EntityFilter;
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 
 @Value
 @Builder
-public class QLTriggerFilter implements QLStringFilterType {
-  private QLTriggerFilterType type;
-  private QLStringFilter stringFilter;
-
-  @Override
-  public String getFilterType() {
-    return type != null ? type.name() : null;
-  }
+public class QLTriggerFilter implements EntityFilter {
+  QLIdFilter trigger;
+  QLIdFilter application;
 }

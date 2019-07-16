@@ -34,12 +34,7 @@ type ServiceConnection {
   nodes: [Service]
 }
 
-enum ServiceFilterType {
-  Application
-  Service
-}
-
 input ServiceFilter {
-  type: ServiceFilterType
-  stringFilter: StringFilter
+  application: IdFilter
+  service: IdFilter
 }

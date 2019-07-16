@@ -5,7 +5,7 @@ import lombok.Value;
 
 @Value
 @Builder
-public class QLNumberFilter {
+public class QLNumberFilter implements Filter {
   private QLNumberOperator operator;
   private Number[] values;
 }

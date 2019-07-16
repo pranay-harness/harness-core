@@ -19,16 +19,10 @@ import software.wings.dl.WingsPersistence;
 import software.wings.graphql.schema.type.aggregation.QLAggregatedData;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLDataPoint;
-import software.wings.graphql.schema.type.aggregation.QLDataType;
-import software.wings.graphql.schema.type.aggregation.QLFilterType;
-import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
-import software.wings.graphql.schema.type.aggregation.QLNumberFilterType;
 import software.wings.graphql.schema.type.aggregation.QLReference;
 import software.wings.graphql.schema.type.aggregation.QLSinglePointData;
 import software.wings.graphql.schema.type.aggregation.QLStackedData;
 import software.wings.graphql.schema.type.aggregation.QLStackedDataPoint;
-import software.wings.graphql.schema.type.aggregation.QLStringFilter;
-import software.wings.graphql.schema.type.aggregation.QLStringFilterType;
 import software.wings.graphql.utils.nameservice.NameResult;
 import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.FlatEntitySummaryStats;
@@ -111,8 +105,7 @@ public abstract class RealTimeStatsDataFetcher<A, F, G, T, S> extends AbstractSt
         .build();
   }
 
-  protected QLData getQLData(
-      String accountId, List<? extends QLFilterType> filters, Class entityClass, List<String> groupByAsStringList) {
+  protected QLData getQLData(String accountId, List<F> filters, Class entityClass, List<String> groupByAsStringList) {
     Query query = populateFilters(wingsPersistence, accountId, filters, entityClass);
     if (isNotEmpty(groupByAsStringList)) {
       if (groupByAsStringList.size() == 1) {
@@ -127,34 +120,15 @@ public abstract class RealTimeStatsDataFetcher<A, F, G, T, S> extends AbstractSt
     }
   }
 
+  protected abstract void populateFilters(List<F> filters, Query query);
+
   @NotNull
   protected Query populateFilters(
-      WingsPersistence wingsPersistence, String accountId, List<? extends QLFilterType> filters, Class entityClass) {
+      WingsPersistence wingsPersistence, String accountId, List<F> filters, Class entityClass) {
     Query query = utils.populateAccountFilter(wingsPersistence, accountId, entityClass);
-
-    if (isNotEmpty(filters)) {
-      filters.forEach(filter -> {
-        if (filter.getDataType().equals(QLDataType.STRING)) {
-          QLStringFilter stringFilter = ((QLStringFilterType) filter).getStringFilter();
-
-          if (stringFilter == null) {
-            throw new WingsException("Filter value is null for type:" + filter.getFilterType());
-          }
-          utils.setStringFilter(query.field(getFilterFieldName(filter.getFilterType())), stringFilter);
-        } else if (((QLFilterType) filter).getDataType().equals(QLDataType.NUMBER)) {
-          QLNumberFilter numberFilter = ((QLNumberFilterType) filter).getNumberFilter();
-
-          if (numberFilter == null) {
-            throw new WingsException("Filter value is null for type:" + filter.getFilterType());
-          }
-          utils.setNumberFilter(query.field(getFilterFieldName(filter.getFilterType())), numberFilter);
-        }
-      });
-    }
+    populateFilters(filters, query);
     return query;
   }
-
-  protected abstract String getFilterFieldName(String filterType);
 
   protected abstract String getAggregationFieldName(String aggregation);
 

@@ -6,16 +6,10 @@ extend type Query {
   cloudProviders: CloudProviderConnection @dataFetcher(name: cloudProviderConnection)
 }
 
-enum CloudProviderFilterType {
-  CloudProvider
-  Type
-  CreatedAt
-}
-
 input CloudProviderFilter {
-  type: CloudProviderFilterType
-  stringFilter: StringFilter
-  numberFilter: NumberFilter
+  cloudProvider: IdFilter
+  cloudProviderType: StringFilter
+  createdAt: TimeFilter
 }
 
 interface CloudProvider {

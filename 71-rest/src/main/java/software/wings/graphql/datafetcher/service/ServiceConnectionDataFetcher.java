@@ -1,5 +1,11 @@
 package software.wings.graphql.datafetcher.service;
 
+import static software.wings.graphql.utils.nameservice.NameService.application;
+import static software.wings.graphql.utils.nameservice.NameService.service;
+
+import com.google.inject.Inject;
+
+import graphql.schema.DataFetchingEnvironment;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -12,9 +18,10 @@ import software.wings.graphql.schema.type.QLService;
 import software.wings.graphql.schema.type.QLService.QLServiceBuilder;
 import software.wings.graphql.schema.type.QLServiceConnection;
 import software.wings.graphql.schema.type.QLServiceConnection.QLServiceConnectionBuilder;
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.service.QLServiceFilter;
-import software.wings.graphql.schema.type.aggregation.service.QLServiceFilterType;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
@@ -24,6 +31,8 @@ import java.util.List;
 @Slf4j
 public class ServiceConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLServiceFilter, QLNoOpSortCriteria, QLServiceConnection> {
+  @Inject ServiceQueryHelper serviceQueryHelper;
+
   @Override
   @AuthRule(permissionType = PermissionType.SERVICE, action = Action.READ)
   protected QLServiceConnection fetchConnection(List<QLServiceFilter> serviceFilters,
@@ -41,15 +50,22 @@ public class ServiceConnectionDataFetcher
     return qlServiceConnectionBuilder.build();
   }
 
-  protected String getFilterFieldName(String filterType) {
-    QLServiceFilterType serviceFilterType = QLServiceFilterType.valueOf(filterType);
-    switch (serviceFilterType) {
-      case Application:
-        return ServiceKeys.appId;
-      case Service:
-        return ServiceKeys.uuid;
-      default:
-        throw new WingsException("Unknown filter type" + filterType);
+  @Override
+  protected void populateFilters(List<QLServiceFilter> filters, Query query) {
+    serviceQueryHelper.setQuery(filters, query);
+  }
+
+  @Override
+  protected QLServiceFilter generateFilter(DataFetchingEnvironment environment, String key, String value) {
+    QLIdFilter idFilter = QLIdFilter.builder()
+                              .operator(QLIdOperator.EQUALS)
+                              .values(new String[] {(String) utils.getFieldValue(environment.getSource(), value)})
+                              .build();
+    if (application.equals(key)) {
+      return QLServiceFilter.builder().application(idFilter).build();
+    } else if (service.equals(key)) {
+      return QLServiceFilter.builder().service(idFilter).build();
     }
+    throw new WingsException("Unsupported field " + key + " while generating filter");
   }
 }

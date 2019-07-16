@@ -15,16 +15,26 @@ enum NumericOperator {
   GREATER_THAN
   GREATER_THAN_OR_EQUALS
   IN
-  NOT_IN
   LESS_THAN
   LESS_THAN_OR_EQUALS
   NOT_EQUALS
 }
 
+enum TimeOperator {
+  EQUALS
+  BEFORE
+  AFTER
+}
+
 enum StringOperator {
   EQUALS
   IN
-  NOT_IN
+  NOT_EQUALS
+}
+
+enum IdOperator {
+  EQUALS
+  IN
   NOT_EQUALS
 }
 
@@ -33,7 +43,17 @@ input StringFilter {
   values: [String]
 }
 
+input IdFilter {
+  operator: IdOperator
+  values: [String]
+}
+
 input NumberFilter {
   operator: NumericOperator
   values: [Number]
+}
+
+input TimeFilter {
+  operator: TimeOperator
+  value: Number
 }

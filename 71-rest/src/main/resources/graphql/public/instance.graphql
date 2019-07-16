@@ -29,19 +29,13 @@ type InstanceConnection {
   nodes: [Instance]
 }
 
-enum InstanceFilterType {
-  CreatedAt
-  Application
-  Service
-  Environment
-  CloudProvider
-  InstanceType
-}
-
 input InstanceFilter {
-  type: InstanceFilterType
-  stringFilter: StringFilter
-  numberFilter: NumberFilter
+  createdAt: TimeFilter
+  application: IdFilter
+  service: IdFilter
+  environment: IdFilter
+  cloudProvider: IdFilter
+  instanceType: InstanceType
 }
 
 enum InstanceCountType {

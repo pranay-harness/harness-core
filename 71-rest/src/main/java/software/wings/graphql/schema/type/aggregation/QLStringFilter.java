@@ -5,7 +5,7 @@ import lombok.Value;
 
 @Value
 @Builder
-public class QLStringFilter {
+public class QLStringFilter implements Filter {
   private QLStringOperator operator;
   private String[] values;
 }

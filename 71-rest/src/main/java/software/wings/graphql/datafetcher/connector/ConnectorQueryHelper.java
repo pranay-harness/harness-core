@@ -1,0 +1,53 @@
+package software.wings.graphql.datafetcher.connector;
+
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
+import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.Query;
+import software.wings.beans.SettingAttribute;
+import software.wings.graphql.datafetcher.DataFetcherUtils;
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+import software.wings.graphql.schema.type.aggregation.QLStringFilter;
+import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
+import software.wings.graphql.schema.type.aggregation.connector.QLConnectorFilter;
+
+import java.util.List;
+
+/**
+ * @author rktummala on 07/12/19
+ */
+@Singleton
+public class ConnectorQueryHelper {
+  @Inject protected DataFetcherUtils utils;
+
+  public void setQuery(List<QLConnectorFilter> filters, Query query) {
+    if (isEmpty(filters)) {
+      return;
+    }
+
+    filters.forEach(filter -> {
+      FieldEnd<? extends Query<SettingAttribute>> field;
+
+      if (filter.getConnector() != null) {
+        field = query.field("_id");
+        QLIdFilter connectorFilter = filter.getConnector();
+        utils.setIdFilter(field, connectorFilter);
+      }
+
+      if (filter.getConnectorType() != null) {
+        field = query.field("value.type");
+        QLStringFilter connectorTypeFilter = filter.getConnectorType();
+        utils.setStringFilter(field, connectorTypeFilter);
+      }
+
+      if (filter.getCreatedAt() != null) {
+        field = query.field("createdAt");
+        QLTimeFilter createdAtFilter = filter.getCreatedAt();
+        utils.setTimeFilter(field, createdAtFilter);
+      }
+    });
+  }
+}

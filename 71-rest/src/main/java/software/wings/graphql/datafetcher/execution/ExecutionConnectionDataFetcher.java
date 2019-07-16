@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher.execution;
 
 import com.google.inject.Inject;
 
+import graphql.schema.DataFetchingEnvironment;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,8 @@ import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.graphql.schema.type.QLExecution;
 import software.wings.graphql.schema.type.QLExecutionConnection;
 import software.wings.graphql.schema.type.QLExecutionConnection.QLExecutionConnectionBuilder;
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.QLStringFilter;
 import software.wings.graphql.schema.type.aggregation.QLStringOperator;
@@ -46,6 +49,11 @@ public class ExecutionConnectionDataFetcher
     return connectionBuilder.build();
   }
 
+  @Override
+  protected void populateFilters(List<QLExecutionFilter> filters, Query query) {
+    // TODO to be implemented later
+  }
+
   private List<QLExecutionFilter> addAppIdValidation(List<QLExecutionFilter> filters) {
     List<QLExecutionFilter> updatedFilters = filters != null ? new ArrayList<>(filters) : new ArrayList<>();
     boolean appIdFilterFound = false;
@@ -71,7 +79,6 @@ public class ExecutionConnectionDataFetcher
     return updatedFilters;
   }
 
-  @Override
   protected String getFilterFieldName(String filterType) {
     QLExecutionFilterType type = QLExecutionFilterType.valueOf(filterType);
     switch (type) {
@@ -108,5 +115,25 @@ public class ExecutionConnectionDataFetcher
   @Override
   public String getAccountId() {
     return null;
+  }
+
+  @Override
+  protected QLExecutionFilter generateFilter(DataFetchingEnvironment environment, String key, String value) {
+    QLIdFilter idFilter = QLIdFilter.builder()
+                              .operator(QLIdOperator.EQUALS)
+                              .values(new String[] {(String) utils.getFieldValue(environment.getSource(), value)})
+                              .build();
+
+    // TODO Rushabh
+    //    if (NameService.application.equals(key)) {
+    //      return QLExecutionFilter.builder().application(idFilter).build();
+    //    } else if (NameService.service.equals(key)) {
+    //      return QLExecutionFilter.builder().service(idFilter).build();
+    //    } else if (NameService.environment.equals(key)) {
+    //      return QLExecutionFilter.builder().environment(idFilter).build();
+    //    } else if (NameService.cloudProvider.equals(key)) {
+    //      return QLExecutionFilter.builder().cloudProvider(idFilter).build();
+    //    }
+    throw new WingsException("Unsupported field " + key + " while generating filter");
   }
 }

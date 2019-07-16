@@ -5,16 +5,10 @@ extend type Query {
   connectors: ConnectorConnection @dataFetcher(name: connectorConnection)
 }
 
-enum ConnectorFilterType {
-  Connector
-  Type
-  CreatedAt
-}
-
 input ConnectorFilter {
-  type: ConnectorFilterType
-  stringFilter: StringFilter
-  numberFilter: NumberFilter
+  connector: IdFilter
+  connectorType: StringFilter
+  createdAt: TimeFilter
 }
 
 interface Connector {

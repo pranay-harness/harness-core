@@ -95,7 +95,7 @@ public class ServiceTest extends GraphQLTest {
     {
       String query = $GQL(/*
 {
-  services(filters:[{type:Application,stringFilter:{operator:EQUALS,values:["%s"]}}], limit: 2) {
+  services(filters:[{application:{operator:EQUALS,values:["%s"]}}], limit: 2) {
     nodes {
       id
     }
@@ -111,7 +111,7 @@ public class ServiceTest extends GraphQLTest {
     {
       String query = $GQL(/*
 {
-  services(filters:[{type:Application,stringFilter:{operator:EQUALS,values:["%s"]}}] limit: 2 offset: 1) {
+  services(filters:[{application:{operator:EQUALS,values:["%s"]}}] limit: 2 offset: 1) {
     nodes {
       id
     }

@@ -10,9 +10,10 @@ enum PipelineFilterType {
   Application
   Pipeline
 }
+
 input PipelineFilter {
-  type: PipelineFilterType
-  stringFilter: StringFilter
+  application: IdFilter
+  pipeline: IdFilter
 }
 
 # Type for pipeline

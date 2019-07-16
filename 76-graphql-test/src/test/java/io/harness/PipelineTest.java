@@ -96,7 +96,7 @@ public class PipelineTest extends GraphQLTest {
     {
       String query = $GQL(/*
 {
-  pipelines(filters:[{type:Application,stringFilter:{operator:EQUALS,values:["%s"]}}] limit: 2) {
+  pipelines(filters:[{application:{operator:EQUALS,values:["%s"]}}] limit: 2) {
     nodes {
       id
       name
@@ -115,7 +115,7 @@ public class PipelineTest extends GraphQLTest {
     {
       String query = $GQL(/*
 {
-  pipelines(filters:[{type:Application,stringFilter:{operator:EQUALS,values:["%s"]}}] limit: 2 offset: 1) {
+  pipelines(filters:[{application:{operator:EQUALS,values:["%s"]}}] limit: 2 offset: 1) {
     nodes {
       id
       name

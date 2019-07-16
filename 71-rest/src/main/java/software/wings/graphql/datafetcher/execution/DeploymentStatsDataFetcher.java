@@ -482,7 +482,6 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
             + "'" + filterValue + "'"));
         break;
       case NOT_EQUALS:
-      case NOT_IN:
         selectQuery.addCondition(new CustomCondition("NOT " + key + " @>"
             + "'" + filterValue + "'"));
         break;
@@ -511,9 +510,6 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
         break;
       case IN:
         selectQuery.addCondition(new InCondition(key, (Object[]) filter.getNumberFilter().getValues()));
-        break;
-      case NOT_IN:
-        selectQuery.addCondition(new InCondition(key, (Object[]) filter.getNumberFilter().getValues()).setNegate(true));
         break;
       case LESS_THAN:
         selectQuery.addCondition(BinaryCondition.lessThan(key, filter.getNumberFilter().getValues()[0]));

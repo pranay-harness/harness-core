@@ -1,6 +1,5 @@
 package software.wings.graphql.datafetcher;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ReportTarget.GRAPHQL_API;
 import static io.harness.exception.WingsException.USER_SRE;
 import static software.wings.graphql.datafetcher.DataFetcherUtils.EXCEPTION_MSG_DELIMITER;
@@ -28,21 +27,11 @@ import software.wings.dl.WingsPersistence;
 import software.wings.graphql.directive.DataFetcherDirective.DataFetcherDirectiveAttributes;
 import software.wings.graphql.schema.query.QLPageQueryParameterImpl;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
-import software.wings.graphql.schema.type.aggregation.QLDataType;
-import software.wings.graphql.schema.type.aggregation.QLFilterType;
-import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
-import software.wings.graphql.schema.type.aggregation.QLNumberFilterType;
-import software.wings.graphql.schema.type.aggregation.QLStringFilter;
-import software.wings.graphql.schema.type.aggregation.QLStringFilterType;
-import software.wings.graphql.schema.type.aggregation.QLStringOperator;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -86,7 +75,7 @@ public abstract class AbstractConnectionV2DataFetcher<F, S, O> implements DataFe
         }
         List<F> finalFilters = filters;
         contextFieldArgsMap.forEach((key, value) -> {
-          F filter = generateFilter(environment, filterClass, key, value);
+          F filter = generateFilter(environment, key, value);
           finalFilters.add(filter);
         });
         filters.addAll(finalFilters);
@@ -110,15 +99,7 @@ public abstract class AbstractConnectionV2DataFetcher<F, S, O> implements DataFe
     return responseMessages.stream().map(rm -> rm.getMessage()).collect(Collectors.joining(EXCEPTION_MSG_DELIMITER));
   }
 
-  private F generateFilter(DataFetchingEnvironment environment, Class<F> filterClass, String key, String value) {
-    Map<String, Object> map = new HashMap<>();
-    map.put("type", key);
-    Map stringFilterMap = new LinkedHashMap();
-    stringFilterMap.put("operator", QLStringOperator.EQUALS.name());
-    stringFilterMap.put("values", Arrays.asList(utils.getFieldValue(environment.getSource(), value)));
-    map.put("stringFilter", stringFilterMap);
-    return convertToObject(map, filterClass);
-  }
+  protected abstract F generateFilter(DataFetchingEnvironment environment, String key, String value);
 
   public String getAccountId(DataFetchingEnvironment environment) {
     return utils.getAccountId(environment);
@@ -176,32 +157,12 @@ public abstract class AbstractConnectionV2DataFetcher<F, S, O> implements DataFe
     }
   }
 
-  protected abstract String getFilterFieldName(String filterType);
+  protected abstract void populateFilters(List<F> filters, Query query);
 
   @NotNull
-  public Query populateFilters(
-      WingsPersistence wingsPersistence, List<? extends QLFilterType> filters, Class entityClass) {
+  public Query populateFilters(WingsPersistence wingsPersistence, List<F> filters, Class entityClass) {
     Query query = populateAccountFilter(wingsPersistence, entityClass);
-
-    if (isNotEmpty(filters)) {
-      filters.forEach(filter -> {
-        if (filter.getDataType().equals(QLDataType.STRING)) {
-          QLStringFilter stringFilter = ((QLStringFilterType) filter).getStringFilter();
-
-          if (stringFilter == null) {
-            throw new WingsException("Filter value is null for type:" + filter.getFilterType());
-          }
-          utils.setStringFilter(query.field(getFilterFieldName(filter.getFilterType())), stringFilter);
-        } else if (((QLFilterType) filter).getDataType().equals(QLDataType.NUMBER)) {
-          QLNumberFilter numberFilter = ((QLNumberFilterType) filter).getNumberFilter();
-
-          if (numberFilter == null) {
-            throw new WingsException("Filter value is null for type:" + filter.getFilterType());
-          }
-          utils.setNumberFilter(query.field(getFilterFieldName(filter.getFilterType())), numberFilter);
-        }
-      });
-    }
+    populateFilters(filters, query);
     return query;
   }
 
