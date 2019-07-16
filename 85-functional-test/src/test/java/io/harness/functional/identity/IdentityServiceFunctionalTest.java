@@ -58,6 +58,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
     assertThat(user).isNotNull();
     assertThat(user.getEmail()).isEqualTo(ADMIN_USER);
     assertThat(user.getToken()).isNullOrEmpty();
+    assertThat(user.isFirstLogin()).isFalse();
   }
 
   @Test
@@ -120,6 +121,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
     assertThat(user).isNotNull();
     assertThat(user.getEmail()).isEqualTo(userEmail);
     assertThat(user.getUuid()).isNotEmpty();
+    assertThat(user.isFirstLogin()).isTrue();
   }
 
   private String generateIdentityServiceToken() {
