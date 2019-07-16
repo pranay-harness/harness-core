@@ -139,6 +139,10 @@ logging:
       logFormat: "%blue([${VERSION}]) %green([%thread]) %highlight(%-5level) %blue(%X{executionId}) %cyan(%logger) - %msg %n"
       key: 9a3e6eac4dcdbdc41a93ca99100537df
       programName: manager-saas
+    - type: gke-console
+      threshold: TRACE
+      target: STDOUT
+      logFormat: "%blue([${VERSION}]) %green([%thread]) %highlight(%-5level) %blue(%X{executionId}) %cyan(%logger) - %msg %n"
 
 timescaledb:
   timescaledbUrl:
