@@ -69,7 +69,7 @@ import javax.validation.constraints.NotNull;
       }), @Index(options = @IndexOptions(name = "lastDeployedSearch"), fields = {
         @Field(WorkflowExecutionKeys.appId)
         , @Field(WorkflowExecutionKeys.status), @Field(WorkflowExecutionKeys.workflowId),
-            @Field(WorkflowExecutionKeys.infraMappingIds),
+            @Field(WorkflowExecutionKeys.infraMappingIds), @Field(WorkflowExecutionKeys.infraDefinitionIds),
             @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
       })
 })
@@ -93,6 +93,7 @@ public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAt
   private List<String> cloudProviderIds;
   @Indexed private List<String> serviceIds;
   @Indexed private List<String> infraMappingIds;
+  @Indexed private List<String> infraDefinitionIds;
   private String appName;
   private String envName;
   private EnvironmentType envType;

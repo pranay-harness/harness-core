@@ -65,6 +65,11 @@ public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
   }
 
   @Override
+  public boolean validate(boolean infraRefactor) {
+    return true;
+  }
+
+  @Override
   public OrchestrationWorkflow cloneInternal() {
     return aCustomOrchestrationWorkflow().withGraph(getGraph()).build();
   }
@@ -79,6 +84,11 @@ public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
 
   @Override
   public List<String> getInfraMappingIds() {
+    return new ArrayList<>();
+  }
+
+  @Override
+  public List<String> getInfraDefinitionIds() {
     return new ArrayList<>();
   }
 

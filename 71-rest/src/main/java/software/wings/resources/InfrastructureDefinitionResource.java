@@ -47,8 +47,9 @@ public class InfrastructureDefinitionResource {
   @ExceptionMetered
   @AuthRule(permissionType = ENV, action = READ)
   public RestResponse<PageResponse<InfrastructureDefinition>> list(
-      @BeanParam PageRequest<InfrastructureDefinition> pageRequest) {
-    return new RestResponse<>(infrastructureDefinitionService.list(pageRequest));
+      @BeanParam PageRequest<InfrastructureDefinition> pageRequest, @QueryParam("serviceId") String serviceId,
+      @QueryParam("appId") String appId) {
+    return new RestResponse<>(infrastructureDefinitionService.list(pageRequest, serviceId, appId));
   }
 
   @POST

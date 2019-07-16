@@ -37,11 +37,13 @@ import software.wings.beans.TemplateExpression;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.TemplateExpressionProcessor;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.MultiArtifactWorkflowExecutionServiceHelper;
 import software.wings.service.impl.SweepingOutputServiceImpl;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SweepingOutputService;
@@ -78,11 +80,14 @@ public class PhaseSubWorkflow extends SubWorkflowState {
   private String uuid;
   private String serviceId;
   private String infraMappingId;
+  private String infraDefinitionId;
 
   // Only for rollback phase steps
   @SchemaIgnore private String phaseNameForRollback;
 
   @Inject @Transient private transient ServiceResourceService serviceResourceService;
+
+  @Inject @Transient private transient InfrastructureDefinitionService infrastructureDefinitionService;
 
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
 
@@ -106,8 +111,10 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
     Service service = null;
     InfrastructureMapping infrastructureMapping = null;
+    InfrastructureDefinition infrastructureDefinition = null;
     String serviceIdExpression = null;
     String infraMappingIdExpression = null;
+    String infraDefinitionIdExpression = null;
     List<TemplateExpression> templateExpressions = this.getTemplateExpressions();
     if (templateExpressions != null) {
       for (TemplateExpression templateExpression : templateExpressions) {
@@ -119,23 +126,49 @@ public class PhaseSubWorkflow extends SubWorkflowState {
           infraMappingIdExpression = templateExpression.getExpression();
           infrastructureMapping =
               templateExpressionProcessor.resolveInfraMapping(context, app.getAppId(), templateExpression);
+        } else if (fieldName != null && fieldName.equals("infraDefinitionId")) {
+          infraDefinitionIdExpression = templateExpression.getExpression();
+          infrastructureDefinition =
+              templateExpressionProcessor.resolveInfraDefinition(context, app.getAppId(), templateExpression);
         }
       }
     }
-    if (serviceIdExpression != null) {
-      if (infraMappingIdExpression == null) {
-        throw new WingsException("Service templatized so service infrastructure should be templatized", USER);
-      }
-    } else {
-      if (serviceId != null) {
+    boolean infraRefactor = infraDefinitionId != null || infraDefinitionIdExpression != null;
+
+    if (infraRefactor) {
+      if (serviceIdExpression == null) {
         service = serviceResourceService.get(app.getAppId(), serviceId, false);
         Validator.notNullCheck("Service might have been deleted", service, USER);
       }
-    }
-    if (infraMappingIdExpression == null) {
-      if (infraMappingId != null) {
-        infrastructureMapping = infrastructureMappingService.get(app.getAppId(), infraMappingId);
-        Validator.notNullCheck("Service Infrastructure might have been deleted", infrastructureMapping, USER);
+      if (infraDefinitionIdExpression == null) {
+        infrastructureMapping =
+            infrastructureDefinitionService.getInfraMapping(app.getAppId(), service.getUuid(), infraDefinitionId);
+      } else {
+        infrastructureMapping = infrastructureDefinitionService.getInfraMapping(
+            app.getAppId(), service.getUuid(), infrastructureDefinition.getUuid());
+      }
+
+    } else {
+      if (serviceIdExpression != null) {
+        if (infraMappingIdExpression == null) {
+          throw new WingsException("Service templatized so service infrastructure should be templatized", USER);
+        }
+      } else {
+        if (serviceId != null) {
+          service = serviceResourceService.get(app.getAppId(), serviceId, false);
+          Validator.notNullCheck("Service might have been deleted", service, USER);
+        }
+      }
+      if (infraMappingIdExpression == null) {
+        if (infraDefinitionId != null) {
+          infrastructureMapping =
+              infrastructureDefinitionService.getInfraMapping(app.getAppId(), serviceId, infraDefinitionId);
+          //        infrastructureMapping = infrastructureMappingService.get(app.getAppId(), infraMappingId);
+          Validator.notNullCheck("Service Infrastructure might have been deleted", infrastructureMapping, USER);
+        } else if (infraMappingId != null) {
+          infrastructureMapping = infrastructureMappingService.get(app.getAppId(), infraMappingId);
+          Validator.notNullCheck("Service Infrastructure might have been deleted", infrastructureMapping, USER);
+        }
       }
     }
 
@@ -608,5 +641,14 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
   public void setInfraMappingId(String infraMappingId) {
     this.infraMappingId = infraMappingId;
+  }
+
+  @SchemaIgnore
+  public String getInfraDefinitionId() {
+    return infraMappingId;
+  }
+
+  public void setInfraDefinitionId(String infraDefinitionId) {
+    this.infraDefinitionId = infraDefinitionId;
   }
 }

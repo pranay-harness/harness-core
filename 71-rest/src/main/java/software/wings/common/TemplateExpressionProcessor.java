@@ -14,6 +14,8 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
+import software.wings.infra.InfrastructureDefinition;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -27,6 +29,7 @@ import java.util.regex.Matcher;
 @Slf4j
 public class TemplateExpressionProcessor {
   @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private SettingsService settingsService;
 
@@ -61,6 +64,24 @@ public class TemplateExpressionProcessor {
           WingsException.USER);
     }
     return infrastructureMapping;
+  }
+
+  public InfrastructureDefinition resolveInfraDefinition(
+      ExecutionContext context, String appId, TemplateExpression templateExpression) {
+    String infraDefinitionId = resolveTemplateExpression(context, templateExpression);
+    InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefinitionId);
+    if (infrastructureDefinition == null) {
+      if (matchesVariablePattern(infraDefinitionId)) {
+        throw new WingsException("No value provided for templated Infra Definition workflow variable ["
+                + templateExpression.getExpression() + "]",
+            WingsException.USER);
+      }
+      throw new WingsException("Infrastructure Definition expression  " + templateExpression.getExpression()
+              + " resolved as [" + infraDefinitionId
+              + "]. However, no Infrastructure Definition found with InfraDefinitionId : " + infraDefinitionId,
+          WingsException.USER);
+    }
+    return infrastructureDefinition;
   }
 
   public Service resolveService(ExecutionContext context, Application app, TemplateExpression templateExpression) {

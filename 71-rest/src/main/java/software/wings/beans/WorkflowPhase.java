@@ -38,6 +38,7 @@ public class WorkflowPhase implements UuidAccess {
   private boolean statefulSet;
 
   private String infraMappingId;
+  private String infraDefinitionId;
   private String infraMappingName;
 
   private DeploymentType deploymentType;
@@ -118,6 +119,14 @@ public class WorkflowPhase implements UuidAccess {
 
   public void setInfraMappingId(String infraMappingId) {
     this.infraMappingId = infraMappingId;
+  }
+
+  public String getInfraDefinitionId() {
+    return infraDefinitionId;
+  }
+
+  public void setInfraDefinitionId(String infraDefinitionId) {
+    this.infraDefinitionId = infraDefinitionId;
   }
 
   public String getInfraMappingName() {
@@ -212,6 +221,7 @@ public class WorkflowPhase implements UuidAccess {
                         .putIfNotNull("computeProviderId", computeProviderId)
                         .putIfNotNull("infraMappingName", infraMappingName)
                         .putIfNotNull("infraMappingId", infraMappingId)
+                        .putIfNotNull("infraDefinitionId", infraDefinitionId)
                         .putIfNotNull(Constants.SUB_WORKFLOW_ID, uuid)
                         .putIfNotNull("phaseNameForRollback", phaseNameForRollback)
                         .build())
@@ -226,6 +236,7 @@ public class WorkflowPhase implements UuidAccess {
     params.put("computeProviderId", computeProviderId);
     params.put("infraMappingName", infraMappingName);
     params.put("infraMappingId", infraMappingId);
+    params.put("infraDefinitionId", infraDefinitionId);
     params.put("deploymentType", deploymentType);
     return params;
   }
@@ -276,6 +287,7 @@ public class WorkflowPhase implements UuidAccess {
                                             .uuid(generateUuid())
                                             .serviceId(getServiceId())
                                             .infraMappingId(getInfraMappingId())
+                                            .infraDefinitionId(getInfraDefinitionId())
                                             .infraMappingName(getInfraMappingName())
                                             .computeProviderId(getComputeProviderId())
                                             .deploymentType(getDeploymentType())
@@ -307,6 +319,11 @@ public class WorkflowPhase implements UuidAccess {
     return checkFieldTemplatized("infraMappingId");
   }
 
+  @JsonIgnore
+  public boolean checkInfraDefinitionTemplatized() {
+    return checkFieldTemplatized("infraDefinitionId");
+  }
+
   public String fetchServiceTemplatizedName() {
     TemplateExpression serviceTemplateExpression = fetchServiceTemplateExpression();
     return WorkflowServiceTemplateHelper.getName(serviceTemplateExpression.getExpression(), EntityType.SERVICE);
@@ -316,6 +333,12 @@ public class WorkflowPhase implements UuidAccess {
     TemplateExpression infraTemplateExpression = fetchInfraMappingTemplateExpression();
     return WorkflowServiceTemplateHelper.getName(
         infraTemplateExpression.getExpression(), EntityType.INFRASTRUCTURE_MAPPING);
+  }
+
+  public String fetchInfraDefinitionTemplatizedName() {
+    TemplateExpression infraTemplateExpression = fetchInfraDefinitonTemplateExpression();
+    return WorkflowServiceTemplateHelper.getName(
+        infraTemplateExpression.getExpression(), EntityType.INFRASTRUCTURE_DEFINITION);
   }
 
   private boolean checkFieldTemplatized(String fieldName) {
@@ -338,11 +361,19 @@ public class WorkflowPhase implements UuidAccess {
         .orElse(null);
   }
 
+  private TemplateExpression fetchInfraDefinitonTemplateExpression() {
+    return templateExpressions.stream()
+        .filter(templateExpression -> templateExpression.getFieldName().equals("infraDefinitionId"))
+        .findFirst()
+        .orElse(null);
+  }
+
   public static final class WorkflowPhaseBuilder {
     private String uuid = generateUuid();
     private String name;
     private String serviceId;
     private String infraMappingId;
+    private String infraDefinitionId;
     private String infraMappingName;
     private DeploymentType deploymentType;
     private String computeProviderId;
@@ -378,6 +409,11 @@ public class WorkflowPhase implements UuidAccess {
 
     public WorkflowPhaseBuilder infraMappingId(String infraMappingId) {
       this.infraMappingId = infraMappingId;
+      return this;
+    }
+
+    public WorkflowPhaseBuilder infraDefinitionId(String infraDefinitionId) {
+      this.infraDefinitionId = infraDefinitionId;
       return this;
     }
 
@@ -442,6 +478,7 @@ public class WorkflowPhase implements UuidAccess {
       workflowPhase.setName(name);
       workflowPhase.setServiceId(serviceId);
       workflowPhase.setInfraMappingId(infraMappingId);
+      workflowPhase.setInfraDefinitionId(infraDefinitionId);
       workflowPhase.setInfraMappingName(infraMappingName);
       workflowPhase.setDeploymentType(deploymentType);
       workflowPhase.setComputeProviderId(computeProviderId);

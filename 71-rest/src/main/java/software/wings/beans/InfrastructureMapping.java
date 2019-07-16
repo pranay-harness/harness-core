@@ -54,6 +54,7 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
   public static final String PROVISIONER_ID_KEY = "provisionerId";
   public static final String SERVICE_ID_KEY = "serviceId";
   public static final String INFRA_MAPPING_TYPE_KEY = "infraMappingType";
+  public static final String APP_ID_KEY = "appId";
 
   @NotEmpty private String computeProviderSettingId;
   @NotEmpty private String envId;
@@ -78,6 +79,7 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
   @Indexed private Long nextIteration;
 
   private Map<String, Object> blueprints;
+  private String infrastructureDefinitionId;
 
   /**
    * Instantiates a new Infrastructure mapping.
@@ -287,6 +289,14 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
 
   public void setInfraMappingType(String infraMappingType) {
     this.infraMappingType = infraMappingType;
+  }
+
+  public String getInfrastructureDefinitionId() {
+    return infrastructureDefinitionId;
+  }
+
+  public void setInfrastructureDefinitionId(String infrastructureDefinitionId) {
+    this.infrastructureDefinitionId = infrastructureDefinitionId;
   }
 
   public String getProvisionerId() {

@@ -107,6 +107,10 @@ public enum EntityType {
    */
   INFRASTRUCTURE_MAPPING,
   /**
+   * Infrastructure Definition type.
+   */
+  INFRASTRUCTURE_DEFINITION,
+  /**
    * User entity type
    */
   USER,

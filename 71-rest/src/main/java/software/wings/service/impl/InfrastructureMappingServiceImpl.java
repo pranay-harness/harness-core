@@ -94,12 +94,12 @@ import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
-import software.wings.beans.GcpKubernetesInfrastructureMapping.GcpKubernetesInfrastructureMappingKeys;
 import software.wings.beans.HostValidationRequest;
 import software.wings.beans.HostValidationResponse;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
 import software.wings.beans.InfrastructureMappingType;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping;
@@ -129,6 +129,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
+import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -210,6 +211,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private TriggerService triggerService;
   @Inject private PipelineService pipelineService;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
 
   @Inject private Queue<PruneEvent> pruneQueue;
 
@@ -254,10 +256,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (fromYaml) {
       logger.info("Ignore validation for InfraMapping created from yaml");
       return;
-    }
-
-    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infraMapping.getAccountId())) {
-      validateProvisionerConfig(infraMapping);
     }
 
     if (infraMapping instanceof AwsInfrastructureMapping) {
@@ -809,18 +807,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @VisibleForTesting
   public void validateGcpInfraMapping(GcpKubernetesInfrastructureMapping infraMapping) {
-    if (isNotEmpty(infraMapping.getProvisionerId())) {
-      if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infraMapping.getAccountId())) {
-        Map<String, Object> blueprints = infraMapping.getBlueprints();
-        if (blueprints.get(ContainerInfrastructureMappingKeys.clusterName) == null) {
-          throw new InvalidRequestException("Cluster name can't be empty");
-        }
-        if (blueprints.get(GcpKubernetesInfrastructureMappingKeys.namespace) == null) {
-          throw new InvalidRequestException("Namespace can't be empty");
-        }
-      }
-      return;
-    }
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
     notNullCheck(format("No cloud provider found with given id : [%s]", infraMapping.getComputeProviderSettingId()),
         settingAttribute, USER);
@@ -831,6 +817,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
     if (isEmpty(namespace)) {
       throw new InvalidRequestException("Namespace can't be empty");
+    }
+    if (isNotEmpty(infraMapping.getProvisionerId())) {
+      InfrastructureProvisioner infrastructureProvisioner =
+          infrastructureProvisionerService.get(infraMapping.getAppId(), infraMapping.getProvisionerId());
+      notNullCheck(format("No provisioner found with given id : [%s]. Please check if the provisioner is not deleted.",
+                       infraMapping.getProvisionerId()),
+          infrastructureProvisioner, USER);
+      return;
     }
     KubernetesHelperService.validateNamespace(namespace);
 

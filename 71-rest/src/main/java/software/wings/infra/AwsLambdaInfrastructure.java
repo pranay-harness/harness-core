@@ -13,5 +13,5 @@ public class AwsLambdaInfrastructure implements CloudProviderInfrastructure {
   private String vpcId;
   private List<String> subnetIds;
   private List<String> securityGroupIds;
-  private String iamRole;
+  private String role;
 }

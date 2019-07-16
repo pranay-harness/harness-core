@@ -72,6 +72,7 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
   // Only for UI payload to support BasicOrchestration workflow {{
   @Transient private String serviceId;
   @Transient private String infraMappingId;
+  @Transient private String infraDefinitionId;
   @Transient @Getter @Setter private WorkflowCreationFlags creationFlags;
   // }}
 
@@ -219,6 +220,14 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
     this.infraMappingId = infraMappingId;
   }
 
+  public String getInfraDefinitionId() {
+    return infraDefinitionId;
+  }
+
+  public void setInfradefinitionId(String infraMappingId) {
+    this.infraDefinitionId = infraDefinitionId;
+  }
+
   public boolean isTemplatized() {
     return templatized;
   }
@@ -308,6 +317,7 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
     private long lastUpdatedAt;
     private String serviceId;
     private String infraMappingId;
+    private String infraDefinitionId;
     private boolean templatized;
     private List<TemplateExpression> templateExpressions;
     private List<String> linkedTemplateUuids;
@@ -402,6 +412,11 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
 
     public WorkflowBuilder infraMappingId(String infraMappingId) {
       this.infraMappingId = infraMappingId;
+      return this;
+    }
+
+    public WorkflowBuilder infraDefinitionId(String infraDefinitionId) {
+      this.infraDefinitionId = infraDefinitionId;
       return this;
     }
 
