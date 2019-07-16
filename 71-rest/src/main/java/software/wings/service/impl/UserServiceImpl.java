@@ -1406,6 +1406,12 @@ public class UserServiceImpl implements UserService {
     createSSOSettingsAndMarkAsDefaultAuthMechanism(accountId);
 
     //    eventPublishHelper.publishUserRegistrationCompletionEvent(accountId, user);
+
+    // PL-2698: UI lead-update call will be called only if it's first login. Will need to
+    // make sure the isFirstLogin is always derived from lastLogin value.
+    boolean isFirstLogin = user.getLastLogin() == 0L;
+    user.setFirstLogin(isFirstLogin);
+
     return user;
   }
 
