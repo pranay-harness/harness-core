@@ -67,11 +67,6 @@ type SinglePointData implements Data {
   request: Request
 }
 
-input AggregateFunction {
-  aggregateValue: String
-  aggregateOperation: AggregateOperation
-}
-
 type StackedDataPoint {
   key: Reference
   values: [DataPoint]
@@ -83,7 +78,7 @@ type StackedData implements Data {
 }
 
 type TimeSeriesDataPoint {
-  data: Number
+  value: Number
   time: Long
 }
 

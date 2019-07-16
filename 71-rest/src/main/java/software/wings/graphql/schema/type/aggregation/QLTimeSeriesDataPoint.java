@@ -6,6 +6,6 @@ import lombok.Value;
 @Value
 @Builder
 public class QLTimeSeriesDataPoint {
-  Number data;
+  Number value;
   Long time;
 }

@@ -23,17 +23,20 @@ import software.wings.graphql.datafetcher.AbstractStatsDataFetcher;
 import software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.DeploymentMetaDataFields;
 import software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.DeploymentStatsQueryMetaDataBuilder;
 import software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.ResultType;
-import software.wings.graphql.schema.type.aggregation.QLAggregateFunction;
+import software.wings.graphql.schema.type.aggregation.Filter;
 import software.wings.graphql.schema.type.aggregation.QLAggregatedData;
 import software.wings.graphql.schema.type.aggregation.QLAggregatedData.QLAggregatedDataBuilder;
 import software.wings.graphql.schema.type.aggregation.QLAggregationKind;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLDataPoint.QLDataPointBuilder;
-import software.wings.graphql.schema.type.aggregation.QLDataType;
 import software.wings.graphql.schema.type.aggregation.QLFilterKind;
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLIntermediateStackDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLIntermediateStackDataPoint.QLIntermediateStackDataPointBuilder;
+import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
+import software.wings.graphql.schema.type.aggregation.QLNumberOperator;
 import software.wings.graphql.schema.type.aggregation.QLReference;
 import software.wings.graphql.schema.type.aggregation.QLSinglePointData;
 import software.wings.graphql.schema.type.aggregation.QLSinglePointData.QLSinglePointDataBuilder;
@@ -46,9 +49,11 @@ import software.wings.graphql.schema.type.aggregation.QLStackedTimeSeriesData;
 import software.wings.graphql.schema.type.aggregation.QLStackedTimeSeriesData.QLStackedTimeSeriesDataBuilder;
 import software.wings.graphql.schema.type.aggregation.QLStackedTimeSeriesDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLStackedTimeSeriesDataPoint.QLStackedTimeSeriesDataPointBuilder;
+import software.wings.graphql.schema.type.aggregation.QLStringFilter;
 import software.wings.graphql.schema.type.aggregation.QLStringOperator;
 import software.wings.graphql.schema.type.aggregation.QLTimeDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLTimeDataPoint.QLTimeDataPointBuilder;
+import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesData;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesData.QLTimeSeriesDataBuilder;
@@ -67,6 +72,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,15 +80,15 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
-public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggregateFunction, QLDeploymentFilter,
-    QLDeploymentAggregation, QLTimeSeriesAggregation, QLDeploymentSortCriteria> {
+public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeploymentAggregationFunction,
+    QLDeploymentFilter, QLDeploymentAggregation, QLTimeSeriesAggregation, QLDeploymentSortCriteria> {
   @Inject TimeScaleDBService timeScaleDBService;
   @Inject QLStatsHelper statsHelper;
   private DeploymentTableSchema schema = new DeploymentTableSchema();
 
   @Override
-  protected QLData fetch(String accountId, QLAggregateFunction aggregateFunction, List<QLDeploymentFilter> filters,
-      List<QLDeploymentAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
+  protected QLData fetch(String accountId, QLDeploymentAggregationFunction aggregateFunction,
+      List<QLDeploymentFilter> filters, List<QLDeploymentAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
       List<QLDeploymentSortCriteria> sortCriteria) {
     try {
       if (timeScaleDBService.isValid()) {
@@ -117,7 +123,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
     }
   }
 
-  private QLData getData(@NotNull String accountId, QLAggregateFunction aggregateFunction,
+  private QLData getData(@NotNull String accountId, QLDeploymentAggregationFunction aggregateFunction,
       List<QLDeploymentFilter> filters, List<QLDeploymentAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
       List<QLDeploymentSortCriteria> sortCriteria) {
     DeploymentStatsQueryMetaData queryData = null;
@@ -174,6 +180,9 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
           case INTEGER:
             dataPointBuilder.value(resultSet.getInt(field.getFieldName()));
             break;
+          case LONG:
+            dataPointBuilder.value(resultSet.getLong(field.getFieldName()));
+            break;
           case STRING:
             final String entityId = resultSet.getString(field.getFieldName());
             if (queryData.getGroupByFields().get(1).equals(field)) {
@@ -192,24 +201,84 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
       qlTimeDataPointMap.get(dataPoint.getGroupBy1()).add(dataPoint);
     }
 
-    return generateStackedChart(queryData.getGroupByFields().get(0), qlTimeDataPointMap);
+    return generateStackedChart(queryData, queryData.getGroupByFields().get(0), qlTimeDataPointMap);
   }
 
-  private QLStackedData generateStackedChart(
-      DeploymentMetaDataFields groupBy1, Map<String, List<QLIntermediateStackDataPoint>> intermediateMap) {
+  private QLStackedData generateStackedChart(DeploymentStatsQueryMetaData queryData, DeploymentMetaDataFields groupBy1,
+      Map<String, List<QLIntermediateStackDataPoint>> intermediateMap) {
     QLStackedDataBuilder builder = QLStackedData.builder();
     List<QLStackedDataPoint> stackedDataPoints = new ArrayList<>();
     intermediateMap.keySet().forEach(key -> {
       QLStackedDataPointBuilder stackedDataPointBuilder = QLStackedDataPoint.builder();
       List<QLDataPoint> dataPoints = intermediateMap.get(key)
-                                         .parallelStream()
+                                         .stream()
                                          .map(QLIntermediateStackDataPoint::getDataPoint)
                                          .collect(Collectors.toList());
+
       stackedDataPointBuilder.values(dataPoints).key(buildQLReference(groupBy1, key));
       stackedDataPoints.add(stackedDataPointBuilder.build());
     });
 
+    boolean countSort = false;
+    QLSortOrder countSortOrder = null;
+    if (queryData.getSortCriteria() != null) {
+      for (QLDeploymentSortCriteria sortCriteria : queryData.getSortCriteria()) {
+        if (sortCriteria.getSortType().equals(QLDeploymentSortType.Count)) {
+          countSort = true;
+          countSortOrder = sortCriteria.getSortOrder();
+          stackedDataPoints.sort(new QLStackedDataPointComparator(countSortOrder));
+          break;
+        }
+      }
+    }
+
     return builder.dataPoints(stackedDataPoints).build();
+  }
+
+  private class QLStackedDataPointComparator implements Comparator<QLStackedDataPoint> {
+    private QLSortOrder sortOrder;
+
+    QLStackedDataPointComparator(QLSortOrder sortOrder) {
+      this.sortOrder = sortOrder;
+    }
+
+    @Override
+    public int compare(QLStackedDataPoint o1, QLStackedDataPoint o2) {
+      Integer o1Count;
+      Integer o2Count;
+      if (o1.getValues().get(0).getValue() instanceof Integer) {
+        o1Count = handleInteger(o1);
+        o2Count = handleInteger(o2);
+      } else {
+        o1Count = handleLong(o1);
+        o2Count = handleLong(o2);
+      }
+      switch (sortOrder) {
+        case ASCENDING:
+          return o1Count - o2Count;
+        case DESCENDING:
+        default:
+          return o2Count - o1Count;
+      }
+    }
+
+    @org.jetbrains.annotations.NotNull
+    private Integer handleInteger(QLStackedDataPoint o1) {
+      Integer o1Count = 0;
+      for (QLDataPoint dataPoint : o1.getValues()) {
+        o1Count = (Integer) dataPoint.getValue() + o1Count;
+      }
+      return o1Count;
+    }
+
+    @org.jetbrains.annotations.NotNull
+    private Integer handleLong(QLStackedDataPoint o1) {
+      Long o1Count = 0L;
+      for (QLDataPoint dataPoint : o1.getValues()) {
+        o1Count = (Long) dataPoint.getValue() + o1Count;
+      }
+      return o1Count.intValue();
+    }
   }
 
   private QLReference buildQLReference(DeploymentMetaDataFields field, String key) {
@@ -272,7 +341,10 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
       for (DeploymentMetaDataFields field : queryData.getFieldNames()) {
         switch (field.getDataType()) {
           case INTEGER:
-            dataPointBuilder.data(resultSet.getInt(field.getFieldName()));
+            dataPointBuilder.value(resultSet.getInt(field.getFieldName()));
+            break;
+          case LONG:
+            dataPointBuilder.value(resultSet.getLong(field.getFieldName()));
             break;
           case TIMESTAMP:
             dataPointBuilder.time(resultSet.getTimestamp(field.getFieldName()).getTime());
@@ -297,6 +369,9 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
           case INTEGER:
             dataPoint.value(resultSet.getInt(field.getFieldName()));
             break;
+          case LONG:
+            dataPoint.value(resultSet.getLong(field.getFieldName()));
+            break;
           case STRING:
             final String entityId = resultSet.getString(field.getFieldName());
             dataPoint.key(buildQLReference(field, entityId));
@@ -315,23 +390,27 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
     QLSinglePointDataBuilder builder = QLSinglePointData.builder();
     while (resultSet != null && resultSet.next()) {
       DeploymentMetaDataFields queryField = queryData.getFieldNames().get(0);
-      Integer data;
+      Number data;
       switch (queryField.getDataType()) {
         case INTEGER:
           data = resultSet.getInt(queryField.getFieldName());
           break;
+        case LONG:
+          data = resultSet.getLong(queryField.getFieldName());
+          break;
         default:
           throw new RuntimeException("Single Data Type data type not supported " + queryField.getDataType());
       }
-      builder.dataPoint(QLDataPoint.builder()
-                            .value(data)
-                            .key(QLReference.builder().type(getEntityType()).id(getEntityType()).build())
-                            .build());
+      builder.dataPoint(
+          QLDataPoint.builder()
+              .value(data)
+              .key(QLReference.builder().type(getEntityType()).id(getEntityType()).name(getEntityType()).build())
+              .build());
     }
     return builder.build();
   }
 
-  private DeploymentStatsQueryMetaData formQuery(String accountId, QLAggregateFunction aggregateFunction,
+  private DeploymentStatsQueryMetaData formQuery(String accountId, QLDeploymentAggregationFunction aggregateFunction,
       List<QLDeploymentFilter> filters, List<QLDeploymentAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
       List<QLDeploymentSortCriteria> sortCriteria) {
     DeploymentStatsQueryMetaDataBuilder queryMetaDataBuilder = DeploymentStatsQueryMetaData.builder();
@@ -354,19 +433,20 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
     List<DeploymentMetaDataFields> fieldNames = new ArrayList<>();
     List<DeploymentMetaDataFields> groupByFields = new ArrayList<>();
 
-    if (aggregateFunction == null
-        || !aggregateFunction.getAggregateValue().equals(QLDeploymentFilterType.Duration.name())) {
+    if (aggregateFunction == null || aggregateFunction.getCount() != null) {
       selectQuery.addCustomColumns(
           Converter.toColumnSqlObject(FunctionCall.countAll(), DeploymentMetaDataFields.COUNT.getFieldName()));
       fieldNames.add(DeploymentMetaDataFields.COUNT);
-    } else if (aggregateFunction.getAggregateValue().equals(QLDeploymentFilterType.Duration.name())) {
-      FunctionCall functionCall = getFunctionCall(aggregateFunction);
-      selectQuery.addColumns(schema.getDuration());
+    }
+    if (aggregateFunction != null && aggregateFunction.getDuration() != null) {
+      FunctionCall functionCall = getFunctionCall(aggregateFunction.getDuration());
+      selectQuery.addCustomColumns(Converter.toColumnSqlObject(
+          functionCall.addColumnParams(schema.getDuration()), DeploymentMetaDataFields.DURATION.getFieldName()));
       fieldNames.add(DeploymentMetaDataFields.DURATION);
     }
     selectQuery.addCustomFromTable(schema.getDeploymentTable());
 
-    if (isValidFilters(filters)) {
+    if (!Lists.isNullOrEmpty(filters)) {
       decorateQueryWithFilters(selectQuery, filters);
     }
 
@@ -380,9 +460,11 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
 
     addAccountFilter(selectQuery, accountId);
 
+    List<QLDeploymentSortCriteria> finalSortCriteria = null;
     if (!isValidGroupByTime(groupByTime)) {
-      validateAndAddSortCriteria(selectQuery, sortCriteria, fieldNames);
+      finalSortCriteria = validateAndAddSortCriteria(selectQuery, sortCriteria, fieldNames);
     } else {
+      finalSortCriteria = null;
       logger.info("Not adding sortCriteria since it is a timeSeries");
     }
 
@@ -390,7 +472,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
     queryMetaDataBuilder.fieldNames(fieldNames);
     queryMetaDataBuilder.query(selectQuery.toString());
     queryMetaDataBuilder.groupByFields(groupByFields);
-    queryMetaDataBuilder.sortCriteria(sortCriteria);
+    queryMetaDataBuilder.sortCriteria(finalSortCriteria);
     return queryMetaDataBuilder.build();
   }
 
@@ -429,117 +511,153 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
 
   private void decorateQueryWithFilters(SelectQuery selectQuery, List<QLDeploymentFilter> filters) {
     for (QLDeploymentFilter filter : filters) {
-      if (filter.getType().getMetaDataFields().getFilterKind().equals(QLFilterKind.SIMPLE)) {
-        decorateSimpleFilter(selectQuery, filter);
-      } else if (filter.getType().getMetaDataFields().getFilterKind().equals(QLFilterKind.ARRAY)) {
-        decorateArrayFilter(selectQuery, filter);
-      } else if (filter.getType().getMetaDataFields().getFilterKind().equals(QLFilterKind.TIME)) {
-        decorateTimeFilter(selectQuery, filter);
-      } else {
-        logger.error("Failed to apply filter :[{}]", filter);
+      for (QLDeploymentFilterType type : filter.getFilterTypes()) {
+        if (type.getMetaDataFields().getFilterKind().equals(QLFilterKind.SIMPLE)) {
+          decorateSimpleFilter(selectQuery, filter, type);
+        } else if (type.getMetaDataFields().getFilterKind().equals(QLFilterKind.ARRAY)) {
+          decorateArrayFilter(selectQuery, filter, type);
+        } else {
+          logger.error("Failed to apply filter :[{}]", filter);
+        }
       }
     }
   }
 
-  private void decorateTimeFilter(SelectQuery selectQuery, QLDeploymentFilter filter) {
-    DbColumn key = getFilterKey(filter.getType());
-    switch (filter.getNumberFilter().getOperator()) {
-      case LESS_THAN:
-        selectQuery.addCondition(
-            BinaryCondition.lessThan(key, new Timestamp((Long) (filter.getNumberFilter().getValues()[0]))));
+  private void addSimpleTimeFilter(SelectQuery selectQuery, Filter filter, QLDeploymentFilterType type) {
+    DbColumn key = getFilterKey(type);
+    QLTimeFilter timeFilter = (QLTimeFilter) filter;
+    switch (timeFilter.getOperator()) {
+      case BEFORE:
+        selectQuery.addCondition(BinaryCondition.lessThanOrEq(key, new Timestamp((Long) (filter.getValues()[0]))));
         break;
-      case LESS_THAN_OR_EQUALS:
-        selectQuery.addCondition(
-            BinaryCondition.lessThanOrEq(key, new Timestamp((Long) (filter.getNumberFilter().getValues()[0]))));
-        break;
-      case GREATER_THAN:
-        selectQuery.addCondition(
-            BinaryCondition.greaterThan(key, new Timestamp((Long) (filter.getNumberFilter().getValues()[0]))));
-        break;
-      case GREATER_THAN_OR_EQUALS:
-        selectQuery.addCondition(
-            BinaryCondition.greaterThanOrEq(key, new Timestamp((Long) (filter.getNumberFilter().getValues()[0]))));
+      case AFTER:
+        selectQuery.addCondition(BinaryCondition.greaterThanOrEq(key, new Timestamp((Long) (filter.getValues()[0]))));
         break;
       default:
-        throw new RuntimeException("Invalid TimeFilter operator: " + filter.getNumberFilter().getOperator());
+        throw new RuntimeException("Invalid TimeFilter operator: " + filter.getOperator());
     }
   }
 
-  private void decorateArrayFilter(SelectQuery selectQuery, QLDeploymentFilter filter) {
+  private void decorateArrayFilter(SelectQuery selectQuery, QLDeploymentFilter filter, QLDeploymentFilterType type) {
     /**
-     * We only support String based arrays over here
+     * We only support id based arrays over here
      */
-    addArrayStringFilter(selectQuery, filter);
+    Filter f = QLDeploymentFilter.getFilter(type, filter);
+    if (isIdFilter(f)) {
+      addArrayIdFilter(selectQuery, f, type);
+    } else if (isStringFilter(f)) {
+      addArrayStringFilter(selectQuery, f, type);
+    }
   }
 
-  private void addArrayStringFilter(SelectQuery selectQuery, QLDeploymentFilter filter) {
-    DbColumn key = getFilterKey(filter.getType());
-    String filterValue = "{" + String.join(",", filter.getStringFilter().getValues()) + "}";
-    switch (filter.getStringFilter().getOperator()) {
+  private void addArrayIdFilter(SelectQuery selectQuery, Filter filter, QLDeploymentFilterType type) {
+    DbColumn key = getFilterKey(type);
+    QLIdOperator operator = (QLIdOperator) filter.getOperator();
+    QLIdFilter idFilter = (QLIdFilter) filter;
+    String filterValue = "{" + String.join(",", idFilter.getValues()) + "}";
+    switch (idFilter.getOperator()) {
       case IN:
       case EQUALS:
         selectQuery.addCondition(new CustomCondition(key + " @>"
             + "'" + filterValue + "'"));
         break;
-      case NOT_EQUALS:
-        selectQuery.addCondition(new CustomCondition("NOT " + key + " @>"
+      default:
+        throw new RuntimeException("Unsupported operator for ArrayStringFilter" + idFilter.getOperator());
+    }
+  }
+
+  private void addArrayStringFilter(SelectQuery selectQuery, Filter filter, QLDeploymentFilterType type) {
+    DbColumn key = getFilterKey(type);
+    QLStringOperator operator = (QLStringOperator) filter.getOperator();
+    QLStringFilter stringFilter = (QLStringFilter) filter;
+    String filterValue = "{" + String.join(",", stringFilter.getValues()) + "}";
+    switch (stringFilter.getOperator()) {
+      case IN:
+      case EQUALS:
+        selectQuery.addCondition(new CustomCondition(key + " @>"
             + "'" + filterValue + "'"));
         break;
       default:
-        throw new RuntimeException(
-            "Unsupported operator for ArrayStringFilter" + filter.getStringFilter().getOperator());
+        throw new RuntimeException("Unsupported operator for ArrayStringFilter" + stringFilter.getOperator());
     }
   }
 
-  private void decorateSimpleFilter(SelectQuery selectQuery, QLDeploymentFilter filter) {
-    if (filter.getType().getDataType().equals(QLDataType.STRING)) {
-      addSimpleStringFilter(selectQuery, filter);
-    } else if (filter.getType().getDataType().equals(QLDataType.NUMBER)) {
-      addSimpleNumberFilter(selectQuery, filter);
+  private void decorateSimpleFilter(SelectQuery selectQuery, QLDeploymentFilter filter, QLDeploymentFilterType type) {
+    Filter f = QLDeploymentFilter.getFilter(type, filter);
+    if (checkFilter(f)) {
+      if (isIdFilter(f)) {
+        addSimpleIdOperator(selectQuery, f, type);
+      } else if (isNumberFilter(f)) {
+        addSimpleNumberFilter(selectQuery, f, type);
+      } else if (isTimeFilter(f)) {
+        addSimpleTimeFilter(selectQuery, f, type);
+      } else if (isStringFilter(f)) {
+        addSimpleStringOperator(selectQuery, f, type);
+      }
+    } else {
+      logger.error("Not adding filter since it is not valid " + f);
     }
   }
 
-  private void addSimpleNumberFilter(SelectQuery selectQuery, QLDeploymentFilter filter) {
-    DbColumn key = getFilterKey(filter.getType());
-    switch (filter.getNumberFilter().getOperator()) {
+  private boolean isIdFilter(Filter f) {
+    return f instanceof QLIdFilter;
+  }
+
+  private boolean isStringFilter(Filter f) {
+    return f instanceof QLStringFilter;
+  }
+
+  private boolean isNumberFilter(Filter f) {
+    return f instanceof QLNumberFilter;
+  }
+
+  private boolean isTimeFilter(Filter f) {
+    return f instanceof QLTimeFilter;
+  }
+
+  private boolean checkFilter(Filter f) {
+    return f.getOperator() != null && EmptyPredicate.isNotEmpty(f.getValues());
+  }
+
+  private void addSimpleNumberFilter(SelectQuery selectQuery, Filter filter, QLDeploymentFilterType type) {
+    DbColumn key = getFilterKey(type);
+    QLNumberOperator operator = (QLNumberOperator) filter.getOperator();
+
+    switch (operator) {
       case EQUALS:
-        selectQuery.addCondition(BinaryCondition.equalTo(key, filter.getNumberFilter().getValues()[0]));
+        selectQuery.addCondition(BinaryCondition.equalTo(key, filter.getValues()[0]));
         break;
       case NOT_EQUALS:
-        selectQuery.addCondition(BinaryCondition.notEqualTo(key, filter.getNumberFilter().getValues()[0]));
+        selectQuery.addCondition(BinaryCondition.notEqualTo(key, filter.getValues()[0]));
         break;
       case IN:
-        selectQuery.addCondition(new InCondition(key, (Object[]) filter.getNumberFilter().getValues()));
+        selectQuery.addCondition(new InCondition(key, (Object[]) filter.getValues()));
         break;
       case LESS_THAN:
-        selectQuery.addCondition(BinaryCondition.lessThan(key, filter.getNumberFilter().getValues()[0]));
+        selectQuery.addCondition(BinaryCondition.lessThan(key, filter.getValues()[0]));
         break;
       case LESS_THAN_OR_EQUALS:
-        selectQuery.addCondition(BinaryCondition.lessThanOrEq(key, filter.getNumberFilter().getValues()[0]));
+        selectQuery.addCondition(BinaryCondition.lessThanOrEq(key, filter.getValues()[0]));
         break;
       case GREATER_THAN:
-        selectQuery.addCondition(BinaryCondition.greaterThan(key, filter.getNumberFilter().getValues()[0]));
+        selectQuery.addCondition(BinaryCondition.greaterThan(key, filter.getValues()[0]));
         break;
       case GREATER_THAN_OR_EQUALS:
-        selectQuery.addCondition(BinaryCondition.greaterThanOrEq(key, filter.getNumberFilter().getValues()[0]));
+        selectQuery.addCondition(BinaryCondition.greaterThanOrEq(key, filter.getValues()[0]));
         break;
       default:
-        throw new RuntimeException("String simple operator not supported" + filter.getNumberFilter().getOperator());
+        throw new RuntimeException("String simple operator not supported" + filter.getOperator());
     }
   }
 
-  private void addSimpleStringFilter(SelectQuery selectQuery, QLDeploymentFilter filter) {
-    DbColumn key = getFilterKey(filter.getType());
-    QLStringOperator operator = filter.getStringFilter().getOperator();
+  private void addSimpleStringOperator(SelectQuery selectQuery, Filter filter, QLDeploymentFilterType type) {
+    DbColumn key = getFilterKey(type);
+    QLStringOperator operator = (QLStringOperator) filter.getOperator();
     QLStringOperator finalOperator = operator;
-    if (filter.getStringFilter().getValues().length > 0) {
+    if (filter.getValues().length > 0) {
       switch (operator) {
         case EQUALS:
           finalOperator = QLStringOperator.IN;
-          logger.info("Changing simpleStringOperator from [{}] to [{}]", operator, finalOperator);
-          break;
-        case NOT_EQUALS:
-          finalOperator = QLStringOperator.NOT_IN;
           logger.info("Changing simpleStringOperator from [{}] to [{}]", operator, finalOperator);
           break;
         default:
@@ -548,16 +666,36 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
     }
     switch (finalOperator) {
       case EQUALS:
-        selectQuery.addCondition(BinaryCondition.equalTo(key, filter.getStringFilter().getValues()[0]));
-        break;
-      case NOT_EQUALS:
-        selectQuery.addCondition(BinaryCondition.notEqualTo(key, filter.getStringFilter().getValues()[0]));
+        selectQuery.addCondition(BinaryCondition.equalTo(key, filter.getValues()[0]));
         break;
       case IN:
-        selectQuery.addCondition(new InCondition(key, (Object[]) filter.getStringFilter().getValues()));
+        selectQuery.addCondition(new InCondition(key, (Object[]) filter.getValues()));
         break;
-      case NOT_IN:
-        selectQuery.addCondition(new InCondition(key, (Object[]) filter.getStringFilter().getValues()).setNegate(true));
+      default:
+        throw new RuntimeException("String simple operator not supported" + operator);
+    }
+  }
+
+  private void addSimpleIdOperator(SelectQuery selectQuery, Filter filter, QLDeploymentFilterType type) {
+    DbColumn key = getFilterKey(type);
+    QLIdOperator operator = (QLIdOperator) filter.getOperator();
+    QLIdOperator finalOperator = operator;
+    if (filter.getValues().length > 0) {
+      switch (operator) {
+        case EQUALS:
+          finalOperator = QLIdOperator.IN;
+          logger.info("Changing simpleStringOperator from [{}] to [{}]", operator, finalOperator);
+          break;
+        default:
+          finalOperator = operator;
+      }
+    }
+    switch (finalOperator) {
+      case EQUALS:
+        selectQuery.addCondition(BinaryCondition.equalTo(key, filter.getValues()[0]));
+        break;
+      case IN:
+        selectQuery.addCondition(new InCondition(key, (Object[]) filter.getValues()));
         break;
       default:
         throw new RuntimeException("String simple operator not supported" + operator);
@@ -568,41 +706,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
     QLDeploymentSortType sortType = sortCriteria.getSortType();
     OrderObject.Dir dir = sortCriteria.getSortOrder() == QLSortOrder.ASCENDING ? Dir.ASCENDING : Dir.DESCENDING;
     switch (sortType) {
-      case StartTime:
-        selectQuery.addOrdering(schema.getStartTime(), dir);
-        break;
-      case EndTime:
-        selectQuery.addOrdering(schema.getEndTime(), dir);
-        break;
-      case Application:
-        selectQuery.addOrdering(schema.getAppId(), dir);
-        break;
-      case Trigger:
-        selectQuery.addOrdering(schema.getTriggerId(), dir);
-        break;
-      case Triggered_By:
-        selectQuery.addOrdering(schema.getTriggeredBy(), dir);
-        break;
-      case Status:
-        selectQuery.addOrdering(schema.getStatus(), dir);
-        break;
-      case Service:
-        selectQuery.addCustomOrdering(DeploymentMetaDataFields.SERVICEID.getFieldName(), dir);
-        break;
-      case Workflow:
-        selectQuery.addCustomOrdering(DeploymentMetaDataFields.WORKFLOWID.getFieldName(), dir);
-        break;
-      case CloudProvider:
-        selectQuery.addCustomOrdering(DeploymentMetaDataFields.CLOUDPROVIDERID.getFieldName(), dir);
-        break;
-      case Environment:
-        selectQuery.addCustomOrdering(DeploymentMetaDataFields.ENVID.getFieldName(), dir);
-        break;
-      case Pipeline:
-        selectQuery.addOrdering(schema.getPipeline(), dir);
-        break;
       case Duration:
-        selectQuery.addOrdering(schema.getDuration(), dir);
+        selectQuery.addCustomOrdering(DeploymentMetaDataFields.DURATION.name(), dir);
         break;
       case Count:
         selectQuery.addCustomOrdering(DeploymentMetaDataFields.COUNT.name(), dir);
@@ -643,7 +748,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
         return schema.getAppId();
       case Trigger:
         return schema.getTriggerId();
-      case Triggered_By:
+      case TriggeredBy:
         return schema.getTriggeredBy();
       case Status:
         return schema.getStatus();
@@ -662,29 +767,6 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
       default:
         throw new RuntimeException("Filter type not supported " + type);
     }
-  }
-
-  private boolean isValidFilters(List<QLDeploymentFilter> filters) {
-    if (Lists.isNullOrEmpty(filters)) {
-      return false;
-    }
-    for (QLDeploymentFilter deploymentFilter : filters) {
-      if (deploymentFilter.getType().getDataType().equals(QLDataType.NUMBER)) {
-        if (deploymentFilter.getNumberFilter().getOperator() == null
-            || EmptyPredicate.isEmpty(deploymentFilter.getNumberFilter().getValues())) {
-          logger.error("Offending number deployment filter is [{}]", deploymentFilter);
-          return false;
-        }
-      } else {
-        if (deploymentFilter.getStringFilter().getOperator() == null
-            || EmptyPredicate.isEmpty(deploymentFilter.getStringFilter().getValues())) {
-          logger.error("Offending string deployment filter is [{}]", deploymentFilter);
-          return false;
-        }
-      }
-    }
-
-    return true;
   }
 
   private void decorateQueryWithGroupBy(List<DeploymentMetaDataFields> fieldNames, SelectQuery selectQuery,
@@ -785,8 +867,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLAggre
         && groupByTime.getTimeAggregationValue() != null;
   }
 
-  private FunctionCall getFunctionCall(QLAggregateFunction aggregateFunction) {
-    switch (aggregateFunction.getAggregateOperation()) {
+  private FunctionCall getFunctionCall(QLDurationAggregateOperation operation) {
+    switch (operation) {
       case MAX:
         return FunctionCall.max();
       case MIN:

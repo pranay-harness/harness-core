@@ -118,13 +118,6 @@ public class DataFetcherUtils {
         }
         field.equal(stringFilterValues[0]);
         break;
-      case NOT_EQUALS:
-        if (stringFilterValues.length > 1) {
-          throw new WingsException("Only one value needs to be inputted for operator NOT_EQUALS");
-        }
-        field.notEqual(stringFilterValues[0]);
-        break;
-
       default:
         throw new WingsException("Unknown String operator " + operator);
     }
@@ -156,13 +149,6 @@ public class DataFetcherUtils {
         }
         field.equal(idFilterValues[0]);
         break;
-      case NOT_EQUALS:
-        if (idFilterValues.length > 1) {
-          throw new WingsException("Only one value needs to be inputted for operator NOT_EQUALS");
-        }
-        field.notEqual(idFilterValues[0]);
-        break;
-
       default:
         throw new WingsException("Unknown Id operator " + operator);
     }
@@ -259,10 +245,10 @@ public class DataFetcherUtils {
         field.equal(values[0]);
         break;
       case BEFORE:
-        field.lessThan(values[0]);
+        field.lessThanOrEq(values[0]);
         break;
       case AFTER:
-        field.greaterThan(values[0]);
+        field.greaterThanOrEq(values[0]);
         break;
       default:
         throw new WingsException("Unknown Time operator " + operator);

@@ -141,7 +141,7 @@ public class InstanceTimeSeriesDataHelper {
         ResultSet resultSet = statement.executeQuery(query);
         while (resultSet != null && resultSet.next()) {
           QLTimeSeriesDataPointBuilder dataPointBuilder = QLTimeSeriesDataPoint.builder();
-          dataPointBuilder.data(resultSet.getInt("CNT"));
+          dataPointBuilder.value(resultSet.getInt("CNT"));
           dataPointBuilder.time(resultSet.getTimestamp("GRP_BY_TIME").getTime());
           dataPoints.add(dataPointBuilder.build());
         }
@@ -272,11 +272,11 @@ public class InstanceTimeSeriesDataHelper {
         queryBuilder.append(filter.getValues()[0]);
         break;
       case BEFORE:
-        queryBuilder.append(" < ");
+        queryBuilder.append(" <= ");
         queryBuilder.append(filter.getValues()[0]);
         break;
       case AFTER:
-        queryBuilder.append(" > ");
+        queryBuilder.append(" >= ");
         queryBuilder.append(filter.getValues()[0]);
         break;
       default:
@@ -288,11 +288,6 @@ public class InstanceTimeSeriesDataHelper {
     switch (filter.getOperator()) {
       case EQUALS:
         queryBuilder.append(" = '");
-        queryBuilder.append(filter.getValues()[0]);
-        queryBuilder.append('\'');
-        break;
-      case NOT_EQUALS:
-        queryBuilder.append(" != '");
         queryBuilder.append(filter.getValues()[0]);
         queryBuilder.append('\'');
         break;
