@@ -4,30 +4,25 @@ import software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData
 import software.wings.graphql.schema.type.aggregation.QLDataType;
 
 public enum QLDeploymentFilterType {
-  Application(QLDataType.STRING, DeploymentMetaDataFields.APPID),
-  Service(QLDataType.STRING, DeploymentMetaDataFields.SERVICEID),
-  Environment(QLDataType.STRING, DeploymentMetaDataFields.ENVID),
-  CloudProvider(QLDataType.STRING, DeploymentMetaDataFields.CLOUDPROVIDERID),
-  Status(QLDataType.STRING, DeploymentMetaDataFields.STATUS),
-  EndTime(QLDataType.NUMBER, DeploymentMetaDataFields.ENDTIME),
-  StartTime(QLDataType.NUMBER, DeploymentMetaDataFields.STARTTIME),
-  Duration(QLDataType.NUMBER, DeploymentMetaDataFields.DURATION),
-  Triggered_By(QLDataType.STRING, DeploymentMetaDataFields.TRIGGERED_BY),
-  Trigger(QLDataType.STRING, DeploymentMetaDataFields.TRIGGER_ID),
-  Workflow(QLDataType.STRING, DeploymentMetaDataFields.WORKFLOWID),
-  Pipeline(QLDataType.STRING, DeploymentMetaDataFields.PIPELINEID);
+  Application(DeploymentMetaDataFields.APPID),
+  Service(DeploymentMetaDataFields.SERVICEID),
+  Environment(DeploymentMetaDataFields.ENVID),
+  CloudProvider(DeploymentMetaDataFields.CLOUDPROVIDERID),
+  Status(DeploymentMetaDataFields.STATUS),
+  EndTime(DeploymentMetaDataFields.ENDTIME),
+  StartTime(DeploymentMetaDataFields.STARTTIME),
+  Duration(DeploymentMetaDataFields.DURATION),
+  TriggeredBy(DeploymentMetaDataFields.TRIGGERED_BY),
+  Trigger(DeploymentMetaDataFields.TRIGGER_ID),
+  Workflow(DeploymentMetaDataFields.WORKFLOWID),
+  Pipeline(DeploymentMetaDataFields.PIPELINEID);
 
   private QLDataType dataType;
   private DeploymentMetaDataFields metaDataFields;
   QLDeploymentFilterType() {}
 
-  QLDeploymentFilterType(QLDataType dataType, DeploymentMetaDataFields metaDataFields) {
-    this.dataType = dataType;
+  QLDeploymentFilterType(DeploymentMetaDataFields metaDataFields) {
     this.metaDataFields = metaDataFields;
-  }
-
-  public QLDataType getDataType() {
-    return dataType;
   }
 
   public DeploymentMetaDataFields getMetaDataFields() {

@@ -18,8 +18,7 @@ import software.wings.graphql.schema.type.QLExecutionConnection.QLExecutionConne
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
-import software.wings.graphql.schema.type.aggregation.QLStringFilter;
-import software.wings.graphql.schema.type.aggregation.QLStringOperator;
+import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
@@ -31,12 +30,12 @@ import java.util.List;
 public class ExecutionConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLExecutionFilter, QLNoOpSortCriteria, QLExecutionConnection> {
   @Inject private ExecutionController executionController;
+  @Inject private ExecutionQueryHelper executionQueryHelper;
   @Inject private AppService appService;
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   protected QLExecutionConnection fetchConnection(List<QLExecutionFilter> filters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
-    filters = addAppIdValidation(filters);
     Query<WorkflowExecution> query = populateFilters(wingsPersistence, filters, WorkflowExecution.class)
                                          .order(Sort.descending(WorkflowExecutionKeys.createdAt));
 
@@ -51,7 +50,8 @@ public class ExecutionConnectionDataFetcher
 
   @Override
   protected void populateFilters(List<QLExecutionFilter> filters, Query query) {
-    // TODO to be implemented later
+    filters = addAppIdValidation(filters);
+    executionQueryHelper.setQuery(filters, query);
   }
 
   private List<QLExecutionFilter> addAppIdValidation(List<QLExecutionFilter> filters) {
@@ -59,7 +59,7 @@ public class ExecutionConnectionDataFetcher
     boolean appIdFilterFound = false;
     if (EmptyPredicate.isNotEmpty(filters)) {
       for (QLExecutionFilter filter : filters) {
-        if (filter.getType().equals(QLExecutionFilterType.Application)) {
+        if (filter.getApplication() != null) {
           appIdFilterFound = true;
           break;
         }
@@ -70,9 +70,7 @@ public class ExecutionConnectionDataFetcher
       List<String> appIds = appService.getAppIdsByAccountId(super.getAccountId());
       updatedFilters.add(
           QLExecutionFilter.builder()
-              .type(QLExecutionFilterType.Application)
-              .stringFilter(
-                  QLStringFilter.builder().operator(QLStringOperator.IN).values(appIds.toArray(new String[0])).build())
+              .application(QLIdFilter.builder().operator(QLIdOperator.IN).values(appIds.toArray(new String[0])).build())
               .build());
     }
 
@@ -124,16 +122,15 @@ public class ExecutionConnectionDataFetcher
                               .values(new String[] {(String) utils.getFieldValue(environment.getSource(), value)})
                               .build();
 
-    // TODO Rushabh
-    //    if (NameService.application.equals(key)) {
-    //      return QLExecutionFilter.builder().application(idFilter).build();
-    //    } else if (NameService.service.equals(key)) {
-    //      return QLExecutionFilter.builder().service(idFilter).build();
-    //    } else if (NameService.environment.equals(key)) {
-    //      return QLExecutionFilter.builder().environment(idFilter).build();
-    //    } else if (NameService.cloudProvider.equals(key)) {
-    //      return QLExecutionFilter.builder().cloudProvider(idFilter).build();
-    //    }
+    if (NameService.application.equals(key)) {
+      return QLExecutionFilter.builder().application(idFilter).build();
+    } else if (NameService.service.equals(key)) {
+      return QLExecutionFilter.builder().service(idFilter).build();
+    } else if (NameService.environment.equals(key)) {
+      return QLExecutionFilter.builder().environment(idFilter).build();
+    } else if (NameService.cloudProvider.equals(key)) {
+      return QLExecutionFilter.builder().cloudProvider(idFilter).build();
+    }
     throw new WingsException("Unsupported field " + key + " while generating filter");
   }
 }

@@ -21,12 +21,6 @@ type Service {
 
   createdAt: DateTime
   createdBy: User
-
-  executions(limit: Int!, offset: Int, statuses: [ExecutionStatus], from: DateTime, to: DateTime): ExecutionConnection
-    @dataFetcher(name: executionConnection, contextFieldArgsMap: "{ \"serviceId\": \"id\"}")
-
-  instances(limit: Int!, offset: Int): InstanceConnection
-    @dataFetcher(name: instanceConnection, contextFieldArgsMap: "{ \"serviceId\": \"id\"}")
 }
 
 type ServiceConnection {

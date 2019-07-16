@@ -1,18 +1,3 @@
-enum DeploymentFilterType {
-  Application
-  Service
-  Environment
-  CloudProvider
-  Status
-  EndTime
-  StartTime
-  Duration
-  Triggered_By
-  Trigger
-  Workflow
-  Pipeline
-}
-
 enum DeploymentAggregation {
   Application
   Service
@@ -26,18 +11,7 @@ enum DeploymentAggregation {
 }
 
 enum DeploymentSortType {
-  Application
-  Service
-  Environment
-  CloudProvider
-  Status
-  EndTime
-  StartTime
   Duration
-  Triggered_By
-  Trigger
-  Workflow
-  Pipeline
   Count
 }
 
@@ -47,15 +21,35 @@ input DeploymentSortCriteria {
 }
 
 input DeploymentFilter {
-  type: DeploymentFilterType
-  stringFilter: StringFilter
-  numberFilter: NumberFilter
+  application: IdFilter
+  service: IdFilter
+  cloudProvider: IdFilter
+  environment: IdFilter
+  status: IdFilter
+  endTime: TimeFilter
+  startTime: TimeFilter
+  duration: NumberFilter
+  triggeredBy: IdFilter
+  trigger: IdFilter
+  workflow: IdFilter
+  pipeline: IdFilter
+}
+
+input DeploymentAggregationFunction {
+  count: CountAggregateOperation
+  duration: DurationAggregateOperation
+}
+
+enum DurationAggregateOperation {
+  AVERAGE
+  MIN
+  MAX
 }
 
 extend type Query {
   #Get deployment stats.
   deploymentStats(
-    aggregateFunction: AggregateFunction
+    aggregateFunction: DeploymentAggregationFunction
     filters: [DeploymentFilter]
     groupBy: [DeploymentAggregation]
     groupByTime: TimeSeriesAggregation

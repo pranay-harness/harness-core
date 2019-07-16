@@ -19,7 +19,7 @@ public class DeploymentStatsQueryMetaData {
   enum DataType { STRING, INTEGER, TIMESTAMP, LONG }
 
   public enum DeploymentMetaDataFields {
-    TIME_SERIES("TIME_BUCKET", DataType.TIMESTAMP, QLFilterKind.TIME),
+    TIME_SERIES("TIME_BUCKET", DataType.TIMESTAMP, QLFilterKind.SIMPLE),
     COUNT("COUNT", DataType.INTEGER, QLFilterKind.SIMPLE),
     DURATION("DURATION", DataType.LONG, QLFilterKind.SIMPLE),
     APPID("APPID", DataType.STRING, QLFilterKind.SIMPLE),
@@ -31,8 +31,8 @@ public class DeploymentStatsQueryMetaData {
     ENVID("ENVID", DataType.STRING, QLFilterKind.ARRAY),
     CLOUDPROVIDERID("CLOUDPROVIDERID", DataType.STRING, QLFilterKind.ARRAY),
     WORKFLOWID("WORKFLOWID", DataType.STRING, QLFilterKind.ARRAY),
-    STARTTIME("STARTTIME", DataType.TIMESTAMP, QLFilterKind.TIME),
-    ENDTIME("ENDTIME", DataType.TIMESTAMP, QLFilterKind.TIME);
+    STARTTIME("STARTTIME", DataType.TIMESTAMP, QLFilterKind.SIMPLE),
+    ENDTIME("ENDTIME", DataType.TIMESTAMP, QLFilterKind.SIMPLE);
 
     private DataType dataType;
     private String fieldName;

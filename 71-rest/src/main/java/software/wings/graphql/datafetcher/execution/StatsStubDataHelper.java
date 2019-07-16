@@ -92,15 +92,15 @@ public class StatsStubDataHelper {
   public static QLData getTimeAggregatedData() {
     QLTimeSeriesDataPoint dataPoint1 = QLTimeSeriesDataPoint.builder()
                                            .time(System.currentTimeMillis() - 3 * 60 * 60 * 1000)
-                                           .data(Integer.valueOf(100))
+                                           .value(Integer.valueOf(100))
                                            .build();
     QLTimeSeriesDataPoint dataPoint2 = QLTimeSeriesDataPoint.builder()
                                            .time(System.currentTimeMillis() - 2 * 60 * 60 * 1000)
-                                           .data(Integer.valueOf(50))
+                                           .value(Integer.valueOf(50))
                                            .build();
     QLTimeSeriesDataPoint dataPoint3 = QLTimeSeriesDataPoint.builder()
                                            .time(System.currentTimeMillis() - 1 * 60 * 60 * 1000)
-                                           .data(Integer.valueOf(200))
+                                           .value(Integer.valueOf(200))
                                            .build();
     return QLTimeSeriesData.builder()
         .dataPoints(Arrays.asList(dataPoint1, dataPoint2, dataPoint3))

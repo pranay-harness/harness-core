@@ -7,26 +7,20 @@ extend type Query {
     @dataFetcher(name: executionConnection)
 }
 
-enum ExecutionFilterType {
-  Application
-  Service
-  Environment
-  CloudProvider
-  Status
-  EndTime
-  CreatedAt
-  StartTime
-  Duration
-  Triggered_By
-  Trigger
-  Workflow
-  Pipeline
-}
-
 input ExecutionFilter {
-  type: ExecutionFilterType
-  stringFilter: StringFilter
-  numberFilter: NumberFilter
+  application: IdFilter
+  service: IdFilter
+  cloudProvider: IdFilter
+  environment: IdFilter
+  status: IdFilter
+  endTime: TimeFilter
+  startTime: TimeFilter
+  duration: NumberFilter
+  triggeredBy: IdFilter
+  trigger: IdFilter
+  workflow: IdFilter
+  pipeline: IdFilter
+  creationTime: TimeFilter
 }
 
 enum ExecutionStatus {

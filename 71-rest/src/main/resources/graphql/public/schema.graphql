@@ -29,13 +29,11 @@ enum TimeOperator {
 enum StringOperator {
   EQUALS
   IN
-  NOT_EQUALS
 }
 
 enum IdOperator {
   EQUALS
   IN
-  NOT_EQUALS
 }
 
 input StringFilter {
