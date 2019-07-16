@@ -78,6 +78,5 @@ public interface AuditService extends EntityCrudOperationObserver {
 
   <T> void registerAuditActions(String accountId, T oldEntity, T newEntity, Type type);
 
-  PageResponse<AuditHeader> listUsingFilter(
-      String accountId, String filter, String limit, String offset, boolean isCommunityAccount);
+  PageResponse<AuditHeader> listUsingFilter(String accountId, String filter, String limit, String offset);
 }

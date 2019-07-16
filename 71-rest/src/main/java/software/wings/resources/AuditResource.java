@@ -1,7 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static software.wings.features.AuditTrailFeature.FEATURE_NAME;
+import static io.harness.exception.WingsException.USER;
 import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
 
 import com.google.inject.Inject;
@@ -12,19 +12,18 @@ import com.codahale.metrics.annotation.Timed;
 import io.dropwizard.jersey.caching.CacheControl;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.beans.SearchFilter.Operator;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.audit.AuditHeaderYamlResponse;
 import software.wings.features.AuditTrailFeature;
-import software.wings.features.api.RestrictedFeature;
+import software.wings.features.api.PremiumFeature;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuditService;
 
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
@@ -41,7 +40,7 @@ import javax.ws.rs.QueryParam;
 public class AuditResource {
   private AuditService httpAuditService;
   private AccountService accountService;
-  @Inject @Named(FEATURE_NAME) private RestrictedFeature auditTrailFeature;
+  @Inject @Named(AuditTrailFeature.FEATURE_NAME) private PremiumFeature auditTrailFeature;
 
   /**
    * Gets http audit service.
@@ -76,13 +75,6 @@ public class AuditResource {
   @AuthRule(permissionType = AUDIT_VIEWER)
   public RestResponse<PageResponse<AuditHeader>> list(
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<AuditHeader> pageRequest) {
-    Optional<Integer> retentionPeriodInDays =
-        ((AuditTrailFeature) auditTrailFeature).getRetentionPeriodInDays(accountId);
-    if (retentionPeriodInDays.isPresent()) {
-      long fromInstantInPast = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(retentionPeriodInDays.get());
-      pageRequest.addFilter(AuditHeaderKeys.createdAt, Operator.GT, fromInstantInPast);
-    }
-
     pageRequest.addFilter(AuditHeaderKeys.accountId, EQ, accountId);
     return new RestResponse<>(httpAuditService.list(pageRequest));
   }
@@ -95,8 +87,8 @@ public class AuditResource {
   @AuthRule(permissionType = AUDIT_VIEWER)
   public RestResponse<PageResponse<AuditHeader>> listUsingFilter(@QueryParam("accountId") String accountId,
       @QueryParam("filter") String filter, @QueryParam("limit") String limit, @QueryParam("offset") String offset) {
-    boolean isCommunityAccount = accountService.isCommunityAccount(accountId);
-    return new RestResponse<>(httpAuditService.listUsingFilter(accountId, filter, limit, offset, isCommunityAccount));
+    checkIfOperationIsAllowed(accountId);
+    return new RestResponse<>(httpAuditService.listUsingFilter(accountId, filter, limit, offset));
   }
 
   @GET
@@ -109,5 +101,11 @@ public class AuditResource {
   public RestResponse<AuditHeaderYamlResponse> getAuditHeaderDetails(@PathParam("auditHeaderId") String auditHeaderId,
       @QueryParam("entityId") String entityId, @QueryParam("accountId") String accountId) {
     return new RestResponse<>(httpAuditService.fetchAuditEntityYamls(auditHeaderId, entityId, accountId));
+  }
+
+  private void checkIfOperationIsAllowed(String accountId) {
+    if (!auditTrailFeature.isAvailableForAccount(accountId)) {
+      throw new InvalidRequestException(String.format("Operation not permitted for account [%s]", accountId), USER);
+    }
   }
 }

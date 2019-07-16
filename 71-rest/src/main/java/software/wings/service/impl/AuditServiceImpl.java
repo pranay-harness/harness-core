@@ -15,7 +15,6 @@ import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static org.mongodb.morphia.query.Sort.descending;
 import static software.wings.service.intfc.FileService.FileBucket;
@@ -402,8 +401,7 @@ public class AuditServiceImpl implements AuditService {
   }
 
   @Override
-  public PageResponse<AuditHeader> listUsingFilter(
-      String accountId, String filterJson, String limit, String offset, boolean isCommunityAccount) {
+  public PageResponse<AuditHeader> listUsingFilter(String accountId, String filterJson, String limit, String offset) {
     AuditPreference auditPreference = (AuditPreference) auditPreferenceHelper.parseJsonIntoPreference(filterJson);
     auditPreference.setAccountId(accountId);
 
@@ -411,35 +409,9 @@ public class AuditServiceImpl implements AuditService {
       return new PageResponse<>();
     }
 
-    // Set hardcoded 7 dats period for Community account if given period is more than that.
-    if (isCommunityAccount) {
-      handleCommunityAccount(auditPreference);
-    }
-
     PageRequest<AuditHeader> pageRequest =
         auditPreferenceHelper.generatePageRequestFromAuditPreference(auditPreference, offset, limit);
     return wingsPersistence.query(AuditHeader.class, pageRequest);
-  }
-
-  /**
-   * Community account max duration is 7 days.
-   */
-  private void handleCommunityAccount(AuditPreference auditPreference) {
-    Integer last7Days = Integer.valueOf(7);
-
-    Integer lastNDays = auditPreference.getLastNDays();
-    if (lastNDays != null && (lastNDays.intValue() > 7 || lastNDays.intValue() < 0)) {
-      auditPreference.setLastNDays(last7Days);
-      return;
-    }
-
-    if (isBlank(auditPreference.getStartTime()) || startTimeOlderThanSevenDays(auditPreference.getStartTime())) {
-      auditPreference.setLastNDays(last7Days);
-    }
-  }
-
-  private boolean startTimeOlderThanSevenDays(String startTime) {
-    return Long.parseLong(startTime) < System.currentTimeMillis() - TimeUnit.DAYS.toMillis(7);
   }
 
   private <T> void updateEntityNameCacheIfRequired(T oldEntity, T newEntity, EntityAuditRecord record) {

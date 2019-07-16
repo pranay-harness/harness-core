@@ -112,9 +112,9 @@
 
   AUDIT_TRAIL:
     COMMUNITY:
-      retentionPeriodInDays: 7
+      available: false
     ESSENTIALS:
-      retentionPeriodInDays: 7
+      available: false
 
   API_KEYS:
     COMMUNITY:

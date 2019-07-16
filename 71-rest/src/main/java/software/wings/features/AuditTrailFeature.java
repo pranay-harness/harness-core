@@ -1,15 +1,18 @@
 package software.wings.features;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
-import software.wings.features.api.AbstractRestrictedFeature;
+import software.wings.features.api.AbstractPremiumFeature;
 import software.wings.features.api.FeatureRestrictions;
-import software.wings.features.api.FeatureUsageComplianceReport;
+import software.wings.features.api.Usage;
 import software.wings.service.intfc.AccountService;
 
-import java.util.Optional;
+import java.util.Collection;
+import java.util.Collections;
 
-public class AuditTrailFeature extends AbstractRestrictedFeature {
+@Singleton
+public class AuditTrailFeature extends AbstractPremiumFeature {
   public static final String FEATURE_NAME = "AUDIT_TRAIL";
 
   @Inject
@@ -18,21 +21,17 @@ public class AuditTrailFeature extends AbstractRestrictedFeature {
   }
 
   @Override
+  public boolean isBeingUsed(String accountId) {
+    return false;
+  }
+
+  @Override
+  public Collection<Usage> getDisallowedUsages(String accountId, String targetAccountType) {
+    return Collections.emptyList();
+  }
+
+  @Override
   public String getFeatureName() {
     return FEATURE_NAME;
-  }
-
-  public Optional<Integer> getRetentionPeriodInDays(String accountId) {
-    return Optional.ofNullable((Integer) getRestrictions(accountId).get("retentionPeriodInDays"));
-  }
-
-  @Override
-  public boolean isUsageCompliantWithRestrictions(String accountId, String targetAccountType) {
-    return true;
-  }
-
-  @Override
-  public FeatureUsageComplianceReport getUsageComplianceReport(String accountId, String targetAccountType) {
-    return FeatureUsageComplianceReport.builder().featureName(FEATURE_NAME).build();
   }
 }

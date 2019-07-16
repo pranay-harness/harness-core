@@ -1,6 +1,7 @@
 package software.wings.features;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import software.wings.features.api.AbstractRestrictedFeature;
 import software.wings.features.api.FeatureRestrictions;
@@ -9,6 +10,7 @@ import software.wings.service.intfc.AccountService;
 
 import java.util.Optional;
 
+@Singleton
 public class DeploymentHistoryFeature extends AbstractRestrictedFeature {
   public static final String FEATURE_NAME = "DEPLOYMENT_HISTORY";
   private static final String RETENTION_PERIOD_IN_DAYS_KEY = "retentionPeriodInDays";
