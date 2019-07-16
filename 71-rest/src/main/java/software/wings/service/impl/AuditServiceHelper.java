@@ -21,8 +21,8 @@ public class AuditServiceHelper {
   @Getter private Subject<EntityCrudOperationObserver> entityCrudSubject = new Subject<>();
 
   public void reportDeleteForAuditing(String appId, Object entity) {
-    String accountId = appService.getAccountIdByAppId(appId);
     try {
+      String accountId = appService.getAccountIdByAppId(appId);
       entityCrudSubject.fireInform(
           EntityCrudOperationObxxxxxxxx:handleEntityCrudOperation, accountId, entity, null, Type.DELETE);
     } catch (Exception e) {
