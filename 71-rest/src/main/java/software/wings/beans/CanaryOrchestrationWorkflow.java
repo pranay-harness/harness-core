@@ -16,6 +16,7 @@ import static software.wings.beans.EntityType.ELK_CONFIGID;
 import static software.wings.beans.EntityType.ELK_INDICES;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.HELM_GIT_CONFIG_ID;
+import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.NEWRELIC_APPID;
 import static software.wings.beans.EntityType.NEWRELIC_CONFIGID;
@@ -231,6 +232,20 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   }
 
   @Override
+  public List<String> getInfraDefinitionIds() {
+    List<WorkflowPhase> workflowPhases = new ArrayList<>();
+    for (String workflowPhaseId : workflowPhaseIds) {
+      WorkflowPhase workflowPhase = workflowPhaseIdMap.get(workflowPhaseId);
+      workflowPhases.add(workflowPhase);
+    }
+    return workflowPhases.stream()
+        .filter(workflowPhase -> workflowPhase.getInfraDefinitionId() != null)
+        .map(WorkflowPhase::getInfraDefinitionId)
+        .distinct()
+        .collect(toList());
+  }
+
+  @Override
   public void setCloneMetadata(Map<String, String> serviceIdMapping) {
     if (workflowPhaseIdMap == null || serviceIdMapping == null) {
       return;
@@ -387,6 +402,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       }
     }
     addRemainingEntity(reorderVariables, entityVariables, INFRASTRUCTURE_MAPPING);
+    addRemainingEntity(reorderVariables, entityVariables, INFRASTRUCTURE_DEFINITION);
   }
 
   private void addAppDUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
@@ -610,39 +626,58 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     setValid(true);
     setValidationMessage(null);
     if (workflowPhases != null) {
-      String invalid = "";
-      List<String> invalidChildren = workflowPhases.stream()
-                                         .filter(workflowPhase -> !workflowPhase.validate())
-                                         .map(WorkflowPhase::getName)
-                                         .collect(toList());
-      if (isNotEmpty(invalidChildren)) {
-        setValid(false);
-        invalid += invalidChildren.toString();
-      }
-      if (rollbackWorkflowPhaseIdMap != null) {
-        List<String> invalidRollbacks = new ArrayList<>();
-        for (WorkflowPhase workflowPhase : workflowPhases) {
-          WorkflowPhase rollbackPhase = rollbackWorkflowPhaseIdMap.get(workflowPhase.getUuid());
-          if (rollbackPhase != null) {
-            if (!rollbackPhase.validate()) {
-              invalidRollbacks.add(rollbackPhase.getName());
-            }
-          }
-        }
-        if (!invalidRollbacks.isEmpty()) {
-          setValid(false);
-          if (!invalid.isEmpty()) {
-            invalid += ", ";
-          }
-          invalid += invalidRollbacks.toString();
-        }
-      }
-      if (!invalid.isEmpty()) {
-        setValidationMessage(format(WORKFLOW_VALIDATION_MESSAGE, invalid));
-      }
+      validateInternal();
       validateInframapping();
     }
     return isValid();
+  }
+
+  @Override
+  public boolean validate(boolean infraRefactor) {
+    setValid(true);
+    setValidationMessage(null);
+    if (workflowPhases != null) {
+      validateInternal();
+      if (infraRefactor) {
+        validateDefinitions();
+      } else {
+        validateInframapping();
+      }
+    }
+    return isValid();
+  }
+
+  private void validateInternal() {
+    String invalid = "";
+    List<String> invalidChildren = workflowPhases.stream()
+                                       .filter(workflowPhase -> !workflowPhase.validate())
+                                       .map(WorkflowPhase::getName)
+                                       .collect(toList());
+    if (isNotEmpty(invalidChildren)) {
+      setValid(false);
+      invalid += invalidChildren.toString();
+    }
+    if (rollbackWorkflowPhaseIdMap != null) {
+      List<String> invalidRollbacks = new ArrayList<>();
+      for (WorkflowPhase workflowPhase : workflowPhases) {
+        WorkflowPhase rollbackPhase = rollbackWorkflowPhaseIdMap.get(workflowPhase.getUuid());
+        if (rollbackPhase != null) {
+          if (!rollbackPhase.validate()) {
+            invalidRollbacks.add(rollbackPhase.getName());
+          }
+        }
+      }
+      if (!invalidRollbacks.isEmpty()) {
+        setValid(false);
+        if (!invalid.isEmpty()) {
+          invalid += ", ";
+        }
+        invalid += invalidRollbacks.toString();
+      }
+    }
+    if (!invalid.isEmpty()) {
+      setValidationMessage(format(WORKFLOW_VALIDATION_MESSAGE, invalid));
+    }
   }
 
   private void validateInframapping() {
@@ -653,6 +688,24 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
           continue;
         }
         if (isEmpty(phase.getInfraMappingId())) {
+          invalidInfraPhaseIds.add(phase.getName());
+        }
+      }
+      if (isNotEmpty(invalidInfraPhaseIds)) {
+        setValid(false);
+        setValidationMessage(format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, invalidInfraPhaseIds.toString()));
+      }
+    }
+  }
+
+  private void validateDefinitions() {
+    if (workflowPhases != null) {
+      List<String> invalidInfraPhaseIds = new ArrayList<>();
+      for (WorkflowPhase phase : workflowPhases) {
+        if (phase == null || phase.checkInfraDefinitionTemplatized()) {
+          continue;
+        }
+        if (isEmpty(phase.getInfraDefinitionId())) {
           invalidInfraPhaseIds.add(phase.getName());
         }
       }
@@ -751,6 +804,26 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     return templatizedInfraMappingIds.stream().distinct().collect(toList());
   }
 
+  @Override
+  public List<String> getTemplatizedInfraDefinitionIds() {
+    List<String> templatizedInfraDefinitionIds = new ArrayList<>();
+    if (workflowPhases == null) {
+      return templatizedInfraDefinitionIds;
+    }
+    for (WorkflowPhase workflowPhase : workflowPhases) {
+      List<TemplateExpression> templateExpressions = workflowPhase.getTemplateExpressions();
+      if (templateExpressions != null) {
+        if (templateExpressions.stream().anyMatch(
+                templateExpression -> templateExpression.getFieldName().equals("infraDefinitionId"))) {
+          if (workflowPhase.getInfraDefinitionId() != null) {
+            templatizedInfraDefinitionIds.add(workflowPhase.getInfraDefinitionId());
+          }
+        }
+      }
+    }
+    return templatizedInfraDefinitionIds.stream().distinct().collect(toList());
+  }
+
   /**
    * Checks if service templatized or not
    * @return
@@ -779,6 +852,26 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         if (templateExpressions != null) {
           if (templateExpressions.stream().anyMatch(
                   templateExpression -> templateExpression.getFieldName().equals("infraMappingId"))) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Checks if InfraDefinition templatized or not
+   * @return
+   */
+  @Override
+  public boolean isInfraDefinitionTemplatized() {
+    if (workflowPhases != null) {
+      for (WorkflowPhase workflowPhase : workflowPhases) {
+        List<TemplateExpression> templateExpressions = workflowPhase.getTemplateExpressions();
+        if (templateExpressions != null) {
+          if (templateExpressions.stream().anyMatch(
+                  templateExpression -> templateExpression.getFieldName().equals("infraDefinitionId"))) {
             return true;
           }
         }

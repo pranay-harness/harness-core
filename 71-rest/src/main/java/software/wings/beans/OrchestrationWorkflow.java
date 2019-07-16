@@ -86,6 +86,8 @@ public abstract class OrchestrationWorkflow {
 
   public abstract boolean validate();
 
+  public abstract boolean validate(boolean infraRefactor);
+
   public abstract OrchestrationWorkflow cloneInternal();
 
   public abstract List<Variable> getUserVariables();
@@ -93,6 +95,8 @@ public abstract class OrchestrationWorkflow {
   public abstract void setCloneMetadata(Map<String, String> serviceIdMapping);
 
   public abstract List<String> getInfraMappingIds();
+
+  public abstract List<String> getInfraDefinitionIds();
 
   public abstract boolean needCloudProvider();
 
@@ -129,6 +133,11 @@ public abstract class OrchestrationWorkflow {
     return asList();
   }
 
+  @JsonIgnore
+  public List<String> getTemplatizedInfraDefinitionIds() {
+    return asList();
+  }
+
   public void updateUserVariables() {}
 
   /**
@@ -148,6 +157,11 @@ public abstract class OrchestrationWorkflow {
    */
   @JsonIgnore
   public boolean isInfraMappingTemplatized() {
+    return false;
+  }
+
+  @JsonIgnore
+  public boolean isInfraDefinitionTemplatized() {
     return false;
   }
 

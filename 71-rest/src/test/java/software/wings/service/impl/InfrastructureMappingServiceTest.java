@@ -50,6 +50,8 @@ import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.NAMESPACE;
+import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_INSTANCE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
@@ -112,6 +114,7 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
+import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.infrastructure.Host;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -125,6 +128,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
+import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -160,6 +164,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Mock private AzureInfrastructureProvider azureInfrastructureProvider;
 
   @Mock private ServiceInstanceService serviceInstanceService;
+  @Mock private InfrastructureProvisionerService infrastructureProvisionerService;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private SettingsService settingsService;
   @Mock private AppService appService;
@@ -1145,20 +1150,25 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     InfrastructureMappingServiceImpl infrastructureMappingService =
         (InfrastructureMappingServiceImpl) this.infrastructureMappingService;
     doReturn(true).when(featureFlagService).isEnabled(any(), any());
+    doReturn(aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(GcpConfig.builder().build()).build())
+        .when(settingsService)
+        .get(any());
 
-    infrastructureMapping.setProvisionerId("p123");
-    Map<String, Object> blueprints = new HashMap<>();
-    infrastructureMapping.setBlueprints(blueprints);
-    blueprints.put("clusterName", "fad");
-    blueprints.put("namespace", "fad");
+    doReturn(TerraformInfrastructureProvisioner.builder().build())
+        .when(infrastructureProvisionerService)
+        .get(any(), any());
+
+    infrastructureMapping.setProvisionerId(PROVISIONER_ID);
+    infrastructureMapping.setClusterName(CLUSTER_NAME);
+    infrastructureMapping.setNamespace(NAMESPACE);
     infrastructureMappingService.validateGcpInfraMapping(infrastructureMapping);
 
-    blueprints.remove("clusterName");
+    infrastructureMapping.setClusterName(null);
     Assertions.assertThatThrownBy(() -> infrastructureMappingService.validateGcpInfraMapping(infrastructureMapping))
         .isInstanceOf(InvalidRequestException.class);
 
-    blueprints.put("clusterName", "fad");
-    blueprints.remove("namespace");
+    infrastructureMapping.setClusterName(CLUSTER_NAME);
+    infrastructureMapping.setNamespace(null);
     Assertions.assertThatThrownBy(() -> infrastructureMappingService.validateGcpInfraMapping(infrastructureMapping))
         .isInstanceOf(InvalidRequestException.class);
   }

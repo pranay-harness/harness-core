@@ -228,12 +228,17 @@ public class WorkflowServiceTemplateHelper {
   private static void addTemplateExpressions(
       List<TemplateExpression> sourceTemplateExpressions, List<TemplateExpression> targetTemplateExpressions) {
     TemplateExpression serviceExpression = getTemplateExpression(sourceTemplateExpressions, "serviceId");
-    TemplateExpression infraExpression = getTemplateExpression(sourceTemplateExpressions, "infraMappingId");
+    TemplateExpression infraMappingExpression = getTemplateExpression(sourceTemplateExpressions, "infraMappingId");
+    TemplateExpression infraDefinitionExpression =
+        getTemplateExpression(sourceTemplateExpressions, "infraDefinitionId");
     if (serviceExpression != null) {
       targetTemplateExpressions.add(serviceExpression);
     }
-    if (infraExpression != null) {
-      targetTemplateExpressions.add(infraExpression);
+    if (infraMappingExpression != null) {
+      targetTemplateExpressions.add(infraMappingExpression);
+    }
+    if (infraDefinitionExpression != null) {
+      targetTemplateExpressions.add(infraDefinitionExpression);
     }
   }
 
@@ -283,6 +288,22 @@ public class WorkflowServiceTemplateHelper {
       if (infraExpression == null) {
         throw new InvalidRequestException(
             "Service Infrastructure cannot be de-templatized because Service is templatized", USER);
+      }
+    }
+  }
+
+  public static void validateTemplateExpressionsInfraRefactor(List<TemplateExpression> templateExpressions) {
+    // Validate combinations
+    TemplateExpression envExpression =
+        WorkflowServiceTemplateHelper.getTemplateExpression(templateExpressions, "envId");
+    TemplateExpression infraExpression = getTemplateExpression(templateExpressions, "infraDefinitionId");
+
+    // It means nullifying both Service and InfraMappings .. throw an error if environment is templatized
+    // Infra not present
+    if (envExpression != null) {
+      if (infraExpression == null) {
+        throw new InvalidRequestException(
+            "Service Infrastructure cannot be de-templatized because Environment is templatized", USER);
       }
     }
   }

@@ -181,6 +181,7 @@ import software.wings.service.intfc.BarrierService.OrchestrationWorkflowInfo;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceInstanceService;
@@ -262,6 +263,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private AppService appService;
   @Inject private WorkflowService workflowService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private PipelineService pipelineService;
   @Inject private ExecutorService executorService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
@@ -1035,6 +1037,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       String pipelineExecutionId, @NotNull ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate,
       Trigger trigger) {
     String accountId = appService.getAccountIdByAppId(appId);
+    boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId);
+
+    logger.info("Execution Triggered. Type: {}, accountId={}", executionArgs.getWorkflowType(), accountId);
     checkPreDeploymentConditions(accountId, appId);
 
     // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
@@ -1049,7 +1054,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
         ((CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getGraph(),
-        workflowService.stencilMap(appId));
+        workflowService.stencilMap(appId), infraRefactor);
 
     // TODO: this is workaround for a side effect in the state machine generation that mangles with the original
     //       workflow object.
@@ -1080,9 +1085,16 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       workflowExecution.setServiceIds(services.stream().map(Service::getUuid).collect(toList()));
     }
 
-    workflowExecution.setInfraMappingIds(workflowService.getResolvedInfraMappingIds(workflow, workflowVariables));
-    workflowExecution.setCloudProviderIds(
-        infrastructureMappingService.fetchCloudProviderIds(appId, workflowExecution.getInfraMappingIds()));
+    if (infraRefactor) {
+      workflowExecution.setInfraDefinitionIds(
+          workflowService.getResolvedInfraDefinitionIds(workflow, workflowVariables));
+      workflowExecution.setCloudProviderIds(
+          infrastructureDefinitionService.fetchCloudProviderIds(appId, workflowExecution.getInfraDefinitionIds()));
+    } else {
+      workflowExecution.setInfraMappingIds(workflowService.getResolvedInfraMappingIds(workflow, workflowVariables));
+      workflowExecution.setCloudProviderIds(
+          infrastructureMappingService.fetchCloudProviderIds(appId, workflowExecution.getInfraMappingIds()));
+    }
 
     WorkflowStandardParams stdParams;
     if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.CANARY
