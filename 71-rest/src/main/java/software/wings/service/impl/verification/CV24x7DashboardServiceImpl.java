@@ -13,6 +13,7 @@ import static software.wings.service.impl.analysis.ContinuousVerificationService
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -170,10 +171,11 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
             .project(LogMLAnalysisRecordKeys.protoSerializedAnalyisDetails, readDetails)
             .project(LogMLAnalysisRecordKeys.cluster_scores, readDetails);
 
-    if (featureFlagService.isEnabled(FeatureName.CV_FEEDBACKS, cvConfiguration.getAccountId())) {
-      analysisRecordQuery = analysisRecordQuery.filter(
-          LogMLAnalysisRecordKeys.analysisStatus, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
+    if (readDetails) {
+      analysisRecordQuery = analysisRecordQuery.project(LogMLAnalysisRecordKeys.analysisStatus, true);
+      analysisRecordQuery = analysisRecordQuery.project(LogMLAnalysisRecordKeys.logCollectionMinute, true);
     }
+
     if (readDetails) {
       analysisRecordQuery = analysisRecordQuery.field(LogMLAnalysisRecordKeys.logCollectionMinute)
                                 .greaterThan(TimeUnit.MILLISECONDS.toMinutes(startTime));
@@ -182,7 +184,39 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
           analysisRecordQuery.field(LogMLAnalysisRecordKeys.logCollectionMinute)
               .greaterThanOrEq(TimeUnit.MILLISECONDS.toMinutes(startTime) + CRON_POLL_INTERVAL_IN_MINUTES);
     }
-    return analysisRecordQuery.asList();
+
+    // iterate and remove any dupes in the same time (LE vs FE)
+    Map<Integer, Integer> analysisMinRecordIndexMap = new HashMap<>();
+    List<Integer> indexesWithFeedback = new ArrayList<>();
+    List<LogMLAnalysisRecord> records = new ArrayList<>();
+    int index = 0;
+    try (HIterator<LogMLAnalysisRecord> iterator = new HIterator<>(analysisRecordQuery.fetch())) {
+      while (iterator.hasNext()) {
+        LogMLAnalysisRecord record = iterator.next();
+        record.decompressLogAnalysisRecord();
+        if (analysisMinRecordIndexMap.containsKey(record.getLogCollectionMinute())) {
+          LogMLAnalysisRecord prevRecord = records.get(analysisMinRecordIndexMap.get(record.getLogCollectionMinute()));
+          prevRecord.decompressLogAnalysisRecord();
+          if (prevRecord.getAnalysisStatus().equals(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE)) {
+            indexesWithFeedback.add(analysisMinRecordIndexMap.get(record.getLogCollectionMinute()));
+          } else {
+            indexesWithFeedback.add(index);
+          }
+        }
+        analysisMinRecordIndexMap.put(record.getLogCollectionMinute(), index);
+        records.add(record);
+        index++;
+      }
+    }
+
+    // now remove all indexes with feedback.
+    Collections.sort(indexesWithFeedback, Collections.reverseOrder());
+
+    for (int ind : indexesWithFeedback) {
+      records.remove(ind);
+    }
+
+    return records;
   }
 
   private LogMLAnalysisRecord getLastAnalysisRecord(String appId, String cvConfigId) {
