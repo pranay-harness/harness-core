@@ -104,3 +104,9 @@ indexes:
   - name: serviceId
   - name: logCollectionMinute
     direction: desc
+
+- kind: logDataRecords
+  properties:
+  - name: serviceId
+  - name: timeStamp
+    direction: desc
