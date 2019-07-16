@@ -18,6 +18,7 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_FILTER;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.ENTITY_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
@@ -26,15 +27,19 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID_CHANGED;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
 import static software.wings.utils.WingsTestConstants.TRIGGER_NAME;
+import static software.wings.utils.WingsTestConstants.VARIABLE_NAME;
+import static software.wings.utils.WingsTestConstants.VARIABLE_VALUE;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.ImmutableMap;
 
+import software.wings.beans.ArtifactVariable;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
+import software.wings.beans.VariableType;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.Artifact;
@@ -144,11 +149,22 @@ public class TriggerServiceTestHelper {
   }
 
   public static Pipeline buildPipeline() {
-    return Pipeline.builder()
-        .appId(APP_ID)
-        .uuid(PIPELINE_ID)
-        .services(asList(Service.builder().uuid(SERVICE_ID).name("Catalog").build()))
-        .build();
+    Pipeline pipeline = Pipeline.builder()
+                            .appId(APP_ID)
+                            .uuid(PIPELINE_ID)
+                            .services(asList(Service.builder().uuid(SERVICE_ID).name("Catalog").build()))
+                            .build();
+    List<Variable> userVariables = new ArrayList<>();
+    userVariables.add(ArtifactVariable.builder()
+                          .entityId(ENTITY_ID)
+                          .name(VARIABLE_NAME)
+                          .value(VARIABLE_VALUE)
+                          .type(VariableType.ARTIFACT)
+                          .build());
+
+    pipeline.setPipelineVariables(userVariables);
+
+    return pipeline;
   }
 
   public static Trigger buildWorkflowWebhookTrigger() {
