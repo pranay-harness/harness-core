@@ -82,9 +82,7 @@ public class StackDriverServiceImpl implements StackDriverService {
                                             .build();
       return delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
           .getMetricsWithDataForNode((GcpConfig) settingAttribute.getValue(), encryptionDetails, setupTestNodeData,
-              hostName,
-              createApiCallLog(
-                  settingAttribute.getAccountId(), setupTestNodeData.getAppId(), setupTestNodeData.getGuid()));
+              hostName, createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid()));
     } catch (Exception e) {
       logger.info("error getting metric data for node", e);
       throw new WingsException(STACKDRIVER_ERROR)
@@ -153,8 +151,7 @@ public class StackDriverServiceImpl implements StackDriverService {
                 TimeUnit.SECONDS.toMillis(
                     OffsetDateTime.now().minusMinutes(TIME_DURATION_FOR_LOGS_IN_MINUTES + 2).toEpochSecond()),
                 TimeUnit.SECONDS.toMillis(OffsetDateTime.now().minusMinutes(2).toEpochSecond()),
-                createApiCallLog(settingAttribute.getAccountId(), appId, null), Collections.EMPTY_SET, hostNameField, 0,
-                true);
+                createApiCallLog(settingAttribute.getAccountId(), null), Collections.EMPTY_SET, hostNameField, 0, true);
     if (response.size() / TIME_DURATION_FOR_LOGS_IN_MINUTES > VerificationConstants.TOTAL_HITS_PER_MIN_THRESHOLD) {
       throw new WingsException(ErrorCode.STACKDRIVER_ERROR, "Too many logs to process, please refine your query")
           .addParam("reason", "Too many logs returned using query: '" + query + "'. Please refine your query.");

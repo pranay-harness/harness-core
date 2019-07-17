@@ -351,8 +351,6 @@ public interface Constants {
   String CF_AWSCONFIG_VAR_DESC = "Variable for CloudFormation AWS Config entity";
   String HELM_GITCONFIG_VAR_DESC = "Variable for Helm Git Config entity";
 
-  String URL_STRING = "Url";
-
   String DEPLOYMENT_TRIGGERED_BY = "deploymentTriggeredBy";
   long ARTIFACT_FILE_SIZE_LIMIT = 4L * 1024L * 1024L * 1024L; // 4GB
 

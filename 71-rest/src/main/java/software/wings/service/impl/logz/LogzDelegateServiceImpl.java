@@ -1,7 +1,7 @@
 package software.wings.service.impl.logz;
 
 import static io.harness.network.Http.getOkHttpClientBuilder;
-import static software.wings.common.Constants.URL_STRING;
+import static software.wings.common.VerificationConstants.URL_STRING;
 import static software.wings.service.impl.ThirdPartyApiCallLog.PAYLOAD;
 
 import com.google.common.base.Preconditions;

@@ -72,6 +72,7 @@ public class VerificationConstants {
   public static final String DD_K8s_HOST_NAME = "pod_name";
   public static final String DD_HOST_NAME_EXPRESSION = "${host_identifier}";
   public static final String IS_EXPERIMENTAL = "isExperimental";
+  public static final String URL_STRING = "Url";
 
   public static final String STATIC_CLOUD_WATCH_METRIC_URL = "/configs/cloudwatch_metrics.yml";
 

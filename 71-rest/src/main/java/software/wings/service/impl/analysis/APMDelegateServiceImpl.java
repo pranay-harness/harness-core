@@ -1,6 +1,8 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.common.VerificationConstants.URL_STRING;
+import static software.wings.service.impl.ThirdPartyApiCallLog.PAYLOAD;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -11,18 +13,25 @@ import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.http.HttpStatus;
 import org.json.JSONObject;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.APMValidateCollectorConfig;
+import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.apm.APMRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
+import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.APMVerificationState.Method;
 
 import java.io.IOException;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -31,6 +40,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class APMDelegateServiceImpl implements APMDelegateService {
   @Inject private EncryptionService encryptionService;
+  @Inject private DelegateLogService delegateLogService;
+
   private Map<String, String> decryptedFields = new HashMap<>();
 
   @Override
@@ -78,7 +89,7 @@ public class APMDelegateServiceImpl implements APMDelegateService {
   }
 
   @Override
-  public String fetch(APMValidateCollectorConfig config) {
+  public String fetch(APMValidateCollectorConfig config, ThirdPartyApiCallLog apiCallLog) {
     config.getHeaders().put("Accept", "application/json");
     if (config.getEncryptedDataDetails() != null) {
       char[] decryptedValue;
@@ -93,12 +104,16 @@ public class APMDelegateServiceImpl implements APMDelegateService {
         }
       }
     }
+    apiCallLog.setTitle("Fetching data from " + config.getUrl());
+    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
 
     Call<Object> request;
     if (config.getCollectionMethod() != null && config.getCollectionMethod().equals(Method.POST)) {
       Map<String, Object> body = new HashMap<>();
       if (isNotEmpty(config.getBody())) {
         body = new JSONObject(config.getBody()).toMap();
+        apiCallLog.addFieldToRequest(
+            ThirdPartyApiCallField.builder().name(PAYLOAD).value(JsonUtils.asJson(body)).type(FieldType.JSON).build());
       }
       request = getAPMRestClient(config).postCollect(config.getUrl(), resolveDollarReferences(config.getHeaders()),
           resolveDollarReferences(config.getOptions()), body);
@@ -106,18 +121,32 @@ public class APMDelegateServiceImpl implements APMDelegateService {
       request = getAPMRestClient(config).collect(
           config.getUrl(), resolveDollarReferences(config.getHeaders()), resolveDollarReferences(config.getOptions()));
     }
+    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                     .name(URL_STRING)
+                                     .value(request.request().url().toString())
+                                     .type(FieldType.URL)
+                                     .build());
 
     final Response<Object> response;
     try {
       response = request.execute();
       if (response.isSuccessful()) {
+        apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
+        delegateLogService.save(apiCallLog.getAccountId(), apiCallLog);
         return JsonUtils.asJson(response.body());
       } else {
+        apiCallLog.addFieldToResponse(response.code(), response.errorBody(), FieldType.TEXT);
+        delegateLogService.save(apiCallLog.getAccountId(), apiCallLog);
         logger.error("Request not successful. Reason: {}", response);
         throw new WingsException(response.errorBody().string());
       }
     } catch (Exception e) {
-      throw new WingsException(e);
+      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+      apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
+      delegateLogService.save(apiCallLog.getAccountId(), apiCallLog);
+      logger.info("Error while getting response from metric provider", e);
+      throw new WingsException("Unsuccessful response while fetching data from APM provider. Error message: "
+          + e.getMessage() + " Request: " + request.request().url());
     }
   }
 

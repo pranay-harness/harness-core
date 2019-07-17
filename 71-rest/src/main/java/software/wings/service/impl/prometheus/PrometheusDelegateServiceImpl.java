@@ -1,6 +1,6 @@
 package software.wings.service.impl.prometheus;
 
-import static software.wings.common.Constants.URL_STRING;
+import static software.wings.common.VerificationConstants.URL_STRING;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.getUnsafeHttpClient;
 
 import com.google.common.base.Preconditions;

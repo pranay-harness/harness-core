@@ -1,7 +1,7 @@
 package software.wings.service.impl.splunk;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.common.Constants.URL_STRING;
+import static software.wings.common.VerificationConstants.URL_STRING;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;

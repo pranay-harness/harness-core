@@ -90,8 +90,7 @@ public class LogVerificationServiceImpl implements LogVerificationService {
       response = delegateProxyFactory.get(BugsnagDelegateService.class, taskContext)
                      .search((BugsnagConfig) settingAttribute.getValue(), accountId, bugsnagSetupTestData,
                          encryptedDataDetails,
-                         createApiCallLog(settingAttribute.getAccountId(), bugsnagSetupTestData.getAppId(),
-                             bugsnagSetupTestData.getGuid()));
+                         createApiCallLog(settingAttribute.getAccountId(), bugsnagSetupTestData.getGuid()));
     } catch (IOException ex) {
       logger.info("Error while getting data ", ex);
       return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();

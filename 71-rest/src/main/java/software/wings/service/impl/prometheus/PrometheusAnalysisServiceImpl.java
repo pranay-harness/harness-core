@@ -47,8 +47,7 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
   @Override
   public VerificationNodeDataSetupResponse getMetricsWithDataForNode(PrometheusSetupTestNodeData setupTestNodeData) {
     final SettingAttribute settingAttribute = settingsService.get(setupTestNodeData.getSettingId());
-    ThirdPartyApiCallLog apiCallLog =
-        createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getAppId(), setupTestNodeData.getGuid());
+    ThirdPartyApiCallLog apiCallLog = createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid());
 
     String hostName = null;
     if (!setupTestNodeData.isServiceLevel()) {

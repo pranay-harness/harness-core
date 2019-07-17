@@ -131,7 +131,7 @@ public class ThirdPartyApiCallLog implements GoogleDataStoreAware, CreatedAtAwar
     request.add(field);
   }
 
-  public static ThirdPartyApiCallLog createApiCallLog(String accountId, String appId, String stateExecutionId) {
+  public static ThirdPartyApiCallLog createApiCallLog(String accountId, String stateExecutionId) {
     return ThirdPartyApiCallLog.builder()
         .accountId(accountId)
         .stateExecutionId(isEmpty(stateExecutionId) ? NO_STATE_EXECUTION_ID : stateExecutionId)
