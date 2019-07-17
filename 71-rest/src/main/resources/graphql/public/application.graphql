@@ -20,6 +20,9 @@ type Application {
 
   pipelines(limit: Int!, offset: Int): PipelineConnection
     @dataFetcher(name: pipelineConnection, contextFieldArgsMap: "{ \"Application\": \"id\"}")
+
+  environments(limit: Int!, offset: Int): EnvironmentConnection
+    @dataFetcher(name: environmentConnection, contextFieldArgsMap: "{ \"Application\": \"id\"}")
 }
 
 type ApplicationConnection {
