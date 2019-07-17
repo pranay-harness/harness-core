@@ -88,6 +88,7 @@ import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataKeys;
 import software.wings.service.impl.analysis.MetricAnalysisRecord.MetricAnalysisRecordKeys;
@@ -1273,7 +1274,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                   .encryptedDataDetails(apmVerificationConfig.encryptedDataDetails(secretManager))
                   .build();
 
-          return getVerificationNodeDataResponse(accountId, apmValidateCollectorConfig);
+          return getVerificationNodeDataResponse(accountId, apmValidateCollectorConfig, apmFetchConfig.getGuid());
         default:
           throw new WingsException("Invalid StateType provided" + type);
       }
@@ -1315,7 +1316,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       }
       apmValidateCollectorConfig.setUrl(url);
       VerificationNodeDataSetupResponse verificationNodeDataSetupResponse =
-          getVerificationNodeDataResponse(accountId, apmValidateCollectorConfig);
+          getVerificationNodeDataResponse(accountId, apmValidateCollectorConfig, config.getGuid());
       if (!verificationNodeDataSetupResponse.isProviderReachable()) {
         // if not reachable then directly return. no need to process further
         return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
@@ -1355,7 +1356,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     apmValidateCollectorConfig.setUrl(DatadogConfig.LOG_API_PATH_SUFFIX);
     apmValidateCollectorConfig.setCollectionMethod(Method.POST);
     apmValidateCollectorConfig.setBody(new JSONObject(body).toString());
-    return getVerificationNodeDataResponse(accountId, apmValidateCollectorConfig);
+    return getVerificationNodeDataResponse(accountId, apmValidateCollectorConfig, config.getGuid());
   }
 
   private Map<String, Object> createDatadogBodyMapForLogsApi(
@@ -2055,11 +2056,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   private VerificationNodeDataSetupResponse getVerificationNodeDataResponse(
-      String accountId, APMValidateCollectorConfig apmValidateCollectorConfig) {
+      String accountId, APMValidateCollectorConfig apmValidateCollectorConfig, String guid) {
     SyncTaskContext syncTaskContext =
         SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
-    String apmResponse =
-        delegateProxyFactory.get(APMDelegateService.class, syncTaskContext).fetch(apmValidateCollectorConfig);
+    String apmResponse = delegateProxyFactory.get(APMDelegateService.class, syncTaskContext)
+                             .fetch(apmValidateCollectorConfig, ThirdPartyApiCallLog.createApiCallLog(accountId, guid));
     JSONObject jsonObject = new JSONObject(apmResponse);
     boolean hasLoad = false;
     if (jsonObject.length() != 0) {

@@ -108,9 +108,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
       responseWithoutHost =
           delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
               .search((ElkConfig) settingAttribute.getValue(), encryptedDataDetails, elkFetchRequestWithoutHost,
-                  createApiCallLog(
-                      settingAttribute.getAccountId(), elkSetupTestNodeData.getAppId(), elkSetupTestNodeData.getGuid()),
-                  5);
+                  createApiCallLog(settingAttribute.getAccountId(), elkSetupTestNodeData.getGuid()), 5);
     } catch (IOException ex) {
       logger.info("Error while getting data ", ex);
       return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
@@ -171,9 +169,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
       responseWithHost =
           delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
               .search((ElkConfig) settingAttribute.getValue(), encryptedDataDetails, elkFetchRequestWithHost,
-                  createApiCallLog(
-                      settingAttribute.getAccountId(), elkSetupTestNodeData.getAppId(), elkSetupTestNodeData.getGuid()),
-                  5);
+                  createApiCallLog(settingAttribute.getAccountId(), elkSetupTestNodeData.getGuid()), 5);
     } catch (IOException ex) {
       logger.info("Error while getting data for node", ex);
       return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
@@ -236,7 +232,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
       Object responseWithoutHost =
           delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
               .search((ElkConfig) settingAttribute.getValue(), encryptedDataDetails, elkFetchRequestWithoutHost,
-                  createApiCallLog(settingAttribute.getAccountId(), appId, guid), 5);
+                  createApiCallLog(settingAttribute.getAccountId(), guid), 5);
       long totalHitsPerMinute = parseTotalHits(responseWithoutHost) / TIME_DURATION_FOR_LOGS_IN_MINUTES;
       if (totalHitsPerMinute >= VerificationConstants.TOTAL_HITS_PER_MIN_THRESHOLD) {
         throw new WingsException(

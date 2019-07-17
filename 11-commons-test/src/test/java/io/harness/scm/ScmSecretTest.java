@@ -45,7 +45,7 @@ public class ScmSecretTest {
       return;
     }
 
-    String text = "this is a test of the cipher";
+    String text = "udo6OkOATXXGFZR/J0RCUDrtib6njyGbZtCv2c+v";
 
     final byte[] bytes = text.getBytes();
     String test = scmSecret.encrypt(bytes);

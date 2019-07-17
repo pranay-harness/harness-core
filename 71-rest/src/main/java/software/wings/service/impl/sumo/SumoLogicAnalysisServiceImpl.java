@@ -41,7 +41,6 @@ public class SumoLogicAnalysisServiceImpl extends AnalysisServiceImpl implements
             sumoLogicSetupTestNodedata.isServiceLevel() ? null
                                                         : sumoLogicSetupTestNodedata.getInstanceElement().getHostName(),
             encryptedDataDetails,
-            createApiCallLog(settingAttribute.getAccountId(), sumoLogicSetupTestNodedata.getAppId(),
-                sumoLogicSetupTestNodedata.getGuid()));
+            createApiCallLog(settingAttribute.getAccountId(), sumoLogicSetupTestNodedata.getGuid()));
   }
 }

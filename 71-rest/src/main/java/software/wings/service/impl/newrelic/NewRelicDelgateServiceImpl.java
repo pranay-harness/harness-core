@@ -7,8 +7,7 @@ import static io.harness.network.Http.getOkHttpClientBuilder;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.common.Constants.URL_STRING;
+import static software.wings.common.VerificationConstants.URL_STRING;
 import static software.wings.service.impl.ThirdPartyApiCallLog.PAYLOAD;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
@@ -190,7 +189,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       List<EncryptedDataDetail> encryptedDataDetails, String newRelicApplicationName, ThirdPartyApiCallLog apiCallLog)
       throws IOException {
     if (apiCallLog == null) {
-      apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), GLOBAL_APP_ID, null);
+      apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), null);
     }
     final Call<NewRelicApplicationsResponse> request =
         getNewRelicRestClient(newRelicConfig)
@@ -217,7 +216,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       List<EncryptedDataDetail> encryptedDataDetails, String newRelicApplicationId, ThirdPartyApiCallLog apiCallLog)
       throws IOException, CloneNotSupportedException {
     if (apiCallLog == null) {
-      apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), GLOBAL_APP_ID, null);
+      apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), null);
     }
     final Call<NewRelicApplicationsResponse> request =
         getNewRelicRestClient(newRelicConfig)
@@ -246,7 +245,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     }
 
     if (apiCallLog == null) {
-      apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), GLOBAL_APP_ID, null);
+      apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), null);
     }
     int pageCount = 1;
     while (true) {
@@ -309,7 +308,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       throws IOException {
     List<NewRelicApplicationInstance> rv = new ArrayList<>();
     if (apiCallLog == null) {
-      apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), GLOBAL_APP_ID, null);
+      apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), null);
     }
     int pageCount = 1;
     while (true) {
@@ -373,7 +372,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       throws IOException {
     Set<NewRelicMetric> newRelicMetrics = new HashSet<>();
     if (apiCallLog == null) {
-      apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), GLOBAL_APP_ID, null);
+      apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), null);
     }
     int failedAttempts = 0;
     while (true) {
@@ -435,7 +434,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails, long applicationId,
       boolean checkNotAllowedStrings, ThirdPartyApiCallLog apiCallLog) {
     if (apiCallLog == null) {
-      apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), GLOBAL_APP_ID, null);
+      apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), null);
     }
     Map<String, NewRelicMetric> webTransactionMetrics = new HashMap<>();
     for (NewRelicMetric metric : metrics) {
@@ -549,7 +548,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       Collection<String> metricNames, long fromTime, long toTime, ThirdPartyApiCallLog apiCallLog, boolean summarize)
       throws IOException {
     if (apiCallLog == null) {
-      apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), GLOBAL_APP_ID, null);
+      apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), null);
     }
 
     Collection<String> updatedMetrics = new ArrayList<>();
@@ -623,7 +622,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       long newRelicApplicationId, NewRelicDeploymentMarkerPayload body, ThirdPartyApiCallLog apiCallLog)
       throws IOException {
     if (apiCallLog == null) {
-      apiCallLog = createApiCallLog(config.getAccountId(), GLOBAL_APP_ID, null);
+      apiCallLog = createApiCallLog(config.getAccountId(), null);
     }
     final String baseUrl =
         config.getNewRelicUrl().endsWith("/") ? config.getNewRelicUrl() : config.getNewRelicUrl() + "/";

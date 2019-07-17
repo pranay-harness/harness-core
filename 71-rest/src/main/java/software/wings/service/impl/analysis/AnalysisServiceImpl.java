@@ -1041,10 +1041,9 @@ public class AnalysisServiceImpl implements AnalysisService {
                                                .appId(GLOBAL_APP_ID)
                                                .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                                .build();
-          searchResponse =
-              delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
-                  .search((ElkConfig) settingAttribute.getValue(), encryptedDataDetails, elkFetchRequest,
-                      createApiCallLog(accountId, GLOBAL_APP_ID, null), ElkDelegateServiceImpl.MAX_RECORDS);
+          searchResponse = delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
+                               .search((ElkConfig) settingAttribute.getValue(), encryptedDataDetails, elkFetchRequest,
+                                   createApiCallLog(accountId, null), ElkDelegateServiceImpl.MAX_RECORDS);
           break;
         case LOGZ:
           errorCode = ErrorCode.LOGZ_CONFIGURATION_ERROR;
@@ -1055,7 +1054,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                                                 .build();
           searchResponse = delegateProxyFactory.get(LogzDelegateService.class, logzTaskContext)
                                .search((LogzConfig) settingAttribute.getValue(), encryptedDataDetails, elkFetchRequest,
-                                   createApiCallLog(accountId, GLOBAL_APP_ID, null));
+                                   createApiCallLog(accountId, null));
           break;
         default:
           errorCode = ErrorCode.DEFAULT_ERROR_CODE;

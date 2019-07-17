@@ -38,6 +38,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo;
@@ -98,7 +99,8 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     // setup
     when(mockSettingsService.get(anyString())).thenReturn(attribute);
     when(mockDelegateProxyFactory.get(any(), any())).thenReturn(mockAPMDelegateService);
-    when(mockAPMDelegateService.fetch(any(APMValidateCollectorConfig.class))).thenReturn(dummyResponseString);
+    when(mockAPMDelegateService.fetch(any(APMValidateCollectorConfig.class), any(ThirdPartyApiCallLog.class)))
+        .thenReturn(dummyResponseString);
 
     // execute
     VerificationNodeDataSetupResponse response =
@@ -125,7 +127,8 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     // setup
     when(mockSettingsService.get(anyString())).thenReturn(attribute);
     when(mockDelegateProxyFactory.get(any(), any())).thenReturn(mockAPMDelegateService);
-    when(mockAPMDelegateService.fetch(any(APMValidateCollectorConfig.class))).thenReturn(dummyResponseString);
+    when(mockAPMDelegateService.fetch(any(APMValidateCollectorConfig.class), any(ThirdPartyApiCallLog.class)))
+        .thenReturn(dummyResponseString);
 
     // execute
     VerificationNodeDataSetupResponse response =
@@ -151,7 +154,8 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     // setup
     when(mockSettingsService.get(anyString())).thenReturn(attribute);
     when(mockDelegateProxyFactory.get(any(), any())).thenReturn(mockAPMDelegateService);
-    when(mockAPMDelegateService.fetch(any(APMValidateCollectorConfig.class))).thenReturn(dummyResponseString);
+    when(mockAPMDelegateService.fetch(any(APMValidateCollectorConfig.class), any(ThirdPartyApiCallLog.class)))
+        .thenReturn(dummyResponseString);
 
     // execute
     VerificationNodeDataSetupResponse response =
@@ -173,7 +177,8 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     // setup
     when(mockSettingsService.get(anyString())).thenReturn(attribute);
     when(mockDelegateProxyFactory.get(any(), any())).thenReturn(mockAPMDelegateService);
-    when(mockAPMDelegateService.fetch(any(APMValidateCollectorConfig.class))).thenReturn(dummyResponseString);
+    when(mockAPMDelegateService.fetch(any(APMValidateCollectorConfig.class), any(ThirdPartyApiCallLog.class)))
+        .thenReturn(dummyResponseString);
 
     // execute
     VerificationNodeDataSetupResponse response =
@@ -195,7 +200,8 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     // setup
     when(mockSettingsService.get(anyString())).thenReturn(attribute);
     when(mockDelegateProxyFactory.get(any(), any())).thenReturn(mockAPMDelegateService);
-    when(mockAPMDelegateService.fetch(any(APMValidateCollectorConfig.class))).thenThrow(new WingsException(""));
+    when(mockAPMDelegateService.fetch(any(APMValidateCollectorConfig.class), any(ThirdPartyApiCallLog.class)))
+        .thenThrow(new WingsException(""));
 
     // execute
     VerificationNodeDataSetupResponse response =

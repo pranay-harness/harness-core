@@ -4,8 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.SUMO_CONFIGURATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.common.Constants.URL_STRING;
+import static software.wings.common.VerificationConstants.URL_STRING;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 import static software.wings.delegatetasks.SumoDataCollectionTask.DEFAULT_TIME_ZONE;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
@@ -99,7 +98,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
       ThirdPartyApiCallLog apiCallLog) {
     logger.info("Starting to fetch test log data by host for sumo logic");
     if (apiCallLog == null) {
-      apiCallLog = createApiCallLog(accountId, GLOBAL_APP_ID, null);
+      apiCallLog = createApiCallLog(accountId, null);
     }
 
     long startTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(5);
@@ -318,7 +317,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
       String collectionStartTime, String collectionEndTime, Object searchJobStatusResponse, Long requestTimeStamp,
       Long responseTimeStamp, int httpStatus, FieldType responseFieldType) {
     if (apiCallLog == null) {
-      apiCallLog = createApiCallLog(config.getAccountId(), GLOBAL_APP_ID, null);
+      apiCallLog = createApiCallLog(config.getAccountId(), null);
     }
     apiCallLog.setTitle("Fetch request to " + config.getSumoUrl());
     apiCallLog.addFieldToRequest(

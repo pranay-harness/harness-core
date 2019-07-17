@@ -1,7 +1,6 @@
 package software.wings.service.impl.bugsnag;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.common.Constants.URL_STRING;
+import static software.wings.common.VerificationConstants.URL_STRING;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.common.collect.HashBiMap;
@@ -99,7 +98,7 @@ public class BugsnagDelegateServiceImpl implements BugsnagDelegateService {
   public Object search(BugsnagConfig config, String accountId, BugsnagSetupTestData bugsnagSetupTestData,
       List<EncryptedDataDetail> encryptedDataDetails, ThirdPartyApiCallLog apiCallLog) throws IOException {
     if (apiCallLog == null) {
-      apiCallLog = createApiCallLog(accountId, GLOBAL_APP_ID, null);
+      apiCallLog = createApiCallLog(accountId, null);
     }
     try {
       Map<String, Object> hMap = HashBiMap.create();

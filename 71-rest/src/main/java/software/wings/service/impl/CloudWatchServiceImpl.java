@@ -199,9 +199,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
       }
       return delegateProxyFactory.get(CloudWatchDelegateService.class, syncTaskContext)
           .getMetricsWithDataForNode((AwsConfig) settingAttribute.getValue(), encryptionDetails, setupTestNodeData,
-              createApiCallLog(
-                  settingAttribute.getAccountId(), setupTestNodeData.getAppId(), setupTestNodeData.getGuid()),
-              hostName);
+              createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid()), hostName);
     } catch (Exception e) {
       logger.info("error getting metric data for node", e);
       throw new WingsException(ErrorCode.CLOUDWATCH_ERROR)

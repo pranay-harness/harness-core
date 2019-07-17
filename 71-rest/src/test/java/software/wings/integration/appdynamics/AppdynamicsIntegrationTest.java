@@ -160,7 +160,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
       for (AppdynamicsTier tier : tierRestResponse.getResource()) {
         List<AppdynamicsMetric> btMetrics = appdynamicsDelegateService.getTierBTMetrics(appDynamicsConfig,
             application.getId(), tier.getId(), secretManager.getEncryptionDetails(appDynamicsConfig, null, null),
-            createApiCallLog(appDynamicsConfig.getAccountId(), accountId, null));
+            createApiCallLog(appDynamicsConfig.getAccountId(), null));
 
         assertFalse(btMetrics.isEmpty());
 
@@ -255,7 +255,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
         logger.info(application.toString());
         Set<AppdynamicsNode> nodes = appdynamicsDelegateService.getNodes(appDynamicsConfig, application.getId(),
             tier.getId(), secretManager.getEncryptionDetails(appDynamicsConfig, null, null),
-            createApiCallLog(appDynamicsConfig.getAccountId(), accountId, null));
+            createApiCallLog(appDynamicsConfig.getAccountId(), null));
 
         for (AppdynamicsNode node : new TreeSet<>(nodes).descendingSet()) {
           AppdynamicsSetupTestNodeData testNodeData =

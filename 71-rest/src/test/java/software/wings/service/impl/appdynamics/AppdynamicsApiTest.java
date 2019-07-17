@@ -15,7 +15,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 import static software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl.BT_PERFORMANCE_PATH_PREFIX;
 import static software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl.EXTERNAL_CALLS;
@@ -278,7 +277,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
                                               .accountname(UUID.randomUUID().toString())
                                               .build();
     List<AppdynamicsMetric> tierBTMetrics = delegateService.getTierBTMetrics(appDynamicsConfig, new Random().nextLong(),
-        new Random().nextLong(), Collections.emptyList(), createApiCallLog(accountId, GLOBAL_APP_ID, null));
+        new Random().nextLong(), Collections.emptyList(), createApiCallLog(accountId, null));
     assertEquals(2, tierBTMetrics.size());
     assertEquals(bts, tierBTMetrics);
   }
@@ -370,7 +369,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     List<AppdynamicsMetricData> tierBTMetricData =
         delegateService.getTierBTMetricData(appDynamicsConfig, new Random().nextLong(), generateUuid(), generateUuid(),
             generateUuid(), System.currentTimeMillis() - new Random().nextInt(), System.currentTimeMillis(),
-            Collections.emptyList(), createApiCallLog(accountId, GLOBAL_APP_ID, null));
+            Collections.emptyList(), createApiCallLog(accountId, null));
     assertEquals(2, tierBTMetricData.size());
     assertEquals(btData, tierBTMetricData);
   }

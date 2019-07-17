@@ -49,9 +49,7 @@ public class DynaTraceServiceImpl implements DynaTraceService {
       List<DynaTraceMetricDataResponse> response =
           delegateProxyFactory.get(DynaTraceDelegateService.class, syncTaskContext)
               .getMetricsWithDataForNode((DynaTraceConfig) settingAttribute.getValue(), encryptionDetails,
-                  setupTestNodeData,
-                  createApiCallLog(
-                      settingAttribute.getAccountId(), setupTestNodeData.getAppId(), setupTestNodeData.getGuid()));
+                  setupTestNodeData, createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid()));
       if (response.isEmpty()) {
         return VerificationNodeDataSetupResponse.builder()
             .providerReachable(true)

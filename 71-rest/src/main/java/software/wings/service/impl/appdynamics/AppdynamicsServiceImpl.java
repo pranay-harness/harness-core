@@ -161,8 +161,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
       return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
           .getMetricsWithDataForNode((AppDynamicsConfig) settingAttribute.getValue(), encryptionDetails,
               setupTestNodeData, hostName,
-              createApiCallLog(
-                  settingAttribute.getAccountId(), setupTestNodeData.getAppId(), setupTestNodeData.getGuid()));
+              createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid()));
     } catch (Exception e) {
       logger.info("error getting metric data for node", e);
       throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)

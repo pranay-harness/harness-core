@@ -36,6 +36,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.APMDelegateService;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.apm.MLServiceUtils;
@@ -122,7 +123,8 @@ public class NewRelicServiceImpl implements NewRelicService {
                                             .appId(GLOBAL_APP_ID)
                                             .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                             .build();
-      return delegateProxyFactory.get(APMDelegateService.class, syncTaskContext).fetch(apmValidateCollectorConfig);
+      return delegateProxyFactory.get(APMDelegateService.class, syncTaskContext)
+          .fetch(apmValidateCollectorConfig, ThirdPartyApiCallLog.createApiCallLog(accountId, fetchConfig.getGuid()));
     } catch (Exception e) {
       String errorMsg = e.getCause() != null ? ExceptionUtils.getMessage(e.getCause()) : ExceptionUtils.getMessage(e);
       throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR, USER).addParam("reason", errorMsg);
@@ -318,8 +320,7 @@ public class NewRelicServiceImpl implements NewRelicService {
               instanceId,
               !featureFlagService.isEnabled(
                   FeatureName.DISABLE_METRIC_NAME_CURLY_BRACE_CHECK, settingAttribute.getAccountId()),
-              createApiCallLog(
-                  settingAttribute.getAccountId(), setupTestNodeData.getAppId(), setupTestNodeData.getGuid()));
+              createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid()));
     } catch (Exception e) {
       logger.info("error getting metric data for node", e);
       throw new WingsException(ErrorCode.NEWRELIC_ERROR, USER)

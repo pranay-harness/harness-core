@@ -47,8 +47,7 @@ public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements Sp
       throw new WingsException(
           "No " + StateType.SPLUNKV2 + " setting with id: " + setupTestNodeData.getSettingId() + " found");
     }
-    ThirdPartyApiCallLog apiCallLog =
-        createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getAppId(), setupTestNodeData.getGuid());
+    ThirdPartyApiCallLog apiCallLog = createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid());
 
     List<EncryptedDataDetail> encryptedDataDetails =
         secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);

@@ -3,7 +3,6 @@ package software.wings.service.impl.appdynamics;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.RETRIES;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.getUnsafeHttpClient;
@@ -131,7 +130,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
           try {
             List<AppdynamicsMetric> externalCallMetrics =
                 getExternalCallMetrics(appDynamicsConfig, appdynamicsAppId, tierBtMetric, tierBTsPath + "|",
-                    encryptionDetails, createApiCallLog(appDynamicsConfig.getAccountId(), GLOBAL_APP_ID, null));
+                    encryptionDetails, createApiCallLog(appDynamicsConfig.getAccountId(), null));
             externalCallMetrics.forEach(
                 externalCallMetric -> parseAndAddExternalTier(tier.getExternalTiers(), externalCallMetric, tiers));
           } catch (IOException e) {
