@@ -44,6 +44,9 @@ public class GCPMarketPlaceServiceIntegrationTest extends BaseIntegrationTest {
   private static final String SOME_OPERATION_ID =
       "gcp-mkt-operation-id-" + GCPMarketPlaceServiceIntegrationTest.class.getSimpleName();
 
+  private static final String SOME_ENTITLEMENT_NAME =
+      "gcp-mkt-entitlement-" + GCPMarketPlaceServiceIntegrationTest.class.getSimpleName();
+
   @Before
   public void ensureIndices() {
     if (!indexesEnsured) {
@@ -93,7 +96,8 @@ public class GCPMarketPlaceServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   private GCPUsageReport getSampleGCPUsageReport(Instant startTime, Instant endTime) {
-    return new GCPUsageReport(SOME_ACCOUNT_ID, SOME_CONSUMER_ID, SOME_OPERATION_ID, startTime, endTime, 5);
+    return new GCPUsageReport(
+        SOME_ACCOUNT_ID, SOME_CONSUMER_ID, SOME_OPERATION_ID, SOME_ENTITLEMENT_NAME, startTime, endTime, 5);
   }
 
   private List<InstanceStatsSnapshot> generateInstanceStatsSnapshot(Instant startTime, Instant endTime) {

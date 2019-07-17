@@ -100,9 +100,10 @@ public class GCPMarketPlaceServiceImpl implements GCPMarketPlaceService {
 
       long instanceUsage = getGCPInstanceUsage(accountId, reportStartTime, reportEndTime);
       String consumerId = entitlement.getUsageReportingId();
+      String entitlementName = entitlement.getName();
       String operationId = String.format("%s-%s", consumerId, reportStartTime.toEpochMilli());
-      GCPUsageReport gcpUsageReport =
-          new GCPUsageReport(accountId, consumerId, operationId, reportStartTime, reportEndTime, instanceUsage);
+      GCPUsageReport gcpUsageReport = new GCPUsageReport(
+          accountId, consumerId, operationId, entitlementName, reportStartTime, reportEndTime, instanceUsage);
 
       logger.info("GCP_MKT_PLACE Gcp usage report data {} ", gcpUsageReport.toString());
 
