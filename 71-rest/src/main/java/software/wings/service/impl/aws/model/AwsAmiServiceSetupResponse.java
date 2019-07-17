@@ -22,4 +22,5 @@ public class AwsAmiServiceSetupResponse implements AwsResponse {
   private int minInstances;
   private int maxInstances;
   private int desiredInstances;
+  private List<String> baseAsgScalingPolicyJSONs;
 }

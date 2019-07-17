@@ -21,7 +21,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.Getter;
 import lombok.Setter;
-import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AwsAmiSwitchRoutesStateExecutionData;
 import software.wings.api.PhaseElement;
@@ -63,11 +62,11 @@ public class AwsAmiSwitchRoutesState extends State {
   @DefaultValue("true")
   private boolean downsizeOldAsg;
 
-  @Inject @Transient protected transient SettingsService settingsService;
-  @Inject @Transient protected transient InfrastructureMappingService infrastructureMappingService;
-  @Inject @Transient protected transient ActivityService activityService;
-  @Inject @Transient protected transient SecretManager secretManager;
-  @Inject @Transient protected transient DelegateService delegateService;
+  @Inject protected transient SettingsService settingsService;
+  @Inject protected transient InfrastructureMappingService infrastructureMappingService;
+  @Inject protected transient ActivityService activityService;
+  @Inject protected transient SecretManager secretManager;
+  @Inject protected transient DelegateService delegateService;
 
   public AwsAmiSwitchRoutesState(String name) {
     super(name, StateType.AWS_AMI_SWITCH_ROUTES.name());
@@ -131,6 +130,7 @@ public class AwsAmiSwitchRoutesState extends State {
             .preDeploymentData(serviceSetupElement.getPreDeploymentData())
             .downscaleOldAsg(downsizeOldAsg)
             .rollback(rollback)
+            .baseScalingPolicyJSONs(serviceSetupElement.getBaseScalingPolicyJSONs())
             .build();
 
     AwsAmiSwitchRoutesStateExecutionData executionData =

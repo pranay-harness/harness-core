@@ -26,18 +26,21 @@ public class AwsAmiServiceDeployRequest extends AwsAmiRequest {
   private Integer autoScalingSteadyStateTimeout;
   private int minInstances;
   private int maxInstances;
+  private int desiredInstances;
   private AwsAmiPreDeploymentData preDeploymentData;
   private List<String> infraMappingClassisLbs;
   private List<String> infraMappingTargetGroupArns;
   private boolean rollback;
+  private List<String> baseScalingPolicyJSONs;
 
   @Builder
   public AwsAmiServiceDeployRequest(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String accountId, String appId, String activityId, String commandName, boolean resizeNewFirst,
       String newAutoScalingGroupName, Integer newAsgFinalDesiredCount, String oldAutoScalingGroupName,
-      Integer oldAsgFinalDesiredCount, Integer autoScalingSteadyStateTimeout, boolean lastDeployStep, int minInstances,
+      Integer oldAsgFinalDesiredCount, Integer autoScalingSteadyStateTimeout, int minInstances,
       List<AwsAmiResizeData> asgDesiredCounts, int maxInstances, AwsAmiPreDeploymentData preDeploymentData,
-      List<String> infraMappingClassisLbs, List<String> infraMappingTargetGroupArns, boolean rollback) {
+      List<String> infraMappingClassisLbs, List<String> infraMappingTargetGroupArns, boolean rollback,
+      List<String> baseScalingPolicyJSONs, int desiredInstances) {
     super(awsConfig, encryptionDetails, EXECUTE_AMI_SERVICE_DEPLOY, region);
     this.accountId = accountId;
     this.appId = appId;
@@ -56,5 +59,7 @@ public class AwsAmiServiceDeployRequest extends AwsAmiRequest {
     this.infraMappingClassisLbs = infraMappingClassisLbs;
     this.infraMappingTargetGroupArns = infraMappingTargetGroupArns;
     this.rollback = rollback;
+    this.baseScalingPolicyJSONs = baseScalingPolicyJSONs;
+    this.desiredInstances = desiredInstances;
   }
 }

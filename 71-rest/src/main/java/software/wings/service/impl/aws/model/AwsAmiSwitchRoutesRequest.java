@@ -27,13 +27,15 @@ public class AwsAmiSwitchRoutesRequest extends AwsAmiRequest {
   private boolean downscaleOldAsg;
   private AwsAmiPreDeploymentData preDeploymentData;
   boolean rollback;
+  private List<String> baseScalingPolicyJSONs;
 
   @Builder
   public AwsAmiSwitchRoutesRequest(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String accountId, String appId, String activityId, String commandName, String oldAsgName,
       List<String> primaryClassicLBs, List<String> primaryTargetGroupARNs, String newAsgName,
       List<String> stageClassicLBs, List<String> stageTargetGroupARNs, int registrationTimeout,
-      AwsAmiPreDeploymentData preDeploymentData, boolean downscaleOldAsg, boolean rollback) {
+      AwsAmiPreDeploymentData preDeploymentData, boolean downscaleOldAsg, boolean rollback,
+      List<String> baseScalingPolicyJSONs) {
     super(awsConfig, encryptionDetails, EXECUTE_AMI_SWITCH_ROUTE, region);
     this.accountId = accountId;
     this.appId = appId;
@@ -49,5 +51,6 @@ public class AwsAmiSwitchRoutesRequest extends AwsAmiRequest {
     this.preDeploymentData = preDeploymentData;
     this.downscaleOldAsg = downscaleOldAsg;
     this.rollback = rollback;
+    this.baseScalingPolicyJSONs = baseScalingPolicyJSONs;
   }
 }

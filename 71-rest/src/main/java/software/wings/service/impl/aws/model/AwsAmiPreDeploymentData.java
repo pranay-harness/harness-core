@@ -1,8 +1,11 @@
 package software.wings.service.impl.aws.model;
 
+import static java.util.Collections.emptyList;
+
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -10,6 +13,7 @@ import java.util.Map;
 public class AwsAmiPreDeploymentData {
   private Map<String, Integer> asgNameToMinCapacity;
   private Map<String, Integer> asgNameToDesiredCapacity;
+  private Map<String, List<String>> asgNameToScalingPolicyJSON;
   private static final int DEFAULT_DESIRED_COUNT = 10;
 
   public int getPreDeploymentMinCapacity(String asgName) {
@@ -37,5 +41,12 @@ public class AwsAmiPreDeploymentData {
       return false;
     }
     return count.equals(desiredCount);
+  }
+
+  public List<String> getScalingPolicyJSONForAsg(String asgName) {
+    if (asgNameToScalingPolicyJSON == null) {
+      return emptyList();
+    }
+    return asgNameToScalingPolicyJSON.get(asgName);
   }
 }

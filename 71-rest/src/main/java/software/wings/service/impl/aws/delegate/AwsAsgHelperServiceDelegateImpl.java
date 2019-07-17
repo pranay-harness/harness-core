@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.delegate;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INIT_TIMEOUT;
@@ -11,6 +12,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_DESIRED_INSTANCES;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MAX_INSTANCES;
@@ -40,17 +42,24 @@ import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationRequest
 import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationResult;
 import com.amazonaws.services.autoscaling.model.DeleteAutoScalingGroupRequest;
 import com.amazonaws.services.autoscaling.model.DeleteLaunchConfigurationRequest;
+import com.amazonaws.services.autoscaling.model.DeletePolicyRequest;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsResult;
 import com.amazonaws.services.autoscaling.model.DescribeLaunchConfigurationsRequest;
+import com.amazonaws.services.autoscaling.model.DescribePoliciesRequest;
+import com.amazonaws.services.autoscaling.model.DescribePoliciesResult;
 import com.amazonaws.services.autoscaling.model.DescribeScalingActivitiesRequest;
 import com.amazonaws.services.autoscaling.model.DescribeScalingActivitiesResult;
 import com.amazonaws.services.autoscaling.model.DetachLoadBalancerTargetGroupsRequest;
 import com.amazonaws.services.autoscaling.model.DetachLoadBalancersRequest;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
+import com.amazonaws.services.autoscaling.model.PutScalingPolicyRequest;
+import com.amazonaws.services.autoscaling.model.PutScalingPolicyResult;
+import com.amazonaws.services.autoscaling.model.ScalingPolicy;
 import com.amazonaws.services.autoscaling.model.SetDesiredCapacityRequest;
 import com.amazonaws.services.autoscaling.model.UpdateAutoScalingGroupRequest;
 import com.amazonaws.services.ec2.model.Instance;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -640,5 +649,146 @@ public class AwsAsgHelperServiceDelegateImpl
       handleAmazonClientException(amazonClientException);
     }
     return null;
+  }
+
+  private String getJSONForScalingPolicy(ScalingPolicy scalingPolicy, ExecutionLogCallback logCallback) {
+    if (scalingPolicy == null) {
+      return EMPTY;
+    }
+    ObjectMapper mapper = new ObjectMapper();
+    try {
+      return mapper.writeValueAsString(scalingPolicy);
+    } catch (Exception ex) {
+      String errorMessage = format("Exception: [%s] while extracting policy JSON for scaling policy: [%s]. Ignored.",
+          ex.getMessage(), scalingPolicy.getPolicyARN());
+      logger.error(errorMessage, ex);
+      logCallback.saveExecutionLog(errorMessage);
+      return EMPTY;
+    }
+  }
+
+  private List<ScalingPolicy> listAllScalingPoliciesOfAsg(
+      AmazonAutoScalingClient amazonAutoScalingClient, String asgName) {
+    List<ScalingPolicy> scalingPolicies = newArrayList();
+    String nextToken = null;
+    DescribePoliciesRequest request = null;
+    DescribePoliciesResult result = null;
+    do {
+      request = new DescribePoliciesRequest().withAutoScalingGroupName(asgName).withNextToken(nextToken);
+      result = amazonAutoScalingClient.describePolicies(request);
+      if (isNotEmpty(result.getScalingPolicies())) {
+        scalingPolicies.addAll(result.getScalingPolicies());
+      }
+      nextToken = result.getNextToken();
+    } while (nextToken != null);
+    return scalingPolicies;
+  }
+
+  @Override
+  public List<String> getScalingPolicyJSONs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, String asgName, ExecutionLogCallback logCallback) {
+    try {
+      logCallback.saveExecutionLog(format("Extracting scaling policy JSONs from: [%s]", asgName));
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
+      List<ScalingPolicy> scalingPolicies = listAllScalingPoliciesOfAsg(amazonAutoScalingClient, asgName);
+      if (isEmpty(scalingPolicies)) {
+        logCallback.saveExecutionLog("No policies found");
+        return emptyList();
+      }
+      List<String> scalingPolicyJSONs = newArrayList();
+      scalingPolicies.forEach(scalingPolicy -> {
+        logCallback.saveExecutionLog(format("Found scaling policy: [%s]", scalingPolicy.getPolicyARN()));
+        scalingPolicyJSONs.add(getJSONForScalingPolicy(scalingPolicy, logCallback));
+      });
+      return scalingPolicyJSONs;
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
+    return emptyList();
+  }
+
+  @Override
+  public void clearAllScalingPoliciesForAsg(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, String asgName, ExecutionLogCallback logCallback) {
+    try {
+      logCallback.saveExecutionLog(format("Clearing away all scaling policies for Asg: [%s]", asgName));
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
+      List<ScalingPolicy> scalingPolicies = listAllScalingPoliciesOfAsg(amazonAutoScalingClient, asgName);
+      if (isEmpty(scalingPolicies)) {
+        logCallback.saveExecutionLog("No policies found");
+        return;
+      }
+      scalingPolicies.forEach(scalingPolicy -> {
+        logCallback.saveExecutionLog(format("Found scaling policy: [%s]. Deleting it.", scalingPolicy.getPolicyARN()));
+        DeletePolicyRequest deletePolicyRequest =
+            new DeletePolicyRequest().withAutoScalingGroupName(asgName).withPolicyName(scalingPolicy.getPolicyARN());
+        amazonAutoScalingClient.deletePolicy(deletePolicyRequest);
+      });
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
+  }
+
+  private ScalingPolicy getScalingPolicyFromJSON(String json, ExecutionLogCallback logCallback) {
+    ObjectMapper mapper = new ObjectMapper();
+    try {
+      return mapper.readValue(json, ScalingPolicy.class);
+    } catch (Exception ex) {
+      String errorMessage = format("Exception: [%s] while desirializing cached JSON", ex.getMessage());
+      logCallback.saveExecutionLog(errorMessage);
+      logger.error(errorMessage, ex);
+      return null;
+    }
+  }
+
+  @Override
+  public void attachScalingPoliciesToAsg(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, String asgName, List<String> scalingPolicyJSONs, ExecutionLogCallback logCallback) {
+    try {
+      logCallback.saveExecutionLog(format("Attaching scaling policies to Asg: [%s]", asgName));
+      if (isEmpty(scalingPolicyJSONs)) {
+        logCallback.saveExecutionLog("No policy to attach");
+        return;
+      }
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
+      scalingPolicyJSONs.forEach(scalingPolicyJSON -> {
+        if (isNotEmpty(scalingPolicyJSON)) {
+          ScalingPolicy scalingPolicy = getScalingPolicyFromJSON(scalingPolicyJSON, logCallback);
+          if (scalingPolicy != null) {
+            logCallback.saveExecutionLog(
+                format("Found policy: [%s]. Attaching to: [%s]", scalingPolicy.getPolicyName(), asgName));
+            PutScalingPolicyRequest putScalingPolicyRequest =
+                new PutScalingPolicyRequest()
+                    .withAutoScalingGroupName(asgName)
+                    .withPolicyName(scalingPolicy.getPolicyName())
+                    .withPolicyType(scalingPolicy.getPolicyType())
+                    .withAdjustmentType(scalingPolicy.getAdjustmentType())
+                    .withCooldown(scalingPolicy.getCooldown())
+                    .withEstimatedInstanceWarmup(scalingPolicy.getEstimatedInstanceWarmup())
+                    .withMetricAggregationType(scalingPolicy.getMetricAggregationType())
+                    .withMinAdjustmentMagnitude(scalingPolicy.getMinAdjustmentMagnitude())
+                    .withMinAdjustmentStep(scalingPolicy.getMinAdjustmentStep())
+                    .withScalingAdjustment(scalingPolicy.getScalingAdjustment())
+                    .withStepAdjustments(scalingPolicy.getStepAdjustments())
+                    .withTargetTrackingConfiguration(scalingPolicy.getTargetTrackingConfiguration());
+            PutScalingPolicyResult putScalingPolicyResult =
+                amazonAutoScalingClient.putScalingPolicy(putScalingPolicyRequest);
+            logCallback.saveExecutionLog(
+                format("Created policy with Arn: [%s]", putScalingPolicyResult.getPolicyARN()));
+          }
+        }
+      });
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
   }
 }

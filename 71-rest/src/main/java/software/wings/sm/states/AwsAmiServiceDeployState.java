@@ -287,7 +287,8 @@ public class AwsAmiServiceDeployState extends State {
         infrastructureMapping.getAppId(), activity.getUuid(), getCommandName(), resizeNewFirst, newAutoScalingGroupName,
         newAsgFinalDesiredCount, newDesiredCapacities, serviceSetupElement.getAutoScalingSteadyStateTimeout(),
         infrastructureMapping.getEnvId(), serviceSetupElement.getMinInstances(), serviceSetupElement.getMaxInstances(),
-        serviceSetupElement.getPreDeploymentData(), classicLbs, targetGroupArns, false);
+        serviceSetupElement.getPreDeploymentData(), classicLbs, targetGroupArns, false,
+        serviceSetupElement.getBaseScalingPolicyJSONs(), serviceSetupElement.getDesiredInstances());
 
     return anExecutionResponse()
         .withAsync(true)
@@ -325,7 +326,7 @@ public class AwsAmiServiceDeployState extends State {
       String newAutoScalingGroupName, Integer newAsgFinalDesiredCount, List<AwsAmiResizeData> resizeData,
       Integer autoScalingSteadyStateTimeout, String envId, int minInstaces, int maxInstances,
       AwsAmiPreDeploymentData preDeploymentData, List<String> classicLBs, List<String> targetGroupArns,
-      boolean rollback) {
+      boolean rollback, List<String> baseScalingPolicyJSONs, int desiredInstances) {
     AwsAmiServiceDeployRequest request = AwsAmiServiceDeployRequest.builder()
                                              .awsConfig(awsConfig)
                                              .encryptionDetails(encryptionDetails)
@@ -340,8 +341,10 @@ public class AwsAmiServiceDeployState extends State {
                                              .autoScalingSteadyStateTimeout(autoScalingSteadyStateTimeout)
                                              .minInstances(minInstaces)
                                              .maxInstances(maxInstances)
+                                             .desiredInstances(desiredInstances)
                                              .preDeploymentData(preDeploymentData)
                                              .rollback(rollback)
+                                             .baseScalingPolicyJSONs(baseScalingPolicyJSONs)
                                              .asgDesiredCounts(resizeData)
                                              .infraMappingClassisLbs(classicLBs)
                                              .infraMappingTargetGroupArns(targetGroupArns)

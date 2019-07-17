@@ -56,4 +56,10 @@ public interface AwsAsgHelperServiceDelegate {
       String asgName, List<String> classicLBs, ExecutionLogCallback logCallback);
   AwsAsgGetRunningCountData getCurrentlyRunningInstanceCount(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String infraMappingId);
+  List<String> getScalingPolicyJSONs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String asgName, ExecutionLogCallback logCallback);
+  void clearAllScalingPoliciesForAsg(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String asgName, ExecutionLogCallback logCallback);
+  void attachScalingPoliciesToAsg(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String asgName, List<String> scalingPolicyJSONs, ExecutionLogCallback logCallback);
 }
