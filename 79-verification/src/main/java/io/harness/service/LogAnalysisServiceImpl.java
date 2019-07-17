@@ -333,10 +333,15 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       logger.info("Saved {} clustered data for cvConfig: {}, minute {}, toLevel {}, host {}", logDataRecords.size(),
           cvConfigId, logCollectionMinute, clusterLevel, host);
 
-      if (dataStoreService instanceof GoogleDataStoreServiceImpl && clusterLevel.equals(L2)) {
-        dataStoreService.save(LogDataRecord.class, logDataRecords, true);
-        logger.info("Saved L2 clustered data to GoogleDatStore for cvConfig: {}, minute {}, toLevel {}", cvConfigId,
-            logCollectionMinute, clusterLevel);
+      if (dataStoreService instanceof GoogleDataStoreServiceImpl && L2.equals(clusterLevel)) {
+        try {
+          dataStoreService.save(LogDataRecord.class, logDataRecords, true);
+          logger.info("Saved L2 clustered data to GoogleDatStore for cvConfig: {}, minute {}, toLevel {}", cvConfigId,
+              logCollectionMinute, clusterLevel);
+
+        } catch (Exception e) {
+          logger.info("for {} failed to save clusterd log data to google store", cvConfigId, e);
+        }
       }
     }
 
