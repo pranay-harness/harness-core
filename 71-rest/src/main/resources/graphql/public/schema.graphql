@@ -53,5 +53,5 @@ input NumberFilter {
 
 input TimeFilter {
   operator: TimeOperator
-  value: Number
+  value: DateTime
 }

@@ -3,7 +3,6 @@ package software.wings.graphql.datafetcher.connector;
 import io.harness.exception.WingsException;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.user.UserController;
-import software.wings.graphql.scalar.GraphQLDateTimeScalar;
 import software.wings.graphql.schema.type.connector.QLConnectorBuilder;
 import software.wings.graphql.schema.type.connector.QLDockerConnector;
 import software.wings.graphql.schema.type.connector.QLJiraConnector;
@@ -20,7 +19,7 @@ public class ConnectorsController {
   public static QLConnectorBuilder populateConnector(SettingAttribute settingAttribute, QLConnectorBuilder builder) {
     return builder.id(settingAttribute.getUuid())
         .name(settingAttribute.getName())
-        .createdAt(GraphQLDateTimeScalar.convert(settingAttribute.getCreatedAt()))
+        .createdAt(settingAttribute.getCreatedAt())
         .createdBy(UserController.populateUser(settingAttribute.getCreatedBy()));
   }
 

@@ -6,7 +6,6 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.Base.APP_ID_KEY;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -35,6 +34,7 @@ import org.quartz.SimpleScheduleBuilder;
 import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
+import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ServiceTemplate;
 import software.wings.dl.WingsPersistence;
@@ -209,7 +209,7 @@ public class ZombieHunterJob implements Job {
 
     BasicDBObject select = new BasicDBObject();
     select.put(ID_KEY, 1);
-    select.put(APP_ID_KEY, 1);
+    select.put(ApplicationKeys.appId, 1);
     select.put(zombieType.ownerFieldName, 1);
 
     BasicDBObject selectOwner = new BasicDBObject();
@@ -236,7 +236,7 @@ public class ZombieHunterJob implements Job {
         continue;
       }
 
-      final Object appId = object.get(APP_ID_KEY);
+      final Object appId = object.get(ApplicationKeys.appId);
       zombieType.exterminator.delete(appId.toString(), entityId.toString());
 
       if (logger.isWarnEnabled()) {

@@ -3,7 +3,6 @@ package software.wings.graphql.datafetcher.cloudProvider;
 import io.harness.exception.WingsException;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.user.UserController;
-import software.wings.graphql.scalar.GraphQLDateTimeScalar;
 import software.wings.graphql.schema.type.cloudProvider.QLAwsCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLAzureCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLCloudProviderBuilder;
@@ -17,7 +16,7 @@ public class CloudProviderController {
       SettingAttribute settingAttribute, QLCloudProviderBuilder builder) {
     return builder.id(settingAttribute.getUuid())
         .name(settingAttribute.getName())
-        .createdAt(GraphQLDateTimeScalar.convert(settingAttribute.getCreatedAt()))
+        .createdAt(settingAttribute.getCreatedAt())
         .createdBy(UserController.populateUser(settingAttribute.getCreatedBy()));
   }
 

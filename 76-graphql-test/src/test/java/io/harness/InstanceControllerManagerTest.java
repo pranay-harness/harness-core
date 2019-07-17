@@ -19,7 +19,6 @@ import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo
 import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
 import software.wings.graphql.datafetcher.instance.InstanceControllerManager;
-import software.wings.graphql.scalar.GraphQLDateTimeScalar;
 import software.wings.graphql.schema.type.instance.QLAutoScalingGroupInstance;
 import software.wings.graphql.schema.type.instance.QLCodeDeployInstance;
 import software.wings.graphql.schema.type.instance.QLEcsContainerInstance;
@@ -154,7 +153,7 @@ public class InstanceControllerManagerTest extends GraphQLMockBaseTest {
     assertThat(qlEcsContainerInstance.getType()).isEqualTo(QLInstanceType.ECS_CONTAINER_INSTANCE);
     assertThat(qlEcsContainerInstance.getClusterName()).isEqualTo("TESTCLUSTER");
     assertThat(qlEcsContainerInstance.getServiceName()).isEqualTo("TESTSERVICE");
-    assertThat(qlEcsContainerInstance.getStartedAt()).isEqualTo(GraphQLDateTimeScalar.convert(Long.valueOf(100)));
+    assertThat(qlEcsContainerInstance.getStartedAt()).isEqualTo(Long.valueOf(100));
     assertThat(qlEcsContainerInstance.getStartedBy()).isEqualTo("TESTUSER");
     assertThat(qlEcsContainerInstance.getTaskArn()).isEqualTo("TESTTASK");
     assertThat(qlEcsContainerInstance.getTaskDefinitionArn()).isEqualTo("TESTTASKDEF");

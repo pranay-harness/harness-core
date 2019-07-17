@@ -32,7 +32,6 @@ import software.wings.beans.Application;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
-import software.wings.graphql.scalar.GraphQLDateTimeScalar;
 import software.wings.graphql.schema.type.QLUser.QLUserKeys;
 import software.wings.graphql.schema.type.QLWorkflow.QLWorkflowKeys;
 import software.wings.graphql.schema.type.QLWorkflowConnection;
@@ -71,8 +70,7 @@ public class WorkflowTest extends GraphQLTest {
     assertThat(qlWorkflow.get(QLWorkflowKeys.id)).isEqualTo(workflow.getUuid());
     assertThat(qlWorkflow.get(QLWorkflowKeys.name)).isEqualTo(workflow.getName());
     assertThat(qlWorkflow.get(QLWorkflowKeys.description)).isEqualTo(workflow.getDescription());
-    assertThat(qlWorkflow.get(QLWorkflowKeys.createdAt))
-        .isEqualTo(GraphQLDateTimeScalar.convertToString(workflow.getCreatedAt()));
+    assertThat(qlWorkflow.get(QLWorkflowKeys.createdAt)).isEqualTo(workflow.getCreatedAt());
     assertThat(qlWorkflow.sub(QLWorkflowKeys.createdBy).get(QLUserKeys.id))
         .isEqualTo(workflow.getCreatedBy().getUuid());
   }

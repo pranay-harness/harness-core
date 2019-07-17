@@ -7,8 +7,6 @@ import software.wings.graphql.schema.type.QLUser;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 
-import java.time.OffsetDateTime;
-
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "QLCloudProviderKeys")
@@ -17,7 +15,7 @@ public class QLAwsCloudProvider implements QLCloudProvider {
   private String id;
   private String name;
   private String description;
-  private OffsetDateTime createdAt;
+  private Long createdAt;
   private QLUser createdBy;
 
   public static class QLAwsCloudProviderBuilder implements QLCloudProviderBuilder {}

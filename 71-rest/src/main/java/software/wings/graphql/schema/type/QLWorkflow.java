@@ -6,8 +6,6 @@ import lombok.experimental.FieldNameConstants;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 
-import java.time.OffsetDateTime;
-
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "QLWorkflowKeys")
@@ -16,6 +14,6 @@ public class QLWorkflow implements QLObject {
   private String id;
   private String name;
   private String description;
-  private OffsetDateTime createdAt;
+  private Long createdAt;
   private QLUser createdBy;
 }

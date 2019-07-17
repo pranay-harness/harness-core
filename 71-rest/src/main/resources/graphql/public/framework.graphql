@@ -3,8 +3,6 @@ scalar DateTime
 
 scalar Number
 
-scalar Long
-
 type PageInfo {
   hasMore: Boolean
   total: Int

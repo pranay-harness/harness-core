@@ -6,8 +6,6 @@ import lombok.experimental.FieldNameConstants;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 
-import java.time.OffsetDateTime;
-
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "QLApplicationKeys")
@@ -16,6 +14,6 @@ public class QLApplication implements QLObject {
   String id;
   String name;
   String description;
-  OffsetDateTime createdAt;
+  Long createdAt;
   QLUser createdBy;
 }

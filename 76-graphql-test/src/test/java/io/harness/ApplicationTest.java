@@ -21,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
-import software.wings.graphql.scalar.GraphQLDateTimeScalar;
 import software.wings.graphql.schema.type.QLApplication.QLApplicationKeys;
 import software.wings.graphql.schema.type.QLApplicationConnection;
 import software.wings.graphql.schema.type.QLUser.QLUserKeys;
@@ -59,8 +58,7 @@ public class ApplicationTest extends GraphQLTest {
     assertThat(qlTestObject.get(QLApplicationKeys.id)).isEqualTo(application.getUuid());
     assertThat(qlTestObject.get(QLApplicationKeys.name)).isEqualTo(application.getName());
     assertThat(qlTestObject.get(QLApplicationKeys.description)).isEqualTo(application.getDescription());
-    assertThat(qlTestObject.get(QLApplicationKeys.createdAt))
-        .isEqualTo(GraphQLDateTimeScalar.convertToString(application.getCreatedAt()));
+    assertThat(qlTestObject.get(QLApplicationKeys.createdAt)).isEqualTo(application.getCreatedAt());
     assertThat(qlTestObject.sub(QLApplicationKeys.createdBy).get(QLUserKeys.id))
         .isEqualTo(application.getCreatedBy().getUuid());
   }

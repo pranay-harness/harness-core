@@ -24,7 +24,6 @@ import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
-import software.wings.graphql.scalar.GraphQLDateTimeScalar;
 import software.wings.graphql.schema.type.QLEnvironment.QLEnvironmentKeys;
 import software.wings.graphql.schema.type.QLEnvironmentConnection;
 import software.wings.graphql.schema.type.QLUser.QLUserKeys;
@@ -63,8 +62,7 @@ public class EnvironmentTest extends GraphQLTest {
     assertThat(qlEnvironment.get(QLEnvironmentKeys.id)).isEqualTo(environment.getUuid());
     assertThat(qlEnvironment.get(QLEnvironmentKeys.name)).isEqualTo(environment.getName());
     assertThat(qlEnvironment.get(QLEnvironmentKeys.description)).isEqualTo(environment.getDescription());
-    assertThat(qlEnvironment.get(QLEnvironmentKeys.createdAt))
-        .isEqualTo(GraphQLDateTimeScalar.convertToString(environment.getCreatedAt()));
+    assertThat(qlEnvironment.get(QLEnvironmentKeys.createdAt)).isEqualTo(environment.getCreatedAt());
     assertThat(qlEnvironment.sub(QLEnvironmentKeys.createdBy).get(QLUserKeys.id))
         .isEqualTo(environment.getCreatedBy().getUuid());
   }

@@ -7,7 +7,6 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.template.Template.FOLDER_ID_KEY;
 import static software.wings.beans.template.Template.NAME_KEY;
@@ -41,6 +40,7 @@ import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.ReferencedTemplate;
 import software.wings.beans.template.ReferencedTemplate.ReferencedTemplateBuilder;
 import software.wings.beans.template.Template;
+import software.wings.beans.template.Template.TemplateKeys;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.beans.yaml.YamlType;
@@ -260,7 +260,7 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
         if (referenceId != null) {
           Query<Template> templateQuery = wingsPersistence.createQuery(Template.class)
                                               .project("name", true)
-                                              .filter(ACCOUNT_ID_KEY, template.getAccountId())
+                                              .filter(TemplateKeys.accountId, template.getAccountId())
                                               .filter(TYPE_KEY, template.getType())
                                               .filter(FOLDER_ID_KEY, template.getFolderId())
                                               .filter(NAME_KEY, referenceId);
