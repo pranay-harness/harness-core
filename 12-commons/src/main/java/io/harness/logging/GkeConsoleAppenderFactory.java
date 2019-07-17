@@ -8,12 +8,15 @@ import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.ConsoleAppender;
 import ch.qos.logback.core.Layout;
 import ch.qos.logback.core.encoder.LayoutWrappingEncoder;
+import ch.qos.logback.core.helpers.NOPAppender;
 import ch.qos.logback.core.spi.DeferredProcessingAware;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.dropwizard.logging.ConsoleAppenderFactory;
 import io.dropwizard.logging.async.AsyncAppenderFactory;
 import io.dropwizard.logging.filter.LevelFilterFactory;
 import io.dropwizard.logging.layout.LayoutFactory;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.Map;
 
@@ -25,24 +28,33 @@ import java.util.Map;
  *
  */
 @JsonTypeName("gke-console")
+@Data
+@EqualsAndHashCode(callSuper = false)
 public class GkeConsoleAppenderFactory<E extends DeferredProcessingAware> extends ConsoleAppenderFactory<E> {
+  private boolean stackdriverLogEnabled;
   @Override
   public Appender<E> build(LoggerContext context, String applicationName, LayoutFactory<E> layoutFactory,
       LevelFilterFactory<E> levelFilterFactory, AsyncAppenderFactory<E> asyncAppenderFactory) {
-    final ConsoleAppender<E> appender = new ConsoleAppender<>();
-    appender.setName("gke-console");
-    appender.setContext(context);
-    appender.setTarget(getTarget().get());
+    Appender<E> appender;
+    if (!stackdriverLogEnabled) {
+      appender = new NOPAppender();
+    } else {
+      appender = new ConsoleAppender<>();
 
-    final LayoutWrappingEncoder<E> layoutEncoder = new LayoutWrappingEncoder<>();
-    JsonLayout jsonLayout = new StackdriverLoggingJsonLayout(context);
-    layoutEncoder.setLayout((Layout<E>) jsonLayout);
+      ConsoleAppender<E> consoleAppender = (ConsoleAppender<E>) appender;
+      consoleAppender.setName("gke-console");
+      consoleAppender.setContext(context);
+      consoleAppender.setTarget(getTarget().get());
 
-    appender.setEncoder(layoutEncoder);
-    appender.addFilter(levelFilterFactory.build(getThreshold()));
+      final LayoutWrappingEncoder<E> layoutEncoder = new LayoutWrappingEncoder<>();
+      JsonLayout jsonLayout = new StackdriverLoggingJsonLayout(context);
+      layoutEncoder.setLayout((Layout<E>) jsonLayout);
 
-    getFilterFactories().forEach(f -> appender.addFilter(f.build()));
+      consoleAppender.setEncoder(layoutEncoder);
+      consoleAppender.addFilter(levelFilterFactory.build(getThreshold()));
 
+      getFilterFactories().forEach(f -> consoleAppender.addFilter(f.build()));
+    }
     appender.start();
 
     return wrapAsync(appender, asyncAppenderFactory);
