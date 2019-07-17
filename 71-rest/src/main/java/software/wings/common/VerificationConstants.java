@@ -171,8 +171,8 @@ public class VerificationConstants {
   }
 
   public static List<StateType> getLogAnalysisStates() {
-    return Arrays.asList(StateType.ELK, StateType.SUMO, StateType.LOGZ, StateType.SPLUNK, StateType.SPLUNKV2,
-        StateType.BUG_SNAG, StateType.DATA_DOG_LOG, StateType.STACK_DRIVER_LOG);
+    return Arrays.asList(StateType.ELK, StateType.SUMO, StateType.LOGZ, StateType.SPLUNKV2, StateType.BUG_SNAG,
+        StateType.DATA_DOG_LOG, StateType.STACK_DRIVER_LOG);
   }
 
   public static List<StateType> getAnalysisStates() {

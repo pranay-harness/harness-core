@@ -21,7 +21,6 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.StateType;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -46,7 +45,7 @@ public class SplunkState extends HttpState {
    */
   public SplunkState(String name) {
     super(name);
-    setStateType(StateType.SPLUNK.name());
+    setStateType("Splunk-Deprecated");
   }
 
   @Override
