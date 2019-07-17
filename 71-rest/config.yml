@@ -143,6 +143,7 @@ logging:
       threshold: TRACE
       target: STDOUT
       logFormat: "%blue([${VERSION}]) %green([%thread]) %highlight(%-5level) %blue(%X{executionId}) %cyan(%logger) - %msg %n"
+      stackdriverLogEnabled: false
 
 timescaledb:
   timescaledbUrl:
