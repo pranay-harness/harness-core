@@ -221,20 +221,16 @@ public class AuthenticationManager {
     } else {
       if (user.isTwoFactorAuthenticationEnabled()) {
         user = generate2faJWTToken(user);
+      } else {
+        // PL-2698: UI lead-update call will be called only if it's first login. Will need to
+        // make sure the firstLogin is derived from lastLogin value.
+        boolean isFirstLogin = user.getLastLogin() == 0L;
+        user.setFirstLogin(isFirstLogin);
+
+        // User's lastLogin field should be updated on every login attempt.
+        user.setLastLogin(System.currentTimeMillis());
+        userService.update(user);
       }
-      // With identity service manage bearer tokens, no need for manager to generate bearer tokens.
-      //      else {
-      //        user = authService.generateBearerTokenForUser(user);
-      //      }
-
-      // PL-2698: UI lead-update call will be called only if it's first login. Will need to
-      // make sure the firstLogin is derived from lastLogin value.
-      boolean isFirstLogin = user.getLastLogin() == 0L;
-      user.setFirstLogin(isFirstLogin);
-
-      // User's lastLogin field should be updated on every login attempt.
-      user.setLastLogin(System.currentTimeMillis());
-      userService.update(user);
     }
 
     return user;
