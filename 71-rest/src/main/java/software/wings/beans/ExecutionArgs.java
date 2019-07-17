@@ -37,6 +37,7 @@ public class ExecutionArgs {
   private boolean triggeredFromPipeline;
   private String pipelineId;
   private String pipelinePhaseElementId;
+  @Getter @Setter private int pipelinePhaseParallelIndex;
   private Map<String, String> workflowVariables;
   private String notes;
   @Deprecated @JsonIgnore private EmbeddedUser triggeredBy;

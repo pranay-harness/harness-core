@@ -27,9 +27,9 @@ import javax.validation.constraints.NotNull;
 
 @Entity(value = "barrierInstances", noClassnameStored = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "search", unique = true),
+  @Index(options = @IndexOptions(name = "search2", unique = true),
       fields = { @Field("name")
-                 , @Field("pipeline.executionId") })
+                 , @Field("pipeline.executionId"), @Field("pipeline.parallelIndex") })
   ,
       @Index(options = @IndexOptions(name = "next"), fields = { @Field("state")
                                                                 , @Field("nextIteration") })
@@ -80,6 +80,7 @@ public class BarrierInstance implements PersistentEntity, UuidAware, PersistentR
   @FieldNameConstants(innerTypeName = "PipelineKeys")
   public static class Pipeline {
     private String executionId;
+    private int parallelIndex;
     List<Workflow> workflows;
   }
 
@@ -93,6 +94,7 @@ public class BarrierInstance implements PersistentEntity, UuidAware, PersistentR
 
   public static final class BarrierInstanceKeys {
     public static final String pipeline_executionId = pipeline + "." + PipelineKeys.executionId;
+    public static final String pipeline_parallelIndex = pipeline + "." + PipelineKeys.parallelIndex;
     public static final String pipeline_workflows_pipelineStageId =
         pipeline + "." + PipelineKeys.workflows + "." + WorkflowKeys.pipelineStageId;
   }

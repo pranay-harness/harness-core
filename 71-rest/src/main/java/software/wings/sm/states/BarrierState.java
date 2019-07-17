@@ -123,16 +123,14 @@ public class BarrierState extends State {
   }
 
   private Builder executionResponseBuilder(ExecutionContext context) {
-    final String renderedIdentifier = context.renderExpression(identifier);
-
     BarrierExecutionData stateExecutionData = new BarrierExecutionData();
-    stateExecutionData.setIdentifier(renderedIdentifier);
+    stateExecutionData.setIdentifier(getIdentifier());
     return anExecutionResponse().withStateExecutionData(stateExecutionData);
   }
 
   private BarrierInstance updateBarrier(ExecutionContext context) {
-    final String barrierId = barrierService.findByStep(
-        context.getAppId(), context.getPipelineStageElementId(), context.getWorkflowExecutionId(), getIdentifier());
+    final String barrierId = barrierService.findByStep(context.getAppId(), context.getPipelineStageElementId(),
+        context.getPipelineStageParallelIndex(), context.getWorkflowExecutionId(), getIdentifier());
 
     // If this is noop barrier
     if (barrierId == null) {

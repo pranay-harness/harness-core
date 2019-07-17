@@ -296,7 +296,8 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   }
 
   @Override
-  public String findByStep(String appId, String pipelineStageId, String workflowExecutionId, String identifier) {
+  public String findByStep(String appId, String pipelineStageId, int pipelineStageParallelIndex,
+      String workflowExecutionId, String identifier) {
     final String pipelineExecutionId = wingsPersistence.createQuery(WorkflowExecution.class)
                                            .filter(WorkflowExecutionKeys.appId, appId)
                                            .filter(WorkflowExecutionKeys.uuid, workflowExecutionId)
@@ -309,6 +310,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
                                   .filter(BarrierInstanceKeys.appId, appId)
                                   .filter(BarrierInstanceKeys.name, identifier)
                                   .filter(BarrierInstanceKeys.pipeline_executionId, pipelineExecutionId)
+                                  .filter(BarrierInstanceKeys.pipeline_parallelIndex, pipelineStageParallelIndex)
                                   .filter(BarrierInstanceKeys.pipeline_workflows_pipelineStageId, pipelineStageId)
                                   .fetchKeys())) {
       if (!keys.hasNext()) {
@@ -326,7 +328,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
 
   @Override
   public List<BarrierInstance> obtainInstances(
-      String appId, List<OrchestrationWorkflowInfo> orchestrations, String pipelineExecutionId) {
+      String appId, List<OrchestrationWorkflowInfo> orchestrations, String pipelineExecutionId, int parallelIndex) {
     if (isEmpty(orchestrations)) {
       return null;
     }
@@ -402,6 +404,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
                   .state(STANDING.name())
                   .pipeline(BarrierInstance.Pipeline.builder()
                                 .executionId(pipelineExecutionId)
+                                .parallelIndex(parallelIndex)
                                 .workflows(entry.getValue().stream().map(BarrierDetail::getWorkflow).collect(toList()))
                                 .build())
                   .build();
