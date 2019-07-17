@@ -119,6 +119,7 @@ import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.verification.CVConfiguration;
+import software.wings.verification.CVTask;
 import software.wings.verification.apm.APMCVServiceConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
@@ -181,7 +182,7 @@ public class ManagerMorphiaClasses {
       DelayEvent.class, ExperimentalLogMLAnalysisRecord.class, NewRelicMetricAnalysisRecord.class, CollectEvent.class,
       SecretChangeLog.class, TimeSeriesMLScores.class, AppDynamicsCVServiceConfiguration.class,
       BugsnagCVConfiguration.class, EncryptableSetting.class, DeploymentSummary.class,
-      LearningEngineExperimentalAnalysisTask.class, StateMachine.class, CVConfiguration.class,
+      LearningEngineExperimentalAnalysisTask.class, StateMachine.class, CVConfiguration.class, CVTask.class,
       DelegateConnectionResult.class, DeploymentEvent.class, AuditHeader.class, TimeSeriesMetricTemplates.class,
       SecretUsageLog.class, DynaTraceCVServiceConfiguration.class, LogDataRecord.class, InstanceChangeEvent.class,
       YamlChangeSet.class, YamlHistory.class, LearningEngineAnalysisTask.class, ExperimentalMetricAnalysisRecord.class,
