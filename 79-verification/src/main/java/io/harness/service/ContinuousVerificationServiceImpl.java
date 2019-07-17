@@ -73,6 +73,7 @@ import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.service.intfc.verification.CVConfigurationService;
+import software.wings.service.intfc.verification.CVTaskService;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.VerificationDataAnalysisResponse;
@@ -107,6 +108,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private HarnessMetricRegistry metricRegistry;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UsageMetricsHelper usageMetricsHelper;
+  @Inject private CVTaskService cvTaskService;
 
   @Override
   @Counted
@@ -127,6 +129,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               : TimeUnit.MINUTES.toMillis(maxCVCollectionMinute);
           long endTime = TimeUnit.MINUTES.toMillis(endMinute);
           if (endTime - startTime >= TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES / 3)) {
+            enqueueTask(accountId, cvConfiguration.getUuid(), startTime, endTime);
             logger.info("triggering data collection for state {} config {} startTime {} endTime {} collectionMinute {}",
                 cvConfiguration.getStateType(), cvConfiguration.getUuid(), startTime, endTime, endMinute);
             verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVDataCollection(
@@ -136,6 +139,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         });
     metricRegistry.recordGaugeValue(DATA_COLLECTION_TASKS_PER_MINUTE, null, totalDataCollectionTasks.get());
     return true;
+  }
+
+  private void enqueueTask(String accountId, String cvConfigId, long startTime, long endTime) {
+    if (isFeatureFlagEnabled(FeatureName.CV_TASKS, accountId)) {
+      cvTaskService.enqueueTask(accountId, cvConfigId, startTime, endTime);
+    }
   }
 
   @Override
@@ -474,6 +483,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             }
 
             if (endTime < TimeUnit.MINUTES.toMillis(endMinute)) {
+              enqueueTask(accountId, cvConfiguration.getUuid(), startTime, endTime);
               logger.info(
                   "triggering data collection for state {} config {} startTime {} endTime {} collectionMinute {}",
                   cvConfiguration.getStateType(), cvConfiguration.getUuid(), startTime, endTime, endMinute);
@@ -808,10 +818,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Counted
   @Timed
   public void triggerFeedbackAnalysis(String accountId) {
-    boolean isFlagEnabled =
-        verificationManagerClientHelper
-            .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(FeatureName.CV_FEEDBACKS, accountId))
-            .getResource();
+    boolean isFlagEnabled = isFeatureFlagEnabled(FeatureName.CV_FEEDBACKS, accountId);
     if (!isFlagEnabled) {
       logger.info(
           "CV Feedbacks feature flag is not enabled for account {}, not going to create a feedback task", accountId);
@@ -866,6 +873,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             }
           }
         });
+  }
+
+  private boolean isFeatureFlagEnabled(FeatureName featureName, String accountId) {
+    return verificationManagerClientHelper
+        .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(featureName, accountId))
+        .getResource();
   }
 
   private boolean createFeedbackAnalysisTask(LogsCVConfiguration logsCVConfiguration, long logCollectionMinute) {

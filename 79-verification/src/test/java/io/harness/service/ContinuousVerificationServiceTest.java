@@ -14,7 +14,10 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.TaskType.ELK_COLLECT_LOG_DATA;
@@ -94,6 +97,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CVConfigurationService;
+import software.wings.service.intfc.verification.CVTaskService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.DatadogLogState;
 import software.wings.verification.CVConfiguration;
@@ -133,6 +137,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Inject private Injector injector;
 
   @Mock private CVConfigurationService cvConfigurationService;
+  @Mock private CVTaskService cvTaskService;
   @Mock private HarnessMetricRegistry metricRegistry;
   @Mock private VerificationManagerClient verificationManagerClient;
   @Mock private DelegateService delegateService;
@@ -207,7 +212,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         .thenReturn(Lists.newArrayList(logsCVConfiguration, datadogCVConfiguration));
     writeField(continuousVerificationService, "cvConfigurationService", cvConfigurationService, true);
     writeField(continuousVerificationService, "metricRegistry", metricRegistry, true);
-
+    writeField(continuousVerificationService, "cvTaskService", cvTaskService, true);
     when(delegateService.queueTask(anyObject()))
         .then(invocation -> wingsPersistence.save((DelegateTask) invocation.getArguments()[0]));
     when(settingsService.get(connectorId)).thenReturn(aSettingAttribute().withValue(sumoConfig).build());
@@ -226,7 +231,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     writeField(managerVerificationService, "mainConfiguration", mainConfiguration, true);
     writeField(managerVerificationService, "appService", appService, true);
     writeField(managerVerificationService, "cvConfigurationService", cvConfigurationService, true);
-
     AlertService alertService = new AlertServiceImpl();
     writeField(alertService, "wingsPersistence", wingsPersistence, true);
     writeField(alertService, "executorService", Executors.newSingleThreadScheduledExecutor(), true);
@@ -339,7 +343,12 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testLogsCollectionBaselineInFuture() {
+  public void testLogsCollectionBaselineInFuture() throws IOException {
+    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
+        .thenReturn(managerFeatureFlagCall);
+
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
     logger.info("currentMin: {}", currentMinute);
 
@@ -368,7 +377,11 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testLogsCollectionBaselineInFutureDatadogLog() {
+  public void testLogsCollectionBaselineInFutureDatadogLog() throws IOException {
+    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
+        .thenReturn(managerFeatureFlagCall);
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
     logger.info("currentMin: {}", currentMinute);
 
@@ -426,8 +439,13 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testLogsCollection() {
+  public void testLogsCollection() throws IOException {
+    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
+        .thenReturn(managerFeatureFlagCall);
     continuousVerificationService.triggerLogDataCollection(accountId);
+    verify(cvTaskService, times(2)).enqueueTask(eq(accountId), anyString(), anyLong(), anyLong());
     List<DelegateTask> delegateTasks =
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
     assertEquals(2, delegateTasks.size());
@@ -464,6 +482,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
       wingsPersistence.save(logDataRecord);
     }
     continuousVerificationService.triggerLogDataCollection(accountId);
+    verify(cvTaskService, times(4)).enqueueTask(eq(accountId), anyString(), anyLong(), anyLong());
     delegateTasks =
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
     assertEquals(4, delegateTasks.size());
@@ -488,7 +507,11 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testDatadogLogsCollection() {
+  public void testDatadogLogsCollection() throws IOException {
+    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
+        .thenReturn(managerFeatureFlagCall);
     continuousVerificationService.triggerLogDataCollection(accountId);
     List<DelegateTask> delegateTasks =
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();

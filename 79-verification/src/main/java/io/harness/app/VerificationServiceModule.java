@@ -29,11 +29,13 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.verification.CVConfigurationServiceImpl;
+import software.wings.service.impl.verification.CVTaskServiceImpl;
 import software.wings.service.impl.verification.CvValidationService;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CVConfigurationService;
+import software.wings.service.intfc.verification.CVTaskService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
 import java.io.IOException;
@@ -73,9 +75,11 @@ public class VerificationServiceModule extends AbstractModule {
     bind(SecretManager.class).to(NoOpSecretManagerImpl.class);
     bind(MigrationService.class).to(VerificationMigrationServiceImpl.class);
     bind(Clock.class).toInstance(Clock.systemUTC());
+
     bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
     bind(TimeSeriesAnalysisService.class).to(TimeSeriesAnalysisServiceImpl.class);
     bind(LogAnalysisService.class).to(LogAnalysisServiceImpl.class);
+    bind(CVTaskService.class).to(CVTaskServiceImpl.class);
     bind(CVConfigurationService.class).to(CVConfigurationServiceImpl.class);
     bind(ContinuousVerificationService.class).to(ContinuousVerificationServiceImpl.class);
     bind(CvValidationService.class).to(NoOpCvValidationServiceImpl.class);
