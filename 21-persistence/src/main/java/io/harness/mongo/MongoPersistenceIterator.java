@@ -1,5 +1,6 @@
 package io.harness.mongo;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.PUMP;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.System.currentTimeMillis;
@@ -11,23 +12,24 @@ import com.google.inject.Inject;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.PersistentIrregularIterable;
 import io.harness.persistence.PersistentIterable;
+import io.harness.persistence.PersistentRegularIterable;
 import io.harness.queue.QueueController;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 
 @Builder
 @Slf4j
 public class MongoPersistenceIterator<T extends PersistentIterable> implements PersistenceIterator<T> {
-  private static final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().returnNew(false);
   private static final Duration QUERY_TIME = ofMillis(200);
 
   @Inject private final HPersistence persistence;
@@ -46,6 +48,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
   private ExecutorService executorService;
   private Semaphore semaphore;
   private boolean redistribute;
+  private boolean regular;
 
   private long movingAvg(long current, long sample) {
     return (15 * current + sample) / 16;
@@ -73,7 +76,8 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
         semaphore.acquire();
 
         long base = currentTimeMillis();
-        if (redistribute && previous != 0) {
+        // redistribution make sense only for regular iteration
+        if (redistribute && regular && previous != 0) {
           base = movingAvg(previous + movingAverage, base);
           movingAverage = movingAvg(movingAverage, base - previous);
         }
@@ -89,7 +93,23 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
 
         if (entity != null) {
           // Make sure that if the object is updated we reset the scheduler for it
-          entity.updateNextIteration(fieldName, null);
+          if (regular) {
+            ((PersistentRegularIterable) entity).updateNextIteration(fieldName, null);
+          } else {
+            final Long nextIteration = entity.obtainNextIteration(fieldName);
+
+            final List<Long> nextIterations =
+                ((PersistentIrregularIterable) entity).recalculateNextIterations(fieldName);
+            if (isNotEmpty(nextIterations)) {
+              final UpdateOperations<T> operations =
+                  persistence.createUpdateOperations(clazz).set(fieldName, nextIterations);
+              persistence.update(entity, operations);
+            }
+
+            if (nextIteration == null) {
+              continue;
+            }
+          }
 
           T finalEntity = entity;
           synchronized (finalEntity) {
@@ -114,11 +134,13 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
 
         Duration sleepInterval = maximumDaleyForCheck == null ? targetInterval : maximumDaleyForCheck;
 
-        final Long nextIteration = entity.obtainNextIteration(fieldName);
-        if (first != null && nextIteration != null) {
-          final Duration nextEntity = ofMillis(Math.max(0, nextIteration - currentTimeMillis()));
-          if (nextEntity.compareTo(maximumDaleyForCheck) < 0) {
-            sleepInterval = nextEntity;
+        if (entity != null) {
+          final Long nextIteration = entity.obtainNextIteration(fieldName);
+          if (first != null && nextIteration != null) {
+            final Duration nextEntity = ofMillis(Math.max(0, nextIteration - currentTimeMillis()));
+            if (nextEntity.compareTo(maximumDaleyForCheck) < 0) {
+              sleepInterval = nextEntity;
+            }
           }
         }
         Thread.sleep(sleepInterval.toMillis());
@@ -139,10 +161,11 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
       filterExpander.filter(query);
     }
 
-    final UpdateOperations<T> updateOperations =
-        persistence.createUpdateOperations(clazz).set(fieldName, base + targetInterval.toMillis());
+    UpdateOperations<T> updateOperations = regular
+        ? persistence.createUpdateOperations(clazz).set(fieldName, base + targetInterval.toMillis())
+        : persistence.createUpdateOperations(clazz).removeFirst(fieldName);
 
-    return persistence.findAndModifySystemData(query, updateOperations, findAndModifyOptions);
+    return persistence.findAndModifySystemData(query, updateOperations, HPersistence.returnOldOptions);
   }
 
   void processEntity(T entity) {

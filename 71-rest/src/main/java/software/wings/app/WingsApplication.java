@@ -574,6 +574,7 @@ public class WingsApplication extends Application<MainConfiguration> {
                                                          .executorService(artifactCollectionExecutor)
                                                          .semaphore(artifactCollectionSemaphore)
                                                          .handler(artifactCollectionHandler)
+                                                         .regular(true)
                                                          .redistribute(true)
                                                          .build();
 
@@ -595,6 +596,7 @@ public class WingsApplication extends Application<MainConfiguration> {
             .handler(artifactCleanupHandler)
             .filterExpander(
                 query -> query.filter(ArtifactStreamKeys.artifactStreamType, ArtifactStreamType.DOCKER.name()))
+            .regular(true)
             .redistribute(true)
             .build();
 

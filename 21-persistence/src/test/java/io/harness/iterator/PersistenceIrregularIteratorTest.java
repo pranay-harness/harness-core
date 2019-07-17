@@ -1,5 +1,6 @@
 package io.harness.iterator;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.LOOP;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.PUMP;
 import static java.time.Duration.ofMillis;
@@ -10,12 +11,12 @@ import com.google.inject.Inject;
 
 import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
-import io.harness.iterator.IterableEntity.IterableEntityKeys;
+import io.harness.iterator.IrregularIterableEntity.IrregularIterableEntityKeys;
+import io.harness.maintenance.MaintenanceGuard;
 import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.MongoPersistenceIterator.Handler;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
-import io.harness.rule.BypassRuleMixin.Bypass;
 import io.harness.threading.Morpheus;
 import io.harness.threading.ThreadPool;
 import lombok.extern.slf4j.Slf4j;
@@ -30,16 +31,16 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class PersistenceIteratorTest extends PersistenceTest {
+public class PersistenceIrregularIteratorTest extends PersistenceTest {
   @Inject private HPersistence persistence;
   @Inject private QueueController queueController;
   private ExecutorService executorService = ThreadPool.create(4, 15, 1, TimeUnit.SECONDS);
 
-  PersistenceIterator<IterableEntity> iterator;
+  PersistenceIterator<IrregularIterableEntity> iterator;
 
-  class TestHandler implements Handler<IterableEntity> {
+  class TestHandler implements Handler<IrregularIterableEntity> {
     @Override
-    public void handle(IterableEntity entity) {
+    public void handle(IrregularIterableEntity entity) {
       Morpheus.sleep(ofSeconds(1));
       logger.info("Handle {}", entity.getUuid());
     }
@@ -47,14 +48,16 @@ public class PersistenceIteratorTest extends PersistenceTest {
 
   @Before
   public void setup() {
-    iterator = MongoPersistenceIterator.<IterableEntity>builder()
-                   .clazz(IterableEntity.class)
-                   .fieldName(IterableEntityKeys.nextIteration)
+    iterator = MongoPersistenceIterator.<IrregularIterableEntity>builder()
+                   .clazz(IrregularIterableEntity.class)
+                   .fieldName(IrregularIterableEntityKeys.nextIterations)
                    .targetInterval(ofSeconds(10))
                    .acceptableDelay(ofSeconds(1))
+                   .maximumDaleyForCheck(ofSeconds(1))
                    .executorService(executorService)
                    .semaphore(new Semaphore(10))
                    .handler(new TestHandler())
+                   .regular(false)
                    .redistribute(true)
                    .build();
     on(iterator).set("persistence", persistence);
@@ -77,19 +80,22 @@ public class PersistenceIteratorTest extends PersistenceTest {
 
   @Test
   @Category(UnitTests.class)
-  @Bypass
-  public void testNextReturnsJustAdded() {
-    for (int i = 0; i < 10; i++) {
-      persistence.save(IterableEntity.builder().build());
+  // @Bypass
+  public void testNextReturnsJustAdded() throws IOException {
+    try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
+      for (int i = 0; i < 10; i++) {
+        final IrregularIterableEntity iterableEntity = IrregularIterableEntity.builder().uuid(generateUuid()).build();
+        persistence.save(iterableEntity);
+      }
+
+      final Future<?> future1 = executorService.submit(() -> iterator.process(LOOP));
+      //    final Future<?> future2 = executorService.submit(() -> iterator.process());
+      //    final Future<?> future3 = executorService.submit(() -> iterator.process());
+
+      Morpheus.sleep(ofSeconds(300));
+      future1.cancel(true);
+      //    future2.cancel(true);
+      //    future3.cancel(true);
     }
-
-    final Future<?> future1 = executorService.submit(() -> iterator.process(LOOP));
-    //    final Future<?> future2 = executorService.submit(() -> iterator.process());
-    //    final Future<?> future3 = executorService.submit(() -> iterator.process());
-
-    Morpheus.sleep(ofSeconds(3));
-    future1.cancel(true);
-    //    future2.cancel(true);
-    //    future3.cancel(true);
   }
 }

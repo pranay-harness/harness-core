@@ -3,7 +3,7 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.persistence.PersistentEntity;
-import io.harness.persistence.PersistentIterable;
+import io.harness.persistence.PersistentRegularIterable;
 import io.harness.persistence.UuidAware;
 import lombok.Builder;
 import lombok.Data;
@@ -38,7 +38,7 @@ import javax.validation.constraints.NotNull;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "BarrierInstanceKeys")
-public class BarrierInstance implements PersistentEntity, UuidAware, PersistentIterable {
+public class BarrierInstance implements PersistentEntity, UuidAware, PersistentRegularIterable {
   @Id private String uuid;
   @Indexed @NotNull protected String appId;
 

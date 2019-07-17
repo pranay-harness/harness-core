@@ -1,6 +1,6 @@
 package io.harness.iterator;
 
-import io.harness.persistence.PersistentIterable;
+import io.harness.persistence.PersistentRegularIterable;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -9,9 +9,9 @@ import org.mongodb.morphia.annotations.Id;
 
 @Data
 @Builder
-@Entity(value = "!!!testIterable")
-@FieldNameConstants(innerTypeName = "IterableEntityKeys")
-public class IterableEntity implements PersistentIterable {
+@Entity(value = "!!!testRegularIterable")
+@FieldNameConstants(innerTypeName = "RegularIterableEntityKeys")
+public class RegularIterableEntity implements PersistentRegularIterable {
   @Id private String uuid;
   private Long nextIteration;
 
