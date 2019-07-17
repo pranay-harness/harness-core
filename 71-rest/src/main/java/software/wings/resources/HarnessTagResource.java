@@ -84,10 +84,15 @@ public class HarnessTagResource {
   @GET
   @Timed
   @ExceptionMetered
-  public RestResponse<PageResponse<HarnessTag>> list(
-      @QueryParam("accountId") String accountId, @BeanParam PageRequest<HarnessTag> request) {
+  public RestResponse<PageResponse<HarnessTag>> list(@QueryParam("accountId") String accountId,
+      @QueryParam("includeInUseValues") boolean includeInUseValues, @BeanParam PageRequest<HarnessTag> request) {
     request.addFilter(HarnessTagLinkKeys.accountId, IN, accountId);
-    return new RestResponse<>(harnessTagService.list(request));
+
+    if (includeInUseValues) {
+      return new RestResponse<>(harnessTagService.listTagsWithInUseValues(request));
+    } else {
+      return new RestResponse<>(harnessTagService.list(request));
+    }
   }
 
   @POST

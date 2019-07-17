@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
@@ -94,7 +95,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     HarnessTag existingTag = get(tag.getAccountId(), tag.getKey());
 
     if (existingTag != null) {
-      throw new InvalidRequestException("Tag with given key already exists");
+      throw new InvalidRequestException("Tag with given Tag Name already exists");
     }
 
     if (getTagCount(tag.getAccountId()) >= MAX_TAGS_PER_ACCOUNT) {
@@ -112,7 +113,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     HarnessTag existingTag = get(tag.getAccountId(), tag.getKey());
 
     if (existingTag == null) {
-      throw new InvalidRequestException("Tag with given key does not exist");
+      throw new InvalidRequestException("Tag with given Tag Name does not exist");
     }
     wingsPersistence.updateField(
         HarnessTag.class, existingTag.getUuid(), HarnessTagKeys.allowedValues, tag.getAllowedValues());
@@ -146,6 +147,22 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   @Override
   public PageResponse<HarnessTag> list(PageRequest<HarnessTag> request) {
     return wingsPersistence.query(HarnessTag.class, request);
+  }
+
+  @Override
+  public PageResponse<HarnessTag> listTagsWithInUseValues(PageRequest<HarnessTag> request) {
+    PageResponse<HarnessTag> response = list(request);
+
+    List<HarnessTag> tags = response.getResponse();
+    if (isEmpty(tags)) {
+      return response;
+    }
+
+    for (HarnessTag harnessTag : tags) {
+      harnessTag.setInUseValues(getInUseValues(harnessTag.getAccountId(), harnessTag.getKey()));
+    }
+
+    return response;
   }
 
   @Override
