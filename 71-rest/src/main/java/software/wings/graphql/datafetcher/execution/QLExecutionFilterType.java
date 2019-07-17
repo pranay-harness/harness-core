@@ -15,7 +15,8 @@ public enum QLExecutionFilterType {
   TriggeredBy(QLDataType.STRING),
   Trigger(QLDataType.STRING),
   Workflow(QLDataType.STRING),
-  Pipeline(QLDataType.STRING);
+  Pipeline(QLDataType.STRING),
+  PipelineExecution(QLDataType.STRING);
 
   QLDataType dataType;
 

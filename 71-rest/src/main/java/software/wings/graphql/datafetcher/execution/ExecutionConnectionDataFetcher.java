@@ -77,39 +77,6 @@ public class ExecutionConnectionDataFetcher
     return updatedFilters;
   }
 
-  protected String getFilterFieldName(String filterType) {
-    QLExecutionFilterType type = QLExecutionFilterType.valueOf(filterType);
-    switch (type) {
-      case EndTime:
-        return WorkflowExecutionKeys.endTs;
-      case StartTime:
-        return WorkflowExecutionKeys.startTs;
-      case Service:
-        return WorkflowExecutionKeys.serviceIds;
-      case Trigger:
-        return WorkflowExecutionKeys.deploymentTriggerId;
-      case TriggeredBy:
-        return WorkflowExecutionKeys.triggeredBy;
-      case CloudProvider:
-        return WorkflowExecutionKeys.cloudProviderIds;
-      case Environment:
-        return WorkflowExecutionKeys.envIds;
-      case Pipeline:
-      case Workflow:
-        return WorkflowExecutionKeys.workflowId;
-      case Status:
-        return WorkflowExecutionKeys.status;
-      case Application:
-        return WorkflowExecutionKeys.appId;
-      case CreatedAt:
-        return WorkflowExecutionKeys.createdAt;
-      // TODO
-      case Duration:
-      default:
-        throw new WingsException("Unsupported type " + type);
-    }
-  }
-
   @Override
   public String getAccountId() {
     return null;
@@ -130,6 +97,8 @@ public class ExecutionConnectionDataFetcher
       return QLExecutionFilter.builder().environment(idFilter).build();
     } else if (NameService.cloudProvider.equals(key)) {
       return QLExecutionFilter.builder().cloudProvider(idFilter).build();
+    } else if (NameService.pipelineExecution.equals(key)) {
+      return QLExecutionFilter.builder().pipelineExecution(idFilter).build();
     }
     throw new WingsException("Unsupported field " + key + " while generating filter");
   }

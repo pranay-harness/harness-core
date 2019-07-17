@@ -106,6 +106,12 @@ public class ExecutionQueryHelper {
         QLTimeFilter timeFilter = filter.getCreationTime();
         utils.setTimeFilter(field, timeFilter);
       }
+
+      if (filter.getPipelineExecution() != null) {
+        field = query.field(WorkflowExecutionKeys.pipelineExecutionId);
+        QLIdFilter idFilter = filter.getPipelineExecution();
+        utils.setIdFilter(field, idFilter);
+      }
     });
   }
 }
