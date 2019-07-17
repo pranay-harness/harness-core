@@ -9,7 +9,6 @@ import static java.lang.String.format;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.template.Template.TYPE_KEY;
 import static software.wings.beans.template.TemplateFolder.GALLERY_ID_KEY;
@@ -39,6 +38,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Base;
 import software.wings.beans.Event.Type;
 import software.wings.beans.template.Template;
+import software.wings.beans.template.Template.TemplateKeys;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateFolder.TemplateFolderKeys;
 import software.wings.beans.template.TemplateGallery;
@@ -166,7 +166,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
     if (templateService.deleteByFolder(templateFolder)) {
       // Delete children
       wingsPersistence.delete(wingsPersistence.createQuery(TemplateFolder.class)
-                                  .filter(ACCOUNT_ID_KEY, templateFolder.getAccountId())
+                                  .filter(TemplateFolderKeys.accountId, templateFolder.getAccountId())
                                   .field(TemplateFolder.PATH_ID_KEY)
                                   .contains(templateFolderUuid));
       boolean deleted = wingsPersistence.delete(TemplateFolder.class, templateFolderUuid);
@@ -189,7 +189,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
     return wingsPersistence.createQuery(TemplateFolder.class)
         .field(GALLERY_ID_KEY)
         .equal(galleryId)
-        .field(TemplateFolder.ACCOUNT_ID_KEY)
+        .field(TemplateFolderKeys.accountId)
         .equal(accountId)
         .field(TemplateFolder.PARENT_ID_KEY)
         .doesNotExist()
@@ -244,9 +244,10 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
   @Override
   public TemplateFolder getTemplateTree(String accountId, String keyword, List<String> templateTypes) {
     Query<TemplateFolder> folderQuery =
-        wingsPersistence.createQuery(TemplateFolder.class).filter(ACCOUNT_ID_KEY, accountId);
+        wingsPersistence.createQuery(TemplateFolder.class).filter(TemplateFolderKeys.accountId, accountId);
 
-    Query<Template> templateQuery = wingsPersistence.createQuery(Template.class).filter(ACCOUNT_ID_KEY, accountId);
+    Query<Template> templateQuery =
+        wingsPersistence.createQuery(Template.class).filter(TemplateFolderKeys.accountId, accountId);
 
     if (isNotEmpty(keyword)) {
       folderQuery = folderQuery.field(TemplateFolder.KEYWORDS_KEY).contains(keyword.toLowerCase());
@@ -268,7 +269,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
       if (isNotEmpty(rootTemplateFolders)) {
         for (TemplateFolder rootTemplateFolder : rootTemplateFolders) {
           templateFolders.addAll(wingsPersistence.createQuery(TemplateFolder.class)
-                                     .filter(ACCOUNT_ID_KEY, accountId)
+                                     .filter(TemplateFolderKeys.accountId, accountId)
                                      .filter(GALLERY_ID_KEY, rootTemplateFolder.getGalleryId())
                                      .asList());
         }
@@ -289,12 +290,14 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
   @Override
   public TemplateFolder getTemplateTree(String accountId, String appId, String keyword, List<String> templateTypes) {
     // Get all app level template folders
-    Query<TemplateFolder> folderQuery =
-        wingsPersistence.createQuery(TemplateFolder.class).filter(ACCOUNT_ID_KEY, accountId).filter(APP_ID_KEY, appId);
+    Query<TemplateFolder> folderQuery = wingsPersistence.createQuery(TemplateFolder.class)
+                                            .filter(TemplateFolderKeys.accountId, accountId)
+                                            .filter(APP_ID_KEY, appId);
 
     // Get all templates belonging to appId
-    Query<Template> templateQuery =
-        wingsPersistence.createQuery(Template.class).filter(ACCOUNT_ID_KEY, accountId).filter(APP_ID_KEY, appId);
+    Query<Template> templateQuery = wingsPersistence.createQuery(Template.class)
+                                        .filter(TemplateKeys.accountId, accountId)
+                                        .filter(APP_ID_KEY, appId);
 
     if (isNotEmpty(keyword)) {
       folderQuery = folderQuery.field(TemplateFolder.KEYWORDS_KEY).contains(keyword.toLowerCase());
@@ -317,7 +320,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
         if (rootTemplateFolder != null) {
           templateFolders.add(rootTemplateFolder);
           templateFolders.addAll(wingsPersistence.createQuery(TemplateFolder.class)
-                                     .filter(ACCOUNT_ID_KEY, accountId)
+                                     .filter(TemplateFolderKeys.accountId, accountId)
                                      .filter(APP_ID_KEY, appId)
                                      .filter(GALLERY_ID_KEY, rootTemplateFolder.getGalleryId())
                                      .asList());
@@ -359,7 +362,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
 
   private List<TemplateFolder> getTemplateFolderUuids(String accountId, List<String> parentUuids) {
     return wingsPersistence.createQuery(TemplateFolder.class)
-        .filter(ACCOUNT_ID_KEY, accountId)
+        .filter(TemplateFolderKeys.accountId, accountId)
         .field("uuid")
         .in(parentUuids)
         .asList();
@@ -426,7 +429,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
 
   private List<TemplateFolder> getTemplateFolders(String accountId, String appId, String folderName) {
     return wingsPersistence.createQuery(TemplateFolder.class)
-        .filter(ACCOUNT_ID_KEY, accountId)
+        .filter(TemplateFolderKeys.accountId, accountId)
         .filter(APP_ID_KEY, appId)
         .filter(TemplateFolderKeys.name, folderName)
         .asList();
@@ -456,7 +459,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
   public Map<String, String> fetchTemplateFolderNames(String accountId, List<String> parentUuids) {
     List<TemplateFolder> templateFolders = wingsPersistence.createQuery(TemplateFolder.class)
                                                .project(NAME_KEY, true)
-                                               .filter(ACCOUNT_ID_KEY, accountId)
+                                               .filter(TemplateFolderKeys.accountId, accountId)
                                                .field("uuid")
                                                .in(parentUuids)
                                                .asList();

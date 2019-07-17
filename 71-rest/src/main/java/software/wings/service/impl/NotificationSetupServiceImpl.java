@@ -9,7 +9,6 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Base.APP_ID_KEY;
 
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
@@ -21,6 +20,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
 import software.wings.beans.Application;
+import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.Event;
 import software.wings.beans.Event.Type;
 import software.wings.beans.NotificationChannelType;
@@ -29,6 +29,7 @@ import software.wings.beans.Role;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
+import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.SettingsService;
@@ -175,8 +176,8 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
         .stream()
         .map(key -> key.getId().toString())
         .forEach(appId -> {
-          try (HIterator<Workflow> workflows =
-                   new HIterator<>(wingsPersistence.createQuery(Workflow.class).filter(APP_ID_KEY, appId).fetch())) {
+          try (HIterator<Workflow> workflows = new HIterator<>(
+                   wingsPersistence.createQuery(Workflow.class).filter(WorkflowKeys.appId, appId).fetch())) {
             for (Workflow workflow : workflows) {
               if (workflow.getOrchestrationWorkflow() != null
                   && workflow.getOrchestrationWorkflow().getNotificationRules().stream().anyMatch(notificationRule
@@ -256,11 +257,12 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
     for (NotificationGroup notificationGroup : notificationGroups) {
       if (notificationGroup.getRoles() != null) {
         notificationGroup.getRoles().forEach(role -> {
-          try (HIterator<User> iterator = new HIterator<>(wingsPersistence.createQuery(User.class)
-                                                              .filter(APP_ID_KEY, notificationGroup.getAppId())
-                                                              .field(User.ROLES_KEY)
-                                                              .in(asList(role))
-                                                              .fetch())) {
+          try (HIterator<User> iterator =
+                   new HIterator<>(wingsPersistence.createQuery(User.class)
+                                       .filter(ApplicationKeys.appId, notificationGroup.getAppId())
+                                       .field(User.ROLES_KEY)
+                                       .in(asList(role))
+                                       .fetch())) {
             for (User user : iterator) {
               if (user.isEmailVerified()) {
                 emailAddresses.add(user.getEmail());

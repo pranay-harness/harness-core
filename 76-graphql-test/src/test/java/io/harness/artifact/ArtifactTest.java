@@ -22,7 +22,6 @@ import software.wings.beans.Application;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.graphql.scalar.GraphQLDateTimeScalar;
 import software.wings.graphql.schema.type.artifact.QLArtifact.QLArtifactKeys;
 import software.wings.service.intfc.ArtifactService;
 
@@ -69,7 +68,6 @@ public class ArtifactTest extends GraphQLTest {
     QLTestObject qlArtifact = qlExecute(query, accountId);
     assertThat(qlArtifact.get(QLArtifactKeys.id)).isEqualTo(artifact.getUuid());
     assertThat(qlArtifact.get(QLArtifactKeys.buildNo)).isEqualTo(artifact.getBuildNo());
-    assertThat(qlArtifact.get(QLArtifactKeys.collectedAt))
-        .isEqualTo(GraphQLDateTimeScalar.convertToString(artifact.getCreatedAt()));
+    assertThat(qlArtifact.get(QLArtifactKeys.collectedAt)).isEqualTo(artifact.getCreatedAt());
   }
 }

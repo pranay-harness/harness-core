@@ -5,7 +5,6 @@ import com.google.inject.Inject;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
 import software.wings.graphql.datafetcher.instance.InstanceControllerUtils;
-import software.wings.graphql.scalar.GraphQLDateTimeScalar;
 import software.wings.graphql.schema.type.instance.QLEcsContainerInstance;
 import software.wings.graphql.schema.type.instance.QLInstanceType;
 
@@ -25,7 +24,7 @@ public class EcsContainerController implements InstanceController<QLEcsContainer
         .type(QLInstanceType.ECS_CONTAINER_INSTANCE)
         .clusterName(info.getClusterName())
         .serviceName(info.getServiceName())
-        .startedAt(GraphQLDateTimeScalar.convert(info.getStartedAt()))
+        .startedAt(info.getStartedAt())
         .startedBy(info.getStartedBy())
         .taskArn(info.getTaskArn())
         .taskDefinitionArn(info.getTaskDefinitionArn())

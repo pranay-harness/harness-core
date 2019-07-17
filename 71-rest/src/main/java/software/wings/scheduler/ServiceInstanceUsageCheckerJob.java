@@ -1,7 +1,5 @@
 package software.wings.scheduler;
 
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
-
 import com.google.inject.Inject;
 
 import io.harness.scheduler.BackgroundExecutorService;
@@ -15,6 +13,7 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.TriggerBuilder;
+import software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
 import software.wings.beans.instance.dashboard.InstanceStatsUtils;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.instance.licensing.InstanceUsageLimitExcessHandler;
@@ -58,7 +57,7 @@ public class ServiceInstanceUsageCheckerJob implements Job {
             .withIdentity(accountId, GROUP)
             .withDescription(
                 "Checks for Service Instance usage of an account periodically and updates the violation (that is if usage > allowed usage) in database")
-            .usingJobData(ACCOUNT_ID_KEY, accountId)
+            .usingJobData(InstanceKeys.accountId, accountId)
             .build();
 
     TriggerBuilder triggerBuilder =
@@ -78,7 +77,7 @@ public class ServiceInstanceUsageCheckerJob implements Job {
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
     executorService.submit(() -> {
-      String accountId = (String) jobExecutionContext.getJobDetail().getJobDataMap().get(ACCOUNT_ID_KEY);
+      String accountId = (String) jobExecutionContext.getJobDetail().getJobDataMap().get(InstanceKeys.accountId);
       Objects.requireNonNull(accountId, "[ServiceInstanceUsageCheckerJob] accountId must be passed in job context");
 
       // Skip for non-CE accounts

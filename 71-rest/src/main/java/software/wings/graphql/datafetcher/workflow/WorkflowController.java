@@ -2,7 +2,6 @@ package software.wings.graphql.datafetcher.workflow;
 
 import software.wings.beans.Workflow;
 import software.wings.graphql.datafetcher.user.UserController;
-import software.wings.graphql.scalar.GraphQLDateTimeScalar;
 import software.wings.graphql.schema.type.QLWorkflow.QLWorkflowBuilder;
 
 import javax.validation.constraints.NotNull;
@@ -17,7 +16,7 @@ public class WorkflowController {
     builder.id(workflow.getUuid())
         .name(workflow.getName())
         .description(workflow.getDescription())
-        .createdAt(GraphQLDateTimeScalar.convert(workflow.getCreatedAt()))
+        .createdAt(workflow.getCreatedAt())
         .createdBy(UserController.populateUser(workflow.getCreatedBy()));
   }
 }

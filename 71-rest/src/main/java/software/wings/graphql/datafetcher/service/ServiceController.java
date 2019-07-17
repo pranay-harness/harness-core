@@ -2,7 +2,6 @@ package software.wings.graphql.datafetcher.service;
 
 import software.wings.beans.Service;
 import software.wings.graphql.datafetcher.user.UserController;
-import software.wings.graphql.scalar.GraphQLDateTimeScalar;
 import software.wings.graphql.schema.type.QLService.QLServiceBuilder;
 
 public class ServiceController {
@@ -12,7 +11,7 @@ public class ServiceController {
         .description(service.getDescription())
         .artifactType(service.getArtifactType())
         .deploymentType(service.getDeploymentType())
-        .createdAt(GraphQLDateTimeScalar.convert(service.getCreatedAt()))
+        .createdAt(service.getCreatedAt())
         .createdBy(UserController.populateUser(service.getCreatedBy()));
   }
 }

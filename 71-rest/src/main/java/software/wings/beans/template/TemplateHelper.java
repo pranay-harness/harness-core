@@ -5,8 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.excludeValidate;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
-import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.EntityType.ARTIFACT_STREAM;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
@@ -24,6 +22,7 @@ import io.harness.persistence.PersistentEntity;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
+import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.CommandCategory;
 import software.wings.beans.EntityType;
 import software.wings.beans.NameValuePair;
@@ -265,8 +264,8 @@ public class TemplateHelper {
 
     Query<Template> templateQuery = wingsPersistence.createQuery(Template.class)
                                         .project("name", true)
-                                        .filter(ACCOUNT_ID_KEY, accountId)
-                                        .filter(APP_ID_KEY, appId)
+                                        .filter(ApplicationKeys.accountId, accountId)
+                                        .filter(ApplicationKeys.appId, appId)
                                         .filter(FOLDER_ID_KEY, template.getFolderId())
                                         .filter(TYPE_KEY, template.getType())
                                         .field(NAME_KEY)

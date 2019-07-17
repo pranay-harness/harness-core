@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.SettingAttribute;
-import software.wings.graphql.scalar.GraphQLDateTimeScalar;
 import software.wings.graphql.schema.type.QLUser.QLUserKeys;
 import software.wings.graphql.schema.type.cloudProvider.QLCloudProviderConnection.QLCloudProviderConnectionKeys;
 
@@ -54,8 +53,7 @@ public class CloudProviderTest extends GraphQLTest {
       QLTestObject qlAwsCP = qlExecute(query, settingAttribute.getAccountId());
       assertThat(qlAwsCP.get(QLCloudProviderKeys.id)).isEqualTo(settingAttribute.getUuid());
       assertThat(qlAwsCP.get(QLCloudProviderKeys.name)).isEqualTo(settingAttribute.getName());
-      assertThat(qlAwsCP.get(QLCloudProviderKeys.createdAt))
-          .isEqualTo(GraphQLDateTimeScalar.convertToString(settingAttribute.getCreatedAt()));
+      assertThat(qlAwsCP.get(QLCloudProviderKeys.createdAt)).isEqualTo(settingAttribute.getCreatedAt());
       assertThat(qlAwsCP.sub(QLCloudProviderKeys.createdBy).get(QLUserKeys.id))
           .isEqualTo(settingAttribute.getCreatedBy().getUuid());
     }

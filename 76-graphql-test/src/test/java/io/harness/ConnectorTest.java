@@ -16,7 +16,6 @@ import io.harness.testframework.graphql.QLTestObject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.SettingAttribute;
-import software.wings.graphql.scalar.GraphQLDateTimeScalar;
 import software.wings.graphql.schema.type.QLUser.QLUserKeys;
 import software.wings.graphql.schema.type.connector.QLConnectorsConnection.QLConnectorsConnectionKeys;
 import software.wings.graphql.schema.type.connector.QLJiraConnector.QLJiraConnectorKeys;
@@ -52,8 +51,7 @@ public class ConnectorTest extends GraphQLTest {
       QLTestObject qlJiraConnector = qlExecute(query, settingAttribute.getAccountId());
       assertThat(qlJiraConnector.get(QLJiraConnectorKeys.id)).isEqualTo(settingAttribute.getUuid());
       assertThat(qlJiraConnector.get(QLJiraConnectorKeys.name)).isEqualTo(settingAttribute.getName());
-      assertThat(qlJiraConnector.get(QLJiraConnectorKeys.createdAt))
-          .isEqualTo(GraphQLDateTimeScalar.convertToString(settingAttribute.getCreatedAt()));
+      assertThat(qlJiraConnector.get(QLJiraConnectorKeys.createdAt)).isEqualTo(settingAttribute.getCreatedAt());
       assertThat(qlJiraConnector.sub(QLJiraConnectorKeys.createdBy).get(QLUserKeys.id))
           .isEqualTo(settingAttribute.getCreatedBy().getUuid());
     }

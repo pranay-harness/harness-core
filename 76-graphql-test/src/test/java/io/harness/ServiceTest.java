@@ -23,7 +23,6 @@ import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceBuilder;
-import software.wings.graphql.scalar.GraphQLDateTimeScalar;
 import software.wings.graphql.schema.type.QLServiceConnection;
 import software.wings.graphql.schema.type.QLUser.QLUserKeys;
 
@@ -66,8 +65,7 @@ public class ServiceTest extends GraphQLTest {
     assertThat(qlService.get(QLServiceKeys.description)).isEqualTo(service.getDescription());
     assertThat(qlService.get(QLServiceKeys.artifactType)).isEqualTo(service.getArtifactType().name());
     assertThat(qlService.get(QLServiceKeys.deploymentType)).isEqualTo(service.getDeploymentType().name());
-    assertThat(qlService.get(QLServiceKeys.createdAt))
-        .isEqualTo(GraphQLDateTimeScalar.convertToString(service.getCreatedAt()));
+    assertThat(qlService.get(QLServiceKeys.createdAt)).isEqualTo(service.getCreatedAt());
     assertThat(qlService.sub(QLServiceKeys.createdBy).get(QLUserKeys.id)).isEqualTo(service.getCreatedBy().getUuid());
     assertThat(qlService.sub(QLServiceKeys.createdBy).get(QLUserKeys.name)).isEqualTo(service.getCreatedBy().getName());
     assertThat(qlService.sub(QLServiceKeys.createdBy).get(QLUserKeys.email))

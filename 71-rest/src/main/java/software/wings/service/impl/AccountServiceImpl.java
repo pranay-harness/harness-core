@@ -15,7 +15,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.ID_KEY;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.Role.Builder.aRole;
@@ -70,6 +69,7 @@ import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.AppContainer;
+import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.DelegateConnection;
@@ -684,8 +684,9 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public List<Account> listAllAccounts() {
-    List<Account> accountList =
-        wingsPersistence.createQuery(Account.class, excludeAuthorityCount).filter(APP_ID_KEY, GLOBAL_APP_ID).asList();
+    List<Account> accountList = wingsPersistence.createQuery(Account.class, excludeAuthorityCount)
+                                    .filter(ApplicationKeys.appId, GLOBAL_APP_ID)
+                                    .asList();
     decryptLicenseInfo(accountList);
     return accountList;
   }
@@ -696,7 +697,7 @@ public class AccountServiceImpl implements AccountService {
         .project(ID_KEY, true)
         .project(AccountKeys.accountName, true)
         .project(AccountKeys.companyName, true)
-        .filter(APP_ID_KEY, GLOBAL_APP_ID)
+        .filter(ApplicationKeys.appId, GLOBAL_APP_ID)
         .asList();
   }
 

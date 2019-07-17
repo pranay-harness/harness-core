@@ -60,9 +60,9 @@ union Cause = ExecutedByUser | ExecutedAlongPipeline | ExecutedByTrigger
 interface Execution {
   id: String
   application: Application
-  createdAt: Number
-  startedAt: Number
-  endedAt: Number
+  createdAt: DateTime
+  startedAt: DateTime
+  endedAt: DateTime
   status: ExecutionStatus
   cause: Cause
   notes: String
@@ -82,13 +82,13 @@ type WorkflowExecution implements Execution {
     @dataFetcher(name: application, useBatch: true, contextFieldArgsMap: "{ \"executionId\": \"id\"}")
 
   # DateTime when execution started
-  createdAt: Number
+  createdAt: DateTime
 
   # DateTime when execution started
-  startedAt: Number
+  startedAt: DateTime
 
   # DateTime when execution ended
-  endedAt: Number
+  endedAt: DateTime
 
   # Status of the workflow
   status: ExecutionStatus
@@ -110,13 +110,13 @@ type PipelineExecution implements Execution {
   application: Application @dataFetcher(name: application, contextFieldArgsMap: "{ \"executionId\": \"id\"}")
 
   # DateTime when execution started
-  createdAt: Number
+  createdAt: DateTime
 
   # DateTime when execution started
-  startedAt: Number
+  startedAt: DateTime
 
   # DateTime when execution ended
-  endedAt: Number
+  endedAt: DateTime
 
   # Status of the workflow
   status: ExecutionStatus

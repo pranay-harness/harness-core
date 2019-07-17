@@ -7,7 +7,6 @@ import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Group.id;
 import static org.mongodb.morphia.aggregation.Projection.projection;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Base.APP_ID_KEY;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -25,6 +24,7 @@ import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.Service;
+import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.Workflow;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.dl.WingsPersistence;
@@ -45,7 +45,7 @@ public class UsageMetricsHelper {
 
   public Application getApplication(String appId) {
     Application application = wingsPersistence.createQuery(Application.class)
-                                  .project(Application.ACCOUNT_ID_KEY, true)
+                                  .project(ApplicationKeys.accountId, true)
                                   .project(ApplicationKeys.name, true)
                                   .filter(Application.ID_KEY, appId)
                                   .get();
@@ -56,7 +56,7 @@ public class UsageMetricsHelper {
   public String getServiceName(String appId, String serviceId) {
     Service service = wingsPersistence.createQuery(Service.class)
                           .project(Workflow.NAME_KEY, true)
-                          .filter(APP_ID_KEY, appId)
+                          .filter(ServiceKeys.appId, appId)
                           .filter(Service.ID_KEY, serviceId)
                           .get();
     Validator.notNullCheck("Service does not exist", service, USER);
@@ -66,7 +66,7 @@ public class UsageMetricsHelper {
   public String getEnvironmentName(String appId, String environmentId) {
     Environment environment = wingsPersistence.createQuery(Environment.class)
                                   .project(EnvironmentKeys.name, true)
-                                  .filter(APP_ID_KEY, appId)
+                                  .filter(EnvironmentKeys.appId, appId)
                                   .filter(Environment.ID_KEY, environmentId)
                                   .get();
     Validator.notNullCheck("Environment does not exist", environment, USER);
@@ -76,7 +76,7 @@ public class UsageMetricsHelper {
   public List<Account> listAllAccountsWithDefaults() {
     PageRequest<Account> pageRequest = aPageRequest()
                                            .addFieldsIncluded(Account.ID_KEY, AccountKeys.accountName)
-                                           .addFilter(APP_ID_KEY, Operator.EQ, GLOBAL_APP_ID)
+                                           .addFilter(EnvironmentKeys.appId, Operator.EQ, GLOBAL_APP_ID)
                                            .build();
     return wingsPersistence.getAllEntities(pageRequest, () -> wingsPersistence.query(Account.class, pageRequest));
   }

@@ -79,7 +79,7 @@ type StackedData implements Data {
 
 type TimeSeriesDataPoint {
   value: Number
-  time: Long
+  time: DateTime
 }
 
 #This data structure will serve timeseries graphs
@@ -92,11 +92,6 @@ type TimeSeriesData implements Data {
 enum TimeAggregationType {
   HOUR
   DAY
-}
-
-input TimeRange {
-  from: Long
-  to: Long
 }
 
 enum DataType {
@@ -118,7 +113,7 @@ enum SortOrder {
 
 type StackedTimeSeriesDataPoint {
   values: [DataPoint]
-  time: Long
+  time: DateTime
 }
 
 type StackedTimeSeriesData implements Data {

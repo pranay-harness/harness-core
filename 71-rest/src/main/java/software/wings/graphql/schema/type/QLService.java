@@ -8,8 +8,6 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 import software.wings.utils.ArtifactType;
 
-import java.time.OffsetDateTime;
-
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "QLServiceKeys")
@@ -20,6 +18,6 @@ public class QLService implements QLObject {
   private String description;
   private ArtifactType artifactType;
   private DeploymentType deploymentType;
-  private OffsetDateTime createdAt;
+  private Long createdAt;
   private QLUser createdBy;
 }

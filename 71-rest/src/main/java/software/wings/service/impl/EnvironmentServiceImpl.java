@@ -19,7 +19,6 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
-import static software.wings.beans.Environment.APP_ID_KEY;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
@@ -360,8 +359,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     List<Environment> environments = wingsPersistence.createQuery(Environment.class)
                                          .project(EnvironmentKeys.name, true)
                                          .project(EnvironmentKeys.environmentType, true)
-                                         .project(APP_ID_KEY, true)
-                                         .filter(APP_ID_KEY, appId)
+                                         .project(EnvironmentKeys.appId, true)
+                                         .filter(EnvironmentKeys.appId, appId)
                                          .field(Environment.ID_KEY)
                                          .in(envIds)
                                          .asList();

@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.Application.APP_ID_KEY;
 import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
 import static software.wings.beans.yaml.YamlConstants.ECS_CONTAINER_TASK_YAML_FILE_NAME;
 import static software.wings.beans.yaml.YamlConstants.ECS_SERVICE_SPEC_YAML_FILE_NAME;
@@ -516,7 +515,7 @@ public class EntityHelper {
 
   private String getApplicationName(String appId) {
     List<Application> applications = wingsPersistence.createQuery(Application.class)
-                                         .filter(APP_ID_KEY, appId)
+                                         .filter(ApplicationKeys.appId, appId)
                                          .project(ApplicationKeys.name, true)
                                          .asList();
     if (isEmpty(applications)) {
@@ -528,7 +527,7 @@ public class EntityHelper {
   private String getServiceName(String serviceId, String appId) {
     List<Service> services = wingsPersistence.createQuery(Service.class)
                                  .filter(ID_KEY, serviceId)
-                                 .filter(APP_ID_KEY, appId)
+                                 .filter(ApplicationKeys.appId, appId)
                                  .project(ServiceKeys.name, true)
                                  .asList();
     if (isEmpty(services)) {
@@ -540,7 +539,7 @@ public class EntityHelper {
   private String getEnvironmentName(String envId, String appId) {
     List<Environment> environments = wingsPersistence.createQuery(Environment.class)
                                          .filter(ID_KEY, envId)
-                                         .filter(APP_ID_KEY, appId)
+                                         .filter(ApplicationKeys.appId, appId)
                                          .project(EnvironmentKeys.name, true)
                                          .asList();
     if (isEmpty(environments)) {
