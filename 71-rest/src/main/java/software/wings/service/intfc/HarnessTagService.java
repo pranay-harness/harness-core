@@ -26,4 +26,6 @@ public interface HarnessTagService {
   void pushToGit(String accountId, String entityId, boolean syncFromGit);
   void attachTagWithoutGitPush(HarnessTagLink tagLink);
   void detachTagWithoutGitPush(@NotBlank String accountId, @NotBlank String entityId, @NotBlank String key);
+
+  PageResponse<HarnessTag> listTagsWithInUseValues(PageRequest<HarnessTag> request);
 }
