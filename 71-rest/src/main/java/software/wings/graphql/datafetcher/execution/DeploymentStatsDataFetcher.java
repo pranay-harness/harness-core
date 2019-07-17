@@ -460,6 +460,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
 
     addAccountFilter(selectQuery, accountId);
 
+    addParentIdFilter(selectQuery);
+
     List<QLDeploymentSortCriteria> finalSortCriteria = null;
     if (!isValidGroupByTime(groupByTime)) {
       finalSortCriteria = validateAndAddSortCriteria(selectQuery, sortCriteria, fieldNames);
@@ -474,6 +476,10 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
     queryMetaDataBuilder.groupByFields(groupByFields);
     queryMetaDataBuilder.sortCriteria(finalSortCriteria);
     return queryMetaDataBuilder.build();
+  }
+
+  private void addParentIdFilter(SelectQuery selectQuery) {
+    selectQuery.addCondition(UnaryCondition.isNull(schema.getParentExecution()));
   }
 
   private List<QLDeploymentSortCriteria> validateAndAddSortCriteria(
@@ -760,6 +766,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
         return schema.getCloudProviders();
       case Environment:
         return schema.getEnvironments();
+      case EnvironmentType:
+        return schema.getEnvTypes();
       case Pipeline:
         return schema.getPipeline();
       case Duration:
@@ -795,6 +803,10 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
       case Environment:
         groupBy = DeploymentMetaDataFields.ENVID;
         unnestField = schema.getEnvironments().getName();
+        break;
+      case EnvironmentType:
+        groupBy = DeploymentMetaDataFields.ENVTYPE;
+        unnestField = schema.getEnvTypes().getName();
         break;
       case CloudProvider:
         groupBy = DeploymentMetaDataFields.CLOUDPROVIDERID;

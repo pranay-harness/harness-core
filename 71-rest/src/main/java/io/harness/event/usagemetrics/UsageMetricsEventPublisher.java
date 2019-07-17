@@ -97,18 +97,29 @@ public class UsageMetricsEventPublisher {
     stringData.put(EventProcessor.STATUS, workflowExecution.getStatus().name());
     if (workflowExecution.getPipelineExecution() != null) {
       stringData.put(EventProcessor.PIPELINE, workflowExecution.getPipelineExecution().getPipelineId());
-      /**
-       * TODO Get data for workflows in an execution
-       */
     } else {
       listData.put(EventProcessor.WORKFLOW_LIST, Lists.newArrayList(workflowExecution.getWorkflowId()));
     }
-    /**
-     * TODO CLOUDPROVIDER
-     */
+
     stringData.put(EventProcessor.APPID, workflowExecution.getAppId());
     longData.put(EventProcessor.STARTTIME, workflowExecution.getStartTs());
     longData.put(EventProcessor.ENDTIME, workflowExecution.getEndTs());
+
+    if (!Lists.isNullOrEmpty(workflowExecution.getCloudProviderIds())) {
+      listData.put(EventProcessor.CLOUD_PROVIDER_LIST, workflowExecution.getCloudProviderIds());
+    }
+
+    if (!Lists.isNullOrEmpty(workflowExecution.getEnvironments())) {
+      listData.put(EventProcessor.ENVTYPES,
+          new ArrayList<>(workflowExecution.getEnvironments()
+                              .stream()
+                              .map(envSummary -> envSummary.getEnvironmentType().name())
+                              .collect(Collectors.toSet())));
+    }
+
+    if (workflowExecution.getPipelineExecutionId() != null) {
+      stringData.put(EventProcessor.PARENT_EXECUTION, workflowExecution.getPipelineExecutionId());
+    }
 
     if (!Lists.isNullOrEmpty(workflowExecution.getArtifacts())) {
       listData.put(EventProcessor.ARTIFACT_LIST,
@@ -127,7 +138,7 @@ public class UsageMetricsEventPublisher {
       stringData.put(EventProcessor.TRIGGERED_BY, workflowExecution.getTriggeredBy().getUuid());
     }
     stringData.put(EventProcessor.ACCOUNTID, accountId);
-    longData.put(EventProcessor.DURATION, workflowExecution.getEndTs() - workflowExecution.getStartTs());
+    longData.put(EventProcessor.DURATION, workflowExecution.getDuration());
 
     TimeSeriesEventInfo eventInfo = TimeSeriesEventInfo.builder()
                                         .accountId(accountId)

@@ -2,6 +2,7 @@ enum DeploymentAggregation {
   Application
   Service
   Environment
+  EnvironmentType
   CloudProvider
   Status
   TriggeredBy
@@ -25,6 +26,7 @@ input DeploymentFilter {
   service: IdFilter
   cloudProvider: IdFilter
   environment: IdFilter
+  environmentType: StringFilter
   status: IdFilter
   endTime: TimeFilter
   startTime: TimeFilter

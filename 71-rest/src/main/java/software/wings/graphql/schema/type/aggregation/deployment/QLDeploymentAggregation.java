@@ -6,6 +6,7 @@ public enum QLDeploymentAggregation {
   Application(QLAggregationKind.SIMPLE),
   Service(QLAggregationKind.ARRAY),
   Environment(QLAggregationKind.ARRAY),
+  EnvironmentType(QLAggregationKind.ARRAY),
   CloudProvider(QLAggregationKind.ARRAY),
   Status(QLAggregationKind.SIMPLE),
   TriggeredBy(QLAggregationKind.SIMPLE),

@@ -2,6 +2,7 @@ package migrations;
 
 import com.google.common.collect.ImmutableList;
 
+import migrations.timescaledb.DeploymentAdditionalColumns;
 import migrations.timescaledb.InitSchemaMigration;
 import migrations.timescaledb.InitVerificationSchemaMigration;
 import migrations.timescaledb.RenameInstanceMigration;
@@ -15,6 +16,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(1, InitSchemaMigration.class))
         .add(Pair.of(2, InitVerificationSchemaMigration.class))
         .add(Pair.of(3, RenameInstanceMigration.class))
+        .add(Pair.of(4, DeploymentAdditionalColumns.class))
         .build();
   }
 }
