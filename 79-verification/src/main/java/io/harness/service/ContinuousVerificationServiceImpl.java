@@ -47,7 +47,6 @@ import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
-import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import software.wings.beans.FeatureName;
@@ -849,8 +848,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               } else {
                 minuteForFeedbackAnalysis = lastLogMLAnalysisMinute;
               }
-            } else if (TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()) - lastFeedbackAnalysisMinute
-                < CRON_POLL_INTERVAL_IN_MINUTES) {
+            } else if (minuteForFeedbackAnalysis > lastLogMLAnalysisMinute) {
               logger.info("It is not time for the next feedback analysis yet. We'll wait for some time.");
               return;
             }

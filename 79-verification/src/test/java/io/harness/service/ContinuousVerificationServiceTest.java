@@ -1166,38 +1166,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testCreateFeedbackAnalysisTask() throws Exception {
-    // setup mocks
-    setupFeedbacks(true);
-
-    // initally there should be no tasks even if we trigger
-    continuousVerificationService.triggerFeedbackAnalysis(accountId);
-    List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, MLAnalysisType.FEEDBACK_ANALYSIS)
-            .asList();
-    assertEquals(0, learningEngineAnalysisTasks.size());
-
-    int oldMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()) - 15;
-
-    LogMLAnalysisRecord feedbackRecord =
-        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(oldMinute).build();
-
-    feedbackRecord.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
-
-    wingsPersistence.save(feedbackRecord);
-
-    continuousVerificationService.triggerFeedbackAnalysis(accountId);
-    learningEngineAnalysisTasks =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, MLAnalysisType.FEEDBACK_ANALYSIS)
-            .asList();
-    assertEquals(1, learningEngineAnalysisTasks.size());
-    assertEquals(oldMinute + CRON_POLL_INTERVAL_IN_MINUTES, learningEngineAnalysisTasks.get(0).getAnalysis_minute());
-  }
-
-  @Test
-  @Category(UnitTests.class)
   public void testCreateFeedbackAnalysisTaskNoPrevFeedbackAnalysisRecord() throws Exception {
     // setup mocks
     setupFeedbacks(true);
@@ -1280,12 +1248,54 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     wingsPersistence.save(oldFeedbackRecord);
 
+    LogMLAnalysisRecord oldLERecord =
+        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(oldMinute).build();
+
+    oldLERecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+
+    wingsPersistence.save(oldLERecord);
+
     continuousVerificationService.triggerFeedbackAnalysis(accountId);
     learningEngineAnalysisTasks =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
             .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, MLAnalysisType.FEEDBACK_ANALYSIS)
             .asList();
     assertEquals(0, learningEngineAnalysisTasks.size());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCreateFeedbackAnalysisTaskBasedOnOldLE() throws Exception {
+    // setup mocks
+    setupFeedbacks(true);
+    // initally there should be no tasks even if we trigger
+    continuousVerificationService.triggerFeedbackAnalysis(accountId);
+    List<LearningEngineAnalysisTask> learningEngineAnalysisTasks =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, MLAnalysisType.FEEDBACK_ANALYSIS)
+            .asList();
+    assertEquals(0, learningEngineAnalysisTasks.size());
+
+    int oldMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()) - 1;
+    LogMLAnalysisRecord oldFeedbackRecord =
+        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(oldMinute - 15).build();
+    oldFeedbackRecord.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
+    wingsPersistence.save(oldFeedbackRecord);
+
+    LogMLAnalysisRecord oldLERecord =
+        LogMLAnalysisRecord.builder().appId(appId).cvConfigId(cvConfigId).logCollectionMinute(oldMinute).build();
+
+    oldLERecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+
+    wingsPersistence.save(oldLERecord);
+
+    continuousVerificationService.triggerFeedbackAnalysis(accountId);
+    learningEngineAnalysisTasks =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+            .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, MLAnalysisType.FEEDBACK_ANALYSIS)
+            .asList();
+    assertEquals(1, learningEngineAnalysisTasks.size());
+    assertEquals(oldMinute, learningEngineAnalysisTasks.get(0).getAnalysis_minute());
   }
 
   @Test
