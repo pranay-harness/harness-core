@@ -618,7 +618,7 @@ public class EcsSetupCommandTaskHelper {
     String targetContainerName = setupParams.getTargetContainerName();
     String targetPort = setupParams.getTargetPort();
 
-    if (targetContainerName != null && targetPort != null) {
+    if (isNotBlank(targetContainerName) && isNotBlank(targetPort)) {
       containerName = targetContainerName;
 
       if (!StringUtils.isNumeric(targetPort.trim())) {
@@ -630,7 +630,7 @@ public class EcsSetupCommandTaskHelper {
 
       containerPort = Integer.parseInt(targetPort);
 
-    } else if (targetContainerName == null && targetPort == null) {
+    } else if (isBlank(targetContainerName) && isBlank(targetPort)) {
       TargetGroup targetGroup = awsClusterService.getTargetGroup(
           setupParams.getRegion(), cloudProviderSetting, encryptedDataDetails, setupParams.getTargetGroupArn());
 
