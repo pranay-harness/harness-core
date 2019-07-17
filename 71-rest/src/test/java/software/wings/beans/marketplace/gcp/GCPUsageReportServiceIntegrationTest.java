@@ -14,6 +14,7 @@ import org.junit.experimental.categories.Category;
 import software.wings.beans.marketplace.gcp.GCPUsageReport.GCPUsageReportKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
+import software.wings.service.impl.marketplace.gcp.GCPMarketPlaceServiceIntegrationTest;
 import software.wings.service.impl.marketplace.gcp.GCPUsageReportServiceImpl;
 
 import java.time.Instant;
@@ -32,6 +33,9 @@ public class GCPUsageReportServiceIntegrationTest extends BaseIntegrationTest {
 
   private static final String SOME_OPERATION_ID =
       "gcp-operation-id-" + GCPUsageReportServiceIntegrationTest.class.getSimpleName();
+
+  private static final String SOME_ENTITLEMENT_NAME =
+      "gcp-entitlement-" + GCPMarketPlaceServiceIntegrationTest.class.getSimpleName();
 
   @Before
   public void ensureIndices() {
@@ -71,7 +75,8 @@ public class GCPUsageReportServiceIntegrationTest extends BaseIntegrationTest {
   private GCPUsageReport getSampleGCPUsageReport() {
     val startInstance = Instant.now();
     val endInstance = startInstance.plusSeconds(1);
-    return new GCPUsageReport(SOME_ACCOUNT_ID, SOME_CONSUMER_ID, SOME_OPERATION_ID, startInstance, endInstance, 5);
+    return new GCPUsageReport(
+        SOME_ACCOUNT_ID, SOME_CONSUMER_ID, SOME_OPERATION_ID, SOME_ENTITLEMENT_NAME, startInstance, endInstance, 5);
   }
 
   @After

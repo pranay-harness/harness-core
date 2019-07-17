@@ -34,6 +34,7 @@ public class GCPUsageReport implements PersistentEntity, UuidAccess, CreatedAtAc
   @NonFinal private String accountId;
   @NonFinal private String consumerId;
   @NonFinal private String operationId;
+  @NonFinal private String entitlementName;
   @NonFinal private Instant startTimestamp;
   @NonFinal private Instant endTimestamp;
   @NonFinal private long instanceUsage;
@@ -41,13 +42,14 @@ public class GCPUsageReport implements PersistentEntity, UuidAccess, CreatedAtAc
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private long createdAt;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore @NotNull private long lastUpdatedAt;
 
-  public GCPUsageReport(String accountId, String consumerId, String operationId, Instant usageStartTime,
-      Instant usageEndTime, long instanceUsage) {
+  public GCPUsageReport(String accountId, String consumerId, String operationId, String entitlementName,
+      Instant usageStartTime, Instant usageEndTime, long instanceUsage) {
     long currentMillis = Instant.now().toEpochMilli();
     this.uuid = String.format("%s-%s", accountId, usageStartTime.toEpochMilli());
     this.accountId = accountId;
     this.consumerId = consumerId;
     this.operationId = operationId;
+    this.entitlementName = entitlementName;
     this.startTimestamp = usageStartTime;
     this.endTimestamp = usageEndTime;
     this.instanceUsage = instanceUsage;
