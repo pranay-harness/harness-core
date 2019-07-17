@@ -126,4 +126,7 @@ type PipelineExecution implements Execution {
   cause: Cause
 
   notes: String
+
+  memberExecutions: ExecutionConnection
+    @dataFetcher(name: executionConnection, contextFieldArgsMap: "{ \"PipelineExecution\": \"id\"}")
 }
