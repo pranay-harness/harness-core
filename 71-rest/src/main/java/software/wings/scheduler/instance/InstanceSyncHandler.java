@@ -44,6 +44,7 @@ public class InstanceSyncHandler implements Handler<InfrastructureMapping> {
                                          .executorService(executor)
                                          .semaphore(new Semaphore(POOL_SIZE))
                                          .handler(handler)
+                                         .regular(true)
                                          .redistribute(true)
                                          .build();
 

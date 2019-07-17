@@ -1,6 +1,6 @@
 package software.wings.beans.approval;
 
-import io.harness.persistence.PersistentIterable;
+import io.harness.persistence.PersistentRegularIterable;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -19,7 +19,7 @@ import software.wings.sm.states.ApprovalState.ApprovalStateType;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ToString(exclude = "scriptString")
-public class ApprovalPollingJobEntity implements PersistentIterable {
+public class ApprovalPollingJobEntity implements PersistentRegularIterable {
   String appId;
   String accountId;
   String stateExecutionInstanceId;

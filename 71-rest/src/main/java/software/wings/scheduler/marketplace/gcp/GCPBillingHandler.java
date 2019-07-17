@@ -41,6 +41,7 @@ public class GCPBillingHandler implements Handler<GCPBillingJobEntity> {
                                          .executorService(executor)
                                          .semaphore(semaphore)
                                          .handler(handler)
+                                         .regular(true)
                                          .redistribute(true)
                                          .build();
 

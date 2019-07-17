@@ -45,6 +45,7 @@ public class ApprovalPollingHandler implements Handler<ApprovalPollingJobEntity>
                                          .executorService(executor)
                                          .semaphore(new Semaphore(POOL_SIZE))
                                          .handler(handler)
+                                         .regular(true)
                                          .redistribute(true)
                                          .build();
 

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.persistence.CreatedAtAccess;
-import io.harness.persistence.PersistentIterable;
+import io.harness.persistence.PersistentRegularIterable;
 import io.harness.persistence.UpdatedAtAccess;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -25,7 +25,7 @@ import javax.validation.constraints.NotNull;
 @Getter
 @ToString
 @EqualsAndHashCode
-public class GCPBillingJobEntity implements PersistentIterable, CreatedAtAccess, UpdatedAtAccess {
+public class GCPBillingJobEntity implements PersistentRegularIterable, CreatedAtAccess, UpdatedAtAccess {
   @Id private String uuid;
   @Indexed private String accountId;
   private String gcpAccountId;
