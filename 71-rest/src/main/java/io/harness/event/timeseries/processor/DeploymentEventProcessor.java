@@ -35,9 +35,12 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
    * 	PIPELINE TEXT,
    * 	DURATION BIGINT NOT NULL,
    * 	ARTIFACTS TEXT[]
+   * 	ENVTYPES TEXT[]
+   * 	PARENT_EXECUTION TEXT
+   * 	STAGENAME TEXT
    */
   String insert_prepared_statement_sql =
-      "INSERT INTO DEPLOYMENT (EXECUTIONID,STARTTIME,ENDTIME,ACCOUNTID,APPID,TRIGGERED_BY,TRIGGER_ID,STATUS,SERVICES,WORKFLOWS,CLOUDPROVIDERS,ENVIRONMENTS,PIPELINE,DURATION,ARTIFACTS) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+      "INSERT INTO DEPLOYMENT (EXECUTIONID,STARTTIME,ENDTIME,ACCOUNTID,APPID,TRIGGERED_BY,TRIGGER_ID,STATUS,SERVICES,WORKFLOWS,CLOUDPROVIDERS,ENVIRONMENTS,PIPELINE,DURATION,ARTIFACTS,ENVTYPES,PARENT_EXECUTION,STAGENAME) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
   @Inject private TimeScaleDBService timeScaleDBService;
 
@@ -67,6 +70,9 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
            * 	PIPELINE TEXT,
            * 	DURATION BIGINT NOT NULL,
            * 	ARTIFACTS TEXT[]
+           * 	ENVTYPES TEXT[]
+           * 	PARENT_EXECUTION TEXT
+           * 	STAGENAME TEXT
            **/
           insertPreparedStatement.setString(1, eventInfo.getStringData().get(EventProcessor.EXECUTIONID));
           insertPreparedStatement.setTimestamp(2, new Timestamp(eventInfo.getLongData().get(EventProcessor.STARTTIME)));
@@ -98,6 +104,12 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
 
           insertArrayData(
               dbConnection, insertPreparedStatement, getListData(eventInfo, EventProcessor.ARTIFACT_LIST), 15);
+
+          insertArrayData(dbConnection, insertPreparedStatement, getListData(eventInfo, EventProcessor.ENVTYPES), 16);
+
+          insertPreparedStatement.setString(17, eventInfo.getStringData().get(EventProcessor.PARENT_EXECUTION));
+
+          insertPreparedStatement.setString(18, eventInfo.getStringData().get(EventProcessor.STAGENAME));
 
           insertPreparedStatement.execute();
           successfulInsert = true;

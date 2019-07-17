@@ -34,6 +34,9 @@ public interface EventProcessor<T extends EventInfo> {
   String WORKFLOW_LIST = "WORKFLOW_LIST";
   String CLOUD_PROVIDER_LIST = "CLOUD_PROVIDER_LIST";
   String ENV_LIST = "ENV_LIST";
+  String ENVTYPES = "ENVTYPES";
+  String PARENT_EXECUTION = "PARENT_EXECUTION";
+  String STAGENAME = "STAGENAME";
   String PIPELINE = "PIPELINE";
   String DURATION = "DURATION";
   String ARTIFACT_LIST = "ARTIFACT_LIST";

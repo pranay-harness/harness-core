@@ -31,6 +31,7 @@ public class DeploymentStatsQueryMetaData {
     ENVID("ENVID", DataType.STRING, QLFilterKind.ARRAY),
     CLOUDPROVIDERID("CLOUDPROVIDERID", DataType.STRING, QLFilterKind.ARRAY),
     WORKFLOWID("WORKFLOWID", DataType.STRING, QLFilterKind.ARRAY),
+    ENVTYPE("ENVTYPE", DataType.STRING, QLFilterKind.ARRAY),
     STARTTIME("STARTTIME", DataType.TIMESTAMP, QLFilterKind.SIMPLE),
     ENDTIME("ENDTIME", DataType.TIMESTAMP, QLFilterKind.SIMPLE);
 

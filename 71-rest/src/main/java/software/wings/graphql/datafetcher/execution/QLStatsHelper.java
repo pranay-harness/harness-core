@@ -38,6 +38,8 @@ public class QLStatsHelper {
         return getServiceName(entityId);
       case ENVID:
         return getEnvName(entityId);
+      case ENVTYPE:
+        return entityId;
       case WORKFLOWID:
         return getWorkflowName(entityId);
       default:

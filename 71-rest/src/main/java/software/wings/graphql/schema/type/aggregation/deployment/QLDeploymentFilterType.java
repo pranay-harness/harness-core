@@ -7,6 +7,7 @@ public enum QLDeploymentFilterType {
   Application(DeploymentMetaDataFields.APPID),
   Service(DeploymentMetaDataFields.SERVICEID),
   Environment(DeploymentMetaDataFields.ENVID),
+  EnvironmentType(DeploymentMetaDataFields.ENVTYPE),
   CloudProvider(DeploymentMetaDataFields.CLOUDPROVIDERID),
   Status(DeploymentMetaDataFields.STATUS),
   EndTime(DeploymentMetaDataFields.ENDTIME),

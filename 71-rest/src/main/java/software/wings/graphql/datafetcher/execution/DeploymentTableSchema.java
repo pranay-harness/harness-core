@@ -27,6 +27,9 @@ public class DeploymentTableSchema {
    * 	PIPELINE TEXT,
    * 	DURATION BIGINT NOT NULL,
    * 	ARTIFACTS TEXT[]
+   * 	ENVTYPE TEXT[]
+   * 	PARENT_EXECUTION TEXT
+   * 	STAGENAME TEXT
    */
   DbSpec dbSpec;
   DbSchema dbSchema;
@@ -46,6 +49,9 @@ public class DeploymentTableSchema {
   DbColumn pipeline;
   DbColumn duration;
   DbColumn artifacts;
+  DbColumn envTypes;
+  DbColumn parentExecution;
+  DbColumn stageName;
 
   public DeploymentTableSchema() {
     dbSpec = new DbSpec();
@@ -66,5 +72,8 @@ public class DeploymentTableSchema {
     pipeline = deploymentTable.addColumn("PIPELINE", "text", null);
     duration = deploymentTable.addColumn("DURATION", "bigint", null);
     artifacts = deploymentTable.addColumn("ARTIFACTS", "text[]", null);
+    envTypes = deploymentTable.addColumn("ENVTYPES", "text[]", null);
+    parentExecution = deploymentTable.addColumn("PARENT_EXECUTION", "text", null);
+    stageName = deploymentTable.addColumn("STAGENAME", "text", null);
   }
 }
