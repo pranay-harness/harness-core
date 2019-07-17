@@ -70,7 +70,7 @@ public class ConnectorTest extends GraphQLTest {
     {
       String query = $GQL(/*
 {
-  connectors {
+  connectors(limit:100) {
     nodes {
       id
       name

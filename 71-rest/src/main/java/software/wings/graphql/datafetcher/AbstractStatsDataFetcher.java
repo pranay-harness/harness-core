@@ -19,8 +19,6 @@ import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.instance.dashboard.EntitySummary;
-import software.wings.graphql.schema.type.aggregation.QLAggregateFunction;
-import software.wings.graphql.schema.type.aggregation.QLAggregateOperation;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLReference;
@@ -116,38 +114,6 @@ public abstract class AbstractStatsDataFetcher<A, F, G, T, S> implements DataFet
     }
 
     return accountId;
-  }
-
-  protected String getMongoAggregateOperation(QLAggregateFunction aggregateFunction) {
-    QLAggregateOperation aggregateOperation = aggregateFunction.getAggregateOperation();
-    switch (aggregateOperation) {
-      case MIN:
-        return "$min";
-      case MAX:
-        return "$max";
-      case SUM:
-        return "$sum";
-      case AVERAGE:
-        return "$avg";
-      default:
-        throw new WingsException("Unknown aggregation operation" + aggregateOperation);
-    }
-  }
-
-  public String getSqlAggregateOperation(QLAggregateFunction aggregateFunction) {
-    QLAggregateOperation aggregateOperation = aggregateFunction.getAggregateOperation();
-    switch (aggregateOperation) {
-      case MIN:
-        return "min";
-      case MAX:
-        return "max";
-      case SUM:
-        return "sum";
-      case AVERAGE:
-        return "avg";
-      default:
-        throw new WingsException("Unknown aggregation operation" + aggregateOperation);
-    }
   }
 
   protected QLDataPoint getDataPoint(FlatEntitySummaryStats stats, String entityType) {

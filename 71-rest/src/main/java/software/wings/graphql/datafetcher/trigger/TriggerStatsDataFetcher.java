@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.Trigger.TriggerKeys;
+import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.RealTimeStatsDataFetcher;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLNoOpAggregateFunction;
@@ -39,11 +40,18 @@ public class TriggerStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOpAggr
     return getQLData(accountId, filters, entityClass, groupByList);
   }
 
-  @NotNull
-  protected Query populateAccountFilter(String accountId, Class entityClass) {
-    Query query = wingsPersistence.createQuery(entityClass);
+  private void populateAppIdFilter(String accountId, Query query) {
     List<String> appIds = appService.getAppIdsByAccountId(accountId);
     query.field(TriggerKeys.appId).in(appIds);
+  }
+
+  @Override
+  @NotNull
+  protected Query populateFilters(
+      WingsPersistence wingsPersistence, String accountId, List<QLTriggerFilter> filters, Class entityClass) {
+    Query query = wingsPersistence.createQuery(entityClass);
+    populateFilters(filters, query);
+    populateAppIdFilter(accountId, query);
     return query;
   }
 

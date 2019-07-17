@@ -106,7 +106,7 @@ public class CloudProviderTest extends GraphQLTest {
     {
       String query = $GQL(/*
 {
-  cloudProviders {
+  cloudProviders(limit:100) {
     nodes {
       id
       name
