@@ -783,7 +783,12 @@ public abstract class AbstractAnalysisState extends State {
     }
 
     final Optional<String> accountType = accountService.getAccountType(accountId);
-    if (!accountType.isPresent() || COMMUNITY.equals(accountType.get()) || ESSENTIALS.equals(accountType.get())) {
+    if (!accountType.isPresent()) {
+      getLogger().info("for id {} and stateType {} the account has no type set. License check will not be enforced",
+          stateExecutionId, stateType);
+      return false;
+    }
+    if (COMMUNITY.equals(accountType.get()) || ESSENTIALS.equals(accountType.get())) {
       getLogger().info("for id {}, stateType {} the account type {} does not have license to run. Skipping analysis",
           stateExecutionId, stateType, accountType.get());
       return false;
