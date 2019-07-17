@@ -84,10 +84,10 @@ public class HarnessTagResource {
   @GET
   @Timed
   @ExceptionMetered
-  public PageResponse<HarnessTag> list(
+  public RestResponse<PageResponse<HarnessTag>> list(
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<HarnessTag> request) {
     request.addFilter(HarnessTagLinkKeys.accountId, IN, accountId);
-    return harnessTagService.list(request);
+    return new RestResponse<>(harnessTagService.list(request));
   }
 
   @POST
@@ -117,9 +117,9 @@ public class HarnessTagResource {
   @Path("links")
   @Timed
   @ExceptionMetered
-  public PageResponse<HarnessTagLink> listResourcesWithTag(
+  public RestResponse<PageResponse<HarnessTagLink>> listResourcesWithTag(
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<HarnessTagLink> request) {
     request.addFilter(HarnessTagLinkKeys.accountId, IN, accountId);
-    return harnessTagService.listResourcesWithTag(accountId, request);
+    return new RestResponse<>(harnessTagService.listResourcesWithTag(accountId, request));
   }
 }
