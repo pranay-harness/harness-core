@@ -2,7 +2,8 @@ extend type Query {
   # Get details about connector
   connector(connectorId: String!): Connector @dataFetcher(name: connector)
 
-  connectors: ConnectorConnection @dataFetcher(name: connectorConnection)
+  connectors(filters: [ConnectorFilter], limit: Int!, offset: Int): ConnectorConnection
+    @dataFetcher(name: connectorConnection)
 }
 
 input ConnectorFilter {
