@@ -27,6 +27,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
+import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
@@ -70,14 +71,17 @@ public class EnvState extends State {
   @Expand(dataProvider = EnvironmentServiceImpl.class)
   @EnumData(enumDataProvider = EnvironmentServiceImpl.class)
   @Attributes(required = true, title = "Environment")
+  @Setter
   private String envId;
 
   @EnumData(enumDataProvider = WorkflowServiceImpl.class)
   @Attributes(required = true, title = "Workflow")
+  @Setter
   private String workflowId;
 
-  @SchemaIgnore private String pipelineId;
-  @SchemaIgnore private String pipelineStageElementId;
+  @Setter @SchemaIgnore private String pipelineId;
+  @Setter @SchemaIgnore private String pipelineStageElementId;
+  @Setter @SchemaIgnore private int pipelineStageParallelIndex;
 
   @JsonIgnore @SchemaIgnore private Map<String, String> workflowVariables;
 
@@ -138,6 +142,7 @@ public class EnvState extends State {
     executionArgs.setTriggeredFromPipeline(true);
     executionArgs.setPipelineId(pipelineId);
     executionArgs.setPipelinePhaseElementId(context.getPipelineStageElementId());
+    executionArgs.setPipelinePhaseParallelIndex(context.getPipelineStageParallelIndex());
     executionArgs.setWorkflowVariables(populatePipelineVariables(workflow, workflowStandardParams));
     executionArgs.setExcludeHostsWithSameArtifact(workflowStandardParams.isExcludeHostsWithSameArtifact());
     executionArgs.setNotifyTriggeredUserOnly(workflowStandardParams.isNotifyTriggeredUserOnly());
@@ -229,33 +234,18 @@ public class EnvState extends State {
   public String getEnvId() {
     return envId;
   }
-
-  public void setEnvId(String envId) {
-    this.envId = envId;
-  }
-
   public String getWorkflowId() {
     return workflowId;
   }
-
-  public void setWorkflowId(String workflowId) {
-    this.workflowId = workflowId;
-  }
-
   public String getPipelineId() {
     return pipelineId;
   }
-  public void setPipelineId(String pipelineId) {
-    this.pipelineId = pipelineId;
-  }
-
   public String getPipelineStageElementId() {
     return pipelineStageElementId;
   }
-  public void setPipelineStageElementId(String pipelineStageElementId) {
-    this.pipelineStageElementId = pipelineStageElementId;
+  public int getPipelineStageParallelIndex() {
+    return pipelineStageParallelIndex;
   }
-
   public Map<String, String> getWorkflowVariables() {
     return workflowVariables;
   }

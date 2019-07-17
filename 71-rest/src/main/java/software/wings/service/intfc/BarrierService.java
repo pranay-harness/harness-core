@@ -14,7 +14,8 @@ public interface BarrierService {
   BarrierInstance update(String appId, String barrierId);
   BarrierInstance update(BarrierInstance barrierInstance);
 
-  String findByStep(String appId, String pipelineStageId, String workflowExecutionId, String identifier);
+  String findByStep(String appId, String pipelineStageId, int pipelineStageParallelIndex, String workflowExecutionId,
+      String identifier);
 
   @Value
   @Builder
@@ -25,7 +26,7 @@ public interface BarrierService {
   }
 
   List<BarrierInstance> obtainInstances(
-      String appId, List<OrchestrationWorkflowInfo> orchestrations, String pipelineExecutionId);
+      String appId, List<OrchestrationWorkflowInfo> orchestrations, String pipelineExecutionId, int parallelIndex);
 
   void updateAllActiveBarriers(String appId);
 }

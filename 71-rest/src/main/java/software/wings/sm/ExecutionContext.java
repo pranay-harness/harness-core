@@ -64,6 +64,8 @@ public interface ExecutionContext {
 
   String getPipelineStageElementId();
 
+  int getPipelineStageParallelIndex();
+
   String getAppId();
 
   String getAccountId();

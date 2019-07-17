@@ -20,6 +20,7 @@ import io.harness.category.element.UnitTests;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.Value;
 import org.junit.Test;
@@ -46,6 +47,7 @@ public class PageRequestTest extends WingsBaseTest {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @EqualsAndHashCode(callSuper = false)
   public static class Dummy extends Base {
     private List<DummyItem> dummies;
     private String name;

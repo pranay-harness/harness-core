@@ -66,7 +66,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                    .pipelineStageId("bar")
                    .orchestrationWorkflow(orchestrationWorkflow)
                    .build()),
-        generateUuid());
+        generateUuid(), 0);
 
     assertThat(barrierInstances).isEmpty();
   }
@@ -101,7 +101,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                    .pipelineStageId("bar")
                    .orchestrationWorkflow(orchestrationWorkflow)
                    .build()),
-        generateUuid());
+        generateUuid(), 0);
     assertThat(barrierInstances).isEmpty();
   }
 
@@ -162,7 +162,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                 .pipelineStageId("bar2")
                 .orchestrationWorkflow(orchestrationWorkflow2)
                 .build()),
-        pipelineExecution);
+        pipelineExecution, 0);
     assertThat(barrierInstances.size()).isEqualTo(1);
     assertThat(barrierInstances.get(0).getName()).isEqualTo("deploy");
     assertThat(barrierInstances.get(0).getPipeline().getExecutionId()).isEqualTo(pipelineExecution);
@@ -176,7 +176,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                                           .pipelineStageId("bar1")
                                           .orchestrationWorkflow(orchestrationWorkflow)
                                           .build()),
-                               generateUuid()))
+                               generateUuid(), 0))
         .isInstanceOf(WingsException.class)
         .matches(ex -> ((WingsException) ex).getCode() == BARRIERS_NOT_RUNNING_CONCURRENTLY);
   }
@@ -292,7 +292,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                    .pipelineStageId("bar1")
                    .orchestrationWorkflow(orchestrationWorkflow)
                    .build()),
-        generateUuid());
+        generateUuid(), 0);
     assertThat(barrierInstances).isEmpty();
   }
 }

@@ -869,10 +869,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private void constructBarriers(Pipeline pipeline, String pipelineExecutionId) {
     // Initializing the list workarounds an issue with having the first stage having isParallel set.
     List<OrchestrationWorkflowInfo> orchestrationWorkflows = new ArrayList<>();
+    int parallelIndex = 0;
     for (PipelineStage stage : pipeline.getPipelineStages()) {
       if (!stage.isParallel()) {
         if (!isEmpty(orchestrationWorkflows)) {
-          barrierService.obtainInstances(pipeline.getAppId(), orchestrationWorkflows, pipelineExecutionId)
+          barrierService
+              .obtainInstances(pipeline.getAppId(), orchestrationWorkflows, pipelineExecutionId, parallelIndex)
               .forEach(barrier -> barrierService.save(barrier));
         }
         orchestrationWorkflows = new ArrayList<>();
@@ -880,6 +882,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
       // this array is legacy, we always have just one item
       PipelineStageElement element = stage.getPipelineStageElements().get(0);
+      parallelIndex = element.getParallelIndex();
 
       if (element.isDisable()) {
         continue;
@@ -901,7 +904,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     if (!isEmpty(orchestrationWorkflows)) {
-      barrierService.obtainInstances(pipeline.getAppId(), orchestrationWorkflows, pipelineExecutionId)
+      barrierService.obtainInstances(pipeline.getAppId(), orchestrationWorkflows, pipelineExecutionId, parallelIndex)
           .forEach(barrier -> barrierService.save(barrier));
     }
   }
@@ -1250,6 +1253,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     stateExecutionInstance.setOrchestrationWorkflowType(workflowExecution.getOrchestrationType());
     stateExecutionInstance.setWorkflowId(workflowExecution.getWorkflowId());
     stateExecutionInstance.setPipelineStageElementId(executionArgs.getPipelinePhaseElementId());
+    stateExecutionInstance.setPipelineStageParallelIndex(executionArgs.getPipelinePhaseParallelIndex());
 
     if (workflowExecutionUpdate == null) {
       workflowExecutionUpdate = new WorkflowExecutionUpdate();
