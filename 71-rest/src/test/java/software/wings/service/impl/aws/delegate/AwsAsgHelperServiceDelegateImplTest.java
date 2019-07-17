@@ -28,7 +28,10 @@ import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationRequest
 import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationResult;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsResult;
 import com.amazonaws.services.autoscaling.model.DescribeLaunchConfigurationsResult;
+import com.amazonaws.services.autoscaling.model.DescribePoliciesResult;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
+import com.amazonaws.services.autoscaling.model.PutScalingPolicyResult;
+import com.amazonaws.services.autoscaling.model.ScalingPolicy;
 import com.amazonaws.services.autoscaling.model.SetDesiredCapacityResult;
 import com.amazonaws.services.autoscaling.model.TagDescription;
 import com.amazonaws.services.ec2.model.Instance;
@@ -354,5 +357,54 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
     assertThat(data.getAsgMax()).isEqualTo(3);
     assertThat(data.getAsgMin()).isEqualTo(0);
     assertThat(data.getAsgDesired()).isEqualTo(1);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetScalingPolicyJSONs() {
+    AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
+    doReturn(mockClient).when(awsAsgHelperServiceDelegate).getAmazonAutoScalingClient(any(), any());
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    doReturn(new DescribePoliciesResult().withScalingPolicies(new ScalingPolicy().withPolicyName("policy")))
+        .when(mockClient)
+        .describePolicies(any());
+    List<String> jSONs = awsAsgHelperServiceDelegate.getScalingPolicyJSONs(
+        AwsConfig.builder().build(), emptyList(), "us-east-1", "asg", mockCallback);
+    assertThat(jSONs).isNotNull();
+    assertThat(jSONs.size()).isEqualTo(1);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testClearAllScalingPoliciesForAsg() {
+    AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
+    doReturn(mockClient).when(awsAsgHelperServiceDelegate).getAmazonAutoScalingClient(any(), any());
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    doReturn(new DescribePoliciesResult().withScalingPolicies(new ScalingPolicy().withPolicyName("policy")))
+        .when(mockClient)
+        .describePolicies(any());
+    awsAsgHelperServiceDelegate.clearAllScalingPoliciesForAsg(
+        AwsConfig.builder().build(), emptyList(), "us-east-1", "asg", mockCallback);
+    verify(mockClient).deletePolicy(any());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testAttachScalingPoliciesToAsg() {
+    AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
+    doReturn(mockClient).when(awsAsgHelperServiceDelegate).getAmazonAutoScalingClient(any(), any());
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    doReturn(new PutScalingPolicyResult().withPolicyARN("arn")).when(mockClient).putScalingPolicy(any());
+    awsAsgHelperServiceDelegate.attachScalingPoliciesToAsg(AwsConfig.builder().build(), emptyList(), "us-east-1", "asg",
+        singletonList(
+            "{\"autoScalingGroupName\":null,\"policyName\":\"policy\",\"policyARN\":null,\"policyType\":null,\"adjustmentType\":null,\"minAdjustmentStep\":null,\"minAdjustmentMagnitude\":null,\"scalingAdjustment\":null,\"cooldown\":null,\"stepAdjustments\":[],\"metricAggregationType\":null,\"estimatedInstanceWarmup\":null,\"alarms\":[],\"targetTrackingConfiguration\":null}"),
+        mockCallback);
+    verify(mockClient).putScalingPolicy(any());
   }
 }

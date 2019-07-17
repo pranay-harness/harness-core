@@ -38,6 +38,7 @@ public class AmiServiceSetupElement implements ContextElement {
   private AwsAmiPreDeploymentData preDeploymentData;
   private boolean blueGreen;
   private ResizeStrategy resizeStrategy;
+  private List<String> baseScalingPolicyJSONs;
 
   @Override
   public ContextElementType getElementType() {

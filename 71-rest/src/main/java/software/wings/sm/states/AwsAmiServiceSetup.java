@@ -152,6 +152,7 @@ public class AwsAmiServiceSetup extends State {
         AmiServiceSetupElement.builder()
             .newAutoScalingGroupName(amiServiceSetupResponse.getNewAsgName())
             .oldAutoScalingGroupName(amiServiceSetupResponse.getLastDeployedAsgName())
+            .baseScalingPolicyJSONs(amiServiceSetupResponse.getBaseAsgScalingPolicyJSONs())
             .minInstances(amiServiceSetupResponse.getMinInstances())
             .maxInstances(amiServiceSetupResponse.getMaxInstances())
             .desiredInstances(amiServiceSetupResponse.getDesiredInstances())
