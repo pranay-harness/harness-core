@@ -150,7 +150,6 @@ import software.wings.sm.states.RepeatState;
 import software.wings.sm.states.ResourceConstraintState;
 import software.wings.sm.states.RollingNodeSelectState;
 import software.wings.sm.states.ShellScriptState;
-import software.wings.sm.states.SplunkState;
 import software.wings.sm.states.SplunkV2State;
 import software.wings.sm.states.StackDriverLogState;
 import software.wings.sm.states.StackDriverState;
@@ -274,11 +273,6 @@ public enum StateType implements StateTypeDescriptor {
    * Prometheus state type.
    */
   PROMETHEUS(PrometheusState.class, VERIFICATIONS, 6, asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
-
-  /**
-   * Splunk state type.
-   */
-  SPLUNK(SplunkState.class, VERIFICATIONS, 7, asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Splunk V2 state type.
