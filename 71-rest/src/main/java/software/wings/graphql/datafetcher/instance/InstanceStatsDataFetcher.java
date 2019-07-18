@@ -19,10 +19,10 @@ import software.wings.graphql.datafetcher.RealTimeStatsDataFetcher;
 import software.wings.graphql.schema.type.aggregation.QLAggregatedData;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLDataPoint;
+import software.wings.graphql.schema.type.aggregation.QLNoOpAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.QLSinglePointData;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
-import software.wings.graphql.schema.type.aggregation.instance.QLInstanceAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceAggregation;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceFilter;
 import software.wings.graphql.utils.nameservice.NameService;
@@ -30,31 +30,39 @@ import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.FlatE
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
-public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLInstanceAggregateFunction, QLInstanceFilter,
+public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOpAggregateFunction, QLInstanceFilter,
     QLInstanceAggregation, QLTimeSeriesAggregation, QLNoOpSortCriteria> {
   @Inject private WingsPersistence wingsPersistence;
   @Inject InstanceTimeSeriesDataHelper timeSeriesDataHelper;
   @Inject InstanceQueryHelper instanceMongoHelper;
 
   @Override
-  protected QLData fetch(String accountId, QLInstanceAggregateFunction aggregateFunction,
-      List<QLInstanceFilter> filters, List<QLInstanceAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
-      List<QLNoOpSortCriteria> sortCriteria) {
+  protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction, List<QLInstanceFilter> filters,
+      List<QLInstanceAggregation> groupBy, QLTimeSeriesAggregation groupByTime, List<QLNoOpSortCriteria> sortCriteria) {
     if (groupByTime != null) {
       if (isNotEmpty(groupBy)) {
         if (groupBy.size() == 1) {
-          return timeSeriesDataHelper.getTimeSeriesAggregatedData(
-              accountId, aggregateFunction, filters, groupByTime, groupBy.get(0));
+          return timeSeriesDataHelper.getTimeSeriesAggregatedData(accountId, filters, groupByTime, groupBy.get(0));
         } else {
           throw new WingsException("Invalid query. Only one groupBy column allowed");
         }
       } else {
-        return timeSeriesDataHelper.getTimeSeriesData(accountId, aggregateFunction, filters, groupByTime);
+        return timeSeriesDataHelper.getTimeSeriesData(accountId, filters, groupByTime);
       }
 
     } else {
+      if (isNotEmpty(filters)) {
+        Optional<QLInstanceFilter> timeFilter =
+            filters.stream().filter(filter -> filter.getCreatedAt() != null).findFirst();
+        if (timeFilter.isPresent()) {
+          throw new WingsException(
+              "Time Filter is only supported for time series data(grouped by time)", WingsException.USER);
+        }
+      }
+
       Query<Instance> query = wingsPersistence.createQuery(Instance.class);
       query.filter("accountId", accountId);
       query.filter("isDeleted", false);

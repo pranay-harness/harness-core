@@ -276,11 +276,6 @@ public interface Constants {
   String WINDOWS_RUNTIME_PATH = "WINDOWS_RUNTIME_PATH";
 
   /**
-   * The constant ACTIVITY_ID.
-   */
-  String ACTIVITY_ID = "activityId";
-
-  /**
    * The constant RESUMED_COLOR.
    */
   String RESUMED_COLOR = "#1DAEE2";

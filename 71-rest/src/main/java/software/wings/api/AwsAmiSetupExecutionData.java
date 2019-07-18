@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.beans.ResizeStrategy;
-import software.wings.common.Constants;
 import software.wings.sm.StateExecutionData;
 
 import java.util.Map;
@@ -29,6 +28,7 @@ public class AwsAmiSetupExecutionData extends StateExecutionData implements Resp
   private Integer maxInstances;
   private ResizeStrategy resizeStrategy;
   private String activityId;
+  private static final String ACTIVITY_ID = "activityId";
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
@@ -48,8 +48,8 @@ public class AwsAmiSetupExecutionData extends StateExecutionData implements Resp
         ExecutionDataValue.builder().displayName("Desired Capacity").value(maxInstances).build());
     putNotNull(executionDetails, "oldAutoScalingGroupName",
         ExecutionDataValue.builder().displayName("Old ASG Name").value(oldAutoScalingGroupName).build());
-    putNotNull(executionDetails, Constants.ACTIVITY_ID,
-        ExecutionDataValue.builder().displayName(Constants.ACTIVITY_ID).value(activityId).build());
+    putNotNull(
+        executionDetails, ACTIVITY_ID, ExecutionDataValue.builder().displayName(ACTIVITY_ID).value(activityId).build());
     return executionDetails;
   }
 }
