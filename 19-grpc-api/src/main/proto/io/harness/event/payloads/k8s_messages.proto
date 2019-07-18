@@ -3,15 +3,53 @@ syntax = "proto3";
 package io.harness.event.payloads;
 option java_multiple_files = true;
 
-message K8sPodInfo {
-  string pod_name = 1;
+
+message Container{
+
+  message Resource {
+    message Quantity {
+      string amount = 1;
+      string format = 2;
+    }
+    map<string, Quantity> requests = 1;
+    map<string, Quantity> limits = 2;
+  }
+
+  string name = 1;
+  string image = 2;
+  Resource resource = 3;
 }
 
-message K8sPodLifecycle {
+
+message Owner {
+  string uid = 1;
+  string kind = 2;
+  string name = 3;
 }
 
-message K8sNodeInfo {
+message PodInfo {
+
+  string uid = 1;
+  string name = 2;
+  string namespace = 3;
+  string node_name = 4;
+  string creation_timestamp = 5;
+
+  // label without value is invalid
+  map<string,string> labels = 6;
+  repeated Owner owner = 8;
+  Owner top_level_owner = 9;
+
+  repeated Container containers = 7;
+
 }
 
-message K8sNodeLifecycle {
+message PodEvent {
+  string uid = 1;
+  enum EventType {
+    DELETED = 0;
+    SCHEDULED = 1;
+  }
+  EventType type = 2;
+  string timestamp = 3;
 }

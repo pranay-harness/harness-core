@@ -162,10 +162,6 @@ public interface Constants {
   int DEFAULT_STEADY_STATE_TIMEOUT = 10;
 
   /**
-   * The constant URL.
-   */
-  String URL = "url";
-  /**
    * The constant LAST_UPDATED_AT.
    */
   String LAST_UPDATED_AT = "lastUpdatedAt";

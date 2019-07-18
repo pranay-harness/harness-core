@@ -41,7 +41,6 @@ import software.wings.beans.artifact.EcrArtifactStream;
 import software.wings.beans.artifact.GcrArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
-import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.ArtifactCollectionService;
@@ -50,6 +49,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.utils.WingsTestConstants;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -145,7 +145,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
 
   private BuildDetails getS3BuildDetails() {
     Map<String, String> map = new HashMap<>();
-    map.put(Constants.URL, "https://s3.amazonaws.com/harness-catalogs/appstack/apache-tomcat-8.5.15.tar.gz");
+    map.put(WingsTestConstants.URL, "https://s3.amazonaws.com/harness-catalogs/appstack/apache-tomcat-8.5.15.tar.gz");
     map.put(ArtifactMetadataKeys.buildNo, "appstack/apache-tomcat-8.5.15.tar.gz");
     map.put(ArtifactMetadataKeys.bucketName, "harness-catalogs");
     map.put(ArtifactMetadataKeys.artifactPath, "appstack/apache-tomcat-8.5.15.tar.gz");

@@ -37,5 +37,6 @@ public class K8sTaskParameters implements TaskParameters, ExecutionCapabilityDem
     DELETE,
     TRAFFIC_SPLIT,
     APPLY,
+    ADD_WATCH,
   }
 }
