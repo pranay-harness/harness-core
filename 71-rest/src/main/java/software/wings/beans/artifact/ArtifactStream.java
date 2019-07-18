@@ -22,11 +22,11 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
-import software.wings.beans.KeywordsAware;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.config.ArtifactSourceable;
+import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.utils.Utils;
 import software.wings.yaml.BaseEntityYaml;
 

@@ -29,6 +29,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamBinding;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.utils.ArtifactType;
 import software.wings.yaml.BaseEntityYaml;
 

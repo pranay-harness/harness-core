@@ -25,6 +25,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Environment.EnvironmentKeys;
+import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;

@@ -21,7 +21,7 @@ import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
-import software.wings.beans.entityinterface.AppIdAware;
+import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.intfc.AppService;
@@ -74,7 +74,7 @@ public class HarnessTagYamlHelper {
     }
 
     String accountId = changeContext.getChange().getAccountId();
-    String appId = ((AppIdAware) entity).getAppId();
+    String appId = ((ApplicationAccess) entity).getAppId();
     if (isEmpty(appId)) {
       appId = GLOBAL_APP_ID;
     }
