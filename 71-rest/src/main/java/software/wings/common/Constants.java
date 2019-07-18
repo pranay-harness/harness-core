@@ -335,8 +335,6 @@ public interface Constants {
   String WINDOWS_HOME_DIR = "%USERPROFILE%";
 
   String ROUTE_UPDATE_ROLLBACK_REQUEST_PARAM = "ROUTE_UPDATE_ROLLBACK_REQUEST_PARAM";
-
-  int YAML_MAX_PARALLEL_COUNT = 20;
   /**
    * Template VAR description
    */

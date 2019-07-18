@@ -85,7 +85,6 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
-import software.wings.common.Constants;
 import software.wings.exception.YamlProcessingException;
 import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
 import software.wings.service.impl.yaml.HarnessTagYamlHelper;
@@ -139,6 +138,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   private static final Set<YamlType> rbacUpdateYamlTypes =
       Sets.newHashSet(YamlType.ENVIRONMENT, YamlType.WORKFLOW, YamlType.PIPELINE);
   private static final Set<YamlType> rbacDeleteYamlTypes = Sets.newHashSet(YamlType.APPLICATION, YamlType.ENVIRONMENT);
+
+  private static final int YAML_MAX_PARALLEL_COUNT = 20;
 
   @Inject private YamlHandlerFactory yamlHandlerFactory;
 
@@ -483,7 +484,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         previousChangeType = changeContext.getChange().getChangeType();
       }
 
-      if (previousYamlType != yamlType || (++numOfParallelChanges == Constants.YAML_MAX_PARALLEL_COUNT)) {
+      if (previousYamlType != yamlType || (++numOfParallelChanges == YAML_MAX_PARALLEL_COUNT)) {
         checkFuturesAndEvictCache(futures, previousYamlType, accountId, previousChangeType);
         previousYamlType = yamlType;
         previousChangeType = changeType;
