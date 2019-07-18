@@ -279,6 +279,11 @@ public interface WingsTestConstants {
   String JIRA_ISSUE_ID = "JIRA_ISSUE_ID";
   String APPROVAL_EXECUTION_ID = "APPROVAL_EXECUTION_ID";
 
+  /**
+   * The constant URL.
+   */
+  String URL = "url";
+
   static StaticLimitCheckerWithDecrement mockChecker() {
     return new StaticLimitCheckerWithDecrement() {
       @Override

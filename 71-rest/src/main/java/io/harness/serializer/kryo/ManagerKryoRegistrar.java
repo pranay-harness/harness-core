@@ -1305,5 +1305,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(DeploymentConfiguration.class, 7211);
     kryo.register(ServiceNowImportSetResponse.class, 7212);
     kryo.register(ServiceNowImportSetResult.class, 7213);
+    kryo.register(software.wings.helpers.ext.k8s.response.K8sAddWatchResponse.class, 7214);
   }
 }
