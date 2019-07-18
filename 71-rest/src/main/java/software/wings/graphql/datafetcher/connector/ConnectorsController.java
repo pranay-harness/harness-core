@@ -3,16 +3,34 @@ package software.wings.graphql.datafetcher.connector;
 import io.harness.exception.WingsException;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.user.UserController;
+import software.wings.graphql.schema.type.connector.QLAmazonS3Connector;
+import software.wings.graphql.schema.type.connector.QLApmVerificationConnector;
+import software.wings.graphql.schema.type.connector.QLAppDynamicsConnector;
+import software.wings.graphql.schema.type.connector.QLArtifactoryConnector;
+import software.wings.graphql.schema.type.connector.QLBambooConnector;
+import software.wings.graphql.schema.type.connector.QLBugSnagConnector;
 import software.wings.graphql.schema.type.connector.QLConnectorBuilder;
+import software.wings.graphql.schema.type.connector.QLDataDogConnector;
 import software.wings.graphql.schema.type.connector.QLDockerConnector;
+import software.wings.graphql.schema.type.connector.QLDynaTraceConnector;
+import software.wings.graphql.schema.type.connector.QLECRConnector;
+import software.wings.graphql.schema.type.connector.QLElbConnector;
+import software.wings.graphql.schema.type.connector.QLElkConnector;
+import software.wings.graphql.schema.type.connector.QLGCRConnector;
+import software.wings.graphql.schema.type.connector.QLGCSConnector;
+import software.wings.graphql.schema.type.connector.QLGitConnector;
+import software.wings.graphql.schema.type.connector.QLJenkinsConnector;
 import software.wings.graphql.schema.type.connector.QLJiraConnector;
-import software.wings.graphql.schema.type.connector.QLJiraConnector.QLJiraConnectorBuilder;
+import software.wings.graphql.schema.type.connector.QLLogzConnector;
+import software.wings.graphql.schema.type.connector.QLNewRelicConnector;
+import software.wings.graphql.schema.type.connector.QLNexusConnector;
+import software.wings.graphql.schema.type.connector.QLPrometheusConnector;
 import software.wings.graphql.schema.type.connector.QLServiceNowConnector;
-import software.wings.graphql.schema.type.connector.QLServiceNowConnector.QLServiceNowConnectorBuilder;
+import software.wings.graphql.schema.type.connector.QLSftpConnector;
 import software.wings.graphql.schema.type.connector.QLSlackConnector;
-import software.wings.graphql.schema.type.connector.QLSlackConnector.QLSlackConnectorBuilder;
 import software.wings.graphql.schema.type.connector.QLSmtpConnector;
-import software.wings.graphql.schema.type.connector.QLSmtpConnector.QLSmtpConnectorBuilder;
+import software.wings.graphql.schema.type.connector.QLSplunkConnector;
+import software.wings.graphql.schema.type.connector.QLSumoConnector;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 public class ConnectorsController {
@@ -37,33 +55,54 @@ public class ConnectorsController {
         return QLSlackConnector.builder();
       case DOCKER:
         return QLDockerConnector.builder();
+      case JENKINS:
+        return QLJenkinsConnector.builder();
+      case BAMBOO:
+        return QLBambooConnector.builder();
+      case SPLUNK:
+        return QLSplunkConnector.builder();
+      case ELK:
+        return QLElkConnector.builder();
+      case LOGZ:
+        return QLLogzConnector.builder();
+      case SUMO:
+        return QLSumoConnector.builder();
+      case APP_DYNAMICS:
+        return QLAppDynamicsConnector.builder();
+      case NEW_RELIC:
+        return QLNewRelicConnector.builder();
+      case DYNA_TRACE:
+        return QLDynaTraceConnector.builder();
+      case BUG_SNAG:
+        return QLBugSnagConnector.builder();
+      case DATA_DOG:
+        return QLDataDogConnector.builder();
+      case APM_VERIFICATION:
+        return QLApmVerificationConnector.builder();
+      case PROMETHEUS:
+        return QLPrometheusConnector.builder();
+      case ELB:
+        return QLElbConnector.builder();
+      case ECR:
+        return QLECRConnector.builder();
+      case GCR:
+        return QLGCRConnector.builder();
+      case NEXUS:
+        return QLNexusConnector.builder();
+      case ARTIFACTORY:
+        return QLArtifactoryConnector.builder();
+      case AMAZON_S3:
+        return QLAmazonS3Connector.builder();
+      case GCS:
+        return QLGCSConnector.builder();
+      case GIT:
+        return QLGitConnector.builder();
+      case SMB:
+        return QLSmtpConnector.builder();
+      case SFTP:
+        return QLSftpConnector.builder();
       default:
         throw new WingsException("Unsupported Connector " + settingType);
     }
-  }
-
-  public static QLJiraConnector prepareJiraConfig(SettingAttribute settingAttribute) {
-    QLJiraConnectorBuilder qlJiraConnectorBuilder = QLJiraConnector.builder();
-    ConnectorsController.populateConnector(settingAttribute, qlJiraConnectorBuilder);
-
-    return qlJiraConnectorBuilder.build();
-  }
-  public static QLServiceNowConnector prepareServiceNowConfig(SettingAttribute settingAttribute) {
-    QLServiceNowConnectorBuilder qlServiceNowConnectorBuilder = QLServiceNowConnector.builder();
-    ConnectorsController.populateConnector(settingAttribute, qlServiceNowConnectorBuilder);
-
-    return qlServiceNowConnectorBuilder.build();
-  }
-  public static QLSmtpConnector prepareSmtpConfig(SettingAttribute settingAttribute) {
-    QLSmtpConnectorBuilder qlSmtpConnectorBuilder = QLSmtpConnector.builder();
-    ConnectorsController.populateConnector(settingAttribute, qlSmtpConnectorBuilder);
-
-    return qlSmtpConnectorBuilder.build();
-  }
-  public static QLSlackConnector prepareSlackConfig(SettingAttribute settingAttribute) {
-    QLSlackConnectorBuilder qlSlackConnectorBuilder = QLSlackConnector.builder();
-    ConnectorsController.populateConnector(settingAttribute, qlSlackConnectorBuilder);
-
-    return qlSlackConnectorBuilder.build();
   }
 }
