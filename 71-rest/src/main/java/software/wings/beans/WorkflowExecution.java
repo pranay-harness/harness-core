@@ -35,6 +35,7 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionArgs.ExecutionArgsKeys;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateMachine;
 

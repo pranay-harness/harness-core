@@ -24,8 +24,8 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
-import software.wings.beans.KeywordsAware;
 import software.wings.beans.Variable;
+import software.wings.beans.entityinterface.KeywordsAware;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;

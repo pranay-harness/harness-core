@@ -1,4 +1,4 @@
-package software.wings.beans;
+package software.wings.beans.entityinterface;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.persistence.CreatedByAccess;
