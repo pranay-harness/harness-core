@@ -49,10 +49,14 @@ public class HarnessTagLink
     implements PersistentEntity, UuidAware, UpdatedAtAware, UpdatedByAware, CreatedAtAware, CreatedByAware {
   @Id private String uuid;
   @NotEmpty private String accountId;
+  @NotEmpty private String appId;
   @NotEmpty private String key;
   private String value;
   @NotEmpty private EntityType entityType;
   @NotEmpty private String entityId;
+
+  private transient String appName;
+  private transient String entityName;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private EmbeddedUser createdBy;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private long createdAt;

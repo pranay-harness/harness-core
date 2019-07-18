@@ -50,6 +50,7 @@ import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.ecs.ECSPollingJobEntity;
+import software.wings.beans.entityinterface.AppIdAware;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.TerraformConfig;
@@ -202,7 +203,7 @@ public class ManagerMorphiaClasses {
       KmsLegacyConfig.class, AwsSecretsManagerLegacyConfig.class, LocalEncryptionConfig.class, ResourceLookup.class,
       LoginSettings.class, GCPUsageReport.class, GCPBillingJobEntity.class, DashboardSettings.class,
       InfrastructureDefinition.class, GcpMarketplaceEvent.class, SupervisedTSThreshold.class, TimeSeriesRawData.class,
-      AzureVaultConfig.class, ECSPollingJobEntity.class, PublishedMessage.class);
+      AzureVaultConfig.class, ECSPollingJobEntity.class, PublishedMessage.class, AppIdAware.class);
 
   public static final Set<Class> dependentClasses =
       ImmutableSet.<Class>of(EncryptionConfig.class, EncryptedRecord.class, ExecutionCapabilityDemander.class);

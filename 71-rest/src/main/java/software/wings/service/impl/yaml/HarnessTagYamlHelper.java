@@ -21,6 +21,7 @@ import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
+import software.wings.beans.entityinterface.AppIdAware;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.intfc.AppService;
@@ -73,6 +74,10 @@ public class HarnessTagYamlHelper {
     }
 
     String accountId = changeContext.getChange().getAccountId();
+    String appId = ((AppIdAware) entity).getAppId();
+    if (isEmpty(appId)) {
+      appId = GLOBAL_APP_ID;
+    }
 
     BaseEntityYaml yaml = (BaseEntityYaml) changeContext.getYaml();
     Map<String, String> tagsFromYaml = yaml.getHarnessTags();
@@ -118,6 +123,7 @@ public class HarnessTagYamlHelper {
 
       HarnessTagLink harnessTagLink = HarnessTagLink.builder()
                                           .accountId(accountId)
+                                          .appId(appId)
                                           .entityId(entityId)
                                           .entityType(entityType)
                                           .key(tagKey)
