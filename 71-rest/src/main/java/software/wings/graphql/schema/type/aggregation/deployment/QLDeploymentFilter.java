@@ -3,6 +3,7 @@ package software.wings.graphql.schema.type.aggregation.deployment;
 import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.ToString;
+import lombok.Value;
 import software.wings.graphql.schema.type.aggregation.EntityFilter;
 import software.wings.graphql.schema.type.aggregation.Filter;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
@@ -13,6 +14,7 @@ import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import java.util.HashSet;
 import java.util.Set;
 
+@Value
 @Builder
 @ToString
 public class QLDeploymentFilter implements EntityFilter {
@@ -32,7 +34,6 @@ public class QLDeploymentFilter implements EntityFilter {
    *   Pipeline(DeploymentMetaDataFields.PIPELINEID);
    */
 
-  private Set<QLDeploymentFilterType> filterTypes;
   private QLIdFilter application;
   private QLIdFilter service;
   private QLIdFilter cloudProvider;
@@ -47,102 +48,52 @@ public class QLDeploymentFilter implements EntityFilter {
   private QLIdFilter workflow;
   private QLIdFilter pipeline;
 
-  public QLIdFilter getApplication() {
-    if (application != null) {
-      getFilterTypes().add(QLDeploymentFilterType.Application);
+  public static Set<QLDeploymentFilterType> getFilterTypes(QLDeploymentFilter filter) {
+    Set<QLDeploymentFilterType> filterTypes = new HashSet<>();
+    if (filter.getEnvironment() != null) {
+      filterTypes.add(QLDeploymentFilterType.Environment);
     }
-    return application;
-  }
+    if (filter.getEnvironmentType() != null) {
+      filterTypes.add(QLDeploymentFilterType.EnvironmentType);
+    }
 
-  public QLIdFilter getService() {
-    if (service != null) {
-      getFilterTypes().add(QLDeploymentFilterType.Service);
+    if (filter.getPipeline() != null) {
+      filterTypes.add(QLDeploymentFilterType.Pipeline);
     }
-    return service;
-  }
+    if (filter.getWorkflow() != null) {
+      filterTypes.add(QLDeploymentFilterType.Workflow);
+    }
+    if (filter.getTrigger() != null) {
+      filterTypes.add(QLDeploymentFilterType.Trigger);
+    }
+    if (filter.getTriggeredBy() != null) {
+      filterTypes.add(QLDeploymentFilterType.TriggeredBy);
+    }
+    if (filter.getDuration() != null) {
+      filterTypes.add(QLDeploymentFilterType.Duration);
+    }
+    if (filter.getStartTime() != null) {
+      filterTypes.add(QLDeploymentFilterType.StartTime);
+    }
+    if (filter.getEndTime() != null) {
+      filterTypes.add(QLDeploymentFilterType.EndTime);
+    }
+    if (filter.getStatus() != null) {
+      filterTypes.add(QLDeploymentFilterType.Status);
+    }
+    if (filter.getCloudProvider() != null) {
+      filterTypes.add(QLDeploymentFilterType.CloudProvider);
+    }
 
-  public QLIdFilter getCloudProvider() {
-    if (cloudProvider != null) {
-      getFilterTypes().add(QLDeploymentFilterType.CloudProvider);
+    if (filter.getService() != null) {
+      filterTypes.add(QLDeploymentFilterType.Service);
     }
-    return cloudProvider;
-  }
 
-  public QLStringFilter getStatus() {
-    if (status != null) {
-      getFilterTypes().add(QLDeploymentFilterType.Status);
+    if (filter.getApplication() != null) {
+      filterTypes.add(QLDeploymentFilterType.Application);
     }
-    return status;
-  }
 
-  public QLTimeFilter getEndTime() {
-    if (endTime != null) {
-      getFilterTypes().add(QLDeploymentFilterType.EndTime);
-    }
-    return endTime;
-  }
-
-  public QLTimeFilter getStartTime() {
-    if (startTime != null) {
-      getFilterTypes().add(QLDeploymentFilterType.StartTime);
-    }
-    return startTime;
-  }
-
-  public QLNumberFilter getDuration() {
-    if (duration != null) {
-      getFilterTypes().add(QLDeploymentFilterType.Duration);
-    }
-    return duration;
-  }
-
-  public QLIdFilter getTriggeredBy() {
-    if (triggeredBy != null) {
-      getFilterTypes().add(QLDeploymentFilterType.TriggeredBy);
-    }
-    return triggeredBy;
-  }
-
-  public QLIdFilter getTrigger() {
-    if (trigger != null) {
-      getFilterTypes().add(QLDeploymentFilterType.Trigger);
-    }
-    return trigger;
-  }
-
-  public QLIdFilter getWorkflow() {
-    if (workflow != null) {
-      getFilterTypes().add(QLDeploymentFilterType.Workflow);
-    }
-    return workflow;
-  }
-
-  public QLIdFilter getPipeline() {
-    if (pipeline != null) {
-      getFilterTypes().add(QLDeploymentFilterType.Pipeline);
-    }
-    return pipeline;
-  }
-
-  public QLIdFilter getEnvironment() {
-    if (environment != null) {
-      getFilterTypes().add(QLDeploymentFilterType.Environment);
-    }
-    return environment;
-  }
-
-  public Set<QLDeploymentFilterType> getFilterTypes() {
-    if (filterTypes == null) {
-      filterTypes = new HashSet<>();
-    }
     return filterTypes;
-  }
-
-  public QLStringFilter getEnvironmentType() {
-    if (environment != null) {
-      getFilterTypes().add(QLDeploymentFilterType.EnvironmentType);
-    }
-    return environmentType;
   }
 
   public static Filter getFilter(QLDeploymentFilterType type, QLDeploymentFilter filter) {

@@ -76,6 +76,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
@@ -517,7 +518,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
 
   private void decorateQueryWithFilters(SelectQuery selectQuery, List<QLDeploymentFilter> filters) {
     for (QLDeploymentFilter filter : filters) {
-      for (QLDeploymentFilterType type : filter.getFilterTypes()) {
+      Set<QLDeploymentFilterType> filterTypes = QLDeploymentFilter.getFilterTypes(filter);
+      for (QLDeploymentFilterType type : filterTypes) {
         if (type.getMetaDataFields().getFilterKind().equals(QLFilterKind.SIMPLE)) {
           decorateSimpleFilter(selectQuery, filter, type);
         } else if (type.getMetaDataFields().getFilterKind().equals(QLFilterKind.ARRAY)) {
@@ -534,10 +536,10 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
     QLTimeFilter timeFilter = (QLTimeFilter) filter;
     switch (timeFilter.getOperator()) {
       case BEFORE:
-        selectQuery.addCondition(BinaryCondition.lessThanOrEq(key, new Timestamp((Long) (filter.getValues()[0]))));
+        selectQuery.addCondition(BinaryCondition.lessThanOrEq(key, new Timestamp((Long) (timeFilter.getValue()))));
         break;
       case AFTER:
-        selectQuery.addCondition(BinaryCondition.greaterThanOrEq(key, new Timestamp((Long) (filter.getValues()[0]))));
+        selectQuery.addCondition(BinaryCondition.greaterThanOrEq(key, new Timestamp((Long) (timeFilter.getValue()))));
         break;
       default:
         throw new RuntimeException("Invalid TimeFilter operator: " + filter.getOperator());
