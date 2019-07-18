@@ -1,7 +1,6 @@
 package software.wings.integration;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.PRANJAL;
 import static javax.ws.rs.client.Entity.entity;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -16,13 +15,11 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.IntegrationTests;
-import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.SettingAttribute.Builder;
@@ -32,6 +29,7 @@ import software.wings.service.impl.splunk.SplunkSetupTestNodeData;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.StateType;
 
+import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -57,10 +55,10 @@ public class SplunkResourceIntegrationTest extends BaseIntegrationTest {
             .withName(generateUuid())
             .withAccountId(accountId)
             .withValue(SplunkConfig.builder()
-                           .splunkUrl("https://ec2-52-204-66-40.compute-1.amazonaws.com:8089")
-                           .username("admin")
-                           .password(scmSecret.decryptToCharArray(new SecretName("splunk_config_password")))
                            .accountId(accountId)
+                           .splunkUrl("https://input-prd-p-429h4vj2lsng.cloud.splunk.com:8089")
+                           .username(scmSecret.decryptToString(new SecretName("splunk_cloud_username")))
+                           .password(scmSecret.decryptToString(new SecretName("splunk_cloud_password")).toCharArray())
                            .build())
             .build());
 
@@ -79,9 +77,7 @@ public class SplunkResourceIntegrationTest extends BaseIntegrationTest {
    * Test to verify fetch Log Records based.
    */
   @Test
-  @Owner(emails = PRANJAL, intermittent = true)
   @Category(IntegrationTests.class)
-  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetLogRecordsWithQuery() {
     SplunkSetupTestNodeData setupTestNodeData = getSplunkSetupTestNodedata("*exception*");
     WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.SPLUNK_RESOURCE_BASE_URL
@@ -97,6 +93,8 @@ public class SplunkResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   private SplunkSetupTestNodeData getSplunkSetupTestNodedata(String query) {
+    long toTime = System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1);
+    long fromTime = toTime - TimeUnit.MINUTES.toMillis(20) / TimeUnit.SECONDS.toMillis(1);
     return SplunkSetupTestNodeData.builder()
         .query(query)
         .hostNameField("host")
@@ -122,6 +120,8 @@ public class SplunkResourceIntegrationTest extends BaseIntegrationTest {
                 .withWorkloadName("testHost")
                 .build())
         .hostExpression("${host.hostName}")
+        .toTime(toTime)
+        .fromTime(fromTime)
         .workflowId(workflowId)
         .build();
   }

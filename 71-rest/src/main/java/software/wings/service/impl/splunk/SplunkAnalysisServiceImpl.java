@@ -26,6 +26,7 @@ import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.sm.StateType;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Pranjal on 08/31/2018
@@ -37,6 +38,8 @@ public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements Sp
   @Override
   public VerificationNodeDataSetupResponse getLogDataByHost(
       String accountId, SplunkSetupTestNodeData setupTestNodeData) {
+    long startTime = TimeUnit.SECONDS.toMillis(setupTestNodeData.getFromTime());
+    long endTime = TimeUnit.SECONDS.toMillis(setupTestNodeData.getToTime());
     logger.info("Starting Log Data collection by Host for account Id : {}, SplunkSetupTestNodeData : {}", accountId,
         setupTestNodeData);
 
@@ -56,9 +59,8 @@ public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements Sp
     List<LogElement> responseWithoutHost =
         delegateProxyFactory.get(SplunkDelegateService.class, taskContext)
             .getLogResults((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails,
-                setupTestNodeData.getQuery(), setupTestNodeData.getHostNameField(), null,
-                setupTestNodeData.getFromTime(), setupTestNodeData.getToTime(), apiCallLog, 0,
-                setupTestNodeData.isAdvancedQuery());
+                setupTestNodeData.getQuery(), setupTestNodeData.getHostNameField(), null, startTime, endTime,
+                apiCallLog, 0, setupTestNodeData.isAdvancedQuery());
     if (isEmpty(responseWithoutHost)) {
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
@@ -66,13 +68,22 @@ public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements Sp
           .build();
     }
 
+    if (setupTestNodeData.isServiceLevel()) {
+      return VerificationNodeDataSetupResponse.builder()
+          .providerReachable(true)
+          .loadResponse(VerificationLoadResponse.builder()
+                            .isLoadPresent(!responseWithoutHost.isEmpty())
+                            .loadResponse(responseWithoutHost)
+                            .build())
+          .build();
+    }
+
     String hostName = mlServiceUtils.getHostNameFromExpression(setupTestNodeData);
     List<LogElement> responseWithHost =
         delegateProxyFactory.get(SplunkDelegateService.class, taskContext)
             .getLogResults((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails,
-                setupTestNodeData.getQuery(), setupTestNodeData.getHostNameField(), hostName,
-                setupTestNodeData.getFromTime(), setupTestNodeData.getToTime(), apiCallLog, 0,
-                setupTestNodeData.isAdvancedQuery());
+                setupTestNodeData.getQuery(), setupTestNodeData.getHostNameField(), hostName, startTime, endTime,
+                apiCallLog, 0, setupTestNodeData.isAdvancedQuery());
 
     return VerificationNodeDataSetupResponse.builder()
         .providerReachable(true)
