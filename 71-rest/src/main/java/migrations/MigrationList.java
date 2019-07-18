@@ -10,7 +10,6 @@ import migrations.all.AddInstanceStatsCollectionJobToAllAccounts;
 import migrations.all.AddLimitVicinityCheckJobToAllAccounts;
 import migrations.all.AddLoginSettingsToAccountMigration;
 import migrations.all.AddReplCtrlNameToKubeSetupProperties;
-import migrations.all.AddTagManagementPermissionToAdminUserGroup;
 import migrations.all.AddTemplateMgmtPermissionToAdminUserGroup;
 import migrations.all.AddValidUntilToActivity;
 import migrations.all.AddValidUntilToAlert;
@@ -264,7 +263,7 @@ public class MigrationList {
         .add(Pair.of(267, LimitCounterAccountIdMigration.class))
         .add(Pair.of(268, UpdatePipelineParallelIndexes.class))
         .add(Pair.of(269, AddDuplicateFieldToCVFeedbacks.class))
-        .add(Pair.of(270, AddTagManagementPermissionToAdminUserGroup.class))
+        .add(Pair.of(270, BaseMigration.class))
         .build();
   }
 }
