@@ -6,16 +6,15 @@ extend type Query {
     @dataFetcher(name: environmentConnection)
 }
 
-enum EnvironmentFilterType {
-  Application
-  Environment
-  EnvironmentType
-}
-
 input EnvironmentFilter {
   application: IdFilter
   environment: IdFilter
-  environmentType: EnvironmentType
+  environmentType: EnvironmentTypeFilter
+}
+
+input EnvironmentTypeFilter {
+  operator: EnumOperator
+  values: [EnvironmentType]
 }
 
 type Environment {

@@ -10,16 +10,6 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
-import static software.wings.common.Constants.APPD_APP_VAR_DESC;
-import static software.wings.common.Constants.APPD_SERVER_VAR_DESC;
-import static software.wings.common.Constants.APPD_TIER_VAR_DESC;
-import static software.wings.common.Constants.CF_AWSCONFIG_VAR_DESC;
-import static software.wings.common.Constants.ELK_INDICES_VAR_DESC;
-import static software.wings.common.Constants.ELK_SERVER_VAR_DESC;
-import static software.wings.common.Constants.ENV_VAR_DESC;
-import static software.wings.common.Constants.HELM_GITCONFIG_VAR_DESC;
-import static software.wings.common.Constants.SERVICE_INFRA_VAR_DESC;
-import static software.wings.common.Constants.SERVICE_VAR_DESC;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -55,6 +45,17 @@ import java.util.regex.Matcher;
 
 @Singleton
 public class WorkflowServiceTemplateHelper {
+  private static final String ENV_VAR_DESC = "Variable for Environment entity";
+  private static final String SERVICE_VAR_DESC = "Variable for Service entity";
+  private static final String SERVICE_INFRA_VAR_DESC = "Variable for Service Infra-structure entity";
+  private static final String APPD_SERVER_VAR_DESC = "Variable for AppDynamics Server entity";
+  private static final String APPD_APP_VAR_DESC = "Variable for AppDynamics Application entity";
+  private static final String APPD_TIER_VAR_DESC = "Variable for AppDynamics Tier entity";
+  private static final String ELK_SERVER_VAR_DESC = "Variable for Elastic Search Server entity";
+  private static final String ELK_INDICES_VAR_DESC = "Variable for Elastic Search Indices entity";
+  private static final String CF_AWSCONFIG_VAR_DESC = "Variable for CloudFormation AWS Config entity";
+  private static final String HELM_GITCONFIG_VAR_DESC = "Variable for Helm Git Config entity";
+
   @Inject private TemplateService templateService;
   @Inject private TemplateHelper templateHelper;
 

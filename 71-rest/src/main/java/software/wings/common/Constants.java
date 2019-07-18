@@ -335,19 +335,6 @@ public interface Constants {
   String WINDOWS_HOME_DIR = "%USERPROFILE%";
 
   String ROUTE_UPDATE_ROLLBACK_REQUEST_PARAM = "ROUTE_UPDATE_ROLLBACK_REQUEST_PARAM";
-  /**
-   * Template VAR description
-   */
-  String ENV_VAR_DESC = "Variable for Environment entity";
-  String SERVICE_VAR_DESC = "Variable for Service entity";
-  String SERVICE_INFRA_VAR_DESC = "Variable for Service Infra-structure entity";
-  String APPD_SERVER_VAR_DESC = "Variable for AppDynamics Server entity";
-  String APPD_APP_VAR_DESC = "Variable for AppDynamics Application entity";
-  String APPD_TIER_VAR_DESC = "Variable for AppDynamics Tier entity";
-  String ELK_SERVER_VAR_DESC = "Variable for Elastic Search Server entity";
-  String ELK_INDICES_VAR_DESC = "Variable for Elastic Search Indices entity";
-  String CF_AWSCONFIG_VAR_DESC = "Variable for CloudFormation AWS Config entity";
-  String HELM_GITCONFIG_VAR_DESC = "Variable for Helm Git Config entity";
 
   String DEPLOYMENT_TRIGGERED_BY = "deploymentTriggeredBy";
   long ARTIFACT_FILE_SIZE_LIMIT = 4L * 1024L * 1024L * 1024L; // 4GB

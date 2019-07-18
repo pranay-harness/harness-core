@@ -18,8 +18,11 @@ import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.graphql.directive.DataFetcherDirective.DataFetcherDirectiveAttributes;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
+import software.wings.graphql.schema.type.QLEnum;
 import software.wings.graphql.schema.type.QLPageInfo;
 import software.wings.graphql.schema.type.QLPageInfo.QLPageInfoBuilder;
+import software.wings.graphql.schema.type.aggregation.Filter;
+import software.wings.graphql.schema.type.aggregation.QLEnumOperator;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
@@ -31,7 +34,9 @@ import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Singleton
 public class DataFetcherUtils {
@@ -151,6 +156,43 @@ public class DataFetcherUtils {
         break;
       default:
         throw new WingsException("Unknown Id operator " + operator);
+    }
+  }
+
+  public void setEnumFilter(FieldEnd<? extends Query<?>> field, Filter filter) {
+    if (filter == null) {
+      return;
+    }
+
+    QLEnumOperator operator = (QLEnumOperator) filter.getOperator();
+    if (operator == null) {
+      throw new WingsException("Enum Operator cannot be null");
+    }
+
+    if (isEmpty(filter.getValues())) {
+      throw new WingsException("Enum values cannot be empty");
+    }
+
+    if (!(filter.getValues() instanceof QLEnum[])) {
+      throw new WingsException("Incompatible enum filter value");
+    }
+
+    QLEnum[] values = (QLEnum[]) filter.getValues();
+
+    List<String> enumValueList =
+        Arrays.stream(values).map(value -> value.getStringValue()).collect(Collectors.toList());
+    switch (operator) {
+      case IN:
+        field.in(enumValueList);
+        break;
+      case EQUALS:
+        if (enumValueList.size() > 1) {
+          throw new WingsException("Only one value needs to be inputted for operator EQUALS");
+        }
+        field.equal(enumValueList.get(0));
+        break;
+      default:
+        throw new WingsException("Unknown Enum operator " + operator);
     }
   }
 

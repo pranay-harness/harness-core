@@ -9,8 +9,22 @@ extend type Query {
 
 input CloudProviderFilter {
   cloudProvider: IdFilter
-  cloudProviderType: StringFilter
+  cloudProviderType: CloudProviderTypeFilter
   createdAt: TimeFilter
+}
+
+input CloudProviderTypeFilter {
+  operator: EnumOperator
+  values: [CloudProviderType]
+}
+
+enum CloudProviderType {
+  AWS
+  PHYSICAL_DATA_CENTER
+  AZURE
+  GCP
+  KUBERNETES
+  PCF
 }
 
 interface CloudProvider {

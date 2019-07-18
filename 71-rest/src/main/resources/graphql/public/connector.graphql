@@ -8,8 +8,21 @@ extend type Query {
 
 input ConnectorFilter {
   connector: IdFilter
-  connectorType: StringFilter
+  connectorType: ConnectorTypeFilter
   createdAt: TimeFilter
+}
+
+input ConnectorTypeFilter {
+  operator: EnumOperator
+  values: [ConnectorType]
+}
+
+enum ConnectorType {
+  JIRA
+  SLACK
+  SMTP
+  SERVICENOW
+  DOCKER
 }
 
 interface Connector {

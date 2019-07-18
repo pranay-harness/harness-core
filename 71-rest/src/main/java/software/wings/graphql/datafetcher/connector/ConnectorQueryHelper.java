@@ -10,9 +10,9 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
-import software.wings.graphql.schema.type.aggregation.QLStringFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.connector.QLConnectorFilter;
+import software.wings.graphql.schema.type.aggregation.connector.QLConnectorTypeFilter;
 
 import java.util.List;
 
@@ -39,8 +39,8 @@ public class ConnectorQueryHelper {
 
       if (filter.getConnectorType() != null) {
         field = query.field("value.type");
-        QLStringFilter connectorTypeFilter = filter.getConnectorType();
-        utils.setStringFilter(field, connectorTypeFilter);
+        QLConnectorTypeFilter connectorTypeFilter = filter.getConnectorType();
+        utils.setEnumFilter(field, connectorTypeFilter);
       }
 
       if (filter.getCreatedAt() != null) {
