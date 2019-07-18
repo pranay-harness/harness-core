@@ -18,11 +18,34 @@ input ConnectorTypeFilter {
 }
 
 enum ConnectorType {
-  JIRA
-  SLACK
   SMTP
-  SERVICENOW
+  JENKINS
+  BAMBOO
+  SPLUNK
+  ELK
+  LOGZ
+  SUMO
+  APP_DYNAMICS
+  NEW_RELIC
+  DYNA_TRACE
+  BUG_SNAG
+  DATA_DOG
+  APM_VERIFICATION
+  PROMETHEUS
+  ELB
+  SLACK
   DOCKER
+  ECR
+  GCR
+  NEXUS
+  ARTIFACTORY
+  AMAZON_S3
+  GCS
+  GIT
+  SMB
+  JIRA
+  SFTP
+  SERVICENOW
 }
 
 interface Connector {
@@ -38,6 +61,118 @@ type ConnectorConnection {
   nodes: [Connector]
 }
 
+type AmazonS3Connector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type ApmVerificationConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type AppDynamicsConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type ArtifactoryConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type BambooConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type BugSnagConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type DataDogConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type DockerConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type DynaTraceConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type ECRConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type ElbConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type ElkConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type GCRConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type GCSConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type GitConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type JenkinsConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
 type JiraConnector implements Connector {
   id: String
   name: String
@@ -45,23 +180,34 @@ type JiraConnector implements Connector {
   createdAt: DateTime
   createdBy: User
 }
-
-type SlackConnector implements Connector {
+type LogzConnector implements Connector {
   id: String
   name: String
   description: String
   createdAt: DateTime
   createdBy: User
 }
-
-type SmtpConnector implements Connector {
+type NewRelicConnector implements Connector {
   id: String
   name: String
   description: String
   createdAt: DateTime
   createdBy: User
 }
-
+type NexusConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type PrometheusConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
 type ServiceNowConnector implements Connector {
   id: String
   name: String
@@ -69,8 +215,42 @@ type ServiceNowConnector implements Connector {
   createdAt: DateTime
   createdBy: User
 }
-
-type DockerConnector implements Connector {
+type SftpConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type SlackConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type SMBConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type SmtpConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type SplunkConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type SumoConnector implements Connector {
   id: String
   name: String
   description: String

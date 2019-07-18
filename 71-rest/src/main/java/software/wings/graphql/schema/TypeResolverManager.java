@@ -21,11 +21,34 @@ import software.wings.graphql.schema.type.cloudProvider.QLGcpCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLKubernetesClusterCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLPcfCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLPhysicalDataCenterCloudProvider;
+import software.wings.graphql.schema.type.connector.QLAmazonS3Connector;
+import software.wings.graphql.schema.type.connector.QLApmVerificationConnector;
+import software.wings.graphql.schema.type.connector.QLAppDynamicsConnector;
+import software.wings.graphql.schema.type.connector.QLArtifactoryConnector;
+import software.wings.graphql.schema.type.connector.QLBambooConnector;
+import software.wings.graphql.schema.type.connector.QLBugSnagConnector;
+import software.wings.graphql.schema.type.connector.QLDataDogConnector;
 import software.wings.graphql.schema.type.connector.QLDockerConnector;
+import software.wings.graphql.schema.type.connector.QLDynaTraceConnector;
+import software.wings.graphql.schema.type.connector.QLECRConnector;
+import software.wings.graphql.schema.type.connector.QLElbConnector;
+import software.wings.graphql.schema.type.connector.QLElkConnector;
+import software.wings.graphql.schema.type.connector.QLGCRConnector;
+import software.wings.graphql.schema.type.connector.QLGCSConnector;
+import software.wings.graphql.schema.type.connector.QLGitConnector;
+import software.wings.graphql.schema.type.connector.QLJenkinsConnector;
 import software.wings.graphql.schema.type.connector.QLJiraConnector;
+import software.wings.graphql.schema.type.connector.QLLogzConnector;
+import software.wings.graphql.schema.type.connector.QLNewRelicConnector;
+import software.wings.graphql.schema.type.connector.QLNexusConnector;
+import software.wings.graphql.schema.type.connector.QLPrometheusConnector;
+import software.wings.graphql.schema.type.connector.QLSMBConnector;
 import software.wings.graphql.schema.type.connector.QLServiceNowConnector;
+import software.wings.graphql.schema.type.connector.QLSftpConnector;
 import software.wings.graphql.schema.type.connector.QLSlackConnector;
 import software.wings.graphql.schema.type.connector.QLSmtpConnector;
+import software.wings.graphql.schema.type.connector.QLSplunkConnector;
+import software.wings.graphql.schema.type.connector.QLSumoConnector;
 import software.wings.graphql.schema.type.instance.QLAutoScalingGroupInstance;
 import software.wings.graphql.schema.type.instance.QLCodeDeployInstance;
 import software.wings.graphql.schema.type.instance.QLEc2Instance;
@@ -78,11 +101,34 @@ public class TypeResolverManager {
     public static final String TimeSeriesData = "TimeSeriesData";
     public static final String WorkflowExecution = "WorkflowExecution";
 
-    public static final String JiraConnector = "JiraConnector";
-    public static final String SlackConnector = "SlackConnector";
-    public static final String ServiceNowConnector = "ServiceNowConnector";
-    public static final String SmtpConnector = "SmtpConnector";
+    public static final String AmazonS3Connector = "AmazonS3Connector";
+    public static final String ApmVerificationConnector = "ApmVerificationConnector";
+    public static final String AppDynamicsConnector = "AppDynamicsConnector";
+    public static final String ArtifactoryConnector = "ArtifactoryConnector";
+    public static final String BambooConnector = "BambooConnector";
+    public static final String BugSnagConnector = "BugSnagConnector";
+    public static final String DataDogConnector = "DataDogConnector";
     public static final String DockerConnector = "DockerConnector";
+    public static final String DynaTraceConnector = "DynaTraceConnector";
+    public static final String ECRConnector = "ECRConnector";
+    public static final String ElbConnector = "ElbConnector";
+    public static final String ElkConnector = "ElkConnector";
+    public static final String GCRConnector = "GCRConnector";
+    public static final String GCSConnector = "GCSConnector";
+    public static final String GitConnector = "GitConnector";
+    public static final String JenkinsConnector = "JenkinsConnector";
+    public static final String JiraConnector = "JiraConnector";
+    public static final String LogzConnector = "LogzConnector";
+    public static final String NewRelicConnector = "NewRelicConnector";
+    public static final String NexusConnector = "NexusConnector";
+    public static final String PrometheusConnector = "PrometheusConnector";
+    public static final String ServiceNowConnector = "ServiceNowConnector";
+    public static final String SftpConnector = "SftpConnector";
+    public static final String SlackConnector = "SlackConnector";
+    public static final String SMBConnector = "SMBConnector";
+    public static final String SmtpConnector = "SmtpConnector";
+    public static final String SplunkConnector = "SplunkConnector";
+    public static final String SumoConnector = "SumoConnector";
   }
 
   /**
@@ -111,13 +157,37 @@ public class TypeResolverManager {
                     .put(QLPcfCloudProvider.class, TypeResolverManagerTypes.PcfCloudProvider)
                     .build()))
         .put(TypeResolverManagerUnifaces.Connector,
-            getResultTypeResolver(ImmutableMap.<Class, String>builder()
-                                      .put(QLJiraConnector.class, TypeResolverManagerTypes.JiraConnector)
-                                      .put(QLSlackConnector.class, TypeResolverManagerTypes.SlackConnector)
-                                      .put(QLSmtpConnector.class, TypeResolverManagerTypes.SmtpConnector)
-                                      .put(QLServiceNowConnector.class, TypeResolverManagerTypes.ServiceNowConnector)
-                                      .put(QLDockerConnector.class, TypeResolverManagerTypes.DockerConnector)
-                                      .build()))
+            getResultTypeResolver(
+                ImmutableMap.<Class, String>builder()
+                    .put(QLAmazonS3Connector.class, TypeResolverManagerTypes.AmazonS3Connector)
+                    .put(QLApmVerificationConnector.class, TypeResolverManagerTypes.ApmVerificationConnector)
+                    .put(QLAppDynamicsConnector.class, TypeResolverManagerTypes.AppDynamicsConnector)
+                    .put(QLArtifactoryConnector.class, TypeResolverManagerTypes.ArtifactoryConnector)
+                    .put(QLBambooConnector.class, TypeResolverManagerTypes.BambooConnector)
+                    .put(QLBugSnagConnector.class, TypeResolverManagerTypes.BugSnagConnector)
+                    .put(QLDataDogConnector.class, TypeResolverManagerTypes.DataDogConnector)
+                    .put(QLDockerConnector.class, TypeResolverManagerTypes.DockerConnector)
+                    .put(QLDynaTraceConnector.class, TypeResolverManagerTypes.DynaTraceConnector)
+                    .put(QLECRConnector.class, TypeResolverManagerTypes.ECRConnector)
+                    .put(QLElbConnector.class, TypeResolverManagerTypes.ElbConnector)
+                    .put(QLElkConnector.class, TypeResolverManagerTypes.ElkConnector)
+                    .put(QLGCRConnector.class, TypeResolverManagerTypes.GCRConnector)
+                    .put(QLGCSConnector.class, TypeResolverManagerTypes.GCSConnector)
+                    .put(QLGitConnector.class, TypeResolverManagerTypes.GitConnector)
+                    .put(QLJenkinsConnector.class, TypeResolverManagerTypes.JenkinsConnector)
+                    .put(QLJiraConnector.class, TypeResolverManagerTypes.JiraConnector)
+                    .put(QLLogzConnector.class, TypeResolverManagerTypes.LogzConnector)
+                    .put(QLNewRelicConnector.class, TypeResolverManagerTypes.NewRelicConnector)
+                    .put(QLNexusConnector.class, TypeResolverManagerTypes.NexusConnector)
+                    .put(QLPrometheusConnector.class, TypeResolverManagerTypes.PrometheusConnector)
+                    .put(QLServiceNowConnector.class, TypeResolverManagerTypes.ServiceNowConnector)
+                    .put(QLSftpConnector.class, TypeResolverManagerTypes.SftpConnector)
+                    .put(QLSlackConnector.class, TypeResolverManagerTypes.SlackConnector)
+                    .put(QLSMBConnector.class, TypeResolverManagerTypes.SMBConnector)
+                    .put(QLSmtpConnector.class, TypeResolverManagerTypes.SmtpConnector)
+                    .put(QLSplunkConnector.class, TypeResolverManagerTypes.SplunkConnector)
+                    .put(QLSumoConnector.class, TypeResolverManagerTypes.SumoConnector)
+                    .build()))
         .put(TypeResolverManagerUnifaces.Execution,
             getResultTypeResolver(ImmutableMap.<Class, String>builder()
                                       .put(QLPipelineExecution.class, TypeResolverManagerTypes.PipelineExecution)
