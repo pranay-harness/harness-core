@@ -10,6 +10,7 @@ import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
 import software.wings.graphql.schema.type.aggregation.QLStringFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
+import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentTypeFilter;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -38,7 +39,7 @@ public class QLDeploymentFilter implements EntityFilter {
   private QLIdFilter service;
   private QLIdFilter cloudProvider;
   private QLIdFilter environment;
-  private QLStringFilter environmentType;
+  private QLEnvironmentTypeFilter environmentType;
   private QLStringFilter status;
   private QLTimeFilter endTime;
   private QLTimeFilter startTime;

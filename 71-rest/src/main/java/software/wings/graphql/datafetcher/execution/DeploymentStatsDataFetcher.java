@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.execution;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.inject.Inject;
 
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
@@ -23,6 +25,7 @@ import software.wings.graphql.datafetcher.AbstractStatsDataFetcher;
 import software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.DeploymentMetaDataFields;
 import software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.DeploymentStatsQueryMetaDataBuilder;
 import software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.ResultType;
+import software.wings.graphql.schema.type.QLEnvironmentType;
 import software.wings.graphql.schema.type.aggregation.Filter;
 import software.wings.graphql.schema.type.aggregation.QLAggregatedData;
 import software.wings.graphql.schema.type.aggregation.QLAggregatedData.QLAggregatedDataBuilder;
@@ -30,6 +33,7 @@ import software.wings.graphql.schema.type.aggregation.QLAggregationKind;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLDataPoint.QLDataPointBuilder;
+import software.wings.graphql.schema.type.aggregation.QLEnumOperator;
 import software.wings.graphql.schema.type.aggregation.QLFilterKind;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
@@ -64,6 +68,7 @@ import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentFil
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentFilterType;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentSortCriteria;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentSortType;
+import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentTypeFilter;
 import software.wings.graphql.utils.nameservice.NameService;
 
 import java.sql.Connection;
@@ -72,6 +77,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -485,7 +491,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
 
   private List<QLDeploymentSortCriteria> validateAndAddSortCriteria(
       SelectQuery selectQuery, List<QLDeploymentSortCriteria> sortCriteria, List<DeploymentMetaDataFields> fieldNames) {
-    if (EmptyPredicate.isEmpty(sortCriteria)) {
+    if (isEmpty(sortCriteria)) {
       return new ArrayList<>();
     }
 
@@ -555,12 +561,13 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
       addArrayIdFilter(selectQuery, f, type);
     } else if (isStringFilter(f)) {
       addArrayStringFilter(selectQuery, f, type);
+    } else if (isEnvTypeFilter(f)) {
+      addEnvTypeFilter(selectQuery, (QLEnvironmentTypeFilter) f, type);
     }
   }
 
   private void addArrayIdFilter(SelectQuery selectQuery, Filter filter, QLDeploymentFilterType type) {
     DbColumn key = getFilterKey(type);
-    QLIdOperator operator = (QLIdOperator) filter.getOperator();
     QLIdFilter idFilter = (QLIdFilter) filter;
     String filterValue = "{" + String.join(",", idFilter.getValues()) + "}";
     switch (idFilter.getOperator()) {
@@ -574,9 +581,30 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
     }
   }
 
+  private void addEnvTypeFilter(SelectQuery selectQuery, QLEnvironmentTypeFilter filter, QLDeploymentFilterType type) {
+    DbColumn key = getFilterKey(type);
+    QLEnumOperator operator = filter.getOperator();
+    QLEnvironmentType[] values = filter.getValues();
+    if (isEmpty(values)) {
+      throw new RuntimeException("No values are provided for EnvTypeFilter" + operator);
+    }
+
+    Set<String> envTypeSet = Arrays.stream(values).map(value -> value.name()).collect(Collectors.toSet());
+
+    String filterValue = "{" + String.join(",", envTypeSet) + "}";
+    switch (operator) {
+      case IN:
+      case EQUALS:
+        selectQuery.addCondition(new CustomCondition(key + " @>"
+            + "'" + filterValue + "'"));
+        break;
+      default:
+        throw new RuntimeException("Unsupported operator for EnvTypeFilter" + operator);
+    }
+  }
+
   private void addArrayStringFilter(SelectQuery selectQuery, Filter filter, QLDeploymentFilterType type) {
     DbColumn key = getFilterKey(type);
-    QLStringOperator operator = (QLStringOperator) filter.getOperator();
     QLStringFilter stringFilter = (QLStringFilter) filter;
     String filterValue = "{" + String.join(",", stringFilter.getValues()) + "}";
     switch (stringFilter.getOperator()) {
@@ -613,6 +641,10 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
 
   private boolean isStringFilter(Filter f) {
     return f instanceof QLStringFilter;
+  }
+
+  private boolean isEnvTypeFilter(Filter f) {
+    return f instanceof QLEnvironmentTypeFilter;
   }
 
   private boolean isNumberFilter(Filter f) {

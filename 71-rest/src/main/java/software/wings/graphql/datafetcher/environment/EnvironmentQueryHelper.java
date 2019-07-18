@@ -9,9 +9,9 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Environment;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
-import software.wings.graphql.schema.type.QLEnvironmentType;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentFilter;
+import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentTypeFilter;
 
 import java.util.List;
 
@@ -44,8 +44,8 @@ public class EnvironmentQueryHelper {
 
       if (filter.getEnvironmentType() != null) {
         field = query.field("environmentType");
-        QLEnvironmentType environmentType = filter.getEnvironmentType();
-        utils.setStringFilter(field, environmentType.name());
+        QLEnvironmentTypeFilter envTypeFilter = filter.getEnvironmentType();
+        utils.setEnumFilter(field, envTypeFilter);
       }
     });
   }

@@ -36,6 +36,11 @@ enum IdOperator {
   IN
 }
 
+enum EnumOperator {
+  EQUALS
+  IN
+}
+
 input StringFilter {
   operator: StringOperator
   values: [String]
