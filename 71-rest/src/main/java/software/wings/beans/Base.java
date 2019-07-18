@@ -23,6 +23,7 @@ import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PrePersist;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.entityinterface.AppIdAware;
 import software.wings.security.ThreadLocalUserProvider;
 
 import java.util.HashMap;
@@ -46,7 +47,7 @@ import javax.validation.constraints.NotNull;
 // PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware
 // To implement these interfaces simply define the respective field
 public class Base
-    implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
+    implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware, AppIdAware {
   public static final String ID_KEY = "_id";
   public static final String APP_ID_KEY = "appId";
   public static final String ACCOUNT_ID_KEY = "accountId";

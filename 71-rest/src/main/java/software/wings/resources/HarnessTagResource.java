@@ -102,6 +102,7 @@ public class HarnessTagResource {
   public RestResponse attachTag(
       @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, HarnessTagLink tagLink) {
     tagLink.setAccountId(accountId);
+    tagLink.setAppId(appId);
     harnessTagService.authorizeTagAttachDetach(appId, tagLink);
     harnessTagService.attachTag(tagLink);
     return new RestResponse();

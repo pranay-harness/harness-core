@@ -27,6 +27,7 @@ import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.ResourceLookup;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.EntityNameCache;
 import software.wings.service.impl.HarnessTagServiceImpl;
 import software.wings.service.intfc.ResourceLookupService;
 
@@ -37,6 +38,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
 
   @Mock private MainConfiguration mainConfiguration;
   @Mock private ResourceLookupService resourceLookupService;
+  @Mock EntityNameCache entityNameCache;
 
   @Inject @InjectMocks @Spy private HarnessTagServiceImpl harnessTagService;
 
@@ -149,6 +151,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   public void attachTagSmokeTest() {
     harnessTagService.attachTag(HarnessTagLink.builder()
                                     .accountId(TEST_ACCOUNT_ID)
+                                    .appId(APP_ID)
                                     .entityId("id")
                                     .entityType(SERVICE)
                                     .key(colorTagKey)
@@ -175,6 +178,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   public void updateTagValueTest() {
     HarnessTagLink tagLink = HarnessTagLink.builder()
                                  .accountId(TEST_ACCOUNT_ID)
+                                 .appId(APP_ID)
                                  .entityId("id")
                                  .entityType(SERVICE)
                                  .key(colorTagKey)
@@ -220,6 +224,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   public void tryToDeleteInUseTagTest() {
     harnessTagService.attachTag(HarnessTagLink.builder()
                                     .accountId(TEST_ACCOUNT_ID)
+                                    .appId(APP_ID)
                                     .entityId("id")
                                     .entityType(SERVICE)
                                     .key(colorTagKey)
@@ -248,6 +253,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
 
     HarnessTagLink tagLinkRed = HarnessTagLink.builder()
                                     .accountId(TEST_ACCOUNT_ID)
+                                    .appId(APP_ID)
                                     .entityId("id1")
                                     .entityType(SERVICE)
                                     .key(colorTagKey)
@@ -258,6 +264,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
 
     HarnessTagLink tagLinkBlue = HarnessTagLink.builder()
                                      .accountId(TEST_ACCOUNT_ID)
+                                     .appId(APP_ID)
                                      .entityId("id2")
                                      .entityType(SERVICE)
                                      .key(colorTagKey)

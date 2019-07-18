@@ -60,6 +60,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -79,6 +80,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   @Inject private TriggerService triggerService;
   @Inject private AuthService authService;
   @Inject private AppService appService;
+  @Inject private EntityNameCache entityNameCache;
 
   private static final Set<EntityType> supportedEntityTypes =
       ImmutableSet.of(SERVICE, ENVIRONMENT, WORKFLOW, PROVISIONER, PIPELINE, TRIGGER, APPLICATION);
@@ -249,6 +251,21 @@ public class HarnessTagServiceImpl implements HarnessTagService {
       response = filteredResourcesWithTag.subList(offset, endIdx);
     }
 
+    if (isNotEmpty(response)) {
+      for (HarnessTagLink harnessTagLink : response) {
+        try {
+          String entityName =
+              entityNameCache.getEntityName(harnessTagLink.getEntityType(), harnessTagLink.getEntityId());
+          String appName = entityNameCache.getEntityName(APPLICATION, harnessTagLink.getAppId());
+
+          harnessTagLink.setEntityName(entityName);
+          harnessTagLink.setAppName(appName);
+        } catch (ExecutionException ex) {
+          throw new WingsException("Failed to find entity name", ex, USER);
+        }
+      }
+    }
+
     return aPageResponse()
         .withResponse(response)
         .withTotal(filteredResourcesWithTag.size())
@@ -308,6 +325,8 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     if (!supportedEntityTypes.contains(tagLink.getEntityType())) {
       throw new InvalidRequestException("Unsupported entityType specified. " + tagLink.getEntityType());
     }
+
+    notNullCheck("appId", tagLink.getAppId());
 
     if (tagLink.getValue() == null) {
       throw new InvalidRequestException("Tag value cannot be null");
