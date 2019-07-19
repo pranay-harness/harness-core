@@ -4,7 +4,6 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
-import static software.wings.beans.Account.ACCOUNT_ID_KEY;
 import static software.wings.beans.Account.Builder;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.User.Builder.anUser;
@@ -286,7 +285,7 @@ public class AccountGenerator {
                     .withRoles(wingsPersistence
                                    .query(Role.class,
                                        aPageRequest()
-                                           .addFilter(ACCOUNT_ID_KEY, EQ, account.getUuid())
+                                           .addFilter("accountId", EQ, account.getUuid())
                                            .addFilter("roleType", EQ, RoleType.ACCOUNT_ADMIN)
                                            .build())
                                    .getResponse())
