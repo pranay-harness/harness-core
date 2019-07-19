@@ -54,7 +54,7 @@ public class PersistenceIrregularIteratorTest extends PersistenceTest {
                    .fieldName(IrregularIterableEntityKeys.nextIterations)
                    .targetInterval(ofSeconds(10))
                    .acceptableDelay(ofSeconds(1))
-                   .maximumDaleyForCheck(ofSeconds(1))
+                   .maximumDelayForCheck(ofSeconds(1))
                    .executorService(executorService)
                    .semaphore(new Semaphore(10))
                    .handler(new TestHandler())
