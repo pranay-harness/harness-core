@@ -1,4 +1,4 @@
-package software.wings.service.impl.yaml;
+package software.wings.service.impl.yaml.handler.tag;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -16,6 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.HarnessTag;
+import software.wings.beans.HarnessTag.HarnessTagAbstractYaml;
+import software.wings.beans.HarnessTag.Yaml;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Pipeline;
@@ -30,10 +33,12 @@ import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 @Singleton
 @Slf4j
@@ -41,7 +46,7 @@ public class HarnessTagYamlHelper {
   @Inject HarnessTagService harnessTagService;
   @Inject AppService appService;
 
-  public void updateYamlWithHarnessTags(PersistentEntity entity, String appId, BaseEntityYaml yaml) {
+  public void updateYamlWithHarnessTagLinks(PersistentEntity entity, String appId, BaseEntityYaml yaml) {
     if (!(entity instanceof TagAware)) {
       return;
     }
@@ -66,7 +71,7 @@ public class HarnessTagYamlHelper {
     return null;
   }
 
-  public void upsertTagsIfRequired(ChangeContext changeContext) {
+  public void upsertTagLinksIfRequired(ChangeContext changeContext) {
     PersistentEntity entity = changeContext.getEntity();
 
     if (!(entity instanceof TagAware)) {
@@ -143,7 +148,7 @@ public class HarnessTagYamlHelper {
     }
 
     boolean syncFromGit = changeContext.getChange().isSyncFromGit();
-    harnessTagService.pushToGit(accountId, entityId, syncFromGit);
+    harnessTagService.pushTagLinkToGit(accountId, entityId, syncFromGit);
   }
 
   private EntityType getEntityType(PersistentEntity entity) {
@@ -163,6 +168,100 @@ public class HarnessTagYamlHelper {
       return EntityType.PROVISIONER;
     } else {
       throw new InvalidRequestException("Unhandled entity " + entity.getClass().getSimpleName(), USER);
+    }
+  }
+
+  public List<HarnessTagAbstractYaml> getHarnessTagsYamlList(List<HarnessTag> harnessTags) {
+    List<HarnessTagAbstractYaml> harnessTagsYamlList = new ArrayList<>();
+
+    if (isEmpty(harnessTags)) {
+      return harnessTagsYamlList;
+    }
+
+    for (HarnessTag harnessTag : harnessTags) {
+      List<String> allowedValues = new ArrayList<>();
+
+      if (isNotEmpty(harnessTag.getAllowedValues())) {
+        allowedValues = new ArrayList<>(harnessTag.getAllowedValues());
+      }
+
+      harnessTagsYamlList.add(
+          HarnessTagAbstractYaml.builder().name(harnessTag.getKey()).allowedValues(allowedValues).build());
+    }
+
+    return harnessTagsYamlList;
+  }
+
+  public void upsertHarnessTags(Yaml yaml, String accountId, boolean syncFromGit) {
+    List<HarnessTag> currentTags = harnessTagService.listTags(accountId);
+    Map<String, Set<String>> currentTagsMap = new HashMap<>();
+    for (HarnessTag harnessTag : currentTags) {
+      Set<String> allowedValues = new HashSet<>();
+      if (isNotEmpty(harnessTag.getAllowedValues())) {
+        allowedValues = harnessTag.getAllowedValues();
+      }
+
+      currentTagsMap.put(harnessTag.getKey(), allowedValues);
+    }
+
+    List<HarnessTagAbstractYaml> updatedTags = yaml.getTag();
+    Map<String, Set<String>> updatedTagsMap = new HashMap<>();
+    if (isNotEmpty(updatedTags)) {
+      for (HarnessTagAbstractYaml harnessTagAbstractYaml : updatedTags) {
+        Set<String> allowedValues = new HashSet<>();
+        if (isNotEmpty(harnessTagAbstractYaml.getAllowedValues())) {
+          allowedValues = new HashSet<>(harnessTagAbstractYaml.getAllowedValues());
+        }
+
+        updatedTagsMap.put(harnessTagAbstractYaml.getName(), allowedValues);
+      }
+    }
+
+    List<HarnessTag> tagsToBeAdded = new ArrayList<>();
+    List<HarnessTag> tagsToBeUpdated = new ArrayList<>();
+    List<String> tagsToBeRemoved = new ArrayList<>();
+
+    // Tags to be added/updated
+    for (Entry<String, Set<String>> entry : updatedTagsMap.entrySet()) {
+      String key = entry.getKey();
+      Set<String> value = entry.getValue();
+
+      if (!currentTagsMap.containsKey(key)) {
+        tagsToBeAdded.add(HarnessTag.builder().key(key).allowedValues(value).build());
+      } else if (!value.equals(currentTagsMap.get(key))) {
+        tagsToBeUpdated.add(HarnessTag.builder().key(key).allowedValues(value).build());
+      }
+    }
+
+    // Tags to be removed
+    for (Entry<String, Set<String>> entry : currentTagsMap.entrySet()) {
+      if (!updatedTagsMap.containsKey(entry.getKey())) {
+        tagsToBeRemoved.add(entry.getKey());
+      }
+    }
+
+    for (HarnessTag harnessTag : tagsToBeAdded) {
+      harnessTag.setAccountId(accountId);
+      harnessTagService.createTag(harnessTag, syncFromGit);
+    }
+
+    for (HarnessTag harnessTag : tagsToBeUpdated) {
+      harnessTag.setAccountId(accountId);
+      harnessTagService.updateTag(harnessTag, syncFromGit);
+    }
+
+    for (String tagKey : tagsToBeRemoved) {
+      harnessTagService.deleteTag(accountId, tagKey, syncFromGit);
+    }
+  }
+
+  public void deleteTags(Yaml yaml, String accountId, boolean syncFromGit) {
+    List<HarnessTagAbstractYaml> tags = yaml.getTag();
+
+    if (isNotEmpty(tags)) {
+      for (HarnessTagAbstractYaml harnessTagAbstractYaml : tags) {
+        harnessTagService.deleteTag(accountId, harnessTagAbstractYaml.getName(), syncFromGit);
+      }
     }
   }
 }

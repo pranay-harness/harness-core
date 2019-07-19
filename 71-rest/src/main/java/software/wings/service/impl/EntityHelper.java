@@ -12,6 +12,7 @@ import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
 import static software.wings.beans.yaml.YamlConstants.KUBERNETES_CONTAINER_TASK_YAML_FILE_NAME;
 import static software.wings.beans.yaml.YamlConstants.LAMBDA_SPEC_YAML_FILE_NAME;
 import static software.wings.beans.yaml.YamlConstants.PCF_MANIFEST_YAML_FILE_NAME;
+import static software.wings.beans.yaml.YamlConstants.TAGS_YAML;
 import static software.wings.beans.yaml.YamlConstants.USER_DATA_SPEC_YAML_FILE_NAME;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 
@@ -39,6 +40,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
+import software.wings.beans.HarnessTag;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.LambdaSpecification;
@@ -447,6 +449,14 @@ public class EntityHelper {
       affectedResourceName = ResourceType.GOVERNANCE.name();
       affectedResourceType = ResourceType.GOVERNANCE.name();
       affectedResourceOperation = type.name();
+    } else if (entity instanceof HarnessTag) {
+      HarnessTag harnessTag = (HarnessTag) entity;
+      entityType = ResourceType.TAG.name();
+      appId = Application.GLOBAL_APP_ID;
+      affectedResourceId = harnessTag.getUuid();
+      affectedResourceName = ResourceType.TAG.name();
+      affectedResourceType = ResourceType.TAG.name();
+      affectedResourceOperation = type.name();
     } else {
       logger.error(format("Unhandled class for auditing: [%s]", entity.getClass().getSimpleName()));
       entityType = format("Object of class: [%s]", entity.getClass().getSimpleName());
@@ -666,6 +676,8 @@ public class EntityHelper {
       } else if (entity instanceof CVConfiguration) {
         CVConfiguration cvConfiguration = (CVConfiguration) entity;
         finalYaml = format("%s/%s%s", yamlPrefix, cvConfiguration.getName(), YAML_EXTENSION);
+      } else if (entity instanceof HarnessTag) {
+        finalYaml = format("Setup/%s", TAGS_YAML);
       } else {
         finalYaml = yamlPrefix;
       }

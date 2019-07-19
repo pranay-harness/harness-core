@@ -32,4 +32,6 @@ public interface EntityUpdateService {
   <T> String obtainAccountIdFromEntity(T entity);
 
   <R, T> String getEntityRootFilePath(T entity);
+
+  List<GitFileChange> getHarnessTagsChangeSet(String accountId);
 }

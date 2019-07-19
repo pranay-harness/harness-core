@@ -90,10 +90,6 @@ public interface Constants {
    */
   String PHASE_STEP_VALIDATION_MESSAGE = "Some steps %s are found to be invalid/incomplete.";
   /**
-   * The constant PHASE_VALIDATION_MESSAGE.
-   */
-  String PHASE_VALIDATION_MESSAGE = "Some steps %s are found to be invalid/incomplete.";
-  /**
    * The constant WORKFLOW_VALIDATION_MESSAGE.
    */
   String WORKFLOW_VALIDATION_MESSAGE = "Some phases %s are found to be invalid/incomplete.";
@@ -192,15 +188,6 @@ public interface Constants {
    * The constant WINGS_BACKUP_PATH.
    */
   String WINGS_BACKUP_PATH = "WINGS_BACKUP_PATH";
-  /**
-   * Constants for HTTP state
-   */
-  String HTTP_URL = "httpUrl";
-  /**
-   * The constant HTTP_RESPONSE_METHOD.
-   */
-  String HTTP_RESPONSE_METHOD = "httpResponseMethod";
-
   /**
    * Constants for expression
    */

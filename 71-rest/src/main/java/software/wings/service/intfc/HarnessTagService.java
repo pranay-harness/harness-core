@@ -23,9 +23,13 @@ public interface HarnessTagService {
   void pruneTagLinks(String accountId, String entityId);
   void authorizeTagAttachDetach(String appId, HarnessTagLink tagLink);
   List<HarnessTagLink> getTagLinksWithEntityId(String accountId, String entityId);
-  void pushToGit(String accountId, String entityId, boolean syncFromGit);
+  void pushTagLinkToGit(String accountId, String entityId, boolean syncFromGit);
   void attachTagWithoutGitPush(HarnessTagLink tagLink);
   void detachTagWithoutGitPush(@NotBlank String accountId, @NotBlank String entityId, @NotBlank String key);
 
   PageResponse<HarnessTag> listTagsWithInUseValues(PageRequest<HarnessTag> request);
+  List<HarnessTag> listTags(String accountId);
+  HarnessTag createTag(HarnessTag tag, boolean syncFromGit);
+  HarnessTag updateTag(HarnessTag tag, boolean syncFromGit);
+  void deleteTag(@NotBlank String accountId, @NotBlank String key, boolean syncFromGit);
 }

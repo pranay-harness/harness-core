@@ -279,6 +279,8 @@ public interface WingsTestConstants {
   String JIRA_ISSUE_ID = "JIRA_ISSUE_ID";
   String APPROVAL_EXECUTION_ID = "APPROVAL_EXECUTION_ID";
 
+  String PHASE_VALIDATION_MESSAGE = "Some steps %s are found to be invalid/incomplete.";
+
   /**
    * The constant URL.
    */

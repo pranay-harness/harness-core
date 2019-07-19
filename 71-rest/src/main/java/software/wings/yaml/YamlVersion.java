@@ -149,7 +149,8 @@ public class YamlVersion extends Base implements YamlHistory {
     NOTIFICATION_GROUP,
     APPLICATION_MANIFEST,
     APPLICATION_MANIFEST_FILE,
-    SERVICE_CV_CONFIG
+    SERVICE_CV_CONFIG,
+    TAGS
   }
 
   @SuppressFBWarnings("CN_IMPLEMENTS_CLONE_BUT_NOT_CLONEABLE") // TODO

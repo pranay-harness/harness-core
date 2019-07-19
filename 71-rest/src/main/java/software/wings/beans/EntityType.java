@@ -212,5 +212,7 @@ public enum EntityType {
 
   ENCRYPTED_RECORDS,
 
-  CV_CONFIGURATION
+  CV_CONFIGURATION,
+
+  TAG
 }

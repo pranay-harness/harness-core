@@ -19,8 +19,6 @@ import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_REP
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_USER_NAME_KEY;
 import static software.wings.common.Constants.DEPLOYMENT_TRIGGERED_BY;
 import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
-import static software.wings.common.Constants.HTTP_RESPONSE_METHOD;
-import static software.wings.common.Constants.HTTP_URL;
 import static software.wings.common.Constants.PCF_APP_NAME;
 import static software.wings.common.Constants.PCF_OLD_APP_NAME;
 import static software.wings.common.Constants.WINGS_BACKUP_PATH;
@@ -118,6 +116,8 @@ public abstract class ExpressionBuilder {
   protected static final String XPATH = "xpath('//status/text()')";
   protected static final String JSONPATH = "jsonpath('health.status')";
 
+  protected static final String HTTP_URL = "httpUrl";
+  protected static final String HTTP_RESPONSE_METHOD = "httpResponseMethod";
   protected static final String HTTP_RESPONSE_CODE = "httpResponseCode";
   protected static final String HTTP_RESPONSE_BODY = "httpResponseBody";
 

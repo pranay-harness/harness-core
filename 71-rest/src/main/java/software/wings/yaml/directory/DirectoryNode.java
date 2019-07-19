@@ -54,6 +54,8 @@ public class DirectoryNode {
       this.restName = "application-manifests";
     } else if (this.shortClassName.equals("ManifestFile")) {
       this.restName = "manifest-files";
+    } else if (this.shortClassName.equals("HarnessTag")) {
+      this.restName = "tags";
     } else {
       this.restName = this.shortClassName.toLowerCase() + "s";
     }

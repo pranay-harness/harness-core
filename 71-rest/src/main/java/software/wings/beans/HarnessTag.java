@@ -15,6 +15,8 @@ import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -25,7 +27,10 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.HarnessTag.HarnessTagKeys;
 import software.wings.jersey.JsonViews;
+import software.wings.yaml.BaseEntityYaml;
+import software.wings.yaml.BaseYaml;
 
+import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 
@@ -51,4 +56,31 @@ public class HarnessTag
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private long createdAt;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore @NotNull private long lastUpdatedAt;
+
+  @Data
+  @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
+  public static class HarnessTagAbstractYaml extends BaseYaml {
+    private String name;
+    private List<String> allowedValues;
+
+    @lombok.Builder
+    public HarnessTagAbstractYaml(String name, List<String> allowedValues) {
+      this.name = name;
+      this.allowedValues = allowedValues;
+    }
+  }
+
+  @Data
+  @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
+  public static class Yaml extends BaseEntityYaml {
+    private List<HarnessTagAbstractYaml> tag;
+
+    @Builder
+    public Yaml(String harnessApiVersion, List<HarnessTagAbstractYaml> tag) {
+      super(EntityType.TAG.name(), harnessApiVersion);
+      this.tag = tag;
+    }
+  }
 }

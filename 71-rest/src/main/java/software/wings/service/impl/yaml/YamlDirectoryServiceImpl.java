@@ -31,6 +31,7 @@ import static software.wings.beans.yaml.YamlConstants.PIPELINES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PROVISIONERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SERVICES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.TAGS_YAML;
 import static software.wings.beans.yaml.YamlConstants.TRIGGER_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.VALUES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.VERIFICATION_PROVIDERS_FOLDER;
@@ -58,6 +59,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
+import software.wings.beans.HarnessTag;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.LambdaSpecification;
@@ -338,6 +340,11 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             appId = ((ServiceLevelYamlNode) dn).getAppId();
             yaml = yamlResourceService.getUserDataSpec(accountId, appId, entityId).getResource().getYaml();
             break;
+
+          case "HarnessTag":
+            yaml = yamlResourceService.getHarnessTags(accountId).getResource().getYaml();
+            break;
+
           default:
             logger.warn("No toYaml for entity[{}, {}]", dn.getShortClassName(), entityId);
         }
@@ -445,6 +452,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     String defaultVarsYamlFileName = DEFAULTS_YAML;
     configFolder.addChild(new YamlNode(accountId, GLOBAL_APP_ID, defaultVarsYamlFileName, Defaults.class,
         directoryPath.clone().add(defaultVarsYamlFileName), yamlGitSyncService, Type.ACCOUNT_DEFAULTS));
+
+    if (featureFlagService.isEnabled(FeatureName.TAGS_YAML, accountId)) {
+      String tagsFileName = TAGS_YAML;
+      configFolder.addChild(new YamlNode(accountId, GLOBAL_APP_ID, tagsFileName, HarnessTag.class,
+          directoryPath.clone().add(tagsFileName), yamlGitSyncService, Type.TAGS));
+    }
 
     List<Future<FolderNode>> futureList = new ArrayList<>();
 
@@ -2097,6 +2110,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       return getRootPathByCVConfiguration((CVConfiguration) entity);
     } else if (entity instanceof Trigger) {
       return getRootPathByTrigger((Trigger) entity);
+    } else if (entity instanceof HarnessTag) {
+      return getRootPathForTags();
     }
 
     throw new InvalidRequestException(
@@ -2111,5 +2126,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     // Setting app git sync
     YamlGitConfig yamlGitConfig = yamlGitService.get(accountId, applicationId, EntityType.APPLICATION);
     appFolder.setYamlGitConfig(yamlGitConfig);
+  }
+
+  private String getRootPathForTags() {
+    return getRootPath() + PATH_DELIMITER;
   }
 }

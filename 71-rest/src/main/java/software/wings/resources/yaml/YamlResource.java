@@ -1068,4 +1068,22 @@ public class YamlResource {
     yamlGitService.asyncFullSyncForEntireAccount(accountId);
     return new RestResponse<>("Triggered async full git sync");
   }
+
+  @GET
+  @Path("/tags/{uuid}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  public RestResponse<YamlPayload> getTags(@QueryParam("accountId") String accountId) {
+    return yamlResourceService.getHarnessTags(accountId);
+  }
+
+  @PUT
+  @Path("/tags/{uuid}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  public RestResponse<ServiceCommand> updateTags(@QueryParam("accountId") String accountId, YamlPayload yamlPayload) {
+    return yamlService.update(yamlPayload, accountId);
+  }
 }

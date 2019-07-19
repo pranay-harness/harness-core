@@ -91,7 +91,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   private static long MAX_TAGS_PER_RESOURCE = 50L;
 
   @Override
-  public HarnessTag create(HarnessTag tag) {
+  public HarnessTag createTag(HarnessTag tag, boolean syncFromGit) {
     sanitizeAndValidateHarnessTag(tag);
 
     HarnessTag existingTag = get(tag.getAccountId(), tag.getKey());
@@ -105,15 +105,23 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     }
 
     wingsPersistence.save(tag);
-    return get(tag.getAccountId(), tag.getKey());
+    HarnessTag savedTag = get(tag.getAccountId(), tag.getKey());
+
+    yamlPushService.pushYamlChangeSet(savedTag.getAccountId(), savedTag, savedTag, Type.UPDATE, syncFromGit, false);
+
+    return savedTag;
   }
 
   @Override
-  public HarnessTag update(HarnessTag tag) {
+  public HarnessTag create(HarnessTag tag) {
+    return createTag(tag, false);
+  }
+
+  @Override
+  public HarnessTag updateTag(HarnessTag tag, boolean syncFromGit) {
     sanitizeAndValidateHarnessTag(tag);
 
     HarnessTag existingTag = get(tag.getAccountId(), tag.getKey());
-
     if (existingTag == null) {
       throw new InvalidRequestException("Tag with given Tag Name does not exist");
     }
@@ -122,7 +130,17 @@ public class HarnessTagServiceImpl implements HarnessTagService {
 
     wingsPersistence.updateField(
         HarnessTag.class, existingTag.getUuid(), HarnessTagKeys.allowedValues, tag.getAllowedValues());
-    return get(tag.getAccountId(), tag.getKey());
+    HarnessTag updatedTag = get(tag.getAccountId(), tag.getKey());
+
+    yamlPushService.pushYamlChangeSet(
+        updatedTag.getAccountId(), updatedTag, updatedTag, Type.UPDATE, syncFromGit, false);
+
+    return updatedTag;
+  }
+
+  @Override
+  public HarnessTag update(HarnessTag tag) {
+    return updateTag(tag, false);
   }
 
   private void validateAllowedValuesUpdate(HarnessTag harnessTag, HarnessTag existingTag) {
@@ -191,14 +209,32 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     return response;
   }
 
+  public List<HarnessTag> listTags(String accountId) {
+    return wingsPersistence.createQuery(HarnessTag.class).filter(HarnessTagKeys.accountId, accountId).asList();
+  }
+
   @Override
-  public void delete(@NotBlank String accountId, @NotBlank String key) {
+  public void deleteTag(@NotBlank String accountId, @NotBlank String key, boolean syncFromGit) {
     if (isTagInUse(accountId, key)) {
       throw new InvalidRequestException("Tag is in use. Cannot delete");
     }
+
+    HarnessTag harnessTag = get(accountId, key);
+    if (harnessTag == null) {
+      return;
+    }
+
     wingsPersistence.delete(wingsPersistence.createQuery(HarnessTag.class)
                                 .filter(HarnessTagKeys.accountId, accountId)
                                 .filter(HarnessTagKeys.key, key.trim()));
+
+    yamlPushService.pushYamlChangeSet(
+        harnessTag.getAccountId(), harnessTag, harnessTag, Type.UPDATE, syncFromGit, false);
+  }
+
+  @Override
+  public void delete(@NotBlank String accountId, @NotBlank String key) {
+    deleteTag(accountId, key, false);
   }
 
   @Override
@@ -209,7 +245,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   @Override
   public void attachTag(HarnessTagLink tagLink) {
     attachTagWithoutGitPush(tagLink);
-    pushToGit(tagLink.getAccountId(), tagLink.getEntityId(), false);
+    pushTagLinkToGit(tagLink.getAccountId(), tagLink.getEntityId(), false);
   }
 
   @Override
@@ -241,7 +277,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   @Override
   public void detachTag(@NotBlank String accountId, @NotBlank String entityId, @NotBlank String key) {
     detachTagWithoutGitPush(accountId, entityId, key);
-    pushToGit(accountId, entityId, false);
+    pushTagLinkToGit(accountId, entityId, false);
   }
 
   @Override
@@ -516,7 +552,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   }
 
   @Override
-  public void pushToGit(String accountId, String entityId, boolean syncFromGit) {
+  public void pushTagLinkToGit(String accountId, String entityId, boolean syncFromGit) {
     ResourceLookup resourceLookup = resourceLookupService.getWithResourceId(accountId, entityId);
     PersistentEntity resource = getPersistentEntity(resourceLookup);
 
@@ -553,5 +589,10 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     }
 
     return null;
+  }
+
+  private void pushTagsToGit(HarnessTag harnessTag, boolean syncFromGit) {
+    yamlPushService.pushYamlChangeSet(
+        harnessTag.getAccountId(), harnessTag, harnessTag, Type.UPDATE, syncFromGit, false);
   }
 }
