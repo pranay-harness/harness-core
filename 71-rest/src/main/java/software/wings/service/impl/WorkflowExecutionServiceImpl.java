@@ -40,7 +40,6 @@ import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ApprovalDetails.Action.APPROVE;
 import static software.wings.beans.ApprovalDetails.Action.REJECT;
-import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.EntityType.DEPLOYMENT;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
@@ -1925,7 +1924,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     List<StateExecutionInterrupt> interrupts =
         wingsPersistence.createQuery(ExecutionInterrupt.class)
-            .filter(ExecutionInterrupt.APP_ID_KEY, appId)
+            .filter(ExecutionInterruptKeys.appId, appId)
             .filter(ExecutionInterruptKeys.stateExecutionInstanceId, stateExecutionInstanceId)
             .asList()
             .stream()
@@ -1938,7 +1937,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     if (isNotEmpty(stateExecutionInstance.getInterruptHistory())) {
       wingsPersistence.createQuery(ExecutionInterrupt.class)
-          .filter(ExecutionInterrupt.APP_ID_KEY, appId)
+          .filter(ExecutionInterruptKeys.appId, appId)
           .field(ID_KEY)
           .in(map.keySet())
           .asList()
@@ -2776,7 +2775,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private WorkflowExecution fetchLastSuccessDeployment(String appId, String workflowId) {
     return wingsPersistence.createQuery(WorkflowExecution.class)
         .filter(WorkflowExecutionKeys.workflowId, workflowId)
-        .filter(APP_ID_KEY, appId)
+        .filter(WorkflowExecutionKeys.appId, appId)
         .filter(WorkflowExecutionKeys.status, SUCCESS)
         .order("-createdAt")
         .get();

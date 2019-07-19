@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.common.Constants.ML_RECORDS_TTL_MONTHS;
 
 import com.google.common.base.Preconditions;
@@ -13,6 +12,7 @@ import software.wings.beans.Base;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.beans.baseline.WorkflowExecutionBaseline.WorkflowExecutionBaselineKeys;
 import software.wings.dl.WingsPersistence;
@@ -45,7 +45,7 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
     for (WorkflowExecutionBaseline workflowExecutionBaseline : workflowExecutionBaselines) {
       List<WorkflowExecutionBaseline> existingBaselines =
           wingsPersistence.createQuery(WorkflowExecutionBaseline.class)
-              .filter(APP_ID_KEY, workflowExecutionBaseline.getAppId())
+              .filter(WorkflowExecutionKeys.appId, workflowExecutionBaseline.getAppId())
               .filter(WorkflowExecutionBaselineKeys.workflowId, workflowExecutionBaseline.getWorkflowId())
               .filter(WorkflowExecutionBaselineKeys.envId, workflowExecutionBaseline.getEnvId())
               .filter(WorkflowExecutionBaselineKeys.serviceId, workflowExecutionBaseline.getServiceId())
@@ -170,14 +170,14 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
   private <T extends Base> void updateTtl(String workflowExecutionId, String appId, Class<T> recordClass) {
     wingsPersistence.update(wingsPersistence.createQuery(recordClass)
                                 .filter("workflowExecutionId", workflowExecutionId)
-                                .filter(APP_ID_KEY, appId),
+                                .filter(WorkflowExecutionKeys.appId, appId),
         wingsPersistence.createUpdateOperations(recordClass).set("validUntil", BASELINE_TTL));
   }
 
   @Override
   public String getBaselineExecutionId(String appId, String workflowId, String envId, String serviceId) {
     WorkflowExecutionBaseline executionBaseline = wingsPersistence.createQuery(WorkflowExecutionBaseline.class)
-                                                      .filter(WorkflowExecutionBaseline.APP_ID_KEY, appId)
+                                                      .filter(WorkflowExecutionBaselineKeys.appId, appId)
                                                       .filter(WorkflowExecutionBaseline.WORKFLOW_ID_KEY, workflowId)
                                                       .filter(WorkflowExecutionBaseline.ENV_ID_KEY, envId)
                                                       .filter(WorkflowExecutionBaseline.SERVICE_ID_KEY, serviceId)

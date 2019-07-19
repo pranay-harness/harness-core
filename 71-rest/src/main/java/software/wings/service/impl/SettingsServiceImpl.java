@@ -18,7 +18,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingAttribute.ENV_ID_KEY;
@@ -291,7 +290,7 @@ public class SettingsServiceImpl implements SettingsService {
     int maxGitConnectorsAllowed = gitOpsFeature.getMaxUsageAllowedForAccount(settingAttribute.getAccountId());
     PageRequest<SettingAttribute> request =
         aPageRequest()
-            .addFilter(SettingAttribute.ACCOUNT_ID_KEY, Operator.EQ, settingAttribute.getAccountId())
+            .addFilter(SettingAttributeKeys.accountId, Operator.EQ, settingAttribute.getAccountId())
             .addFilter(SettingAttribute.VALUE_TYPE_KEY, Operator.EQ, SettingVariableTypes.GIT)
             .build();
     int currentGitConnectorCount = list(request, null, null).getResponse().size();
@@ -320,8 +319,8 @@ public class SettingsServiceImpl implements SettingsService {
       Map<String, SettingAttribute> cloudProvidersMap = new HashMap<>();
 
       wingsPersistence.createQuery(SettingAttribute.class)
-          .filter(SettingAttribute.ACCOUNT_ID_KEY, accountId)
-          .filter(APP_ID_KEY, GLOBAL_APP_ID)
+          .filter(SettingAttributeKeys.accountId, accountId)
+          .filter(SettingAttributeKeys.appId, GLOBAL_APP_ID)
           .field(ID_KEY)
           .in(cloudProviderIds)
           .forEach(settingAttribute -> { cloudProvidersMap.put(settingAttribute.getUuid(), settingAttribute); });
@@ -457,8 +456,8 @@ public class SettingsServiceImpl implements SettingsService {
 
   private Map<String, String> listAccountOrAppDefaults(String accountId, String appId) {
     List<SettingAttribute> settingAttributes = wingsPersistence.createQuery(SettingAttribute.class)
-                                                   .filter(SettingAttribute.ACCOUNT_ID_KEY, accountId)
-                                                   .filter(APP_ID_KEY, appId)
+                                                   .filter(SettingAttributeKeys.accountId, accountId)
+                                                   .filter(SettingAttributeKeys.appId, appId)
                                                    .filter(VALUE_TYPE_KEY, SettingVariableTypes.STRING.name())
                                                    .asList();
 
@@ -701,7 +700,7 @@ public class SettingsServiceImpl implements SettingsService {
     if (EmptyPredicate.isNotEmpty(selectedGitConnectors)) {
       // Delete git connectors
       wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class)
-                                  .filter(SettingAttribute.ACCOUNT_ID_KEY, accountId)
+                                  .filter(SettingAttributeKeys.accountId, accountId)
                                   .filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.GIT)
                                   .field(NAME_KEY)
                                   .notIn(selectedGitConnectors));
@@ -823,8 +822,8 @@ public class SettingsServiceImpl implements SettingsService {
   public SettingAttribute fetchSettingAttributeByName(
       String accountId, String attributeName, SettingVariableTypes settingVariableTypes) {
     return wingsPersistence.createQuery(SettingAttribute.class)
-        .filter(SettingAttribute.ACCOUNT_ID_KEY, accountId)
-        .filter(SettingAttribute.APP_ID_KEY, GLOBAL_APP_ID)
+        .filter(SettingAttributeKeys.accountId, accountId)
+        .filter(SettingAttributeKeys.appId, GLOBAL_APP_ID)
         .filter(ENV_ID_KEY, GLOBAL_ENV_ID)
         .filter(SettingAttribute.NAME_KEY, attributeName)
         .filter(VALUE_TYPE_KEY, settingVariableTypes.name())
@@ -934,9 +933,9 @@ public class SettingsServiceImpl implements SettingsService {
     List<SettingAttribute> settingAttributes = new ArrayList<>();
 
     try (HIterator<SettingAttribute> iterator = new HIterator(wingsPersistence.createQuery(SettingAttribute.class)
-                                                                  .filter(SettingAttribute.ACCOUNT_ID_KEY, accountId)
-                                                                  .filter(APP_ID_KEY, appId)
-                                                                  .filter(ENV_ID_KEY, envId)
+                                                                  .filter(SettingAttributeKeys.accountId, accountId)
+                                                                  .filter(SettingAttributeKeys.appId, appId)
+                                                                  .filter(SettingAttributeKeys.envId, envId)
                                                                   .filter(VALUE_TYPE_KEY, type)
                                                                   .order(NAME_KEY)
                                                                   .fetch())) {
@@ -965,7 +964,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   public SettingValue getSettingValueById(String accountId, String id) {
     SettingAttribute settingAttribute = wingsPersistence.createQuery(SettingAttribute.class)
-                                            .filter(SettingAttribute.ACCOUNT_ID_KEY, accountId)
+                                            .filter(SettingAttributeKeys.accountId, accountId)
                                             .filter(SettingAttribute.ID_KEY, id)
                                             .get();
     if (settingAttribute != null) {
