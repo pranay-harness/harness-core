@@ -4,8 +4,9 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
+import static software.wings.beans.Account.ACCOUNT_ID_KEY;
+import static software.wings.beans.Account.Builder;
 import static software.wings.beans.Account.Builder.anAccount;
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.User.Builder.anUser;
 
 import com.google.common.collect.ImmutableMap;
@@ -116,7 +117,7 @@ public class AccountGenerator {
   }
 
   public Account ensureGenericTest() {
-    Account account = ensureAccount(Account.Builder.anAccount()
+    Account account = ensureAccount(Builder.anAccount()
                                         .withUuid(ACCOUNT_ID)
                                         .withAccountName("Harness")
                                         .withCompanyName("Harness")
@@ -177,7 +178,7 @@ public class AccountGenerator {
 
     if (account == null) {
       logger.info("Account does not exist with accountName = {}", accountName);
-      account = Account.Builder.anAccount()
+      account = Builder.anAccount()
                     .withUuid(accountId)
                     .withAccountName(accountName)
                     .withCompanyName(companyName)
