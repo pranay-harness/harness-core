@@ -19,11 +19,11 @@ input CloudProviderTypeFilter {
 }
 
 enum CloudProviderType {
-  AWS
   PHYSICAL_DATA_CENTER
+  AWS
   AZURE
   GCP
-  KUBERNETES
+  KUBERNETES_CLUSTER
   PCF
 }
 
