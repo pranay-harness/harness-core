@@ -41,6 +41,7 @@ import java.util.List;
 public class GitConfig extends SettingValue implements EncryptableSetting {
   public static final String HARNESS_IO_KEY_ = "Harness.io";
   public static final String HARNESS_SUPPORT_EMAIL_KEY = "support@harness.io";
+  public static final String GIT_USER = "git";
 
   @Attributes(title = "Username", required = true) private String username;
   @Attributes(title = "Password", required = true) @Encrypted private char[] password;
