@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import io.fabric8.utils.Lists;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
 
 import java.sql.Array;
@@ -43,6 +44,7 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
       "INSERT INTO DEPLOYMENT (EXECUTIONID,STARTTIME,ENDTIME,ACCOUNTID,APPID,TRIGGERED_BY,TRIGGER_ID,STATUS,SERVICES,WORKFLOWS,CLOUDPROVIDERS,ENVIRONMENTS,PIPELINE,DURATION,ARTIFACTS,ENVTYPES,PARENT_EXECUTION,STAGENAME) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
   @Inject private TimeScaleDBService timeScaleDBService;
+  @Inject DataFetcherUtils utils;
 
   @Override
   public void processEvent(TimeSeriesEventInfo eventInfo) {
@@ -75,8 +77,10 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
            * 	STAGENAME TEXT
            **/
           insertPreparedStatement.setString(1, eventInfo.getStringData().get(EventProcessor.EXECUTIONID));
-          insertPreparedStatement.setTimestamp(2, new Timestamp(eventInfo.getLongData().get(EventProcessor.STARTTIME)));
-          insertPreparedStatement.setTimestamp(3, new Timestamp(eventInfo.getLongData().get(EventProcessor.ENDTIME)));
+          insertPreparedStatement.setTimestamp(
+              2, new Timestamp(eventInfo.getLongData().get(EventProcessor.STARTTIME)), utils.getDefaultCalendar());
+          insertPreparedStatement.setTimestamp(
+              3, new Timestamp(eventInfo.getLongData().get(EventProcessor.ENDTIME)), utils.getDefaultCalendar());
           insertPreparedStatement.setString(4, eventInfo.getAccountId());
           insertPreparedStatement.setString(5, eventInfo.getStringData().get(EventProcessor.APPID));
           insertPreparedStatement.setString(6, eventInfo.getStringData().get(EventProcessor.TRIGGERED_BY));
