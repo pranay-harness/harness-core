@@ -72,6 +72,8 @@ import javax.validation.constraints.NotNull;
         , @Field(WorkflowExecutionKeys.status), @Field(WorkflowExecutionKeys.workflowId),
             @Field(WorkflowExecutionKeys.infraMappingIds), @Field(WorkflowExecutionKeys.infraDefinitionIds),
             @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
+      }), @Index(options = @IndexOptions(name = "appId_endTs", background = true), fields = {
+        @Field(WorkflowExecutionKeys.appId), @Field(value = WorkflowExecutionKeys.endTs)
       })
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -83,6 +85,7 @@ public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAt
   @Indexed @NotNull protected String appId;
   private EmbeddedUser createdBy;
   @Indexed private long createdAt;
+  @Indexed private String accountId;
 
   private String workflowId;
 
