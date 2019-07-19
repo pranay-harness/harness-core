@@ -207,6 +207,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private EmailNotificationService emailNotificationService;
   @Inject private DashboardStatisticsService dashboardStatisticsService;
   @Inject private UsageMetricsEventPublisher usageMetricsEventPublisher;
+  @Inject private HarnessUserGroupServiceImpl harnessUserGroupService;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   private Map<String, UrlInfo> techStackDocLinks;
@@ -757,13 +758,28 @@ public class AccountServiceImpl implements AccountService {
         wingsPersistence.createQuery(User.class, excludeAuthority).field("accounts").contains(accountId);
     try (HIterator<User> records = new HIterator<>(query.fetch())) {
       for (User user : records) {
-        user.setDisabled(!enable);
-        wingsPersistence.save(user);
-        userService.evictUserFromCache(user.getUuid());
-        logger.info("User {} has been disabled.", user.getEmail());
+        if (canEnableOrDisable(user)) {
+          user.setDisabled(!enable);
+          wingsPersistence.save(user);
+          userService.evictUserFromCache(user.getUuid());
+          logger.info("User {} has been disabled: {}", user.getEmail(), !enable);
+        }
       }
     }
     logger.info("All users in account {} has been disabled.", accountId);
+  }
+
+  /**
+   * User can NOT be disabled/enabled in account status change only when:
+   * 1. User belongs to multiple accounts
+   * 2. User belongs to Harness user group
+   */
+  private boolean canEnableOrDisable(User user) {
+    boolean result = true;
+    if (user.getAccounts().size() > 0 || harnessUserGroupService.isHarnessSupportUser(user.getUuid())) {
+      result = false;
+    }
+    return result;
   }
 
   @Override
