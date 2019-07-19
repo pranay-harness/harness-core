@@ -46,6 +46,7 @@ public class ECSPollingHandler implements Handler<ECSPollingJobEntity> {
                                          .executorService(executor)
                                          .semaphore(semaphore)
                                          .handler(handler)
+                                         .regular(true)
                                          .redistribute(true)
                                          .build();
 

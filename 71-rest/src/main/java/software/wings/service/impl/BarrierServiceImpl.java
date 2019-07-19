@@ -86,6 +86,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
             .semaphore(new Semaphore(threads))
             .handler(barrierInstance -> barrierService.update(barrierInstance))
             .filterExpander(query -> query.filter(BarrierInstanceKeys.state, STANDING.name()))
+            .regular(true)
             .redistribute(true)
             .build();
 
