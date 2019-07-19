@@ -3,9 +3,10 @@ package software.wings.service.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
-import static software.wings.common.Constants.PARENT;
+
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.service.impl.instance.InstanceHelperTest.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.PARENT;
 import static software.wings.utils.WingsTestConstants.PATH;
 
 import com.google.api.client.util.Lists;

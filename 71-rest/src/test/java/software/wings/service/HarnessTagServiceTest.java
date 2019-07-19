@@ -71,7 +71,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
       harnessTagService.create(HarnessTag.builder().accountId(TEST_ACCOUNT_ID).key(" ").build());
       fail("Expected an InvalidRequestException to be thrown");
     } catch (InvalidRequestException exception) {
-      assertThat(exception.getParams().get("message")).isEqualTo("Tag key cannot be blank");
+      assertThat(exception.getParams().get("message")).isEqualTo("Tag name cannot be blank");
     }
   }
 
@@ -87,7 +87,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
               .build());
       fail("Expected an InvalidRequestException to be thrown");
     } catch (InvalidRequestException exception) {
-      assertThat(exception.getParams().get("message")).isEqualTo("Max allowed size for tag key is 128");
+      assertThat(exception.getParams().get("message")).isEqualTo("Max allowed size for tag name is 128");
     }
   }
 
