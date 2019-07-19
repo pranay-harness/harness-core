@@ -60,7 +60,7 @@ import software.wings.rules.SetupScheduler;
 import software.wings.service.impl.SSHKeyDataProvider;
 import software.wings.service.impl.WinRmConnectionAttributesDataProvider;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
-import software.wings.service.impl.yaml.HarnessTagYamlHelper;
+import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHelper;
 import software.wings.service.impl.yaml.handler.workflow.PipelineStageYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.PipelineYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;

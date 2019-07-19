@@ -21,6 +21,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
+import software.wings.beans.HarnessTag;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
@@ -176,6 +177,8 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       return obtainDefaultVariableChangeSet(accountId, ((SettingAttribute) entity).getAppId(), changeType);
     } else if (entity instanceof ServiceVariable) {
       return obtainServiceVariableChangeSet(accountId, (ServiceVariable) entity, changeType);
+    } else if (entity instanceof HarnessTag) {
+      return getHarnessTagsChangeSet(accountId);
     }
 
     boolean isNonLeafEntity;
@@ -311,6 +314,8 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       appId = ((Base) entity).getAppId();
     } else if (entity instanceof String) { // Special handling for DefaultVariables
       appId = (String) entity;
+    } else if (entity instanceof HarnessTag) {
+      appId = GLOBAL_APP_ID;
     }
 
     notNullCheck("Application id cannot be null", appId, SRE);
@@ -331,5 +336,15 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
 
     Application application = appService.get(appId);
     return application.getAccountId();
+  }
+
+  @Override
+  public List<GitFileChange> getHarnessTagsChangeSet(String accountId) {
+    // Tags.yaml is a special case where one yaml is mapped to a list of multiple tags.
+    // So any CRUD operation on any tag should result in ChangeType.MODIFY
+
+    String yaml = yamlResourceService.getHarnessTags(accountId).getResource().getYaml();
+    return Lists.newArrayList(createGitFileChange(
+        accountId, yamlDirectoryService.getRootPath(), YamlConstants.TAGS, yaml, ChangeType.MODIFY, false));
   }
 }

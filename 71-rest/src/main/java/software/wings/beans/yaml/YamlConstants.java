@@ -94,4 +94,7 @@ public interface YamlConstants {
   String VALUES_FOLDER = "Values";
 
   String VALUES_YAML_KEY = "values.yaml";
+
+  String TAGS = "Tags";
+  String TAGS_YAML = "Tags.yaml";
 }

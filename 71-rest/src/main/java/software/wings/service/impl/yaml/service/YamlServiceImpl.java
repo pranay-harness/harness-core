@@ -46,6 +46,7 @@ import static software.wings.beans.yaml.YamlType.NOTIFICATION_GROUP;
 import static software.wings.beans.yaml.YamlType.PIPELINE;
 import static software.wings.beans.yaml.YamlType.PROVISIONER;
 import static software.wings.beans.yaml.YamlType.SERVICE;
+import static software.wings.beans.yaml.YamlType.TAG;
 import static software.wings.beans.yaml.YamlType.TRIGGER;
 import static software.wings.beans.yaml.YamlType.VERIFICATION_PROVIDER;
 import static software.wings.beans.yaml.YamlType.WORKFLOW;
@@ -87,9 +88,9 @@ import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.YamlProcessingException;
 import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
-import software.wings.service.impl.yaml.HarnessTagYamlHelper;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
+import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.WorkflowService;
@@ -157,7 +158,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   private final List<YamlType> yamlProcessingOrder = getEntityProcessingOrder();
 
   private List<YamlType> getEntityProcessingOrder() {
-    return Lists.newArrayList(ACCOUNT_DEFAULTS, CLOUD_PROVIDER, CLOUD_PROVIDER_OVERRIDE, ARTIFACT_SERVER,
+    return Lists.newArrayList(ACCOUNT_DEFAULTS, TAG, CLOUD_PROVIDER, CLOUD_PROVIDER_OVERRIDE, ARTIFACT_SERVER,
         ARTIFACT_SERVER_OVERRIDE, COLLABORATION_PROVIDER, LOADBALANCER_PROVIDER, VERIFICATION_PROVIDER,
         NOTIFICATION_GROUP, APPLICATION, APPLICATION_DEFAULTS, SERVICE, PROVISIONER, CV_CONFIGURATION, ARTIFACT_STREAM,
         ARTIFACT_SERVER_ARTIFACT_STREAM_OVERRIDE, CLOUD_PROVIDER_ARTIFACT_STREAM_OVERRIDE, COMMAND,
@@ -633,7 +634,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       yamlSyncHandler.upsertFromYaml(changeContext, changeContextList);
 
       // Handling for tags
-      harnessTagYamlHelper.upsertTagsIfRequired(changeContext);
+      harnessTagYamlHelper.upsertTagLinksIfRequired(changeContext);
 
     } catch (WingsException e) {
       if (e.getCode() == ErrorCode.USAGE_LIMITS_EXCEEDED) {

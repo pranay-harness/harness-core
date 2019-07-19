@@ -7,7 +7,7 @@ import io.harness.persistence.PersistentEntity;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.ChangeContext.Builder;
-import software.wings.service.impl.yaml.HarnessTagYamlHelper;
+import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHelper;
 import software.wings.yaml.BaseEntityYaml;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlHelper;
@@ -49,6 +49,6 @@ public abstract class BaseYamlHandler<Y extends BaseYaml, B extends Object> {
   }
 
   protected void updateYamlWithAdditionalInfo(PersistentEntity entity, String appId, BaseEntityYaml yaml) {
-    harnessTagYamlHelper.updateYamlWithHarnessTags(entity, appId, yaml);
+    harnessTagYamlHelper.updateYamlWithHarnessTagLinks(entity, appId, yaml);
   }
 }

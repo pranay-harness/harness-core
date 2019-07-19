@@ -53,6 +53,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.EntityYamlRecord;
 import software.wings.beans.EntityYamlRecord.EntityYamlRecordKeys;
 import software.wings.beans.Event.Type;
+import software.wings.beans.HarnessTag;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
@@ -164,6 +165,14 @@ public class AuditServiceImpl implements AuditService {
 
     if (isEmpty(entityAuditRecords)) {
       return builder.build();
+    }
+
+    String entityType = entityAuditRecords.get(0).getEntityType();
+    if (ResourceType.TAG.name().equals(entityType)) {
+      entityAuditRecords = header.getEntityAuditRecords()
+                               .stream()
+                               .filter(record -> entityType.equals(record.getEntityType()))
+                               .collect(Collectors.toList());
     }
 
     String entityOldYamlRecordId = entityAuditRecords.get(0).getEntityOldYamlRecordId();
@@ -455,14 +464,21 @@ public class AuditServiceImpl implements AuditService {
       entityType = record.getEntityType();
       entityId = record.getEntityId();
     }
-    EntityYamlRecord entityYamlRecord = wingsPersistence.createQuery(EntityYamlRecord.class)
-                                            .filter(EntityYamlRecordKeys.entityId, entityId)
-                                            .filter(EntityYamlRecordKeys.accountId, accountId)
+
+    // All Tags go to same yaml file, Tags.yaml. Ignore entityId in that case and use entity type to get all tags
+    // updated in this audit record.
+    Query<EntityYamlRecord> query = wingsPersistence.createQuery(EntityYamlRecord.class);
+    if (!ResourceType.TAG.name().equals(entityType)) {
+      query.filter(EntityYamlRecordKeys.entityId, entityId);
+    }
+
+    EntityYamlRecord entityYamlRecord = query.filter(EntityYamlRecordKeys.accountId, accountId)
                                             .filter(EntityYamlRecordKeys.entityType, entityType)
                                             .project(EntityYamlRecordKeys.uuid, true)
                                             .project(EntityYamlRecordKeys.yamlPath, true)
                                             .order(descending(EntityYamlRecordKeys.createdAt))
                                             .get();
+
     if (entityYamlRecord != null) {
       record.setYamlPath(entityYamlRecord.getYamlPath());
       record.setEntityOldYamlRecordId(entityYamlRecord.getUuid());
@@ -495,6 +511,8 @@ public class AuditServiceImpl implements AuditService {
           && SettingVariableTypes.STRING.name().equals(((SettingAttribute) entity).getValue().getType())) {
         YamlPayload resource = yamlResourceService.getDefaultVariables(accountId, record.getAppId()).getResource();
         yamlContent = resource.getYaml();
+      } else if (entity instanceof HarnessTag) {
+        yamlContent = yamlResourceService.getHarnessTags(accountId).getResource().getYaml();
       } else {
         YamlPayload resource = yamlResourceService.obtainEntityYamlVersion(accountId, entity).getResource();
         yamlContent = resource.getYaml();

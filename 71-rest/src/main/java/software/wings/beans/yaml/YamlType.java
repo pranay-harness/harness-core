@@ -27,6 +27,7 @@ import static software.wings.beans.yaml.YamlConstants.PIPELINES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PROVISIONERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SERVICES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.TAGS_YAML;
 import static software.wings.beans.yaml.YamlConstants.TRIGGER_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.VALUES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.VALUES_YAML_KEY;
@@ -41,6 +42,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.GraphNode;
+import software.wings.beans.HarnessTag;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.LambdaSpecification.DefaultSpecification;
@@ -265,7 +267,9 @@ public enum YamlType {
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, ANY), Defaults.class),
   USAGE_RESTRICTIONS(ObjectType.USAGE_RESTRICTIONS, "", "", UsageRestrictions.class),
   TRIGGER_CONDITION(ObjectType.TRIGGER_CONDITION, "", "", TriggerConditionYaml.class),
-  ARTIFACT_SELECTION(ObjectType.ARTIFACT_SELECTION, "", "", ArtifactSelection.Yaml.class);
+  ARTIFACT_SELECTION(ObjectType.ARTIFACT_SELECTION, "", "", ArtifactSelection.Yaml.class),
+  TAG(EntityType.TAG.name(), generatePath(PATH_DELIMITER, false, SETUP_FOLDER, TAGS_YAML),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, ANY), HarnessTag.class);
 
   private String entityType;
   private String pathExpression;

@@ -6,6 +6,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
 import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
+import static software.wings.beans.yaml.YamlConstants.TAGS_YAML;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE;
@@ -25,6 +26,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
+import software.wings.beans.HarnessTag;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.LambdaSpecification;
@@ -56,6 +58,7 @@ import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.NotificationSetupService;
@@ -103,6 +106,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private CVConfigurationService cvConfigurationService;
   @Inject private ApplicationManifestService applicationManifestService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Inject private HarnessTagService harnessTagService;
 
   /**
    * Find by app, service and service command ids.
@@ -683,5 +687,13 @@ public class YamlResourceServiceImpl implements YamlResourceService {
         unhandled(appManifestSource);
         throw new WingsException("Unhandled app manifest type");
     }
+  }
+
+  @Override
+  public RestResponse<YamlPayload> getHarnessTags(String accountId) {
+    List<HarnessTag> harnessTags = harnessTagService.listTags(accountId);
+    BaseYaml yaml = yamlHandlerFactory.getYamlHandler(YamlType.TAG).toYaml(harnessTags, GLOBAL_APP_ID);
+
+    return YamlHelper.getYamlRestResponse(yamlGitSyncService, GLOBAL_APP_ID, accountId, yaml, TAGS_YAML);
   }
 }

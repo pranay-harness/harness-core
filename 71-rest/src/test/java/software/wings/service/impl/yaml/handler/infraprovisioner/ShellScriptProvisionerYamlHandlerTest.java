@@ -18,7 +18,7 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
 import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner.Yaml;
-import software.wings.service.impl.yaml.HarnessTagYamlHelper;
+import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 

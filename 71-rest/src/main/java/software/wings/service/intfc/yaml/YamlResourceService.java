@@ -127,4 +127,6 @@ public interface YamlResourceService {
   RestResponse<YamlPayload> getCVConfiguration(String appId, String cvConfigId);
 
   YamlType getYamlTypeFromAppManifest(ApplicationManifest applicationManifest);
+
+  RestResponse<YamlPayload> getHarnessTags(String accountId);
 }

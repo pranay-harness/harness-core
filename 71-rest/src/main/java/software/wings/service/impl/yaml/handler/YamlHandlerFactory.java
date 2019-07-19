@@ -61,6 +61,7 @@ import software.wings.service.impl.yaml.handler.setting.cloudprovider.CloudProvi
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.CollaborationProviderYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.loadbalancer.ElasticLoadBalancerConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.VerificationProviderYamlHandler;
+import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHandler;
 import software.wings.service.impl.yaml.handler.template.TemplateExpressionYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.ArtifactSelectionYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.TriggerConditionYamlHandler;
@@ -143,6 +144,7 @@ public class YamlHandlerFactory {
   @Inject private ManifestFileYamlHandler manifestFileYamlHandler;
   @Inject private UsageRestrictionsYamlHandler usageRestrictionsYamlHandler;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private HarnessTagYamlHandler harnessTagYamlHandler;
 
   public <T extends BaseYamlHandler> T getYamlHandler(YamlType yamlType) {
     return getYamlHandler(yamlType, null);
@@ -295,6 +297,11 @@ public class YamlHandlerFactory {
       case ARTIFACT_SELECTION:
         yamlHandler = artifactSelectionYamlHandler;
         break;
+
+      case TAG:
+        yamlHandler = harnessTagYamlHandler;
+        break;
+
       default:
         break;
     }
