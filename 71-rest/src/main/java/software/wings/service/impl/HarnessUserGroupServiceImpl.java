@@ -23,11 +23,13 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.app.DeployMode;
 import software.wings.beans.Account;
 import software.wings.beans.FeatureName;
+import software.wings.beans.User;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.HarnessUserAccountActions;
 import software.wings.security.HarnessUserThreadLocal;
 import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -234,10 +236,15 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
       return false;
     }
 
-    // Identity service auth filter may set this thread local if the call comes from identity service
-    // and identity service indicates this call should be treated as from a harness user.
-    if (HarnessUserThreadLocal.get() != null) {
-      return true;
+    if (featureFlagService.isGlobalEnabled(FeatureName.GLOBAL_HARNESS_USER_GROUP)) {
+      // Identity service auth filter may set this thread local if the call comes from identity service
+      // and identity service indicates this call should be treated as from a harness user.
+      if (HarnessUserThreadLocal.get() != null) {
+        User currentUser = UserThreadLocal.get();
+        if (currentUser != null && currentUser.getUuid().equals(userId)) {
+          return true;
+        }
+      }
     }
 
     Query<HarnessUserGroup> query = wingsPersistence.createQuery(HarnessUserGroup.class, excludeAuthority);
