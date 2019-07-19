@@ -860,17 +860,20 @@ public class TriggerServiceImpl implements TriggerService {
       Trigger trigger, ExecutionArgs executionArgs, List<String> artifactNeededServiceIds) {
     // Artifact serviceIds
     List<String> collectedArtifactServiceIds = triggerServiceHelper.obtainCollectedArtifactServiceIds(executionArgs);
-
+    String accountId = appService.getAccountIdByAppId(trigger.getAppId());
     if (isEmpty(artifactNeededServiceIds) && isNotEmpty(collectedArtifactServiceIds)) {
       WorkflowType workflowType = trigger.getWorkflowType() == null ? PIPELINE : trigger.getWorkflowType();
       StringBuilder msg = new StringBuilder(128);
-      msg.append("Trigger rejected. Reason: ")
+      msg.append("Trigger [" + trigger.getName() + "] rejected. Reason: ")
           .append(PIPELINE.equals(workflowType) ? "Pipeline" : "Workflow")
           .append(" [")
           .append(trigger.fetchWorkflowOrPipelineName())
           .append("] does not need artifacts. However, trigger received with the artifacts");
-      logger.warn(msg.toString());
-      //      throw new WingsException(msg.toString());
+
+      if (featureFlagService.isEnabled(FeatureName.REJECT_TRIGGER_IF_ARTIFACTS_NOT_MATCH, accountId)) {
+        logger.warn(msg.toString());
+        throw new WingsException(msg.toString());
+      }
     }
     List<String> missingServiceIds = new ArrayList<>();
     for (String artifactNeededServiceId : artifactNeededServiceIds) {
@@ -886,9 +889,13 @@ public class TriggerServiceImpl implements TriggerService {
           artifactNeededServiceIds, collectedArtifactServiceIds, trigger.getUuid());
       List<String> missingServiceNames =
           serviceResourceService.fetchServiceNamesByUuids(trigger.getAppId(), missingServiceIds);
-      logger.warn("Trigger rejected. Reason: Artifacts are missing for service name(s) {}", missingServiceNames);
-      //      throw new WingsException(
-      //          "Trigger rejected. Reason: Artifacts are missing for service name(s)" + missingServiceNames, USER);
+
+      if (featureFlagService.isEnabled(FeatureName.REJECT_TRIGGER_IF_ARTIFACTS_NOT_MATCH, accountId)) {
+        logger.warn("Trigger rejected. Reason: Artifacts are missing for service name(s) {}", missingServiceNames);
+        String message = "Trigger [" + trigger.getName()
+            + " ] rejected. Reason: Artifacts are missing for service name(s)" + missingServiceNames;
+        throw new WingsException(message, USER);
+      }
     }
     if (isNotEmpty(collectedArtifactServiceIds)) {
       WorkflowType workflowType = trigger.getWorkflowType() == null ? PIPELINE : trigger.getWorkflowType();
@@ -898,8 +905,11 @@ public class TriggerServiceImpl implements TriggerService {
           .append(" [")
           .append(trigger.fetchWorkflowOrPipelineName())
           .append(']');
-      logger.warn(msg.toString());
-      //      throw new WingsException(msg.toString());
+
+      if (featureFlagService.isEnabled(FeatureName.REJECT_TRIGGER_IF_ARTIFACTS_NOT_MATCH, accountId)) {
+        logger.warn(msg.toString());
+        throw new WingsException(msg.toString());
+      }
     }
   }
 

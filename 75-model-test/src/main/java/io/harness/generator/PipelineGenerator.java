@@ -25,7 +25,6 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.WorkflowType;
 import io.harness.distribution.constraint.Constraint.Strategy;
-import io.harness.generator.NotificationGroupGenerator.NotificationGroups;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.WorkflowGenerator.PostProcessInfo;
@@ -33,7 +32,6 @@ import io.harness.generator.WorkflowGenerator.Workflows;
 import software.wings.beans.Application;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.NotificationGroup;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
@@ -50,7 +48,6 @@ public class PipelineGenerator {
   @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
   @Inject private ResourceConstraintGenerator resourceConstraintGenerator;
   @Inject private ServiceGenerator serviceGenerator;
-  @Inject private NotificationGroupGenerator notificationGroupGenerator;
 
   public enum Pipelines { BARRIER, RESOURCE_CONSTRAINT_WORKFLOW, BUILD }
 
@@ -150,9 +147,6 @@ public class PipelineGenerator {
 
     serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
 
-    final NotificationGroup notificationGroup =
-        notificationGroupGenerator.ensurePredefined(seed, owners, NotificationGroups.GENERIC_TEST);
-
     Workflow[] workflows = new Workflow[3];
 
     for (int i = 0; i < 3; i++) {
@@ -175,7 +169,6 @@ public class PipelineGenerator {
                                                       .put("permits", 6)
                                                       .put("holdingScope", HoldingScope.WORKFLOW.name())
                                                       .put("notificationEvents", asList(BLOCKED, UNBLOCKED))
-                                                      .put("notificationGroups", asList(notificationGroup.getUuid()))
                                                       .build())
                                       .build())
                               .build())
