@@ -30,7 +30,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -104,7 +104,9 @@ public class InstanceTimeSeriesDataHelper {
           .append("' GROUP BY REPORTEDAT) INSTANCE_STATS GROUP BY GRP_BY_TIME ORDER BY GRP_BY_TIME");
 
       List<QLTimeSeriesDataPoint> dataPoints = new ArrayList<>();
-      executeTimeSeriesQuery(accountId, queryBuilder.toString(), dataPoints);
+      final String query = queryBuilder.toString();
+      logger.info("Query executed:[{}],accountId:[{}]", query, accountId);
+      executeTimeSeriesQuery(accountId, query, dataPoints);
       return QLTimeSeriesData.builder().dataPoints(dataPoints).build();
     } catch (Exception ex) {
       throw new WingsException("Error while getting time series data", ex);
@@ -259,17 +261,17 @@ public class InstanceTimeSeriesDataHelper {
     switch (filter.getOperator()) {
       case EQUALS:
         queryBuilder.append(" = timestamp '");
-        queryBuilder.append(new Timestamp((Long) filter.getValue()));
+        queryBuilder.append(Instant.ofEpochMilli((Long) filter.getValue()));
         queryBuilder.append('\'');
         break;
       case BEFORE:
         queryBuilder.append(" <= timestamp '");
-        queryBuilder.append(new Timestamp((Long) filter.getValue()));
+        queryBuilder.append(Instant.ofEpochMilli((Long) filter.getValue()));
         queryBuilder.append('\'');
         break;
       case AFTER:
         queryBuilder.append(" >= timestamp '");
-        queryBuilder.append(new Timestamp((Long) filter.getValue()));
+        queryBuilder.append(Instant.ofEpochMilli((Long) filter.getValue()));
         queryBuilder.append('\'');
         break;
       default:

@@ -75,7 +75,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -310,7 +310,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
             dataPointBuilder.key(buildQLReference(field, entityId));
             break;
           case TIMESTAMP:
-            long time = resultSet.getTimestamp(field.getFieldName()).getTime();
+            long time = resultSet.getTimestamp(field.getFieldName(), utils.getDefaultCalendar()).getTime();
             dataPointBuilder.time(time);
             break;
           default:
@@ -354,7 +354,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
             dataPointBuilder.value(resultSet.getLong(field.getFieldName()));
             break;
           case TIMESTAMP:
-            dataPointBuilder.time(resultSet.getTimestamp(field.getFieldName()).getTime());
+            dataPointBuilder.time(resultSet.getTimestamp(field.getFieldName(), utils.getDefaultCalendar()).getTime());
             break;
           default:
             throw new RuntimeException("UnsupportedType " + field.getDataType());
@@ -542,10 +542,11 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
     QLTimeFilter timeFilter = (QLTimeFilter) filter;
     switch (timeFilter.getOperator()) {
       case BEFORE:
-        selectQuery.addCondition(BinaryCondition.lessThanOrEq(key, new Timestamp((Long) (timeFilter.getValue()))));
+        selectQuery.addCondition(BinaryCondition.lessThanOrEq(key, Instant.ofEpochMilli((Long) timeFilter.getValue())));
         break;
       case AFTER:
-        selectQuery.addCondition(BinaryCondition.greaterThanOrEq(key, new Timestamp((Long) (timeFilter.getValue()))));
+        selectQuery.addCondition(
+            BinaryCondition.greaterThanOrEq(key, Instant.ofEpochMilli((Long) timeFilter.getValue())));
         break;
       default:
         throw new RuntimeException("Invalid TimeFilter operator: " + filter.getOperator());

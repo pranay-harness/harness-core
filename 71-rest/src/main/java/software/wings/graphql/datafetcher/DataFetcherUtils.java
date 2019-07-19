@@ -34,8 +34,10 @@ import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -328,5 +330,9 @@ public class DataFetcherUtils {
       }
     }
     return builder.build();
+  }
+
+  public Calendar getDefaultCalendar() {
+    return Calendar.getInstance(TimeZone.getTimeZone("UTC"));
   }
 }

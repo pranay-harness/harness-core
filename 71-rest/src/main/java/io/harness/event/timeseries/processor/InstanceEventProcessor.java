@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.service.impl.event.timeseries.TimeSeriesBatchEventInfo;
 import software.wings.service.impl.event.timeseries.TimeSeriesBatchEventInfo.DataPoint;
 
@@ -25,6 +26,7 @@ public class InstanceEventProcessor implements EventProcessor<TimeSeriesBatchEve
       "INSERT INTO INSTANCE_STATS (REPORTEDAT, ACCOUNTID, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, INSTANCETYPE, INSTANCECOUNT, ARTIFACTID) VALUES (?,?,?,?,?,?,?,?,?)";
 
   @Inject private TimeScaleDBService timeScaleDBService;
+  @Inject private DataFetcherUtils utils;
 
   @Override
   public void processEvent(TimeSeriesBatchEventInfo eventInfo) {
@@ -39,7 +41,7 @@ public class InstanceEventProcessor implements EventProcessor<TimeSeriesBatchEve
           dataPointList.forEach(dataPoint -> {
             try {
               Map<String, Object> dataMap = dataPoint.getData();
-              statement.setTimestamp(1, new Timestamp(eventInfo.getTimestamp()));
+              statement.setTimestamp(1, new Timestamp(eventInfo.getTimestamp()), utils.getDefaultCalendar());
               statement.setString(2, eventInfo.getAccountId());
               statement.setString(3, (String) dataMap.get(EventProcessor.APPID));
               statement.setString(4, (String) dataMap.get(EventProcessor.SERVICEID));
