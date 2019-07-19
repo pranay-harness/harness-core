@@ -1,23 +1,26 @@
 package io.harness.iterator;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static java.util.Arrays.asList;
 
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
 @Builder
-@Entity(value = "!!!testIrregularIterable")
-@FieldNameConstants(innerTypeName = "IrregularIterableEntityKeys")
-public class IrregularIterableEntity implements PersistentIrregularIterable {
+@Entity(value = "!!!testCronIterable")
+@FieldNameConstants(innerTypeName = "CronIterableEntityKeys")
+@Slf4j
+public class CronIterableEntity implements PersistentCronIterable {
   @Id private String uuid;
   private String name;
+  private String expression;
   private List<Long> nextIterations;
 
   @Override
@@ -27,14 +30,20 @@ public class IrregularIterableEntity implements PersistentIrregularIterable {
 
   @Override
   public List<Long> recalculateNextIterations(String fieldName) {
-    if (nextIterations != null && nextIterations.size() > 1) {
-      // If no new items are provided we need to remove the first item to prevent it being added again with merge
-      nextIterations.remove(0);
-      return null;
+    if (nextIterations == null) {
+      nextIterations = new ArrayList<>();
     }
 
-    final long millis = System.currentTimeMillis();
-    nextIterations = asList(millis + 1000, millis + 2000, millis + 3000, millis + 4000);
-    return nextIterations;
+    if (expandNextIterations(expression, nextIterations)) {
+      logger.info(expression);
+      return nextIterations;
+    }
+
+    return null;
+  }
+
+  @Override
+  public boolean skipMissed() {
+    return true;
   }
 }

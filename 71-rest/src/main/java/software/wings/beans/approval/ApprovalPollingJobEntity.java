@@ -1,6 +1,6 @@
 package software.wings.beans.approval;
 
-import io.harness.persistence.PersistentRegularIterable;
+import io.harness.iterator.PersistentRegularIterable;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
