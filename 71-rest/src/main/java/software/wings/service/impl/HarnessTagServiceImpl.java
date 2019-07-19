@@ -29,8 +29,10 @@ import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.PersistentEntity;
+import io.harness.validation.Update;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotBlank;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.HarnessTag;
@@ -248,9 +250,10 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   }
 
   @Override
+  @ValidationGroups(Update.class)
   public void attachTag(HarnessTagLink tagLink) {
     attachTagWithoutGitPush(tagLink);
-    pushTagLinkToGit(tagLink.getAccountId(), tagLink.getEntityId(), false);
+    pushTagLinkToGit(tagLink.getAccountId(), tagLink.getAppId(), tagLink.getEntityId(), tagLink.getEntityType(), false);
   }
 
   @Override
@@ -280,9 +283,10 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   }
 
   @Override
-  public void detachTag(@NotBlank String accountId, @NotBlank String entityId, @NotBlank String key) {
-    detachTagWithoutGitPush(accountId, entityId, key);
-    pushTagLinkToGit(accountId, entityId, false);
+  @ValidationGroups(Update.class)
+  public void detachTag(HarnessTagLink tagLink) {
+    detachTagWithoutGitPush(tagLink.getAccountId(), tagLink.getEntityId(), tagLink.getKey());
+    pushTagLinkToGit(tagLink.getAccountId(), tagLink.getAppId(), tagLink.getEntityId(), tagLink.getEntityType(), false);
   }
 
   @Override
@@ -347,6 +351,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   }
 
   @Override
+  @ValidationGroups(Update.class)
   public void authorizeTagAttachDetach(String appId, HarnessTagLink tagLink) {
     validateResourceAccess(appId, tagLink, Action.UPDATE);
   }
@@ -566,37 +571,35 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   }
 
   @Override
-  public void pushTagLinkToGit(String accountId, String entityId, boolean syncFromGit) {
-    ResourceLookup resourceLookup = resourceLookupService.getWithResourceId(accountId, entityId);
-    PersistentEntity resource = getPersistentEntity(resourceLookup);
+  public void pushTagLinkToGit(
+      String accountId, String appId, String entityId, EntityType entityType, boolean syncFromGit) {
+    PersistentEntity resource = getPersistentEntity(appId, entityId, entityType);
 
     yamlPushService.pushYamlChangeSet(accountId, resource, resource, Type.UPDATE, syncFromGit, false);
   }
 
-  private PersistentEntity getPersistentEntity(ResourceLookup resourceLookup) {
-    EntityType entityType = EntityType.valueOf(resourceLookup.getResourceType());
-
+  private PersistentEntity getPersistentEntity(String appId, String entityId, EntityType entityType) {
     switch (entityType) {
       case SERVICE:
-        return serviceResourceService.get(resourceLookup.getAppId(), resourceLookup.getResourceId(), false);
+        return serviceResourceService.get(appId, entityId, false);
 
       case ENVIRONMENT:
-        return environmentService.get(resourceLookup.getAppId(), resourceLookup.getResourceId(), false);
+        return environmentService.get(appId, entityId, false);
 
       case WORKFLOW:
-        return workflowService.readWorkflow(resourceLookup.getAppId(), resourceLookup.getResourceId());
+        return workflowService.readWorkflow(appId, entityId);
 
       case PIPELINE:
-        return pipelineService.readPipeline(resourceLookup.getAppId(), resourceLookup.getResourceId(), false);
+        return pipelineService.readPipeline(appId, entityId, false);
 
       case PROVISIONER:
-        return infrastructureProvisionerService.get(resourceLookup.getAppId(), resourceLookup.getResourceId());
+        return infrastructureProvisionerService.get(appId, entityId);
 
       case TRIGGER:
-        return triggerService.get(resourceLookup.getAppId(), resourceLookup.getResourceId());
+        return triggerService.get(appId, entityId);
 
       case APPLICATION:
-        return appService.get(resourceLookup.getResourceId(), false);
+        return appService.get(entityId, false);
 
       default:
         unhandled(entityType);
