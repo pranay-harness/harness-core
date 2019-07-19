@@ -7,8 +7,7 @@ enum InstanceAggregation {
 }
 
 extend type Query {
-  # Get instance statistics.
-  # (Model query: select * from Instance where applicationid = 123 group by)
+  # Get statistics about instances.
   instanceStats(filters: [InstanceFilter], groupBy: [InstanceAggregation], groupByTime: TimeSeriesAggregation): Data
     @dataFetcher(name: instanceStats)
 }
