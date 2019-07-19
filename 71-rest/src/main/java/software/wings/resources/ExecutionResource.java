@@ -42,7 +42,6 @@ import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.beans.deployment.DeploymentMetadata;
-import software.wings.common.Constants;
 import software.wings.features.DeploymentHistoryFeature;
 import software.wings.features.api.RestrictedFeature;
 import software.wings.security.PermissionAttribute;
@@ -117,8 +116,8 @@ public class ExecutionResource {
 
     pageRequest.addFilter("appId", Operator.IN, authorizedAppIds.toArray());
 
-    if (pageRequest.getPageSize() > Constants.DEFAULT_RUNTIME_ENTITY_PAGESIZE) {
-      pageRequest.setLimit(Constants.DEFAULT_RUNTIME_ENTITY_PAGESIZE_STR);
+    if (pageRequest.getPageSize() > ResourceConstants.DEFAULT_RUNTIME_ENTITY_PAGESIZE) {
+      pageRequest.setLimit(ResourceConstants.DEFAULT_RUNTIME_ENTITY_PAGESIZE_STR);
     }
 
     if (isNotEmpty(workflowTypes)) {

@@ -36,7 +36,6 @@ import software.wings.beans.Activity;
 import software.wings.beans.Log;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
-import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.ActivityService;
@@ -128,7 +127,7 @@ public class ActivityResourceTest extends CategoryTest {
     PageRequest<Activity> expectedPageRequest = new PageRequest<>();
     expectedPageRequest.addFilter("environmentId", Operator.EQ, ENV_ID);
     expectedPageRequest.setOffset("0");
-    expectedPageRequest.setLimit(Constants.DEFAULT_RUNTIME_ENTITY_PAGESIZE_STR);
+    expectedPageRequest.setLimit(ResourceConstants.DEFAULT_RUNTIME_ENTITY_PAGESIZE_STR);
 
     verify(ACTIVITY_SERVICE).list(expectedPageRequest);
   }

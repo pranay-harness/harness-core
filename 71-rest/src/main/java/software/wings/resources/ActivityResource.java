@@ -24,7 +24,6 @@ import io.swagger.annotations.Api;
 import software.wings.beans.Activity;
 import software.wings.beans.Log;
 import software.wings.beans.command.CommandUnitDetails;
-import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.GoogleDataStoreServiceImpl;
@@ -89,8 +88,8 @@ public class ActivityResource {
     if (isNotEmpty(envId)) {
       request.addFilter("environmentId", EQ, envId);
     }
-    if (request.getPageSize() > Constants.DEFAULT_RUNTIME_ENTITY_PAGESIZE) {
-      request.setLimit(Constants.DEFAULT_RUNTIME_ENTITY_PAGESIZE_STR);
+    if (request.getPageSize() > ResourceConstants.DEFAULT_RUNTIME_ENTITY_PAGESIZE) {
+      request.setLimit(ResourceConstants.DEFAULT_RUNTIME_ENTITY_PAGESIZE_STR);
     }
     return new RestResponse<>(activityService.list(request));
   }

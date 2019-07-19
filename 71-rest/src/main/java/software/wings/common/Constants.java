@@ -225,15 +225,6 @@ public interface Constants {
   String EXECUTE_WITH_PREVIOUS_STEPS = "executeWithPreviousSteps";
 
   /**
-   * The constant DEFAULT_RUNTIME_ENTITY_PAGESIZE.
-   */
-  int DEFAULT_RUNTIME_ENTITY_PAGESIZE = 20;
-  /**
-   * The constant DEFAULT_RUNTIME_ENTITY_PAGESIZE_STR.
-   */
-  String DEFAULT_RUNTIME_ENTITY_PAGESIZE_STR = "20";
-
-  /**
    * The constant ASG_COMMAND_NAME.
    */
   String ASG_COMMAND_NAME = "Resize AutoScaling Group";

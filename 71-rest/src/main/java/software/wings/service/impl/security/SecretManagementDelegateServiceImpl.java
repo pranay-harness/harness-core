@@ -14,6 +14,9 @@ import static software.wings.helpers.ext.vault.VaultRestClientFactory.getFullPat
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.TimeLimiter;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -59,6 +62,7 @@ import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureVaultConfig;
@@ -95,6 +99,8 @@ import javax.crypto.spec.SecretKeySpec;
 @Slf4j
 public class SecretManagementDelegateServiceImpl implements SecretManagementDelegateService {
   private static final String REASON_KEY = "reason";
+  private static final String KEY_SEPARATOR = "#";
+  private static final JsonParser JSON_PARSER = new JsonParser();
 
   private TimeLimiter timeLimiter;
 
@@ -401,10 +407,14 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   private EncryptedRecord encryptInternal(String name, String value, String accountId, SettingVariableTypes settingType,
       AwsSecretsManagerConfig secretsManagerConfig, EncryptedRecord savedEncryptedData) {
     final String fullSecretName;
+    String refKeyName = null;
     boolean pathReference = false;
     if (savedEncryptedData != null && isNotEmpty(savedEncryptedData.getPath())) {
       pathReference = true;
-      fullSecretName = savedEncryptedData.getPath();
+      String path = savedEncryptedData.getPath();
+      ParsedSecretRef secretRef = parsedSecretRef(path);
+      fullSecretName = secretRef.secretPath;
+      refKeyName = secretRef.keyName;
     } else {
       fullSecretName = getFullPath(secretsManagerConfig.getSecretNamePrefix(), name);
     }
@@ -430,21 +440,46 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
     // Get the secret value to see if it exists already.
     boolean secretExists = false;
+    String secretValue = null;
     try {
       GetSecretValueRequest getSecretValueRequest = new GetSecretValueRequest().withSecretId(fullSecretName);
       GetSecretValueResult result = client.getSecretValue(getSecretValueRequest);
       secretExists = isNotEmpty(result.getARN());
+      secretValue = result.getSecretString();
+
+      // Make sure the encrypted key/value of encrypted data record is set when secret exists.
+      encryptedData.setEncryptionKey(savedEncryptedData.getPath());
+      encryptedData.setEncryptedValue(result.getARN().toCharArray());
     } catch (ResourceNotFoundException e) {
       // If reaching here, it means the resource doesn't exist.
     }
 
-    if (!secretExists) {
-      // If it's a secret reference, the referred secret has to exist for this reference creation to succeed.
-      if (pathReference) {
+    // If it's a secret reference, the referred secret has to exist for this reference creation to succeed.
+    if (pathReference) {
+      if (secretValue == null) {
         throw new WingsException(ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR, USER)
             .addParam(REASON_KEY, "Secret name reference '" + savedEncryptedData.getPath() + "' is invalid");
+      } else {
+        // Secret name exist, check to make sure the referenced Key name also exist as part of the secret value JSON.
+        if (refKeyName != null) {
+          try {
+            JsonElement element = JSON_PARSER.parse(secretValue);
+            if (!element.getAsJsonObject().has(refKeyName)) {
+              throw new WingsException(ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR, USER)
+                  .addParam(REASON_KEY, "Secret reference key name " + refKeyName + " is invalid");
+            }
+          } catch (JsonParseException e) {
+            throw new WingsException(ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR, USER, e)
+                .addParam(REASON_KEY, "Secret value for " + fullSecretName + " is not a valid JSON document");
+          }
+        }
       }
 
+      // For path reference secret. No need to actually encrypted and save the secret value in the AWS Secrets Manager.
+      return encryptedData;
+    }
+
+    if (!secretExists) {
       // Create the secret with proper tags.
       CreateSecretRequest request = new CreateSecretRequest()
                                         .withName(fullSecretName)
@@ -470,14 +505,35 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   private char[] decryptInternal(EncryptedRecord data, AwsSecretsManagerConfig secretsManagerConfig) {
     long startTime = System.currentTimeMillis();
 
-    AWSSecretsManager client = getAwsSecretsManagerClient(secretsManagerConfig);
+    final String secretName;
+    String refKeyName = null;
+    if (isNotEmpty(data.getPath())) {
+      String path = data.getPath();
+      ParsedSecretRef secretRef = parsedSecretRef(path);
+      secretName = secretRef.secretPath;
+      refKeyName = secretRef.keyName;
+    } else {
+      secretName = data.getEncryptionKey();
+    }
 
-    String secretName = data.getEncryptionKey();
+    AWSSecretsManager client = getAwsSecretsManagerClient(secretsManagerConfig);
     GetSecretValueRequest request = new GetSecretValueRequest().withSecretId(secretName);
     GetSecretValueResult result = client.getSecretValue(request);
+    String secretValue = result.getSecretString();
+
+    char[] decryptedValue = null;
+    if (isNotEmpty(refKeyName)) {
+      JsonElement element = JSON_PARSER.parse(secretValue);
+      if (element.getAsJsonObject().has(refKeyName)) {
+        JsonElement refKeyedElement = element.getAsJsonObject().get(refKeyName);
+        decryptedValue = refKeyedElement.toString().toCharArray();
+      }
+    } else {
+      decryptedValue = secretValue.toCharArray();
+    }
 
     logger.info("Done decrypting AWS secret {} in {}ms", secretName, System.currentTimeMillis() - startTime);
-    return result.getSecretString().toCharArray();
+    return decryptedValue;
   }
 
   private AWSSecretsManager getAwsSecretsManagerClient(AwsSecretsManagerConfig secretsManagerConfig) {
@@ -834,11 +890,27 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     return byteArray;
   }
 
+  private ParsedSecretRef parsedSecretRef(String path) {
+    String[] parts = path.split(KEY_SEPARATOR);
+    ParsedSecretRef secretRef = new ParsedSecretRef();
+    secretRef.secretPath = parts[0];
+    if (parts.length > 1) {
+      secretRef.keyName = parts[1];
+    }
+    return secretRef;
+  }
+
   @Data
   @AllArgsConstructor
   @EqualsAndHashCode
   private class KmsEncryptionKeyCacheKey {
     String uuid;
     String encryptionKey;
+  }
+
+  @ToString
+  private class ParsedSecretRef {
+    String secretPath;
+    String keyName;
   }
 }
