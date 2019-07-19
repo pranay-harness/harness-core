@@ -756,17 +756,19 @@ public class AccountServiceImpl implements AccountService {
   private void setUserStatusInAccount(String accountId, boolean enable) {
     Query<User> query =
         wingsPersistence.createQuery(User.class, excludeAuthority).field("accounts").contains(accountId);
+    int count = 0;
     try (HIterator<User> records = new HIterator<>(query.fetch())) {
       for (User user : records) {
         if (canEnableOrDisable(user)) {
           user.setDisabled(!enable);
           wingsPersistence.save(user);
           userService.evictUserFromCache(user.getUuid());
-          logger.info("User {} has been disabled: {}", user.getEmail(), !enable);
+          logger.info("User {} has been set to status disabled: {}", user.getEmail(), !enable);
+          count++;
         }
       }
     }
-    logger.info("All users in account {} has been disabled.", accountId);
+    logger.info("{} users in account {} has been set to status disabled: {}", count, accountId, !enable);
   }
 
   /**
@@ -775,10 +777,13 @@ public class AccountServiceImpl implements AccountService {
    * 2. User belongs to Harness user group
    */
   private boolean canEnableOrDisable(User user) {
-    boolean result = true;
-    if (user.getAccounts().size() > 1 || harnessUserGroupService.isHarnessSupportUser(user.getUuid())) {
-      result = false;
-    }
+    String email = user.getEmail();
+    boolean associatedWithMultipleAccounts = user.getAccounts().size() > 1;
+    logger.info("User {} is associated with {} accounts", email, user.getAccounts().size());
+    boolean isHarnessUser = harnessUserGroupService.isHarnessSupportUser(user.getUuid());
+    logger.info("User {} is in harness user group: {}", email, isHarnessUser);
+    boolean result = !(associatedWithMultipleAccounts || isHarnessUser);
+    logger.info("User {} can be set to new disabled status: {}", email, result);
     return result;
   }
 
