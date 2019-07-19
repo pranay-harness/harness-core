@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.stencils.EnumData;
@@ -22,6 +23,7 @@ import java.util.Optional;
  * Created by brett on 6/22/17
  */
 @JsonTypeName("AWS_AWS_CODEDEPLOY")
+@FieldNameConstants(innerTypeName = "CodeDeployInfrastructureMappingKeys")
 public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Region", required = true)
   @NotEmpty

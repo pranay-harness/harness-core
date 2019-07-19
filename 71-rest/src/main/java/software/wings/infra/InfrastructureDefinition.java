@@ -2,6 +2,7 @@ package software.wings.infra;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
+import io.harness.data.validator.EntityName;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.NameAccess;
@@ -22,6 +23,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
+import software.wings.beans.InfrastructureMapping;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -39,14 +41,23 @@ public class InfrastructureDefinition
   @Id private String uuid;
   @SchemaIgnore private EmbeddedUser createdBy;
   @SchemaIgnore private long createdAt;
-  @NotEmpty private String name;
+  @NotEmpty @EntityName private String name;
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @SchemaIgnore @NotNull private long lastUpdatedAt;
   @NotNull protected String appId;
   private String provisionerId;
   @NotNull private CloudProviderType cloudProviderType;
   @NotNull private DeploymentType deploymentType;
-  @NotNull private CloudProviderInfrastructure infrastructure;
+  @NotNull private InfraMappingInfrastructureProvider infrastructure;
   private List<String> scopedToServices;
   @NotNull private String envId;
+
+  public InfrastructureMapping getInfraMapping() {
+    InfrastructureMapping infrastructureMapping = infrastructure.getInfraMapping();
+    infrastructureMapping.setAppId(appId);
+    infrastructureMapping.setEnvId(envId);
+    infrastructureMapping.setDeploymentType(deploymentType.name());
+    infrastructureMapping.setComputeProviderType(cloudProviderType.name());
+    return infrastructureMapping;
+  }
 }

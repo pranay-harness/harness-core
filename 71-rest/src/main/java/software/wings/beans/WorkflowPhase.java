@@ -17,7 +17,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Graph.Builder;
-import software.wings.common.Constants;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.sm.TransitionType;
 import software.wings.yaml.BaseYamlWithType;
@@ -38,8 +37,10 @@ public class WorkflowPhase implements UuidAccess {
   private boolean statefulSet;
 
   private String infraMappingId;
-  private String infraDefinitionId;
   private String infraMappingName;
+
+  private String infraDefinitionId;
+  private String infraDefinitionName;
 
   private DeploymentType deploymentType;
   private String computeProviderId;
@@ -56,6 +57,8 @@ public class WorkflowPhase implements UuidAccess {
   @Valid private List<NameValuePair> variableOverrides = new ArrayList<>();
 
   private List<PhaseStep> phaseSteps = new ArrayList<>();
+
+  private static final String PHASE_VALIDATION_MESSAGE = "Some steps %s are found to be invalid/incomplete.";
 
   public String getUuid() {
     return uuid;
@@ -127,6 +130,14 @@ public class WorkflowPhase implements UuidAccess {
 
   public void setInfraDefinitionId(String infraDefinitionId) {
     this.infraDefinitionId = infraDefinitionId;
+  }
+
+  public String getInfraDefinitionName() {
+    return infraDefinitionName;
+  }
+
+  public void setInfraDefinitionName(String infraDefinitionName) {
+    this.infraDefinitionName = infraDefinitionName;
   }
 
   public String getInfraMappingName() {
@@ -220,9 +231,10 @@ public class WorkflowPhase implements UuidAccess {
                         .putIfNotNull("deploymentType", deploymentType)
                         .putIfNotNull("computeProviderId", computeProviderId)
                         .putIfNotNull("infraMappingName", infraMappingName)
+                        .putIfNotNull("infraDefinitionName", infraDefinitionName)
                         .putIfNotNull("infraMappingId", infraMappingId)
                         .putIfNotNull("infraDefinitionId", infraDefinitionId)
-                        .putIfNotNull(Constants.SUB_WORKFLOW_ID, uuid)
+                        .putIfNotNull("subWorkflowId", uuid)
                         .putIfNotNull("phaseNameForRollback", phaseNameForRollback)
                         .build())
         .templateExpressions(templateExpressions)
@@ -235,6 +247,7 @@ public class WorkflowPhase implements UuidAccess {
     params.put("serviceId", serviceId);
     params.put("computeProviderId", computeProviderId);
     params.put("infraMappingName", infraMappingName);
+    params.put("infraDefinitionName", infraDefinitionName);
     params.put("infraMappingId", infraMappingId);
     params.put("infraDefinitionId", infraDefinitionId);
     params.put("deploymentType", deploymentType);
@@ -275,7 +288,7 @@ public class WorkflowPhase implements UuidAccess {
           phaseSteps.stream().filter(phaseStep -> !phaseStep.validate()).map(PhaseStep::getName).collect(toList());
       if (isNotEmpty(invalidChildren)) {
         valid = false;
-        validationMessage = format(Constants.PHASE_VALIDATION_MESSAGE, invalidChildren.toString());
+        validationMessage = format(PHASE_VALIDATION_MESSAGE, invalidChildren.toString());
       }
     }
 
@@ -289,6 +302,7 @@ public class WorkflowPhase implements UuidAccess {
                                             .infraMappingId(getInfraMappingId())
                                             .infraDefinitionId(getInfraDefinitionId())
                                             .infraMappingName(getInfraMappingName())
+                                            .infraDefinitionName(getInfraDefinitionName())
                                             .computeProviderId(getComputeProviderId())
                                             .deploymentType(getDeploymentType())
                                             .rollback(isRollback())
@@ -375,6 +389,7 @@ public class WorkflowPhase implements UuidAccess {
     private String infraMappingId;
     private String infraDefinitionId;
     private String infraMappingName;
+    private String infraDefinitionName;
     private DeploymentType deploymentType;
     private String computeProviderId;
     private boolean rollback;
@@ -419,6 +434,11 @@ public class WorkflowPhase implements UuidAccess {
 
     public WorkflowPhaseBuilder infraMappingName(String infraMappingName) {
       this.infraMappingName = infraMappingName;
+      return this;
+    }
+
+    public WorkflowPhaseBuilder infraDefinitionName(String infraDefinitionName) {
+      this.infraDefinitionName = infraDefinitionName;
       return this;
     }
 
@@ -480,6 +500,7 @@ public class WorkflowPhase implements UuidAccess {
       workflowPhase.setInfraMappingId(infraMappingId);
       workflowPhase.setInfraDefinitionId(infraDefinitionId);
       workflowPhase.setInfraMappingName(infraMappingName);
+      workflowPhase.setInfraDefinitionName(infraDefinitionName);
       workflowPhase.setDeploymentType(deploymentType);
       workflowPhase.setComputeProviderId(computeProviderId);
       workflowPhase.setRollback(rollback);
@@ -500,6 +521,7 @@ public class WorkflowPhase implements UuidAccess {
   public static final class Yaml extends BaseYamlWithType {
     private String name;
     private String infraMappingName;
+    private String infraDefinitionName;
     private String serviceName;
     private String computeProviderName;
     private boolean provisionNodes;
@@ -511,12 +533,14 @@ public class WorkflowPhase implements UuidAccess {
     //  private DeploymentType deploymentType;
 
     @lombok.Builder
-    public Yaml(String type, String name, String infraMappingName, String serviceName, String computeProviderName,
-        boolean provisionNodes, String phaseNameForRollback, List<TemplateExpression.Yaml> templateExpressions,
-        List<PhaseStep.Yaml> phaseSteps, boolean daemonSet, boolean statefulSet) {
+    public Yaml(String type, String name, String infraMappingName, String infraDefinitionName, String serviceName,
+        String computeProviderName, boolean provisionNodes, String phaseNameForRollback,
+        List<TemplateExpression.Yaml> templateExpressions, List<PhaseStep.Yaml> phaseSteps, boolean daemonSet,
+        boolean statefulSet) {
       super(type);
       this.name = name;
       this.infraMappingName = infraMappingName;
+      this.infraDefinitionName = infraDefinitionName;
       this.serviceName = serviceName;
       this.computeProviderName = computeProviderName;
       this.provisionNodes = provisionNodes;

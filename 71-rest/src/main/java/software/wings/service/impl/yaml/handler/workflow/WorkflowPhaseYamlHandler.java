@@ -15,6 +15,7 @@ import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import software.wings.api.DeploymentType;
 import software.wings.beans.EntityType;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.Service;
@@ -27,10 +28,14 @@ import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.template.TemplateExpressionYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -47,7 +52,10 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private SettingsService settingsService;
   @Inject private InfrastructureMappingService infraMappingService;
+  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private YamlHandlerFactory yamlHandlerFactory;
+  @Inject private FeatureFlagService featureFlagService;
+  @Inject private AppService appService;
 
   private WorkflowPhase toBean(ChangeContext<Yaml> context, List<ChangeContext> changeSetContext) {
     Yaml yaml = context.getYaml();
@@ -59,15 +67,22 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     String envId = context.getEntityIdMap().get(EntityType.ENVIRONMENT.name());
     String infraMappingId = null;
     String infraMappingName = null;
-    // @Todo read from yaml itslf rather than infraMapping
+    String infraDefId = null;
+    String infraDefName = null;
     String deploymentTypeString = yaml.getType();
 
-    if (envId != null && isNotEmpty(yaml.getInfraMappingName())) {
+    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)
+        && isNotEmpty(yaml.getInfraDefinitionName())) {
+      InfrastructureDefinition infrastructureDefinition =
+          infrastructureDefinitionService.getInfraDefByName(appId, envId, yaml.getInfraDefinitionName());
+      infraDefId = infrastructureDefinition != null ? infrastructureDefinition.getUuid() : null;
+      infraDefName = infrastructureDefinition != null ? infrastructureDefinition.getName() : null;
+
+    } else if (envId != null && isNotEmpty(yaml.getInfraMappingName())) {
       InfrastructureMapping infraMapping =
           infraMappingService.getInfraMappingByName(appId, envId, yaml.getInfraMappingName());
       infraMappingId = infraMapping != null ? infraMapping.getUuid() : null;
       infraMappingName = infraMapping != null ? infraMapping.getName() : null;
-      // deploymentTypeString = infraMapping != null ? infraMapping.getDeploymentType() : null;
     }
 
     String serviceId = null;
@@ -127,6 +142,8 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
         .deploymentType(deploymentType)
         .infraMappingId(infraMappingId)
         .infraMappingName(infraMappingName)
+        .infraDefinitionName(infraDefName)
+        .infraDefinitionId(infraDefId)
         .name(yaml.getName())
         .phaseNameForRollback(yaml.getPhaseNameForRollback())
         .phaseSteps(phaseSteps)
@@ -179,7 +196,21 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
 
     String infraMappingName = null;
     String infraMappingId = bean.getInfraMappingId();
-    if (isNotEmpty(infraMappingId)) {
+    String infraDefId = bean.getInfraDefinitionId();
+    String infraDefName = null;
+    String accountId = appService.getAccountIdByAppId(appId);
+    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId) && isNotEmpty(infraDefId)) {
+      InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefId);
+      if (infrastructureDefinition != null) {
+        infraDefName = infrastructureDefinition.getName();
+      }
+      // when templatized infraMappings used, we do expect infraMapping can be null, so don't perform this check
+      if (infrastructureDefinition == null && !bean.checkInfraDefinitionTemplatized()) {
+        String message = format("Infra-definition:%s could not be found for workflowPhase:%s, for app:%s", infraDefId,
+            bean.getName(), appId);
+        throw new WingsException(ErrorCode.GENERAL_ERROR, USER).addParam("message", message);
+      }
+    } else if (isNotEmpty(infraMappingId)) {
       InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
 
       // dont set infraName is its templatized
@@ -198,6 +229,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     return Yaml.builder()
         .computeProviderName(computeProviderName)
         .infraMappingName(infraMappingName)
+        .infraDefinitionName(infraDefName)
         .serviceName(serviceName)
         .name(bean.getName())
         .phaseNameForRollback(bean.getPhaseNameForRollback())

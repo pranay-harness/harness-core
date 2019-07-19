@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.beans.EmbeddedUser;
 import io.harness.exception.InvalidRequestException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -137,5 +138,22 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
       this.securityGroupIds = securityGroupIds;
       this.role = role;
     }
+  }
+
+  @lombok.Builder
+  public AwsLambdaInfraStructureMapping(String entityYamlPath, String appId, String accountId, String type, String uuid,
+      EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt,
+      String computeProviderSettingId, String envId, String serviceTemplateId, String serviceId,
+      String computeProviderType, String infraMappingType, String deploymentType, String computeProviderName,
+      String name, boolean autoPopulateName, Map<String, Object> blueprints, String provisionerId, String region,
+      String vpcId, List<String> subnetIds, List<String> securityGroupIds, String role) {
+    super(entityYamlPath, appId, accountId, type, uuid, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt,
+        computeProviderSettingId, envId, serviceTemplateId, serviceId, computeProviderType, infraMappingType,
+        deploymentType, computeProviderName, name, autoPopulateName, blueprints, provisionerId);
+    this.region = region;
+    this.vpcId = vpcId;
+    this.subnetIds = subnetIds;
+    this.securityGroupIds = securityGroupIds;
+    this.role = role;
   }
 }

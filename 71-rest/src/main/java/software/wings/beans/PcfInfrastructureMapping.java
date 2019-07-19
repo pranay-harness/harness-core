@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.utils.Utils;
 
@@ -20,6 +21,7 @@ import java.util.Optional;
 @JsonTypeName("PCF_PCF")
 @Data
 @EqualsAndHashCode(callSuper = true)
+@FieldNameConstants(innerTypeName = "PcfInfrastructureMappingKeys")
 public class PcfInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Organization", required = true) private String organization;
   @Attributes(title = "Space", required = true) private String space;

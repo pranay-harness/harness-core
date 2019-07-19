@@ -10,6 +10,7 @@ import io.harness.data.validator.Trimmed;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.utils.Utils;
 
@@ -19,6 +20,7 @@ import java.util.Optional;
 @JsonTypeName("AZURE_KUBERNETES")
 @Data
 @EqualsAndHashCode(callSuper = true)
+@FieldNameConstants(innerTypeName = "AzureKubernetesInfrastructureMappingKeys")
 public class AzureKubernetesInfrastructureMapping extends ContainerInfrastructureMapping {
   @Attributes(title = "SubscriptionId") private String subscriptionId;
   @Attributes(title = "Resource Group") private String resourceGroup;

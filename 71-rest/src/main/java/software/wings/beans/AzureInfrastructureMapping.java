@@ -9,6 +9,7 @@ import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.utils.Utils;
 
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 @JsonTypeName("AZURE_INFRA")
+@FieldNameConstants(innerTypeName = "AzureInfrastructureMappingKeys")
 public class AzureInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Subscription Id") private String subscriptionId;
   @Attributes(title = "Resource Group") private String resourceGroup;

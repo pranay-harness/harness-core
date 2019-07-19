@@ -329,6 +329,8 @@ FORM_FIELD_TO_ENTITY_TYPE:
       value: SERVICE
     - name: infraMappingId
       value: INFRASTRUCTURE_MAPPING
+    - name: infraDefinitionId
+      value: INFRASTRUCTURE_DEFINITION
     - name: analysisServerConfigId
       value: APPDYNAMICS_CONFIGID
     - name: applicationId

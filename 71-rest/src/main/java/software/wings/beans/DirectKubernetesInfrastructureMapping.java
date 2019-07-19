@@ -12,6 +12,7 @@ import io.harness.data.validator.Trimmed;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.utils.Utils;
 
@@ -25,6 +26,7 @@ import java.util.Optional;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
+@FieldNameConstants(innerTypeName = "DirectKubernetesInfrastructureMappingKeys")
 public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructureMapping {
   @Attributes(title = "Namespace") private String namespace;
   @Trimmed private String releaseName;
