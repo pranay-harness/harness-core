@@ -18,6 +18,8 @@ import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -84,6 +86,9 @@ public class HarnessTagServiceImpl implements HarnessTagService {
 
   private static final Set<EntityType> supportedEntityTypes =
       ImmutableSet.of(SERVICE, ENVIRONMENT, WORKFLOW, PROVISIONER, PIPELINE, TRIGGER, APPLICATION);
+
+  private static final String ALLOWED_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_ /";
+  private static final Set<Character> ALLOWED_CHARS_SET = Sets.newHashSet(Lists.charactersOf(ALLOWED_CHARS));
 
   private static int MAX_TAG_KEY_LENGTH = 128;
   private static int MAX_TAG_VALUE_LENGTH = 256;
@@ -347,37 +352,52 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   }
 
   private void sanitizeAndValidateHarnessTag(HarnessTag tag) {
-    tag.setKey(tag.getKey().trim());
-
-    validateTagKey(tag.getKey());
+    tag.setKey(validateTagKey(tag.getKey()));
 
     if (isNotEmpty(tag.getAllowedValues())) {
       Set<String> sanitizedAllowedValues = new HashSet<>();
       for (String value : tag.getAllowedValues()) {
-        validateTagValue(value);
-        sanitizedAllowedValues.add(value.trim());
+        sanitizedAllowedValues.add(validateTagValue(value));
       }
       tag.setAllowedValues(sanitizedAllowedValues);
     }
   }
 
-  private void validateTagKey(String key) {
+  private String validateTagKey(String key) {
     if (isBlank(key)) {
-      throw new InvalidRequestException("Tag key cannot be blank");
+      throw new InvalidRequestException("Tag name cannot be blank");
     }
 
     if (key.length() > MAX_TAG_KEY_LENGTH) {
-      throw new InvalidRequestException("Max allowed size for tag key is " + MAX_TAG_KEY_LENGTH);
+      throw new InvalidRequestException("Max allowed size for tag name is " + MAX_TAG_KEY_LENGTH);
     }
+
+    validateTagNameValueCharacterSet(key);
+    return key.trim();
   }
 
-  private void validateTagValue(String value) {
+  private String validateTagValue(String value) {
     if (value == null) {
       throw new InvalidRequestException("Tag value cannot be null");
     }
 
     if (value.length() > MAX_TAG_VALUE_LENGTH) {
       throw new InvalidRequestException("Max allowed size for tag value is " + MAX_TAG_VALUE_LENGTH);
+    }
+
+    validateTagNameValueCharacterSet(value);
+    return value.trim();
+  }
+
+  private void validateTagNameValueCharacterSet(String value) {
+    value = value.trim();
+
+    if (!ALLOWED_CHARS_SET.containsAll(Lists.charactersOf(value))) {
+      throw new InvalidRequestException("Tag name/value can contain only " + ALLOWED_CHARS);
+    }
+
+    if (Sets.newHashSet('_', '-', '/').contains(value.charAt(0))) {
+      throw new InvalidRequestException("Tag name/value cannot begin with -_/");
     }
   }
 
@@ -392,14 +412,8 @@ public class HarnessTagServiceImpl implements HarnessTagService {
       throw new InvalidRequestException("Tag value cannot be null");
     }
 
-    String trimmedKey = tagLink.getKey().trim();
-    String trimmedValue = tagLink.getValue().trim();
-
-    validateTagKey(trimmedKey);
-    validateTagValue(trimmedValue);
-
-    tagLink.setKey(trimmedKey);
-    tagLink.setValue(trimmedValue);
+    tagLink.setKey(validateTagKey(tagLink.getKey()));
+    tagLink.setValue(validateTagValue(tagLink.getValue()));
   }
 
   private void validateAndCreateTagIfNeeded(String accountId, String key, String value) {

@@ -281,6 +281,8 @@ public interface WingsTestConstants {
 
   String PHASE_VALIDATION_MESSAGE = "Some steps %s are found to be invalid/incomplete.";
 
+  String PARENT = "parent";
+
   /**
    * The constant URL.
    */

@@ -161,10 +161,6 @@ public interface Constants {
    * The constant LAST_UPDATED_AT.
    */
   String LAST_UPDATED_AT = "lastUpdatedAt";
-  /**
-   * The constant PARENT.
-   */
-  String PARENT = "parent";
 
   /**
    * The constant S3.
