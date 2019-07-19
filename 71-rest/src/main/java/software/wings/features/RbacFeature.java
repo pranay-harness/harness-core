@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.APPLICATION_CREATE_DELETE;
+import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
 import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
@@ -100,7 +101,7 @@ public class RbacFeature extends AbstractUsageLimitedFeature implements Complian
     AccountPermissions accountPermissions =
         AccountPermissions.builder()
             .permissions(Sets.newHashSet(USER_PERMISSION_MANAGEMENT, ACCOUNT_MANAGEMENT, APPLICATION_CREATE_DELETE,
-                TEMPLATE_MANAGEMENT, USER_PERMISSION_READ))
+                TEMPLATE_MANAGEMENT, USER_PERMISSION_READ, AUDIT_VIEWER))
             .build();
 
     Set<AppPermission> appPermissions = Sets.newHashSet();
