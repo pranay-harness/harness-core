@@ -166,7 +166,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     Map<String, List<CloudWatchMetric>> loadBalancerMetricsByLoadBalancer = new HashMap<>();
     List<CloudWatchMetric> loadBalancerMetrics = new ArrayList<>();
     loadBalancerMetrics.add(
-        new CloudWatchMetric("Latency", "Latenc", "LoadBalancerName", "Load balancer name", "ERROR", true));
+        new CloudWatchMetric("Latency", "Latenc", "LoadBalancerName", "Load balancer name", "ERROR", true, "Sum"));
     loadBalancerMetricsByLoadBalancer.put("init-test", loadBalancerMetrics);
     cloudWatchCVServiceConfiguration.setLoadBalancerMetrics(loadBalancerMetricsByLoadBalancer);
     cloudWatchCVServiceConfiguration.setRegion("us-east-2");
@@ -174,7 +174,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     Map<String, List<CloudWatchMetric>> metricsByLambdaFunction = new HashMap<>();
     List<CloudWatchMetric> lambdaMetrics = new ArrayList<>();
     lambdaMetrics.add(new CloudWatchMetric(
-        "Invocations", "Invocations Sum", "FunctionName", "Lambda Function Name", "THROUGHPUT", true));
+        "Invocations", "Invocations Sum", "FunctionName", "Lambda Function Name", "THROUGHPUT", true, "Sum"));
     metricsByLambdaFunction.put("lambda_fn1", lambdaMetrics);
 
     cloudWatchCVServiceConfiguration.setLambdaFunctionsMetrics(metricsByLambdaFunction);

@@ -5,6 +5,7 @@ EC2:
       dimensionDisplay: Host name expression
       metricType: VALUE
       enabledDefault: true
+      statistics: Average
 
     - metricName: DiskReadBytes
       displayName: Disk Read Bytes
@@ -12,6 +13,7 @@ EC2:
       dimensionDisplay: Host name expression
       metricType: VALUE
       enabledDefault: true
+      statistics: Average
 
     - metricName: DiskReadOps
       displayName: Disk Read Ops
@@ -19,6 +21,7 @@ EC2:
       dimensionDisplay: Host name expression
       metricType: VALUE
       enabledDefault: true
+      statistics: Average
 
     - metricName: DiskWriteBytes
       displayName: Disk Write Bytes
@@ -26,6 +29,7 @@ EC2:
       dimensionDisplay: Host name expression
       metricType: VALUE
       enabledDefault: true
+      statistics: Average
 
     - metricName: DiskWriteOps
       displayName: Disk Write Ops
@@ -33,6 +37,7 @@ EC2:
       dimensionDisplay: Host name expression
       metricType: VALUE
       enabledDefault: true
+      statistics: Average
 
     - metricName: NetworkIn
       displayName: Network In
@@ -40,6 +45,7 @@ EC2:
       dimensionDisplay: Host name expression
       metricType: VALUE
       enabledDefault: true
+      statistics: Average
 
     - metricName: NetworkOut
       displayName: Network Out
@@ -47,6 +53,7 @@ EC2:
       dimensionDisplay: Host name expression
       metricType: VALUE
       enabledDefault: true
+      statistics: Average
 
     - metricName: NetworkPacketsIn
       displayName: Network Packets In
@@ -54,6 +61,7 @@ EC2:
       dimensionDisplay: Host name expression
       metricType: VALUE
       enabledDefault: false
+      statistics: Average
 
     - metricName: NetworkPacketsOut
       displayName: Network Packets Out
@@ -61,6 +69,7 @@ EC2:
       dimensionDisplay: Host name expression
       metricType: VALUE
       enabledDefault: false
+      statistics: Average
 
 ELB:
     - metricName: HTTPCode_Backend_2XX
@@ -69,6 +78,7 @@ ELB:
       dimensionDisplay: Load balancer name
       metricType: ERROR
       enabledDefault: true
+      statistics: Sum
 
     - metricName: HTTPCode_Backend_3XX
       displayName: HTTP 3XX
@@ -76,6 +86,7 @@ ELB:
       dimensionDisplay: Load balancer name
       metricType: ERROR
       enabledDefault: true
+      statistics: Sum
 
     - metricName: HTTPCode_Backend_4XX
       displayName: HTTP 4XX
@@ -83,6 +94,7 @@ ELB:
       dimensionDisplay: Load balancer name
       metricType: ERROR
       enabledDefault: true
+      statistics: Sum
 
     - metricName: HTTPCode_Target_2XX_Count
       displayName: HTTP Target 2XX
@@ -90,6 +102,7 @@ ELB:
       dimensionDisplay: Load balancer name
       metricType: ERROR
       enabledDefault: true
+      statistics: Sum
 
     - metricName: HTTPCode_Target_3XX_Count
       displayName: HTTP Target 3XX
@@ -97,6 +110,7 @@ ELB:
       dimensionDisplay: Load balancer name
       metricType: ERROR
       enabledDefault: true
+      statistics: Sum
 
     - metricName: HTTPCode_Target_4XX_Count
       displayName: HTTP Target 4XX
@@ -104,6 +118,7 @@ ELB:
       dimensionDisplay: Load balancer name
       metricType: ERROR
       enabledDefault: true
+      statistics: Sum
 
     - metricName: Latency
       displayName: Latency
@@ -111,6 +126,7 @@ ELB:
       dimensionDisplay: Load balancer name
       metricType: ERROR
       enabledDefault: true
+      statistics: Average
 
     - metricName: RequestCount
       displayName: Request Count
@@ -118,6 +134,7 @@ ELB:
       dimensionDisplay: Load balancer name
       metricType: THROUGHPUT
       enabledDefault: true
+      statistics: Sum
 
     - metricName: EstimatedProcessedBytes
       displayName: Estimated Processed Bytes
@@ -125,6 +142,7 @@ ELB:
       dimensionDisplay: Load balancer name
       metricType: VALUE
       enabledDefault: true
+      statistics: Average
 
     - metricName: EstimatedALBNewConnectionCount
       displayName: Estimated ALB New Connection Count
@@ -132,6 +150,7 @@ ELB:
       dimensionDisplay: Load balancer name
       metricType: THROUGHPUT
       enabledDefault: true
+      statistics: Sum
 
     - metricName: EstimatedALBActiveConnectionCount
       displayName: Estimated ALB Active Connection Count
@@ -139,6 +158,7 @@ ELB:
       dimensionDisplay: Load balancer name
       metricType: THROUGHPUT
       enabledDefault: true
+      statistics: Sum
 
     - metricName: UnHealthyHostCount
       displayName: UnHealthy Host Count
@@ -146,6 +166,7 @@ ELB:
       dimensionDisplay: Load balancer name
       metricType: THROUGHPUT
       enabledDefault: true
+      statistics: Sum
 
     - metricName: HealthyHostCount
       displayName: Healthy Host Count
@@ -153,6 +174,7 @@ ELB:
       dimensionDisplay: Load balancer name
       metricType: THROUGHPUT
       enabledDefault: true
+      statistics: Sum
 
 LAMBDA:
     - metricName: Invocations
@@ -161,6 +183,7 @@ LAMBDA:
       dimensionDisplay: Lambda Function Name
       metricType: THROUGHPUT
       enabledDefault: true
+      statistics: Sum
 
     - metricName: Errors
       displayName: Errors Sum
@@ -168,6 +191,7 @@ LAMBDA:
       dimensionDisplay: Lambda Function Name
       metricType: ERROR
       enabledDefault: true
+      statistics: Sum
 
     - metricName: Throttles
       displayName: Throttles Sum
@@ -175,6 +199,7 @@ LAMBDA:
       dimensionDisplay: Lambda Function Name
       metricType: ERROR
       enabledDefault: true
+      statistics: Sum
 
     - metricName: Duration
       displayName: Duration Average
@@ -182,6 +207,7 @@ LAMBDA:
       dimensionDisplay: Lambda Function Name
       metricType: THROUGHPUT
       enabledDefault: true
+      statistics: Average
 
 ECS:
     - metricName: CPUReservation
@@ -190,6 +216,7 @@ ECS:
       dimensionDisplay: Cluster Name
       metricType: VALUE
       enabledDefault: true
+      statistics: Average
 
     - metricName: CPUUtilization
       displayName: CPU Utilization
@@ -197,6 +224,7 @@ ECS:
       dimensionDisplay: Cluster Name
       metricType: VALUE
       enabledDefault: true
+      statistics: Average
 
     - metricName: MemoryReservation
       displayName: Memory Reservation
@@ -204,6 +232,7 @@ ECS:
       dimensionDisplay: Cluster Name
       metricType: VALUE
       enabledDefault: true
+      statistics: Average
 
     - metricName: MemoryUtilization
       displayName: Memory Utilization
@@ -211,5 +240,6 @@ ECS:
       dimensionDisplay: Cluster Name
       metricType: VALUE
       enabledDefault: true
+      statistics: Average
 
 

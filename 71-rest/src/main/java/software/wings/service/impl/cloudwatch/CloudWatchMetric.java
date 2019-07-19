@@ -19,4 +19,5 @@ public class CloudWatchMetric {
   private String dimensionDisplay;
   private String metricType;
   private boolean enabledDefault;
+  private String statistics;
 }
