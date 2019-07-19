@@ -2,8 +2,8 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.iterator.PersistentRegularIterable;
 import io.harness.persistence.PersistentEntity;
-import io.harness.persistence.PersistentRegularIterable;
 import io.harness.persistence.UuidAware;
 import lombok.Builder;
 import lombok.Data;

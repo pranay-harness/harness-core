@@ -1,6 +1,5 @@
 package io.harness.iterator;
 
-import io.harness.persistence.PersistentRegularIterable;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;

@@ -5,8 +5,6 @@ import com.puppycrawl.tools.checkstyle.DefaultConfiguration;
 import com.puppycrawl.tools.checkstyle.TreeWalker;
 import org.junit.Test;
 
-import java.security.acl.Owner;
-
 public class AnnotationOrderCheckTest extends AbstractModuleTestSupport {
   @Override
   protected String getPackageLocation() {

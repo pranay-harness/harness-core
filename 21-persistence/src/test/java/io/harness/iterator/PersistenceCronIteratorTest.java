@@ -2,8 +2,6 @@ package io.harness.iterator;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.LOOP;
-import static io.harness.iterator.PersistenceIterator.ProcessMode.PUMP;
-import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 import static org.joor.Reflect.on;
 
@@ -11,7 +9,7 @@ import com.google.inject.Inject;
 
 import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
-import io.harness.iterator.IrregularIterableEntity.IrregularIterableEntityKeys;
+import io.harness.iterator.CronIterableEntity.CronIterableEntityKeys;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.MongoPersistenceIterator.Handler;
@@ -32,16 +30,16 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class PersistenceIrregularIteratorTest extends PersistenceTest {
+public class PersistenceCronIteratorTest extends PersistenceTest {
   @Inject private HPersistence persistence;
   @Inject private QueueController queueController;
   private ExecutorService executorService = ThreadPool.create(4, 15, 1, TimeUnit.SECONDS);
 
-  PersistenceIterator<IrregularIterableEntity> iterator;
+  PersistenceIterator<CronIterableEntity> iterator;
 
-  class TestHandler implements Handler<IrregularIterableEntity> {
+  class TestHandler implements Handler<CronIterableEntity> {
     @Override
-    public void handle(IrregularIterableEntity entity) {
+    public void handle(CronIterableEntity entity) {
       Morpheus.sleep(ofSeconds(1));
       logger.info("Handle {}", entity.getUuid());
     }
@@ -49,9 +47,9 @@ public class PersistenceIrregularIteratorTest extends PersistenceTest {
 
   @Before
   public void setup() {
-    iterator = MongoPersistenceIterator.<IrregularIterableEntity>builder()
-                   .clazz(IrregularIterableEntity.class)
-                   .fieldName(IrregularIterableEntityKeys.nextIterations)
+    iterator = MongoPersistenceIterator.<CronIterableEntity>builder()
+                   .clazz(CronIterableEntity.class)
+                   .fieldName(CronIterableEntityKeys.nextIterations)
                    .targetInterval(ofSeconds(10))
                    .acceptableDelay(ofSeconds(1))
                    .maximumDaleyForCheck(ofSeconds(1))
@@ -67,36 +65,19 @@ public class PersistenceIrregularIteratorTest extends PersistenceTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testPumpWithEmptyCollection() {
-    iterator.process(PUMP);
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  public void testLoopWithEmptyCollection() throws IOException {
-    final Future<?> future1 = executorService.submit(() -> iterator.process(LOOP));
-    Morpheus.sleep(ofMillis(300));
-    future1.cancel(true);
-  }
-
-  @Test
-  @Category(UnitTests.class)
   @Bypass
   public void testNextReturnsJustAdded() throws IOException {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
-      for (int i = 0; i < 10; i++) {
-        final IrregularIterableEntity iterableEntity = IrregularIterableEntity.builder().uuid(generateUuid()).build();
+      for (int i = 1; i <= 10; i++) {
+        final CronIterableEntity iterableEntity =
+            CronIterableEntity.builder().uuid(generateUuid()).expression(String.format("*/%d * * * * ? *", i)).build();
         persistence.save(iterableEntity);
       }
 
       final Future<?> future1 = executorService.submit(() -> iterator.process(LOOP));
-      //    final Future<?> future2 = executorService.submit(() -> iterator.process());
-      //    final Future<?> future3 = executorService.submit(() -> iterator.process());
 
       Morpheus.sleep(ofSeconds(300));
       future1.cancel(true);
-      //    future2.cancel(true);
-      //    future3.cancel(true);
     }
   }
 }
