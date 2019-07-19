@@ -16,6 +16,7 @@ import com.splunk.ResultsReaderJson;
 import com.splunk.SSLSecurityProtocol;
 import com.splunk.Service;
 import com.splunk.ServiceArgs;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -131,14 +132,12 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       apiCallLog.addFieldToResponse(
           HttpStatus.SC_OK, "splunk query done. Num of events: " + job.getEventCount(), FieldType.TEXT);
       delegateLogService.save(splunkConfig.getAccountId(), apiCallLog);
-
       return logElements;
-
     } catch (Exception e) {
       apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
       apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
       delegateLogService.save(splunkConfig.getAccountId(), apiCallLog);
-      throw new WingsException(e);
+      throw new WingsException(ErrorCode.SPLUNK_CONFIGURATION_ERROR).addParam("reason", e);
     }
   }
 
