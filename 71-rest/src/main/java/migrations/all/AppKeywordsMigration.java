@@ -1,6 +1,6 @@
 package migrations.all;
 
-import static io.harness.data.structure.ListUtils.trimStrings;
+import static io.harness.data.structure.ListUtils.trimStringsAndConvertToLowerCase;
 
 import com.google.inject.Inject;
 
@@ -41,7 +41,8 @@ public class AppKeywordsMigration implements Migration {
             .find(wingsPersistence.createQuery(Service.class)
                       .filter(Service.ID_KEY, application.getUuid())
                       .getQueryObject())
-            .updateOne(new BasicDBObject("$set", new BasicDBObject("keywords", trimStrings(keywords))));
+            .updateOne(
+                new BasicDBObject("$set", new BasicDBObject("keywords", trimStringsAndConvertToLowerCase(keywords))));
       }
     }
     if (i % BATCH_SIZE != 1) {

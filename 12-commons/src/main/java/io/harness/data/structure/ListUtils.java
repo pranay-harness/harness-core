@@ -5,9 +5,10 @@ import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class ListUtils {
-  public static List<String> trimList(List<Object> objects) {
+  public static List<String> trimListAndConvertToLowerCase(List<Object> objects) {
     if (objects == null) {
       return null;
     }
@@ -19,7 +20,7 @@ public class ListUtils {
         .collect(toList());
   }
 
-  public static List<String> trimStrings(List<String> strings) {
+  public static List<String> trimStringsAndConvertToLowerCase(List<String> strings) {
     if (strings == null) {
       return null;
     }
@@ -27,6 +28,18 @@ public class ListUtils {
         .filter(s -> s != null)
         .map(s -> s.trim().toLowerCase())
         .filter(s -> isNotEmpty(s))
+        .distinct()
+        .collect(toList());
+  }
+
+  public static List<String> trimStrings(List<String> strings) {
+    if (strings == null) {
+      return null;
+    }
+    return strings.stream()
+        .filter(Objects::nonNull)
+        .map(String::trim)
+        .filter(EmptyPredicate::isNotEmpty)
         .distinct()
         .collect(toList());
   }

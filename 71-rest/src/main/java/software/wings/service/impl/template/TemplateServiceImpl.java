@@ -2,8 +2,8 @@ package software.wings.service.impl.template;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.ListUtils.trimList;
-import static io.harness.data.structure.ListUtils.trimStrings;
+import static io.harness.data.structure.ListUtils.trimListAndConvertToLowerCase;
+import static io.harness.data.structure.ListUtils.trimStringsAndConvertToLowerCase;
 import static io.harness.eraro.ErrorCode.TEMPLATES_LINKED;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
@@ -188,7 +188,7 @@ public class TemplateServiceImpl implements TemplateService {
     notNullCheck("Template " + template.getName() + " does not exist", oldTemplate);
     validateScope(template, oldTemplate);
     List<String> existingKeywords = oldTemplate.getKeywords();
-    List<String> generatedKeywords = trimStrings(template.generateKeywords());
+    List<String> generatedKeywords = trimStringsAndConvertToLowerCase(template.generateKeywords());
     if (isNotEmpty(existingKeywords)) {
       generatedKeywords.addAll(existingKeywords);
     }
@@ -197,7 +197,7 @@ public class TemplateServiceImpl implements TemplateService {
       generatedKeywords.remove(oldTemplate.getDescription().toLowerCase());
     }
     generatedKeywords.remove(oldTemplate.getType().toLowerCase());
-    template.setKeywords(trimList(Arrays.asList(generatedKeywords.toArray())));
+    template.setKeywords(trimListAndConvertToLowerCase(Arrays.asList(generatedKeywords.toArray())));
     VersionedTemplate newVersionedTemplate = buildTemplateDetails(template, template.getUuid());
     validateTemplateVariables(newVersionedTemplate.getVariables());
     boolean templateObjectChanged = checkTemplateDetailsChanged(
@@ -538,7 +538,7 @@ public class TemplateServiceImpl implements TemplateService {
   }
 
   private List<String> getKeywords(Template template) {
-    List<String> generatedKeywords = trimStrings(template.generateKeywords());
+    List<String> generatedKeywords = trimStringsAndConvertToLowerCase(template.generateKeywords());
     return addUserKeyWords(template.getKeywords(), generatedKeywords);
   }
 

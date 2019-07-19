@@ -285,11 +285,11 @@ public class TemplateHelper {
   }
 
   public static List<String> addUserKeyWords(List<String> keywords, List<String> generatedKeywords) {
-    List<String> userKeywords = ListUtils.trimStrings(keywords);
+    List<String> userKeywords = ListUtils.trimStringsAndConvertToLowerCase(keywords);
     if (isNotEmpty(userKeywords)) {
       generatedKeywords.addAll(userKeywords);
     }
-    return ListUtils.trimStrings(generatedKeywords);
+    return ListUtils.trimStringsAndConvertToLowerCase(generatedKeywords);
   }
   public static Map<String, Object> convertToVariableMap(List<Variable> variables) {
     if (isEmpty(variables)) {

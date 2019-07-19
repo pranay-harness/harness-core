@@ -5,7 +5,7 @@ import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.ListUtils.trimStrings;
+import static io.harness.data.structure.ListUtils.trimStringsAndConvertToLowerCase;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -485,7 +485,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private void setKeyWords(Service clonedService) {
-    clonedService.setKeywords(trimStrings(clonedService.generateKeywords()));
+    clonedService.setKeywords(trimStringsAndConvertToLowerCase(clonedService.generateKeywords()));
   }
 
   @Override
@@ -627,7 +627,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Service savedService = get(service.getAppId(), service.getUuid(), false);
     notNullCheck("Service", savedService);
 
-    List<String> keywords = trimStrings(service.generateKeywords());
+    List<String> keywords = trimStringsAndConvertToLowerCase(service.generateKeywords());
     UpdateOperations<Service> updateOperations =
         wingsPersistence.createUpdateOperations(Service.class)
             .set(ServiceKeys.name, service.getName())
