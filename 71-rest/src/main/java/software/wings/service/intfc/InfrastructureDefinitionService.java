@@ -26,4 +26,6 @@ public interface InfrastructureDefinitionService {
   boolean isDynamicInfrastructure(String appId, String infraDefinitionId);
 
   List<String> fetchCloudProviderIds(String appId, List<String> infraDefinitionIds);
+
+  InfrastructureDefinition getInfraDefByName(String appId, String envId, String infraDefName);
 }

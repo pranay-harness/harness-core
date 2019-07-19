@@ -8,6 +8,7 @@ import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.beans.infrastructure.Host;
@@ -18,6 +19,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @JsonTypeName("PHYSICAL_DATA_CENTER_WINRM")
+@FieldNameConstants(innerTypeName = "PhysicalInfrastructureMappingWinRmKeys")
 public class PhysicalInfrastructureMappingWinRm extends PhysicalInfrastructureMappingBase {
   @NotEmpty private String winRmConnectionAttributes;
 

@@ -7,6 +7,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.infrastructure.Host;
 
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+@FieldNameConstants(innerTypeName = "PhysicalInfrastructureMappingBaseKeys")
 public abstract class PhysicalInfrastructureMappingBase extends InfrastructureMapping {
   @Attributes(title = "Host Names", required = true) private List<String> hostNames;
   private List<Host> hosts;

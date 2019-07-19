@@ -11,6 +11,7 @@ import io.harness.exception.WingsException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.beans.infrastructure.Host;
 import software.wings.utils.Utils;
@@ -23,6 +24,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 
 @JsonTypeName("PHYSICAL_DATA_CENTER_SSH")
+@FieldNameConstants(innerTypeName = "PhysicalInfrastructureMappingKeys")
 public class PhysicalInfrastructureMapping extends PhysicalInfrastructureMappingBase {
   private String hostConnectionAttrs;
 
