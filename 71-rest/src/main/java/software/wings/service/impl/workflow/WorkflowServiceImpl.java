@@ -983,7 +983,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (orchestrationWorkflow != null) {
       if (StringUtils.isNotEmpty(workflow.getServiceId())
           && workflowServiceHelper.isK8sV2Service(workflow.getAppId(), workflow.getServiceId())) {
-        createK8sWorkflow(workflow);
+        CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
+        if (isEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
+          createK8sWorkflow(workflow);
+        }
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)
           || orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
         CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;

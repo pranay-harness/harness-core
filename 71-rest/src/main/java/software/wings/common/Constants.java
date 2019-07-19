@@ -175,11 +175,6 @@ public interface Constants {
   String PARENT = "parent";
 
   /**
-   * The constant GIT_USER.
-   */
-  String GIT_USER = "git";
-
-  /**
    * The constant S3.
    */
   String S3 = "S3";
