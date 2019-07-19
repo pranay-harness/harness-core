@@ -153,7 +153,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
       testRecord.setCvConfigId(cvConfigId);
       testRecord.setAnalysisMinute(sampleMinute);
 
-      TimeSeriesMLAnalysisRecord red = wingsPersistence.saveAndGet(TimeSeriesMLAnalysisRecord.class, testRecord);
+      wingsPersistence.save(testRecord);
       sampleMinute = sampleMinute - (int) TimeUnit.DAYS.toMinutes(7);
       testRecord = TimeSeriesMLAnalysisRecord.builder().build();
     }
@@ -182,7 +182,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
       testRecord.setCvConfigId(cvConfigId);
       testRecord.setAnalysisMinute(sampleMinute);
 
-      TimeSeriesMLAnalysisRecord red = wingsPersistence.saveAndGet(TimeSeriesMLAnalysisRecord.class, testRecord);
+      wingsPersistence.save(testRecord);
       sampleMinute = sampleMinute - (int) TimeUnit.DAYS.toMinutes(7);
       testRecord = TimeSeriesMLAnalysisRecord.builder().build();
     }
@@ -211,7 +211,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
       testRecord.setCvConfigId(cvConfigId);
       testRecord.setAnalysisMinute(sampleMinute);
 
-      TimeSeriesMLAnalysisRecord red = wingsPersistence.saveAndGet(TimeSeriesMLAnalysisRecord.class, testRecord);
+      wingsPersistence.save(testRecord);
       sampleMinute = sampleMinute - (int) TimeUnit.DAYS.toMinutes(7);
       testRecord = TimeSeriesMLAnalysisRecord.builder().build();
     }
