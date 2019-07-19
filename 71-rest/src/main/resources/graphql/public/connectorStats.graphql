@@ -3,6 +3,6 @@ enum ConnectorAggregation {
 }
 
 extend type Query {
-  # Get Connector stats.
+  # Get statistics for a Connector.
   connectorStats(filters: [ConnectorFilter], groupBy: [ConnectorAggregation]): Data @dataFetcher(name: connectorStats)
 }

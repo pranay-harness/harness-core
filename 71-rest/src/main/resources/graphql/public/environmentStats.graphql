@@ -4,7 +4,7 @@ enum EnvironmentAggregation {
 }
 
 extend type Query {
-  # Get Environment stats.
+  # Get statistics about Harness Environments.
   environmentStats(filters: [EnvironmentFilter], groupBy: [EnvironmentAggregation]): Data
     @dataFetcher(name: environmentStats)
 }

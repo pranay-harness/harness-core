@@ -1,4 +1,4 @@
 extend type Query {
-  #Get deployment stats.
+  #Get deployment statistics for a Harness Application.
   applicationStats: SinglePointData @dataFetcher(name: applicationStats)
 }

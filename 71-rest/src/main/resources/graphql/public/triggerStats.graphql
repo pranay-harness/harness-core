@@ -3,6 +3,6 @@ enum TriggerAggregation {
 }
 
 extend type Query {
-  # Get Trigger stats.
+  # Get statistics about Triggers.
   triggerStats(filters: [TriggerFilter], groupBy: [TriggerAggregation]): Data @dataFetcher(name: triggerStats)
 }

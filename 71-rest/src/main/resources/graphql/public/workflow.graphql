@@ -1,21 +1,21 @@
 extend type Query {
-  # Get workflow object by ID
+  # Get a Workflow object by ID.
   workflow(workflowId: String!): Workflow @dataFetcher(name: workflow)
 
-  # Get list of workflows for an applicationId. It will return paginated data
+  # Get a list of Workflows, by applicationId. This returns paginated data.
   workflows(filters: [WorkflowFilter], limit: Int!, offset: Int): WorkflowConnection
     @dataFetcher(name: workflowConnection)
 }
 
-# Type workflow
+# Type Workflow
 type Workflow {
   # Workflow ID
   id: String
 
-  # Name of the workflow
+  # Name of the Workflow
   name: String
 
-  # Description of the workflow
+  # Description of the Workflow
   description: String
 
   createdAt: DateTime

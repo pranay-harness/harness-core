@@ -1,8 +1,8 @@
 extend type Query {
-  # Get details about cloud provider
+  # Get details about a Cloud Provider.
   cloudProvider(cloudProviderId: String!): CloudProvider @dataFetcher(name: cloudProvider)
 
-  # Will remove it once authentication is available
+  # Get names and IDs of Cloud Providers. (Will be removed once authentication is available.)
   cloudProviders(filters: [CloudProviderFilter], limit: Int!, offset: Int): CloudProviderConnection
     @dataFetcher(name: cloudProviderConnection)
 }
