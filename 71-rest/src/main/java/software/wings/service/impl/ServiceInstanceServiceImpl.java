@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 
 import com.google.inject.Inject;
@@ -105,7 +104,7 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   @Override
   public void deleteByEnv(String appId, String envId) {
     wingsPersistence.createQuery(ServiceInstance.class)
-        .filter(ServiceInstance.APP_ID_KEY, appId)
+        .filter(ServiceInstanceKeys.appId, appId)
         .filter(ServiceInstanceKeys.envId, envId)
         .asList()
         .forEach(serviceInstance -> delete(appId, envId, serviceInstance.getUuid()));
@@ -152,21 +151,21 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   @Override
   public void pruneByInfrastructureMapping(String appId, String infraMappingId) {
     wingsPersistence.delete(wingsPersistence.createQuery(ServiceInstance.class)
-                                .filter("appId", appId)
+                                .filter(ServiceInstanceKeys.appId, appId)
                                 .filter(ServiceInstanceKeys.infraMappingId, infraMappingId));
   }
 
   @Override
   public void pruneByHost(String appId, String hostId) {
     wingsPersistence.delete(wingsPersistence.createQuery(ServiceInstance.class)
-                                .filter("appId", appId)
+                                .filter(ServiceInstanceKeys.appId, appId)
                                 .filter(ServiceInstanceKeys.hostId, hostId));
   }
 
   @Override
   public List<ServiceInstance> fetchServiceInstances(String appId, Set<String> uuids) {
     return wingsPersistence.createQuery(ServiceInstance.class)
-        .filter(APP_ID_KEY, appId)
+        .filter(ServiceInstanceKeys.appId, appId)
         .field(ID_KEY)
         .in(uuids)
         .asList();

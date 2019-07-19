@@ -29,6 +29,11 @@ public class ExecutionInterrupt extends Base {
   private String envId;
   @NotNull @Indexed private String executionUuid;
   @Indexed private String stateExecutionInstanceId;
+
+  public static class ExecutionInterruptKeys {
+    // Temporary
+    public static final String appId = "appId";
+  }
   private Map<String, Object> properties;
 
   public boolean isSeized() {

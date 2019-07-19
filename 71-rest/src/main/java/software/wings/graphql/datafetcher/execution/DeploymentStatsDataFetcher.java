@@ -894,7 +894,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
   }
 
   private boolean isValidGroupBy(List<QLDeploymentAggregation> groupBy) {
-    return groupBy != null && groupBy.size() <= 2;
+    return EmptyPredicate.isNotEmpty(groupBy) && groupBy.size() <= 2;
   }
 
   private void decorateQueryWithGroupByTime(

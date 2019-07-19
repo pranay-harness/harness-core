@@ -13,7 +13,6 @@ import static java.util.stream.Collectors.toList;
 import static net.redhogs.cronparser.CronExpressionDescriptor.getDescription;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_COLLECTED;
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_DEPLOYED;
 import static software.wings.beans.trigger.TriggerConditionType.NEW_ARTIFACT;
@@ -201,7 +200,7 @@ public class TriggerServiceHelper {
 
   public List<Trigger> getTriggersByWorkflow(String appId, String pipelineId) {
     return wingsPersistence.createQuery(Trigger.class)
-        .filter(Trigger.APP_ID_KEY, appId)
+        .filter(TriggerKeys.appId, appId)
         .filter(TriggerKeys.workflowId, pipelineId)
         .asList();
   }
@@ -209,7 +208,7 @@ public class TriggerServiceHelper {
   public List<String> checkTemplatedEntityReferenced(String appId, String envId) {
     List<String> referencedTriggers = new ArrayList<>();
     try (HIterator<Trigger> triggerHIterator =
-             new HIterator<>(wingsPersistence.createQuery(Trigger.class).filter(APP_ID_KEY, appId).fetch())) {
+             new HIterator<>(wingsPersistence.createQuery(Trigger.class).filter(TriggerKeys.appId, appId).fetch())) {
       if (triggerHIterator != null) {
         for (Trigger trigger : triggerHIterator) {
           if (trigger.getWorkflowVariables() != null && trigger.getWorkflowVariables().values().contains(envId)) {

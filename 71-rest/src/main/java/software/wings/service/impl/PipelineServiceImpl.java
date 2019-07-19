@@ -16,7 +16,6 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.PipelineExecution.PIPELINE_ID_KEY;
 import static software.wings.common.Constants.PIPELINE_ENV_STATE_VALIDATION_MESSAGE;
@@ -238,7 +237,7 @@ public class PipelineServiceImpl implements PipelineService {
   public List<String> obtainPipelineNamesReferencedByEnvironment(String appId, String envId) {
     List<String> referencedPipelines = new ArrayList<>();
     try (HIterator<Pipeline> pipelineHIterator =
-             new HIterator<>(wingsPersistence.createQuery(Pipeline.class).filter(APP_ID_KEY, appId).fetch())) {
+             new HIterator<>(wingsPersistence.createQuery(Pipeline.class).filter(PipelineKeys.appId, appId).fetch())) {
       while (pipelineHIterator.hasNext()) {
         Pipeline pipeline = pipelineHIterator.next();
       PIPELINE_STAGE_LOOP:
@@ -269,7 +268,7 @@ public class PipelineServiceImpl implements PipelineService {
   // TODO: Add unit tests for this function
   private void ensurePipelineSafeToDelete(Pipeline pipeline) {
     PageRequest<PipelineExecution> pageRequest = aPageRequest()
-                                                     .addFilter(APP_ID_KEY, EQ, pipeline.getAppId())
+                                                     .addFilter(PipelineKeys.appId, EQ, pipeline.getAppId())
                                                      .addFilter(PIPELINE_ID_KEY, EQ, pipeline.getUuid())
                                                      .build();
     PageResponse<PipelineExecution> pageResponse = wingsPersistence.query(PipelineExecution.class, pageRequest);
@@ -322,7 +321,7 @@ public class PipelineServiceImpl implements PipelineService {
   public String fetchPipelineName(String appId, String pipelineId) {
     Pipeline pipeline = wingsPersistence.createQuery(Pipeline.class)
                             .project(Pipeline.NAME_KEY, true)
-                            .filter(APP_ID_KEY, appId)
+                            .filter(PipelineKeys.appId, appId)
                             .filter(Pipeline.ID_KEY, pipelineId)
                             .get();
     Validator.notNullCheck("Pipeline does not exist", pipeline, USER);
@@ -775,7 +774,7 @@ public class PipelineServiceImpl implements PipelineService {
   public List<String> obtainPipelineNamesReferencedByTemplatedEntity(String appId, String templatedEntityId) {
     List<String> referencedPipelines = new ArrayList<>();
     try (HIterator<Pipeline> pipelineHIterator =
-             new HIterator<>(wingsPersistence.createQuery(Pipeline.class).filter(APP_ID_KEY, appId).fetch())) {
+             new HIterator<>(wingsPersistence.createQuery(Pipeline.class).filter(PipelineKeys.appId, appId).fetch())) {
       while (pipelineHIterator.hasNext()) {
         Pipeline pipeline = pipelineHIterator.next();
         // Templatized Id in workflow variables

@@ -50,6 +50,11 @@ public class ServiceInstance extends Base {
   private String commandType;
   private long lastDeployedOn;
 
+  public static final class ServiceInstanceKeys {
+    // Temporary
+    public static final String appId = "appId";
+  }
+
   /**
    * Gets env id.
    *

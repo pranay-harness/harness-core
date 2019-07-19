@@ -9,9 +9,7 @@ import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.Account.ACCOUNT_ID_KEY;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
-import static software.wings.beans.Application.APP_ID_KEY;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.EntityType.ARTIFACT_STREAM;
 import static software.wings.beans.EntityType.SERVICE;
@@ -57,7 +55,9 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.Variable;
 import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
+import software.wings.beans.template.Template.TemplateKeys;
 import software.wings.beans.template.TemplateFolder;
+import software.wings.beans.template.TemplateFolder.TemplateFolderKeys;
 import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.template.TemplateType;
@@ -473,7 +473,7 @@ public class TemplateServiceImpl implements TemplateService {
                             .filter(Template.ACCOUNT_ID_KEY, accountId)
                             .filter(NAME_KEY, templateName)
                             .filter(Template.FOLDER_ID_KEY, templateFolder.getUuid())
-                            .filter(APP_ID_KEY, appId)
+                            .filter(TemplateKeys.appId, appId)
                             .get();
     if (template == null) {
       throw new WingsException("No template found for the uri [" + templateUri + "]");
@@ -546,8 +546,8 @@ public class TemplateServiceImpl implements TemplateService {
     Template template = null;
     if (isNotEmpty(keyword)) {
       Query<Template> templateQuery = wingsPersistence.createQuery(Template.class)
-                                          .filter(ACCOUNT_ID_KEY, accountId)
-                                          .filter(APP_ID_KEY, GLOBAL_APP_ID)
+                                          .filter(TemplateKeys.accountId, accountId)
+                                          .filter(TemplateKeys.appId, GLOBAL_APP_ID)
                                           .field(Template.KEYWORDS_KEY)
                                           .in(asList(keyword.toLowerCase()));
       List<Template> templates = templateQuery.asList();
@@ -565,8 +565,8 @@ public class TemplateServiceImpl implements TemplateService {
     Template template = null;
     if (isNotEmpty(keyword)) {
       Query<Template> templateQuery = wingsPersistence.createQuery(Template.class)
-                                          .filter(ACCOUNT_ID_KEY, accountId)
-                                          .filter(APP_ID_KEY, appId)
+                                          .filter(TemplateKeys.accountId, accountId)
+                                          .filter(TemplateKeys.appId, appId)
                                           .field(Template.KEYWORDS_KEY)
                                           .in(asList(keyword.toLowerCase()));
       List<Template> templates = templateQuery.asList();
@@ -585,8 +585,8 @@ public class TemplateServiceImpl implements TemplateService {
     if (isNotEmpty(keywords)) {
       Query<Template> templateQuery =
           wingsPersistence.createQuery(Template.class)
-              .filter(ACCOUNT_ID_KEY, accountId)
-              .filter(APP_ID_KEY, GLOBAL_APP_ID)
+              .filter(TemplateKeys.accountId, accountId)
+              .filter(TemplateKeys.appId, GLOBAL_APP_ID)
               .field(Template.KEYWORDS_KEY)
               .hasAllOf(keywords.stream().map(String::toLowerCase).collect(Collectors.toList()));
       List<Template> templates = templateQuery.asList();
@@ -602,7 +602,7 @@ public class TemplateServiceImpl implements TemplateService {
 
   public List<Template> fetchTemplatesWithReferencedTemplateId(@NotEmpty String templateId) {
     Query<Template> templateQuery = wingsPersistence.createQuery(Template.class)
-                                        .filter(APP_ID_KEY, GLOBAL_APP_ID)
+                                        .filter(TemplateKeys.appId, GLOBAL_APP_ID)
                                         .filter(REFERENCED_TEMPLATE_ID, templateId);
     List<Template> templates = templateQuery.asList();
     if (isNotEmpty(templates)) {
@@ -662,7 +662,7 @@ public class TemplateServiceImpl implements TemplateService {
   @Override
   public void deleteByAccountId(String accountId) {
     List<Template> templates =
-        wingsPersistence.createQuery(Template.class).filter(Template.ACCOUNT_ID_KEY, accountId).asList();
+        wingsPersistence.createQuery(Template.class).filter(TemplateKeys.accountId, accountId).asList();
     for (Template template : templates) {
       delete(accountId, template.getUuid());
     }
@@ -676,14 +676,14 @@ public class TemplateServiceImpl implements TemplateService {
   @Override
   public void pruneByApplication(String appId) {
     // delete all templates with appId
-    List<Template> templates = wingsPersistence.createQuery(Template.class).filter(Template.APP_ID_KEY, appId).asList();
+    List<Template> templates = wingsPersistence.createQuery(Template.class).filter(TemplateKeys.appId, appId).asList();
     for (Template template : templates) {
       deleteTemplate(template);
       auditServiceHelper.reportDeleteForAuditing(appId, template);
     }
     // delete all template folders with appId
     List<TemplateFolder> templateFolders =
-        wingsPersistence.createQuery(TemplateFolder.class).filter(TemplateFolder.APP_ID_KEY, appId).asList();
+        wingsPersistence.createQuery(TemplateFolder.class).filter(TemplateFolderKeys.appId, appId).asList();
     for (TemplateFolder templateFolder : templateFolders) {
       wingsPersistence.delete(templateFolder);
       auditServiceHelper.reportDeleteForAuditing(appId, templateFolder);

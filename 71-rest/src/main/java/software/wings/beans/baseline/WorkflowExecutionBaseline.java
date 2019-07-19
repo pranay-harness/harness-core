@@ -36,4 +36,9 @@ public class WorkflowExecutionBaseline extends Base {
   @NotEmpty private String serviceId;
   @NotEmpty @Indexed private String workflowExecutionId;
   private String pipelineExecutionId;
+
+  public static class WorkflowExecutionBaselineKeys {
+    // Temporary
+    public static final String appId = "appId";
+  }
 }
