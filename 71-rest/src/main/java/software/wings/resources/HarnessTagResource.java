@@ -114,8 +114,10 @@ public class HarnessTagResource {
   @ExceptionMetered
   public RestResponse detachTag(
       @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, HarnessTagLink tagLink) {
+    tagLink.setAccountId(accountId);
+    tagLink.setAppId(appId);
     harnessTagService.authorizeTagAttachDetach(appId, tagLink);
-    harnessTagService.detachTag(accountId, tagLink.getEntityId(), tagLink.getKey());
+    harnessTagService.detachTag(tagLink);
     return new RestResponse();
   }
 

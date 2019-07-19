@@ -52,7 +52,7 @@ public class HarnessTagLink
   @NotEmpty private String appId;
   @NotEmpty private String key;
   private String value;
-  @NotEmpty private EntityType entityType;
+  @NotNull private EntityType entityType;
   @NotEmpty private String entityId;
 
   private transient String appName;

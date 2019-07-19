@@ -148,7 +148,8 @@ public class HarnessTagYamlHelper {
     }
 
     boolean syncFromGit = changeContext.getChange().isSyncFromGit();
-    harnessTagService.pushTagLinkToGit(accountId, entityId, syncFromGit);
+    EntityType entityType = getEntityType(entity);
+    harnessTagService.pushTagLinkToGit(accountId, appId, entityId, entityType, syncFromGit);
   }
 
   private EntityType getEntityType(PersistentEntity entity) {
