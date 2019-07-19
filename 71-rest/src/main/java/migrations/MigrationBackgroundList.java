@@ -30,6 +30,7 @@ import migrations.all.SetDummyTechStackForOldAccounts;
 import migrations.all.SetEmailToIndividualMemberFlag;
 import migrations.all.SetLastLoginTimeToAllUsers;
 import migrations.all.TerraformIsTemplatizedMigration;
+import migrations.all.UpdateWorkflowExecutionAccountId;
 import migrations.all.UpdateWorkflowExecutionDuration;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -83,6 +84,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(38, MigrateTimeSeriesRawDataToGoogle.class))
         .add(Pair.of(39, BaseMigration.class))
         .add(Pair.of(40, UpdateWorkflowExecutionDuration.class))
+        .add(Pair.of(41, UpdateWorkflowExecutionAccountId.class))
         .build();
   }
 }
