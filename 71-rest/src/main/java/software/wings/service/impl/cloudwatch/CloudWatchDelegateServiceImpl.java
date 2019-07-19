@@ -23,6 +23,7 @@ import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsRequest;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsResult;
 import io.harness.exception.WingsException;
+import io.harness.govern.Switch;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -238,7 +239,7 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
         .withStartTime(new Date(startTime))
         .withEndTime(new Date(endTime))
         .withPeriod(60)
-        .withStatistics("Average");
+        .withStatistics(cloudWatchMetric.getStatistics());
     apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
                                      .name("body")
                                      .value(JsonUtils.asJson(metricStatisticsRequest))
@@ -282,7 +283,18 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
               .tag(awsNameSpace.name())
               .values(new HashMap<>())
               .build();
-      newRelicMetricDataRecord.getValues().put(cloudWatchMetric.getMetricName(), datapoint.getAverage());
+      double value = 0;
+      switch (cloudWatchMetric.getStatistics()) {
+        case "Sum":
+          value = datapoint.getSum();
+          break;
+        case "Average":
+          value = datapoint.getAverage();
+          break;
+        default:
+          Switch.unhandled(cloudWatchMetric.getStatistics());
+      }
+      newRelicMetricDataRecord.getValues().put(cloudWatchMetric.getMetricName(), value);
 
       rv.put(dimensionValue, datapoint.getTimestamp().getTime(), newRelicMetricDataRecord);
     });
