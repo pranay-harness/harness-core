@@ -1,5 +1,5 @@
 extend type Query {
-  # Get details about am artifact
+  # Get details about an artifact.
   artifact(artifactId: String!): Artifact @dataFetcher(name: artifact)
 }
 

@@ -1,8 +1,8 @@
 extend type Query {
-  # Get details about a trigger
+  # Get details about a Trigger.
   trigger(triggerId: String!): Trigger @dataFetcher(name: trigger)
 
-  # Get list of services for applicationId. It will return paginated data
+  # Get a list of Harness Services, by applicationId. This returns paginated data.
   triggers(filters: [TriggerFilter], limit: Int!, offset: Int): TriggerConnection @dataFetcher(name: triggerConnection)
 }
 

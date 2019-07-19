@@ -1,5 +1,6 @@
 # Harness GraphQL SDL details
 extend type Query {
+  # Get details about instances.
   instances(filters: [InstanceFilter], limit: Int!, offset: Int): InstanceConnection
     @dataFetcher(name: instanceConnection)
 }

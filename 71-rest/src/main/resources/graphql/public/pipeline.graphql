@@ -1,7 +1,8 @@
 extend type Query {
-  # Get a pipeline object by ID
+  # Get a Pipeline object by ID.
   pipeline(pipelineId: String!): Pipeline @dataFetcher(name: pipeline)
 
+  # Get details about one or multiple Pipelines.
   pipelines(filters: [PipelineFilter], limit: Int!, offset: Int): PipelineConnection
     @dataFetcher(name: pipelineConnection)
 }

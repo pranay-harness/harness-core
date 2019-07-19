@@ -1,8 +1,8 @@
 extend type Query {
-  # Get the execution status of a workflow
+  # Get the execution status of a Workflow.
   execution(executionId: String!): Execution @dataFetcher(name: execution)
 
-  # Get the list of executions.
+  # Get a list of executions, with filtering options.
   executions(filters: [ExecutionFilter], limit: Int!, offset: Int): ExecutionConnection
     @dataFetcher(name: executionConnection)
 }

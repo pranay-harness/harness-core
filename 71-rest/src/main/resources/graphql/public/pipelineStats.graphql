@@ -3,6 +3,6 @@ enum PipelineAggregation {
 }
 
 extend type Query {
-  # Get Pipeline stats.
+  # Get statistics about Pipelines.
   pipelineStats(filters: [PipelineFilter], groupBy: [PipelineAggregation]): Data @dataFetcher(name: pipelineStats)
 }

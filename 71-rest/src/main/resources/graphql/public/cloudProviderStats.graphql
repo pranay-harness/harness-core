@@ -3,7 +3,7 @@ enum CloudProviderAggregation {
 }
 
 extend type Query {
-  # Get CloudProvider stats.
+  # Get statistics for a Cloud Provider.
   cloudProviderStats(filters: [CloudProviderFilter], groupBy: [CloudProviderAggregation]): Data
     @dataFetcher(name: cloudProviderStats)
 }

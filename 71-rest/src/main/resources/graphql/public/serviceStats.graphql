@@ -4,6 +4,6 @@ enum ServiceAggregation {
 }
 
 extend type Query {
-  # Get service stats.
+  # Get statistics about Harness Services.
   serviceStats(filters: [ServiceFilter], groupBy: [ServiceAggregation]): Data @dataFetcher(name: serviceStats)
 }

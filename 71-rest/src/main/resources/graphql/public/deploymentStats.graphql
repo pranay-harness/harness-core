@@ -49,7 +49,7 @@ enum DurationAggregateOperation {
 }
 
 extend type Query {
-  #Get deployment stats.
+  #Get statistics about one or multiple deployments.
   deploymentStats(
     aggregateFunction: DeploymentAggregationFunction
     filters: [DeploymentFilter]

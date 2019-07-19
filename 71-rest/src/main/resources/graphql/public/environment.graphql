@@ -1,7 +1,8 @@
 extend type Query {
-  # Get details about an environment
+  # Get details about a Harness Environment.
   environment(environmentId: String!): Environment @dataFetcher(name: environment)
 
+  # Get details about one or multiple Harness Environments.
   environments(filters: [EnvironmentFilter], limit: Int!, offset: Int): EnvironmentConnection
     @dataFetcher(name: environmentConnection)
 }
