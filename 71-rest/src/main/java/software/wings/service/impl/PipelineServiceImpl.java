@@ -6,7 +6,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.ListUtils.trimStrings;
+import static io.harness.data.structure.ListUtils.trimStringsAndConvertToLowerCase;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.PIPELINE_EXECUTION_IN_PROGRESS;
@@ -174,7 +174,7 @@ public class PipelineServiceImpl implements PipelineService {
     setUnset(ops, "name", pipeline.getName());
     setUnset(ops, "pipelineStages", pipeline.getPipelineStages());
     setUnset(ops, "failureStrategies", pipeline.getFailureStrategies());
-    setUnset(ops, "keywords", trimStrings(keywords));
+    setUnset(ops, "keywords", trimStringsAndConvertToLowerCase(keywords));
 
     wingsPersistence.update(wingsPersistence.createQuery(Pipeline.class)
                                 .filter("appId", pipeline.getAppId())
@@ -757,7 +757,7 @@ public class PipelineServiceImpl implements PipelineService {
     return LimitEnforcementUtils.withLimitCheck(checker, () -> {
       List<String> keywords = pipeline.generateKeywords();
       validatePipeline(pipeline, keywords);
-      pipeline.setKeywords(trimStrings(keywords));
+      pipeline.setKeywords(trimStringsAndConvertToLowerCase(keywords));
 
       wingsPersistence.save(pipeline);
 

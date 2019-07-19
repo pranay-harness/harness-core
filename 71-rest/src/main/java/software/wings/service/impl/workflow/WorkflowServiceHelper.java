@@ -10,8 +10,8 @@ import static io.harness.beans.OrchestrationWorkflowType.MULTI_SERVICE;
 import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.ListUtils.trimList;
-import static io.harness.data.structure.ListUtils.trimStrings;
+import static io.harness.data.structure.ListUtils.trimListAndConvertToLowerCase;
+import static io.harness.data.structure.ListUtils.trimStringsAndConvertToLowerCase;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
@@ -357,12 +357,12 @@ public class WorkflowServiceHelper {
         keywords.add(environment.getName());
       }
     }
-    return trimStrings(keywords);
+    return trimStringsAndConvertToLowerCase(keywords);
   }
 
   public void setKeywords(Workflow workflow) {
     workflow.setDefaultVersion(1);
-    workflow.setKeywords(trimList(
+    workflow.setKeywords(trimListAndConvertToLowerCase(
         newArrayList(workflow.getName(), workflow.getDescription(), workflow.getWorkflowType(), workflow.getNotes())));
   }
 

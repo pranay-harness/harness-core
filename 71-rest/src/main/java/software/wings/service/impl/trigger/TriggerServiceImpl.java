@@ -1028,7 +1028,7 @@ public class TriggerServiceImpl implements TriggerService {
         trigger.setWebHookToken(webHookTriggerCondition.getWebHookToken().getWebHookToken());
         if (webHookTriggerCondition.isCheckFileContentChanged()) {
           logger.info("File paths to watch selected");
-          List<String> filePaths = ListUtils.trimStrings(webHookTriggerCondition.getFilePaths());
+          List<String> filePaths = ListUtils.trimStringsAndConvertToLowerCase(webHookTriggerCondition.getFilePaths());
           if (isEmpty(filePaths)) {
             throw new InvalidRequestException("At least one file path is required to check content changed");
           }

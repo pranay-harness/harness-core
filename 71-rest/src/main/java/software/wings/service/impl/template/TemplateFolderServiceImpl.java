@@ -2,7 +2,7 @@ package software.wings.service.impl.template;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.ListUtils.trimStrings;
+import static io.harness.data.structure.ListUtils.trimStringsAndConvertToLowerCase;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
@@ -109,7 +109,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
   }
 
   private List<String> getKeywords(TemplateFolder templateFolder) {
-    List<String> generatedKeywords = trimStrings(templateFolder.generateKeywords());
+    List<String> generatedKeywords = trimStringsAndConvertToLowerCase(templateFolder.generateKeywords());
     return TemplateHelper.addUserKeyWords(templateFolder.getKeywords(), generatedKeywords);
   }
 
@@ -128,7 +128,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
         wingsPersistence.createQuery(TemplateFolder.class).field(ID_KEY).equal(savedTemplateFolder.getUuid());
     UpdateOperations<TemplateFolder> operations = wingsPersistence.createUpdateOperations(TemplateFolder.class);
 
-    List<String> userKeywords = trimStrings(savedTemplateFolder.getKeywords());
+    List<String> userKeywords = trimStringsAndConvertToLowerCase(savedTemplateFolder.getKeywords());
 
     if (isNotEmpty(savedTemplateFolder.getDescription())) {
       if (isNotEmpty(userKeywords)) {
