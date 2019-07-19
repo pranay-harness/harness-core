@@ -1,5 +1,6 @@
 package software.wings.service.impl.cloudwatch;
 
+import com.amazonaws.services.cloudwatch.model.StandardUnit;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,4 +21,5 @@ public class CloudWatchMetric {
   private String metricType;
   private boolean enabledDefault;
   private String statistics;
+  private StandardUnit unit;
 }

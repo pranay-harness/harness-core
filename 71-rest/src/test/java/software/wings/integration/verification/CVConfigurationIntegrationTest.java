@@ -29,6 +29,7 @@ import static software.wings.utils.WingsTestConstants.mockChecker;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import com.amazonaws.services.cloudwatch.model.StandardUnit;
 import io.harness.category.element.IntegrationTests;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rest.RestResponse;
@@ -165,16 +166,16 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
     Map<String, List<CloudWatchMetric>> loadBalancerMetricsByLoadBalancer = new HashMap<>();
     List<CloudWatchMetric> loadBalancerMetrics = new ArrayList<>();
-    loadBalancerMetrics.add(
-        new CloudWatchMetric("Latency", "Latenc", "LoadBalancerName", "Load balancer name", "ERROR", true, "Sum"));
+    loadBalancerMetrics.add(new CloudWatchMetric(
+        "Latency", "Latenc", "LoadBalancerName", "Load balancer name", "ERROR", true, "Sum", StandardUnit.Count));
     loadBalancerMetricsByLoadBalancer.put("init-test", loadBalancerMetrics);
     cloudWatchCVServiceConfiguration.setLoadBalancerMetrics(loadBalancerMetricsByLoadBalancer);
     cloudWatchCVServiceConfiguration.setRegion("us-east-2");
 
     Map<String, List<CloudWatchMetric>> metricsByLambdaFunction = new HashMap<>();
     List<CloudWatchMetric> lambdaMetrics = new ArrayList<>();
-    lambdaMetrics.add(new CloudWatchMetric(
-        "Invocations", "Invocations Sum", "FunctionName", "Lambda Function Name", "THROUGHPUT", true, "Sum"));
+    lambdaMetrics.add(new CloudWatchMetric("Invocations", "Invocations Sum", "FunctionName", "Lambda Function Name",
+        "THROUGHPUT", true, "Sum", StandardUnit.Count));
     metricsByLambdaFunction.put("lambda_fn1", lambdaMetrics);
 
     cloudWatchCVServiceConfiguration.setLambdaFunctionsMetrics(metricsByLambdaFunction);

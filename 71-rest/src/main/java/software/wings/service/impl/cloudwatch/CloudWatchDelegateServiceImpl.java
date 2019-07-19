@@ -1,6 +1,7 @@
 package software.wings.service.impl.cloudwatch;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.govern.Switch.unhandled;
 import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_CURRENT;
@@ -22,8 +23,8 @@ import com.amazonaws.services.cloudwatch.model.Datapoint;
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsRequest;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsResult;
+import com.amazonaws.services.cloudwatch.model.StandardUnit;
 import io.harness.exception.WingsException;
-import io.harness.govern.Switch;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -283,21 +284,61 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
               .tag(awsNameSpace.name())
               .values(new HashMap<>())
               .build();
-      double value = 0;
-      switch (cloudWatchMetric.getStatistics()) {
-        case "Sum":
-          value = datapoint.getSum();
-          break;
-        case "Average":
-          value = datapoint.getAverage();
-          break;
-        default:
-          Switch.unhandled(cloudWatchMetric.getStatistics());
-      }
+      double value = getDataPointValue(cloudWatchMetric, datapoint);
+
       newRelicMetricDataRecord.getValues().put(cloudWatchMetric.getMetricName(), value);
 
       rv.put(dimensionValue, datapoint.getTimestamp().getTime(), newRelicMetricDataRecord);
     });
+  }
+
+  private double getDataPointValue(CloudWatchMetric cloudWatchMetric, Datapoint datapoint) {
+    double value = 0;
+    switch (cloudWatchMetric.getStatistics()) {
+      case "Sum":
+        value = datapoint.getSum();
+        break;
+      case "Average":
+        value = datapoint.getAverage();
+        break;
+      default:
+        unhandled(cloudWatchMetric.getStatistics());
+    }
+
+    if (!cloudWatchMetric.getUnit().name().equals(datapoint.getUnit())) {
+      switch (StandardUnit.valueOf(datapoint.getUnit())) {
+        case Bytes:
+          switch (cloudWatchMetric.getUnit()) {
+            case Kilobytes:
+              value = value / VerificationConstants.KB;
+              break;
+            case Megabytes:
+              value = value / VerificationConstants.MB;
+              break;
+            case Gigabytes:
+              value = value / VerificationConstants.GB;
+              break;
+            default:
+              unhandled(cloudWatchMetric.getUnit());
+          }
+          break;
+        case Seconds:
+          switch (cloudWatchMetric.getUnit()) {
+            case Microseconds:
+              value = value * TimeUnit.SECONDS.toMicros(1);
+              break;
+            case Milliseconds:
+              value = value * TimeUnit.SECONDS.toMillis(1);
+              break;
+            default:
+              unhandled(cloudWatchMetric.getUnit());
+          }
+          break;
+        default:
+          unhandled(StandardUnit.valueOf(datapoint.getUnit()));
+      }
+    }
+    return value;
   }
 
   public int getCollectionMinute(final long metricTimeStamp, AnalysisComparisonStrategy analysisComparisonStrategy,

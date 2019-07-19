@@ -9,6 +9,7 @@ import static software.wings.common.VerificationConstants.STATIC_CLOUD_WATCH_MET
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -222,6 +223,12 @@ public class CloudWatchServiceImpl implements CloudWatchService {
       URL url = CloudWatchService.class.getResource(STATIC_CLOUD_WATCH_METRIC_URL);
       String yaml = Resources.toString(url, Charsets.UTF_8);
       cloudWatchMetrics = yamlUtils.read(yaml, new TypeReference<Map<AwsNameSpace, List<CloudWatchMetric>>>() {});
+      cloudWatchMetrics.forEach((awsNameSpace, metrics) -> metrics.forEach(cloudWatchMetric -> {
+        Preconditions.checkState(isNotEmpty(cloudWatchMetric.getStatistics()),
+            awsNameSpace + ":" + cloudWatchMetric.getMetricName() + " does not have statistics field defined");
+        Preconditions.checkState(cloudWatchMetric.getUnit() != null,
+            awsNameSpace + ":" + cloudWatchMetric.getMetricName() + " does not have unit field defined");
+      }));
     } catch (Exception e) {
       throw new WingsException(e);
     }
