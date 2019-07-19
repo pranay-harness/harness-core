@@ -166,10 +166,6 @@ public interface Constants {
    */
   String LAST_UPDATED_AT = "lastUpdatedAt";
   /**
-   * The constant PATH.
-   */
-  String PATH = "path";
-  /**
    * The constant PARENT.
    */
   String PARENT = "parent";
@@ -303,7 +299,6 @@ public interface Constants {
   String HARNESS_KUBE_CONFIG_PATH = "HARNESS_KUBE_CONFIG_PATH";
 
   String INFRA_ROUTE = "infra.route";
-  String INFRA_TEMP_ROUTE = "infra.tempRoute";
 
   String PCF_APP_NAME = "pcfAppName";
   String PCF_OLD_APP_NAME = "pcfOldAppName";

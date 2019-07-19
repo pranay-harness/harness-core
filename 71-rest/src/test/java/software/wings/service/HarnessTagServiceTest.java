@@ -8,6 +8,7 @@ import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
@@ -31,6 +32,7 @@ import software.wings.service.impl.EntityNameCache;
 import software.wings.service.impl.HarnessTagServiceImpl;
 import software.wings.service.intfc.ResourceLookupService;
 
+import java.util.Collections;
 import java.util.HashSet;
 
 public class HarnessTagServiceTest extends WingsBaseTest {
@@ -242,6 +244,29 @@ public class HarnessTagServiceTest extends WingsBaseTest {
       fail("Expected an InvalidRequestException to be thrown");
     } catch (InvalidRequestException exception) {
       assertThat(exception.getParams().get("message")).isEqualTo("Tag is in use. Cannot delete");
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void tryToDeleteInUseAllowedValueTest() {
+    colorTag.setAllowedValues(Sets.newHashSet("red"));
+    harnessTagService.create(colorTag);
+    harnessTagService.attachTag(HarnessTagLink.builder()
+                                    .accountId(TEST_ACCOUNT_ID)
+                                    .appId(APP_ID)
+                                    .entityId("id")
+                                    .entityType(SERVICE)
+                                    .key(colorTagKey)
+                                    .value("red")
+                                    .build());
+    colorTag.setAllowedValues(Collections.emptySet());
+
+    try {
+      harnessTagService.update(colorTag);
+      fail("Expected an InvalidRequestException to be thrown");
+    } catch (InvalidRequestException exception) {
+      assertThat(exception.getParams().get("message")).isEqualTo("Tag value red is in use. Cannot delete");
     }
   }
 

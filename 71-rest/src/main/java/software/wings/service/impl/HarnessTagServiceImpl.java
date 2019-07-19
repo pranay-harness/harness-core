@@ -117,9 +117,33 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     if (existingTag == null) {
       throw new InvalidRequestException("Tag with given Tag Name does not exist");
     }
+
+    validateAllowedValuesUpdate(tag, existingTag);
+
     wingsPersistence.updateField(
         HarnessTag.class, existingTag.getUuid(), HarnessTagKeys.allowedValues, tag.getAllowedValues());
     return get(tag.getAccountId(), tag.getKey());
+  }
+
+  private void validateAllowedValuesUpdate(HarnessTag harnessTag, HarnessTag existingTag) {
+    Set<String> existingAllowedValues = existingTag.getAllowedValues();
+    if (isEmpty(existingAllowedValues)) {
+      return;
+    }
+
+    Set<String> removedAllowedValues = existingAllowedValues;
+    removedAllowedValues.removeAll(harnessTag.getAllowedValues());
+
+    if (isEmpty(removedAllowedValues)) {
+      return;
+    }
+
+    Set<String> inUseValues = getInUseValues(harnessTag.getAccountId(), harnessTag.getKey());
+    inUseValues.retainAll(removedAllowedValues);
+
+    if (isNotEmpty(inUseValues)) {
+      throw new InvalidRequestException(format("Tag value %s is in use. Cannot delete", String.join(",", inUseValues)));
+    }
   }
 
   @Override
