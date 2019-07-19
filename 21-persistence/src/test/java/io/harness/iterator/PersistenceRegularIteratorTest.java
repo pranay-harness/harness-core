@@ -1,9 +1,12 @@
 package io.harness.iterator;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.LOOP;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.PUMP;
+import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 
 import com.google.inject.Inject;
@@ -53,7 +56,7 @@ public class PersistenceRegularIteratorTest extends PersistenceTest {
                    .fieldName(RegularIterableEntityKeys.nextIteration)
                    .targetInterval(ofSeconds(10))
                    .acceptableDelay(ofSeconds(1))
-                   .maximumDaleyForCheck(ofSeconds(1))
+                   .maximumDelayForCheck(ofSeconds(5))
                    .executorService(executorService)
                    .semaphore(new Semaphore(10))
                    .handler(new TestHandler())
@@ -76,6 +79,30 @@ public class PersistenceRegularIteratorTest extends PersistenceTest {
     final Future<?> future1 = executorService.submit(() -> iterator.process(LOOP));
     Morpheus.sleep(ofMillis(300));
     future1.cancel(true);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  @Bypass
+  public void testWakeup() throws IOException {
+    try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
+      final RegularIterableEntity entity =
+          RegularIterableEntity.builder().uuid(generateUuid()).nextIteration(currentTimeMillis() + 1000).build();
+      persistence.save(entity);
+
+      final Future<?> future1 = executorService.submit(() -> iterator.process(LOOP));
+
+      Morpheus.sleep(ofSeconds(2));
+
+      iterator.wakeup();
+
+      Morpheus.sleep(ofSeconds(1));
+      future1.cancel(true);
+
+      final RegularIterableEntity updatedEntity = persistence.get(RegularIterableEntity.class, entity.getUuid());
+
+      assertThat(updatedEntity.getNextIteration()).isGreaterThan(entity.getNextIteration());
+    }
   }
 
   @Test

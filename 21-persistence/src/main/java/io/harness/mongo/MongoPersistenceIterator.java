@@ -41,7 +41,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
   private Class<T> clazz;
   private String fieldName;
   private Duration targetInterval;
-  private Duration maximumDaleyForCheck;
+  private Duration maximumDelayForCheck;
   private Duration acceptableDelay;
   private Handler<T> handler;
   private FilterExpander<T> filterExpander;
@@ -56,6 +56,11 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
 
   private boolean shouldProcess() {
     return !MaintenanceController.isMaintenance() && queueController.isPrimary();
+  }
+
+  @Override
+  public synchronized void wakeup() {
+    notify();
   }
 
   @Override
@@ -132,18 +137,20 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
 
         final T first = query.get();
 
-        Duration sleepInterval = maximumDaleyForCheck == null ? targetInterval : maximumDaleyForCheck;
+        Duration sleepInterval = maximumDelayForCheck == null ? targetInterval : maximumDelayForCheck;
 
         if (entity != null) {
           final Long nextIteration = entity.obtainNextIteration(fieldName);
           if (first != null && nextIteration != null) {
             final Duration nextEntity = ofMillis(Math.max(0, nextIteration - currentTimeMillis()));
-            if (nextEntity.compareTo(maximumDaleyForCheck) < 0) {
+            if (nextEntity.compareTo(maximumDelayForCheck) < 0) {
               sleepInterval = nextEntity;
             }
           }
         }
-        Thread.sleep(sleepInterval.toMillis());
+        synchronized (this) {
+          wait(sleepInterval.toMillis());
+        }
       } catch (InterruptedException exception) {
         Thread.currentThread().interrupt();
         break;

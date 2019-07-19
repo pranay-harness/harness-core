@@ -57,9 +57,6 @@ import javax.validation.constraints.NotNull;
     @Field(TriggerKeys.artifactSelections + "." + ArtifactSelectionKeys.artifactStreamId)
   })
 })
-// TODO: suppressing this working is to work around issue with reporting it intermittently in different places
-//       Base is deprecated and it should be removed
-@SuppressWarnings("deprecation")
 public class Trigger extends Base implements NameAccess, TagAware {
   @NotEmpty private String name;
   private String description;
