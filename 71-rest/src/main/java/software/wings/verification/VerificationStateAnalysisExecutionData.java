@@ -88,7 +88,7 @@ public class VerificationStateAnalysisExecutionData extends StateExecutionData {
 
     if (MLAnalysisType.TIME_SERIES.equals(mlAnalysisType)) {
       Set<String> crypticHostnames = Sets.newHashSet("testNode", "controlNode-1", "controlNode-2", "controlNode-3",
-          "controlNode-4", "controlNode-5", "controlNode-6", "controlNode-7");
+          "controlNode-4", "controlNode-5", "controlNode-6", "controlNode-7", "null");
       if (canaryNewHostNames != null) {
         canaryNewHostNames.removeAll(crypticHostnames);
       }
