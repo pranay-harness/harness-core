@@ -776,7 +776,7 @@ public class AccountServiceImpl implements AccountService {
    */
   private boolean canEnableOrDisable(User user) {
     boolean result = true;
-    if (user.getAccounts().size() > 0 || harnessUserGroupService.isHarnessSupportUser(user.getUuid())) {
+    if (user.getAccounts().size() > 1 || harnessUserGroupService.isHarnessSupportUser(user.getUuid())) {
       result = false;
     }
     return result;
