@@ -283,6 +283,8 @@ public interface WingsTestConstants {
    * The constant URL.
    */
   String URL = "url";
+  String PATH = "path";
+  String INFRA_TEMP_ROUTE = "infra.tempRoute";
 
   static StaticLimitCheckerWithDecrement mockChecker() {
     return new StaticLimitCheckerWithDecrement() {
