@@ -1,5 +1,6 @@
 package io.harness.serializer.kryo;
 
+import com.amazonaws.services.cloudwatch.model.StandardUnit;
 import com.amazonaws.services.ecs.model.Deployment;
 import com.amazonaws.services.ecs.model.DeploymentConfiguration;
 import com.amazonaws.services.ecs.model.Service;
@@ -1306,5 +1307,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ServiceNowImportSetResponse.class, 7212);
     kryo.register(ServiceNowImportSetResult.class, 7213);
     kryo.register(software.wings.helpers.ext.k8s.response.K8sAddWatchResponse.class, 7214);
+    kryo.register(StandardUnit.class, 7215);
   }
 }
