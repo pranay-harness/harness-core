@@ -38,3 +38,7 @@ fi
 if [[ -v "DATA_STORE" ]]; then
     sed -i "s|dataStorageMode: MONGO|dataStorageMode: ${DATA_STORE}|" /opt/harness/verification-config.yml
 fi
+
+if [[ -v "STACK_DRIVER_LOGGING_ENABLED" ]]; then
+    sed -i "s|stackdriverLogEnabled: false|stackdriverLogEnabled: ${STACK_DRIVER_LOGGING_ENABLED}|" /opt/harness/config.yml
+fi
