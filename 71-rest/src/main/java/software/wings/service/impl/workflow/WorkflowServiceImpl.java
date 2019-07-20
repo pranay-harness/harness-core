@@ -254,6 +254,8 @@ import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
@@ -267,6 +269,10 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Slf4j
 public class WorkflowServiceImpl implements WorkflowService, DataProvider {
+  private static final Pattern serviceArtifactVariablePattern = Pattern.compile("\\$\\{artifacts\\.([^.{}]+)}");
+  private static final Pattern serviceArtifactVariablePropertyPattern =
+      Pattern.compile("\\$\\{artifacts\\.([^.{}]+)\\.");
+
   private static final String VERIFY = "Verify";
   private static final String ROLLBACK_PROVISION_INFRASTRUCTURE = "Rollback Provision Infrastructure";
 
@@ -2869,7 +2875,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                     .map(Variable::getValue)
                                     .collect(toList());
           if (isNotEmpty(values)) {
-            updateArtifactVariablesNeeded(serviceArtifactVariableNames, workflowVariableNames, values.toArray());
+            updateArtifactVariablesNeededForTemplate(
+                serviceArtifactVariableNames, workflowVariableNames, values.toArray());
           }
         }
       }
@@ -2963,6 +2970,39 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       String str = (String) arg;
       ExpressionEvaluator.updateServiceArtifactVariableNames(str, serviceArtifactVariableNames);
       ExpressionEvaluator.updateWorkflowVariableNames(str, workflowVariableNames);
+    }
+  }
+
+  private void updateArtifactVariablesNeededForTemplate(
+      Set<String> serviceArtifactVariableNames, Set<String> workflowVariableNames, Object... args) {
+    for (Object arg : args) {
+      if (!(arg instanceof String)) {
+        continue;
+      }
+
+      String str = (String) arg;
+      updateServiceArtifactVariableNames(str, serviceArtifactVariableNames);
+      ExpressionEvaluator.updateWorkflowVariableNames(str, workflowVariableNames);
+    }
+  }
+
+  private void updateServiceArtifactVariableNames(String str, Set<String> serviceArtifactVariableNames) {
+    // TODO: ASR: IMP: ARTIFACT_FILE_NAME behaved differently for multi artifact
+    if (str.contains("${artifact.") || str.contains("${ARTIFACT_FILE_NAME}") || str.equals("${artifact}")) {
+      serviceArtifactVariableNames.add("artifact");
+    }
+
+    // case 1: artifact variable in template has the value ${artifacts.artifact}
+    Matcher matcher = serviceArtifactVariablePattern.matcher(str);
+    if (matcher.find()) {
+      serviceArtifactVariableNames.add(matcher.group(1));
+    }
+
+    // case 2: text variable in template referencing some property of artifact variable like
+    // ${artifacts.artifact.metadata.url}
+    matcher = serviceArtifactVariablePropertyPattern.matcher(str);
+    if (matcher.find()) {
+      serviceArtifactVariableNames.add(matcher.group(1));
     }
   }
 

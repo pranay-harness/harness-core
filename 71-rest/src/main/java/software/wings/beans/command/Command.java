@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.beans.command.Command.Builder.aCommand;
 
@@ -37,6 +38,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by peeyushaggarwal on 5/31/16.
@@ -50,6 +53,9 @@ import java.util.Set;
                , @Field("originEntityId"), @Field("version") }))
 @FieldNameConstants(innerTypeName = "CommandKeys")
 public class Command extends Base implements CommandUnit {
+  private static final Pattern serviceArtifactVariablePattern = Pattern.compile("\\$\\{artifacts\\.([^.{}]+)}");
+  private static final Pattern serviceArtifactVariablePropertyPattern =
+      Pattern.compile("\\$\\{artifacts\\.([^.{}]+)\\.");
   @NotEmpty @SchemaIgnore private String name;
   @SchemaIgnore private CommandUnitType commandUnitType;
   @SchemaIgnore private CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.QUEUED;
@@ -368,6 +374,23 @@ public class Command extends Base implements CommandUnit {
   @SchemaIgnore
   @Override
   public void updateServiceArtifactVariableNames(Set<String> serviceArtifactVariableNames) {
+    if (isNotEmpty(templateVariables)) { // when command linked to service
+      for (Variable variable : templateVariables) {
+        if (variable.getValue().contains("${artifact.") || variable.getValue().equals("${artifact}")) {
+          serviceArtifactVariableNames.add("artifact");
+        }
+
+        Matcher matcher = serviceArtifactVariablePropertyPattern.matcher(variable.getValue());
+        if (matcher.find()) {
+          serviceArtifactVariableNames.add(matcher.group(1));
+        }
+
+        matcher = serviceArtifactVariablePattern.matcher(variable.getValue());
+        if (matcher.find()) {
+          serviceArtifactVariableNames.add(matcher.group(1));
+        }
+      }
+    }
     commandUnits.forEach(commandUnit -> commandUnit.updateServiceArtifactVariableNames(serviceArtifactVariableNames));
   }
 
