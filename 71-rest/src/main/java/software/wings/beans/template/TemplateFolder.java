@@ -30,6 +30,7 @@ import software.wings.beans.entityinterface.KeywordsAware;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @Entity(value = "templateFolders", noClassnameStored = true)
@@ -59,7 +60,7 @@ public class TemplateFolder extends Base implements KeywordsAware, NameAccess {
   private String pathId;
   private transient List<TemplateFolder> children = new ArrayList<>();
 
-  @SchemaIgnore private List<String> keywords;
+  @SchemaIgnore private Set<String> keywords;
 
   public enum NodeType {
     FOLDER("folder"),
@@ -78,7 +79,7 @@ public class TemplateFolder extends Base implements KeywordsAware, NameAccess {
 
   @Builder
   public TemplateFolder(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, List<String> keywords, String entityYamlPath, String accountId, String name,
+      long lastUpdatedAt, Set<String> keywords, String entityYamlPath, String accountId, String name,
       String description, String parentId, String nodeType, String galleryId, String pathId,
       List<TemplateFolder> children) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
@@ -105,8 +106,8 @@ public class TemplateFolder extends Base implements KeywordsAware, NameAccess {
   }
 
   @Override
-  public List<String> generateKeywords() {
-    List<String> keywords = KeywordsAware.super.generateKeywords();
+  public Set<String> generateKeywords() {
+    Set<String> keywords = KeywordsAware.super.generateKeywords();
     keywords.addAll(asList(name, description));
     return keywords;
   }

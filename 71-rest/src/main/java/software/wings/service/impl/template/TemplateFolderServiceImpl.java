@@ -1,8 +1,8 @@
 package software.wings.service.impl.template;
 
+import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.ListUtils.trimStringsAndConvertToLowerCase;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
@@ -55,6 +55,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -108,8 +109,8 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
     return savedTemplateFolder;
   }
 
-  private List<String> getKeywords(TemplateFolder templateFolder) {
-    List<String> generatedKeywords = trimStringsAndConvertToLowerCase(templateFolder.generateKeywords());
+  private Set<String> getKeywords(TemplateFolder templateFolder) {
+    Set<String> generatedKeywords = trimmedLowercaseSet(templateFolder.generateKeywords());
     return TemplateHelper.addUserKeyWords(templateFolder.getKeywords(), generatedKeywords);
   }
 
@@ -128,7 +129,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
         wingsPersistence.createQuery(TemplateFolder.class).field(ID_KEY).equal(savedTemplateFolder.getUuid());
     UpdateOperations<TemplateFolder> operations = wingsPersistence.createUpdateOperations(TemplateFolder.class);
 
-    List<String> userKeywords = trimStringsAndConvertToLowerCase(savedTemplateFolder.getKeywords());
+    Set<String> userKeywords = trimmedLowercaseSet(savedTemplateFolder.getKeywords());
 
     if (isNotEmpty(savedTemplateFolder.getDescription())) {
       if (isNotEmpty(userKeywords)) {

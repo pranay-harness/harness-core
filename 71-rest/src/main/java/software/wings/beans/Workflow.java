@@ -28,6 +28,7 @@ import software.wings.beans.entityinterface.KeywordsAware;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -41,7 +42,6 @@ import javax.validation.constraints.NotNull;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Workflow extends Base implements KeywordsAware, NameAccess, TagAware {
   public static final String NAME_KEY = "name";
-  public static final String KEYWORDS_KEY = "keywords";
   public static final String LINKED_TEMPLATE_UUIDS_KEY = "linkedTemplateUuids";
   public static final String ORCHESTRATION_KEY = "orchestration";
 
@@ -59,7 +59,7 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
 
   private List<TemplateExpression> templateExpressions;
 
-  @Getter @Setter private List<String> keywords;
+  @Getter @Setter private Set<String> keywords;
 
   @Transient private String notes;
 
@@ -277,8 +277,8 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
   }
 
   @Override
-  public List<String> generateKeywords() {
-    List<String> keywords = KeywordsAware.super.generateKeywords();
+  public Set<String> generateKeywords() {
+    Set<String> keywords = KeywordsAware.super.generateKeywords();
     keywords.addAll(asList(name, description, notes));
     if (workflowType != null) {
       keywords.add(workflowType.name());

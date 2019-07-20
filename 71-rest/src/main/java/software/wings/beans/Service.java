@@ -35,6 +35,7 @@ import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Component bean class.
@@ -71,7 +72,7 @@ public class Service extends Base implements KeywordsAware, NameAccess, TagAware
   @Transient private Activity lastProdDeploymentActivity;
   @Transient private Setup setup;
 
-  @SchemaIgnore private List<String> keywords;
+  @SchemaIgnore private Set<String> keywords;
 
   private boolean isK8sV2;
   @Indexed private String accountId;
@@ -80,7 +81,7 @@ public class Service extends Base implements KeywordsAware, NameAccess, TagAware
 
   @Builder
   public Service(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, List<String> keywords, String entityYamlPath, String name, String description,
+      long lastUpdatedAt, Set<String> keywords, String entityYamlPath, String name, String description,
       ArtifactType artifactType, DeploymentType deploymentType, String configMapYaml, String helmValueYaml,
       long version, AppContainer appContainer, List<ConfigFile> configFiles, List<ServiceVariable> serviceVariables,
       List<ArtifactStream> artifactStreams, List<ServiceCommand> serviceCommands, Activity lastDeploymentActivity,
@@ -125,8 +126,8 @@ public class Service extends Base implements KeywordsAware, NameAccess, TagAware
   }
 
   @Override
-  public List<String> generateKeywords() {
-    List<String> keywords = KeywordsAware.super.generateKeywords();
+  public Set<String> generateKeywords() {
+    Set<String> keywords = KeywordsAware.super.generateKeywords();
     keywords.addAll(asList(name, description));
     if (artifactType != null) {
       keywords.add(artifactType.name());

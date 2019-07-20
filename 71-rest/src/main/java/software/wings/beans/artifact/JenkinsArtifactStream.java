@@ -14,6 +14,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 @JsonTypeName("JENKINS")
 @Data
@@ -30,7 +31,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
   public JenkinsArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
       String name, boolean autoPopulate, String serviceId, boolean metadataOnly, String jobname,
-      List<String> artifactPaths, String accountId, List<String> keywords) {
+      List<String> artifactPaths, String accountId, Set<String> keywords) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, JENKINS.name(), sourceName,
         settingId, name, autoPopulate, serviceId, metadataOnly, accountId, keywords);
     this.jobname = jobname;

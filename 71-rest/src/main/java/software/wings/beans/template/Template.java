@@ -28,6 +28,7 @@ import software.wings.beans.Variable;
 import software.wings.beans.entityinterface.KeywordsAware;
 
 import java.util.List;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 @JsonInclude(NON_NULL)
@@ -67,11 +68,11 @@ public class Template extends Base implements KeywordsAware, NameAccess {
   private String referencedTemplateId;
   private Long referencedTemplateVersion;
   private transient String referencedTemplateUri;
-  @SchemaIgnore private List<String> keywords;
+  @SchemaIgnore private Set<String> keywords;
 
   @Builder
   public Template(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, List<String> keywords, String entityYamlPath, String name, String accountId, String type,
+      long lastUpdatedAt, Set<String> keywords, String entityYamlPath, String name, String accountId, String type,
       String folderId, long version, String description, String folderPathId, String folderPath, String gallery,
       BaseTemplate templateObject, List<Variable> variables, VersionedTemplate versionedTemplate, String galleryId,
       String referencedTemplateId, Long referencedTemplateVersion) {
@@ -95,8 +96,8 @@ public class Template extends Base implements KeywordsAware, NameAccess {
   }
 
   @Override
-  public List<String> generateKeywords() {
-    List<String> keywords = KeywordsAware.super.generateKeywords();
+  public Set<String> generateKeywords() {
+    Set<String> keywords = KeywordsAware.super.generateKeywords();
     keywords.addAll(asList(name, description, type));
     return keywords;
   }

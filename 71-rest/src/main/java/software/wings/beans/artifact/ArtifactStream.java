@@ -32,6 +32,7 @@ import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * ArtifactStream bean class.
@@ -81,7 +82,7 @@ public abstract class ArtifactStream
   private String templateVersion;
   private List<Variable> templateVariables = new ArrayList<>();
   private String accountId;
-  @SchemaIgnore private List<String> keywords;
+  @SchemaIgnore private Set<String> keywords;
   @Transient private int artifactCount;
   @Transient private List<ArtifactSummary> artifacts;
 
@@ -93,7 +94,7 @@ public abstract class ArtifactStream
   public ArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
       long lastUpdatedAt, String entityYamlPath, String artifactStreamType, String sourceName, String settingId,
       String name, boolean autoPopulate, String serviceId, boolean metadataOnly, String accountId,
-      List<String> keywords) {
+      Set<String> keywords) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.artifactStreamType = artifactStreamType;
     this.sourceName = sourceName;
@@ -142,8 +143,8 @@ public abstract class ArtifactStream
   }
 
   @Override
-  public List<String> generateKeywords() {
-    List<String> keywords = KeywordsAware.super.generateKeywords();
+  public Set<String> generateKeywords() {
+    Set<String> keywords = KeywordsAware.super.generateKeywords();
     keywords.addAll(asList(name, sourceName, artifactStreamType));
     return keywords;
   }

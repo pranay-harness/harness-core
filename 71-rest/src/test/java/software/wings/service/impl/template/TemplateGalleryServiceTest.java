@@ -28,6 +28,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.INVALID_NAME;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
@@ -284,7 +285,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
         .accountId(ACCOUNT_ID)
         .description(TEMPLATE_GALLERY_DESC)
         .appId(GLOBAL_APP_ID)
-        .keywords(asList("CD"))
+        .keywords(ImmutableSet.of("CD"))
         .build();
   }
 
@@ -367,7 +368,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
                             .type("SSH")
                             .description(TEMPLATE_DESC)
                             .folderPath("Harness/Power Shell Commands")
-                            .keywords(asList(TEMPLATE_CUSTOM_KEYWORD))
+                            .keywords(ImmutableSet.of(TEMPLATE_CUSTOM_KEYWORD))
                             .templateObject(sshCommandTemplate)
                             .build();
 

@@ -13,7 +13,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
+import java.util.Set;
 
 /**
  * @author rktummala on 8/4/17.
@@ -37,7 +37,7 @@ public class GcrArtifactStream extends ArtifactStream {
   public GcrArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
       String name, boolean autoPopulate, String serviceId, String registryHostName, String dockerImageName,
-      String accountId, List<String> keywords) {
+      String accountId, Set<String> keywords) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, GCR.name(), sourceName,
         settingId, name, autoPopulate, serviceId, true, accountId, keywords);
     this.registryHostName = registryHostName;

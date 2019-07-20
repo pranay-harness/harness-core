@@ -4,9 +4,9 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.ListUtils.trimStringsAndConvertToLowerCase;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.PIPELINE_EXECUTION_IN_PROGRESS;
@@ -165,7 +165,7 @@ public class PipelineServiceImpl implements PipelineService {
     Pipeline savedPipeline = wingsPersistence.getWithAppId(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
     notNullCheck("Pipeline not saved", savedPipeline, USER);
 
-    List<String> keywords = pipeline.generateKeywords();
+    Set<String> keywords = pipeline.generateKeywords();
     ensurePipelineStageUuidAndParallelIndex(pipeline);
 
     validatePipeline(pipeline, keywords);
@@ -174,7 +174,7 @@ public class PipelineServiceImpl implements PipelineService {
     setUnset(ops, "name", pipeline.getName());
     setUnset(ops, "pipelineStages", pipeline.getPipelineStages());
     setUnset(ops, "failureStrategies", pipeline.getFailureStrategies());
-    setUnset(ops, "keywords", trimStringsAndConvertToLowerCase(keywords));
+    setUnset(ops, "keywords", trimmedLowercaseSet(keywords));
 
     wingsPersistence.update(wingsPersistence.createQuery(Pipeline.class)
                                 .filter("appId", pipeline.getAppId())
@@ -755,9 +755,9 @@ public class PipelineServiceImpl implements PipelineService {
         new Action(accountId, ActionType.CREATE_PIPELINE));
 
     return LimitEnforcementUtils.withLimitCheck(checker, () -> {
-      List<String> keywords = pipeline.generateKeywords();
+      Set<String> keywords = pipeline.generateKeywords();
       validatePipeline(pipeline, keywords);
-      pipeline.setKeywords(trimStringsAndConvertToLowerCase(keywords));
+      pipeline.setKeywords(trimmedLowercaseSet(keywords));
 
       wingsPersistence.save(pipeline);
 
@@ -791,7 +791,7 @@ public class PipelineServiceImpl implements PipelineService {
     return referencedPipelines;
   }
 
-  private void validatePipeline(Pipeline pipeline, List<String> keywords) {
+  private void validatePipeline(Pipeline pipeline, Set<String> keywords) {
     List<Service> services = new ArrayList<>();
     List<String> serviceIds = new ArrayList<>();
     final List<PipelineStage> pipelineStages = pipeline.getPipelineStages();

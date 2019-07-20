@@ -1,13 +1,11 @@
 package software.wings.service.impl.template;
 
+import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.ListUtils.trimListAndConvertToLowerCase;
-import static io.harness.data.structure.ListUtils.trimStringsAndConvertToLowerCase;
 import static io.harness.eraro.ErrorCode.TEMPLATES_LINKED;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -122,7 +120,7 @@ public class TemplateServiceImpl implements TemplateService {
     // create initial version
     processTemplate(template);
 
-    template.setVersion(Long.valueOf(1));
+    template.setVersion(1L);
     template.setKeywords(getKeywords(template));
 
     String templateUuid = Validator.duplicateCheck(() -> wingsPersistence.save(template), NAME_KEY, template.getName());
@@ -187,17 +185,17 @@ public class TemplateServiceImpl implements TemplateService {
     }
     notNullCheck("Template " + template.getName() + " does not exist", oldTemplate);
     validateScope(template, oldTemplate);
-    List<String> existingKeywords = oldTemplate.getKeywords();
-    List<String> generatedKeywords = trimStringsAndConvertToLowerCase(template.generateKeywords());
+    Set<String> existingKeywords = oldTemplate.getKeywords();
+    Set<String> generatedKeywords = trimmedLowercaseSet(template.generateKeywords());
     if (isNotEmpty(existingKeywords)) {
+      existingKeywords.remove(oldTemplate.getName().toLowerCase());
+      if (oldTemplate.getDescription() != null) {
+        existingKeywords.remove(oldTemplate.getDescription().toLowerCase());
+      }
+      existingKeywords.remove(oldTemplate.getType().toLowerCase());
       generatedKeywords.addAll(existingKeywords);
     }
-    generatedKeywords.remove(oldTemplate.getName().toLowerCase());
-    if (oldTemplate.getDescription() != null) {
-      generatedKeywords.remove(oldTemplate.getDescription().toLowerCase());
-    }
-    generatedKeywords.remove(oldTemplate.getType().toLowerCase());
-    template.setKeywords(trimListAndConvertToLowerCase(Arrays.asList(generatedKeywords.toArray())));
+    template.setKeywords(trimmedLowercaseSet(generatedKeywords));
     VersionedTemplate newVersionedTemplate = buildTemplateDetails(template, template.getUuid());
     validateTemplateVariables(newVersionedTemplate.getVariables());
     boolean templateObjectChanged = checkTemplateDetailsChanged(
@@ -210,7 +208,7 @@ public class TemplateServiceImpl implements TemplateService {
     if (templateObjectChanged || templateVariablesChanged) {
       TemplateVersion templateVersion = getTemplateVersion(
           template, template.getUuid(), template.getType(), template.getName(), TemplateVersion.ChangeType.UPDATED);
-      newVersionedTemplate.setVersion(Long.valueOf(templateVersion.getVersion().intValue()));
+      newVersionedTemplate.setVersion(templateVersion.getVersion());
       saveVersionedTemplate(template, newVersionedTemplate);
       templateDetailsChanged = true;
     }
@@ -537,8 +535,8 @@ public class TemplateServiceImpl implements TemplateService {
     return templateProcessBinder.get(templateType);
   }
 
-  private List<String> getKeywords(Template template) {
-    List<String> generatedKeywords = trimStringsAndConvertToLowerCase(template.generateKeywords());
+  private Set<String> getKeywords(Template template) {
+    Set<String> generatedKeywords = trimmedLowercaseSet(template.generateKeywords());
     return addUserKeyWords(template.getKeywords(), generatedKeywords);
   }
 
@@ -548,8 +546,8 @@ public class TemplateServiceImpl implements TemplateService {
       Query<Template> templateQuery = wingsPersistence.createQuery(Template.class)
                                           .filter(TemplateKeys.accountId, accountId)
                                           .filter(TemplateKeys.appId, GLOBAL_APP_ID)
-                                          .field(Template.KEYWORDS_KEY)
-                                          .in(asList(keyword.toLowerCase()));
+                                          .field(TemplateKeys.keywords)
+                                          .contains(keyword.toLowerCase());
       List<Template> templates = templateQuery.asList();
       if (isNotEmpty(templates)) {
         template = templates.get(0);
@@ -567,8 +565,8 @@ public class TemplateServiceImpl implements TemplateService {
       Query<Template> templateQuery = wingsPersistence.createQuery(Template.class)
                                           .filter(TemplateKeys.accountId, accountId)
                                           .filter(TemplateKeys.appId, appId)
-                                          .field(Template.KEYWORDS_KEY)
-                                          .in(asList(keyword.toLowerCase()));
+                                          .field(TemplateKeys.keywords)
+                                          .contains(keyword.toLowerCase());
       List<Template> templates = templateQuery.asList();
       if (isNotEmpty(templates)) {
         template = templates.get(0);
@@ -580,7 +578,7 @@ public class TemplateServiceImpl implements TemplateService {
     return template;
   }
 
-  public Template fetchTemplateByKeywords(@NotEmpty String accountId, List<String> keywords) {
+  public Template fetchTemplateByKeywords(@NotEmpty String accountId, Set<String> keywords) {
     Template template = null;
     if (isNotEmpty(keywords)) {
       Query<Template> templateQuery =

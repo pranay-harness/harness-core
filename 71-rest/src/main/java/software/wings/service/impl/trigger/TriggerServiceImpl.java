@@ -5,6 +5,7 @@ import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
@@ -43,7 +44,6 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
-import io.harness.data.structure.ListUtils;
 import io.harness.distribution.idempotence.IdempotentId;
 import io.harness.distribution.idempotence.IdempotentLock;
 import io.harness.distribution.idempotence.IdempotentResult;
@@ -1028,7 +1028,7 @@ public class TriggerServiceImpl implements TriggerService {
         trigger.setWebHookToken(webHookTriggerCondition.getWebHookToken().getWebHookToken());
         if (webHookTriggerCondition.isCheckFileContentChanged()) {
           logger.info("File paths to watch selected");
-          List<String> filePaths = ListUtils.trimStringsAndConvertToLowerCase(webHookTriggerCondition.getFilePaths());
+          List<String> filePaths = trimStrings(webHookTriggerCondition.getFilePaths());
           if (isEmpty(filePaths)) {
             throw new InvalidRequestException("At least one file path is required to check content changed");
           }

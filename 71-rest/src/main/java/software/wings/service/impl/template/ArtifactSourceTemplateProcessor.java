@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static software.wings.beans.template.TemplateType.ARTIFACT_SOURCE;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
 
@@ -30,7 +31,9 @@ import software.wings.beans.template.artifactsource.ArtifactSourceTemplate;
 import software.wings.beans.template.artifactsource.CustomArtifactSourceTemplate;
 import software.wings.service.intfc.ArtifactStreamService;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Singleton
 @Slf4j
@@ -46,7 +49,7 @@ public class ArtifactSourceTemplateProcessor extends AbstractTemplateProcessor {
   @Override
   public Template process(Template template) {
     template.setType(getTemplateType().name());
-    List<String> keywords = generateKeyword(template);
+    Set<String> keywords = generateKeyword(template);
     if (EmptyPredicate.isNotEmpty(keywords)) {
       template.setKeywords(keywords);
     }
@@ -55,10 +58,10 @@ public class ArtifactSourceTemplateProcessor extends AbstractTemplateProcessor {
     return template;
   }
 
-  private List<String> generateKeyword(Template template) {
+  private Set<String> generateKeyword(Template template) {
     ArtifactSourceTemplate artifactSourceTemplate = (ArtifactSourceTemplate) template.getTemplateObject();
     if (artifactSourceTemplate.getArtifactSource() instanceof CustomArtifactSourceTemplate) {
-      return asList(ArtifactStreamType.CUSTOM.name());
+      return new HashSet<>(singletonList(ArtifactStreamType.CUSTOM.name()));
     }
     return null;
   }

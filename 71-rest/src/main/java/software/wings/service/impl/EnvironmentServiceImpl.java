@@ -3,9 +3,9 @@ package software.wings.service.impl;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
+import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.ListUtils.trimStringsAndConvertToLowerCase;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
@@ -234,7 +234,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   public Environment save(Environment environment) {
     String accountId = appService.getAccountIdByAppId(environment.getAppId());
     environment.setAccountId(accountId);
-    environment.setKeywords(trimStringsAndConvertToLowerCase(environment.generateKeywords()));
+    environment.setKeywords(trimmedLowercaseSet(environment.generateKeywords()));
     Environment savedEnvironment = Validator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(Environment.class, environment), "name", environment.getName());
 
@@ -283,7 +283,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     Environment savedEnvironment =
         wingsPersistence.getWithAppId(Environment.class, environment.getAppId(), environment.getUuid());
 
-    List<String> keywords = trimStringsAndConvertToLowerCase(environment.generateKeywords());
+    Set<String> keywords = trimmedLowercaseSet(environment.generateKeywords());
 
     UpdateOperations<Environment> updateOperations =
         wingsPersistence.createUpdateOperations(Environment.class)

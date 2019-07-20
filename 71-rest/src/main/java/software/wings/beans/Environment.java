@@ -31,6 +31,7 @@ import software.wings.yaml.BaseEntityYaml;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -62,7 +63,7 @@ public class Environment extends Base implements KeywordsAware, NameAccess, TagA
   @Transient private List<ServiceTemplate> serviceTemplates;
   @Transient private List<ConfigFile> configFiles;
   @Transient private Setup setup;
-  @SchemaIgnore private List<String> keywords;
+  @SchemaIgnore private Set<String> keywords;
   @Indexed private String accountId;
 
   /**
@@ -220,8 +221,8 @@ public class Environment extends Base implements KeywordsAware, NameAccess, TagA
   }
 
   @Override
-  public List<String> generateKeywords() {
-    List<String> keywords = KeywordsAware.super.generateKeywords();
+  public Set<String> generateKeywords() {
+    Set<String> keywords = KeywordsAware.super.generateKeywords();
     keywords.addAll(asList(name, description, environmentType.name()));
     return keywords;
   }
