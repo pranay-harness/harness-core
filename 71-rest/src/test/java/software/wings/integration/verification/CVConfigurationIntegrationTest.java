@@ -231,7 +231,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         TimeSeries.builder()
             .txnName("Hardware")
             .metricName("CPU")
-            .metricType(MetricType.ERROR.name())
+            .metricType(MetricType.INFRA.name())
             .url(
                 "/api/v1/query_range?start=$startTime&end=$endTime&step=60s&query=container_cpu_usage_seconds_total{pod_name=\"$hostName\"}")
             .build());

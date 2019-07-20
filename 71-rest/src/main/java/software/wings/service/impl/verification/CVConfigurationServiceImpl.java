@@ -30,6 +30,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.TimeSeriesMetricDefinition;
+import software.wings.resources.PrometheusResource;
 import software.wings.service.impl.CloudWatchServiceImpl;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
@@ -108,6 +109,12 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
       case PROMETHEUS:
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), PrometheusCVServiceConfiguration.class);
+        final Map<String, String> invalidFields = PrometheusResource.validateTransactions(
+            ((PrometheusCVServiceConfiguration) cvConfiguration).getTimeSeriesToAnalyze(), true);
+
+        if (isNotEmpty(invalidFields)) {
+          throw new WingsException("Invalid configuration, reason: " + invalidFields);
+        }
         break;
 
       case DATA_DOG:
