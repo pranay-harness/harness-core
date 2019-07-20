@@ -55,7 +55,8 @@ public class ExecCommandUnit extends SshCommandUnit {
     if (isEmpty(commandString)) {
       return false;
     }
-    return commandString.contains("${artifact.") || commandString.contains("${ARTIFACT_FILE_NAME}");
+    return commandString.contains("${artifact.") || commandString.contains("${ARTIFACT_FILE_NAME}")
+        || commandString.contains("${artifacts.");
   }
 
   @SchemaIgnore
