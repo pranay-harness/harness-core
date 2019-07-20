@@ -47,6 +47,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -141,7 +142,7 @@ public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAt
 
   private List<Artifact> artifacts;
 
-  private List<String> keywords;
+  private Set<String> keywords;
 
   @Default
   @JsonIgnore

@@ -14,6 +14,7 @@ import software.wings.service.intfc.ownership.OwnedByApplication;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -66,7 +67,7 @@ public interface TemplateService extends OwnedByAccount, OwnedByApplication {
 
   Template fetchTemplateByKeyword(@NotEmpty String accountId, @NotEmpty String appId, String keyword);
 
-  Template fetchTemplateByKeywords(@NotEmpty String accountId, List<String> keywords);
+  Template fetchTemplateByKeywords(@NotEmpty String accountId, Set<String> keywords);
 
   List<Template> fetchTemplatesWithReferencedTemplateId(@NotEmpty String templateId);
 

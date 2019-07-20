@@ -24,6 +24,7 @@ import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 
+import java.util.HashSet;
 import java.util.List;
 
 public class TomcatInstallCommandMigration implements SeedDataMigration {
@@ -43,8 +44,8 @@ public class TomcatInstallCommandMigration implements SeedDataMigration {
         return;
       }
 
-      Template globalInstallTemplate =
-          templateService.fetchTemplateByKeywords(GLOBAL_ACCOUNT_ID, asList("ssh", "war", "install", "tomcat"));
+      Template globalInstallTemplate = templateService.fetchTemplateByKeywords(
+          GLOBAL_ACCOUNT_ID, new HashSet<>(asList("ssh", "war", "install", "tomcat")));
       if (globalInstallTemplate != null) {
         logger.info("Migrating Default Tomcat Install Command to new format in account [{}]", GLOBAL_ACCOUNT_ID);
         // Update Tomcat Install template for global account

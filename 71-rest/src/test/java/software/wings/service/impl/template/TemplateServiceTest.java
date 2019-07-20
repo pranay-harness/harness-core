@@ -39,6 +39,7 @@ import static software.wings.utils.TemplateTestConstants.TEMPLATE_FOLDER_NAME;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
@@ -411,7 +412,7 @@ public class TemplateServiceTest extends TemplateBaseTest {
         .name(name)
         .description(TEMPLATE_DESC)
         .folderPath("Harness/Tomcat Commands")
-        .keywords(asList(TEMPLATE_CUSTOM_KEYWORD))
+        .keywords(ImmutableSet.of(TEMPLATE_CUSTOM_KEYWORD))
         .gallery(HARNESS_GALLERY)
         .appId(appId)
         .accountId(GLOBAL_ACCOUNT_ID)

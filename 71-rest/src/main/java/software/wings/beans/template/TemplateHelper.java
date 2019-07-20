@@ -1,5 +1,6 @@
 package software.wings.beans.template;
 
+import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
@@ -16,7 +17,6 @@ import static software.wings.beans.template.Template.TYPE_KEY;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.data.structure.ListUtils;
 import io.harness.exception.WingsException;
 import io.harness.persistence.PersistentEntity;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -284,12 +285,12 @@ public class TemplateHelper {
     return CommandHelper.getCommandCategories(commands);
   }
 
-  public static List<String> addUserKeyWords(List<String> keywords, List<String> generatedKeywords) {
-    List<String> userKeywords = ListUtils.trimStringsAndConvertToLowerCase(keywords);
+  public static Set<String> addUserKeyWords(Set<String> keywords, Set<String> generatedKeywords) {
+    Set<String> userKeywords = trimmedLowercaseSet(keywords);
     if (isNotEmpty(userKeywords)) {
       generatedKeywords.addAll(userKeywords);
     }
-    return ListUtils.trimStringsAndConvertToLowerCase(generatedKeywords);
+    return trimmedLowercaseSet(generatedKeywords);
   }
   public static Map<String, Object> convertToVariableMap(List<Variable> variables) {
     if (isEmpty(variables)) {

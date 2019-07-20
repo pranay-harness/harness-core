@@ -1104,7 +1104,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       linkedTemplateUuids = linkedTemplateUuids.stream().distinct().collect(toList());
     }
 
-    List<String> keywords = workflowServiceHelper.getKeywords(workflow);
+    Set<String> keywords = workflowServiceHelper.getKeywords(workflow);
     wingsPersistence.update(wingsPersistence.createQuery(Workflow.class)
                                 .filter(Workflow.APP_ID_KEY, workflow.getAppId())
                                 .filter(Workflow.ID_KEY, workflow.getUuid()),

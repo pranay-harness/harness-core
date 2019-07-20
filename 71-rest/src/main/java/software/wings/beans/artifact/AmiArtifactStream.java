@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @JsonTypeName("AMI")
@@ -39,7 +40,7 @@ public class AmiArtifactStream extends ArtifactStream {
   public AmiArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
       String name, boolean autoPopulate, String serviceId, String region, String platform, List<Tag> tags,
-      List<FilterClass> filters, String accountId, List<String> keywords) {
+      List<FilterClass> filters, String accountId, Set<String> keywords) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, AMI.name(), sourceName,
         settingId, name, autoPopulate, serviceId, true, accountId, keywords);
     this.region = region;

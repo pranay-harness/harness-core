@@ -16,6 +16,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 @JsonTypeName("AMAZON_S3")
 @Data
@@ -33,7 +34,7 @@ public class AmazonS3ArtifactStream extends ArtifactStream {
   public AmazonS3ArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
       String name, boolean autoPopulate, String serviceId, String jobname, List<String> artifactPaths, String accountId,
-      List<String> keywords) {
+      Set<String> keywords) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, AMAZON_S3.name(), sourceName,
         settingId, name, autoPopulate, serviceId, true, accountId, keywords);
     this.jobname = jobname;

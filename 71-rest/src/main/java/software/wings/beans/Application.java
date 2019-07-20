@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Application bean class.
@@ -58,7 +59,7 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
   @Transient private List<WorkflowExecution> recentExecutions;
   @Transient private List<Notification> notifications;
   @Transient private long nextDeploymentOn;
-  @Getter @Setter private List<String> keywords;
+  @Getter @Setter private Set<String> keywords;
 
   @Getter @Setter private transient YamlGitConfig yamlGitConfig;
 
@@ -442,8 +443,8 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
   }
 
   @Override
-  public List<String> generateKeywords() {
-    List<String> keywords = KeywordsAware.super.generateKeywords();
+  public Set<String> generateKeywords() {
+    Set<String> keywords = KeywordsAware.super.generateKeywords();
     keywords.addAll(asList(name, description));
     return keywords;
   }

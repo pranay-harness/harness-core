@@ -1,6 +1,6 @@
 package migrations.all;
 
-import static io.harness.data.structure.ListUtils.trimStringsAndConvertToLowerCase;
+import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 
 import com.google.inject.Inject;
 
@@ -14,7 +14,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;
 
-import java.util.List;
+import java.util.Set;
 
 @Slf4j
 public class AppKeywordsMigration implements Migration {
@@ -36,13 +36,12 @@ public class AppKeywordsMigration implements Migration {
           logger.info("Applications: {} updated", i);
         }
         ++i;
-        List<String> keywords = application.generateKeywords();
+        Set<String> keywords = application.generateKeywords();
         bulkWriteOperation
             .find(wingsPersistence.createQuery(Service.class)
                       .filter(Service.ID_KEY, application.getUuid())
                       .getQueryObject())
-            .updateOne(
-                new BasicDBObject("$set", new BasicDBObject("keywords", trimStringsAndConvertToLowerCase(keywords))));
+            .updateOne(new BasicDBObject("$set", new BasicDBObject("keywords", trimmedLowercaseSet(keywords))));
       }
     }
     if (i % BATCH_SIZE != 1) {

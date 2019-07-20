@@ -18,7 +18,7 @@ import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.entityinterface.KeywordsAware;
 
-import java.util.List;
+import java.util.Set;
 
 @Entity("templateGalleries")
 @HarnessExportableEntity
@@ -36,11 +36,11 @@ public class TemplateGallery extends Base implements KeywordsAware {
   private String description;
   private String referencedGalleryId;
   private boolean global;
-  @SchemaIgnore private List<String> keywords;
+  @SchemaIgnore private Set<String> keywords;
 
   @Builder
   public TemplateGallery(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, List<String> keywords, String entityYamlPath, String name, String accountId,
+      long lastUpdatedAt, Set<String> keywords, String entityYamlPath, String name, String accountId,
       String description, String referencedGalleryId, boolean global) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
@@ -52,8 +52,8 @@ public class TemplateGallery extends Base implements KeywordsAware {
   }
 
   @Override
-  public List<String> generateKeywords() {
-    List<String> keywords = KeywordsAware.super.generateKeywords();
+  public Set<String> generateKeywords() {
+    Set<String> keywords = KeywordsAware.super.generateKeywords();
     keywords.addAll(asList(name, description));
     return keywords;
   }

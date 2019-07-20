@@ -15,6 +15,7 @@ import software.wings.beans.template.artifactsource.CustomRepositoryMapping;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 @JsonTypeName("CUSTOM")
@@ -48,7 +49,7 @@ public class CustomArtifactStream extends ArtifactStream {
   public CustomArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
       String name, String serviceId, String scriptString, List<Script> scripts, List<String> tags, String accountId,
-      List<String> keywords) {
+      Set<String> keywords) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath,
         ArtifactStreamType.CUSTOM.name(), sourceName, settingId, name, false, serviceId, true, accountId, keywords);
     this.scripts = scripts;

@@ -1,9 +1,13 @@
 package io.harness.data.structure;
 
+import static java.util.stream.Collectors.toSet;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -45,5 +49,17 @@ public class CollectionUtils {
 
   public static <T> List<T> emptyIfNull(List<T> collection) {
     return collection == null ? new ArrayList<>() : collection;
+  }
+
+  public static Set<String> trimmedLowercaseSet(Collection<String> strings) {
+    if (strings == null) {
+      return null;
+    }
+    return strings.stream()
+        .filter(Objects::nonNull)
+        .map(String::trim)
+        .filter(EmptyPredicate::isNotEmpty)
+        .map(String::toLowerCase)
+        .collect(toSet());
   }
 }

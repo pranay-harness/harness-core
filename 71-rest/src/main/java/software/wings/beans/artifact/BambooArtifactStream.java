@@ -15,6 +15,7 @@ import software.wings.utils.Utils;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 @JsonTypeName("BAMBOO")
 @Data
@@ -31,7 +32,7 @@ public class BambooArtifactStream extends ArtifactStream {
   public BambooArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
       String name, boolean autoPopulate, String serviceId, boolean metadataOnly, String jobname,
-      List<String> artifactPaths, String accountId, List<String> keywords) {
+      List<String> artifactPaths, String accountId, Set<String> keywords) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, BAMBOO.name(), sourceName,
         settingId, name, autoPopulate, serviceId, metadataOnly, accountId, keywords);
     this.jobname = jobname;

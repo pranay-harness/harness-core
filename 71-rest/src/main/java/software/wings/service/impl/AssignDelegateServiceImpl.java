@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.CapabilityUtils.isTaskTypeMigratedToCapabilityFramework;
@@ -121,7 +122,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
   private boolean canAssignTags(Delegate delegate, DelegateTask task) {
     return isEmpty(task.getTags())
-        || (isNotEmpty(delegate.getTags()) && delegate.getTags().containsAll(task.getTags()));
+        || (isNotEmpty(delegate.getTags())
+               && trimmedLowercaseSet(delegate.getTags()).containsAll(trimmedLowercaseSet(task.getTags())));
   }
 
   private boolean canAssignScopes(Delegate delegate, DelegateTask task) {

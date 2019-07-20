@@ -1,6 +1,5 @@
 package software.wings.service.impl.workflow;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newHashMap;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.OrchestrationWorkflowType.BASIC;
@@ -8,10 +7,9 @@ import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static io.harness.beans.OrchestrationWorkflowType.CANARY;
 import static io.harness.beans.OrchestrationWorkflowType.MULTI_SERVICE;
 import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
+import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.ListUtils.trimListAndConvertToLowerCase;
-import static io.harness.data.structure.ListUtils.trimStringsAndConvertToLowerCase;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
@@ -349,21 +347,24 @@ public class WorkflowServiceHelper {
         "Workflow [" + workflow.getName() + "] environment parameterized. However, the value not supplied", USER);
   }
 
-  public List<String> getKeywords(Workflow workflow) {
-    List<String> keywords = workflow.generateKeywords();
+  public Set<String> getKeywords(Workflow workflow) {
+    Set<String> keywords = workflow.generateKeywords();
     if (workflow.getEnvId() != null) {
       Environment environment = environmentService.get(workflow.getAppId(), workflow.getEnvId());
       if (environment != null) {
         keywords.add(environment.getName());
       }
     }
-    return trimStringsAndConvertToLowerCase(keywords);
+    return trimmedLowercaseSet(keywords);
   }
 
   public void setKeywords(Workflow workflow) {
     workflow.setDefaultVersion(1);
-    workflow.setKeywords(trimListAndConvertToLowerCase(
-        newArrayList(workflow.getName(), workflow.getDescription(), workflow.getWorkflowType(), workflow.getNotes())));
+    List<String> keywords = asList(workflow.getName(), workflow.getDescription(), workflow.getNotes());
+    if (workflow.getWorkflowType() != null) {
+      keywords.add(workflow.getWorkflowType().name());
+    }
+    workflow.setKeywords(trimmedLowercaseSet(keywords));
   }
 
   /**

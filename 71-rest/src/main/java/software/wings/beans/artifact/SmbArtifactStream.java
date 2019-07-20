@@ -16,6 +16,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 @JsonTypeName("SMB")
 @Data
@@ -32,7 +33,7 @@ public class SmbArtifactStream extends ArtifactStream {
   public SmbArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
       String name, boolean autoPopulate, String serviceId, List<String> artifactPaths, String accountId,
-      List<String> keywords) {
+      Set<String> keywords) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, SMB.name(), sourceName,
         settingId, name, autoPopulate, serviceId, true, accountId, keywords);
     this.artifactPaths = artifactPaths;

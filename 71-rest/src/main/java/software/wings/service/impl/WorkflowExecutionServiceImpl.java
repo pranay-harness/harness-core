@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.beans.ExecutionStatus.NEW;
 import static io.harness.beans.ExecutionStatus.PAUSED;
 import static io.harness.beans.ExecutionStatus.PAUSING;
@@ -19,9 +18,9 @@ import static io.harness.beans.SearchFilter.Operator.LT_EQ;
 import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
+import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.ListUtils.trimListAndConvertToLowerCase;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
@@ -1196,8 +1195,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       ExecutionEventAdvisor workflowExecutionAdvisor, WorkflowExecutionUpdate workflowExecutionUpdate,
       WorkflowStandardParams stdParams, Trigger trigger, Pipeline pipeline, Workflow workflow,
       ContextElement... contextElements) {
-    List<Object> keywords = newArrayList(workflowExecution.normalizedName(), workflowExecution.getWorkflowType(),
-        workflowExecution.getOrchestrationType());
+    Set<String> keywords = new HashSet<>();
+    keywords.add(workflowExecution.normalizedName());
+    if (workflowExecution.getWorkflowType() != null) {
+      keywords.add(workflowExecution.getWorkflowType().name());
+    }
+    if (workflowExecution.getOrchestrationType() != null) {
+      keywords.add(workflowExecution.getWorkflowType().name());
+    }
 
     ExecutionArgs executionArgs = workflowExecution.getExecutionArgs();
 
@@ -1218,7 +1223,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     workflowExecution.setErrorStrategy(executionArgs.getErrorStrategy());
 
-    workflowExecution.setKeywords(trimListAndConvertToLowerCase(keywords));
+    workflowExecution.setKeywords(trimmedLowercaseSet(keywords));
     workflowExecution.setStatus(QUEUED);
 
     EntityVersion entityVersion = entityVersionService.newEntityVersion(workflowExecution.getAppId(), DEPLOYMENT,
@@ -1346,7 +1351,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private void populateServiceInstances(
-      WorkflowExecution workflowExecution, List<Object> keywords, ExecutionArgs executionArgs) {
+      WorkflowExecution workflowExecution, Set<String> keywords, ExecutionArgs executionArgs) {
     if (executionArgs.getServiceInstances() != null) {
       List<String> serviceInstanceIds =
           executionArgs.getServiceInstances().stream().map(ServiceInstance::getUuid).collect(toList());
@@ -1369,7 +1374,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private void populateCurrentUser(
-      WorkflowExecution workflowExecution, WorkflowStandardParams stdParams, Trigger trigger, List<Object> keywords) {
+      WorkflowExecution workflowExecution, WorkflowStandardParams stdParams, Trigger trigger, Set<String> keywords) {
     User user = UserThreadLocal.get();
     if (user != null) {
       EmbeddedUser triggeredBy =
@@ -1390,7 +1395,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     stdParams.setCurrentUser(workflowExecution.getCreatedBy());
   }
 
-  private void refreshEnvSummary(WorkflowExecution workflowExecution, List<Object> keywords) {
+  private void refreshEnvSummary(WorkflowExecution workflowExecution, Set<String> keywords) {
     if (isNotEmpty(workflowExecution.getEnvIds())) {
       List<EnvSummary> environmentSummaries =
           environmentService.obtainEnvironmentSummaries(workflowExecution.getAppId(), workflowExecution.getEnvIds());
@@ -1401,7 +1406,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             workflowExecution.setEnvName(envSummary.getName());
             workflowExecution.setEnvType(envSummary.getEnvironmentType());
           }
-          keywords.add(workflowExecution.getEnvType());
+          if (workflowExecution.getEnvType() != null) {
+            keywords.add(workflowExecution.getEnvType().name());
+          }
           keywords.add(workflowExecution.getEnvName());
         }
       }
@@ -1409,7 +1416,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private void populatePipelineSummary(
-      WorkflowExecution workflowExecution, List<Object> keywords, ExecutionArgs executionArgs) {
+      WorkflowExecution workflowExecution, Set<String> keywords, ExecutionArgs executionArgs) {
     if (executionArgs.isTriggeredFromPipeline()) {
       if (executionArgs.getPipelineId() != null) {
         Pipeline pipeline =
@@ -1438,7 +1445,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private void populateArtifactsAndServices(WorkflowExecution workflowExecution, WorkflowStandardParams stdParams,
-      List<Object> keywords, ExecutionArgs executionArgs, String accountId) {
+      Set<String> keywords, ExecutionArgs executionArgs, String accountId) {
     if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
       if (isNotEmpty(executionArgs.getArtifacts())) {
         List<String> artifactIds = executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(toList());
@@ -1483,7 +1490,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           keywords.add(artifact.getArtifactSourceName());
           keywords.add(artifact.getDescription());
           keywords.add(artifact.getRevision());
-          keywords.add(artifact.getMetadata());
+          keywords.addAll(artifact.getMetadata().values());
         });
 
         executionArgs.setArtifacts(artifacts);
@@ -1520,7 +1527,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private void populateArtifacts(WorkflowExecution workflowExecution, WorkflowStandardParams stdParams,
-      List<Object> keywords, ExecutionArgs executionArgs, String accountId) {
+      Set<String> keywords, ExecutionArgs executionArgs, String accountId) {
     // set artifacts in executionArgs
     // TODO: filter for services
     // check if artifact var exits in workflow
@@ -1541,9 +1548,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     List<String> serviceIds =
         isEmpty(workflowExecution.getServiceIds()) ? new ArrayList<>() : workflowExecution.getServiceIds();
-    List<String> envIds = isEmpty(workflowExecution.getEnvIds()) ? new ArrayList<>() : workflowExecution.getEnvIds();
-    List<String> workflowIds =
-        isEmpty(workflowExecution.getWorkflowIds()) ? new ArrayList<>() : workflowExecution.getWorkflowIds();
 
     List<Artifact> filteredArtifacts = multiArtifactWorkflowExecutionServiceHelper.filterArtifactsForExecution(
         artifactVariables, workflowExecution, accountId);

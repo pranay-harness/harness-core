@@ -79,6 +79,7 @@ import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -298,7 +299,8 @@ public class AppServiceTest extends WingsBaseTest {
       verify(query).filter(ID_KEY, APP_ID);
       verify(updateOperations).set("name", "App_Name");
       verify(updateOperations).set("description", "Description");
-      verify(updateOperations).set("keywords", asList("App_Name".toLowerCase(), "Description".toLowerCase()));
+      verify(updateOperations)
+          .set("keywords", new HashSet<>(asList("App_Name".toLowerCase(), "Description".toLowerCase())));
       verify(wingsPersistence).update(query, updateOperations);
       verify(wingsPersistence, times(2)).get(Application.class, APP_ID);
       verify(yamlPushService).pushYamlChangeSet(ACCOUNT_ID, application, application, Type.UPDATE, false, true);

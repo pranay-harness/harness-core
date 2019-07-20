@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -69,7 +70,7 @@ public class Pipeline extends Base implements KeywordsAware, NameAccess, TagAwar
   private transient List<EnvSummary> envSummaries = new ArrayList<>();
   private transient boolean hasBuildWorkflow;
   private transient List<String> infraMappingIds = new ArrayList<>();
-  @SchemaIgnore private List<String> keywords;
+  @SchemaIgnore private Set<String> keywords;
   @Indexed private String accountId;
 
   @Builder
@@ -101,8 +102,8 @@ public class Pipeline extends Base implements KeywordsAware, NameAccess, TagAwar
   }
 
   @Override
-  public List<String> generateKeywords() {
-    List<String> keywords = KeywordsAware.super.generateKeywords();
+  public Set<String> generateKeywords() {
+    Set<String> keywords = KeywordsAware.super.generateKeywords();
     keywords.addAll(asList(name, description, PIPELINE.name()));
     return keywords;
   }

@@ -77,6 +77,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
 import de.danielbechler.diff.ObjectDifferBuilder;
@@ -170,6 +171,7 @@ import software.wings.utils.WingsTestConstants.MockChecker;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -371,8 +373,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
       verify(updateOperations).set("description", "UPDATED_SERVICE_DESC");
       verify(updateOperations)
           .set("keywords",
-              asList(service.getName().toLowerCase(), service.getDescription().toLowerCase(),
-                  service.getArtifactType().name().toLowerCase()));
+              new HashSet<>(asList(service.getName().toLowerCase(), service.getDescription().toLowerCase(),
+                  service.getArtifactType().name().toLowerCase())));
 
       verify(serviceTemplateService)
           .updateDefaultServiceTemplateName(APP_ID, SERVICE_ID, SERVICE_NAME, "UPDATED_SERVICE_NAME");
@@ -1946,7 +1948,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         .name("My Start Command")
         .description(TEMPLATE_DESC)
         .folderPath("Harness/Tomcat Commands/Standard")
-        .keywords(asList(TEMPLATE_CUSTOM_KEYWORD))
+        .keywords(ImmutableSet.of(TEMPLATE_CUSTOM_KEYWORD))
         .gallery(HARNESS_GALLERY)
         .appId(GLOBAL_APP_ID)
         .accountId(GLOBAL_ACCOUNT_ID)

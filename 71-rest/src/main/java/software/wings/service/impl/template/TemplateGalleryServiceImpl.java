@@ -1,7 +1,7 @@
 package software.wings.service.impl.template;
 
+import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.ListUtils.trimStringsAndConvertToLowerCase;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -49,6 +49,7 @@ import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 
 import java.util.List;
+import java.util.Set;
 import javax.validation.executable.ValidateOnExecution;
 
 @Singleton
@@ -111,7 +112,7 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
         wingsPersistence.createQuery(TemplateGallery.class).field(ID_KEY).equal(templateGallery.getUuid());
     UpdateOperations<TemplateGallery> operations = wingsPersistence.createUpdateOperations(TemplateGallery.class);
 
-    List<String> userKeywords = trimStringsAndConvertToLowerCase(templateGallery.getKeywords());
+    Set<String> userKeywords = trimmedLowercaseSet(templateGallery.getKeywords());
     if (isNotEmpty(templateGallery.getDescription())) {
       if (isNotEmpty(userKeywords)) {
         userKeywords.remove(savedGallery.getDescription().toLowerCase());
@@ -258,8 +259,8 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
         "Install IIS Website", POWER_SHELL_IIS_WEBSITE_V4_INSTALL_PATH, accountId, accountName);
     logger.info("Copying default templates for account {} success", accountName);
   }
-  private List<String> getKeywords(TemplateGallery templateGallery) {
-    List<String> generatedKeywords = trimStringsAndConvertToLowerCase(templateGallery.generateKeywords());
+  private Set<String> getKeywords(TemplateGallery templateGallery) {
+    Set<String> generatedKeywords = trimmedLowercaseSet(templateGallery.generateKeywords());
     return TemplateHelper.addUserKeyWords(templateGallery.getKeywords(), generatedKeywords);
   }
 

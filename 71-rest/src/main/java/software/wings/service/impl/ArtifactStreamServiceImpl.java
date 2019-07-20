@@ -6,9 +6,9 @@ import static io.harness.beans.SearchFilter.Operator.CONTAINS;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.beans.SearchFilter.Operator.STARTS_WITH;
+import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.ListUtils.trimStringsAndConvertToLowerCase;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
@@ -291,7 +291,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     // set metadata-only field for nexus
     setMetadataOnly(artifactStream);
     // add keywords
-    artifactStream.setKeywords(trimStringsAndConvertToLowerCase(artifactStream.generateKeywords()));
+    artifactStream.setKeywords(trimmedLowercaseSet(artifactStream.generateKeywords()));
     String id = Validator.duplicateCheck(() -> wingsPersistence.save(artifactStream), "name", artifactStream.getName());
     yamlPushService.pushYamlChangeSet(
         accountId, null, artifactStream, Type.CREATE, artifactStream.isSyncFromGit(), false);
@@ -427,7 +427,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     artifactStream.setSourceName(artifactStream.generateSourceName());
 
     // add keywords
-    artifactStream.setKeywords(trimStringsAndConvertToLowerCase(artifactStream.generateKeywords()));
+    artifactStream.setKeywords(trimmedLowercaseSet(artifactStream.generateKeywords()));
 
     ArtifactStream finalArtifactStream = Validator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(ArtifactStream.class, artifactStream), "name", artifactStream.getName());

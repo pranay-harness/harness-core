@@ -1,7 +1,6 @@
 package software.wings.service.impl.template;
 
 import static io.harness.rule.OwnerRule.AADITI;
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -21,6 +20,8 @@ import static software.wings.utils.TemplateTestConstants.TEMPLATE_GALLERY_DESC;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.INVALID_NAME;
+
+import com.google.common.collect.ImmutableSet;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -296,7 +297,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
                                     .accountId(ACCOUNT_ID)
                                     .description(TEMPLATE_GALLERY_DESC)
                                     .appId(GLOBAL_APP_ID)
-                                    .keywords(asList("CD"))
+                                    .keywords(ImmutableSet.of("CD"))
                                     .build());
     templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     templateFolderService.copyHarnessTemplateFolders(templateGallery.getUuid(), ACCOUNT_ID, TEMPLATE_GALLERY);

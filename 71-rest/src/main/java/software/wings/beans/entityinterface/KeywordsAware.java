@@ -4,15 +4,15 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.persistence.CreatedByAccess;
 import io.harness.persistence.UpdatedByAccess;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public interface KeywordsAware {
-  List<String> getKeywords();
-  void setKeywords(List<String> keywords);
+  Set<String> getKeywords();
+  void setKeywords(Set<String> keywords);
 
-  default List<String> generateKeywords() {
-    List<String> keyWordList = new ArrayList<>();
+  default Set<String> generateKeywords() {
+    Set<String> keyWordList = new HashSet<>();
 
     if (this instanceof CreatedByAccess) {
       CreatedByAccess createdByAccess = (CreatedByAccess) this;
