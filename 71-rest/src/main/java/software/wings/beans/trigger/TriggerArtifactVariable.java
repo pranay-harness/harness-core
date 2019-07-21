@@ -10,7 +10,6 @@ import software.wings.beans.EntityType;
 @Builder
 @FieldNameConstants(innerTypeName = "ArtifactSelectionKeys")
 public class TriggerArtifactVariable {
-  @NotEmpty private Type type;
   @NotEmpty private String variableName;
 
   @NotEmpty private String entityId;
@@ -18,8 +17,6 @@ public class TriggerArtifactVariable {
   @NotEmpty private transient String entityName;
 
   private TriggerArtifactSelectionValue variableValue;
-
-  public enum Type { ARTIFACT_SOURCE, LAST_COLLECTED, LAST_DEPLOYED, PIPELINE_SOURCE, WEBHOOK_VARIABLE }
 
   //  @Data
   //  @NoArgsConstructor

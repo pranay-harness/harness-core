@@ -44,6 +44,7 @@ public class ExecutionArgs {
   private boolean excludeHostsWithSameArtifact;
   @Getter @Setter private boolean notifyTriggeredUserOnly;
   private List<ArtifactVariable> artifactVariables;
+  @Getter @Setter private DeploymentTriggerExecutionArgs triggerExecutionArgs;
 
   /**
    * Gets service id.

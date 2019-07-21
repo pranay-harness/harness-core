@@ -95,7 +95,7 @@ public class WebhookTriggerProcessor {
   }
 
   public void initiateTriggerContentChangeDelegateTask(
-      Trigger trigger, TriggerExecution prevTriggerExecution, TriggerExecution triggerExecution) {
+      Trigger trigger, TriggerExecution prevTriggerExecution, TriggerExecution triggerExecution, String appId) {
     triggerExecution.setStatus(Status.RUNNING);
 
     WebhookEventDetails webhookEventDetails = triggerExecution.getWebhookEventDetails();
@@ -108,10 +108,10 @@ public class WebhookTriggerProcessor {
     TriggerExecution savedTriggerExecution = triggerExecutionService.save(triggerExecution);
 
     logger.info("Initiating file content change delegate task request");
-    String accountId = appService.getAccountIdByAppId(trigger.getAppId());
+    String accountId = appService.getAccountIdByAppId(appId);
 
     TriggerDeploymentNeededRequest triggerDeploymentNeededRequest = createTriggerDeploymentNeededRequest(accountId,
-        trigger.getAppId(), webhookEventDetails.getGitConnectorId(), webhookEventDetails.getCommitId(),
+        appId, webhookEventDetails.getGitConnectorId(), webhookEventDetails.getCommitId(),
         webhookEventDetails.getPrevCommitId(), webhookEventDetails.getBranchName(), webhookEventDetails.getFilePaths());
 
     String waitId = generateUuid();
@@ -123,12 +123,11 @@ public class WebhookTriggerProcessor {
                                               .timeout(TimeUnit.MINUTES.toMillis(TRIGGER_TASK_TIMEOUT))
                                               .build())
                                     .accountId(accountId)
-                                    .appId(trigger.getAppId())
+                                    .appId(appId)
                                     .waitId(waitId)
                                     .build();
 
-    waitNotifyEngine.waitForAll(
-        new TriggerCallback(accountId, trigger.getAppId(), savedTriggerExecution.getUuid()), waitId);
+    waitNotifyEngine.waitForAll(new TriggerCallback(accountId, appId, savedTriggerExecution.getUuid()), waitId);
     delegateService.queueTask(delegateTask);
     logger.info("Issued file content change delegate task request for trigger execution id {}",
         savedTriggerExecution.getUuid());

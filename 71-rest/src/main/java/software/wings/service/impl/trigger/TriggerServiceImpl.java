@@ -682,7 +682,7 @@ public class TriggerServiceImpl implements TriggerService {
       } else {
         triggerExecution.setExecutionArgs(executionArgs);
         webhookTriggerProcessor.initiateTriggerContentChangeDelegateTask(
-            trigger, lastTriggerExecution, triggerExecution);
+            trigger, lastTriggerExecution, triggerExecution, trigger.getAppId());
         workflowExecution = WorkflowExecution.builder().status(ExecutionStatus.NEW).build();
       }
     } else {
@@ -846,7 +846,7 @@ public class TriggerServiceImpl implements TriggerService {
         logger.info("Check file content option selected. Invoking delegate task to verify the file content.");
         triggerExecution.setExecutionArgs(executionArgs);
         webhookTriggerProcessor.initiateTriggerContentChangeDelegateTask(
-            trigger, lastTriggerExecution, triggerExecution);
+            trigger, lastTriggerExecution, triggerExecution, trigger.getAppId());
         workflowExecution = WorkflowExecution.builder().status(ExecutionStatus.NEW).build();
       }
     } else {

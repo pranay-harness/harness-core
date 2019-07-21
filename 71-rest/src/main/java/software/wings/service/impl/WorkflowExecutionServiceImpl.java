@@ -1217,7 +1217,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     refreshEnvSummary(workflowExecution, keywords);
 
-    populateCurrentUser(workflowExecution, stdParams, trigger, keywords);
+    populateCurrentUser(workflowExecution, stdParams, trigger, keywords, executionArgs);
 
     populateServiceInstances(workflowExecution, keywords, executionArgs);
 
@@ -1373,8 +1373,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
   }
 
-  private void populateCurrentUser(
-      WorkflowExecution workflowExecution, WorkflowStandardParams stdParams, Trigger trigger, Set<String> keywords) {
+  private void populateCurrentUser(WorkflowExecution workflowExecution, WorkflowStandardParams stdParams,
+      Trigger trigger, Set<String> keywords, ExecutionArgs executionArgs) {
     User user = UserThreadLocal.get();
     if (user != null) {
       EmbeddedUser triggeredBy =
@@ -1387,6 +1387,16 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           EmbeddedUser.builder().name(trigger.getName() + " (Deployment Trigger)").build());
       workflowExecution.setCreatedBy(EmbeddedUser.builder().name(trigger.getName() + " (Deployment Trigger)").build());
       workflowExecution.setDeploymentTriggerId(trigger.getUuid());
+    } else if (executionArgs.getTriggerExecutionArgs() != null) {
+      workflowExecution.setTriggeredBy(
+          EmbeddedUser.builder()
+              .name(executionArgs.getTriggerExecutionArgs().getTriggerName() + " (Deployment Trigger)")
+              .build());
+      workflowExecution.setCreatedBy(
+          EmbeddedUser.builder()
+              .name(executionArgs.getTriggerExecutionArgs().getTriggerName() + " (Deployment Trigger)")
+              .build());
+      workflowExecution.setDeploymentTriggerId(executionArgs.getTriggerExecutionArgs().getTriggerUuid());
     }
     if (workflowExecution.getCreatedBy() != null) {
       keywords.add(workflowExecution.getCreatedBy().getName());
@@ -2767,6 +2777,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public List<ArtifactVariable> obtainLastGoodDeployedArtifactsVariables(String appId, String workflowId) {
     WorkflowExecution workflowExecution = fetchLastSuccessDeployment(appId, workflowId);
+    // Todo call fetchLastSuccessDeployment (fetch infra mapping)
     if (workflowExecution != null) {
       ExecutionArgs executionArgs = workflowExecution.getExecutionArgs();
       if (executionArgs != null) {

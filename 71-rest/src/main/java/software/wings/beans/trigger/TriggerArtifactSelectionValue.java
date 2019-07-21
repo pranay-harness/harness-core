@@ -5,14 +5,14 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXISTING_PROPERTY
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "actionType", include = EXISTING_PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "artifactSelectionType", include = EXISTING_PROPERTY)
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = TriggerArtifactSelectionWorkflow.class, name = "ORCHESTRATION")
-  , @JsonSubTypes.Type(value = TriggerArtifactSelectionPipeline.class, name = "PIPELINE"),
-      @JsonSubTypes.Type(value = TriggerArtifactSelectionArtifact.class, name = "ARTIFACT")
+  @JsonSubTypes.Type(value = TriggerArtifactSelectionLastDeployed.class, name = "LAST_DEPLOYED")
+  , @JsonSubTypes.Type(value = TriggerArtifactSelectionLastCollected.class, name = "LAST_COLLECTED"),
+      @JsonSubTypes.Type(value = TriggerArtifactSelectionFromSource.class, name = "ARTIFACT_SOURCE")
 })
 public interface TriggerArtifactSelectionValue {
-  enum ArtifactVariableType { PIPELINE, ORCHESTRATION, ARTIFACT }
+  enum ArtifactSelectionType { ARTIFACT_SOURCE, LAST_COLLECTED, LAST_DEPLOYED, PIPELINE_SOURCE, WEBHOOK_VARIABLE }
 
-  ArtifactVariableType getArtifactVariableType();
+  ArtifactSelectionType getArtifactSelectionType();
 }
