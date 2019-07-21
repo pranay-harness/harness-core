@@ -23,6 +23,7 @@ import io.harness.waiter.NotifyCallback;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
+import software.wings.beans.FeatureName;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ArtifactCollectionFailedAlert;
 import software.wings.beans.artifact.Artifact;
@@ -36,9 +37,11 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PermitService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
+import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryType;
 
@@ -67,6 +70,8 @@ public class BuildSourceCallback implements NotifyCallback {
   @Inject private transient WingsPersistence wingsPersistence;
   @Inject private transient ArtifactStreamService artifactStreamService;
   @Inject private transient TriggerService triggerService;
+  @Inject private transient DeploymentTriggerService deploymentTriggerService;
+  @Inject private transient FeatureFlagService featureFlagService;
   @Inject private transient PermitService permitService;
   @Inject private transient AlertService alertService;
   @Inject private transient ArtifactCollectionUtils artifactCollectionUtils;
@@ -101,8 +106,13 @@ public class BuildSourceCallback implements NotifyCallback {
           if (isNotEmpty(artifacts)) {
             logger.info("[{}] new artifacts collected for artifactStreamId {}",
                 artifacts.stream().map(Artifact::getBuildNo).collect(Collectors.toList()), artifactStream.getUuid());
-            triggerService.triggerExecutionPostArtifactCollectionAsync(
-                accountId, artifactStream.fetchAppId(), artifactStreamId, artifacts);
+            if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+              triggerService.triggerExecutionPostArtifactCollectionAsync(
+                  accountId, artifactStream.fetchAppId(), artifactStreamId, artifacts);
+            } else {
+              deploymentTriggerService.triggerExecutionPostArtifactCollectionAsync(
+                  accountId, artifactStream.fetchAppId(), artifactStreamId, artifacts);
+            }
           }
         } catch (WingsException ex) {
           ex.addContext(Account.class, accountId);
