@@ -89,8 +89,10 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   private static final Set<EntityType> supportedEntityTypes =
       ImmutableSet.of(SERVICE, ENVIRONMENT, WORKFLOW, PROVISIONER, PIPELINE, TRIGGER, APPLICATION);
 
-  private static final String ALLOWED_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_ /";
+  private static final String ALLOWED_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_ /";
   private static final Set<Character> ALLOWED_CHARS_SET = Sets.newHashSet(Lists.charactersOf(ALLOWED_CHARS));
+  private static final String SYSTEM_TAG_PREFIX = "system/";
+  private static final String HARNESS_TAG_PREFIX = "harness.io/";
 
   private static int MAX_TAG_KEY_LENGTH = 128;
   private static int MAX_TAG_VALUE_LENGTH = 256;
@@ -98,8 +100,9 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   private static long MAX_TAGS_PER_RESOURCE = 50L;
 
   @Override
-  public HarnessTag createTag(HarnessTag tag, boolean syncFromGit) {
+  public HarnessTag createTag(HarnessTag tag, boolean syncFromGit, boolean allowSystemTagsCreate) {
     sanitizeAndValidateHarnessTag(tag);
+    validateSystemTagNameCreation(tag, allowSystemTagsCreate);
 
     HarnessTag existingTag = get(tag.getAccountId(), tag.getKey());
 
@@ -121,7 +124,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
 
   @Override
   public HarnessTag create(HarnessTag tag) {
-    return createTag(tag, false);
+    return createTag(tag, false, true);
   }
 
   @Override
@@ -379,6 +382,11 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     }
 
     validateTagNameValueCharacterSet(trimmedKey);
+
+    if (trimmedKey.startsWith(HARNESS_TAG_PREFIX)) {
+      throw new InvalidRequestException("Unauthorized: harness.io is a reserved Tag name prefix");
+    }
+
     return trimmedKey;
   }
 
@@ -403,8 +411,8 @@ public class HarnessTagServiceImpl implements HarnessTagService {
       throw new InvalidRequestException("Tag name/value can contain only " + ALLOWED_CHARS);
     }
 
-    if (Sets.newHashSet('_', '-', '/').contains(value.charAt(0))) {
-      throw new InvalidRequestException("Tag name/value cannot begin with -_/");
+    if (Sets.newHashSet('.', '_', '-', '/').contains(value.charAt(0))) {
+      throw new InvalidRequestException("Tag name/value cannot begin with .-_/");
     }
   }
 
@@ -426,7 +434,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   private void validateAndCreateTagIfNeeded(String accountId, String key, String value) {
     HarnessTag existingTag = get(accountId, key);
     if (existingTag == null) {
-      create(HarnessTag.builder().accountId(accountId).key(key).build());
+      createTag(HarnessTag.builder().accountId(accountId).key(key).build(), false, false);
       return;
     }
 
@@ -610,8 +618,10 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     return null;
   }
 
-  private void pushTagsToGit(HarnessTag harnessTag, boolean syncFromGit) {
-    yamlPushService.pushYamlChangeSet(
-        harnessTag.getAccountId(), harnessTag, harnessTag, Type.UPDATE, syncFromGit, false);
+  private void validateSystemTagNameCreation(HarnessTag tag, boolean allowSystemTagsCreate) {
+    if (!allowSystemTagsCreate && tag.getKey().startsWith(SYSTEM_TAG_PREFIX)) {
+      throw new InvalidRequestException(
+          "Unauthorized: User need to have TAG_MANAGEMENT permission to create system tags");
+    }
   }
 }
