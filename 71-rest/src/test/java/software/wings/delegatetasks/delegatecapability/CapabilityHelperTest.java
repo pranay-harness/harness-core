@@ -32,7 +32,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
   public static final String HTTP_VAUTL_URL = "http://vautl.com";
   public static final String GOOGLE_COM = "http://google.com";
   public static final String US_EAST_2 = "us-east-2";
-  public static final String AWS_KMS_URL = "https://apigateway.us-east-2.amazonaws.com";
+  public static final String AWS_KMS_URL = "https://kms.us-east-2.amazonaws.com";
 
   @Test
   @Category(UnitTests.class)
