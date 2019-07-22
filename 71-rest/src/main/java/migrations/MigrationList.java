@@ -71,6 +71,7 @@ import migrations.all.MetricAnalysisRecordGroupNameMigration;
 import migrations.all.MetricDataRecordGroupNameMigration;
 import migrations.all.MetricMLAnalysisRecordGroupNameMigration;
 import migrations.all.MigrateCVMetadataApplicationId;
+import migrations.all.MigrateCloudwatchCVTemplates;
 import migrations.all.MigrateLogFeedbackRecordsToGoogle;
 import migrations.all.NewRelicMetricAnalysisRecordsMigration;
 import migrations.all.NewRelicMetricDataBaselineMigration;
@@ -265,7 +266,9 @@ public class MigrationList {
         .add(Pair.of(268, UpdatePipelineParallelIndexes.class))
         .add(Pair.of(269, AddDuplicateFieldToCVFeedbacks.class))
         .add(Pair.of(270, BaseMigration.class))
-        .add(Pair.of(271, AddTagManagementPermissionToAdminUserGroup.class))
+        .add(Pair.of(271, MigrateCloudwatchCVTemplates.class))
+        .add(Pair.of(272, AddTagManagementPermissionToAdminUserGroup.class))
+
         .build();
   }
 }
