@@ -1116,14 +1116,17 @@ public class TriggerServiceImpl implements TriggerService {
           validateAndSetLastDeployedArtifactSelection(trigger, artifactSelection);
           break;
         case LAST_COLLECTED:
-          validateAndSetLastCollectedArtifactSelection(
-              trigger, artifactSelection, "Artifact Source cannot be empty for Last collected type");
+          if (isEmpty(artifactSelection.getArtifactStreamId())) {
+            throw new WingsException("Artifact Source cannot be empty for Last collected type");
+          }
+          setArtifactSourceName(trigger, artifactSelection);
           break;
         case WEBHOOK_VARIABLE:
           WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
           if (webHookTriggerCondition.getWebhookSource() == null) {
-            validateAndSetLastCollectedArtifactSelection(
-                trigger, artifactSelection, "Artifact Source cannot be empty for Webhook Variable type");
+            if (isNotEmpty(artifactSelection.getArtifactStreamId())) {
+              setArtifactSourceName(trigger, artifactSelection);
+            }
           }
           break;
         case ARTIFACT_SOURCE:
@@ -1136,6 +1139,16 @@ public class TriggerServiceImpl implements TriggerService {
     });
   }
 
+  private void setArtifactSourceName(Trigger trigger, ArtifactSelection artifactSelection) {
+    ArtifactStream artifactStream;
+    Service service;
+    artifactStream = artifactStreamService.get(artifactSelection.getArtifactStreamId());
+    notNullCheck("Artifact Source does not exist", artifactStream, USER);
+    service = artifactStreamServiceBindingService.getService(trigger.getAppId(), artifactStream.getUuid(), false);
+    notNullCheck("Service might have been deleted", service, USER);
+    artifactSelection.setArtifactSourceName(artifactStream.getSourceName() + " (" + service.getName() + ")");
+  }
+
   private void setServiceName(Trigger trigger, List<Service> services, ArtifactSelection artifactSelection) {
     Map<String, String> serviceIdNames = services.stream().collect(toMap(Service::getUuid, Service::getName));
     Service service;
@@ -1145,18 +1158,6 @@ public class TriggerServiceImpl implements TriggerService {
       artifactSelection.setServiceName(service.getName());
     } else {
       artifactSelection.setServiceName(serviceIdNames.get(artifactSelection.getServiceId()));
-    }
-  }
-
-  private void validateAndSetLastCollectedArtifactSelection(
-      Trigger trigger, ArtifactSelection artifactSelection, String s) {
-    if (isNotEmpty(artifactSelection.getArtifactStreamId())) {
-      ArtifactStream artifactStream = artifactStreamService.get(artifactSelection.getArtifactStreamId());
-      notNullCheck("Artifact Source does not exist", artifactStream, USER);
-      Service service =
-          artifactStreamServiceBindingService.getService(trigger.getAppId(), artifactStream.getUuid(), false);
-      notNullCheck("Service might have been deleted", service, USER);
-      artifactSelection.setArtifactSourceName(artifactStream.getSourceName() + " (" + service.getName() + ")");
     }
   }
 
