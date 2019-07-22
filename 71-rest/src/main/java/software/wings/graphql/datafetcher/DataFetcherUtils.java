@@ -306,7 +306,7 @@ public class DataFetcherUtils {
     // recommended over obtaining total. To determine if we have more, we fetch 1 more than the requested.
     final FindOptions options = new FindOptions().limit(page.getLimit() + 1).skip(page.getOffset());
 
-    try (HIterator<M> iterator = new HIterator<M>(query.fetch(options))) {
+    try (HIterator<M> iterator = new HIterator<>(query.fetch(options))) {
       int count = 0;
       for (; count < page.getLimit() && iterator.hasNext(); count++) {
         controller.populate(iterator.next());

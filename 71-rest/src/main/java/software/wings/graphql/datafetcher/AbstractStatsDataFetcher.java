@@ -81,10 +81,6 @@ public abstract class AbstractStatsDataFetcher<A, F, G, T, S> implements DataFet
     return responseMessages.stream().map(rm -> rm.getMessage()).collect(Collectors.joining(EXCEPTION_MSG_DELIMITER));
   }
 
-  //  public PermissionAttribute getPermissionAttribute(P parameters) {
-  //    return null;
-  //  }
-
   private <O> Object fetchObject(DataFetchingEnvironment dataFetchingEnvironment, String fieldName, Class<O> klass) {
     Object object = dataFetchingEnvironment.getArguments().get(fieldName);
     if (object == null) {
