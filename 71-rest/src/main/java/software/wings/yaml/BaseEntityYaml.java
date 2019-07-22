@@ -17,7 +17,7 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = true)
 public abstract class BaseEntityYaml extends BaseYamlWithType {
   private String harnessApiVersion = "1.0";
-  private Map<String, String> harnessTags;
+  private Map<String, String> tags;
 
   public BaseEntityYaml(String type, String harnessApiVersion) {
     super(type);

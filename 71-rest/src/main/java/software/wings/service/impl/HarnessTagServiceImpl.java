@@ -373,12 +373,13 @@ public class HarnessTagServiceImpl implements HarnessTagService {
       throw new InvalidRequestException("Tag name cannot be blank");
     }
 
-    if (key.length() > MAX_TAG_KEY_LENGTH) {
+    String trimmedKey = key.trim();
+    if (trimmedKey.length() > MAX_TAG_KEY_LENGTH) {
       throw new InvalidRequestException("Max allowed size for tag name is " + MAX_TAG_KEY_LENGTH);
     }
 
-    validateTagNameValueCharacterSet(key);
-    return key.trim();
+    validateTagNameValueCharacterSet(trimmedKey);
+    return trimmedKey;
   }
 
   private String validateTagValue(String value) {
@@ -386,12 +387,13 @@ public class HarnessTagServiceImpl implements HarnessTagService {
       throw new InvalidRequestException("Tag value cannot be null");
     }
 
-    if (value.length() > MAX_TAG_VALUE_LENGTH) {
+    String trimmedValue = value.trim();
+    if (trimmedValue.length() > MAX_TAG_VALUE_LENGTH) {
       throw new InvalidRequestException("Max allowed size for tag value is " + MAX_TAG_VALUE_LENGTH);
     }
 
-    validateTagNameValueCharacterSet(value);
-    return value.trim();
+    validateTagNameValueCharacterSet(trimmedValue);
+    return trimmedValue;
   }
 
   private void validateTagNameValueCharacterSet(String value) {
