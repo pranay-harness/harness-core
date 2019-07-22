@@ -59,7 +59,7 @@ public class HarnessTagYamlHelper {
     tagLinks.forEach(harnessTagLink -> harnessTags.put(harnessTagLink.getKey(), harnessTagLink.getValue()));
 
     if (isNotEmpty(harnessTags)) {
-      yaml.setHarnessTags(harnessTags);
+      yaml.setTags(harnessTags);
     }
   }
 
@@ -85,7 +85,7 @@ public class HarnessTagYamlHelper {
     }
 
     BaseEntityYaml yaml = (BaseEntityYaml) changeContext.getYaml();
-    Map<String, String> tagsFromYaml = yaml.getHarnessTags();
+    Map<String, String> tagsFromYaml = yaml.getTags();
     if (isEmpty(tagsFromYaml)) {
       tagsFromYaml = new HashMap<>();
     }
