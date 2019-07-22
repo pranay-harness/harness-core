@@ -50,6 +50,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.UpdateOperations;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
+import software.wings.beans.ArtifactVariable;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
@@ -789,6 +790,106 @@ public class PipelineServiceImpl implements PipelineService {
       }
     }
     return referencedPipelines;
+  }
+
+  @Override
+  public DeploymentMetadata fetchDeploymentMetadata(String appId, Pipeline pipeline,
+      List<String> artifactNeededServiceIds, List<String> envIds, DeploymentMetadata.Include... includeList) {
+    Validator.notNullCheck("Pipeline does not exist", pipeline, USER);
+
+    if (artifactNeededServiceIds == null) {
+      artifactNeededServiceIds = new ArrayList<>();
+    }
+    if (envIds == null) {
+      envIds = new ArrayList<>();
+    }
+    DeploymentMetadata finalDeploymentMetadata = DeploymentMetadata.builder()
+                                                     .artifactRequiredServiceIds(artifactNeededServiceIds)
+                                                     .envIds(envIds)
+                                                     .deploymentTypes(new ArrayList<>())
+                                                     .artifactVariables(new ArrayList<>())
+                                                     .build();
+    for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
+      for (PipelineStageElement pse : pipelineStage.getPipelineStageElements()) {
+        if (ENV_STATE.name().equals(pse.getType())) {
+          if (pse.isDisable()) {
+            continue;
+          }
+
+          Workflow workflow = workflowService.readWorkflowWithoutServices(
+              pipeline.getAppId(), (String) pse.getProperties().get("workflowId"));
+          Validator.notNullCheck("Workflow does not exist", workflow, USER);
+          Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow(), USER);
+
+          DeploymentMetadata deploymentMetadata = workflowService.fetchDeploymentMetadata(
+              appId, workflow, pse.getWorkflowVariables(), null, null, includeList);
+          if (deploymentMetadata == null) {
+            continue;
+          }
+
+          if (finalDeploymentMetadata == null) {
+            if (isNotEmpty(deploymentMetadata.getArtifactVariables())) {
+              for (ArtifactVariable artifactVariable : deploymentMetadata.getArtifactVariables()) {
+                List<String> workflowIds = new ArrayList<>();
+                workflowIds.add(workflow.getUuid());
+                artifactVariable.setWorkflowIds(workflowIds);
+              }
+            }
+
+            finalDeploymentMetadata = deploymentMetadata;
+            continue;
+          }
+
+          mergeLists(finalDeploymentMetadata.getArtifactRequiredServiceIds(),
+              deploymentMetadata.getArtifactRequiredServiceIds());
+          mergeLists(finalDeploymentMetadata.getEnvIds(), deploymentMetadata.getEnvIds());
+          mergeLists(finalDeploymentMetadata.getDeploymentTypes(), deploymentMetadata.getDeploymentTypes());
+
+          if (isEmpty(deploymentMetadata.getArtifactVariables())) {
+            continue;
+          }
+
+          List<ArtifactVariable> finalArtifactVariables = finalDeploymentMetadata.getArtifactVariables();
+          for (ArtifactVariable artifactVariable : deploymentMetadata.getArtifactVariables()) {
+            ArtifactVariable finalArtifactVariable = finalArtifactVariables.stream()
+                                                         .filter(av -> av.getName().equals(artifactVariable.getName()))
+                                                         .findFirst()
+                                                         .orElse(null);
+            if (finalArtifactVariable != null) {
+              String finalServiceId = finalArtifactVariable.fetchAssociatedService();
+              if (finalServiceId != null) {
+                String serviceId = artifactVariable.fetchAssociatedService();
+                if (serviceId != null && serviceId.equals(finalServiceId)
+                    && !finalArtifactVariable.getWorkflowIds().contains(workflow.getUuid())) {
+                  finalArtifactVariable.getWorkflowIds().add(workflow.getUuid());
+                  continue;
+                }
+              }
+            }
+
+            List<String> workflowIds = new ArrayList<>();
+            workflowIds.add(workflow.getUuid());
+            artifactVariable.setWorkflowIds(workflowIds);
+            finalArtifactVariables.add(artifactVariable);
+          }
+        }
+      }
+    }
+
+    return finalDeploymentMetadata;
+  }
+
+  private static <T> void mergeLists(List<T> to, List<T> from) {
+    // NOTE: to should not be null
+    if (isEmpty(from)) {
+      return;
+    }
+
+    for (T el : from) {
+      if (!to.contains(el)) {
+        to.add(el);
+      }
+    }
   }
 
   private void validatePipeline(Pipeline pipeline, Set<String> keywords) {

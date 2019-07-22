@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,17 +22,43 @@ public class ArtifactVariable extends Variable {
   private List<ArtifactVariable> overriddenArtifactVariables;
   private List<ArtifactStreamSummary> artifactStreamSummaries;
   private Map<String, List<String>> displayInfo;
+  private List<String> workflowIds;
 
   @Builder
   public ArtifactVariable(String name, String description, boolean mandatory, String value, boolean fixed,
       String allowedValues, List<String> allowedList, Map<String, Object> metadata, VariableType type,
       EntityType entityType, String entityId, List<ArtifactVariable> overriddenArtifactVariables,
-      List<ArtifactStreamSummary> artifactStreamSummaries, Map<String, List<String>> displayInfo) {
+      List<ArtifactStreamSummary> artifactStreamSummaries, Map<String, List<String>> displayInfo,
+      List<String> workflowIds) {
     super(name, description, mandatory, value, fixed, allowedValues, allowedList, metadata, type);
     this.entityType = entityType;
     this.entityId = entityId;
     this.overriddenArtifactVariables = overriddenArtifactVariables;
     this.artifactStreamSummaries = artifactStreamSummaries;
     this.displayInfo = displayInfo;
+    this.workflowIds = workflowIds;
+  }
+
+  public String fetchAssociatedService() {
+    switch (this.getEntityType()) {
+      case SERVICE:
+        return this.getEntityId();
+      case ENVIRONMENT:
+      case WORKFLOW:
+        if (isEmpty(this.getOverriddenArtifactVariables())) {
+          return null;
+        }
+
+        for (ArtifactVariable overriddenArtifactVariable : this.getOverriddenArtifactVariables()) {
+          String serviceId = overriddenArtifactVariable.fetchAssociatedService();
+          if (serviceId != null) {
+            return serviceId;
+          }
+        }
+
+        return null;
+      default:
+        return null;
+    }
   }
 }
