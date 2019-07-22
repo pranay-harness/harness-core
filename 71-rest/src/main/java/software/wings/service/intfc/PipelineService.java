@@ -9,6 +9,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.EntityType;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Pipeline;
+import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 
 import java.util.List;
@@ -126,4 +127,7 @@ public interface PipelineService extends OwnedByApplication {
    * @return List of referenced pipelines
    */
   List<String> obtainPipelineNamesReferencedByEnvironment(String appId, @NotEmpty String envId);
+
+  DeploymentMetadata fetchDeploymentMetadata(String appId, Pipeline pipeline, List<String> artifactNeededServiceIds,
+      List<String> envIds, DeploymentMetadata.Include... includeList);
 }

@@ -1865,20 +1865,32 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public DeploymentMetadata fetchDeploymentMetadata(String appId, ExecutionArgs executionArgs) {
     Validator.notNullCheck("Workflow type is required", executionArgs.getWorkflowType());
+    DeploymentMetadata finalDeploymentMetadata;
     if (executionArgs.getWorkflowType() == ORCHESTRATION) {
       Workflow workflow = workflowService.readWorkflow(appId, executionArgs.getOrchestrationId());
-      DeploymentMetadata deploymentMetadata = workflowService.fetchDeploymentMetadata(
-          appId, workflow, executionArgs.getWorkflowVariables(), null, null, null);
-      // Set Services
-      deploymentMetadata.setArtifactRequiredServices(
-          serviceResourceService.fetchServicesByUuids(appId, deploymentMetadata.getArtifactRequiredServiceIds()));
+      finalDeploymentMetadata =
+          workflowService.fetchDeploymentMetadata(appId, workflow, executionArgs.getWorkflowVariables(), null, null);
+    } else {
+      String accountId = appService.getAccountIdByAppId(appId);
+      if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+        return DeploymentMetadata.builder().build();
+      }
 
-      deploymentMetadata.setEnvSummaries(
-          environmentService.obtainEnvironmentSummaries(appId, deploymentMetadata.getEnvIds()));
-
-      return deploymentMetadata;
+      Pipeline pipeline = pipelineService.readPipeline(appId, executionArgs.getPipelineId(), false);
+      finalDeploymentMetadata = pipelineService.fetchDeploymentMetadata(appId, pipeline, null, null);
     }
-    return DeploymentMetadata.builder().build();
+
+    if (finalDeploymentMetadata != null) {
+      // set services
+      finalDeploymentMetadata.setArtifactRequiredServices(
+          serviceResourceService.fetchServicesByUuids(appId, finalDeploymentMetadata.getArtifactRequiredServiceIds()));
+
+      // set environments
+      finalDeploymentMetadata.setEnvSummaries(
+          environmentService.obtainEnvironmentSummaries(appId, finalDeploymentMetadata.getEnvIds()));
+    }
+
+    return finalDeploymentMetadata;
   }
 
   @Override
