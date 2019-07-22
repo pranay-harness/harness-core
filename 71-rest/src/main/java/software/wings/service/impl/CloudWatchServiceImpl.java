@@ -43,6 +43,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -235,20 +236,48 @@ public class CloudWatchServiceImpl implements CloudWatchService {
     return cloudWatchMetrics;
   }
 
+  private static List<CloudWatchMetric> getMetricsForTemplate(
+      List<CloudWatchMetric> userSelectedMetrics, List<CloudWatchMetric> metricList) {
+    Map<String, CloudWatchMetric> elbMetricMap = new HashMap<>();
+    List<CloudWatchMetric> metricsForTemplate = new ArrayList<>();
+    metricList.forEach(metric -> elbMetricMap.put(metric.getMetricName(), metric));
+
+    userSelectedMetrics.forEach(metric -> metricsForTemplate.add(elbMetricMap.get(metric.getMetricName())));
+    return metricsForTemplate;
+  }
+
   public static Map<AwsNameSpace, List<CloudWatchMetric>> fetchMetrics(
       CloudWatchCVServiceConfiguration cloudwatchConfig) {
     Map<AwsNameSpace, List<CloudWatchMetric>> cloudWatchMetrics, metricsTemplate = new HashMap<>();
     cloudWatchMetrics = fetchMetrics();
 
     if (isNotEmpty(cloudwatchConfig.getLoadBalancerMetrics())) {
-      metricsTemplate.put(AwsNameSpace.ELB, cloudWatchMetrics.get(AwsNameSpace.ELB));
+      List<CloudWatchMetric> elbMetrics = cloudWatchMetrics.get(AwsNameSpace.ELB),
+                             metricsForTemplate = new ArrayList<>();
+
+      cloudwatchConfig.getLoadBalancerMetrics().forEach(
+          (lb, metrics) -> { metricsForTemplate.addAll(getMetricsForTemplate(metrics, elbMetrics)); });
+
+      metricsTemplate.put(AwsNameSpace.ELB, metricsForTemplate);
     }
+
     if (isNotEmpty(cloudwatchConfig.getEcsMetrics())) {
-      metricsTemplate.put(AwsNameSpace.ECS, cloudWatchMetrics.get(AwsNameSpace.ECS));
+      List<CloudWatchMetric> ecsMetrics = cloudWatchMetrics.get(AwsNameSpace.ECS),
+                             metricsForTemplate = new ArrayList<>();
+
+      cloudwatchConfig.getEcsMetrics().forEach(
+          (lb, metrics) -> { metricsForTemplate.addAll(getMetricsForTemplate(metrics, ecsMetrics)); });
+
+      metricsTemplate.put(AwsNameSpace.ECS, metricsForTemplate);
     }
+
     if (isNotEmpty(cloudwatchConfig.getEc2Metrics())) {
-      metricsTemplate.put(AwsNameSpace.EC2, cloudWatchMetrics.get(AwsNameSpace.EC2));
+      List<CloudWatchMetric> ec2Metrics = cloudWatchMetrics.get(AwsNameSpace.EC2),
+                             metricsForTemplate = new ArrayList<>();
+      metricsForTemplate.addAll(getMetricsForTemplate(cloudwatchConfig.getEc2Metrics(), ec2Metrics));
+      metricsTemplate.put(AwsNameSpace.EC2, metricsForTemplate);
     }
+
     if (isNotEmpty(cloudwatchConfig.getLambdaFunctionsMetrics())) {
       metricsTemplate.put(AwsNameSpace.LAMBDA, cloudWatchMetrics.get(AwsNameSpace.LAMBDA));
     }
