@@ -17,11 +17,13 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
@@ -50,6 +52,7 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
 
   @Inject private PrometheusDelegateService prometheusDelegateService;
   @Inject private MetricDataStoreService metricStoreService;
+  @Inject private DelegateLogService delegateLogService;
 
   public PrometheusDataCollectionTask(String delegateId, DelegateTask delegateTask,
       Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
@@ -145,9 +148,8 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
             if (retry == 1) {
               taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
             }
-            logger.warn("error fetching Prometheus metrics for minute " + dataCollectionMinute + ". retrying in "
-                    + RETRY_SLEEP + "s",
-                ex);
+            logger.warn("for {} error fetching Prometheus metrics for minute {} . retrying in {}s",
+                dataCollectionInfo.getStateExecutionId(), dataCollectionMinute, RETRY_SLEEP, ex);
             sleep(RETRY_SLEEP);
           }
         }
@@ -219,8 +221,8 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
           Preconditions.checkState(url.contains(HOST_NAME_PLACE_HOLDER));
           url = url.replace(HOST_NAME_PLACE_HOLDER, host);
         }
+        ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
         try {
-          ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
           PrometheusMetricDataResponse response =
               prometheusDelegateService.fetchMetricData(prometheusConfig, url, apiCallLog);
           TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricRecords =
@@ -239,6 +241,8 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
             }
           });
         } catch (IOException e) {
+          apiCallLog.addFieldToResponse(HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage(), FieldType.TEXT);
+          delegateLogService.save(prometheusConfig.getAccountId(), apiCallLog);
           throw new WingsException("Exception occured while fetching metrics from Prometheus.", e);
         }
       });
