@@ -8,11 +8,8 @@ import static software.wings.graphql.datafetcher.DataFetcherUtils.NEGATIVE_LIMIT
 import static software.wings.graphql.datafetcher.DataFetcherUtils.NEGATIVE_OFFSET_ARG_MSG;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.inject.Inject;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
@@ -37,20 +34,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
-public abstract class AbstractConnectionV2DataFetcher<F, S, O> implements DataFetcher {
+public abstract class AbstractConnectionV2DataFetcher<F, S, O> extends BaseDataFetcher {
   public static final String FILTERS = "filters";
   private static final String SORT_CRITERIA = "sortCriteria";
   private static final String LIMIT = "limit";
   private static final String OFFSET = "offset";
-
-  @Inject protected WingsPersistence wingsPersistence;
-  @Inject protected DataFetcherUtils utils;
-
-  private final Map<String, DataFetcherDirectiveAttributes> parentToContextFieldArgsMap;
-
-  public AbstractConnectionV2DataFetcher() {
-    parentToContextFieldArgsMap = Maps.newHashMap();
-  }
 
   public void addDataFetcherDirectiveAttributesForParent(
       String parentTypeName, DataFetcherDirectiveAttributes dataFetcherDirectiveAttributes) {
@@ -66,6 +54,7 @@ public abstract class AbstractConnectionV2DataFetcher<F, S, O> implements DataFe
       Class<O> returnClass = (Class<O>) typeArguments[2];
       List<F> filters = (List<F>) fetchObject(environment, FILTERS, filterClass);
       final List<S> sort = (List<S>) fetchObject(environment, SORT_CRITERIA, sortClass);
+      authRuleInstrumentation.instrumentDataFetcher(this, environment, returnClass);
       QLPageQueryParameters pageQueryParameters = extractPageQueryParameters(environment);
       Map<String, String> contextFieldArgsMap =
           utils.getContextFieldArgsMap(parentToContextFieldArgsMap, environment.getParentType().getName());
@@ -168,7 +157,7 @@ public abstract class AbstractConnectionV2DataFetcher<F, S, O> implements DataFe
 
   @NotNull
   public Query populateAccountFilter(WingsPersistence wingsPersistence, Class entityClass) {
-    Query query = wingsPersistence.createQuery(entityClass);
+    Query query = wingsPersistence.createAuthorizedQuery(entityClass);
     final String accountId = getAccountId();
     if (accountId != null) {
       query.filter(SettingAttributeKeys.accountId, accountId);

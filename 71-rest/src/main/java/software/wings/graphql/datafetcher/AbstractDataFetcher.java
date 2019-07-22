@@ -6,10 +6,6 @@ import static software.wings.graphql.datafetcher.DataFetcherUtils.GENERIC_EXCEPT
 import static software.wings.graphql.datafetcher.DataFetcherUtils.NEGATIVE_LIMIT_ARG_MSG;
 import static software.wings.graphql.datafetcher.DataFetcherUtils.NEGATIVE_OFFSET_ARG_MSG;
 
-import com.google.common.collect.Maps;
-import com.google.inject.Inject;
-
-import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.InvalidRequestException;
@@ -28,30 +24,20 @@ import org.modelmapper.internal.objenesis.ObjenesisStd;
 import software.wings.graphql.directive.DataFetcherDirective.DataFetcherDirectiveAttributes;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.graphql.schema.type.QLContextedObject;
-import software.wings.security.PermissionAttribute;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
-public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
+public abstract class AbstractDataFetcher<T, P> extends BaseDataFetcher {
   public static final String SELECTION_SET_FIELD_NAME = "selectionSet";
-
-  @Inject AuthRuleGraphQL authRuleInstrumentation;
-  @Inject protected DataFetcherUtils utils;
-  final Map<String, DataFetcherDirectiveAttributes> parentToContextFieldArgsMap;
-
-  public AbstractDataFetcher() {
-    parentToContextFieldArgsMap = Maps.newHashMap();
-  }
 
   public void addDataFetcherDirectiveAttributesForParent(
       String parentTypeName, DataFetcherDirectiveAttributes dataFetcherDirectiveAttributes) {
@@ -69,10 +55,10 @@ public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
     Type[] typeArguments = ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments();
     Class<T> returnClass = (Class<T>) typeArguments[0];
     Class<P> parametersClass = (Class<P>) typeArguments[1];
-    Object result = null;
+    Object result;
     try {
       final P parameters = fetchParameters(parametersClass, dataFetchingEnvironment);
-      authRuleInstrumentation.instrumentDataFetcher(this, dataFetchingEnvironment, parameters, returnClass);
+      authRuleInstrumentation.instrumentDataFetcher(this, dataFetchingEnvironment, returnClass);
       String parentTypeName = dataFetchingEnvironment.getParentType().getName();
       if (isBatchingRequired(parentTypeName)) {
         String dataFetcherName = getDataFetcherName(parentTypeName);
@@ -93,10 +79,6 @@ public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
     return responseMessages.stream()
         .map(rm -> rm.getMessage())
         .collect(Collectors.joining(DataFetcherUtils.EXCEPTION_MSG_DELIMITER));
-  }
-
-  public PermissionAttribute getPermissionAttribute(P parameters) {
-    return null;
   }
 
   private static final Objenesis objenesis = new ObjenesisStd(true);
@@ -140,42 +122,6 @@ public abstract class AbstractDataFetcher<T, P> implements DataFetcher {
     }
 
     return parameters;
-  }
-
-  public Object getArgumentValue(DataFetchingEnvironment dataFetchingEnvironment, String argumentName) {
-    Object argumentValue = dataFetchingEnvironment.getArgument(argumentName);
-    if (argumentValue == null && parentToContextFieldArgsMap != null) {
-      Optional<String> parentFieldNameOptional =
-          parentToContextFieldArgsMap.values()
-              .stream()
-              .filter(dataFetcherDirectiveAttributes -> {
-                if (dataFetcherDirectiveAttributes == null) {
-                  return false;
-                }
-
-                Map<String, String> contextFieldArgsMap = dataFetcherDirectiveAttributes.getContextFieldArgsMap();
-
-                if (contextFieldArgsMap == null) {
-                  return false;
-                }
-
-                String fieldName = contextFieldArgsMap.get(argumentName);
-                if (fieldName == null) {
-                  return false;
-                }
-
-                return true;
-              })
-              .map(dataFetcherDirectiveAttributes
-                  -> dataFetcherDirectiveAttributes.getContextFieldArgsMap().get(argumentName))
-              .findFirst();
-      if (!parentFieldNameOptional.isPresent()) {
-        return null;
-      }
-      String parentFieldName = parentFieldNameOptional.get();
-      argumentValue = utils.getFieldValue(dataFetchingEnvironment.getSource(), parentFieldName);
-    }
-    return argumentValue;
   }
 
   private String getDataFetcherName(@NotNull String parentTypeName) {

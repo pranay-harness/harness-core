@@ -27,6 +27,7 @@ import software.wings.beans.Service;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
@@ -68,7 +69,7 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
   }
 
   private AuthRule getAuthRuleAnnotationOfDataFetcher(@NotNull DataFetcher dataFetcher) {
-    AuthRule authRule = null;
+    AuthRule authRule;
     Class<? extends DataFetcher> dataFetcherClass = dataFetcher.getClass();
     String fetchMethod;
     Class<?>[] parameterTypes;
@@ -76,6 +77,10 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
     if (dataFetcher instanceof AbstractConnectionDataFetcher) {
       fetchMethod = "fetchConnection";
       parameterTypes = new Class[] {java.lang.Object.class};
+    } else if (dataFetcher instanceof AbstractConnectionV2DataFetcher) {
+      fetchMethod = "fetchConnection";
+      parameterTypes = new Class[] {List.class, QLPageQueryParameters.class, List.class};
+      //      List<F> filters, QLPageQueryParameters pageQueryParameters, List<S> sortCriteria
     } else if (dataFetcher instanceof AbstractBatchDataFetcher) {
       fetchMethod = "load";
       parameterTypes = new Class[] {java.lang.Object.class, DataLoader.class};
@@ -95,7 +100,7 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
   }
 
   public DataFetcher<?> instrumentDataFetcher(
-      AbstractDataFetcher dataFetcher, DataFetchingEnvironment environment, P parameters, Class<T> returnDataClass) {
+      BaseDataFetcher dataFetcher, DataFetchingEnvironment environment, Class<T> returnDataClass) {
     Object contextObj = environment.getContext();
 
     if (!(contextObj instanceof GraphQLContext)) {
@@ -117,36 +122,25 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
 
     String httpMethod;
     ResourceType resourceType;
-    PermissionAttribute permissionAttribute = dataFetcher.getPermissionAttribute(parameters);
-    if (permissionAttribute == null) {
-      AuthRule authRule = getAuthRuleAnnotationOfDataFetcher(dataFetcher);
-      if (authRule == null) {
-        logger.error("Missing authRule for the request in class: " + dataFetcher.getClass().getSimpleName());
-        throw new WingsException(ErrorCode.ACCESS_DENIED);
-      }
-
-      Scope scope = returnDataClass.getAnnotation(Scope.class);
-      if (scope == null) {
-        logger.error("Missing scope for the request in class: " + returnDataClass.getSimpleName());
-        throw new WingsException(ErrorCode.ACCESS_DENIED);
-      }
-
-      ResourceType[] resourceTypes = scope.value();
-      resourceType = isEmpty(resourceTypes) ? null : resourceTypes[0];
-
-      Action action = authRule.action() != null ? authRule.action() : Action.DEFAULT;
-      httpMethod = getHttpMethod(action.name());
-      permissionAttribute = authRuleFilter.buildPermissionAttribute(authRule, httpMethod, resourceType);
-      //    PermissionAttribute permissionAttribute = getRequiredPermissionAttribute(permissionType, action, fieldName,
-      //    dbFieldName);
-    } else {
-      Action action = permissionAttribute.getAction();
-      if (action == null) {
-        action = Action.DEFAULT;
-      }
-      httpMethod = getHttpMethod(action.name());
-      resourceType = permissionAttribute.getResourceType();
+    AuthRule authRule = getAuthRuleAnnotationOfDataFetcher(dataFetcher);
+    if (authRule == null) {
+      logger.error("Missing authRule for the request in class: " + dataFetcher.getClass().getSimpleName());
+      throw new WingsException(ErrorCode.ACCESS_DENIED);
     }
+
+    Scope scope = returnDataClass.getAnnotation(Scope.class);
+    if (scope == null) {
+      logger.error("Missing scope for the request in class: " + returnDataClass.getSimpleName());
+      throw new WingsException(ErrorCode.ACCESS_DENIED);
+    }
+
+    ResourceType[] resourceTypes = scope.value();
+    resourceType = isEmpty(resourceTypes) ? null : resourceTypes[0];
+
+    Action action = authRule.action() != null ? authRule.action() : Action.DEFAULT;
+    httpMethod = getHttpMethod(action.name());
+    PermissionAttribute permissionAttribute =
+        authRuleFilter.buildPermissionAttribute(authRule, httpMethod, resourceType);
 
     List<PermissionAttribute> permissionAttributes = asList(permissionAttribute);
     String appId = (String) dataFetcher.getArgumentValue(environment, APP_ID_ARG);
