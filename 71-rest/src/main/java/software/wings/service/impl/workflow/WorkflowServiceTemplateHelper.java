@@ -8,6 +8,7 @@ import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.EntityType.ENVIRONMENT;
+import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
 
@@ -391,6 +392,41 @@ public class WorkflowServiceTemplateHelper {
         phaseTemplateExpressions, StateType.PHASE.name(), workflowPhase.getName(), null);
   }
 
+  /***
+   * Templatizes the service infra if environment templatized for Phase
+   */
+  public static void templatizenfraDefinition(OrchestrationWorkflow orchestrationWorkflow, WorkflowPhase workflowPhase,
+      List<TemplateExpression> phaseTemplateExpressions, Service service) {
+    if (isEmpty(orchestrationWorkflow.getUserVariables())) {
+      return;
+    }
+    List<String> infraDefinitionVariables =
+        getInfraDefinitionWorkflowVariables(orchestrationWorkflow.getUserVariables());
+
+    Map<String, Object> metaData = new HashMap<>();
+    metaData.put(Variable.ENTITY_TYPE, INFRASTRUCTURE_DEFINITION.name());
+    if (service.getArtifactType() != null) {
+      metaData.put(Variable.ARTIFACT_TYPE, service.getArtifactType().name());
+    }
+    String expression = "${InfraDefinition";
+    int i = 1;
+    for (String infraDefinitionVariable : infraDefinitionVariables) {
+      if (infraDefinitionVariable.startsWith("InfraDefinition")) {
+        i++;
+      }
+    }
+    expression =
+        WorkflowServiceTemplateHelper.getInframappingExpressionName(workflowPhase.getDeploymentType(), expression);
+    if (i != 1) {
+      expression = expression + i;
+    }
+    expression = expression + "}";
+    phaseTemplateExpressions.add(
+        TemplateExpression.builder().fieldName("infraDefinitionId").metadata(metaData).expression(expression).build());
+    orchestrationWorkflow.addToUserVariables(
+        phaseTemplateExpressions, StateType.PHASE.name(), workflowPhase.getName(), null);
+  }
+
   public static List<String> getServiceInfrastructureWorkflowVariables(List<Variable> variables) {
     if (isEmpty(variables)) {
       return new ArrayList<>();
@@ -398,6 +434,18 @@ public class WorkflowServiceTemplateHelper {
     return variables.stream()
         .filter(variable
             -> variable.obtainEntityType() != null && variable.obtainEntityType().equals(INFRASTRUCTURE_MAPPING))
+        .map(Variable::getName)
+        .distinct()
+        .collect(toList());
+  }
+
+  public static List<String> getInfraDefinitionWorkflowVariables(List<Variable> variables) {
+    if (isEmpty(variables)) {
+      return new ArrayList<>();
+    }
+    return variables.stream()
+        .filter(variable
+            -> variable.obtainEntityType() != null && variable.obtainEntityType().equals(INFRASTRUCTURE_DEFINITION))
         .map(Variable::getName)
         .distinct()
         .collect(toList());
@@ -433,6 +481,14 @@ public class WorkflowServiceTemplateHelper {
     }
     return templateExpressions.stream().anyMatch(
         templateExpression -> templateExpression.getFieldName().equals("infraMappingId"));
+  }
+
+  public static boolean isInfraDefinitionTemplatized(List<TemplateExpression> templateExpressions) {
+    if (templateExpressions == null) {
+      return false;
+    }
+    return templateExpressions.stream().anyMatch(
+        templateExpression -> templateExpression.getFieldName().equals("infraDefinitionId"));
   }
 
   public static void transformEnvTemplateExpressions(Workflow workflow, OrchestrationWorkflow orchestrationWorkflow) {

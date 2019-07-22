@@ -1663,6 +1663,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
+  public List<InfrastructureDefinition> getResolvedInfraDefinitions(
+      Workflow workflow, Map<String, String> workflowVariables) {
+    return workflowServiceHelper.getResolvedInfraDefinitions(workflow, workflowVariables);
+  }
+
+  @Override
   public List<String> getResolvedInfraMappingIds(Workflow workflow, Map<String, String> workflowVariables) {
     return workflowServiceHelper.getResolvedInfraMappingIds(workflow, workflowVariables);
   }

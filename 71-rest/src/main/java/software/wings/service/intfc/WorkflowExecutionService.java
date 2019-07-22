@@ -25,6 +25,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.trigger.Trigger;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.WorkflowExecutionUpdate;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.PhaseExecutionSummary;
@@ -103,6 +104,8 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
       String infraMappingId, StateType stateType, String stateName);
 
   List<InfrastructureMapping> getResolvedInfraMappings(Workflow workflow, WorkflowExecution workflowExecution);
+
+  List<InfrastructureDefinition> getResolvedInfraDefinitions(Workflow workflow, WorkflowExecution workflowExecution);
 
   List<ElementExecutionSummary> getElementsSummary(
       String appId, String executionUuid, String parentStateExecutionInstanceId);

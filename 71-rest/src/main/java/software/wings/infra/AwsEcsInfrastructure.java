@@ -5,9 +5,9 @@ import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrast
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
-import software.wings.annotation.IncludeInFieldMap;
+import software.wings.annotation.ExcludeFieldMap;
+import software.wings.api.CloudProviderType;
 import software.wings.beans.EcsInfrastructureMapping;
-import software.wings.beans.EcsInfrastructureMapping.EcsInfrastructureMappingKeys;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 
@@ -15,22 +15,22 @@ import java.util.List;
 
 @JsonTypeName("AWS_ECS")
 @Data
-public class AwsEcsInfrastructure implements InfraMappingInfrastructureProvider {
-  private String cloudProviderId;
+public class AwsEcsInfrastructure implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
+  @ExcludeFieldMap private String cloudProviderId;
 
-  @IncludeInFieldMap(key = EcsInfrastructureMappingKeys.region) private String region;
+  private String region;
 
-  @IncludeInFieldMap(key = EcsInfrastructureMappingKeys.vpcId) private String vpcId;
+  private String vpcId;
 
-  @IncludeInFieldMap(key = EcsInfrastructureMappingKeys.subnetIds) private List<String> subnetIds;
+  private List<String> subnetIds;
 
-  @IncludeInFieldMap(key = EcsInfrastructureMappingKeys.securityGroupIds) private List<String> securityGroupIds;
+  private List<String> securityGroupIds;
 
-  @IncludeInFieldMap(key = EcsInfrastructureMappingKeys.assignPublicIp) private boolean assignPublicIp;
+  private boolean assignPublicIp;
 
-  @IncludeInFieldMap(key = EcsInfrastructureMappingKeys.executionRole) private String executionRole;
+  private String executionRole;
 
-  @IncludeInFieldMap(key = EcsInfrastructureMappingKeys.launchType) private String launchType;
+  private String launchType;
 
   @SchemaIgnore private String type;
   @SchemaIgnore private String role;
@@ -56,5 +56,10 @@ public class AwsEcsInfrastructure implements InfraMappingInfrastructureProvider 
   @Override
   public Class<EcsInfrastructureMapping> getMappingClass() {
     return EcsInfrastructureMapping.class;
+  }
+
+  @Override
+  public CloudProviderType getCloudProviderType() {
+    return CloudProviderType.AWS;
   }
 }

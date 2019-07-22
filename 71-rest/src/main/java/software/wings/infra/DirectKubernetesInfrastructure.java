@@ -5,23 +5,22 @@ import static software.wings.beans.DirectKubernetesInfrastructureMapping.Builder
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.data.validator.Trimmed;
 import lombok.Data;
-import software.wings.annotation.IncludeInFieldMap;
-import software.wings.beans.ContainerInfrastructureMapping.ContainerInfrastructureMappingKeys;
+import software.wings.annotation.ExcludeFieldMap;
+import software.wings.api.CloudProviderType;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
-import software.wings.beans.DirectKubernetesInfrastructureMapping.DirectKubernetesInfrastructureMappingKeys;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 
 @JsonTypeName("DIRECT_KUBERNETES")
 @Data
-public class DirectKubernetesInfrastructure implements InfraMappingInfrastructureProvider {
-  private String cloudProviderId;
+public class DirectKubernetesInfrastructure implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
+  @ExcludeFieldMap private String cloudProviderId;
 
-  @IncludeInFieldMap(key = ContainerInfrastructureMappingKeys.clusterName) private String clusterName;
+  private String clusterName;
 
-  @IncludeInFieldMap(key = DirectKubernetesInfrastructureMappingKeys.namespace) private String namespace;
+  private String namespace;
 
-  @IncludeInFieldMap(key = DirectKubernetesInfrastructureMappingKeys.releaseName) @Trimmed private String releaseName;
+  @Trimmed private String releaseName;
 
   @Override
   public InfrastructureMapping getInfraMapping() {
@@ -37,5 +36,10 @@ public class DirectKubernetesInfrastructure implements InfraMappingInfrastructur
   @Override
   public Class<DirectKubernetesInfrastructureMapping> getMappingClass() {
     return DirectKubernetesInfrastructureMapping.class;
+  }
+
+  @Override
+  public CloudProviderType getCloudProviderType() {
+    return CloudProviderType.KUBERNETES_CLUSTER;
   }
 }

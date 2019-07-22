@@ -6,6 +6,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.sm.ExecutionContext;
 
 import java.util.List;
 import java.util.Map;
@@ -21,11 +22,20 @@ public interface InfrastructureDefinitionService {
 
   Map<DeploymentType, List<SettingVariableTypes>> getDeploymentTypeCloudProviderOptions();
 
-  InfrastructureMapping getInfraMapping(String appId, String serviceId, String infraDefinitionId);
+  InfrastructureMapping getInfraMapping(
+      String appId, String serviceId, String infraDefinitionId, ExecutionContext context);
 
   boolean isDynamicInfrastructure(String appId, String infraDefinitionId);
 
   List<String> fetchCloudProviderIds(String appId, List<String> infraDefinitionIds);
 
   InfrastructureDefinition getInfraDefByName(String appId, String envId, String infraDefName);
+
+  void applyProvisionerOutputs(InfrastructureDefinition infrastructureDefinition, Map<String, Object> contextMap);
+
+  List<InfrastructureDefinition> getInfraStructureDefinitionByUuids(String appId, List<String> infraDefinitionIds);
+
+  String cloudProviderNameForDefinition(InfrastructureDefinition infrastructureDefinition);
+
+  String cloudProviderNameForDefinition(String appId, String infraDefinitionId);
 }

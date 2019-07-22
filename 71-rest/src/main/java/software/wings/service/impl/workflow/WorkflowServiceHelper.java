@@ -1832,12 +1832,21 @@ public class WorkflowServiceHelper {
         if (phaseTemplateExpressions == null) {
           phaseTemplateExpressions = new ArrayList<>();
         }
-        if (WorkflowServiceTemplateHelper.isEnvironmentTemplatized(templateExpressions)
-            && !WorkflowServiceTemplateHelper.isInfraTemplatized(phaseTemplateExpressions)) {
-          Service service = serviceResourceService.get(appId, phase.getServiceId(), false);
-          notNullCheck("Service", service, USER);
-          WorkflowServiceTemplateHelper.templatizeServiceInfra(
-              orchestrationWorkflow, phase, phaseTemplateExpressions, service);
+
+        boolean envTemplatized = WorkflowServiceTemplateHelper.isEnvironmentTemplatized(templateExpressions);
+
+        if (envTemplatized) {
+          if (infraRefactor && !WorkflowServiceTemplateHelper.isInfraDefinitionTemplatized(phaseTemplateExpressions)) {
+            Service service = serviceResourceService.get(appId, phase.getServiceId(), false);
+            notNullCheck("Service", service, USER);
+            WorkflowServiceTemplateHelper.templatizenfraDefinition(
+                orchestrationWorkflow, phase, phaseTemplateExpressions, service);
+          } else if (!infraRefactor && !WorkflowServiceTemplateHelper.isInfraTemplatized(phaseTemplateExpressions)) {
+            Service service = serviceResourceService.get(appId, phase.getServiceId(), false);
+            notNullCheck("Service", service, USER);
+            WorkflowServiceTemplateHelper.templatizeServiceInfra(
+                orchestrationWorkflow, phase, phaseTemplateExpressions, service);
+          }
         }
 
         phase.setTemplateExpressions(phaseTemplateExpressions);
@@ -1959,6 +1968,19 @@ public class WorkflowServiceHelper {
         workflow.getAppId(), orchestrationWorkflow.getInfraMappingIds());
   }
 
+  public List<InfrastructureDefinition> getResolvedInfraDefinitions(
+      Workflow workflow, Map<String, String> workflowVariables) {
+    if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
+      return new ArrayList<>();
+    }
+    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    if (orchestrationWorkflow.isInfraDefinitionTemplatized()) {
+      return resolvedTemplateInfraDefinitions(workflow, workflowVariables);
+    }
+    return infrastructureDefinitionService.getInfraStructureDefinitionByUuids(
+        workflow.getAppId(), orchestrationWorkflow.getInfraDefinitionIds());
+  }
+
   public List<String> getResolvedInfraMappingIds(Workflow workflow, Map<String, String> workflowVariables) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     if (orchestrationWorkflow.isInfraMappingTemplatized()) {
@@ -1981,6 +2003,12 @@ public class WorkflowServiceHelper {
       Workflow workflow, Map<String, String> workflowVariables) {
     List<String> infraMappingIds = resolveInfraMappingIds(workflow, workflowVariables);
     return infrastructureMappingService.getInfraStructureMappingsByUuids(workflow.getAppId(), infraMappingIds);
+  }
+
+  private List<InfrastructureDefinition> resolvedTemplateInfraDefinitions(
+      Workflow workflow, Map<String, String> workflowVariables) {
+    List<String> infrDefinitionIds = resolveInfraDefinitionIds(workflow, workflowVariables);
+    return infrastructureDefinitionService.getInfraStructureDefinitionByUuids(workflow.getAppId(), infrDefinitionIds);
   }
 
   private List<String> resolveInfraMappingIds(Workflow workflow, Map<String, String> workflowVariables) {

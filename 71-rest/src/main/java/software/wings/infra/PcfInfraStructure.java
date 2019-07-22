@@ -2,22 +2,22 @@ package software.wings.infra;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
-import software.wings.annotation.IncludeInFieldMap;
+import software.wings.annotation.ExcludeFieldMap;
+import software.wings.api.CloudProviderType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PcfInfrastructureMapping;
-import software.wings.beans.PcfInfrastructureMapping.PcfInfrastructureMappingKeys;
 
 import java.util.List;
 
 @JsonTypeName("PCF_PCF")
 @Data
-public class PcfInfraStructure implements InfraMappingInfrastructureProvider {
-  private String cloudProviderId;
-  @IncludeInFieldMap(key = PcfInfrastructureMappingKeys.organization) private String organization;
-  @IncludeInFieldMap(key = PcfInfrastructureMappingKeys.space) private String space;
-  @IncludeInFieldMap(key = PcfInfrastructureMappingKeys.tempRouteMap) private List<String> tempRouteMap;
-  @IncludeInFieldMap(key = PcfInfrastructureMappingKeys.routeMaps) private List<String> routeMaps;
+public class PcfInfraStructure implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
+  @ExcludeFieldMap private String cloudProviderId;
+  private String organization;
+  private String space;
+  private List<String> tempRouteMap;
+  private List<String> routeMaps;
 
   @Override
   public InfrastructureMapping getInfraMapping() {
@@ -34,5 +34,10 @@ public class PcfInfraStructure implements InfraMappingInfrastructureProvider {
   @Override
   public Class<PcfInfrastructureMapping> getMappingClass() {
     return PcfInfrastructureMapping.class;
+  }
+
+  @Override
+  public CloudProviderType getCloudProviderType() {
+    return CloudProviderType.PCF;
   }
 }

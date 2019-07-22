@@ -5,41 +5,41 @@ import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrast
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.annotation.IncludeInFieldMap;
+import software.wings.annotation.ExcludeFieldMap;
+import software.wings.api.CloudProviderType;
 import software.wings.beans.AwsInfrastructureMapping;
-import software.wings.beans.AwsInfrastructureMapping.AwsInfrastructureMappingKeys;
 import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 
 @JsonTypeName("AWS_SSH")
 @Data
-public class AwsInstanceInfrastructure implements InfraMappingInfrastructureProvider {
-  private String cloudProviderId;
+public class AwsInstanceInfrastructure implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
+  @ExcludeFieldMap private String cloudProviderId;
 
   private boolean useAutoScalingGroup;
 
-  @IncludeInFieldMap(key = AwsInfrastructureMappingKeys.region) private String region;
+  private String region;
 
-  @IncludeInFieldMap(key = AwsInfrastructureMappingKeys.hostConnectionAttrs) private String hostConnectionAttrs;
+  private String hostConnectionAttrs;
 
-  @IncludeInFieldMap(key = AwsInfrastructureMappingKeys.loadBalancerId) private String loadBalancerId;
+  private String loadBalancerId;
 
   @Transient private String loadBalancerName;
 
-  @IncludeInFieldMap(key = AwsInfrastructureMappingKeys.usePublicDns) private boolean usePublicDns;
+  private boolean usePublicDns;
 
-  @IncludeInFieldMap(key = AwsInfrastructureMappingKeys.awsInstanceFilter) private AwsInstanceFilter awsInstanceFilter;
+  private AwsInstanceFilter awsInstanceFilter;
 
-  @IncludeInFieldMap(key = AwsInfrastructureMappingKeys.autoScalingGroupName) private String autoScalingGroupName;
+  private String autoScalingGroupName;
 
-  @IncludeInFieldMap(key = AwsInfrastructureMappingKeys.setDesiredCapacity) private boolean setDesiredCapacity;
+  private boolean setDesiredCapacity;
 
-  @IncludeInFieldMap(key = AwsInfrastructureMappingKeys.desiredCapacity) private int desiredCapacity;
+  private int desiredCapacity;
 
-  @IncludeInFieldMap(key = AwsInfrastructureMappingKeys.hostNameConvention) private String hostNameConvention;
+  private String hostNameConvention;
 
-  @IncludeInFieldMap(key = AwsInfrastructureMappingKeys.provisionInstances) private boolean provisionInstances;
+  private boolean provisionInstances;
 
   @Override
   public InfrastructureMapping getInfraMapping() {
@@ -62,5 +62,10 @@ public class AwsInstanceInfrastructure implements InfraMappingInfrastructureProv
   @Override
   public Class<AwsInfrastructureMapping> getMappingClass() {
     return AwsInfrastructureMapping.class;
+  }
+
+  @Override
+  public CloudProviderType getCloudProviderType() {
+    return CloudProviderType.AWS;
   }
 }
