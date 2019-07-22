@@ -98,6 +98,7 @@ import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.apm.APMMetricInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo;
+import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.impl.datadog.DataDogSetupTestNodeData;
 import software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
@@ -141,6 +142,7 @@ import software.wings.verification.TimeSeriesOfMetric;
 import software.wings.verification.TransactionTimeSeries;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
+import software.wings.verification.apm.APMCVServiceConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.dashboard.HeatMapUnit;
@@ -902,6 +904,49 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         return AppDynamicsState.getMetricTypeForMetric(metricName);
       case NEW_RELIC:
         return NewRelicState.getMetricTypeForMetric(metricName);
+      case PROMETHEUS:
+        PrometheusCVServiceConfiguration prometheusCVServiceConfiguration = (PrometheusCVServiceConfiguration) cvConfig;
+        return prometheusCVServiceConfiguration.getTimeSeriesToAnalyze()
+            .stream()
+            .filter(timeSeries -> timeSeries.getMetricName().equals(metricName))
+            .findAny()
+            .map(TimeSeries::getMetricType)
+            .orElse(null);
+      case APM_VERIFICATION:
+        APMCVServiceConfiguration apmcvServiceConfiguration = (APMCVServiceConfiguration) cvConfig;
+        return apmcvServiceConfiguration.getMetricCollectionInfos()
+            .stream()
+            .filter(metricCollectionInfo -> metricCollectionInfo.getMetricName().equals(metricName))
+            .findAny()
+            .map(x -> x.getMetricType().name())
+            .orElse(null);
+      case DATA_DOG:
+        return DatadogState.getMetricTypeForMetric(metricName);
+      case DYNA_TRACE:
+        return DynatraceState.getMetricTypeForMetric(metricName);
+      case CLOUD_WATCH:
+        CloudWatchCVServiceConfiguration cloudWatchCVServiceConfiguration = (CloudWatchCVServiceConfiguration) cvConfig;
+        List<CloudWatchMetric> metrics = Lists.newArrayList(cloudWatchCVServiceConfiguration.getEc2Metrics());
+        metrics.addAll(cloudWatchCVServiceConfiguration.getLambdaFunctionsMetrics()
+                           .values()
+                           .stream()
+                           .flatMap(List::stream)
+                           .collect(Collectors.toList()));
+        metrics.addAll(cloudWatchCVServiceConfiguration.getEcsMetrics()
+                           .values()
+                           .stream()
+                           .flatMap(List::stream)
+                           .collect(Collectors.toList()));
+        metrics.addAll(cloudWatchCVServiceConfiguration.getLoadBalancerMetrics()
+                           .values()
+                           .stream()
+                           .flatMap(List::stream)
+                           .collect(Collectors.toList()));
+        return metrics.stream()
+            .filter(metric -> metric.getMetricName().equals(metricName))
+            .findAny()
+            .map(CloudWatchMetric::getMetricType)
+            .orElse(null);
       default:
         logger.info("Unsupported stateType {} for deeplinking", cvConfig.getStateType());
         return null;
