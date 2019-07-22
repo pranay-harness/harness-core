@@ -6,6 +6,7 @@ import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.LateBindingMap;
+import io.harness.expression.SecretString;
 import lombok.Builder;
 import software.wings.beans.ServiceVariable;
 import software.wings.security.encryption.EncryptedData;
@@ -38,7 +39,7 @@ public class SecretFunctor extends LateBindingMap {
                                           .build();
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(serviceVariable, null, null);
     managerDecryptionService.decrypt(serviceVariable, encryptionDetails);
-    return new String(serviceVariable.getValue());
+    return SecretString.builder().value(new String(serviceVariable.getValue())).build();
   }
 
   @Override
