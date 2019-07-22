@@ -41,6 +41,7 @@ import software.wings.verification.VerificationStateAnalysisExecutionData;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -169,5 +170,14 @@ public class DynatraceState extends AbstractMetricAnalysisState {
   @Override
   protected Map<String, String> getCanaryNewHostNames(ExecutionContext context) {
     return Collections.singletonMap(TEST_HOST_NAME, DEFAULT_GROUP_NAME);
+  }
+
+  public static String getMetricTypeForMetric(String metricName) {
+    List<DynaTraceTimeSeries> timeSeriesList = Lists.newArrayList(DynaTraceTimeSeries.values());
+    return timeSeriesList.stream()
+        .filter(timeSeries -> timeSeries.getSavedFieldName().equals(metricName))
+        .findAny()
+        .map(timeSeries -> timeSeries.getMetricType().name())
+        .orElse(null);
   }
 }

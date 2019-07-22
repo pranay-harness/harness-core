@@ -258,6 +258,24 @@ public class DatadogState extends AbstractMetricAnalysisState {
     this.customMetrics = customMetrics;
   }
 
+  public static String getMetricTypeForMetric(String metricName) {
+    try {
+      YamlUtils yamlUtils = new YamlUtils();
+      URL url = DatadogState.class.getResource("/apm/datadog_metrics.yml");
+      String yaml = Resources.toString(url, Charsets.UTF_8);
+      Map<String, List<Metric>> metricsMap = yamlUtils.read(yaml, new TypeReference<Map<String, List<Metric>>>() {});
+      List<Metric> metrics = metricsMap.values().stream().flatMap(List::stream).collect(Collectors.toList());
+      Optional<Metric> matchedMetric =
+          metrics.stream().filter(metric -> metric.getMetricName().equals(metricName)).findAny();
+      if (matchedMetric.isPresent()) {
+        return matchedMetric.get().getMlMetricType();
+      }
+    } catch (Exception e) {
+      logger.error("Exception occurred while calculating metric type for name: {}", metricName, e);
+    }
+    return null;
+  }
+
   public static Map<String, List<APMMetricInfo>> metricEndpointsInfo(Optional<String> datadogServiceName,
       Optional<List<String>> metricNames, Optional<String> applicationFilter,
       Optional<Map<String, Set<Metric>>> customMetrics, Optional<DeploymentType> deploymentType) {
