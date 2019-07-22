@@ -243,7 +243,7 @@ public class HarnessTagYamlHelper {
 
     for (HarnessTag harnessTag : tagsToBeAdded) {
       harnessTag.setAccountId(accountId);
-      harnessTagService.createTag(harnessTag, syncFromGit);
+      harnessTagService.createTag(harnessTag, syncFromGit, true);
     }
 
     for (HarnessTag harnessTag : tagsToBeUpdated) {

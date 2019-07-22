@@ -33,7 +33,7 @@ public interface HarnessTagService {
 
   PageResponse<HarnessTag> listTagsWithInUseValues(PageRequest<HarnessTag> request);
   List<HarnessTag> listTags(String accountId);
-  HarnessTag createTag(HarnessTag tag, boolean syncFromGit);
+  HarnessTag createTag(HarnessTag tag, boolean syncFromGit, boolean allowSystemTagCreate);
   HarnessTag updateTag(HarnessTag tag, boolean syncFromGit);
   void deleteTag(@NotBlank String accountId, @NotBlank String key, boolean syncFromGit);
 }
