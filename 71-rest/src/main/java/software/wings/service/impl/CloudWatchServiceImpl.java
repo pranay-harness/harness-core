@@ -18,6 +18,7 @@ import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.DimensionFilter;
 import com.amazonaws.services.cloudwatch.model.ListMetricsRequest;
 import com.amazonaws.services.cloudwatch.model.Metric;
+import com.amazonaws.services.cloudwatch.model.StandardUnit;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ecs.model.Service;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -283,5 +284,38 @@ public class CloudWatchServiceImpl implements CloudWatchService {
     }
 
     return metricsTemplate;
+  }
+
+  public void setStatisticsAndUnit(AwsNameSpace awsNameSpace, List<CloudWatchMetric> metrics) {
+    if (isNotEmpty(metrics)) {
+      metrics.stream()
+          .filter(metric -> isEmpty(metric.getStatistics()) || metric.getUnit() == null)
+          .forEach(cloudWatchMetric -> {
+            cloudWatchMetric.setStatistics(getStatistics(awsNameSpace, cloudWatchMetric));
+            cloudWatchMetric.setUnit(getUnit(awsNameSpace, cloudWatchMetric));
+          });
+    }
+  }
+
+  private String getStatistics(AwsNameSpace awsNameSpace, CloudWatchMetric cloudWatchMetric) {
+    for (CloudWatchMetric metric : getCloudWatchMetrics().get(awsNameSpace)) {
+      if (metric.getMetricName().equals(cloudWatchMetric.getMetricName())) {
+        return metric.getStatistics();
+      }
+    }
+
+    logger.error("No statistics found for {} metric {}", awsNameSpace, cloudWatchMetric);
+    return null;
+  }
+
+  private StandardUnit getUnit(AwsNameSpace awsNameSpace, CloudWatchMetric cloudWatchMetric) {
+    for (CloudWatchMetric metric : getCloudWatchMetrics().get(awsNameSpace)) {
+      if (metric.getMetricName().equals(cloudWatchMetric.getMetricName())) {
+        return metric.getUnit();
+      }
+    }
+
+    logger.error("No unit found for {} metric {}", awsNameSpace, cloudWatchMetric);
+    return null;
   }
 }

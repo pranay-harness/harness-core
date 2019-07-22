@@ -26,6 +26,7 @@ import migrations.all.AwsAmiAsgDesiredInstancesMigration;
 import migrations.all.CVCollectionCronFrequencyMigration;
 import migrations.all.CleanUpDatadogCallLogMigration;
 import migrations.all.CleanupOrphanInstances;
+import migrations.all.CloudWatchCVMigration;
 import migrations.all.CreateDefaultAlertNotificationRule;
 import migrations.all.DanglingAppEnvReferenceRemovalMigration;
 import migrations.all.DanglingUserInviteCleanupMigration;
@@ -268,7 +269,7 @@ public class MigrationList {
         .add(Pair.of(270, BaseMigration.class))
         .add(Pair.of(271, MigrateCloudwatchCVTemplates.class))
         .add(Pair.of(272, AddTagManagementPermissionToAdminUserGroup.class))
-
+        .add(Pair.of(273, CloudWatchCVMigration.class))
         .build();
   }
 }

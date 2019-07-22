@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -15,12 +16,14 @@ import static software.wings.utils.WingsTestConstants.NAMESPACE;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.ListMetricsRequest;
 import com.amazonaws.services.cloudwatch.model.ListMetricsResult;
 import com.amazonaws.services.cloudwatch.model.Metric;
+import com.amazonaws.services.cloudwatch.model.StandardUnit;
 import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
@@ -136,5 +139,23 @@ public class CloudWatchServiceTest extends WingsBaseTest {
     assertFalse("There are no EC2 metrics", cloudwatchMetrics.containsKey(AwsNameSpace.EC2));
     assertFalse("There are no ECS metrics", cloudwatchMetrics.containsKey(AwsNameSpace.ECS));
     assertFalse("There are no ELB metrics", cloudwatchMetrics.containsKey(AwsNameSpace.ELB));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testSetStatisticsAndUnit() {
+    List<CloudWatchMetric> cloudWatchMetrics = Lists.newArrayList(CloudWatchMetric.builder()
+                                                                      .metricName("Latency")
+                                                                      .metricType(generateUuid())
+                                                                      .unit(StandardUnit.Milliseconds)
+                                                                      .build(),
+        CloudWatchMetric.builder().metricName("RequestCount").metricType(generateUuid()).statistics("custom").build());
+
+    cloudWatchService.setStatisticsAndUnit(AwsNameSpace.ELB, cloudWatchMetrics);
+
+    assertEquals("Average", cloudWatchMetrics.get(0).getStatistics());
+    assertEquals(StandardUnit.Milliseconds, cloudWatchMetrics.get(0).getUnit());
+    assertEquals("Sum", cloudWatchMetrics.get(1).getStatistics());
+    assertEquals(StandardUnit.Count, cloudWatchMetrics.get(1).getUnit());
   }
 }
