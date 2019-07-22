@@ -56,9 +56,12 @@ public class PrometheusDelegateServiceImpl implements PrometheusDelegateService 
     Preconditions.checkNotNull(apiCallLog);
     apiCallLog.setTitle("Fetching metric data from " + prometheusConfig.getUrl());
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-    apiCallLog.addFieldToRequest(
-        ThirdPartyApiCallField.builder().name(URL_STRING).value(url).type(FieldType.URL).build());
     final Call<PrometheusMetricDataResponse> request = getRestClient(prometheusConfig).fetchMetricData(url);
+    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                     .name(URL_STRING)
+                                     .value(request.request().url().toString())
+                                     .type(FieldType.URL)
+                                     .build());
     final Response<PrometheusMetricDataResponse> response = request.execute();
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     if (response.isSuccessful()) {
