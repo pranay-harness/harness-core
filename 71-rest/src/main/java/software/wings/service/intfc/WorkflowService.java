@@ -22,6 +22,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.stats.CloneMetadata;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.manipulation.SettingsServiceManipulationObserver;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.sm.StateMachine;
@@ -138,6 +139,8 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
   List<Service> getResolvedServices(Workflow workflow, Map<String, String> workflowVariables);
 
   List<InfrastructureMapping> getResolvedInfraMappings(Workflow workflow, Map<String, String> workflowVariables);
+
+  List<InfrastructureDefinition> getResolvedInfraDefinitions(Workflow workflow, Map<String, String> workflowVariables);
 
   /**
    * Resolves the inframappingIds from workflow variables

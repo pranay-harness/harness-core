@@ -164,6 +164,7 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.common.Constants;
 import software.wings.common.cache.MongoStore;
 import software.wings.dl.WingsPersistence;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserThreadLocal;
@@ -201,6 +202,7 @@ import software.wings.sm.ExecutionInterrupt.ExecutionInterruptKeys;
 import software.wings.sm.ExecutionInterruptEffect;
 import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.ExecutionInterruptType;
+import software.wings.sm.InfraDefinitionSummary;
 import software.wings.sm.InfraMappingSummary;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.PhaseExecutionSummary;
@@ -2085,34 +2087,64 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (workflowExecution.getServiceExecutionSummaries() != null) {
       return;
     }
+    boolean infraRefactor = featureFlagService.isEnabled(
+        FeatureName.INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(workflowExecution.getAppId()));
     List<ElementExecutionSummary> serviceExecutionSummaries = new ArrayList<>();
     // TODO : version should also be captured as part of the WorkflowExecution
     Workflow workflow = workflowService.readWorkflow(workflowExecution.getAppId(), workflowExecution.getWorkflowId());
     if (workflow != null && workflow.getOrchestrationWorkflow() != null) {
       List<Service> services = getResolvedServices(workflow, workflowExecution);
-      List<InfrastructureMapping> infrastructureMappings = getResolvedInfraMappings(workflow, workflowExecution);
+      List<InfrastructureMapping> infrastructureMappings = null;
+      List<InfrastructureDefinition> infrastructureDefinitions = null;
+      if (infraRefactor) {
+        infrastructureDefinitions = getResolvedInfraDefinitions(workflow, workflowExecution);
+      } else {
+        infrastructureMappings = getResolvedInfraMappings(workflow, workflowExecution);
+      }
+
       if (services != null) {
+        List<InfrastructureMapping> finalInfrastructureMappings = infrastructureMappings;
+        List<InfrastructureDefinition> finalInfrastructureDefinitions = infrastructureDefinitions;
         services.forEach(service -> {
           ServiceElement serviceElement =
               aServiceElement().withUuid(service.getUuid()).withName(service.getName()).build();
           ElementExecutionSummary elementSummary =
               anElementExecutionSummary().withContextElement(serviceElement).withStatus(ExecutionStatus.QUEUED).build();
-          List<InfraMappingSummary> infraMappingSummaries = new ArrayList<>();
-          if (infrastructureMappings != null) {
-            for (InfrastructureMapping infraMapping : infrastructureMappings) {
-              if (infraMapping.getServiceId().equals(service.getUuid())) {
-                DeploymentType deploymentType = serviceResourceService.getDeploymentType(infraMapping, service, null);
-                infraMappingSummaries.add(anInfraMappingSummary()
-                                              .withInframappingId(infraMapping.getUuid())
-                                              .withInfraMappingType(infraMapping.getInfraMappingType())
-                                              .withComputerProviderName(infraMapping.getComputeProviderName())
-                                              .withDisplayName(infraMapping.getName())
-                                              .withDeploymentType(deploymentType.name())
-                                              .withComputerProviderType(infraMapping.getComputeProviderType())
-                                              .build());
+
+          if (infraRefactor) {
+            List<InfraDefinitionSummary> infraDefinitionSummaries = new ArrayList<>();
+            if (finalInfrastructureDefinitions != null) {
+              for (InfrastructureDefinition infrastructureDefinition : finalInfrastructureDefinitions) {
+                infraDefinitionSummaries.add(
+                    InfraDefinitionSummary.builder()
+                        .infraDefinitionId(infrastructureDefinition.getUuid())
+                        .deploymentType(infrastructureDefinition.getDeploymentType())
+                        .displayName(infrastructureDefinition.getName())
+                        .cloudProviderType(infrastructureDefinition.getInfrastructure().getCloudProviderType())
+                        .cloudProviderName(
+                            infrastructureDefinitionService.cloudProviderNameForDefinition(infrastructureDefinition))
+                        .build());
               }
+              elementSummary.setInfraDefinitionSummaries(infraDefinitionSummaries);
             }
-            elementSummary.setInfraMappingSummary(infraMappingSummaries);
+          } else {
+            List<InfraMappingSummary> infraMappingSummaries = new ArrayList<>();
+            if (finalInfrastructureMappings != null) {
+              for (InfrastructureMapping infraMapping : finalInfrastructureMappings) {
+                if (infraMapping.getServiceId().equals(service.getUuid())) {
+                  DeploymentType deploymentType = serviceResourceService.getDeploymentType(infraMapping, service, null);
+                  infraMappingSummaries.add(anInfraMappingSummary()
+                                                .withInframappingId(infraMapping.getUuid())
+                                                .withInfraMappingType(infraMapping.getInfraMappingType())
+                                                .withComputerProviderName(infraMapping.getComputeProviderName())
+                                                .withDisplayName(infraMapping.getName())
+                                                .withDeploymentType(deploymentType.name())
+                                                .withComputerProviderType(infraMapping.getComputeProviderType())
+                                                .build());
+                }
+              }
+              elementSummary.setInfraMappingSummary(infraMappingSummaries);
+            }
           }
           serviceExecutionSummaries.add(elementSummary);
         });
@@ -2145,6 +2177,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         ? workflowExecution.getExecutionArgs().getWorkflowVariables()
         : null;
     return workflowService.getResolvedInfraMappings(workflow, workflowVariables);
+  }
+
+  @Override
+  public List<InfrastructureDefinition> getResolvedInfraDefinitions(
+      Workflow workflow, WorkflowExecution workflowExecution) {
+    Map<String, String> workflowVariables = workflowExecution.getExecutionArgs() != null
+        ? workflowExecution.getExecutionArgs().getWorkflowVariables()
+        : null;
+    return workflowService.getResolvedInfraDefinitions(workflow, workflowVariables);
   }
 
   private void populateServiceSummary(

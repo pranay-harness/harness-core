@@ -70,6 +70,8 @@ import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructurePro
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
+import software.wings.infra.InfrastructureDefinition;
+import software.wings.infra.InfrastructureDefinition.InfrastructureDefinitionKeys;
 import software.wings.prune.PruneEvent;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -79,6 +81,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.LogService;
@@ -121,12 +124,10 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Inject FileService fileService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private LogService logService;
-
   @Inject private WingsPersistence wingsPersistence;
-
   @Inject private Queue<PruneEvent> pruneQueue;
-
   @Inject private LimitCheckerFactory limitCheckerFactory;
+  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
 
   @Override
   @ValidationGroups(Create.class)
@@ -452,24 +453,32 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     contextMap.put(infrastructureProvisioner.variableKey(), outputs);
     contextMap.putAll(outputs);
 
-    try (HIterator<InfrastructureMapping> infrastructureMappings =
-             new HIterator<>(wingsPersistence.createQuery(InfrastructureMapping.class)
-                                 .filter(InfrastructureMapping.APP_ID_KEY, infrastructureProvisioner.getAppId())
-                                 .filter(InfrastructureMapping.PROVISIONER_ID_KEY, infrastructureProvisioner.getUuid())
-                                 .fetch())) {
-      if (infrastructureMappings.hasNext()) {
-        boolean featureFlagEnabled =
-            featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infrastructureProvisioner.getAccountId());
-        while (infrastructureMappings.hasNext()) {
-          InfrastructureMapping infrastructureMapping = infrastructureMappings.next();
+    boolean featureFlagEnabled =
+        featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infrastructureProvisioner.getAccountId());
 
-          if (featureFlagEnabled) {
-            Map<String, Object> resolvedBlueprints =
-                resolveBlueprints(contextMap, infrastructureMapping.getBlueprints(), infrastructureMapping.getName());
-            updateInfraMapping(infrastructureMapping, resolvedBlueprints);
-            addToExecutionLog(
-                executionLogCallbackOptional, "Updated service infra \"" + infrastructureMapping.getName() + "\"");
-          } else {
+    if (featureFlagEnabled) {
+      HIterator<InfrastructureDefinition> infrastructureDefinitions =
+          new HIterator<>(wingsPersistence.createQuery(InfrastructureDefinition.class)
+                              .filter(InfrastructureDefinitionKeys.appId, infrastructureProvisioner.getAppId())
+                              .filter(InfrastructureDefinitionKeys.provisionerId, infrastructureProvisioner.getUuid())
+                              .fetch());
+      while (infrastructureDefinitions.hasNext()) {
+        InfrastructureDefinition infrastructureDefinition = infrastructureDefinitions.next();
+        infrastructureDefinitionService.applyProvisionerOutputs(infrastructureDefinition, contextMap);
+        // TODO @PP: set definition in workflow execution context for further use in the workflow
+        addToExecutionLog(executionLogCallbackOptional,
+            format("Updated infra definition : [%s]", infrastructureDefinition.getName()));
+      }
+    } else {
+      try (HIterator<InfrastructureMapping> infrastructureMappings = new HIterator<>(
+               wingsPersistence.createQuery(InfrastructureMapping.class)
+                   .filter(InfrastructureMapping.APP_ID_KEY, infrastructureProvisioner.getAppId())
+                   .filter(InfrastructureMapping.PROVISIONER_ID_KEY, infrastructureProvisioner.getUuid())
+                   .fetch())) {
+        if (infrastructureMappings.hasNext()) {
+          while (infrastructureMappings.hasNext()) {
+            InfrastructureMapping infrastructureMapping = infrastructureMappings.next();
+
             if (isEmpty(infrastructureProvisioner.getMappingBlueprints())) {
               throw new InvalidRequestException(
                   "Service Mapping not found for Service Infra : " + infrastructureMapping.getName()

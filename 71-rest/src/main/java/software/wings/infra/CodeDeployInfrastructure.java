@@ -5,27 +5,23 @@ import static software.wings.beans.CodeDeployInfrastructureMapping.CodeDeployInf
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.annotation.IncludeInFieldMap;
+import software.wings.annotation.ExcludeFieldMap;
+import software.wings.api.CloudProviderType;
 import software.wings.beans.CodeDeployInfrastructureMapping;
-import software.wings.beans.CodeDeployInfrastructureMapping.CodeDeployInfrastructureMappingKeys;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 
 @JsonTypeName("AWS_AWS_CODEDEPLOY")
 @Data
-public class CodeDeployInfrastructure implements InfraMappingInfrastructureProvider {
-  private String cloudProviderId;
+public class CodeDeployInfrastructure implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
+  @ExcludeFieldMap private String cloudProviderId;
 
-  @IncludeInFieldMap(key = CodeDeployInfrastructureMappingKeys.region) private String region;
+  private String region;
 
-  @IncludeInFieldMap(key = CodeDeployInfrastructureMappingKeys.applicationName)
-  @NotEmpty
-  private String applicationName;
-  @IncludeInFieldMap(key = CodeDeployInfrastructureMappingKeys.deploymentGroup)
-  @NotEmpty
-  private String deploymentGroup;
-  @IncludeInFieldMap(key = CodeDeployInfrastructureMappingKeys.deploymentConfig) private String deploymentConfig;
-  @IncludeInFieldMap(key = CodeDeployInfrastructureMappingKeys.hostNameConvention) private String hostNameConvention;
+  @NotEmpty private String applicationName;
+  @NotEmpty private String deploymentGroup;
+  private String deploymentConfig;
+  private String hostNameConvention;
 
   @Override
   public InfrastructureMapping getInfraMapping() {
@@ -42,5 +38,10 @@ public class CodeDeployInfrastructure implements InfraMappingInfrastructureProvi
   @Override
   public Class<CodeDeployInfrastructureMapping> getMappingClass() {
     return CodeDeployInfrastructureMapping.class;
+  }
+
+  @Override
+  public CloudProviderType getCloudProviderType() {
+    return CloudProviderType.AWS;
   }
 }

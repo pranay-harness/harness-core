@@ -4,25 +4,25 @@ import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysic
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
-import software.wings.annotation.IncludeInFieldMap;
+import software.wings.annotation.ExcludeFieldMap;
+import software.wings.api.CloudProviderType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhysicalInfrastructureMapping;
-import software.wings.beans.PhysicalInfrastructureMapping.PhysicalInfrastructureMappingKeys;
-import software.wings.beans.PhysicalInfrastructureMappingBase.PhysicalInfrastructureMappingBaseKeys;
 import software.wings.beans.infrastructure.Host;
 
 import java.util.List;
 
 @JsonTypeName("PHYSICAL_DATA_CENTER_SSH")
 @Data
-public class PhysicalInfra implements PhysicalDataCenterInfra, InfraMappingInfrastructureProvider {
-  private String cloudProviderId;
-  @IncludeInFieldMap(key = PhysicalInfrastructureMappingBaseKeys.hostNames) private List<String> hostNames;
-  @IncludeInFieldMap(key = PhysicalInfrastructureMappingBaseKeys.hosts) private List<Host> hosts;
-  @IncludeInFieldMap(key = PhysicalInfrastructureMappingBaseKeys.loadBalancerId) private String loadBalancerId;
-  @IncludeInFieldMap(key = PhysicalInfrastructureMappingBaseKeys.loadBalancerName) private String loadBalancerName;
-  @IncludeInFieldMap(key = PhysicalInfrastructureMappingKeys.hostConnectionAttrs) private String hostConnectionAttrs;
+public class PhysicalInfra
+    implements PhysicalDataCenterInfra, InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
+  @ExcludeFieldMap private String cloudProviderId;
+  private List<String> hostNames;
+  private List<Host> hosts;
+  private String loadBalancerId;
+  private String loadBalancerName;
+  private String hostConnectionAttrs;
 
   @Override
   public InfrastructureMapping getInfraMapping() {
@@ -39,5 +39,10 @@ public class PhysicalInfra implements PhysicalDataCenterInfra, InfraMappingInfra
   @Override
   public Class<PhysicalInfrastructureMapping> getMappingClass() {
     return PhysicalInfrastructureMapping.class;
+  }
+
+  @Override
+  public CloudProviderType getCloudProviderType() {
+    return CloudProviderType.PHYSICAL_DATA_CENTER;
   }
 }

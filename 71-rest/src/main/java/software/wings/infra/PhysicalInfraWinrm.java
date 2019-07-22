@@ -4,25 +4,24 @@ import static software.wings.beans.PhysicalInfrastructureMappingWinRm.Builder.aP
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
-import software.wings.annotation.IncludeInFieldMap;
+import software.wings.annotation.ExcludeFieldMap;
+import software.wings.api.CloudProviderType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
-import software.wings.beans.PhysicalInfrastructureMappingBase.PhysicalInfrastructureMappingBaseKeys;
 import software.wings.beans.PhysicalInfrastructureMappingWinRm;
-import software.wings.beans.PhysicalInfrastructureMappingWinRm.PhysicalInfrastructureMappingWinRmKeys;
 import software.wings.beans.infrastructure.Host;
 
 import java.util.List;
 
 @JsonTypeName("PHYSICAL_DATA_CENTER_WINRM")
 @Data
-public class PhysicalInfraWinrm implements PhysicalDataCenterInfra, InfraMappingInfrastructureProvider {
-  private String cloudProviderId;
-  @IncludeInFieldMap(key = PhysicalInfrastructureMappingBaseKeys.hostNames) private List<String> hostNames;
-  @IncludeInFieldMap(key = PhysicalInfrastructureMappingBaseKeys.hosts) private List<Host> hosts;
-  @IncludeInFieldMap(key = PhysicalInfrastructureMappingBaseKeys.loadBalancerId) private String loadBalancerId;
-  @IncludeInFieldMap(key = PhysicalInfrastructureMappingBaseKeys.loadBalancerName) private String loadBalancerName;
-  @IncludeInFieldMap(key = PhysicalInfrastructureMappingWinRmKeys.winRmConnectionAttributes)
+public class PhysicalInfraWinrm
+    implements PhysicalDataCenterInfra, InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
+  @ExcludeFieldMap private String cloudProviderId;
+  private List<String> hostNames;
+  private List<Host> hosts;
+  private String loadBalancerId;
+  private String loadBalancerName;
   private String winRmConnectionAttributes;
 
   @Override
@@ -40,5 +39,10 @@ public class PhysicalInfraWinrm implements PhysicalDataCenterInfra, InfraMapping
   @Override
   public Class<PhysicalInfrastructureMappingWinRm> getMappingClass() {
     return PhysicalInfrastructureMappingWinRm.class;
+  }
+
+  @Override
+  public CloudProviderType getCloudProviderType() {
+    return CloudProviderType.PHYSICAL_DATA_CENTER;
   }
 }

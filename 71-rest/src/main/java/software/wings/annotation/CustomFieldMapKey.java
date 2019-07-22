@@ -1,12 +1,13 @@
 package software.wings.annotation;
 
-import java.lang.annotation.ElementType;
+import static java.lang.annotation.ElementType.FIELD;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target({ElementType.FIELD, ElementType.TYPE})
+@Target({FIELD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface IncludeInFieldMap {
-  String key() default "";
+public @interface CustomFieldMapKey {
+  String value();
 }

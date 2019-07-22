@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import io.harness.beans.ExecutionStatus;
 import software.wings.sm.ContextElement;
+import software.wings.sm.InfraDefinitionSummary;
 import software.wings.sm.InfraMappingSummary;
 import software.wings.sm.InstanceStatusSummary;
 
@@ -20,6 +21,7 @@ public class ElementExecutionSummary {
   private Long endTs;
   private ExecutionStatus status;
   private List<InfraMappingSummary> infraMappingSummaries;
+  private List<InfraDefinitionSummary> infraDefinitionSummaries;
 
   /**
    * Gets context element.
@@ -53,6 +55,14 @@ public class ElementExecutionSummary {
 
   public void setInfraMappingSummary(List<InfraMappingSummary> infraMappingSummary) {
     this.infraMappingSummaries = infraMappingSummary;
+  }
+
+  public List<InfraDefinitionSummary> getInfraDefinitionSummaries() {
+    return infraDefinitionSummaries;
+  }
+
+  public void setInfraDefinitionSummaries(List<InfraDefinitionSummary> infraDefinitionSummaries) {
+    this.infraDefinitionSummaries = infraDefinitionSummaries;
   }
   /**
    * Gets instances count.
@@ -203,6 +213,7 @@ public class ElementExecutionSummary {
     private ExecutionStatus status;
     private List<InstanceStatusSummary> instanceStatusSummaries;
     private List<InfraMappingSummary> infraMappingSummaries;
+    private List<InfraDefinitionSummary> infraDefinitionSummaries;
 
     private ElementExecutionSummaryBuilder() {}
 
@@ -245,6 +256,17 @@ public class ElementExecutionSummary {
      */
     public ElementExecutionSummaryBuilder withInfraMappingSummaries(List<InfraMappingSummary> infraMappingSummaries) {
       this.infraMappingSummaries = infraMappingSummaries;
+      return this;
+    }
+
+    /**
+     * With inframapping Summaries
+     * @param infraDefinitionSummaries
+     * @return
+     */
+    public ElementExecutionSummaryBuilder withInfraDefinitionSummaries(
+        List<InfraDefinitionSummary> infraDefinitionSummaries) {
+      this.infraDefinitionSummaries = infraDefinitionSummaries;
       return this;
     }
 
@@ -294,6 +316,7 @@ public class ElementExecutionSummary {
       elementExecutionSummary.setEndTs(endTs);
       elementExecutionSummary.setStatus(status);
       elementExecutionSummary.setInfraMappingSummary(infraMappingSummaries);
+      elementExecutionSummary.setInfraDefinitionSummaries(infraDefinitionSummaries);
       return elementExecutionSummary;
     }
   }

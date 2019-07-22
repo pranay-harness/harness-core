@@ -3,22 +3,26 @@ package software.wings.infra;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import lombok.Builder;
 import lombok.Data;
-import software.wings.annotation.IncludeInFieldMap;
+import software.wings.annotation.ExcludeFieldMap;
+import software.wings.api.CloudProviderType;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 
 @JsonTypeName("GCP_KUBERNETES")
 @Data
-public class GoogleKubernetesEngine implements KubernetesInfrastructure, InfraMappingInfrastructureProvider {
-  private String cloudProviderId;
+@Builder
+public class GoogleKubernetesEngine
+    implements KubernetesInfrastructure, InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
+  @ExcludeFieldMap private String cloudProviderId;
 
-  @IncludeInFieldMap private String clusterName;
+  private String clusterName;
 
-  @IncludeInFieldMap private String namespace;
+  private String namespace;
 
-  @IncludeInFieldMap private String releaseName;
+  private String releaseName;
 
   @Override
   public InfrastructureMapping getInfraMapping() {
@@ -34,5 +38,10 @@ public class GoogleKubernetesEngine implements KubernetesInfrastructure, InfraMa
   @Override
   public Class<GcpKubernetesInfrastructureMapping> getMappingClass() {
     return GcpKubernetesInfrastructureMapping.class;
+  }
+
+  @Override
+  public CloudProviderType getCloudProviderType() {
+    return CloudProviderType.GCP;
   }
 }

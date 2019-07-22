@@ -3,10 +3,11 @@ package software.wings.infra;
 import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import lombok.Builder;
 import lombok.Data;
-import software.wings.annotation.IncludeInFieldMap;
+import software.wings.annotation.ExcludeFieldMap;
+import software.wings.api.CloudProviderType;
 import software.wings.beans.AwsAmiInfrastructureMapping;
-import software.wings.beans.AwsAmiInfrastructureMapping.AwsAmiInfrastructureMappingKeys;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 
@@ -14,25 +15,23 @@ import java.util.List;
 
 @JsonTypeName("AWS_AMI")
 @Data
-public class AwsAmiInfrastructure implements InfraMappingInfrastructureProvider {
-  private String cloudProviderId;
+@Builder
+public class AwsAmiInfrastructure implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
+  @ExcludeFieldMap private String cloudProviderId;
 
-  @IncludeInFieldMap(key = AwsAmiInfrastructureMappingKeys.region) private String region;
+  private String region;
 
-  @IncludeInFieldMap(key = AwsAmiInfrastructureMappingKeys.autoScalingGroupName) private String autoScalingGroupName;
+  private String autoScalingGroupName;
 
-  @IncludeInFieldMap(key = AwsAmiInfrastructureMappingKeys.classicLoadBalancers)
   private List<String> classicLoadBalancers;
 
-  @IncludeInFieldMap(key = AwsAmiInfrastructureMappingKeys.targetGroupArns) private List<String> targetGroupArns;
+  private List<String> targetGroupArns;
 
-  @IncludeInFieldMap(key = AwsAmiInfrastructureMappingKeys.hostNameConvention) private String hostNameConvention;
+  private String hostNameConvention;
 
   // Variables for B/G type Ami deployment
-  @IncludeInFieldMap(key = AwsAmiInfrastructureMappingKeys.stageClassicLoadBalancers)
   private List<String> stageClassicLoadBalancers;
 
-  @IncludeInFieldMap(key = AwsAmiInfrastructureMappingKeys.stageClassicLoadBalancers)
   private List<String> stageTargetGroupArns;
 
   @Override
@@ -54,5 +53,10 @@ public class AwsAmiInfrastructure implements InfraMappingInfrastructureProvider 
   @Override
   public Class<AwsAmiInfrastructureMapping> getMappingClass() {
     return AwsAmiInfrastructureMapping.class;
+  }
+
+  @Override
+  public CloudProviderType getCloudProviderType() {
+    return CloudProviderType.AWS;
   }
 }

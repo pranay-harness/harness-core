@@ -141,11 +141,11 @@ public class PhaseSubWorkflow extends SubWorkflowState {
         Validator.notNullCheck("Service might have been deleted", service, USER);
       }
       if (infraDefinitionIdExpression == null) {
-        infrastructureMapping =
-            infrastructureDefinitionService.getInfraMapping(app.getAppId(), service.getUuid(), infraDefinitionId);
+        infrastructureMapping = infrastructureDefinitionService.getInfraMapping(
+            app.getAppId(), service.getUuid(), infraDefinitionId, context);
       } else {
         infrastructureMapping = infrastructureDefinitionService.getInfraMapping(
-            app.getAppId(), service.getUuid(), infrastructureDefinition.getUuid());
+            app.getAppId(), service.getUuid(), infrastructureDefinition.getUuid(), context);
       }
 
     } else {
@@ -162,7 +162,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
       if (infraMappingIdExpression == null) {
         if (infraDefinitionId != null) {
           infrastructureMapping =
-              infrastructureDefinitionService.getInfraMapping(app.getAppId(), serviceId, infraDefinitionId);
+              infrastructureDefinitionService.getInfraMapping(app.getAppId(), serviceId, infraDefinitionId, context);
           //        infrastructureMapping = infrastructureMappingService.get(app.getAppId(), infraMappingId);
           Validator.notNullCheck("Service Infrastructure might have been deleted", infrastructureMapping, USER);
         } else if (infraMappingId != null) {

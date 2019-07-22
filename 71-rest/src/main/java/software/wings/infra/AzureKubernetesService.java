@@ -4,27 +4,27 @@ import static software.wings.beans.AzureKubernetesInfrastructureMapping.Builder.
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
-import software.wings.annotation.IncludeInFieldMap;
+import software.wings.annotation.ExcludeFieldMap;
+import software.wings.api.CloudProviderType;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
-import software.wings.beans.AzureKubernetesInfrastructureMapping.AzureKubernetesInfrastructureMappingKeys;
-import software.wings.beans.ContainerInfrastructureMapping.ContainerInfrastructureMappingKeys;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 
 @JsonTypeName("AZURE_KUBERNETES")
 @Data
-public class AzureKubernetesService implements KubernetesInfrastructure, InfraMappingInfrastructureProvider {
-  private String cloudProviderId;
+public class AzureKubernetesService
+    implements KubernetesInfrastructure, InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
+  @ExcludeFieldMap private String cloudProviderId;
 
-  @IncludeInFieldMap(key = ContainerInfrastructureMappingKeys.clusterName) private String clusterName;
+  private String clusterName;
 
-  @IncludeInFieldMap(key = AzureKubernetesInfrastructureMappingKeys.namespace) private String namespace;
+  private String namespace;
 
-  @IncludeInFieldMap(key = AzureKubernetesInfrastructureMappingKeys.releaseName) private String releaseName;
+  private String releaseName;
 
-  @IncludeInFieldMap(key = AzureKubernetesInfrastructureMappingKeys.subscriptionId) private String subscriptionId;
+  private String subscriptionId;
 
-  @IncludeInFieldMap(key = AzureKubernetesInfrastructureMappingKeys.resourceGroup) private String resourceGroup;
+  private String resourceGroup;
 
   @Override
   public InfrastructureMapping getInfraMapping() {
@@ -42,5 +42,10 @@ public class AzureKubernetesService implements KubernetesInfrastructure, InfraMa
   @Override
   public Class<AzureKubernetesInfrastructureMapping> getMappingClass() {
     return AzureKubernetesInfrastructureMapping.class;
+  }
+
+  @Override
+  public CloudProviderType getCloudProviderType() {
+    return CloudProviderType.AZURE;
   }
 }

@@ -4,9 +4,9 @@ import static software.wings.beans.AzureInfrastructureMapping.Builder.anAzureInf
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
-import software.wings.annotation.IncludeInFieldMap;
+import software.wings.annotation.ExcludeFieldMap;
+import software.wings.api.CloudProviderType;
 import software.wings.beans.AzureInfrastructureMapping;
-import software.wings.beans.AzureInfrastructureMapping.AzureInfrastructureMappingKeys;
 import software.wings.beans.AzureTag;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
@@ -16,16 +16,15 @@ import java.util.List;
 
 @JsonTypeName("AZURE_SSH")
 @Data
-public class AzureInstanceInfrastructure implements InfraMappingInfrastructureProvider {
-  private String cloudProviderId;
+public class AzureInstanceInfrastructure implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
+  @ExcludeFieldMap private String cloudProviderId;
 
-  @IncludeInFieldMap(key = AzureInfrastructureMappingKeys.subscriptionId) private String subscriptionId;
-  @IncludeInFieldMap(key = AzureInfrastructureMappingKeys.resourceGroup) private String resourceGroup;
-  @IncludeInFieldMap(key = AzureInfrastructureMappingKeys.tags) private List<AzureTag> tags = new ArrayList<>();
-  @IncludeInFieldMap(key = AzureInfrastructureMappingKeys.hostConnectionAttrs) private String hostConnectionAttrs;
-  @IncludeInFieldMap(key = AzureInfrastructureMappingKeys.winRmConnectionAttributes)
+  private String subscriptionId;
+  private String resourceGroup;
+  private List<AzureTag> tags = new ArrayList<>();
+  private String hostConnectionAttrs;
   private String winRmConnectionAttributes;
-  @IncludeInFieldMap(key = AzureInfrastructureMappingKeys.usePublicDns) private boolean usePublicDns;
+  private boolean usePublicDns;
 
   @Override
   public InfrastructureMapping getInfraMapping() {
@@ -45,5 +44,10 @@ public class AzureInstanceInfrastructure implements InfraMappingInfrastructurePr
   @Override
   public Class<AzureInfrastructureMapping> getMappingClass() {
     return AzureInfrastructureMapping.class;
+  }
+
+  @Override
+  public CloudProviderType getCloudProviderType() {
+    return CloudProviderType.AZURE;
   }
 }
