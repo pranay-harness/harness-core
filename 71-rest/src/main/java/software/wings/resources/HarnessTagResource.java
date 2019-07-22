@@ -18,6 +18,7 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.HarnessTagService;
 
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -25,7 +26,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
@@ -47,23 +47,22 @@ public class HarnessTagResource {
   }
 
   @PUT
-  @Path("{key}")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.TAG_MANAGEMENT)
   public RestResponse<HarnessTag> update(
-      @QueryParam("accountId") String accountId, @PathParam("key") String key, HarnessTag tag) {
+      @QueryParam("accountId") String accountId, @NotNull @QueryParam("key") String key, @NotNull HarnessTag tag) {
     tag.setAccountId(accountId);
     tag.setKey(key);
     return new RestResponse<>(harnessTagService.update(tag));
   }
 
   @GET
-  @Path("{key}")
+  @Path("for-key")
   @Timed
   @ExceptionMetered
-  public RestResponse<HarnessTag> get(@QueryParam("accountId") String accountId, @PathParam("key") String key,
-      @QueryParam("includeInUseValues") boolean includeInUseValues) {
+  public RestResponse<HarnessTag> get(@QueryParam("accountId") String accountId,
+      @QueryParam("includeInUseValues") boolean includeInUseValues, @NotNull @QueryParam("key") String key) {
     if (includeInUseValues) {
       return new RestResponse<>(harnessTagService.getTagWithInUseValues(accountId, key));
     } else {
@@ -72,11 +71,10 @@ public class HarnessTagResource {
   }
 
   @DELETE
-  @Path("{key}")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.TAG_MANAGEMENT)
-  public RestResponse delete(@QueryParam("accountId") String accountId, @PathParam("key") String key) {
+  public RestResponse delete(@QueryParam("accountId") String accountId, @NotNull @QueryParam("key") String key) {
     harnessTagService.delete(accountId, key);
     return new RestResponse();
   }
