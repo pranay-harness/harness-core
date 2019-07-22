@@ -108,9 +108,6 @@ fi
 if ! `grep doUpgrade config-delegate.yml > /dev/null`; then
   echo "doUpgrade: true" >> config-delegate.yml
 fi
-if ! `grep description config-delegate.yml > /dev/null`; then
-  echo "description: _description_" >> config-delegate.yml
-fi
 if ! `grep localDiskPath config-delegate.yml > /dev/null`; then
   echo "localDiskPath: /tmp" >> config-delegate.yml
 fi
