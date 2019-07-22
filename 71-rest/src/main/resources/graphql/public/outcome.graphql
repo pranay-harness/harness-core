@@ -9,6 +9,6 @@ type OutcomeConnection {
 
 type DeploymentOutcome implements Outcome {
   execution: Execution @dataFetcher(name: execution)
-  service: Service @dataFetcher(name: service)
-  environment: Environment @dataFetcher(name: environment)
+  service: Service @dataFetcher(name: service, useBatch: true)
+  environment: Environment @dataFetcher(name: environment, useBatch: true)
 }
