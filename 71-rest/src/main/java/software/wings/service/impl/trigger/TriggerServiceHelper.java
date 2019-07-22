@@ -139,7 +139,7 @@ public class TriggerServiceHelper {
         .filter(trigger
             -> trigger.getArtifactSelections().stream().anyMatch(artifactSelection
                 -> artifactSelection.getType().equals(LAST_COLLECTED)
-                    && artifactSelection.getArtifactStreamId().equals(artifactStreamId)))
+                    && artifactStreamId.equals(artifactSelection.getArtifactStreamId())))
         .collect(toList());
   }
 
