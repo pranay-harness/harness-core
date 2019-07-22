@@ -181,6 +181,22 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
         ecsMetrics = createECSMetrics(clusterName, cloudWatchMetrics);
       }
     }
+
+    if (isNotEmpty(loadBalancerMetrics)) {
+      loadBalancerMetrics.forEach((s, metrics) -> cloudWatchService.setStatisticsAndUnit(AwsNameSpace.ELB, metrics));
+    }
+    if (isNotEmpty(ecsMetrics)) {
+      ecsMetrics.forEach((s, metrics) -> cloudWatchService.setStatisticsAndUnit(AwsNameSpace.ECS, metrics));
+    }
+    final Map<String, List<CloudWatchMetric>> lambdaMetrics =
+        createLambdaMetrics(lambdaFunctions.keySet(), cloudWatchMetrics);
+    if (isNotEmpty(lambdaMetrics)) {
+      lambdaMetrics.forEach((s, metrics) -> cloudWatchService.setStatisticsAndUnit(AwsNameSpace.LAMBDA, metrics));
+    }
+
+    if (isNotEmpty(ec2Metrics)) {
+      cloudWatchService.setStatisticsAndUnit(AwsNameSpace.EC2, ec2Metrics);
+    }
     final CloudWatchDataCollectionInfo dataCollectionInfo =
         CloudWatchDataCollectionInfo.builder()
             .awsConfig(awsConfig)
@@ -199,7 +215,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
             .region(getRegion())
             .loadBalancerMetrics(loadBalancerMetrics)
             .ec2Metrics(ec2Metrics)
-            .lambdaFunctionNames(createLambdaMetrics(lambdaFunctions.keySet(), cloudWatchMetrics))
+            .lambdaFunctionNames(lambdaMetrics)
             .metricsByECSClusterName(ecsMetrics)
             .build();
 

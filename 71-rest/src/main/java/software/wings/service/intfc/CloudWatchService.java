@@ -66,4 +66,6 @@ public interface CloudWatchService {
   List<String> getECSClusterNames(String settingId, String region);
 
   List<Service> getECSClusterServices(String settingId, String region, String clusterName);
+
+  void setStatisticsAndUnit(AwsNameSpace awsNameSpace, List<CloudWatchMetric> metrics);
 }
