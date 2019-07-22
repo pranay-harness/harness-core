@@ -108,7 +108,7 @@ public class CloudWatchServiceTest extends WingsBaseTest {
     ecsList.put("testCluster", Arrays.asList(CloudWatchMetric.builder().metricName("CPUUtilization").build()));
     cvServiceConfiguration.setEcsMetrics(ecsList);
     Map<String, List<CloudWatchMetric>> elbList = new HashMap<>();
-    elbList.put("testLB", Arrays.asList(CloudWatchMetric.builder().metricName("HTTP200x").build()));
+    elbList.put("testLB", Arrays.asList(CloudWatchMetric.builder().metricName("HTTPCode_Backend_2XX").build()));
     cvServiceConfiguration.setLoadBalancerMetrics(elbList);
 
     Map<AwsNameSpace, List<CloudWatchMetric>> cloudwatchMetrics =
@@ -116,8 +116,12 @@ public class CloudWatchServiceTest extends WingsBaseTest {
     assertEquals("There are 2 different types of metrics", 2, cloudwatchMetrics.keySet().size());
     assertFalse("There are no lambda metrics", cloudwatchMetrics.containsKey(AwsNameSpace.LAMBDA));
     assertFalse("There are no EC2 metrics", cloudwatchMetrics.containsKey(AwsNameSpace.EC2));
-    assertEquals("There are 4 ECS metrics in the list", 4, cloudwatchMetrics.get(AwsNameSpace.ECS).size());
-    assertEquals("There are 13 ELB metrics in the list", 13, cloudwatchMetrics.get(AwsNameSpace.ELB).size());
+    assertEquals("There is 1 ECS metric in the list", 1, cloudwatchMetrics.get(AwsNameSpace.ECS).size());
+    assertEquals("The ECS metric is CPUUtillization", "CPUUtilization",
+        cloudwatchMetrics.get(AwsNameSpace.ECS).get(0).getMetricName());
+    assertEquals("There are 1 ELB metric in the list", 1, cloudwatchMetrics.get(AwsNameSpace.ELB).size());
+    assertEquals("The ELB metric is HTTPCode_Backend_2XX", "HTTPCode_Backend_2XX",
+        cloudwatchMetrics.get(AwsNameSpace.ELB).get(0).getMetricName());
   }
 
   @Test
