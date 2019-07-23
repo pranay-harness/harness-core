@@ -311,4 +311,141 @@ public class HarnessTagServiceTest extends WingsBaseTest {
         .resourceId(resourceId)
         .build();
   }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testAttachTagWithEmptyValue() {
+    HarnessTagLink tagLink = HarnessTagLink.builder()
+                                 .accountId(TEST_ACCOUNT_ID)
+                                 .appId(APP_ID)
+                                 .entityId("id")
+                                 .entityType(SERVICE)
+                                 .key(colorTagKey)
+                                 .value("")
+                                 .build();
+
+    harnessTagService.attachTag(tagLink);
+    HarnessTag savedTag = harnessTagService.get(TEST_ACCOUNT_ID, colorTagKey);
+    assertThat(savedTag).isNotNull();
+    PageRequest<HarnessTagLink> request = new PageRequest<>();
+    request.addFilter("accountId", EQ, TEST_ACCOUNT_ID);
+    request.addFilter("key", EQ, colorTagKey);
+    request.addFilter("value", EQ, "");
+    PageResponse<HarnessTagLink> resources = harnessTagService.listResourcesWithTag(TEST_ACCOUNT_ID, request);
+
+    assertThat(resources).isNotNull();
+    assertThat(resources.getResponse()).hasSize(1);
+    assertThat(resources.getResponse().get(0).getKey()).isEqualTo(colorTagKey);
+    assertThat(resources.getResponse().get(0).getValue()).isEqualTo("");
+    assertThat(resources.getResponse().get(0).getEntityType()).isEqualTo(SERVICE);
+    assertThat(resources.getResponse().get(0).getEntityId()).isEqualTo("id");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testAttachTagWithNullValue() {
+    HarnessTagLink tagLink = HarnessTagLink.builder()
+                                 .accountId(TEST_ACCOUNT_ID)
+                                 .appId(APP_ID)
+                                 .entityId("id")
+                                 .entityType(SERVICE)
+                                 .key(colorTagKey)
+                                 .build();
+
+    try {
+      harnessTagService.attachTag(tagLink);
+      fail("Expected an InvalidRequestException to be thrown");
+    } catch (InvalidRequestException exception) {
+      assertThat(exception.getParams().get("message")).isEqualTo("Tag value cannot be null");
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testInvalidTagKey() {
+    testInvalidTagKeyUtil("", "Tag name cannot be blank");
+    testInvalidTagKeyUtil("  ", "Tag name cannot be blank");
+    testInvalidTagKeyUtil(" _key", "Tag name/value cannot begin with .-_/");
+    testInvalidTagKeyUtil(" -key", "Tag name/value cannot begin with .-_/");
+    testInvalidTagKeyUtil(" .key", "Tag name/value cannot begin with .-_/");
+    testInvalidTagKeyUtil(" /key", "Tag name/value cannot begin with .-_/");
+    testInvalidTagKeyUtil(" tag + key",
+        "Tag name/value can contain only abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_ /");
+    testInvalidTagKeyUtil("harness.io/abc", "Unauthorized: harness.io is a reserved Tag name prefix");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidTagKey() {
+    testValidTagKeyUtil(" tagKey", "tagKey");
+    testValidTagKeyUtil(" tag Key", "tag Key");
+    testValidTagKeyUtil(" tag 9 Key ", "tag 9 Key");
+    testValidTagKeyUtil(" tag 9 / Key ", "tag 9 / Key");
+    testValidTagKeyUtil(" tag 9 _ Key ", "tag 9 _ Key");
+    testValidTagKeyUtil(" tag 9 . Key ", "tag 9 . Key");
+    testValidTagKeyUtil(" tag 9 Key - ", "tag 9 Key -");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testInvalidTagValue() {
+    testInvalidTagValueUtil(null, "Tag value cannot be null");
+    testInvalidTagValueUtil(" _value", "Tag name/value cannot begin with .-_/");
+    testInvalidTagValueUtil(" -value", "Tag name/value cannot begin with .-_/");
+    testInvalidTagValueUtil(" .value", "Tag name/value cannot begin with .-_/");
+    testInvalidTagValueUtil(" /value", "Tag name/value cannot begin with .-_/");
+    testInvalidTagValueUtil(" tag + key",
+        "Tag name/value can contain only abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_ /");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCreateSystemTag() {
+    HarnessTag tag = HarnessTag.builder().accountId(TEST_ACCOUNT_ID).key("system/key").build();
+    harnessTagService.create(tag);
+    HarnessTag savedTag = harnessTagService.get(TEST_ACCOUNT_ID, "system/key");
+    assertThat(savedTag).isNotNull();
+    assertThat(savedTag.getUuid()).isNotEmpty();
+    assertThat(savedTag).hasFieldOrPropertyWithValue("key", "system/key");
+
+    try {
+      tag = HarnessTag.builder().accountId(TEST_ACCOUNT_ID).key("system/key1").build();
+      harnessTagService.createTag(tag, false, false);
+      fail("Expected an InvalidRequestException to be thrown");
+    } catch (InvalidRequestException exception) {
+      assertThat(exception.getParams().get("message"))
+          .isEqualTo("Unauthorized: User need to have TAG_MANAGEMENT permission to create system tags");
+    }
+  }
+
+  private void testInvalidTagKeyUtil(String key, String expectedExceptionMessage) {
+    try {
+      HarnessTag tag = HarnessTag.builder().accountId(TEST_ACCOUNT_ID).key(key).build();
+      harnessTagService.create(tag);
+      fail("Expected an InvalidRequestException to be thrown");
+    } catch (InvalidRequestException exception) {
+      assertThat(exception.getParams().get("message")).isEqualTo(expectedExceptionMessage);
+    }
+  }
+
+  private void testValidTagKeyUtil(String key, String expectedKey) {
+    HarnessTag tag =
+        HarnessTag.builder().accountId(TEST_ACCOUNT_ID).key(key).allowedValues(Sets.newHashSet("")).build();
+    harnessTagService.create(tag);
+    HarnessTag savedTag = harnessTagService.get(TEST_ACCOUNT_ID, expectedKey);
+    assertThat(savedTag).isNotNull();
+    assertThat(savedTag.getUuid()).isNotEmpty();
+    assertThat(savedTag).hasFieldOrPropertyWithValue("key", expectedKey);
+  }
+
+  private void testInvalidTagValueUtil(String value, String expectedExceptionMessage) {
+    try {
+      HarnessTag tag =
+          HarnessTag.builder().accountId(TEST_ACCOUNT_ID).key("key").allowedValues(Sets.newHashSet(value)).build();
+      harnessTagService.create(tag);
+      fail("Expected an InvalidRequestException to be thrown");
+    } catch (InvalidRequestException exception) {
+      assertThat(exception.getParams().get("message")).isEqualTo(expectedExceptionMessage);
+    }
+  }
 }
