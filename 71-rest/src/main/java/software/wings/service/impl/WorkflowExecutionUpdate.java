@@ -189,7 +189,16 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
          * this case, startTS and endTS are not populated. Ignoring these events.
          */
         if (workflowExecution.getStartTs() != null && workflowExecution.getEndTs() != null) {
-          usageMetricsEventPublisher.publishDeploymentTimeSeriesEvent(accountID, workflowExecution);
+          /**
+           * Had to do a double check on the finalStatus since workflowStatus is still not in finalStatus while
+           * the callBack says it is finalStatus (Check with Srinivas)
+           */
+          if (ExecutionStatus.isFinalStatus(workflowExecution.getStatus())) {
+            usageMetricsEventPublisher.publishDeploymentTimeSeriesEvent(accountID, workflowExecution);
+          } else {
+            logger.warn("Workflow [{}] has executionStatus:[{}], different status:[{}]", workflowExecutionId,
+                workflowExecution.getStatus(), status);
+          }
         }
 
         eventPublishHelper.handleDeploymentCompleted(workflowExecution);
