@@ -12,7 +12,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.security.EncryptionUtils;
 import io.harness.time.Timestamp;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,6 +22,7 @@ import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.encryption.EncryptionUtils;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisStatus;

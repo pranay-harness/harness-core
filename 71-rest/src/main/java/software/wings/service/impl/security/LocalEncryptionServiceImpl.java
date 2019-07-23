@@ -2,8 +2,8 @@ package software.wings.service.impl.security;
 
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.security.SimpleEncryption.CHARSET;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
+import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
 import com.google.common.base.Preconditions;
@@ -12,12 +12,12 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.security.EncryptionUtils;
-import io.harness.security.SimpleEncryption;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.BaseFile;
 import software.wings.beans.LocalEncryptionConfig;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.EncryptionUtils;
+import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.LocalEncryptionService;
 import software.wings.settings.SettingValue.SettingVariableTypes;

@@ -1,4 +1,4 @@
-package io.harness.security;
+package software.wings.security.encryption;
 
 import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
