@@ -74,8 +74,9 @@ public class PipelineStage {
     String entityType;
 
     @Builder
-    public WorkflowVariable(String entityType, String name, String value, String valueType) {
-      super(name, value, valueType);
+    public WorkflowVariable(
+        String entityType, String name, String value, String valueType, List<AllowedValueYaml> allowedValueYamls) {
+      super(name, value, valueType, allowedValueYamls);
       this.entityType = entityType;
     }
   }
