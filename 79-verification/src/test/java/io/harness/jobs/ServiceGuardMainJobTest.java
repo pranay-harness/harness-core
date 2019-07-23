@@ -14,6 +14,7 @@ import io.harness.VerificationBaseTest;
 import io.harness.category.element.UnitTests;
 import io.harness.jobs.sg247.ServiceGuardMainJob;
 import io.harness.scheduler.PersistentScheduler;
+import io.harness.security.EncryptionUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.quartz.JobExecutionContext;
@@ -22,7 +23,6 @@ import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
 import software.wings.rules.SetupScheduler;
-import software.wings.security.encryption.EncryptionUtils;
 import software.wings.service.impl.LicenseUtils;
 
 import java.nio.charset.Charset;

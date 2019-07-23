@@ -24,6 +24,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
+import io.harness.security.SimpleEncryption;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -34,7 +35,6 @@ import software.wings.beans.Account;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.security.UserGroup;
 import software.wings.features.api.PremiumFeature;
-import software.wings.security.encryption.SimpleEncryption;
 import software.wings.utils.Validator;
 
 public class ApiKeyServiceTest extends WingsBaseTest {

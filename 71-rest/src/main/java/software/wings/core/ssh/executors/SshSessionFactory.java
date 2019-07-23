@@ -11,6 +11,7 @@ import com.google.common.base.Charsets;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import io.harness.security.EncryptionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -19,7 +20,6 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 import software.wings.beans.KerberosConfig;
 import software.wings.beans.command.LogCallback;
 import software.wings.beans.command.NoopExecutionCallback;
-import software.wings.security.encryption.EncryptionUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
