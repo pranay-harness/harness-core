@@ -52,7 +52,7 @@ public class Account extends Base {
 
   private List<String> salesContacts;
 
-  @Transient private LicenseInfo licenseInfo;
+  private LicenseInfo licenseInfo;
   @JsonIgnore private byte[] encryptedLicenseInfo;
 
   @JsonIgnore private boolean emailSentToSales;
