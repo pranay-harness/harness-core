@@ -236,11 +236,12 @@ public class Variable {
     private boolean mandatory;
     private String value;
     private boolean fixed;
-    private String allowedValues;
+    private String allowedValues; // todo: toYaml() don't convert to allowedValues
+    private List<AllowedValueYaml> allowedList;
 
     @Builder
     public Yaml(String type, String name, String description, boolean mandatory, String value, boolean fixed,
-        String allowedValues) {
+        String allowedValues, List<AllowedValueYaml> allowedList) {
       super(type);
       this.name = name;
       this.description = description;
@@ -248,6 +249,7 @@ public class Variable {
       this.value = value;
       this.fixed = fixed;
       this.allowedValues = allowedValues;
+      this.allowedList = allowedList;
     }
   }
 }

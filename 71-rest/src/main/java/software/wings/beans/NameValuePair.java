@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.yaml.BaseYaml;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -39,11 +41,13 @@ public class NameValuePair {
     private String name;
     private String value;
     private String valueType;
+    private List<AllowedValueYaml> allowedList = new ArrayList<>();
 
-    public AbstractYaml(String name, String value, String valueType) {
+    public AbstractYaml(String name, String value, String valueType, List<AllowedValueYaml> allowedList) {
       this.name = name;
       this.value = value;
       this.valueType = valueType;
+      this.allowedList = allowedList;
     }
   }
 
@@ -52,8 +56,8 @@ public class NameValuePair {
   @EqualsAndHashCode(callSuper = true)
   public static class Yaml extends AbstractYaml {
     @Builder
-    public Yaml(String name, String value, String valueType) {
-      super(name, value, valueType);
+    public Yaml(String name, String value, String valueType, List<AllowedValueYaml> allowedValueYamlList) {
+      super(name, value, valueType, allowedValueYamlList);
     }
   }
 }

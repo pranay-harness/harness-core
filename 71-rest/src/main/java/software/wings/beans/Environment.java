@@ -497,8 +497,9 @@ public class Environment extends Base implements KeywordsAware, NameAccess, TagA
     private String serviceName;
 
     @lombok.Builder
-    public VariableOverrideYaml(String name, String value, String valueType, String serviceName) {
-      super(name, value, valueType);
+    public VariableOverrideYaml(
+        String name, String value, String valueType, List<AllowedValueYaml> allowedValueYamls, String serviceName) {
+      super(name, value, valueType, allowedValueYamls);
       this.serviceName = serviceName;
     }
   }
