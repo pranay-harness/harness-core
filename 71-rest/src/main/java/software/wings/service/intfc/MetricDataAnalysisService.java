@@ -24,7 +24,7 @@ public interface MetricDataAnalysisService {
   boolean isStateValid(String appId, String stateExecutionID);
 
   String getLastSuccessfulWorkflowExecutionIdWithData(
-      StateType stateType, String appId, String workflowId, String serviceId);
+      StateType stateType, String appId, String workflowId, String serviceId, String infraMappingIds);
 
   List<NewRelicMetricHostAnalysisValue> getToolTip(String stateExecutionId, String workflowExecutionId,
       int analysisMinute, String transactionName, String metricName, String groupName);

@@ -3083,4 +3083,24 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         .get()
         .getAppId();
   }
+
+  @Override
+  public List<WorkflowExecution> getLastSuccessfulWorkflowExecutions(
+      String appId, String workflowId, String serviceId) {
+    final PageRequest<WorkflowExecution> pageRequest =
+        aPageRequest()
+            .addFilter(WorkflowExecutionKeys.appId, Operator.EQ, appId)
+            .addFilter(WorkflowExecutionKeys.workflowId, Operator.EQ, workflowId)
+            .addFilter(WorkflowExecutionKeys.status, Operator.EQ, ExecutionStatus.SUCCESS)
+            .addOrder(WorkflowExecutionKeys.createdAt, OrderType.DESC)
+            .build();
+    if (!isEmpty(serviceId)) {
+      pageRequest.addFilter(WorkflowExecutionKeys.serviceIds, Operator.CONTAINS, serviceId);
+    }
+    final PageResponse<WorkflowExecution> workflowExecutions = listExecutions(pageRequest, false, true, false, false);
+    if (workflowExecutions != null) {
+      return workflowExecutions.getResponse();
+    }
+    return null;
+  }
 }

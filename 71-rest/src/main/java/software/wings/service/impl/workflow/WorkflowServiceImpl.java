@@ -3463,17 +3463,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public List<String> getLastSuccessfulWorkflowExecutionIds(String appId, String workflowId, String serviceId) {
-    final PageRequest<WorkflowExecution> pageRequest = aPageRequest()
-                                                           .addFilter("appId", Operator.EQ, appId)
-                                                           .addFilter("workflowId", Operator.EQ, workflowId)
-                                                           .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
-                                                           .addOrder(WorkflowExecutionKeys.createdAt, OrderType.DESC)
-                                                           .build();
-    if (!isEmpty(serviceId)) {
-      pageRequest.addFilter("serviceIds", Operator.CONTAINS, serviceId);
-    }
-    final PageResponse<WorkflowExecution> workflowExecutions =
-        workflowExecutionService.listExecutions(pageRequest, false, true, false, false);
+    final List<WorkflowExecution> workflowExecutions =
+        workflowExecutionService.getLastSuccessfulWorkflowExecutions(appId, workflowId, serviceId);
     final List<String> workflowExecutionIds = new ArrayList<>();
     if (workflowExecutions != null) {
       for (WorkflowExecution workflowExecution : workflowExecutions) {
