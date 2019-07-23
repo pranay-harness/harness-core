@@ -75,6 +75,8 @@ import javax.validation.constraints.NotNull;
             @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
       }), @Index(options = @IndexOptions(name = "appId_endTs", background = true), fields = {
         @Field(WorkflowExecutionKeys.appId), @Field(value = WorkflowExecutionKeys.endTs)
+      }), @Index(options = @IndexOptions(name = "pipelineExecutionId", background = true), fields = {
+        @Field(WorkflowExecutionKeys.pipelineExecutionId)
       })
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
