@@ -15,6 +15,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.rule.RealMongo;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -447,5 +448,29 @@ public class HarnessTagServiceTest extends WingsBaseTest {
     } catch (InvalidRequestException exception) {
       assertThat(exception.getParams().get("message")).isEqualTo(expectedExceptionMessage);
     }
+  }
+
+  @Test
+  @RealMongo
+  @Category(UnitTests.class)
+  public void testUpdateTagAllowedValues() {
+    harnessTagService.create(colorTag);
+    HarnessTag savedTag = harnessTagService.get(TEST_ACCOUNT_ID, colorTagKey);
+    assertThat(savedTag.getAllowedValues()).isEqualTo(null);
+
+    savedTag.setAllowedValues(Sets.newHashSet("red"));
+    harnessTagService.update(savedTag);
+    HarnessTag savedTag1 = harnessTagService.get(TEST_ACCOUNT_ID, colorTagKey);
+    assertThat(savedTag1.getAllowedValues()).isEqualTo(Sets.newHashSet("red"));
+
+    savedTag.setAllowedValues(null);
+    harnessTagService.update(savedTag);
+    HarnessTag savedTag2 = harnessTagService.get(TEST_ACCOUNT_ID, colorTagKey);
+    assertThat(savedTag2.getAllowedValues()).isEqualTo(null);
+
+    savedTag.setAllowedValues(Sets.newHashSet("red", "blue", "green"));
+    harnessTagService.update(savedTag);
+    HarnessTag savedTag3 = harnessTagService.get(TEST_ACCOUNT_ID, colorTagKey);
+    assertThat(savedTag3.getAllowedValues()).isEqualTo(Sets.newHashSet("red", "blue", "green"));
   }
 }
