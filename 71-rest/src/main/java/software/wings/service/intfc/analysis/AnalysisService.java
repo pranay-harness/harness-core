@@ -46,8 +46,8 @@ public interface AnalysisService {
 
   boolean isStateValid(String appId, String stateExecutionID);
 
-  String getLastSuccessfulWorkflowExecutionIdWithLogs(
-      String stateExecutionId, StateType stateType, String appId, String serviceId, String workflowId, String query);
+  String getLastSuccessfulWorkflowExecutionIdWithLogs(String stateExecutionId, StateType stateType, String appId,
+      String serviceId, String workflowId, String query, String infraMappingId);
 
   boolean saveFeedback(LogMLFeedback feedback, StateType stateType);
 

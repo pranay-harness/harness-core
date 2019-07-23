@@ -571,8 +571,8 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   @Override
-  public String getLastSuccessfulWorkflowExecutionIdWithLogs(
-      String stateExecutionId, StateType stateType, String appId, String serviceId, String workflowId, String query) {
+  public String getLastSuccessfulWorkflowExecutionIdWithLogs(String stateExecutionId, StateType stateType, String appId,
+      String serviceId, String workflowId, String query, String infraMappingId) {
     try (HIterator<ContinuousVerificationExecutionMetaData> cvMetaDateIterator = new HIterator<>(
              wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class, excludeAuthority)
                  .filter(ContinuousVerificationExecutionMetaDataKeys.workflowId, workflowId)
@@ -584,6 +584,14 @@ public class AnalysisServiceImpl implements AnalysisService {
       String lastSuccessFulExecution = null;
       while (cvMetaDateIterator.hasNext()) {
         final ContinuousVerificationExecutionMetaData cvMetaData = cvMetaDateIterator.next();
+        String workflowExecutionId = cvMetaData.getWorkflowExecutionId();
+        WorkflowExecution execution = workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId);
+        if (execution != null) {
+          if (!execution.getInfraMappingIds().contains(infraMappingId)) {
+            // infra mapping ID should also match, for us to call it a potential baseline.
+            continue;
+          }
+        }
         if (!hasSuccessfulExecution) {
           hasSuccessfulExecution = true;
           lastSuccessFulExecution = cvMetaData.getWorkflowExecutionId();
