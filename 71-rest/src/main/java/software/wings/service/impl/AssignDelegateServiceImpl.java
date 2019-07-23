@@ -19,6 +19,7 @@ import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -98,10 +99,11 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
   @Override
   public boolean canAssign(String delegateId, DelegateTask task) {
-    return canAssign(delegateId, task.getAccountId(), task.getAppId(), task.getEnvId(),
-        task.getInfrastructureMappingId(),
-        isNotBlank(task.getData().getTaskType()) ? TaskType.valueOf(task.getData().getTaskType()).getTaskGroup() : null,
-        task.getTags());
+    Delegate delegate = delegateService.get(task.getAccountId(), delegateId, false);
+    if (delegate == null) {
+      return false;
+    }
+    return canAssignScopes(delegate, task) && canAssignTags(delegate, task.getTags());
   }
 
   @Override
@@ -111,34 +113,29 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     if (delegate == null) {
       return false;
     }
-    return (isEmpty(delegate.getIncludeScopes())
-               || delegate.getIncludeScopes().stream().anyMatch(
-                      scope -> scopeMatch(scope, appId, envId, infraMappingId, taskGroup)))
-        && (isEmpty(delegate.getExcludeScopes())
-               || delegate.getExcludeScopes().stream().noneMatch(
-                      scope -> scopeMatch(scope, appId, envId, infraMappingId, taskGroup)))
-        && (isEmpty(tags) || (isNotEmpty(delegate.getTags()) && delegate.getTags().containsAll(tags)));
-  }
-
-  private boolean canAssignTags(Delegate delegate, DelegateTask task) {
-    return isEmpty(task.getTags())
-        || (isNotEmpty(delegate.getTags())
-               && trimmedLowercaseSet(delegate.getTags()).containsAll(trimmedLowercaseSet(task.getTags())));
+    return canAssignScopes(delegate, appId, envId, infraMappingId, taskGroup) && canAssignTags(delegate, tags);
   }
 
   private boolean canAssignScopes(Delegate delegate, DelegateTask task) {
+    TaskGroup taskGroup =
+        isNotBlank(task.getData().getTaskType()) ? TaskType.valueOf(task.getData().getTaskType()).getTaskGroup() : null;
+    return canAssignScopes(delegate, task.getAppId(), task.getEnvId(), task.getInfrastructureMappingId(), taskGroup);
+  }
+
+  private boolean canAssignScopes(
+      Delegate delegate, String appId, String envId, String infraMappingId, TaskGroup taskGroup) {
     return (isEmpty(delegate.getIncludeScopes())
-               || delegate.getIncludeScopes().stream().anyMatch(scope
-                      -> scopeMatch(scope, task.getAppId(), task.getEnvId(), task.getInfrastructureMappingId(),
-                          isNotBlank(task.getData().getTaskType())
-                              ? TaskType.valueOf(task.getData().getTaskType()).getTaskGroup()
-                              : null)))
+               || (delegate.getIncludeScopes().stream().anyMatch(
+                      scope -> scopeMatch(scope, appId, envId, infraMappingId, taskGroup))))
         && (isEmpty(delegate.getExcludeScopes())
-               || delegate.getExcludeScopes().stream().noneMatch(scope
-                      -> scopeMatch(scope, task.getAppId(), task.getEnvId(), task.getInfrastructureMappingId(),
-                          isNotBlank(task.getData().getTaskType())
-                              ? TaskType.valueOf(task.getData().getTaskType()).getTaskGroup()
-                              : null)));
+               || (delegate.getExcludeScopes().stream().noneMatch(
+                      scope -> scopeMatch(scope, appId, envId, infraMappingId, taskGroup))));
+  }
+
+  private boolean canAssignTags(Delegate delegate, List<String> tags) {
+    return isEmpty(tags)
+        || (isNotEmpty(delegate.getTags())
+               && trimmedLowercaseSet(delegate.getTags()).containsAll(trimmedLowercaseSet(tags)));
   }
 
   private boolean scopeMatch(
@@ -241,10 +238,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   private List<String> fetchCriteria(DelegateTask task) {
     // Capability Generation has already happened.
     if (isNotEmpty(task.getExecutionCapabilities())) {
-      return task.getExecutionCapabilities()
-          .stream()
-          .map(executionCapability -> executionCapability.fetchCapabilityBasis())
-          .collect(toList());
+      return task.getExecutionCapabilities().stream().map(ExecutionCapability::fetchCapabilityBasis).collect(toList());
     }
 
     if (isTaskTypeMigratedToCapabilityFramework(task.getData().getTaskType())
@@ -357,7 +351,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
           if (delegate != null) {
             msg.append(" ===> ").append(delegate.getHostName()).append(": ");
             boolean cannotAssignScope = !canAssignScopes(delegate, delegateTask);
-            boolean cannotAssignTags = !canAssignTags(delegate, delegateTask);
+            boolean cannotAssignTags = !canAssignTags(delegate, delegateTask.getTags());
             if (cannotAssignScope) {
               msg.append("Not in scope");
             }
