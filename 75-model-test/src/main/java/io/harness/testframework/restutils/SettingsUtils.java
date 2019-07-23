@@ -23,6 +23,41 @@ public class SettingsUtils {
   private static String DEFAULT_USAGE_RESTRICTION =
       "{\"appEnvRestrictions\":[{\"appFilter\":{\"type\":\"GenericEntityFilter\",\"ids\":null,\"filterType\":\"ALL\"},\"envFilter\":{\"type\":\"EnvFilter\",\"ids\":null,\"filterTypes\":[\"PROD\"]}},{\"appFilter\":{\"type\":\"GenericEntityFilter\",\"ids\":null,\"filterType\":\"ALL\"},\"envFilter\":{\"type\":\"EnvFilter\",\"ids\":null,\"filterTypes\":[\"NON_PROD\"]}}]}\n";
 
+  public static JsonPath createGCP(String bearerToken, String accountId, String cloudProviderName) {
+    return Setup.portal()
+        .auth()
+        .oauth2(bearerToken)
+        .given()
+        .multiPart("file", new ScmSecret().decryptToString(new SecretName("gcp_playground")))
+        .config(RestAssured.config().encoderConfig(
+            encoderConfig().encodeContentTypeAs("multipart/form-data", ContentType.JSON)))
+        .queryParam(ACCOUNT_ID, accountId)
+        .formParam("name", cloudProviderName)
+        .formParam("type", "GCP")
+        .formParam("usageRestrictions", DEFAULT_USAGE_RESTRICTION)
+        .contentType("multipart/form-data")
+        .post(SETTINGS_ENDPOINT + "/upload")
+        .jsonPath();
+  }
+
+  public static JsonPath updateGCP(
+      String bearerToken, String accountId, String cloudProviderName, String GCPcloudProviderId) {
+    return Setup.portal()
+        .auth()
+        .oauth2(bearerToken)
+        .given()
+        .multiPart("file", new ScmSecret().decryptToString(new SecretName("gcp_playground")))
+        .config(RestAssured.config().encoderConfig(
+            encoderConfig().encodeContentTypeAs("multipart/form-data", ContentType.JSON)))
+        .queryParam(ACCOUNT_ID, accountId)
+        .formParam("name", cloudProviderName)
+        .formParam("type", "GCP")
+        .formParam("usageRestrictions", DEFAULT_USAGE_RESTRICTION)
+        .contentType("multipart/form-data")
+        .put(SETTINGS_ENDPOINT + "/" + GCPcloudProviderId + "/upload")
+        .jsonPath();
+  }
+
   public static JsonPath create(String bearerToken, String accountId, SettingAttribute setAttr) {
     Response respo = Setup.portal()
                          .auth()
@@ -34,21 +69,15 @@ public class SettingsUtils {
     return respo.jsonPath();
   }
 
-  public static JsonPath createGCP(String bearerToken, String accountId, String cloudProviderName) {
-    return Setup.portal()
-        .auth()
-        .oauth2(bearerToken)
-        .given()
-        .multiPart("file", new ScmSecret().decryptToString(new SecretName("harness_gcp_exploration")))
-        .config(RestAssured.config().encoderConfig(
-            encoderConfig().encodeContentTypeAs("multipart/form-data", ContentType.JSON)))
-        .queryParam(ACCOUNT_ID, accountId)
-        .formParam("name", cloudProviderName)
-        .formParam("type", "GCP")
-        .formParam("usageRestrictions", DEFAULT_USAGE_RESTRICTION)
-        .contentType("multipart/form-data")
-        .post(SETTINGS_ENDPOINT + "/upload")
-        .jsonPath();
+  public static JsonPath update(String bearerToken, String accountId, SettingAttribute setAttr, String cloudId) {
+    Response respo = Setup.portal()
+                         .auth()
+                         .oauth2(bearerToken)
+                         .queryParam(ACCOUNT_ID, accountId)
+                         .body(setAttr)
+                         .contentType(ContentType.JSON)
+                         .put(SETTINGS_ENDPOINT + "/" + cloudId);
+    return respo.jsonPath();
   }
 
   public static JsonPath listCloudproviderConnector(String bearerToken, String accountId, String category) {
