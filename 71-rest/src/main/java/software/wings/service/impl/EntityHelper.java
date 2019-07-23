@@ -452,6 +452,7 @@ public class EntityHelper {
     } else if (entity instanceof HarnessTag) {
       HarnessTag harnessTag = (HarnessTag) entity;
       entityType = ResourceType.TAG.name();
+      entityName = harnessTag.getKey();
       appId = Application.GLOBAL_APP_ID;
       affectedResourceId = harnessTag.getUuid();
       affectedResourceName = ResourceType.TAG.name();
