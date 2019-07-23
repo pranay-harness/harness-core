@@ -60,8 +60,10 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import javax.validation.constraints.NotNull;
@@ -137,8 +139,15 @@ public class HarnessTagServiceImpl implements HarnessTagService {
 
     validateAllowedValuesUpdate(tag, existingTag);
 
-    wingsPersistence.updateField(
-        HarnessTag.class, existingTag.getUuid(), HarnessTagKeys.allowedValues, tag.getAllowedValues());
+    Map<String, Object> keyValuePairsToAdd = new HashMap<>();
+    Set<String> fieldsToRemove = new HashSet<>();
+    if (isNotEmpty(tag.getAllowedValues())) {
+      keyValuePairsToAdd.put(HarnessTagKeys.allowedValues, tag.getAllowedValues());
+    } else {
+      fieldsToRemove.add(HarnessTagKeys.allowedValues);
+    }
+
+    wingsPersistence.updateFields(HarnessTag.class, existingTag.getUuid(), keyValuePairsToAdd, fieldsToRemove);
     HarnessTag updatedTag = get(tag.getAccountId(), tag.getKey());
 
     yamlPushService.pushYamlChangeSet(
@@ -159,7 +168,9 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     }
 
     Set<String> removedAllowedValues = existingAllowedValues;
-    removedAllowedValues.removeAll(harnessTag.getAllowedValues());
+    if (isNotEmpty(harnessTag.getAllowedValues())) {
+      removedAllowedValues.removeAll(harnessTag.getAllowedValues());
+    }
 
     if (isEmpty(removedAllowedValues)) {
       return;
