@@ -10,7 +10,6 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.security.EncryptionUtils;
 import software.wings.beans.HarnessApiKey;
 import software.wings.beans.HarnessApiKey.AuthType;
 import software.wings.beans.HarnessApiKey.ClientType;
@@ -20,6 +19,7 @@ import software.wings.security.AuthenticationFilter;
 import software.wings.security.SecretManager;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.annotations.HarnessApiKeyAuth;
+import software.wings.security.encryption.EncryptionUtils;
 import software.wings.service.intfc.HarnessApiKeyService;
 import software.wings.utils.CacheManager;
 import software.wings.utils.CryptoUtils;

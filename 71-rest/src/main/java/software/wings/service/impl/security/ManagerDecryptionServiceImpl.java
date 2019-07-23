@@ -12,13 +12,13 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.KmsOperationException;
-import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SyncTaskContext;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 

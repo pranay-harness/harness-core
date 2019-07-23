@@ -1,4 +1,4 @@
-package io.harness.security;
+package software.wings.security.encryption;
 
 import javax.crypto.SecretKey;
 

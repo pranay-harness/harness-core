@@ -52,7 +52,6 @@ import io.harness.eraro.ErrorCode;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -124,11 +123,14 @@ import java.util.concurrent.TimeUnit;
 import javax.cache.Cache;
 import javax.crypto.spec.SecretKeySpec;
 
+/**
+ * Created by peeyushaggarwal on 8/18/16.
+ */
 @Singleton
 @Slf4j
 public class AuthServiceImpl implements AuthService {
   private GenericDbCache dbCache;
-  private HPersistence persistence;
+  private WingsPersistence wingsPersistence;
   private UserService userService;
   private UserGroupService userGroupService;
   private UsageRestrictionsService usageRestrictionsService;
@@ -149,7 +151,7 @@ public class AuthServiceImpl implements AuthService {
   private DashboardAuthHandler dashboardAuthHandler;
 
   @Inject
-  public AuthServiceImpl(GenericDbCache dbCache, WingsPersistence persistence, UserService userService,
+  public AuthServiceImpl(GenericDbCache dbCache, WingsPersistence wingsPersistence, UserService userService,
       UserGroupService userGroupService, UsageRestrictionsService usageRestrictionsService,
       WorkflowService workflowService, EnvironmentService environmentService, CacheManager cacheManager,
       MainConfiguration configuration, LearningEngineService learningEngineService, AuthHandler authHandler,
@@ -158,7 +160,7 @@ public class AuthServiceImpl implements AuthService {
       WhitelistService whitelistService, SSOSettingService ssoSettingService, AppService appService,
       DashboardAuthHandler dashboardAuthHandler) {
     this.dbCache = dbCache;
-    this.persistence = persistence;
+    this.wingsPersistence = wingsPersistence;
     this.userService = userService;
     this.userGroupService = userGroupService;
     this.usageRestrictionsService = usageRestrictionsService;
@@ -438,14 +440,15 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void invalidateAllTokensForUser(String userId) {
-    List<Key<AuthToken>> keyList =
-        persistence.createQuery(AuthToken.class, excludeAuthority).filter(AuthTokenKeys.userId, userId).asKeyList();
+    List<Key<AuthToken>> keyList = wingsPersistence.createQuery(AuthToken.class, excludeAuthority)
+                                       .filter(AuthTokenKeys.userId, userId)
+                                       .asKeyList();
     keyList.forEach(authToken -> invalidateToken(authToken.getId().toString()));
   }
 
   @Override
   public void invalidateToken(String utoken) {
-    persistence.delete(AuthToken.class, utoken);
+    wingsPersistence.delete(AuthToken.class, utoken);
     dbCache.invalidate(AuthToken.class, utoken);
   }
 
@@ -913,7 +916,7 @@ public class AuthServiceImpl implements AuthService {
     }
     User user = getUserFromAuthToken(authToken);
     authToken.setRefreshed(true);
-    persistence.save(authToken);
+    wingsPersistence.save(authToken);
     return generateBearerTokenForUser(user);
   }
 
@@ -931,7 +934,7 @@ public class AuthServiceImpl implements AuthService {
     AuthToken authToken =
         new AuthToken(user.getLastAccountId(), user.getUuid(), configuration.getPortal().getAuthTokenExpiryInMillis());
     authToken.setJwtToken(generateJWTSecret(authToken));
-    persistence.save(authToken);
+    wingsPersistence.save(authToken);
     boolean isFirstLogin = user.getLastLogin() == 0L;
     user.setLastLogin(System.currentTimeMillis());
     userService.update(user);
