@@ -33,6 +33,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.TimeSeriesMetricDefinition;
@@ -89,9 +90,18 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
   @Override
   public String getLastSuccessfulWorkflowExecutionIdWithData(
-      StateType stateType, String appId, String workflowId, String serviceId) {
-    List<String> successfulExecutions =
-        workflowService.getLastSuccessfulWorkflowExecutionIds(appId, workflowId, serviceId);
+      StateType stateType, String appId, String workflowId, String serviceId, String infraMappingId) {
+    List<String> successfulExecutions = new ArrayList<>();
+    List<WorkflowExecution> executions =
+        workflowExecutionService.getLastSuccessfulWorkflowExecutions(appId, workflowId, serviceId);
+
+    // Filter the list of executions by the correct infra mapping ID also.
+    for (WorkflowExecution execution : executions) {
+      if (execution.getInfraMappingIds().contains(infraMappingId)) {
+        successfulExecutions.add(execution.getUuid());
+      }
+    }
+
     for (String successfulExecution : successfulExecutions) {
       PageRequest<NewRelicMetricDataRecord> pageRequest =
           aPageRequest()

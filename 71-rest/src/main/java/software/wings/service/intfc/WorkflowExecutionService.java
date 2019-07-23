@@ -168,4 +168,6 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
       @NotNull String appId, @NotNull String workflowId, @NotNull String envId, int pageOffset, int pageLimit);
 
   String getApplicationIdByExecutionId(@NotNull String executionId);
+
+  List<WorkflowExecution> getLastSuccessfulWorkflowExecutions(String appId, String workflowId, String serviceId);
 }

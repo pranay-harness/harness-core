@@ -650,9 +650,17 @@ public abstract class AbstractAnalysisState extends State {
     return null;
   }
 
+  PhaseElement getPhaseElement(ExecutionContext context) {
+    return context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+  }
   protected String getPhaseServiceId(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = getPhaseElement(context);
     return phaseElement.getServiceElement().getUuid();
+  }
+
+  protected String getPhaseInfraMappingId(ExecutionContext context) {
+    PhaseElement phaseElement = getPhaseElement(context);
+    return phaseElement.getInfraMappingId();
   }
 
   protected DeploymentType getDeploymentType(ExecutionContext context) {
@@ -661,12 +669,12 @@ public abstract class AbstractAnalysisState extends State {
   }
 
   protected String getPhaseServiceName(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = getPhaseElement(context);
     return phaseElement.getServiceElement().getName();
   }
 
   protected String getPhaseName(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = getPhaseElement(context);
     return phaseElement.getPhaseName();
   }
 
@@ -677,7 +685,7 @@ public abstract class AbstractAnalysisState extends State {
   }
 
   protected String getPhaseId(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = getPhaseElement(context);
     return phaseElement.getUuid();
   }
 
