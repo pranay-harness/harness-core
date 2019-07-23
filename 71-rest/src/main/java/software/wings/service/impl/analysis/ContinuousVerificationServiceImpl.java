@@ -495,7 +495,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     Set<String> fieldsNeeded = Sets.newHashSet(WorkflowExecutionKeys.startTs, WorkflowExecutionKeys.endTs,
         WorkflowExecutionKeys.name, WorkflowExecutionKeys.pipelineExecutionId, WorkflowExecutionKeys.appId,
         WorkflowExecutionKeys.serviceIds, WorkflowExecutionKeys.pipelineSummary, WorkflowExecutionKeys.status,
-        WorkflowExecutionKeys.uuid, WorkflowExecutionKeys.workflowId);
+        WorkflowExecutionKeys.envId, WorkflowExecutionKeys.uuid, WorkflowExecutionKeys.workflowId);
 
     try (HIterator<WorkflowExecution> records =
              workflowExecutionService.executions(service.getAppId(), startTime, endTime, fieldsNeeded)) {

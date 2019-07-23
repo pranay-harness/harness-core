@@ -229,6 +229,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
         WorkflowExecution.builder()
             .appId(appId)
             .uuid(workflowExecutionId)
+            .envId(envId)
             .status(ExecutionStatus.SUCCESS)
             .startTs(now)
             .serviceIds(Arrays.asList(serviceId))
@@ -253,6 +254,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
         assertEquals("Status is success", ExecutionStatus.SUCCESS, execution.getStatus());
         assertEquals("pipeline id matches", "pipelineId", execution.getPipelineSummary().getPipelineId());
         assertEquals("pipeline name matches", "pipelineName", execution.getPipelineSummary().getPipelineName());
+        assertEquals("EnvID should match", envId, execution.getEnvId());
       }
     }
     assertTrue("Workflow execution should be in the returned list", executionFound);
@@ -267,6 +269,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
     WorkflowExecution execution1 =
         WorkflowExecution.builder()
             .appId(appId)
+            .envId(envId)
             .uuid(workflowExecutionId)
             .status(ExecutionStatus.SUCCESS)
             .startTs(now)
@@ -278,6 +281,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
     WorkflowExecution execution2 =
         WorkflowExecution.builder()
             .appId(appId)
+            .envId(envId)
             .uuid(workflowExecutionId + "2")
             .status(ExecutionStatus.SUCCESS)
             .startTs(now)
@@ -301,6 +305,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
         "pipeline id matches", "pipelineId", workflowExecutionList.get(0).getPipelineSummary().getPipelineId());
     assertEquals(
         "pipeline name matches", "pipelineName", workflowExecutionList.get(0).getPipelineSummary().getPipelineName());
+    assertEquals("EnvId exists and matches", envId, workflowExecutionList.get(0).getEnvId());
   }
 
   @Test
