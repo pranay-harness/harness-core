@@ -39,7 +39,6 @@ import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTag.HarnessTagKeys;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.HarnessTagLink.HarnessTagLinkKeys;
-import software.wings.beans.ResourceLookup;
 import software.wings.beans.User;
 import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
@@ -86,7 +85,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   @Inject private AppService appService;
   @Inject private EntityNameCache entityNameCache;
 
-  private static final Set<EntityType> supportedEntityTypes =
+  public static final Set<EntityType> supportedEntityTypes =
       ImmutableSet.of(SERVICE, ENVIRONMENT, WORKFLOW, PROVISIONER, PIPELINE, TRIGGER, APPLICATION);
 
   private static final String ALLOWED_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_ /";
@@ -312,7 +311,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     pageRequest.setLimit(String.valueOf(Integer.MAX_VALUE));
 
     PageResponse<HarnessTagLink> pageResponse = wingsPersistence.query(HarnessTagLink.class, pageRequest);
-    List<HarnessTagLink> filteredResourcesWithTag = applyAuthFilters(accountId, pageResponse.getResponse());
+    List<HarnessTagLink> filteredResourcesWithTag = applyAuthFilters(pageResponse.getResponse());
 
     List<HarnessTagLink> response;
     int total = filteredResourcesWithTag.size();
@@ -356,7 +355,8 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   @Override
   @ValidationGroups(Update.class)
   public void authorizeTagAttachDetach(String appId, HarnessTagLink tagLink) {
-    validateResourceAccess(appId, tagLink, Action.UPDATE);
+    validateTagResourceAccess(
+        appId, tagLink.getAccountId(), tagLink.getEntityId(), tagLink.getEntityType(), Action.UPDATE);
   }
 
   private void sanitizeAndValidateHarnessTag(HarnessTag tag) {
@@ -478,7 +478,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
         wingsPersistence.getCollection(HarnessTagLink.class).distinct(HarnessTagLinkKeys.value, andQuery));
   }
 
-  private List<HarnessTagLink> applyAuthFilters(String accountId, List<HarnessTagLink> tagLinks) {
+  private List<HarnessTagLink> applyAuthFilters(List<HarnessTagLink> tagLinks) {
     List<HarnessTagLink> filteredTagLinks = new ArrayList<>();
 
     if (tagLinks == null) {
@@ -487,12 +487,9 @@ public class HarnessTagServiceImpl implements HarnessTagService {
 
     tagLinks.forEach(tagLink -> {
       try {
-        ResourceLookup resourceLookup = resourceLookupService.getWithResourceId(accountId, tagLink.getEntityId());
-
-        if (resourceLookup != null) {
-          validateResourceAccess(resourceLookup.getAppId(), tagLink, Action.READ);
-          filteredTagLinks.add(tagLink);
-        }
+        validateTagResourceAccess(
+            tagLink.getAppId(), tagLink.getAccountId(), tagLink.getEntityId(), tagLink.getEntityType(), Action.READ);
+        filteredTagLinks.add(tagLink);
       } catch (Exception ex) {
         // Exception is thrown if the user does not have permissions on the entity
       }
@@ -501,44 +498,46 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     return filteredTagLinks;
   }
 
-  private void validateResourceAccess(String appId, HarnessTagLink tagLink, Action action) {
+  @Override
+  public void validateTagResourceAccess(
+      String appId, String accountId, String entityId, EntityType entityType, Action action) {
     notNullCheck("appId cannot be null", appId);
 
-    if (EntityType.APPLICATION.equals(tagLink.getEntityType())) {
-      authorizeApplication(appId, tagLink, action);
+    if (EntityType.APPLICATION.equals(entityType)) {
+      authorizeApplication(appId, accountId, action);
       return;
     }
 
-    if (EntityType.TRIGGER.equals(tagLink.getEntityType())) {
+    if (EntityType.TRIGGER.equals(entityType)) {
       // For Read action, we check if the user has access to App or not.
       // This is consistent with what is done in trigger resource list
       if (Action.READ.equals(action)) {
-        authorizeApplication(appId, tagLink, action);
+        authorizeApplication(appId, accountId, action);
       } else {
-        authorizeTriggers(appId, tagLink);
+        authorizeTriggers(appId, entityId);
       }
 
       return;
     }
 
-    PermissionType permissionType = getPermissionType(tagLink.getEntityType());
+    PermissionType permissionType = getPermissionType(entityType);
     PermissionAttribute permissionAttribute = new PermissionAttribute(permissionType, action);
 
-    authHandler.authorize(asList(permissionAttribute), asList(appId), tagLink.getEntityId());
+    authHandler.authorize(asList(permissionAttribute), asList(appId), entityId);
   }
 
-  private void authorizeTriggers(String appId, HarnessTagLink tagLink) {
-    Trigger existingTrigger = triggerService.get(appId, tagLink.getEntityId());
+  private void authorizeTriggers(String appId, String entityId) {
+    Trigger existingTrigger = triggerService.get(appId, entityId);
     if (existingTrigger == null) {
       throw new WingsException("Trigger does not exist", USER);
     }
     triggerService.authorize(existingTrigger, true);
   }
 
-  private void authorizeApplication(String appId, HarnessTagLink tagLink, Action action) {
+  private void authorizeApplication(String appId, String accountId, Action action) {
     User user = UserThreadLocal.get();
 
-    authService.authorizeAppAccess(tagLink.getAccountId(), appId, user, action);
+    authService.authorizeAppAccess(accountId, appId, user, action);
   }
 
   private PermissionType getPermissionType(EntityType entityType) {

@@ -8,6 +8,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.EntityType;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTagLink;
+import software.wings.security.PermissionAttribute.Action;
 
 import java.util.List;
 import javax.validation.Valid;
@@ -36,4 +37,6 @@ public interface HarnessTagService {
   HarnessTag createTag(HarnessTag tag, boolean syncFromGit, boolean allowSystemTagCreate);
   HarnessTag updateTag(HarnessTag tag, boolean syncFromGit);
   void deleteTag(@NotBlank String accountId, @NotBlank String key, boolean syncFromGit);
+
+  void validateTagResourceAccess(String appId, String accountId, String entityId, EntityType entityType, Action action);
 }

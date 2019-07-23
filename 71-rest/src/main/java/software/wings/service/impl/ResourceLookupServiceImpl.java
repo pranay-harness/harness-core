@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.audit.ResourceType.APPLICATION;
 import static software.wings.audit.ResourceType.ARTIFACT_SERVER;
 import static software.wings.audit.ResourceType.CLOUD_PROVIDER;
@@ -20,6 +22,7 @@ import static software.wings.audit.ResourceType.TRIGGER;
 import static software.wings.audit.ResourceType.USER_GROUP;
 import static software.wings.audit.ResourceType.VERIFICATION_PROVIDER;
 import static software.wings.audit.ResourceType.WORKFLOW;
+import static software.wings.service.impl.HarnessTagServiceImpl.supportedEntityTypes;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
@@ -34,17 +37,21 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.beans.Application;
+import software.wings.beans.EntityType;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.ResourceLookup;
 import software.wings.beans.ResourceLookup.ResourceLookupKeys;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.PermissionAttribute.Action;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -67,6 +74,7 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
   @Inject private ResourceLookupFilterHelper resourceLookupFilterHelper;
+  @Inject private HarnessTagService harnessTagService;
 
   private static List<String> applicationLevelResource =
       Arrays.asList(APPLICATION.name(), SERVICE.name(), ENVIRONMENT.name(), WORKFLOW.name(), PIPELINE.name(),
@@ -266,10 +274,55 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
     PageRequest<ResourceLookup> pageRequest = new PageRequest<>();
 
     pageRequest.addFilter(ResourceLookupKeys.accountId, EQ, accountId);
-    pageRequest.setLimit(limit);
-    pageRequest.setOffset(offset);
-
+    pageRequest.setOffset("0");
+    pageRequest.setLimit(String.valueOf(Integer.MAX_VALUE));
     resourceLookupFilterHelper.addResourceLookupFiltersToPageRequest(pageRequest, filter);
-    return wingsPersistence.query(ResourceLookup.class, pageRequest);
+
+    PageResponse<ResourceLookup> pageResponse = wingsPersistence.query(ResourceLookup.class, pageRequest);
+    List<ResourceLookup> filteredResourceLookups = applyAuthFilters(pageResponse.getResponse());
+
+    List<ResourceLookup> response;
+    int total = filteredResourceLookups.size();
+    int offsetValue = Integer.parseInt(offset);
+    int limitValue = Integer.parseInt(limit);
+
+    if (total <= offsetValue) {
+      response = new ArrayList<>();
+    } else {
+      int endIdx = Math.min(offsetValue + limitValue, total);
+      response = filteredResourceLookups.subList(offsetValue, endIdx);
+    }
+
+    return aPageResponse()
+        .withResponse(response)
+        .withTotal(filteredResourceLookups.size())
+        .withOffset(offset)
+        .withLimit(limit)
+        .build();
+  }
+
+  private List<ResourceLookup> applyAuthFilters(List<ResourceLookup> resourceLookups) {
+    List<ResourceLookup> filteredResourceLookupList = new ArrayList<>();
+
+    if (isEmpty(resourceLookups)) {
+      return filteredResourceLookupList;
+    }
+
+    resourceLookups.forEach(resourceLookup -> {
+      try {
+        EntityType entityType = EntityType.valueOf(resourceLookup.getResourceType());
+
+        if (supportedEntityTypes.contains(entityType)) {
+          harnessTagService.validateTagResourceAccess(resourceLookup.getAppId(), resourceLookup.getAccountId(),
+              resourceLookup.getResourceId(), entityType, Action.READ);
+          filteredResourceLookupList.add(resourceLookup);
+        }
+
+      } catch (Exception ex) {
+        // Exception is thrown if the user does not have permissions on the entity
+      }
+    });
+
+    return filteredResourceLookupList;
   }
 }
