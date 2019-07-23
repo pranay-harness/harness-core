@@ -10,6 +10,7 @@ import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
@@ -23,12 +24,18 @@ public class UpdateWorkflowExecutionAccountId implements Migration {
 
   @Override
   public void migrate() {
+    int count = 0;
     try (HIterator<WorkflowExecution> iterator =
              new HIterator<>(wingsPersistence.createQuery(WorkflowExecution.class, excludeAuthority)
+                                 .order(Sort.descending(WorkflowExecutionKeys.createdAt))
                                  .project(WorkflowExecutionKeys.appId, true)
                                  .fetch())) {
       for (WorkflowExecution workflowExecution : iterator) {
         migrate(workflowExecution);
+        count++;
+      }
+      if (count % 1000 == 0) {
+        logger.info("Completed migrating {} records", count);
       }
     }
   }
@@ -45,6 +52,8 @@ public class UpdateWorkflowExecutionAccountId implements Migration {
       ExceptionLogger.logProcessedMessages(exception, ExecutionContext.MANAGER, logger);
     } catch (RuntimeException exception) {
       logger.error("", exception);
+    } catch (Exception e) {
+      logger.error("", e);
     }
   }
 }

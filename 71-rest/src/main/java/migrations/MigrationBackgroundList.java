@@ -84,7 +84,8 @@ public class MigrationBackgroundList {
         .add(Pair.of(38, MigrateTimeSeriesRawDataToGoogle.class))
         .add(Pair.of(39, BaseMigration.class))
         .add(Pair.of(40, UpdateWorkflowExecutionDuration.class))
-        .add(Pair.of(41, UpdateWorkflowExecutionAccountId.class))
+        .add(Pair.of(41, BaseMigration.class))
+        .add(Pair.of(42, UpdateWorkflowExecutionAccountId.class))
         .build();
   }
 }
