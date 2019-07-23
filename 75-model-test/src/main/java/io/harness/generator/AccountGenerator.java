@@ -47,6 +47,8 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.instance.licensing.InstanceLimitProvider;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
@@ -81,6 +83,11 @@ public class AccountGenerator {
   private static final String testUserName = "testadmin";
   private static final String testEmail = "testadmin@harness.io";
   private static final SecretName testPassword = new SecretName("user_default_password");
+
+  private static final String default2faUserUuid = "ZqXNvYmURnO46PX7HwgEtQ";
+  private static final String default2faUserName = "default2fa";
+  private static final String default2faEmail = "default2fa@harness.io";
+  private static final SecretName default2faPassword = new SecretName("user_default_password");
 
   @Inject AccountService accountService;
   @Inject AuthHandler authHandler;
@@ -228,11 +235,16 @@ public class AccountGenerator {
     User adminUser =
         ensureUser(adminUserUuid, adminUserName, adminUserEmail, scmSecret.decryptToCharArray(adminPassword), account);
     ensureUser(defaultUserUuid, defaultUserName, defaultEmail, scmSecret.decryptToCharArray(defaultPassword), account);
+    User default2faUser = ensureUser(default2faUserUuid, default2faUserName, default2faEmail,
+        scmSecret.decryptToCharArray(default2faPassword), account);
     User readOnlyUser = ensureUser(
         readOnlyUserUuid, readOnlyUserName, readOnlyEmail, scmSecret.decryptToCharArray(readOnlyPassword), account);
     ensureUser(rbac1UserUuid, rbac1UserName, rbac1Email, scmSecret.decryptToCharArray(rbac1Password), account);
     ensureUser(rbac2UserUuid, rbac2UserName, rbac2Email, scmSecret.decryptToCharArray(rbac2Password), account);
-    addUserToUserGroup(adminUser, account.getUuid(), UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME);
+    ArrayList<User> users = new ArrayList<>();
+    users.add(adminUser);
+    users.add(default2faUser);
+    addUsersToUserGroup(users, account.getUuid(), UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME);
     UserGroup readOnlyUserGroup = authHandler.buildReadOnlyUserGroup(
         account.getUuid(), readOnlyUser, UserGroup.DEFAULT_READ_ONLY_USER_GROUP_NAME);
     readOnlyUserGroup = wingsPersistence.saveAndGet(UserGroup.class, readOnlyUserGroup);
@@ -258,6 +270,15 @@ public class AccountGenerator {
     PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, true);
     UserGroup userGroup = pageResponse.get(0);
     userGroup.setMembers(asList(user));
+    userGroupService.updateMembers(userGroup, false);
+  }
+
+  private void addUsersToUserGroup(List<User> users, String accountId, String userGroupName) {
+    PageRequest<UserGroup> pageRequest =
+        aPageRequest().addFilter("accountId", EQ, accountId).addFilter("name", EQ, userGroupName).build();
+    PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, true);
+    UserGroup userGroup = pageResponse.get(0);
+    userGroup.setMembers(users);
     userGroupService.updateMembers(userGroup, false);
   }
 
