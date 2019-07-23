@@ -405,7 +405,9 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   }
 
   private void validateTagNameValueCharacterSet(String value) {
-    value = value.trim();
+    if (isBlank(value)) {
+      return;
+    }
 
     if (!ALLOWED_CHARS_SET.containsAll(Lists.charactersOf(value))) {
       throw new InvalidRequestException("Tag name/value can contain only " + ALLOWED_CHARS);
