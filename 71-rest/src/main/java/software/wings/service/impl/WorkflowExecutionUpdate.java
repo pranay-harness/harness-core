@@ -142,7 +142,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
                                          .filter(WorkflowExecutionKeys.appId, appId)
                                          .filter(WorkflowExecutionKeys.uuid, workflowExecutionId)
                                          .field(WorkflowExecutionKeys.status)
-                                         .in(ExecutionStatus.runningStatuses());
+                                         .in(ExecutionStatus.activeStatuses());
 
     UpdateOperations<WorkflowExecution> updateOps =
         wingsPersistence.createUpdateOperations(WorkflowExecution.class).set(WorkflowExecutionKeys.status, status);
