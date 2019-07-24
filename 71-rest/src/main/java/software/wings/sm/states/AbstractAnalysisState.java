@@ -17,6 +17,7 @@ import static software.wings.beans.AccountType.ESSENTIALS;
 import static software.wings.beans.FeatureName.CV_SUCCEED_FOR_ANOMALY;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
+import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
 import static software.wings.utils.Misc.replaceDotWithUnicode;
 
 import com.google.common.base.Preconditions;
@@ -66,7 +67,6 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
-import software.wings.common.Constants;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
@@ -520,7 +520,7 @@ public abstract class AbstractAnalysisState extends State {
     StateExecutionInstance stateExecutionInstance = ((ExecutionContextImpl) context).getStateExecutionInstance();
     Preconditions.checkNotNull(stateExecutionInstance);
 
-    PhaseElement contextPhaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement contextPhaseElement = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
     List<StateExecutionData> stateExecutionDataList = stateExecutionService.fetchPhaseExecutionData(
         stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid(),
         contextPhaseElement == null ? null : contextPhaseElement.getPhaseName(), CurrentPhase.INCLUDE);
@@ -651,7 +651,7 @@ public abstract class AbstractAnalysisState extends State {
   }
 
   PhaseElement getPhaseElement(ExecutionContext context) {
-    return context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    return context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
   }
   protected String getPhaseServiceId(ExecutionContext context) {
     PhaseElement phaseElement = getPhaseElement(context);
@@ -764,7 +764,7 @@ public abstract class AbstractAnalysisState extends State {
   }
 
   protected InfrastructureMapping getInfrastructureMapping(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
     String infraMappingId = phaseElement.getInfraMappingId();
 
     return infraMappingService.get(context.getAppId(), infraMappingId);
