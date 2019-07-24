@@ -51,4 +51,15 @@ public class WorkflowUtils {
                                    .build())
         .build();
   }
+  public Workflow buildCanaryWorkflowPostDeploymentStep(String name, String envId) {
+    return aWorkflow()
+        .name(name)
+        .envId(envId)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
+                                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                   .build())
+        .build();
+  }
 }

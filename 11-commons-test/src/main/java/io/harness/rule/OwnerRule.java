@@ -36,6 +36,7 @@ public class OwnerRule extends RepeatRule {
   public static final String RAMA = "rama@harness.io";
   public static final String RAGHU = "raghu@harness.io";
   public static final String RUSHABH = "rushabh@harness.io";
+  public static final String SHUBHANSHU = "shubhanshu.verma@harness.io";
   public static final String SRINIVAS = "srinivas@harness.io";
   public static final String SRIRAM = "sriram@harness.io";
   public static final String SUNIL = "sunil@harness.io";
@@ -49,8 +50,8 @@ public class OwnerRule extends RepeatRule {
   public static final String DEEPAK = "deepak.patankar@harness.io";
 
   private static List<String> active = asList(AADITI, ADWAIT, ANSHUL, ANUBHAW, BRETT, GARVIT, GEORGE, JATIN, MARK,
-      PARNIAN, PRANJAL, PRAVEEN, POOJA, PUNEET, RAMA, RAGHU, RUSHABH, SRINIVAS, SRIRAM, SUNIL, SWAMY, VAIBHAV_SI,
-      VAIBHAV_TULSYAN, YOGESH_CHAUHAN, NATARAJA, HARSH, UTKARSH, DEEPAK);
+      PARNIAN, PRANJAL, PRAVEEN, POOJA, PUNEET, RAMA, RAGHU, RUSHABH, SHUBHANSHU, SRINIVAS, SRIRAM, SUNIL, SWAMY,
+      VAIBHAV_SI, VAIBHAV_TULSYAN, YOGESH_CHAUHAN, NATARAJA, HARSH, UTKARSH, DEEPAK);
 
   @Retention(RetentionPolicy.RUNTIME)
   @Target({java.lang.annotation.ElementType.METHOD})
