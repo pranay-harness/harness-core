@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.resources.PrometheusResource.renderFetchQueries;
 import static software.wings.service.impl.analysis.TimeSeriesMlAnalysisType.PREDICTIVE;
 
 import com.google.common.base.Preconditions;
@@ -116,20 +117,21 @@ public class PrometheusState extends AbstractMetricAnalysisState {
 
     renderURLExpressions(context, timeSeriesToAnalyze);
     final long dataCollectionStartTimeStamp = Timestamp.minuteBoundary(System.currentTimeMillis());
-    final PrometheusDataCollectionInfo dataCollectionInfo = PrometheusDataCollectionInfo.builder()
-                                                                .prometheusConfig(prometheusConfig)
-                                                                .applicationId(context.getAppId())
-                                                                .stateExecutionId(context.getStateExecutionInstanceId())
-                                                                .workflowId(context.getWorkflowId())
-                                                                .workflowExecutionId(context.getWorkflowExecutionId())
-                                                                .serviceId(getPhaseServiceId(context))
-                                                                .startTime(dataCollectionStartTimeStamp)
-                                                                .collectionTime(Integer.parseInt(getTimeDuration()))
-                                                                .timeSeriesToCollect(timeSeriesToAnalyze)
-                                                                .dataCollectionMinute(0)
-                                                                .hosts(hosts)
-                                                                .timeSeriesMlAnalysisType(analyzedTierAnalysisType)
-                                                                .build();
+    final PrometheusDataCollectionInfo dataCollectionInfo =
+        PrometheusDataCollectionInfo.builder()
+            .prometheusConfig(prometheusConfig)
+            .applicationId(context.getAppId())
+            .stateExecutionId(context.getStateExecutionInstanceId())
+            .workflowId(context.getWorkflowId())
+            .workflowExecutionId(context.getWorkflowExecutionId())
+            .serviceId(getPhaseServiceId(context))
+            .startTime(dataCollectionStartTimeStamp)
+            .collectionTime(Integer.parseInt(getTimeDuration()))
+            .timeSeriesToCollect(renderFetchQueries(timeSeriesToAnalyze))
+            .dataCollectionMinute(0)
+            .hosts(hosts)
+            .timeSeriesMlAnalysisType(analyzedTierAnalysisType)
+            .build();
 
     String waitId = generateUuid();
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);

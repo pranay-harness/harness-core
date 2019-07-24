@@ -2,9 +2,7 @@ package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.sm.states.AbstractAnalysisState.END_TIME_PLACE_HOLDER;
 import static software.wings.sm.states.AbstractAnalysisState.HOST_NAME_PLACE_HOLDER;
-import static software.wings.sm.states.AbstractAnalysisState.START_TIME_PLACE_HOLDER;
 
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
@@ -24,7 +22,6 @@ import software.wings.service.impl.prometheus.PrometheusSetupTestNodeData;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.service.intfc.prometheus.PrometheusAnalysisService;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -64,31 +61,30 @@ public class PrometheusResource implements LogAnalysisResource {
     Map<String, String> metricNameToType = new HashMap<>();
     final TreeBasedTable<String, MetricType, Set<String>> txnToMetricType = TreeBasedTable.create();
     timeSeriesToAnalyze.forEach(timeSeries -> {
-      List<String> missingPlaceHolders = new ArrayList<>();
       MetricType metricType = MetricType.valueOf(timeSeries.getMetricType());
-      if (!serviceLevel && (isEmpty(timeSeries.getUrl()) || !timeSeries.getUrl().contains(HOST_NAME_PLACE_HOLDER))) {
-        missingPlaceHolders.add(HOST_NAME_PLACE_HOLDER);
-      }
-
-      if (isEmpty(timeSeries.getUrl()) || !timeSeries.getUrl().contains(START_TIME_PLACE_HOLDER)) {
-        missingPlaceHolders.add(START_TIME_PLACE_HOLDER);
-      }
-
-      if (isEmpty(timeSeries.getUrl()) || !timeSeries.getUrl().contains(END_TIME_PLACE_HOLDER)) {
-        missingPlaceHolders.add(END_TIME_PLACE_HOLDER);
-      }
-
-      if (isNotEmpty(missingPlaceHolders)) {
+      final String query = timeSeries.getUrl();
+      if (isEmpty(query)) {
         invalidFields.put(
-            "Invalid url for txn: " + timeSeries.getTxnName() + ", metric : " + timeSeries.getMetricName(),
-            missingPlaceHolders + " are not present in the url.");
+            "No query specified for ", "Group: " + timeSeries.getTxnName() + " Metric: " + timeSeries.getMetricName());
+      }
+
+      if (!query.contains("{") || !query.contains("{")) {
+        invalidFields.put(
+            "Invalid query format for group: " + timeSeries.getTxnName() + ", metric: " + timeSeries.getMetricName(),
+            "Expected format example jvm_memory_max_bytes{pod_name=\"$hostName\"}");
+      }
+
+      if (!serviceLevel && isNotEmpty(query) && !query.contains(HOST_NAME_PLACE_HOLDER)) {
+        invalidFields.put(
+            "Invalid query for group: " + timeSeries.getTxnName() + ", metric : " + timeSeries.getMetricName(),
+            HOST_NAME_PLACE_HOLDER + " is not present in the url.");
       }
 
       if (metricNameToType.get(timeSeries.getMetricName()) == null) {
         metricNameToType.put(timeSeries.getMetricName(), timeSeries.getMetricType());
       } else if (!metricNameToType.get(timeSeries.getMetricName()).equals(timeSeries.getMetricType())) {
         invalidFields.put(
-            "Invalid metric type for txn: " + timeSeries.getTxnName() + ", metric : " + timeSeries.getMetricName(),
+            "Invalid metric type for group: " + timeSeries.getTxnName() + ", metric : " + timeSeries.getMetricName(),
             timeSeries.getMetricName() + " has been configured as " + metricNameToType.get(timeSeries.getMetricName())
                 + " in previous transactions. Same metric name can not have different metric types.");
       }
@@ -104,7 +100,7 @@ public class PrometheusResource implements LogAnalysisResource {
       final SortedMap<MetricType, Set<String>> txnRow = txnToMetricType.row(txnName);
       if (txnRow.containsKey(MetricType.ERROR) || txnRow.containsKey(MetricType.RESP_TIME)) {
         if (!txnRow.containsKey(MetricType.THROUGHPUT)) {
-          invalidFields.put("Invalid metrics for txn: " + txnName,
+          invalidFields.put("Invalid metrics for group: " + txnName,
               txnName + " has error metrics "
                   + (txnRow.get(MetricType.ERROR) == null ? Collections.emptySet() : txnRow.get(MetricType.ERROR))
                   + " and/or response time metrics "
@@ -112,18 +108,27 @@ public class PrometheusResource implements LogAnalysisResource {
                                                               : txnRow.get(MetricType.RESP_TIME))
                   + " but no throughput metrics.");
         } else if (txnRow.get(MetricType.THROUGHPUT).size() > 1) {
-          invalidFields.put("Invalid metrics for txn: " + txnName,
+          invalidFields.put("Invalid metrics for group: " + txnName,
               txnName + " has more than one throughput metrics " + txnRow.get(MetricType.THROUGHPUT) + " defined.");
         }
       }
 
       if (txnRow.containsKey(MetricType.THROUGHPUT) && txnRow.size() == 1) {
-        invalidFields.put("Invalid metrics for txn: " + txnName,
+        invalidFields.put("Invalid metrics for group: " + txnName,
             txnName + " has only throughput metrics " + txnRow.get(MetricType.THROUGHPUT)
                 + ". Throughput metrics is used to analyze other metrics and is not analyzed.");
       }
     });
     return invalidFields;
+  }
+
+  public static List<TimeSeries> renderFetchQueries(List<TimeSeries> timeSeriesToAnalyze) {
+    timeSeriesToAnalyze.stream()
+        .filter(timeSeries -> !timeSeries.getUrl().contains("api/v1/query_range"))
+        .forEach(timeSeries
+            -> timeSeries.setUrl(
+                "/api/v1/query_range?start=$startTime&end=$endTime&step=60s&query=" + timeSeries.getUrl()));
+    return timeSeriesToAnalyze;
   }
 
   /**

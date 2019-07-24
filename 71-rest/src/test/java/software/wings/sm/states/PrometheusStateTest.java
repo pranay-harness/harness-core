@@ -69,8 +69,9 @@ public class PrometheusStateTest extends APMStateVerificationTestBase {
     when(settingsService.get(any())).thenReturn(mock(SettingAttribute.class));
     when(appService.get(anyString())).thenReturn(application);
 
-    String renderedUrl = "http://localhost:9090?test=test_value";
-    String testUrl = "http://localhost:9090?test={$TEST_VAR}";
+    String renderedUrl =
+        "/api/v1/query_range?start=$startTime&end=$endTime&step=60s&query=jvm_memory_max_bytes{pod_name=\"$hostName\"}";
+    String testUrl = "jvm_memory_max_bytes{pod_name=\"$hostName\"}";
     List<TimeSeries> timeSeriesToAnalyze = new ArrayList<>();
     TimeSeries timeSeries =
         TimeSeries.builder().metricName("testMetric").url(testUrl).metricType(MetricType.INFRA.name()).build();

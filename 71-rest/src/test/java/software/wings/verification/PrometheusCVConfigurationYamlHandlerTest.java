@@ -150,7 +150,7 @@ public class PrometheusCVConfigurationYamlHandlerTest extends WingsBaseTest {
     mockYamlHelper();
 
     List<TimeSeries> timeSeriesList = new ArrayList<>();
-    String url = "http://35.247.2.110:8080?hostname=$hostName&startTime=$startTime&endTime=$endTime";
+    String url = "jvm_memory_max_bytes{pod_name=\"$hostName\"}";
     timeSeriesList.add(TimeSeries.builder()
                            .metricName("Metric1")
                            .metricType(MetricType.INFRA.name())
