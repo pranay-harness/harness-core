@@ -226,6 +226,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     CVConfiguration savedConfiguration =
         wingsPersistence.getWithAppId(CVConfiguration.class, appId, cvConfiguration.getUuid());
 
+    updateMetricTemplate(cvConfiguration.getStateType(), cvConfiguration);
+
     UpdateOperations<CVConfiguration> updateOperations =
         getUpdateOperations(cvConfiguration.getStateType(), cvConfiguration, savedConfiguration);
     try {
@@ -359,7 +361,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       throw new WingsException("A Service Verification with the name " + updatedConfig.getName()
           + " already exists. Please choose a unique name.");
     }
-    // TODO update metric template if it makes sense
+    updateMetricTemplate(stateType, savedConfiguration);
     CVConfiguration newConfiguration = wingsPersistence.get(CVConfiguration.class, savedConfiguration.getUuid());
     yamlPushService.pushYamlChangeSet(accountId, savedConfiguration, newConfiguration, Type.UPDATE, false,
         !savedConfiguration.getName().equals(newConfiguration.getName()));
@@ -652,34 +654,61 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     }
   }
 
+  private void updateMetricTemplate(StateType stateType, CVConfiguration cvConfiguration) {
+    TimeSeriesMetricTemplates metricTemplate =
+        wingsPersistence.createQuery(TimeSeriesMetricTemplates.class, excludeAuthority)
+            .filter(TimeSeriesMetricTemplatesKeys.cvConfigId, cvConfiguration.getUuid())
+            .get();
+    Map<String, TimeSeriesMetricDefinition> metricTemplates = getMetricDefinitionMap(stateType, cvConfiguration);
+
+    if (isEmpty(metricTemplates) || metricTemplate == null) {
+      return;
+    }
+
+    metricTemplate.setMetricTemplates(metricTemplates);
+
+    wingsPersistence.save(metricTemplate);
+  }
+
   private void saveMetricTemplate(
       String appId, String accountId, CVConfiguration cvConfiguration, StateType stateType) {
     TimeSeriesMetricTemplates metricTemplate;
-    Map<String, TimeSeriesMetricDefinition> metricTemplates;
+    Map<String, TimeSeriesMetricDefinition> metricTemplates = getMetricDefinitionMap(stateType, cvConfiguration);
+
+    if (isEmpty(metricTemplates)) {
+      return;
+    }
+
+    metricTemplate = TimeSeriesMetricTemplates.builder()
+                         .stateType(stateType)
+                         .metricTemplates(metricTemplates)
+                         .cvConfigId(cvConfiguration.getUuid())
+                         .build();
+
+    metricTemplate.setAppId(appId);
+    metricTemplate.setAccountId(accountId);
+    metricTemplate.setStateExecutionId(CV_24x7_STATE_EXECUTION + "-" + cvConfiguration.getUuid());
+    wingsPersistence.save(metricTemplate);
+  }
+
+  @Override
+  public Map<String, TimeSeriesMetricDefinition> getMetricDefinitionMap(
+      StateType stateType, CVConfiguration cvConfiguration) {
+    Map<String, TimeSeriesMetricDefinition> metricTemplates = new HashMap<>();
+
     switch (stateType) {
       case APP_DYNAMICS:
-        metricTemplate = TimeSeriesMetricTemplates.builder()
-                             .stateType(stateType)
-                             .metricTemplates(NewRelicMetricValueDefinition.APP_DYNAMICS_24X7_VALUES_TO_ANALYZE)
-                             .cvConfigId(cvConfiguration.getUuid())
-                             .build();
+        metricTemplates = NewRelicMetricValueDefinition.APP_DYNAMICS_24X7_VALUES_TO_ANALYZE;
         break;
       case NEW_RELIC:
       case DYNA_TRACE:
-        return;
+        break;
       case PROMETHEUS:
         metricTemplates = PrometheusState.createMetricTemplates(
             ((PrometheusCVServiceConfiguration) cvConfiguration).getTimeSeriesToAnalyze());
-        metricTemplate = TimeSeriesMetricTemplates.builder()
-                             .stateType(stateType)
-                             .metricTemplates(metricTemplates)
-                             .cvConfigId(cvConfiguration.getUuid())
-                             .build();
         break;
       case DATA_DOG:
         DatadogCVServiceConfiguration datadogCVServiceConfiguration = (DatadogCVServiceConfiguration) cvConfiguration;
-
-        metricTemplates = new HashMap<>();
         if (isNotEmpty(datadogCVServiceConfiguration.getDockerMetrics())) {
           metricTemplates.putAll(getMetricTemplates(datadogCVServiceConfiguration.getDockerMetrics()));
         }
@@ -693,36 +722,23 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
                     Optional.ofNullable(datadogCVServiceConfiguration.getCustomMetrics()), Optional.empty(),
                     Optional.empty())
                 .values()));
-
-        metricTemplate = TimeSeriesMetricTemplates.builder()
-                             .stateType(stateType)
-                             .metricTemplates(metricTemplates)
-                             .cvConfigId(cvConfiguration.getUuid())
-                             .build();
         break;
       case CLOUD_WATCH:
         metricTemplates = CloudWatchState.fetchMetricTemplates(
             CloudWatchServiceImpl.fetchMetrics((CloudWatchCVServiceConfiguration) cvConfiguration));
-        metricTemplate = TimeSeriesMetricTemplates.builder()
-                             .stateType(stateType)
-                             .metricTemplates(metricTemplates)
-                             .cvConfigId(cvConfiguration.getUuid())
-                             .build();
         break;
       case SUMO:
       case ELK:
       case BUG_SNAG:
       case STACK_DRIVER_LOG:
       case DATA_DOG_LOG:
-        return;
+        break;
 
       default:
-        throw new WingsException("No matching state type found " + stateType);
+        throw new WingsException("No matching metric state type found " + stateType);
     }
-    metricTemplate.setAppId(appId);
-    metricTemplate.setAccountId(accountId);
-    metricTemplate.setStateExecutionId(CV_24x7_STATE_EXECUTION + "-" + cvConfiguration.getUuid());
-    wingsPersistence.save(metricTemplate);
+
+    return metricTemplates;
   }
 
   private Map<String, TimeSeriesMetricDefinition> getMetricTemplates(Map<String, String> metrics) {

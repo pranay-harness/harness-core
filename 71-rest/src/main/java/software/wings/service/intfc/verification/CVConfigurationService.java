@@ -1,12 +1,14 @@
 package software.wings.service.intfc.verification;
 
 import io.harness.beans.PageRequest;
+import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Vaibhav Tulsyan
@@ -31,6 +33,9 @@ public interface CVConfigurationService extends OwnedByAccount {
   List<CVConfiguration> listConfigurations(String accountId, PageRequest<CVConfiguration> pageRequest);
 
   void fillInServiceAndConnectorNames(CVConfiguration cvConfiguration);
+
+  Map<String, TimeSeriesMetricDefinition> getMetricDefinitionMap(StateType stateType, CVConfiguration cvConfiguration);
+
   void deleteStaleConfigs();
   String resetBaseline(String appId, String cvConfigId, LogsCVConfiguration logsCVConfiguration);
   boolean updateAlertSettings(String cvConfigId, CVConfiguration cvConfiguration);
