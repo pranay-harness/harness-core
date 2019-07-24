@@ -17,7 +17,7 @@ import com.google.inject.Inject;
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.IntegrationTests;
-import io.harness.jobs.MetricAnalysisJob;
+import io.harness.jobs.workflow.timeseries.WorkflowTimeSeriesAnalysisJob;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.rest.RestResponse;
 import io.harness.rule.RepeatRule.Repeat;
@@ -279,7 +279,7 @@ public class DataDogIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
-    new MetricAnalysisJob
+    new WorkflowTimeSeriesAnalysisJob
         .MetricAnalysisGenerator(
             timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext, jobExecutionContext)
         .run();

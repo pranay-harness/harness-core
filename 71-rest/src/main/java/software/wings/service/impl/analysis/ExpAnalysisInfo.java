@@ -6,7 +6,7 @@ import software.wings.sm.StateType;
 
 @Data
 @Builder
-public class LogMLExpAnalysisInfo {
+public class ExpAnalysisInfo {
   private String stateExecutionId;
   private String appId;
   private StateType stateType;

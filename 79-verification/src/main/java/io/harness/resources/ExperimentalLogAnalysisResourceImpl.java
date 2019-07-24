@@ -16,8 +16,8 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.analysis.ExpAnalysisInfo;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
-import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;
 import software.wings.sm.StateType;
 
 import java.io.IOException;
@@ -91,7 +91,7 @@ public class ExperimentalLogAnalysisResourceImpl implements ExperimentalLogAnaly
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
-  public RestResponse<List<LogMLExpAnalysisInfo>> getLogExpAnalysisInfo(@QueryParam("accountId") String accountId) {
+  public RestResponse<List<ExpAnalysisInfo>> getLogExpAnalysisInfo(@QueryParam("accountId") String accountId) {
     return new RestResponse<>(analysisService.getExpAnalysisInfoList());
   }
 

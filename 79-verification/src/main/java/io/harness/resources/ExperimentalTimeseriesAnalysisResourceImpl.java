@@ -9,12 +9,15 @@ import io.harness.rest.RestResponse;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import io.swagger.annotations.Api;
+import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.ExperimentalMetricAnalysisRecord;
 import software.wings.sm.StateType;
 
+import java.util.Map;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -63,7 +66,8 @@ public class ExperimentalTimeseriesAnalysisResourceImpl implements ExperimentalM
       @QueryParam("workflowId") final String workflowId, @QueryParam("serviceId") final String serviceId,
       @QueryParam("groupName") final String groupName, @QueryParam("analysisMinute") Integer analysisMinute,
       @QueryParam("taskId") String taskId, @QueryParam("baseLineExecutionId") String baseLineExecutionId,
-      @QueryParam("cvConfigId") String cvConfigId, ExperimentalMetricAnalysisRecord mlAnalysisResponse) {
+      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("experimentName") String experimentName,
+      ExperimentalMetricAnalysisRecord mlAnalysisResponse) {
     if (mlAnalysisResponse == null) {
       learningEngineService.markExpTaskCompleted(taskId);
       return new RestResponse<>(true);
@@ -75,9 +79,25 @@ public class ExperimentalTimeseriesAnalysisResourceImpl implements ExperimentalM
       mlAnalysisResponse.setStateType(stateType);
       mlAnalysisResponse.setAppId(applicationId);
       mlAnalysisResponse.setWorkflowExecutionId(workflowExecutionId);
+      mlAnalysisResponse.setExperimentName(experimentName);
     }
     return new RestResponse<>(timeSeriesAnalysisService.saveAnalysisRecordsML(accountId, stateType, applicationId,
         stateExecutionId, workflowExecutionId, groupName, analysisMinute, taskId, baseLineExecutionId, cvConfigId,
         mlAnalysisResponse, null));
+  }
+
+  @Produces({"application/json", "application/v1+json"})
+  @GET
+  @Path(ExperimentalMetricAnalysisResource.GET_METRIC_TEMPLATE)
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  public RestResponse<Map<String, Map<String, TimeSeriesMetricDefinition>>> getMetricTemplateExperimental(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId,
+      @QueryParam("stateType") StateType stateType, @QueryParam("stateExecutionId") String stateExecutionId,
+      @QueryParam("serviceId") String serviceId, @QueryParam("cvConfigId") String cvConfigId,
+      @QueryParam("groupName") String groupName) {
+    return new RestResponse<>(timeSeriesAnalysisService.getMetricTemplateWithCategorizedThresholds(
+        appId, stateType, stateExecutionId, serviceId, cvConfigId, groupName));
   }
 }

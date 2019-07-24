@@ -3,17 +3,17 @@ package software.wings.service.intfc.analysis;
 import software.wings.api.InstanceElement;
 import software.wings.beans.SettingAttribute;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
 import software.wings.service.impl.analysis.CVCollaborationProviderParameters;
 import software.wings.service.impl.analysis.CVFeedbackRecord;
 import software.wings.service.impl.analysis.FeedbackAction;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterSummary;
-import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;
 import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.elk.ElkQueryType;
-import software.wings.service.impl.splunk.LogMLClusterScores.LogMLScore;
+import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.sm.StateType;
 
@@ -42,6 +42,8 @@ public interface AnalysisService {
    */
   Object getLogSample(String accountId, String analysisServerConfigId, String index, StateType stateType, int duration);
 
+  int getUnexpectedFrequency(Map<String, Map<String, SplunkAnalysisCluster>> testClusters);
+
   void createAndSaveSummary(StateType stateType, String appId, String stateExecutionId, String query, String message);
 
   boolean isStateValid(String appId, String stateExecutionID);
@@ -69,11 +71,9 @@ public interface AnalysisService {
       String hostName, StateType stateType);
 
   Map<String, InstanceElement> getLastExecutionNodes(String appId, String workflowId);
-  List<LogMLExpAnalysisInfo> getExpAnalysisInfoList();
-  LogMLAnalysisSummary getExperimentalAnalysisSummary(
-      String stateExecutionId, String appId, StateType stateType, String expName);
+
   List<LogMLClusterSummary> computeCluster(Map<String, Map<String, SplunkAnalysisCluster>> cluster,
-      Map<String, LogMLScore> clusterScores, CLUSTER_TYPE cluster_type);
+      Map<String, LogMLClusterScores.LogMLScore> clusterScores, AnalysisServiceImpl.CLUSTER_TYPE cluster_type);
 
   boolean save24x7Feedback(LogMLFeedback feedback, String cvConfigId);
   List<CVFeedbackRecord> getFeedbacks(String cvConfigId, String stateExecutionId);

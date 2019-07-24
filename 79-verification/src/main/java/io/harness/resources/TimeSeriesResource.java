@@ -153,10 +153,11 @@ public class TimeSeriesResource {
       @QueryParam("stateType") StateType stateType, @QueryParam("stateExecutionId") String stateExecutionId,
       @QueryParam("serviceId") String serviceId, @QueryParam("cvConfigId") String cvConfigId,
       @QueryParam("groupName") String groupName) {
+    boolean isWorkflowTask = cvConfigId == null;
     if (managerClientHelper
             .callManagerWithRetry(managerClient.isFeatureEnabled(FeatureName.SUPERVISED_TS_THRESHOLD, accountId))
             .getResource()
-        && dataStoreService instanceof GoogleDataStoreServiceImpl) {
+        && dataStoreService instanceof GoogleDataStoreServiceImpl && isWorkflowTask) {
       return new RestResponse<>(timeSeriesAnalysisService.getMetricTemplateWithCategorizedThresholds(
           appId, stateType, stateExecutionId, serviceId, cvConfigId, groupName));
     } else {

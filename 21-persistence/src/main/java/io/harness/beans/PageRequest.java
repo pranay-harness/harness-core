@@ -202,8 +202,9 @@ public class PageRequest<T> {
    *
    * @param fieldsIncluded the fields included
    */
-  public void addFieldsIncluded(String fieldsIncluded) {
+  public PageRequest<T> addFieldsIncluded(String fieldsIncluded) {
     this.fieldsIncluded.add(fieldsIncluded);
+    return this;
   }
 
   /**
@@ -389,8 +390,9 @@ public class PageRequest<T> {
    * @param fieldName the field name
    * @param orderType the order type
    */
-  public void addOrder(String fieldName, OrderType orderType) {
+  public PageRequest<T> addOrder(String fieldName, OrderType orderType) {
     this.orders.add(aSortOrder().withField(fieldName, orderType).build());
+    return this;
   }
 
   /**

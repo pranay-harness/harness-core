@@ -6,11 +6,14 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.resources.ExperimentalTimeseriesAnalysisResourceImpl;
 import io.harness.rest.RestResponse;
+import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.service.impl.analysis.ExperimentalMetricAnalysisRecord;
 import software.wings.sm.StateType;
 
 import java.io.IOException;
+import java.util.Map;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -25,6 +28,7 @@ import javax.ws.rs.QueryParam;
 public interface ExperimentalMetricAnalysisResource {
   String LEARNING_EXP_URL = "timeseries-learning-exp";
   String ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL = "/save-timeseries-analysis-records";
+  String GET_METRIC_TEMPLATE = "/get-metric-template-experimental";
 
   /**
    * API to save ML Analysed Records back to Mongo DB
@@ -57,5 +61,18 @@ public interface ExperimentalMetricAnalysisResource {
       @QueryParam("serviceId") String serviceId, @QueryParam("groupName") String groupName,
       @QueryParam("analysisMinute") Integer analysisMinute, @QueryParam("taskId") String taskId,
       @QueryParam("baseLineExecutionId") String baseLineExecutionId, @QueryParam("cvConfigId") String cvConfigId,
-      ExperimentalMetricAnalysisRecord mlAnalysisResponse) throws IOException;
+      @QueryParam("experimentName") String experimentName, ExperimentalMetricAnalysisRecord mlAnalysisResponse)
+      throws IOException;
+
+  @Produces({"application/json", "application/v1+json"})
+  @GET
+  @Path(GET_METRIC_TEMPLATE)
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  RestResponse<Map<String, Map<String, TimeSeriesMetricDefinition>>> getMetricTemplateExperimental(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId,
+      @QueryParam("stateType") StateType stateType, @QueryParam("stateExecutionId") String stateExecutionId,
+      @QueryParam("serviceId") String serviceId, @QueryParam("cvConfigId") String cvConfigId,
+      @QueryParam("groupName") String groupName);
 }

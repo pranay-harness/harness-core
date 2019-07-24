@@ -57,6 +57,7 @@ import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.CVFeedbackRecord;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataKeys;
+import software.wings.service.impl.analysis.ExpAnalysisInfo;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord.ExperimentalLogMLAnalysisRecordKeys;
 import software.wings.service.impl.analysis.FeedbackAction;
@@ -68,7 +69,6 @@ import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRec
 import software.wings.service.impl.analysis.LogMLAnalysisStatus;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterSummary;
-import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;
 import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.analysis.MLAnalysisType;
@@ -753,7 +753,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   }
 
   @Override
-  public List<LogMLExpAnalysisInfo> getExpAnalysisInfoList() {
+  public List<ExpAnalysisInfo> getExpAnalysisInfoList() {
     final Query<ExperimentalLogMLAnalysisRecord> analysisRecords =
         wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class, excludeAuthority)
             .project(ExperimentalLogMLAnalysisRecordKeys.stateExecutionId, true)
@@ -766,9 +766,9 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
     List<ExperimentalLogMLAnalysisRecord> experimentalLogMLAnalysisRecords = analysisRecords.asList();
 
-    List<LogMLExpAnalysisInfo> result = new ArrayList<>();
+    List<ExpAnalysisInfo> result = new ArrayList<>();
     experimentalLogMLAnalysisRecords.forEach(record -> {
-      result.add(LogMLExpAnalysisInfo.builder()
+      result.add(ExpAnalysisInfo.builder()
                      .stateExecutionId(record.getStateExecutionId())
                      .appId(record.getAppId())
                      .stateType(record.getStateType())

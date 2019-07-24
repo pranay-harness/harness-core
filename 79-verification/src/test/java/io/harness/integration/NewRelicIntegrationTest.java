@@ -35,7 +35,7 @@ import com.google.inject.Inject;
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.IntegrationTests;
-import io.harness.jobs.MetricAnalysisJob.MetricAnalysisGenerator;
+import io.harness.jobs.workflow.timeseries.WorkflowTimeSeriesAnalysisJob.MetricAnalysisGenerator;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.rest.RestResponse;

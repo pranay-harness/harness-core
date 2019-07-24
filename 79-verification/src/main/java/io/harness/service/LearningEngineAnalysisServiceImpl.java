@@ -156,6 +156,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     LearningEngineExperimentalAnalysisTask experimentalAnalysisTask =
         wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class)
             .filter(LearningEngineExperimentalAnalysisTaskKeys.state_execution_id, analysisTask.getState_execution_id())
+            .filter(LearningEngineAnalysisTaskKeys.analysis_minute, analysisTask.getAnalysis_minute())
             .get();
     if (experimentalAnalysisTask != null) {
       logger.info("task already queued for experiment {}", analysisTask.getState_execution_id());

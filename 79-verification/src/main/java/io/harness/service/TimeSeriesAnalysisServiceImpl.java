@@ -255,7 +255,12 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
     saveTimeSeriesMLScores(timeSeriesMLScores);
     bumpCollectionMinuteToProcess(appId, stateExecutionId, workflowExecutionId, groupName, analysisMinute);
-    learningEngineService.markCompleted(taskId);
+
+    if (mlAnalysisResponse instanceof ExperimentalMetricAnalysisRecord) {
+      learningEngineService.markExpTaskCompleted(taskId);
+    } else {
+      learningEngineService.markCompleted(taskId);
+    }
 
     mlAnalysisResponse.compressTransactions();
 
@@ -754,8 +759,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     }
 
     for (TimeSeriesMetricDefinition metricDefinition : metricDefinitions) {
-      updateThresholdDefinitionSkeleton(ThresholdCategory.DEFAULT.name(), metricDefinition.getMetricName(),
-          metricDefinition.getMetricType(), metricDefinitionMap);
+      updateThresholdDefinitionSkeleton(
+          "default", metricDefinition.getMetricName(), metricDefinition.getMetricType(), metricDefinitionMap);
     }
   }
 

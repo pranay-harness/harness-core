@@ -4,8 +4,8 @@ import com.google.inject.ImplementedBy;
 
 import io.harness.resources.ExperimentalLogAnalysisResourceImpl;
 import io.harness.rest.RestResponse;
+import software.wings.service.impl.analysis.ExpAnalysisInfo;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
-import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;
 import software.wings.sm.StateType;
 
 import java.io.IOException;
@@ -26,6 +26,6 @@ public interface ExperimentalLogAnalysisResource {
       @QueryParam("stateType") StateType stateType, ExperimentalLogMLAnalysisRecord mlAnalysisResponse)
       throws IOException;
 
-  RestResponse<List<LogMLExpAnalysisInfo>> getLogExpAnalysisInfo(@QueryParam("accountId") String accountId)
+  RestResponse<List<ExpAnalysisInfo>> getLogExpAnalysisInfo(@QueryParam("accountId") String accountId)
       throws IOException;
 }
