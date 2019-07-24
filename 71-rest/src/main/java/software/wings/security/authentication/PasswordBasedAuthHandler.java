@@ -63,10 +63,6 @@ public class PasswordBasedAuthHandler implements AuthHandler {
       domainWhitelistCheckerService.throwDomainWhitelistFilterException();
     }
 
-    if (user.isPasswordExpired() == true) {
-      throw new WingsException(PASSWORD_EXPIRED, USER);
-    }
-
     if (isPasswordHash) {
       if (password.equals(user.getPasswordHash())) {
         return getAuthenticationResponse(user);
@@ -91,8 +87,17 @@ public class PasswordBasedAuthHandler implements AuthHandler {
 
   private AuthenticationResponse getAuthenticationResponse(User user) {
     checkUserLockoutStatus(user);
+    checkPasswordExpiry(user);
     loginSettingsService.updateUserLockoutInfo(user, accountService.get(user.getDefaultAccountId()), 0);
     return new AuthenticationResponse(user);
+  }
+
+  private void checkPasswordExpiry(User user) {
+    // throwing password expiration status only in case of password is correct. Other-wise invalidCredential exception
+    // should be thrown.
+    if (user.isPasswordExpired()) {
+      throw new WingsException(PASSWORD_EXPIRED, USER);
+    }
   }
 
   private void checkUserLockoutStatus(User user) {

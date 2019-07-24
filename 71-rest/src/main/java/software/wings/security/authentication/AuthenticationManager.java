@@ -8,8 +8,10 @@ import static io.harness.eraro.ErrorCode.DOMAIN_WHITELIST_FILTER_CHECK_FAILED;
 import static io.harness.eraro.ErrorCode.EMAIL_NOT_VERIFIED;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
+import static io.harness.eraro.ErrorCode.PASSWORD_EXPIRED;
 import static io.harness.eraro.ErrorCode.USER_DISABLED;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
+import static io.harness.eraro.ErrorCode.USER_LOCKED;
 import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
@@ -323,6 +325,13 @@ public class AuthenticationManager {
         return generate2faJWTToken(user);
       } else {
         return authService.generateBearerTokenForUser(user);
+      }
+    } catch (WingsException we) {
+      logger.warn("Failed to login via default mechanism", we);
+      if (we.getCode().equals(USER_LOCKED) || we.getCode().equals(PASSWORD_EXPIRED)) {
+        throw we;
+      } else {
+        throw new WingsException(INVALID_CREDENTIAL, USER);
       }
     } catch (Exception e) {
       logger.warn("Failed to login via default mechanism", e);
