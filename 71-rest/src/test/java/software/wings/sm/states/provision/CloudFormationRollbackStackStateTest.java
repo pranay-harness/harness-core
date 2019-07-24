@@ -36,7 +36,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import software.wings.WingsBaseTest;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.cloudformation.CloudFormationRollbackInfoElement;
@@ -45,9 +46,11 @@ import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
+import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCreateStackRequest;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
+import software.wings.helpers.ext.cloudformation.response.CloudFormationRollbackInfo;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
@@ -59,6 +62,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.WorkflowStandardParams;
 
+import java.util.Iterator;
 import java.util.Map;
 
 public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
@@ -69,6 +73,7 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
   @Mock private SecretManager mockSecretManager;
   @Mock private InfrastructureProvisionerService mockInfrastructureProvisionerService;
   @Mock private LogService mockLogService;
+  @Mock private WingsPersistence mockWingsPersistence;
 
   @InjectMocks private CloudFormationRollbackStackState state = new CloudFormationRollbackStackState("stateName");
 
@@ -80,11 +85,19 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
     doReturn(app).when(mockContext).getApp();
     Environment env = anEnvironment().appId(APP_ID).uuid(ENV_ID).name(ENV_NAME).build();
 
-    EmbeddedUser currentUser = EmbeddedUser.builder().name("test").email("test@harness.io").build();
-    WorkflowStandardParams workflowStandardParams = WorkflowStandardParams.Builder.aWorkflowStandardParams().build();
-    workflowStandardParams.setCurrentUser(currentUser);
-    Mockito.when(mockContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
+    EmbeddedUser mockCurrentUser = mock(EmbeddedUser.class);
+    WorkflowStandardParams mockParams = mock(WorkflowStandardParams.class);
+    doReturn(mockCurrentUser).when(mockParams).getCurrentUser();
+    doReturn(mockParams).when(mockContext).getContextElement(ContextElementType.STANDARD);
+    doReturn(env).when(mockParams).getEnv();
 
+    Query mockQuery = mock(Query.class);
+    doReturn(mockQuery).when(mockWingsPersistence).createQuery(any());
+    doReturn(mockQuery).when(mockQuery).filter(anyString(), anyString());
+    doReturn(mockQuery).when(mockQuery).order(any(Sort[].class));
+    Iterator mockIterator = mock(Iterator.class);
+    doReturn(mockIterator).when(mockQuery).iterator();
+    doReturn(false).when(mockIterator).hasNext();
     doReturn(env).when(mockContext).getEnv();
     Activity activity = Activity.builder().build();
     activity.setUuid(ACTIVITY_ID);
@@ -134,9 +147,15 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
             .commandExecutionStatus(SUCCESS)
             .commandResponse(CloudFormationCreateStackResponse.builder()
                                  .cloudFormationOutputMap(ImmutableMap.of("k1", "v1"))
+                                 .rollbackInfo(CloudFormationRollbackInfo.builder().build())
                                  .commandExecutionStatus(SUCCESS)
                                  .build())
             .build());
+    WorkflowStandardParams mockParams = mock(WorkflowStandardParams.class);
+    doReturn(mockParams).when(mockContext).getContextElement(ContextElementType.STANDARD);
+    Environment env = anEnvironment().appId(APP_ID).uuid(ENV_ID).name(ENV_NAME).build();
+    doReturn(env).when(mockParams).getEnv();
+
     ExecutionResponse response = state.handleAsyncResponse(mockContext, delegateResponse);
     assertEquals(ExecutionStatus.SUCCESS, response.getExecutionStatus());
     verify(mockActivityService).updateStatus(eq(ACTIVITY_ID), eq(APP_ID), eq(ExecutionStatus.SUCCESS));

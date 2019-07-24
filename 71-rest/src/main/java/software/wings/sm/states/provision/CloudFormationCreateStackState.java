@@ -43,7 +43,7 @@ import java.util.Map;
 public class CloudFormationCreateStackState extends CloudFormationState {
   private static final String COMMAND_UNIT = "Create Stack";
   @Inject private transient AppService appService;
-  @Inject private GitUtilsManager gitUtilsManager;
+  @Inject private transient GitUtilsManager gitUtilsManager;
 
   public CloudFormationCreateStackState(String name) {
     super(name, StateType.CLOUD_FORMATION_CREATE_STACK.name());
@@ -95,7 +95,9 @@ public class CloudFormationCreateStackState extends CloudFormationState {
         .appId(executionContext.getApp().getUuid())
         .activityId(activityId)
         .commandName(commandUnit())
-        .variables(getVariableMap(provisioner, executionContext))
+        .variables(infrastructureProvisionerService.extractTextVariables(getVariables(), executionContext))
+        .encryptedVariables(
+            infrastructureProvisionerService.extractEncryptedTextVariables(getVariables(), executionContext.getAppId()))
         .awsConfig(awsConfig);
     CloudFormationCreateStackRequest request = builder.build();
     setTimeOutOnRequest(request);
@@ -119,6 +121,8 @@ public class CloudFormationCreateStackState extends CloudFormationState {
     CloudFormationCreateStackResponse createStackResponse = (CloudFormationCreateStackResponse) commandResponse;
     if (CommandExecutionStatus.SUCCESS.equals(commandResponse.getCommandExecutionStatus())) {
       updateInfraMappings(commandResponse, context, provisionerId);
+      saveCloudFormationRollbackConfig(
+          createStackResponse.getRollbackInfo(), (ExecutionContextImpl) context, fetchResolvedAwsConfigId(context));
       Map<String, Object> outputs = ((CloudFormationCreateStackResponse) commandResponse).getCloudFormationOutputMap();
       CloudFormationOutputInfoElement outputElement =
           context.getContextElement(ContextElementType.CLOUD_FORMATION_PROVISION);

@@ -66,6 +66,7 @@ public class CloudFormationDeleteStackState extends CloudFormationState {
 
   protected List<CloudFormationElement> handleResponse(
       CloudFormationCommandResponse commandResponse, ExecutionContext context) {
+    clearRollbackConfig((ExecutionContextImpl) context);
     return emptyList();
   }
 }

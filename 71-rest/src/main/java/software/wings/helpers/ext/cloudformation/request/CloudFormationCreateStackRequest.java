@@ -22,6 +22,7 @@ public class CloudFormationCreateStackRequest extends CloudFormationCommandReque
   private String stackNameSuffix;
   private String customStackName;
   private Map<String, String> variables;
+  private Map<String, EncryptedDataDetail> encryptedVariables;
   private GitFileConfig gitFileConfig;
   private List<EncryptedDataDetail> sourceRepoEncryptionDetails;
   private GitConfig gitConfig;
@@ -30,7 +31,8 @@ public class CloudFormationCreateStackRequest extends CloudFormationCommandReque
   public CloudFormationCreateStackRequest(CloudFormationCommandType commandType, String accountId, String appId,
       String activityId, String commandName, AwsConfig awsConfig, int timeoutInMs, String createType, String data,
       String stackNameSuffix, Map<String, String> variables, String region, String customStackName,
-      GitFileConfig gitFileConfig, GitConfig gitConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+      GitFileConfig gitFileConfig, GitConfig gitConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      Map<String, EncryptedDataDetail> encryptedVariables) {
     super(commandType, accountId, appId, activityId, commandName, awsConfig, timeoutInMs, region);
     this.createType = createType;
     this.data = data;
@@ -40,5 +42,6 @@ public class CloudFormationCreateStackRequest extends CloudFormationCommandReque
     this.gitFileConfig = gitFileConfig;
     this.gitConfig = gitConfig;
     this.sourceRepoEncryptionDetails = encryptedDataDetails;
+    this.encryptedVariables = encryptedVariables;
   }
 }

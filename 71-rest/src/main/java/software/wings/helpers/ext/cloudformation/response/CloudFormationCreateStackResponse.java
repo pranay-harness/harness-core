@@ -13,13 +13,16 @@ public class CloudFormationCreateStackResponse extends CloudFormationCommandResp
   String stackId;
   Map<String, Object> cloudFormationOutputMap;
   ExistingStackInfo existingStackInfo;
+  CloudFormationRollbackInfo rollbackInfo;
 
   @Builder
   public CloudFormationCreateStackResponse(CommandExecutionStatus commandExecutionStatus, String output,
-      Map<String, Object> cloudFormationOutputMap, String stackId, ExistingStackInfo existingStackInfo) {
+      Map<String, Object> cloudFormationOutputMap, String stackId, ExistingStackInfo existingStackInfo,
+      CloudFormationRollbackInfo rollbackInfo) {
     super(commandExecutionStatus, output);
     this.stackId = stackId;
     this.cloudFormationOutputMap = cloudFormationOutputMap;
     this.existingStackInfo = existingStackInfo;
+    this.rollbackInfo = rollbackInfo;
   }
 }
