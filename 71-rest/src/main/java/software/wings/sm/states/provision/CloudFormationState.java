@@ -25,6 +25,7 @@ import io.harness.exception.InvalidRequestException;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
+import org.mongodb.morphia.query.Query;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.cloudformation.CloudFormationElement;
 import software.wings.beans.Activity;
@@ -42,11 +43,16 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandType;
+import software.wings.beans.infrastructure.CloudFormationRollbackConfig;
+import software.wings.beans.infrastructure.CloudFormationRollbackConfig.CloudFormationRollbackConfigKeys;
 import software.wings.common.TemplateExpressionProcessor;
+import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest;
+import software.wings.helpers.ext.cloudformation.request.CloudFormationCreateStackRequest;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
+import software.wings.helpers.ext.cloudformation.response.CloudFormationRollbackInfo;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
@@ -65,7 +71,6 @@ import software.wings.stencils.DefaultValue;
 import software.wings.utils.Validator;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -74,13 +79,14 @@ import java.util.Set;
 @FieldNameConstants(innerTypeName = "CloudFormationStateKeys")
 public abstract class CloudFormationState extends State {
   @Inject private transient ActivityService activityService;
-  @Inject protected transient DelegateService delegateService;
   @Inject private transient SettingsService settingsService;
   @Inject private transient AppService appService;
+  @Inject protected transient DelegateService delegateService;
   @Inject protected transient SecretManager secretManager;
   @Inject protected transient InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject protected transient LogService logService;
-  @Inject protected TemplateExpressionProcessor templateExpressionProcessor;
+  @Inject protected transient TemplateExpressionProcessor templateExpressionProcessor;
+  @Inject protected transient WingsPersistence wingsPersistence;
 
   @Attributes(title = "Provisioner") @Getter @Setter protected String provisionerId;
   @Attributes(title = "Region") @DefaultValue("us-east-1") @Getter @Setter protected String region = "us-east-1";
@@ -231,24 +237,6 @@ public abstract class CloudFormationState extends State {
     executionLogCallback.saveExecutionLog("Completed CF Create Stack", LogLevel.INFO, CommandExecutionStatus.SUCCESS);
   }
 
-  protected Map<String, String> getVariableMap(
-      CloudFormationInfrastructureProvisioner cloudFormationInfrastructureProvisioner, ExecutionContext context) {
-    Map<String, String> result = new HashMap<>();
-
-    if (isNotEmpty(cloudFormationInfrastructureProvisioner.getVariables())) {
-      for (NameValuePair entry : cloudFormationInfrastructureProvisioner.getVariables()) {
-        result.put(entry.getName(), context.renderExpression(entry.getValue()));
-      }
-    }
-
-    if (isNotEmpty(variables)) {
-      for (NameValuePair entry : variables) {
-        result.put(entry.getName(), context.renderExpression(entry.getValue()));
-      }
-    }
-    return result;
-  }
-
   private String createActivity(ExecutionContext executionContext) {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
@@ -315,10 +303,43 @@ public abstract class CloudFormationState extends State {
       return id;
     }
     StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < IDSIZE; i++) {
+    for (int i = 0; i < IDSIZE && i < id.length(); i++) {
       char ch = id.charAt(i);
       sb.append(ALLOWED_CHARS.contains(ch) ? ch : '-');
     }
     return sb.toString();
+  }
+
+  protected void clearRollbackConfig(ExecutionContextImpl context) {
+    Query<CloudFormationRollbackConfig> query =
+        wingsPersistence.createQuery(CloudFormationRollbackConfig.class)
+            .filter(CloudFormationRollbackConfigKeys.entityId, getStackNameSuffix(context, provisionerId));
+    wingsPersistence.delete(query);
+  }
+
+  protected void saveCloudFormationRollbackConfig(
+      CloudFormationRollbackInfo rollbackInfo, ExecutionContextImpl context, String awsConfigId) {
+    String url = null;
+    String body = null;
+    String createType;
+    if (isNotEmpty(rollbackInfo.getUrl())) {
+      createType = CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_URL;
+      url = rollbackInfo.getUrl();
+    } else {
+      createType = CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY;
+      body = rollbackInfo.getBody();
+    }
+    wingsPersistence.save(CloudFormationRollbackConfig.builder()
+                              .appId(context.getAppId())
+                              .url(url)
+                              .body(body)
+                              .region(rollbackInfo.getRegion())
+                              .awsConfigId(awsConfigId)
+                              .customStackName(rollbackInfo.getCustomStackName())
+                              .createType(createType)
+                              .variables(rollbackInfo.getVariables())
+                              .workflowExecutionId(context.getWorkflowExecutionId())
+                              .entityId(getStackNameSuffix(context, provisionerId))
+                              .build());
   }
 }

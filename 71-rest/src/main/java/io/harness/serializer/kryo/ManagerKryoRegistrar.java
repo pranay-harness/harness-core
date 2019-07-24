@@ -333,6 +333,7 @@ import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandE
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationListStacksResponse;
+import software.wings.helpers.ext.cloudformation.response.CloudFormationRollbackInfo;
 import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo;
 import software.wings.helpers.ext.cloudformation.response.StackSummaryInfo;
 import software.wings.helpers.ext.ecs.request.EcsBGListenerUpdateRequest;
@@ -1308,5 +1309,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ServiceNowImportSetResult.class, 7213);
     kryo.register(software.wings.helpers.ext.k8s.response.K8sAddWatchResponse.class, 7214);
     kryo.register(StandardUnit.class, 7215);
+    kryo.register(CloudFormationRollbackInfo.class, 7216);
   }
 }

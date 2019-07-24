@@ -1,10 +1,13 @@
 package software.wings.delegatetasks.cloudformation.cloudformationtaskhandler;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toMap;
+import static software.wings.helpers.ext.cloudformation.request.CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY;
+import static software.wings.helpers.ext.cloudformation.request.CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_URL;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -22,6 +25,8 @@ import lombok.NoArgsConstructor;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.GitOperationContext;
 import software.wings.beans.Log.LogLevel;
+import software.wings.beans.NameValuePair;
+import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCreateStackRequest;
@@ -29,14 +34,17 @@ import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandE
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse.CloudFormationCommandExecutionResponseBuilder;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse.CloudFormationCreateStackResponseBuilder;
+import software.wings.helpers.ext.cloudformation.response.CloudFormationRollbackInfo;
+import software.wings.helpers.ext.cloudformation.response.CloudFormationRollbackInfo.CloudFormationRollbackInfoBuilder;
 import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo;
 import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo.ExistingStackInfoBuilder;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.GitUtilsDelegate;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Singleton
 @NoArgsConstructor
@@ -68,15 +76,8 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
     CloudFormationCommandExecutionResponseBuilder builder = CloudFormationCommandExecutionResponse.builder();
     try {
       executionLogCallback.saveExecutionLog(format("# Starting to Update stack with name: %s", stack.getStackName()));
-      UpdateStackRequest updateStackRequest = new UpdateStackRequest().withStackName(stack.getStackName());
-      if (isNotEmpty(updateRequest.getVariables())) {
-        updateStackRequest.withParameters(
-            updateRequest.getVariables()
-                .entrySet()
-                .stream()
-                .map(entry -> new Parameter().withParameterKey(entry.getKey()).withParameterValue(entry.getValue()))
-                .collect(Collectors.toList()));
-      }
+      UpdateStackRequest updateStackRequest =
+          new UpdateStackRequest().withStackName(stack.getStackName()).withParameters(getCfParams(updateRequest));
       switch (updateRequest.getCreateType()) {
         case CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_GIT: {
           executionLogCallback.saveExecutionLog(format("Fetching template from git url: %s, "
@@ -91,7 +92,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           updateStackAndWaitWithEvents(updateRequest, updateStackRequest, builder, stack, executionLogCallback);
           break;
         }
-        case CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY: {
+        case CLOUD_FORMATION_STACK_CREATE_BODY: {
           executionLogCallback.saveExecutionLog("# Using Template Body to Update Stack");
           updateStackRequest.withTemplateBody(updateRequest.getData());
           setCapabilitiesOnRequest(updateRequest.getAwsConfig(), updateRequest.getRegion(), updateRequest.getData(),
@@ -99,7 +100,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           updateStackAndWaitWithEvents(updateRequest, updateStackRequest, builder, stack, executionLogCallback);
           break;
         }
-        case CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_URL: {
+        case CLOUD_FORMATION_STACK_CREATE_URL: {
           executionLogCallback.saveExecutionLog(
               format("# Using Template Url: [%s] to Update Stack", updateRequest.getData()));
           updateStackRequest.withTemplateURL(updateRequest.getData());
@@ -129,7 +130,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
     String templatePathRepo =
         gitUtilsDelegate.resolveScriptDirectory(gitOperationContext, request.getGitFileConfig().getFilePath());
     request.setData(gitUtilsDelegate.getRequestDataFromFile(templatePathRepo));
-    request.setCreateType(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY);
+    request.setCreateType(CLOUD_FORMATION_STACK_CREATE_BODY);
   }
 
   private CloudFormationCommandExecutionResponse createStack(
@@ -143,15 +144,8 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
     }
     try {
       executionLogCallback.saveExecutionLog(format("# Creating stack with name: %s", stackName));
-      CreateStackRequest createStackRequest = new CreateStackRequest().withStackName(stackName);
-      if (isNotEmpty(createRequest.getVariables())) {
-        createStackRequest.withParameters(
-            createRequest.getVariables()
-                .entrySet()
-                .stream()
-                .map(entry -> new Parameter().withParameterKey(entry.getKey()).withParameterValue(entry.getValue()))
-                .collect(Collectors.toList()));
-      }
+      CreateStackRequest createStackRequest =
+          new CreateStackRequest().withStackName(stackName).withParameters(getCfParams(createRequest));
       switch (createRequest.getCreateType()) {
         case CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_GIT: {
           executionLogCallback.saveExecutionLog(format("Fetching template from git url: %s, "
@@ -166,7 +160,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           createStackAndWaitWithEvents(createRequest, createStackRequest, builder, executionLogCallback);
           break;
         }
-        case CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY: {
+        case CLOUD_FORMATION_STACK_CREATE_BODY: {
           executionLogCallback.saveExecutionLog("# Using Template Body to create Stack");
           createStackRequest.withTemplateBody(createRequest.getData());
           setCapabilitiesOnRequest(createRequest.getAwsConfig(), createRequest.getRegion(), createRequest.getData(),
@@ -174,7 +168,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           createStackAndWaitWithEvents(createRequest, createStackRequest, builder, executionLogCallback);
           break;
         }
-        case CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_URL: {
+        case CLOUD_FORMATION_STACK_CREATE_URL: {
           executionLogCallback.saveExecutionLog(
               format("# Using Template Url: [%s] to Create Stack", createRequest.getData()));
           createStackRequest.withTemplateURL(createRequest.getData());
@@ -183,7 +177,6 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           createStackAndWaitWithEvents(createRequest, createStackRequest, builder, executionLogCallback);
           break;
         }
-
         default: {
           String errorMessage = format("Unsupported stack create type: %s", createRequest.getCreateType());
           executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
@@ -225,8 +218,8 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
       switch (stack.getStackStatus()) {
         case "CREATE_COMPLETE": {
           executionLogCallback.saveExecutionLog("# Stack creation Successful");
-          populateInfraMappingPropertiesFromStack(
-              builder, stack, ExistingStackInfo.builder().stackExisted(false).build(), executionLogCallback);
+          populateInfraMappingPropertiesFromStack(builder, stack,
+              ExistingStackInfo.builder().stackExisted(false).build(), executionLogCallback, createRequest);
           return;
         }
         case "CREATE_FAILED": {
@@ -307,7 +300,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
         case "CREATE_COMPLETE":
         case "UPDATE_COMPLETE": {
           executionLogCallback.saveExecutionLog("# Update Successful for stack");
-          populateInfraMappingPropertiesFromStack(builder, stack, existingStackInfo, executionLogCallback);
+          populateInfraMappingPropertiesFromStack(builder, stack, existingStackInfo, executionLogCallback, request);
           return;
         }
         case "UPDATE_COMPLETE_CLEANUP_IN_PROGRESS": {
@@ -357,7 +350,8 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
   }
 
   private void populateInfraMappingPropertiesFromStack(CloudFormationCommandExecutionResponseBuilder builder,
-      Stack stack, ExistingStackInfo existingStackInfo, ExecutionLogCallback executionLogCallback) {
+      Stack stack, ExistingStackInfo existingStackInfo, ExecutionLogCallback executionLogCallback,
+      CloudFormationCreateStackRequest cloudFormationCreateStackRequest) {
     CloudFormationCreateStackResponseBuilder createBuilder = CloudFormationCreateStackResponse.builder();
     createBuilder.existingStackInfo(existingStackInfo);
     createBuilder.stackId(stack.getStackId());
@@ -367,9 +361,38 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           outputs.stream().collect(toMap(Output::getOutputKey, Output::getOutputValue)));
     }
     createBuilder.commandExecutionStatus(CommandExecutionStatus.SUCCESS);
+    createBuilder.rollbackInfo(getRollbackInfo(cloudFormationCreateStackRequest));
     builder.commandExecutionStatus(CommandExecutionStatus.SUCCESS).commandResponse(createBuilder.build());
     executionLogCallback.saveExecutionLog("# Waiting 30 seconds for resources to come up");
     sleep(ofSeconds(30));
+  }
+
+  private CloudFormationRollbackInfo getRollbackInfo(
+      CloudFormationCreateStackRequest cloudFormationCreateStackRequest) {
+    CloudFormationRollbackInfoBuilder builder = CloudFormationRollbackInfo.builder();
+    if (CLOUD_FORMATION_STACK_CREATE_URL.equals(cloudFormationCreateStackRequest.getCreateType())) {
+      builder.url(cloudFormationCreateStackRequest.getData());
+    } else {
+      // handles the case of both Git and body
+      builder.body(cloudFormationCreateStackRequest.getData());
+    }
+    builder.region(cloudFormationCreateStackRequest.getRegion());
+    builder.customStackName(cloudFormationCreateStackRequest.getCustomStackName());
+    List<NameValuePair> variables = newArrayList();
+    if (isNotEmpty(cloudFormationCreateStackRequest.getVariables())) {
+      for (Entry<String, String> variable : cloudFormationCreateStackRequest.getVariables().entrySet()) {
+        variables.add(new NameValuePair(variable.getKey(), variable.getValue(), Type.TEXT.name()));
+      }
+    }
+    if (isNotEmpty(cloudFormationCreateStackRequest.getEncryptedVariables())) {
+      for (Entry<String, EncryptedDataDetail> encVariable :
+          cloudFormationCreateStackRequest.getEncryptedVariables().entrySet()) {
+        variables.add(new NameValuePair(
+            encVariable.getKey(), encVariable.getValue().getEncryptedData().getUuid(), Type.ENCRYPTED_TEXT.name()));
+      }
+    }
+    builder.variables(variables);
+    return builder.build();
   }
 
   private void setCapabilitiesOnRequest(
@@ -382,5 +405,23 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
       AwsConfig awsConfig, String region, String data, String type, UpdateStackRequest stackRequest) {
     List<String> capabilities = awsCFHelperServiceDelegate.getCapabilities(awsConfig, region, data, type);
     stackRequest.withCapabilities(capabilities);
+  }
+
+  private List<Parameter> getCfParams(CloudFormationCreateStackRequest cloudFormationCreateStackRequest)
+      throws Exception {
+    List<Parameter> allParams = newArrayList();
+    if (isNotEmpty(cloudFormationCreateStackRequest.getVariables())) {
+      cloudFormationCreateStackRequest.getVariables().forEach(
+          (key, value) -> allParams.add(new Parameter().withParameterKey(key).withParameterValue(value)));
+    }
+    if (isNotEmpty(cloudFormationCreateStackRequest.getEncryptedVariables())) {
+      for (Map.Entry<String, EncryptedDataDetail> entry :
+          cloudFormationCreateStackRequest.getEncryptedVariables().entrySet()) {
+        allParams.add(new Parameter()
+                          .withParameterKey(entry.getKey())
+                          .withParameterValue(String.valueOf(encryptionService.getDecryptedValue(entry.getValue()))));
+      }
+    }
+    return allParams;
   }
 }
