@@ -57,6 +57,9 @@ import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.log.BugsnagCVConfiguration;
 import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
+import software.wings.verification.log.LogsCVConfiguration.LogsCVConfigurationKeys;
+import software.wings.verification.log.SplunkCVConfiguration;
+import software.wings.verification.log.SplunkCVConfiguration.SplunkCVConfigurationKeys;
 import software.wings.verification.log.StackdriverCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
@@ -167,6 +170,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
                 "Invalid Query, Please provide textPayload in query " + stackdriverCVConfiguration.getQuery());
           }
         }
+        break;
+      case SPLUNKV2:
+        cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), SplunkCVConfiguration.class);
         break;
 
       default:
@@ -343,6 +349,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         break;
       case BUG_SNAG:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), BugsnagCVConfiguration.class);
+        break;
+      case SPLUNKV2:
+        updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), SplunkCVConfiguration.class);
         break;
       default:
         throw new WingsException("No matching state type found - " + stateType)
@@ -593,6 +602,15 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
         resetBaselineIfNecessary(elkCVConfiguration, (LogsCVConfiguration) savedConfiguration);
         break;
+      case SPLUNKV2:
+        SplunkCVConfiguration splunkCVConfiguration = (SplunkCVConfiguration) cvConfiguration;
+        updateOperations.set(LogsCVConfigurationKeys.query, splunkCVConfiguration.getQuery())
+            .set(LogsCVConfigurationKeys.baselineStartMinute, splunkCVConfiguration.getBaselineStartMinute())
+            .set(LogsCVConfigurationKeys.baselineEndMinute, splunkCVConfiguration.getBaselineEndMinute())
+            .set(SplunkCVConfigurationKeys.hostnameField, splunkCVConfiguration.getHostnameField())
+            .set(SplunkCVConfigurationKeys.isAdvancedQuery, splunkCVConfiguration.isAdvancedQuery());
+        resetBaselineIfNecessary(splunkCVConfiguration, (LogsCVConfiguration) savedConfiguration);
+        break;
       case BUG_SNAG:
         BugsnagCVConfiguration bugsnagCVConfiguration = (BugsnagCVConfiguration) cvConfiguration;
         updateOperations.set("query", bugsnagCVConfiguration.getQuery())
@@ -702,6 +720,12 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         break;
       case NEW_RELIC:
       case DYNA_TRACE:
+      case SUMO:
+      case ELK:
+      case BUG_SNAG:
+      case STACK_DRIVER_LOG:
+      case DATA_DOG_LOG:
+      case SPLUNKV2:
         break;
       case PROMETHEUS:
         metricTemplates = PrometheusState.createMetricTemplates(
@@ -727,13 +751,6 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         metricTemplates = CloudWatchState.fetchMetricTemplates(
             CloudWatchServiceImpl.fetchMetrics((CloudWatchCVServiceConfiguration) cvConfiguration));
         break;
-      case SUMO:
-      case ELK:
-      case BUG_SNAG:
-      case STACK_DRIVER_LOG:
-      case DATA_DOG_LOG:
-        break;
-
       default:
         throw new WingsException("No matching metric state type found " + stateType);
     }

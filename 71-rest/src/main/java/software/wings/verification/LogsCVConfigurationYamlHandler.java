@@ -10,6 +10,7 @@ import software.wings.verification.log.BugsnagCVConfiguration.BugsnagCVConfigura
 import software.wings.verification.log.ElkCVConfiguration.ElkCVConfigurationYaml;
 import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration.LogsCVConfigurationYaml;
+import software.wings.verification.log.SplunkCVConfiguration.SplunkCVConfigurationYaml;
 import software.wings.verification.log.StackdriverCVConfiguration.StackdriverCVConfigurationYaml;
 
 import java.util.List;
@@ -32,6 +33,9 @@ public class LogsCVConfigurationYamlHandler
         break;
       case STACK_DRIVER_LOG:
         yaml = new StackdriverCVConfigurationYaml();
+        break;
+      case SPLUNKV2:
+        yaml = new SplunkCVConfigurationYaml();
         break;
       default:
         throw new IllegalStateException("Invalid state " + bean.getStateType());

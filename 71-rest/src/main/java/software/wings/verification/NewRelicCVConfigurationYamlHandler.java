@@ -2,12 +2,9 @@ package software.wings.verification;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.exception.WingsException.USER;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
-import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
@@ -45,20 +42,10 @@ public class NewRelicCVConfigurationYamlHandler
   }
 
   @Override
-  public NewRelicCVServiceConfiguration upsertFromYaml(ChangeContext<NewRelicCVConfigurationYaml> changeContext,
-      List<ChangeContext> changeSetContext) throws HarnessException {
-    String yamlFilePath = changeContext.getChange().getFilePath();
-    String accountId = changeContext.getChange().getAccountId();
-    String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-
-    notNullCheck("Couldn't retrieve app from yaml:" + yamlFilePath, appId, USER);
-
-    String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
-
-    String name = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
-
-    CVConfiguration previous = cvConfigurationService.getConfiguration(name, appId, envId);
-
+  public NewRelicCVServiceConfiguration upsertFromYaml(
+      ChangeContext<NewRelicCVConfigurationYaml> changeContext, List<ChangeContext> changeSetContext) {
+    CVConfiguration previous = getPreviousCVConfiguration(changeContext);
+    String appId = getAppId(changeContext);
     NewRelicCVServiceConfiguration bean = NewRelicCVServiceConfiguration.builder().build();
     toBean(bean, changeContext, appId);
 
@@ -83,8 +70,8 @@ public class NewRelicCVConfigurationYamlHandler
     return (NewRelicCVServiceConfiguration) yamlHelper.getCVConfiguration(accountId, yamlFilePath);
   }
 
-  private void toBean(NewRelicCVServiceConfiguration bean, ChangeContext<NewRelicCVConfigurationYaml> changeContext,
-      String appId) throws HarnessException {
+  private void toBean(
+      NewRelicCVServiceConfiguration bean, ChangeContext<NewRelicCVConfigurationYaml> changeContext, String appId) {
     NewRelicCVConfigurationYaml yaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     super.toBean(changeContext, bean, appId, yamlFilePath);

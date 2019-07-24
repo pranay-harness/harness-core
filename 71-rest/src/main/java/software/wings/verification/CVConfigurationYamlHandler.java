@@ -1,5 +1,8 @@
 package software.wings.verification;
 
+import static io.harness.exception.WingsException.USER;
+import static software.wings.utils.Validator.notNullCheck;
+
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
@@ -105,5 +108,22 @@ public abstract class CVConfigurationYamlHandler<Y extends CVConfigurationYaml, 
 
   SettingAttribute getConnector(CVConfigurationYaml yaml) {
     return settingsService.getSettingAttributeByName(yaml.getAccountId(), yaml.getConnectorName());
+  }
+
+  protected CVConfiguration getPreviousCVConfiguration(ChangeContext<? extends CVConfigurationYaml> changeContext) {
+    String yamlFilePath = changeContext.getChange().getFilePath();
+    String appId = getAppId(changeContext);
+    String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
+    String name = yamlHelper.getNameFromYamlFilePath(yamlFilePath);
+    return cvConfigurationService.getConfiguration(name, appId, envId);
+  }
+
+  protected String getAppId(ChangeContext<? extends CVConfigurationYaml> changeContext) {
+    String yamlFilePath = changeContext.getChange().getFilePath();
+    String accountId = changeContext.getChange().getAccountId();
+    String appId = yamlHelper.getAppId(accountId, yamlFilePath);
+
+    notNullCheck("Couldn't retrieve app from yaml:" + yamlFilePath, appId, USER);
+    return appId;
   }
 }

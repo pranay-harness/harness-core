@@ -22,6 +22,7 @@ import static software.wings.sm.StateType.DYNA_TRACE;
 import static software.wings.sm.StateType.ELK;
 import static software.wings.sm.StateType.NEW_RELIC;
 import static software.wings.sm.StateType.PROMETHEUS;
+import static software.wings.sm.StateType.SPLUNKV2;
 import static software.wings.sm.StateType.STACK_DRIVER_LOG;
 import static software.wings.sm.StateType.SUMO;
 import static software.wings.utils.WingsTestConstants.mockChecker;
@@ -76,6 +77,7 @@ import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.log.BugsnagCVConfiguration;
 import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
+import software.wings.verification.log.SplunkCVConfiguration;
 import software.wings.verification.log.StackdriverCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
@@ -111,6 +113,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   private DatadogCVServiceConfiguration datadogCVServiceConfiguration;
   private CloudWatchCVServiceConfiguration cloudWatchCVServiceConfiguration;
   private ElkCVConfiguration elkCVConfiguration;
+  private SplunkCVConfiguration splunkCVConfiguration;
   private LogsCVConfiguration logsCVConfiguration;
   private BugsnagCVConfiguration bugsnagCVConfiguration;
   private StackdriverCVConfiguration stackdriverCVConfiguration;
@@ -152,6 +155,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     createLogsCVConfig(true);
     createBugSnagCVConfig(true);
     createStackdriverCVConfig(true);
+    createSplunkCVConfig(true);
   }
 
   private void createCloudWatchConfig() {
@@ -348,6 +352,25 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     stackdriverCVConfiguration.setStateType(STACK_DRIVER_LOG);
   }
 
+  private void createSplunkCVConfig(boolean enabled24x7) {
+    splunkCVConfiguration = new SplunkCVConfiguration();
+    splunkCVConfiguration.setQuery("*exception*");
+    splunkCVConfiguration.setName("Config 1");
+    splunkCVConfiguration.setHostnameField("splunk_hostname");
+    splunkCVConfiguration.setAdvancedQuery(false);
+    splunkCVConfiguration.setAppId(appId);
+    splunkCVConfiguration.setEnvId(envId);
+    splunkCVConfiguration.setServiceId(serviceId);
+    splunkCVConfiguration.setEnabled24x7(enabled24x7);
+    splunkCVConfiguration.setConnectorId(settingAttributeId);
+    splunkCVConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
+    splunkCVConfiguration.setBaselineStartMinute(100);
+    splunkCVConfiguration.setBaselineEndMinute(200);
+    splunkCVConfiguration.setAlertEnabled(false);
+    splunkCVConfiguration.setAlertThreshold(0.1);
+    splunkCVConfiguration.setStateType(SPLUNKV2);
+  }
+
   @Test
   @Category(IntegrationTests.class)
   public void testSaveConfiguration() {
@@ -426,17 +449,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(AnalysisTolerance.LOW, fetchedObject.getAnalysisTolerance());
     assertEquals("Config 2", fetchedObject.getName());
 
-    String delete_url =
-        API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId;
-    target = client.target(delete_url);
-    RestResponse<Boolean> response = getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {});
-    assertEquals(true, response.getResource());
-
-    delete_url =
-        API_BASE + "/cv-configuration/" + UUID.randomUUID().toString() + "?accountId=" + accountId + "&appId=" + appId;
-    target = client.target(delete_url);
-    response = getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {});
-    assertEquals(false, response.getResource());
+    validateDeleteCVConfiguration(savedObjectUuid);
   }
 
   @Test
@@ -797,17 +810,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals("timestamp2", fetchedObject.getTimestampField());
     assertEquals("timestamp_format2", fetchedObject.getTimestampFormat());
 
-    String delete_url =
-        API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId;
-    target = client.target(delete_url);
-    RestResponse<Boolean> response = getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {});
-    assertEquals(true, response.getResource());
-
-    delete_url =
-        API_BASE + "/cv-configuration/" + UUID.randomUUID().toString() + "?accountId=" + accountId + "&appId=" + appId;
-    target = client.target(delete_url);
-    response = getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {});
-    assertEquals(false, response.getResource());
+    validateDeleteCVConfiguration(savedObjectUuid);
   }
 
   @Test
@@ -877,17 +880,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(25931835, fetchedObject.getBaselineEndMinute());
     assertEquals(25931716, fetchedObject.getBaselineStartMinute());
 
-    String delete_url =
-        API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId;
-    target = client.target(delete_url);
-    RestResponse<Boolean> response = getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {});
-    assertEquals(true, response.getResource());
-
-    delete_url =
-        API_BASE + "/cv-configuration/" + UUID.randomUUID().toString() + "?accountId=" + accountId + "&appId=" + appId;
-    target = client.target(delete_url);
-    response = getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {});
-    assertEquals(false, response.getResource());
+    validateDeleteCVConfiguration(savedObjectUuid);
   }
 
   @Test
@@ -955,8 +948,80 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals("Config 2", fetchedObject.getName());
     assertEquals("query2", fetchedObject.getQuery());
 
-    String delete_url =
-        API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId;
+    validateDeleteCVConfiguration(savedObjectUuid);
+  }
+
+  @Test
+  @Category(IntegrationTests.class)
+  public void testSplunkConfiguration() {
+    String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + SPLUNKV2;
+    logger.info("POST " + url);
+    WebTarget target = client.target(url);
+    RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(splunkCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+    String savedObjectUuid = restResponse.getResource();
+
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
+        + "&serviceConfigurationId=" + savedObjectUuid;
+
+    target = client.target(url);
+    RestResponse<SplunkCVConfiguration> getRequestResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<SplunkCVConfiguration>>() {});
+    SplunkCVConfiguration fetchedObject = getRequestResponse.getResource();
+
+    SplunkCVConfiguration cvConfiguration = fetchedObject;
+    assertEquals(SPLUNKV2, fetchedObject.getStateType());
+    validateConfiguration(savedObjectUuid, cvConfiguration);
+
+    url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId;
+    target = client.target(url);
+
+    RestResponse<List<Object>> allConfigResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<Object>>>() {});
+    List<Object> allConifgs = allConfigResponse.getResource();
+
+    assertEquals(1, allConifgs.size());
+
+    SplunkCVConfiguration obj = JsonUtils.asObject(JsonUtils.asJson(allConifgs.get(0)), SplunkCVConfiguration.class);
+
+    assertEquals(savedObjectUuid, obj.getUuid());
+    assertEquals(accountId, obj.getAccountId());
+    assertEquals(appId, obj.getAppId());
+    assertEquals(envId, obj.getEnvId());
+    assertEquals(serviceId, obj.getServiceId());
+    assertEquals(SPLUNKV2, obj.getStateType());
+    assertEquals(AnalysisTolerance.MEDIUM, obj.getAnalysisTolerance());
+    assertEquals("Config 1", obj.getName());
+    assertEquals("splunk_hostname", obj.getHostnameField());
+    assertFalse(obj.isAdvancedQuery());
+
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId
+        + "&stateType=" + SPLUNKV2 + "&serviceConfigurationId=" + savedObjectUuid;
+    target = client.target(url);
+    cvConfiguration.setName("Config 2");
+    cvConfiguration.setEnabled24x7(false);
+
+    cvConfiguration.setAnalysisTolerance(AnalysisTolerance.LOW);
+    cvConfiguration.setQuery("query2");
+    cvConfiguration.setAdvancedQuery(true);
+
+    getRequestBuilderWithAuthHeader(target).put(
+        entity(cvConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+    getRequestResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<SplunkCVConfiguration>>() {});
+    fetchedObject = getRequestResponse.getResource();
+    assertFalse(fetchedObject.isEnabled24x7());
+    assertEquals(AnalysisTolerance.LOW, fetchedObject.getAnalysisTolerance());
+    assertEquals("Config 2", fetchedObject.getName());
+    assertEquals("query2", fetchedObject.getQuery());
+    assertTrue(fetchedObject.isAdvancedQuery());
+
+    validateDeleteCVConfiguration(savedObjectUuid);
+  }
+
+  private void validateDeleteCVConfiguration(String objectUuid) {
+    WebTarget target;
+    String delete_url = API_BASE + "/cv-configuration/" + objectUuid + "?accountId=" + accountId + "&appId=" + appId;
     target = client.target(delete_url);
     RestResponse<Boolean> response = getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {});
     assertEquals(true, response.getResource());
@@ -1067,17 +1132,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(106, fetchedObject.getBaselineStartMinute());
     assertEquals(210, fetchedObject.getBaselineEndMinute());
 
-    String delete_url =
-        API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId;
-    target = client.target(delete_url);
-    RestResponse<Boolean> response = getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {});
-    assertEquals(true, response.getResource());
-
-    delete_url =
-        API_BASE + "/cv-configuration/" + UUID.randomUUID().toString() + "?accountId=" + accountId + "&appId=" + appId;
-    target = client.target(delete_url);
-    response = getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {});
-    assertEquals(false, response.getResource());
+    validateDeleteCVConfiguration(savedObjectUuid);
   }
 
   @Test

@@ -1,8 +1,5 @@
 package software.wings.verification;
 
-import static io.harness.exception.WingsException.USER;
-import static software.wings.utils.Validator.notNullCheck;
-
 import io.harness.exception.WingsException;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.elk.ElkQueryType;
@@ -34,18 +31,8 @@ public class ElkCVConfigurationYamlHandler extends LogsCVConfigurationYamlHandle
   @Override
   public LogsCVConfiguration upsertFromYaml(
       ChangeContext<LogsCVConfigurationYaml> changeContext, List<ChangeContext> changeSetContext) {
-    String yamlFilePath = changeContext.getChange().getFilePath();
-    String accountId = changeContext.getChange().getAccountId();
-    String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-
-    notNullCheck("Couldn't retrieve app from yaml:" + yamlFilePath, appId, USER);
-
-    String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
-
-    String name = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
-
-    CVConfiguration previous = cvConfigurationService.getConfiguration(name, appId, envId);
-
+    String appId = getAppId(changeContext);
+    CVConfiguration previous = getPreviousCVConfiguration(changeContext);
     final ElkCVConfiguration bean = ElkCVConfiguration.builder().build();
 
     super.toBean(bean, changeContext, appId);
