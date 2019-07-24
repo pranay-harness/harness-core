@@ -84,6 +84,7 @@ import migrations.all.OAuthAllowedProvidersListMigration;
 import migrations.all.OauthEnabledFieldMigration;
 import migrations.all.OverrideDefaultLimits;
 import migrations.all.PreferenceUserIdRemoveDollarSignMigration;
+import migrations.all.PrometheusCVMigration;
 import migrations.all.RemoveDupInstanceStats;
 import migrations.all.RemoveResizeFromStatefulSetWorkflows;
 import migrations.all.RemoveServiceVariablesFromActivity;
@@ -268,8 +269,9 @@ public class MigrationList {
         .add(Pair.of(269, AddDuplicateFieldToCVFeedbacks.class))
         .add(Pair.of(270, BaseMigration.class))
         .add(Pair.of(271, MigrateCloudwatchCVTemplates.class))
-        .add(Pair.of(272, AddTagManagementPermissionToAdminUserGroup.class))
-        .add(Pair.of(273, CloudWatchCVMigration.class))
+        .add(Pair.of(272, CloudWatchCVMigration.class))
+        .add(Pair.of(273, AddTagManagementPermissionToAdminUserGroup.class))
+        .add(Pair.of(274, PrometheusCVMigration.class))
         .build();
   }
 }

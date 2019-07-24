@@ -26,6 +26,7 @@ import static software.wings.common.VerificationConstants.ERROR_METRIC_NAMES;
 import static software.wings.common.VerificationConstants.HEARTBEAT_METRIC_NAME;
 import static software.wings.common.VerificationConstants.NEW_RELIC_DEEPLINK_FORMAT;
 import static software.wings.common.VerificationConstants.PROMETHEUS_DEEPLINK_FORMAT;
+import static software.wings.resources.PrometheusResource.renderFetchQueries;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.AbstractLogAnalysisState.HOST_BATCH_SIZE;
 import static software.wings.sm.states.DatadogState.metricEndpointsInfo;
@@ -1696,7 +1697,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .cvConfigId(config.getUuid())
             .startTime(startTime)
             .collectionTime(timeDuration)
-            .timeSeriesToCollect(config.getTimeSeriesToAnalyze())
+            .timeSeriesToCollect(renderFetchQueries(config.getTimeSeriesToAnalyze()))
             .hosts(new HashMap<>())
             .timeSeriesMlAnalysisType(TimeSeriesMlAnalysisType.PREDICTIVE)
             .dataCollectionMinute(0)

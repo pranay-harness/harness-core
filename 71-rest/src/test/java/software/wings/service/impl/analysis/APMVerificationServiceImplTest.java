@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -11,6 +12,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
@@ -348,6 +350,11 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     config.setAppId("appId");
     config.setServiceId("serviceId");
     config.setStateType(StateType.PROMETHEUS);
+    config.setTimeSeriesToAnalyze(Lists.newArrayList(TimeSeries.builder()
+                                                         .txnName(generateUUID())
+                                                         .metricType(generateUUID())
+                                                         .url("jvm_memory_max_bytes{pod_name=\"$hostName\"}")
+                                                         .build()));
     wingsPersistence.save(config);
 
     when(mockSettingsService.get(anyString())).thenReturn(attribute);

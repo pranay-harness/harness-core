@@ -51,7 +51,7 @@ public class PrometheusCVConfigurationYamlHandler
       validateTimeSeriesMetrics(timeSeriesList);
       bean.setTimeSeriesToAnalyze(timeSeriesList);
     } catch (Exception ex) {
-      throw new WingsException(ex.getMessage());
+      throw new WingsException(ex.getMessage(), ex);
     }
 
     bean.setStateType(StateType.PROMETHEUS);
