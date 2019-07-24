@@ -283,6 +283,9 @@ public class UserServiceImpl implements UserService {
 
     String inviteId = wingsPersistence.save(userInvite);
     userInvite.setUuid(inviteId);
+
+    logger.info("Created a new user invite {} for a signup request from market place", inviteId);
+
     return userInvite;
   }
 
@@ -310,6 +313,9 @@ public class UserServiceImpl implements UserService {
       String inviteId = wingsPersistence.save(userInvite);
       userInvite.setUuid(inviteId);
       params.put("userInviteId", inviteId);
+
+      logger.info("Created a new user invite {} for trial user {} from company {}", inviteId, emailAddress,
+          userInvite.getCompanyName());
 
       // Send an email invitation for the trial user to finish up the sign-up with additional information
       // such as password, account/company name information.
@@ -880,6 +886,9 @@ public class UserServiceImpl implements UserService {
       userGroups = pageResponse.getResponse();
       addUserToUserGroups(accountId, user, userGroups, sendNotification);
     }
+
+    logger.info("Invited user {} to join existing account {} with id {}", userInvite.getEmail(),
+        userInvite.getAccountName(), userInvite.getAccountId());
 
     eventPublishHelper.publishUserInviteFromAccountEvent(accountId, userInvite.getEmail());
     return wingsPersistence.getWithAppId(UserInvite.class, userInvite.getAppId(), inviteId);
