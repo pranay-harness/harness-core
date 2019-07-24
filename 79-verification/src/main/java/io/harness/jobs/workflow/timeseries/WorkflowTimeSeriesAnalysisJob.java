@@ -480,10 +480,11 @@ public class WorkflowTimeSeriesAnalysisJob implements Job {
       }
       List<MLExperiments> experiments = learningEngineService.getExperiments(MLAnalysisType.TIME_SERIES);
 
-      String metricTemplateUrl = "/verification/" + MetricDataAnalysisService.RESOURCE_URL
-          + "/get-metric-template?accountId=" + context.getAccountId() + "&appId=" + context.getAppId()
-          + "&stateType=" + context.getStateType() + "&stateExecutionId=" + context.getStateExecutionId()
-          + "&serviceId=" + context.getServiceId() + "&groupName=" + groupName;
+      String metricTemplateUrl = "/verification/" + ExperimentalMetricAnalysisResource.LEARNING_EXP_URL
+          + ExperimentalMetricAnalysisResource.GET_METRIC_TEMPLATE + "?accountId=" + context.getAccountId()
+          + "&appId=" + context.getAppId() + "&stateType=" + context.getStateType()
+          + "&stateExecutionId=" + context.getStateExecutionId() + "&groupName=" + groupName;
+
       metricTemplateUrl = metricTemplateUrl.replaceAll(" ", URLEncoder.encode(" ", "UTF-8"));
       LearningEngineExperimentalAnalysisTask analysisTask =
           LearningEngineExperimentalAnalysisTask.builder()
@@ -518,7 +519,11 @@ public class WorkflowTimeSeriesAnalysisJob implements Job {
       analysisTask.setUuid(uuid);
 
       for (MLExperiments experiment : experiments) {
+        String saveUrl = analysisTask.getAnalysis_save_url();
+        saveUrl += "&experimentName=" + experiment.getExperimentName();
+        analysisTask.setAnalysis_save_url(saveUrl);
         analysisTask.setExperiment_name(experiment.getExperimentName());
+
         logger.info("Queueing for analysis {}", analysisTask);
         learningEngineService.addLearningEngineExperimentalAnalysisTask(analysisTask);
       }
@@ -584,8 +589,8 @@ public class WorkflowTimeSeriesAnalysisJob implements Job {
         String resourceUrl, String saveApiName, String uuid, String groupName, int analysisMinute) {
       String metricAnalysisSaveUrl = "/verification/" + resourceUrl + saveApiName
           + "?accountId=" + context.getAccountId() + "&applicationId=" + context.getAppId() + "&workflowExecutionId="
-          + context.getWorkflowExecutionId() + "&stateExecutionId=" + context.getStateExecutionId()
-          + "&analysisMinute=" + analysisMinute + "&taskId=" + uuid + "&groupName=" + groupName;
+          + context.getWorkflowExecutionId() + "&stateExecutionId=" + context.getStateExecutionId() + "&analysisMinute="
+          + analysisMinute + "&taskId=" + uuid + "&groupName=" + groupName + "&stateType=" + context.getStateType();
 
       if (!isEmpty(context.getPrevWorkflowExecutionId())) {
         metricAnalysisSaveUrl += "&baseLineExecutionId=" + context.getPrevWorkflowExecutionId();

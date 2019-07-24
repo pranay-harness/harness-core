@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -28,4 +29,5 @@ import org.mongodb.morphia.annotations.Indexes;
 @FieldNameConstants(innerTypeName = "ExperimentalMetricAnalysisRecordKeys")
 public class ExperimentalMetricAnalysisRecord extends MetricAnalysisRecord {
   private String envId;
+  @NotEmpty private String experimentName;
 }

@@ -7,13 +7,13 @@ import software.wings.api.InstanceElement;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.CVFeedbackRecord;
+import software.wings.service.impl.analysis.ExpAnalysisInfo;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
 import software.wings.service.impl.analysis.FeedbackAction;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisStatus;
-import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;
 import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -52,7 +52,7 @@ public interface LogAnalysisService {
   LogMLAnalysisRecord getLogAnalysisRecords(
       String fieldName, String fieldValue, int analysisMinute, boolean isCompressed);
 
-  List<LogMLExpAnalysisInfo> getExpAnalysisInfoList();
+  List<ExpAnalysisInfo> getExpAnalysisInfoList();
 
   boolean reQueueExperimentalTask(String appId, String stateExecutionId);
 

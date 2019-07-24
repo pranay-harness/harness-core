@@ -24,9 +24,9 @@ import retrofit2.Call;
 import retrofit2.Response;
 import software.wings.beans.WorkflowExecution;
 import software.wings.metrics.RiskLevel;
+import software.wings.service.impl.analysis.ExpAnalysisInfo;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
-import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;
 import software.wings.sm.StateType;
 
 import java.io.IOException;
@@ -87,9 +87,9 @@ public class ExperimentalLogAnalysisResourceImplTest extends VerificationBaseTes
   @Test
   @Category(UnitTests.class)
   public void testGetLogExpAnalysisInfo_shouldSuccess() throws IOException {
-    List<LogMLExpAnalysisInfo> expectedData = getLogMLExpAnalysisInfo();
+    List<ExpAnalysisInfo> expectedData = getLogMLExpAnalysisInfo();
     when(logAnalysisService.getExpAnalysisInfoList()).thenReturn(expectedData);
-    RestResponse<List<LogMLExpAnalysisInfo>> response = logAnalysisResource.getLogExpAnalysisInfo(mockAccountId);
+    RestResponse<List<ExpAnalysisInfo>> response = logAnalysisResource.getLogExpAnalysisInfo(mockAccountId);
 
     assertEquals(response.getResource(), expectedData);
   }
@@ -114,16 +114,16 @@ public class ExperimentalLogAnalysisResourceImplTest extends VerificationBaseTes
     return summary;
   }
 
-  private List<LogMLExpAnalysisInfo> getLogMLExpAnalysisInfo() {
-    List<LogMLExpAnalysisInfo> logMLExpAnalysisInfoList = new ArrayList<>();
-    LogMLExpAnalysisInfo testdata1 = LogMLExpAnalysisInfo.builder()
-                                         .stateExecutionId(mockStateExecutionId)
-                                         .appId(mockApplicationId)
-                                         .stateType(StateType.ELK)
-                                         .expName("testExp")
-                                         .workflowExecutionId(workflowExecutionId)
-                                         .build();
-    logMLExpAnalysisInfoList.add(testdata1);
-    return logMLExpAnalysisInfoList;
+  private List<ExpAnalysisInfo> getLogMLExpAnalysisInfo() {
+    List<ExpAnalysisInfo> expAnalysisInfoList = new ArrayList<>();
+    ExpAnalysisInfo testdata1 = ExpAnalysisInfo.builder()
+                                    .stateExecutionId(mockStateExecutionId)
+                                    .appId(mockApplicationId)
+                                    .stateType(StateType.ELK)
+                                    .expName("testExp")
+                                    .workflowExecutionId(workflowExecutionId)
+                                    .build();
+    expAnalysisInfoList.add(testdata1);
+    return expAnalysisInfoList;
   }
 }

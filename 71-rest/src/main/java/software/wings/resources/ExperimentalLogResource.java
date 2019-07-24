@@ -9,9 +9,9 @@ import io.swagger.annotations.Api;
 import software.wings.common.VerificationConstants;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.analysis.ExpAnalysisInfo;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
-import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;
-import software.wings.service.intfc.analysis.AnalysisService;
+import software.wings.service.intfc.analysis.ExperimentalAnalysisService;
 import software.wings.sm.StateType;
 
 import java.io.IOException;
@@ -26,15 +26,15 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Scope(ResourceType.SETTING)
 public class ExperimentalLogResource {
-  @Inject private AnalysisService analysisService;
+  @Inject private ExperimentalAnalysisService analysisService;
 
   @GET
   @Path(VerificationConstants.ANALYSIS_STATE_GET_EXP_ANALYSIS_INFO_URL)
   @Timed
   @ExceptionMetered
-  public RestResponse<List<LogMLExpAnalysisInfo>> getLogExpAnalysisInfo(@QueryParam("accountId") String accountId)
+  public RestResponse<List<ExpAnalysisInfo>> getLogExpAnalysisInfo(@QueryParam("accountId") String accountId)
       throws IOException {
-    return new RestResponse<>(analysisService.getExpAnalysisInfoList());
+    return new RestResponse<>(analysisService.getLogExpAnalysisInfoList());
   }
 
   @GET

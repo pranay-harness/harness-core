@@ -9,7 +9,7 @@ import io.harness.rest.RestResponse;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;
+import software.wings.service.impl.analysis.ExpAnalysisInfo;
 
 import java.net.UnknownHostException;
 import java.util.List;
@@ -33,8 +33,8 @@ public class ExperimentalLogAnalysisResourceIntegrationTest extends Verification
         + "learning-exp" + ExperimentalLogAnalysisResource.ANALYSIS_STATE_GET_EXP_ANALYSIS_INFO_URL
         + "?accountId=" + accountId);
 
-    RestResponse<List<LogMLExpAnalysisInfo>> restResponse = getRequestBuilderWithLearningAuthHeader(getTarget).get(
-        new GenericType<RestResponse<List<LogMLExpAnalysisInfo>>>() {});
+    RestResponse<List<ExpAnalysisInfo>> restResponse = getRequestBuilderWithLearningAuthHeader(getTarget).get(
+        new GenericType<RestResponse<List<ExpAnalysisInfo>>>() {});
 
     assertTrue(restResponse.getResource().size() <= 1000);
   }
