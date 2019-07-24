@@ -131,6 +131,7 @@ import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.log.BugsnagCVConfiguration;
 import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
+import software.wings.verification.log.SplunkCVConfiguration;
 import software.wings.verification.log.StackdriverCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
@@ -206,7 +207,7 @@ public class ManagerMorphiaClasses {
       LoginSettings.class, GCPUsageReport.class, GCPBillingJobEntity.class, DashboardSettings.class,
       InfrastructureDefinition.class, GcpMarketplaceEvent.class, SupervisedTSThreshold.class, TimeSeriesRawData.class,
       AzureVaultConfig.class, ECSPollingJobEntity.class, PublishedMessage.class, ApplicationAccess.class,
-      CloudFormationRollbackConfig.class);
+      CloudFormationRollbackConfig.class, SplunkCVConfiguration.class);
 
   public static final Set<Class> dependentClasses =
       ImmutableSet.<Class>of(EncryptionConfig.class, EncryptedRecord.class, ExecutionCapabilityDemander.class);

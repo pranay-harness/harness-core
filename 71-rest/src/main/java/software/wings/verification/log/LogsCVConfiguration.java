@@ -8,11 +8,13 @@ import com.github.reinert.jjschema.Attributes;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import software.wings.stencils.DefaultValue;
 import software.wings.verification.CVConfiguration;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@FieldNameConstants(innerTypeName = "LogsCVConfigurationKeys")
 public class LogsCVConfiguration extends CVConfiguration {
   @Attributes(title = "Search Keywords", required = true) @DefaultValue("*exception*") protected String query;
 

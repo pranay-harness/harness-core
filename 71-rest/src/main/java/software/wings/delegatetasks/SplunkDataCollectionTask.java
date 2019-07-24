@@ -12,6 +12,7 @@ import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import software.wings.beans.DelegateTaskResponse;
+import software.wings.beans.TaskType;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
@@ -68,12 +69,12 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
 
   @Override
   protected boolean is24X7Task() {
-    return false;
+    return getTaskType().equals(TaskType.SPLUNK_COLLECT_24_7_LOG_DATA.name());
   }
 
   @Override
   protected Runnable getDataCollector(DataCollectionTaskResult taskResult) {
-    return new SplunkDataCollector(getTaskId(), dataCollectionInfo, logAnalysisStoreService, taskResult);
+    return new SplunkDataCollector(getTaskId(), dataCollectionInfo, logAnalysisStoreService, is24X7Task(), taskResult);
   }
 
   @Override
@@ -90,21 +91,24 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
     private String delegateTaskId;
     private final SplunkDataCollectionInfo dataCollectionInfo;
     private final LogAnalysisStoreService logAnalysisStoreService;
-    private long startTime;
-    private long endTime;
+    private long startTimeMilliSec;
+    private long endTimeMilliSec;
     private int logCollectionMinute;
     private DataCollectionTaskResult taskResult;
 
     private SplunkDataCollector(String delegateTaskId, SplunkDataCollectionInfo dataCollectionInfo,
-        LogAnalysisStoreService logAnalysisStoreService, DataCollectionTaskResult taskResult) {
+        LogAnalysisStoreService logAnalysisStoreService, boolean is247Task, DataCollectionTaskResult taskResult) {
       this.delegateTaskId = delegateTaskId;
       this.dataCollectionInfo = dataCollectionInfo;
       this.logAnalysisStoreService = logAnalysisStoreService;
-      this.logCollectionMinute = dataCollectionInfo.getStartMinute();
+      this.logCollectionMinute = is247Task ? (int) TimeUnit.MILLISECONDS.toMinutes(dataCollectionInfo.getEndTime())
+                                           : dataCollectionInfo.getStartMinute();
       this.taskResult = taskResult;
-      this.startTime = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime())
-          + logCollectionMinute * TimeUnit.MINUTES.toMillis(1);
-      this.endTime = startTime + TimeUnit.MINUTES.toMillis(1);
+      this.startTimeMilliSec = is247Task ? dataCollectionInfo.getStartTime()
+                                         : Timestamp.minuteBoundary(dataCollectionInfo.getStartTime())
+              + logCollectionMinute * TimeUnit.MINUTES.toMillis(1);
+      this.endTimeMilliSec =
+          is247Task ? dataCollectionInfo.getEndTime() : startTimeMilliSec + TimeUnit.MINUTES.toMillis(1);
     }
 
     @Override
@@ -117,19 +121,9 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
           final List<Callable<List<LogElement>>> callables = new ArrayList<>();
           for (String host : dataCollectionInfo.getHosts()) {
             String query = dataCollectionInfo.getQuery();
-            /* Heart beat */
-            final LogElement splunkHeartBeatElement = new LogElement();
-            splunkHeartBeatElement.setQuery(query);
-            splunkHeartBeatElement.setClusterLabel("-3");
-            splunkHeartBeatElement.setHost(host);
-            splunkHeartBeatElement.setCount(0);
-            splunkHeartBeatElement.setLogMessage("");
-            splunkHeartBeatElement.setTimeStamp(0);
-            splunkHeartBeatElement.setLogCollectionMinute(logCollectionMinute);
-            logElements.add(splunkHeartBeatElement);
-            callables.add(() -> fetchLogsForHost(host, query, logCollectionMinute));
+            addHeartbeat(host, dataCollectionInfo, logCollectionMinute, logElements);
+            callables.add(() -> fetchLogs(host, query, logCollectionMinute));
           }
-
           List<Optional<List<LogElement>>> results = executeParrallel(callables);
           results.forEach(result -> {
             if (result.isPresent()) {
@@ -176,8 +170,8 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
           }
         }
       }
-      startTime += TimeUnit.MINUTES.toMillis(1);
-      endTime = startTime + TimeUnit.MINUTES.toMillis(1);
+      startTimeMilliSec += TimeUnit.MINUTES.toMillis(1);
+      endTimeMilliSec = startTimeMilliSec + TimeUnit.MINUTES.toMillis(1);
       logCollectionMinute++;
       dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
       if (dataCollectionInfo.getCollectionTime() <= 0) {
@@ -196,11 +190,11 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
       }
     }
 
-    private List<LogElement> fetchLogsForHost(String host, String query, int logCollectionMinute) {
+    private List<LogElement> fetchLogs(String host, String query, int logCollectionMinute) {
       ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
       return splunkDelegateService.getLogResults(dataCollectionInfo.getSplunkConfig(),
-          dataCollectionInfo.getEncryptedDataDetails(), query, dataCollectionInfo.getHostnameField(), host, startTime,
-          endTime, apiCallLog, logCollectionMinute, dataCollectionInfo.isAdvancedQuery());
+          dataCollectionInfo.getEncryptedDataDetails(), query, dataCollectionInfo.getHostnameField(), host,
+          startTimeMilliSec, endTimeMilliSec, apiCallLog, logCollectionMinute, dataCollectionInfo.isAdvancedQuery());
     }
   }
 }

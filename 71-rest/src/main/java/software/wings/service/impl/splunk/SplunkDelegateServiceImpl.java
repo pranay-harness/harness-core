@@ -1,9 +1,11 @@
 package software.wings.service.impl.splunk;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.URL_STRING;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -20,6 +22,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.http.HttpStatus;
 import org.apache.xerces.impl.dv.util.Base64;
 import software.wings.beans.SplunkConfig;
@@ -38,8 +41,11 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of Splunk Delegate Service.
@@ -48,7 +54,12 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 @Slf4j
 public class SplunkDelegateServiceImpl implements SplunkDelegateService {
+  public static final String START_TIME = "Start Time";
+  public static final String END_TIME = "End Time";
+  private static final FastDateFormat rfc3339 =
+      FastDateFormat.getInstance("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone("UTC"));
   private static final int HTTP_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(25);
+
   private final SimpleDateFormat SPLUNK_DATE_FORMATER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService delegateLogService;
@@ -77,8 +88,8 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
     return splunkService.getJobs().create(query, jobargs);
   }
 
-  private List<LogElement> fetchSearchResults(Job job, String basicQuery, String host, long logCollectionMinute)
-      throws Exception {
+  private List<LogElement> fetchSearchResults(
+      Job job, String basicQuery, String hostnameField, long logCollectionMinute) throws Exception {
     JobResultsArgs resultsArgs = new JobResultsArgs();
     resultsArgs.setOutputMode(JobResultsArgs.OutputMode.JSON);
 
@@ -91,7 +102,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       final LogElement splunkLogElement = new LogElement();
       splunkLogElement.setQuery(basicQuery);
       splunkLogElement.setClusterLabel(event.get("cluster_label"));
-      splunkLogElement.setHost(host);
+      splunkLogElement.setHost(event.get(hostnameField));
       splunkLogElement.setCount(Integer.parseInt(event.get("cluster_count")));
       splunkLogElement.setLogMessage(event.get("_raw"));
       // splunkLogElement.setTimeStamp(SPLUNK_DATE_FORMATER.parse(event.get("_time")).getTime());
@@ -110,27 +121,16 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       ThirdPartyApiCallLog apiCallLog, int logCollectionMinute, boolean isAdvancedQuery) {
     Service splunkService = initSplunkService(splunkConfig, encryptedDataDetails);
     String query = getQuery(basicQuery, hostNameField, host, isAdvancedQuery);
-
-    apiCallLog.setTitle("Fetch request to " + splunkConfig.getSplunkUrl());
-    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                     .name(URL_STRING)
-                                     .value(splunkConfig.getSplunkUrl())
-                                     .type(FieldType.URL)
-                                     .build());
-    apiCallLog.addFieldToRequest(
-        ThirdPartyApiCallField.builder().name("Query").value(query).type(FieldType.TEXT).build());
-    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-
+    addThirdPartyAPILogRequestFields(apiCallLog, splunkConfig.getSplunkUrl(), query, startTime, endTime);
     logger.info("triggering splunk query startTime: " + startTime + " endTime: " + endTime + " query: " + query
         + " url: " + splunkConfig.getSplunkUrl());
 
     try {
       Job job = createSearchJob(splunkService, query, startTime, endTime);
-      List<LogElement> logElements = fetchSearchResults(job, basicQuery, host, logCollectionMinute);
+      List<LogElement> logElements = fetchSearchResults(job, basicQuery, hostNameField, logCollectionMinute);
 
       apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-      apiCallLog.addFieldToResponse(
-          HttpStatus.SC_OK, "splunk query done. Num of events: " + job.getEventCount(), FieldType.TEXT);
+      apiCallLog.addFieldToResponse(HttpStatus.SC_OK, createJSONBodyForThirdPartyAPILogs(logElements), FieldType.JSON);
       delegateLogService.save(splunkConfig.getAccountId(), apiCallLog);
       return logElements;
     } catch (Exception e) {
@@ -139,6 +139,33 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       delegateLogService.save(splunkConfig.getAccountId(), apiCallLog);
       throw new WingsException(ErrorCode.SPLUNK_CONFIGURATION_ERROR).addParam("reason", e);
     }
+  }
+
+  private void addThirdPartyAPILogRequestFields(
+      ThirdPartyApiCallLog apiCallLog, String splunkUrl, String query, long startTime, long endTime) {
+    apiCallLog.setTitle("Fetch request to " + splunkUrl);
+    apiCallLog.addFieldToRequest(
+        ThirdPartyApiCallField.builder().name(URL_STRING).value(splunkUrl).type(FieldType.URL).build());
+    apiCallLog.addFieldToRequest(
+        ThirdPartyApiCallField.builder().name("Query").value(query).type(FieldType.TEXT).build());
+    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                     .name(START_TIME)
+                                     .value(getDateFormatTime(startTime))
+                                     .type(FieldType.TIMESTAMP)
+                                     .build());
+    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                     .name(END_TIME)
+                                     .value(getDateFormatTime(endTime))
+                                     .type(FieldType.TIMESTAMP)
+                                     .build());
+  }
+
+  private String createJSONBodyForThirdPartyAPILogs(List<LogElement> logElements) {
+    List<String> logs = logElements.stream().map(logElement -> logElement.getLogMessage()).collect(Collectors.toList());
+    SplunkJSONResponse splunkResponse = new SplunkJSONResponse(logs);
+    Gson gson = new Gson();
+    return gson.toJson(splunkResponse);
   }
 
   @VisibleForTesting
@@ -210,7 +237,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
 
   private String getQuery(String query, String hostNameField, String host, boolean isAdvancedQuery) {
     String searchQuery = isAdvancedQuery ? query + " " : "search " + query + " ";
-    if (!isEmpty(host)) {
+    if (!(isEmpty(host) || DUMMY_HOST_NAME.equals(host))) {
       searchQuery += hostNameField + " = " + host;
     }
     searchQuery += " | bin _time span=1m | cluster t=0.9999 showcount=t labelonly=t"
@@ -218,5 +245,18 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
         + "stats latest(_raw) as _raw count as cluster_count by _time,cluster_label," + hostNameField;
 
     return searchQuery;
+  }
+
+  private String getDateFormatTime(long time) {
+    return rfc3339.format(new Date(time));
+  }
+
+  private static class SplunkJSONResponse {
+    private List<String> logs;
+    private long logCount;
+    SplunkJSONResponse(List<String> logs) {
+      this.logs = logs;
+      this.logCount = logs.size();
+    }
   }
 }

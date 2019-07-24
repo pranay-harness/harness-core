@@ -192,6 +192,7 @@ import software.wings.verification.ElkCVConfigurationYamlHandler;
 import software.wings.verification.LogsCVConfigurationYamlHandler;
 import software.wings.verification.NewRelicCVConfigurationYamlHandler;
 import software.wings.verification.PrometheusCVConfigurationYamlHandler;
+import software.wings.verification.SplunkCVConfigurationYamlHandler;
 import software.wings.verification.StackdriverCVConfigurationYamlHandler;
 import software.wings.yaml.trigger.ArtifactTriggerConditionHandler;
 import software.wings.yaml.trigger.PipelineTriggerConditionHandler;
@@ -321,6 +322,7 @@ public class YamlModule extends AbstractModule {
     cvConfigYamlHelperMapBinder.addBinding(StateType.DATA_DOG.name()).to(DatadogCvConfigurationYamlHandler.class);
     cvConfigYamlHelperMapBinder.addBinding(StateType.SUMO.name()).to(LogsCVConfigurationYamlHandler.class);
     cvConfigYamlHelperMapBinder.addBinding(StateType.ELK.name()).to(ElkCVConfigurationYamlHandler.class);
+    cvConfigYamlHelperMapBinder.addBinding(StateType.SPLUNKV2.name()).to(SplunkCVConfigurationYamlHandler.class);
     cvConfigYamlHelperMapBinder.addBinding(StateType.BUG_SNAG.name()).to(BugsnagCVConfigurationYamlHandler.class);
     cvConfigYamlHelperMapBinder.addBinding(StateType.PROMETHEUS.name()).to(PrometheusCVConfigurationYamlHandler.class);
     cvConfigYamlHelperMapBinder.addBinding(StateType.CLOUD_WATCH.name()).to(CloudWatchCVConfigurationYamlHandler.class);
