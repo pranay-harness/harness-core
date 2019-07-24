@@ -16,6 +16,7 @@ import migrations.all.DeleteOrphanNotificationGroups;
 import migrations.all.DeleteStaleThirdPartyApiCallLogsMigration;
 import migrations.all.ExplodeLogMLFeedbackRecordsMigration;
 import migrations.all.FetchAndSaveAccounts;
+import migrations.all.FetchAndSaveAccounts2;
 import migrations.all.InitInfraProvisionerCounters;
 import migrations.all.InitPipelineCounters;
 import migrations.all.InitServiceCounters;
@@ -88,6 +89,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(41, BaseMigration.class))
         .add(Pair.of(42, UpdateWorkflowExecutionAccountId.class))
         .add(Pair.of(43, FetchAndSaveAccounts.class))
+        .add(Pair.of(44, FetchAndSaveAccounts2.class))
         .build();
   }
 }
