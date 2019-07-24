@@ -203,8 +203,6 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
       final TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricDataResponses = TreeBasedTable.create();
       List<Callable<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> callables = new ArrayList<>();
 
-      long endTimeForCollection = System.currentTimeMillis();
-
       AmazonCloudWatchClientBuilder clientBuilder =
           AmazonCloudWatchClientBuilder.standard().withRegion(dataCollectionInfo.getRegion());
 
@@ -251,8 +249,8 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
                         ()
                             -> cloudWatchDelegateService.getMetricDataRecords(AwsNameSpace.EC2, cloudWatchClient,
                                 cloudWatchMetric, host, groupName, dataCollectionInfo, getAppId(),
-                                endTimeForCollection - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES),
-                                endTimeForCollection, createApiCallLog(dataCollectionInfo.getStateExecutionId()),
+                                collectionStartTime - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES),
+                                collectionStartTime, createApiCallLog(dataCollectionInfo.getStateExecutionId()),
                                 is247Task, hostStartTimeMap))));
       }
       logger.info("fetching cloud watch metrics for {} strategy {} for min {}",
