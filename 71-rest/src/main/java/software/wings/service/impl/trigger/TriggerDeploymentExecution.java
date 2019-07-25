@@ -225,14 +225,12 @@ public class TriggerDeploymentExecution {
       return;
     }
 
-    // Todo Harsh: We have to update this api once we merge code changes for pipeline metadata changes
+    DeploymentMetadata deploymentMetadata = pipelineService.fetchDeploymentMetadata(
+        deploymentTrigger.getAppId(), pipeline, null, null, Include.ARTIFACT_SERVICE);
 
-    /*  DeploymentMetadata deploymentMetadata = pipelineService.fetchDeploymentMetadata(
-          deploymentTrigger.getAppId(), pipeline, triggerWorkflowVariableValues, null, null, Include.ARTIFACT_SERVICE);
+    matchTriggerAndDeploymentArtifactVariables(deploymentTrigger.getUuid(), deploymentTrigger.getAppId(),
+        executionArgs.getArtifactVariables(), deploymentMetadata.getArtifactVariables());
 
-      matchTriggerAndDeploymentArtifactVariables(
-          deploymentTrigger.getUuid(), deploymentTrigger.getAppId(), deploymentMetadata.getArtifactVariables());
-  */
     List<String> artifactNeededServiceIds = isEmpty(pipeline.getServices())
         ? new ArrayList<>()
         : pipeline.getServices().stream().map(Service::getUuid).collect(toList());
