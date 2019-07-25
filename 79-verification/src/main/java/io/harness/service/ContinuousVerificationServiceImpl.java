@@ -1071,7 +1071,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                       .feature_name("NEURAL_NET")
                       .is24x7Task(true)
                       .stateType(logsCVConfiguration.getStateType())
-                      .tolerance(cvConfiguration.getAnalysisTolerance().tolerance())
                       .cvConfigId(logsCVConfiguration.getUuid())
                       .analysis_comparison_strategy(logsCVConfiguration.getComparisonStrategy())
                       .build();
