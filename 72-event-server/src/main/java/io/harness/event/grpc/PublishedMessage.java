@@ -1,7 +1,10 @@
 package io.harness.event.grpc;
 
+import com.google.protobuf.Any;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 
+import io.harness.exception.WingsException;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import lombok.Builder;
@@ -10,8 +13,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.PostLoad;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Map;
 
 @Data
@@ -28,15 +29,13 @@ public class PublishedMessage implements PersistentEntity, CreatedAtAware {
   private long createdAt;
 
   @PostLoad
-  private void postLoad() {
+  void postLoad() {
     try {
-      Class<?> clazz = Class.forName(type);
-      Method parseFrom = clazz.getMethod("parseFrom", byte[].class);
-      @SuppressWarnings("PrimitiveArrayArgumentToVarargsMethod")
-      Message parsedMessage = (Message) parseFrom.invoke(null, data);
-      this.message = parsedMessage;
-    } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-      throw new RuntimeException(e);
+      Any any = Any.parseFrom(data);
+      @SuppressWarnings("unchecked") Class<? extends Message> clazz = (Class<? extends Message>) Class.forName(type);
+      this.message = any.unpack(clazz);
+    } catch (ClassNotFoundException | InvalidProtocolBufferException e) {
+      throw new WingsException("Unable to parse message for type: " + type, e);
     }
   }
 }

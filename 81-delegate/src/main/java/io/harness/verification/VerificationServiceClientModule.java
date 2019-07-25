@@ -2,7 +2,7 @@ package io.harness.verification;
 
 import com.google.inject.AbstractModule;
 
-import io.harness.security.VerificationTokenGenerator;
+import io.harness.security.ServiceTokenGenerator;
 
 /**
  * Created by raghu on 09/17/18.
@@ -16,8 +16,8 @@ public class VerificationServiceClientModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    VerificationTokenGenerator tokenGenerator = new VerificationTokenGenerator();
-    bind(VerificationTokenGenerator.class).toInstance(tokenGenerator);
+    ServiceTokenGenerator tokenGenerator = new ServiceTokenGenerator();
+    bind(ServiceTokenGenerator.class).toInstance(tokenGenerator);
     bind(VerificationServiceClient.class).toProvider(new VerificationServiceClientFactory(baseUrl, tokenGenerator));
   }
 }

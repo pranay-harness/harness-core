@@ -44,6 +44,10 @@ public class EventPublisherImpl implements EventPublisher {
   private void publishPending() {
     List<PublishMessage> toPublishNow = new ArrayList<>();
     pendingPublishes.drainTo(toPublishNow);
+    if (toPublishNow.isEmpty()) {
+      // skip publish if there are no events
+      return;
+    }
     try {
       PublishRequest publishRequest = PublishRequest.newBuilder().addAllMessages(toPublishNow).build();
       blockingStub.publish(publishRequest);

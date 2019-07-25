@@ -18,14 +18,25 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * Created by rsingh on 9/17/18.
  */
-public class VerificationTokenGenerator {
+public class ServiceTokenGenerator {
   public static final AtomicReference<String> VERIFICATION_SERVICE_SECRET = new AtomicReference<>();
+  public static final AtomicReference<String> EVENT_SERVICE_SECRET = new AtomicReference<>();
 
-  public String getToken() {
+  public String getVerificationServiceToken() {
     Preconditions.checkState(isNotEmpty(VERIFICATION_SERVICE_SECRET.get()),
         "could not read verification secret from system or env properties");
+    return getToken(VERIFICATION_SERVICE_SECRET.get());
+  }
+
+  public String getEventServiceToken() {
+    Preconditions.checkState(
+        isNotEmpty(EVENT_SERVICE_SECRET.get()), "could not read event service secret from system or env properties");
+    return getToken(EVENT_SERVICE_SECRET.get());
+  }
+
+  private String getToken(String eventServiceSecret) {
     try {
-      Algorithm algorithm = Algorithm.HMAC256(VERIFICATION_SERVICE_SECRET.get());
+      Algorithm algorithm = Algorithm.HMAC256(eventServiceSecret);
 
       return JWT.create()
           .withIssuer("Harness Inc")

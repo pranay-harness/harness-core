@@ -1,4 +1,4 @@
-package io.harness.security;
+package software.wings.service.impl.security;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -11,7 +11,6 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
-import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;

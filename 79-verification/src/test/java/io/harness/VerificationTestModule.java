@@ -6,7 +6,7 @@ import com.codahale.metrics.MetricRegistry;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientFactory;
 import io.harness.metrics.HarnessMetricRegistry;
-import io.harness.security.VerificationTokenGenerator;
+import io.harness.security.ServiceTokenGenerator;
 import io.harness.service.ContinuousVerificationServiceImpl;
 import io.harness.service.intfc.ContinuousVerificationService;
 import io.prometheus.client.CollectorRegistry;
@@ -15,8 +15,8 @@ import software.wings.utils.WingsIntegrationTestConstants;
 public class VerificationTestModule extends AbstractModule {
   @Override
   protected void configure() {
-    VerificationTokenGenerator tokenGenerator = new VerificationTokenGenerator();
-    bind(VerificationTokenGenerator.class).toInstance(tokenGenerator);
+    ServiceTokenGenerator tokenGenerator = new ServiceTokenGenerator();
+    bind(ServiceTokenGenerator.class).toInstance(tokenGenerator);
     bind(VerificationManagerClient.class)
         .toProvider(new VerificationManagerClientFactory(WingsIntegrationTestConstants.API_BASE + "/", tokenGenerator));
     bind(ContinuousVerificationService.class).to(ContinuousVerificationServiceImpl.class);

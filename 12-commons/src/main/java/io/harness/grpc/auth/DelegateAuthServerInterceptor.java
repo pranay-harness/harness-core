@@ -1,4 +1,4 @@
-package io.harness.event.grpc.auth;
+package io.harness.grpc.auth;
 
 import com.google.inject.Inject;
 
@@ -11,7 +11,6 @@ import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.grpc.Status;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.service.intfc.AuthService;
 
 /**
  * {@link ServerInterceptor} that validates the delegate token, and populates context with accountId before calling the
@@ -45,7 +44,7 @@ public class DelegateAuthServerInterceptor implements ServerInterceptor {
     }
     Context ctx;
     try {
-      authService.validateDelegateToken(accountId, token);
+      authService.validateToken(token);
       ctx = Context.current().withValue(DelegateAuthCallCredentials.ACCOUNT_ID_CTX_KEY, accountId);
     } catch (Exception e) {
       logger.warn("Token verification failed. Unauthenticated");

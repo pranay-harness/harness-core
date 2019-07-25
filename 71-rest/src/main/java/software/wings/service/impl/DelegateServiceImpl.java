@@ -36,6 +36,7 @@ import static software.wings.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskA
 import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK;
+import static software.wings.beans.ServiceSecretKey.ServiceType.EVENT_SERVICE;
 import static software.wings.beans.ServiceSecretKey.ServiceType.LEARNING_ENGINE;
 import static software.wings.beans.TaskType.HOST_VALIDATION;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
@@ -245,6 +246,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                                                   .maximumSize(10000)
                                                                   .expireAfterWrite(1, TimeUnit.MINUTES)
                                                                   .build(new CacheLoader<String, String>() {
+                                                                    @Override
                                                                     public String load(String accountId) {
                                                                       return fetchDelegateMetadataFromStorage();
                                                                     }
@@ -255,6 +257,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
           .maximumSize(MAX_DELEGATE_META_INFO_ENTRIES)
           .expireAfterWrite(1, TimeUnit.MINUTES)
           .build(new CacheLoader<String, Optional<Delegate>>() {
+            @Override
             public Optional<Delegate> load(String delegateId) throws NotFoundException {
               return Optional.ofNullable(
                   wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.uuid, delegateId).get());
@@ -598,6 +601,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     return delegateScripts;
   }
 
+  @Override
   public String getLatestDelegateVersion(String accountId) {
     String delegateMatadata = null;
     try {
@@ -1114,6 +1118,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                 .filter(DelegateKeys.uuid, delegateId));
   }
 
+  @Override
   public void retainOnlySelectedDelegatesAndDeleteRest(String accountId, List<String> delegatesToRetain) {
     if (EmptyPredicate.isNotEmpty(delegatesToRetain)) {
       wingsPersistence.delete(wingsPersistence.createQuery(Delegate.class)
@@ -1195,6 +1200,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       alertService.activeDelegateUpdated(registeredDelegate.getAccountId(), registeredDelegate.getUuid());
       registeredDelegate.setVerificationServiceSecret(learningEngineService.getServiceSecretKey(LEARNING_ENGINE));
+      registeredDelegate.setEventServiceSecret(learningEngineService.getServiceSecretKey(EVENT_SERVICE));
     }
     return registeredDelegate;
   }
@@ -2051,6 +2057,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   /**
    * Delegate keepAlive and Registration requests will be handled here
    */
+  @Override
   public Delegate handleEcsDelegateRequest(Delegate delegate) {
     if (delegate.isKeepAlivePacket()) {
       return handleEcsDelegateKeepAlivePacket(delegate);

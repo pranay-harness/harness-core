@@ -29,7 +29,7 @@ import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
-import io.harness.security.VerificationTokenGenerator;
+import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.service.intfc.LearningEngineService;
 import lombok.extern.slf4j.Slf4j;
@@ -88,10 +88,13 @@ public abstract class VerificationBaseIntegrationTest
     config.register(MultiPartWriter.class);
     SSLContext sslcontext = SSLContext.getInstance("TLS");
     X509TrustManager x509TrustManager = new X509TrustManager() {
+      @Override
       public void checkClientTrusted(X509Certificate[] arg0, String arg1) {}
 
+      @Override
       public void checkServerTrusted(X509Certificate[] arg0, String arg1) {}
 
+      @Override
       public X509Certificate[] getAcceptedIssuers() {
         return new X509Certificate[0];
       }
@@ -114,7 +117,7 @@ public abstract class VerificationBaseIntegrationTest
 
   @Before
   public void setUp() throws Exception {
-    VerificationTokenGenerator.VERIFICATION_SERVICE_SECRET.set(
+    ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET.set(
         learningEngineService.getServiceSecretKey(ServiceType.LEARNING_ENGINE));
   }
 
