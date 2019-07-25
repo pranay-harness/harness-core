@@ -930,22 +930,32 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         return DynatraceState.getMetricTypeForMetric(metricName);
       case CLOUD_WATCH:
         CloudWatchCVServiceConfiguration cloudWatchCVServiceConfiguration = (CloudWatchCVServiceConfiguration) cvConfig;
-        List<CloudWatchMetric> metrics = Lists.newArrayList(cloudWatchCVServiceConfiguration.getEc2Metrics());
-        metrics.addAll(cloudWatchCVServiceConfiguration.getLambdaFunctionsMetrics()
-                           .values()
-                           .stream()
-                           .flatMap(List::stream)
-                           .collect(Collectors.toList()));
-        metrics.addAll(cloudWatchCVServiceConfiguration.getEcsMetrics()
-                           .values()
-                           .stream()
-                           .flatMap(List::stream)
-                           .collect(Collectors.toList()));
-        metrics.addAll(cloudWatchCVServiceConfiguration.getLoadBalancerMetrics()
-                           .values()
-                           .stream()
-                           .flatMap(List::stream)
-                           .collect(Collectors.toList()));
+        List<CloudWatchMetric> metrics = new ArrayList<>();
+        if (isNotEmpty(cloudWatchCVServiceConfiguration.getEc2Metrics())) {
+          metrics.addAll(cloudWatchCVServiceConfiguration.getEc2Metrics());
+        }
+
+        if (isNotEmpty(cloudWatchCVServiceConfiguration.getLambdaFunctionsMetrics())) {
+          metrics.addAll(cloudWatchCVServiceConfiguration.getLambdaFunctionsMetrics()
+                             .values()
+                             .stream()
+                             .flatMap(List::stream)
+                             .collect(Collectors.toList()));
+        }
+        if (isNotEmpty(cloudWatchCVServiceConfiguration.getEcsMetrics())) {
+          metrics.addAll(cloudWatchCVServiceConfiguration.getEcsMetrics()
+                             .values()
+                             .stream()
+                             .flatMap(List::stream)
+                             .collect(Collectors.toList()));
+        }
+        if (isNotEmpty(cloudWatchCVServiceConfiguration.getLoadBalancerMetrics())) {
+          metrics.addAll(cloudWatchCVServiceConfiguration.getLoadBalancerMetrics()
+                             .values()
+                             .stream()
+                             .flatMap(List::stream)
+                             .collect(Collectors.toList()));
+        }
         return metrics.stream()
             .filter(metric -> metric.getMetricName().equals(metricName))
             .findAny()
