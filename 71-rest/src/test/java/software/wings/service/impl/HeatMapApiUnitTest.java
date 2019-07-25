@@ -39,6 +39,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
+import software.wings.metrics.MetricType;
 import software.wings.resources.CVConfigurationResource;
 import software.wings.resources.ContinuousVerificationDashboardResource;
 import software.wings.security.encryption.EncryptionUtils;
@@ -50,6 +51,7 @@ import software.wings.service.impl.analysis.TimeSeriesMLHostSummary;
 import software.wings.service.impl.analysis.TimeSeriesMLMetricSummary;
 import software.wings.service.impl.analysis.TimeSeriesMLTxnSummary;
 import software.wings.service.impl.analysis.TimeSeriesRiskSummary;
+import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
@@ -59,6 +61,7 @@ import software.wings.verification.TimeSeriesOfMetric;
 import software.wings.verification.TimeSeriesRisk;
 import software.wings.verification.TransactionTimeSeries;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
+import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
 import java.io.BufferedReader;
@@ -68,6 +71,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -310,7 +314,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     for (int analysisMinute = endMinute, j = 0; analysisMinute >= startMinuteFor12Hrs;
          analysisMinute -= VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES, j++) {
       // for last 15 minutes, set risk as 1. For everything before that, set it to 0.
-      saveMetricDataToDb(analysisMinute, cvConfiguration);
+      saveMetricDataToDb(analysisMinute, cvConfiguration, StateType.APP_DYNAMICS);
       saveTimeSeriesRecordToDb(
           analysisMinute, cvConfiguration, j >= 15 ? 0 : 1); // analysis minute = end minute of analyis
     }
@@ -384,7 +388,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     assertEquals(1, metricMap.get("95th Percentile Response Time (ms)").getRisk());
   }
 
-  private void saveMetricDataToDb(int analysisMinute, CVConfiguration cvConfiguration) {
+  private void saveMetricDataToDb(int analysisMinute, CVConfiguration cvConfiguration, StateType stateType) {
     for (int min = analysisMinute; min > analysisMinute - CRON_POLL_INTERVAL_IN_MINUTES; min--) {
       Map<String, Double> metricMap = new HashMap<>();
       metricMap.put("95th Percentile Response Time (ms)", ThreadLocalRandom.current().nextDouble(0, 30));
@@ -393,7 +397,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
                                             .serviceId(cvConfiguration.getServiceId())
                                             .cvConfigId(cvConfiguration.getUuid())
                                             .dataCollectionMinute(min)
-                                            .stateType(StateType.APP_DYNAMICS)
+                                            .stateType(stateType)
                                             .name("/login")
                                             .values(metricMap)
                                             .build();
@@ -407,7 +411,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
     TimeSeriesMLAnalysisRecord record = TimeSeriesMLAnalysisRecord.builder().build();
     record.setAnalysisMinute(analysisMinute);
-    record.setStateType(StateType.APP_DYNAMICS);
+    record.setStateType(cvConfiguration.getStateType());
     record.setGroupName(DEFAULT_GROUP_NAME);
     record.setCvConfigId(cvConfiguration.getUuid());
     record.setAppId(appId);
@@ -450,6 +454,64 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
     // Save to DB
     wingsPersistence.save(record);
+  }
+
+  private void createCloudwatchMetricRecord(int minute, String cvConfigId) throws Exception {
+    File file = new File(getClass().getClassLoader().getResource("./verification/cloudwatchAnalysis.json").getFile());
+    final Gson gson = new Gson();
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<List<TimeSeriesMLAnalysisRecord>>() {}.getType();
+      List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords = gson.fromJson(br, type);
+      timeSeriesMLAnalysisRecords.forEach(timeSeriesMLAnalysisRecord -> {
+        timeSeriesMLAnalysisRecord.setAppId(appId);
+        timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
+        timeSeriesMLAnalysisRecord.setAnalysisMinute(minute);
+      });
+      wingsPersistence.save(timeSeriesMLAnalysisRecords);
+    }
+    File file1 = new File(getClass().getClassLoader().getResource("./verification/cloudwatchData.json").getFile());
+
+    try (BufferedReader br = new BufferedReader(new FileReader(file1))) {
+      Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();
+      List<NewRelicMetricDataRecord> metricDataRecords = gson.fromJson(br, type);
+      metricDataRecords.forEach(cwRecord -> {
+        cwRecord.setAppId(appId);
+        cwRecord.setCvConfigId(cvConfigId);
+        cwRecord.setDataCollectionMinute(minute);
+      });
+      wingsPersistence.save(metricDataRecords);
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCloudwatchMetricType() throws Exception {
+    long endTime = Timestamp.currentMinuteBoundary();
+    long startTime = endTime - TimeUnit.MINUTES.toMillis(15);
+    long historyStartTime = endTime - TimeUnit.MINUTES.toMillis(135);
+    Map<String, List<CloudWatchMetric>> lbMetrics = new HashMap<>();
+    lbMetrics.put("dummyELB",
+        Arrays.asList(CloudWatchMetric.builder()
+                          .metricName("EstimatedProcessedBytes")
+                          .metricType(MetricType.ERROR.name())
+                          .build()));
+    CVConfiguration cvConfiguration = CloudWatchCVServiceConfiguration.builder().loadBalancerMetrics(lbMetrics).build();
+    cvConfiguration.setUuid(generateUuid());
+    cvConfiguration.setStateType(StateType.CLOUD_WATCH);
+
+    wingsPersistence.save(cvConfiguration);
+
+    createCloudwatchMetricRecord((int) TimeUnit.MICROSECONDS.toMinutes(startTime), cvConfiguration.getUuid());
+
+    SortedSet<TransactionTimeSeries> timeSeries =
+        continuousVerificationService.getTimeSeriesOfHeatMapUnit(TimeSeriesFilter.builder()
+                                                                     .cvConfigId(cvConfiguration.getUuid())
+                                                                     .startTime(startTime)
+                                                                     .endTime(endTime)
+                                                                     .historyStartTime(historyStartTime)
+                                                                     .build());
+
+    assertNotNull(timeSeries);
   }
 
   @Test
