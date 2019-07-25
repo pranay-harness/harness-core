@@ -79,6 +79,18 @@ public class SettingsUtils {
                          .put(SETTINGS_ENDPOINT + "/" + cloudId);
     return respo.jsonPath();
   }
+  public static JsonPath updateConnector(
+      String bearerToken, String accountId, String settingAttrId, SettingAttribute setAttr) {
+    Response respo = Setup.portal()
+                         .auth()
+                         .oauth2(bearerToken)
+                         .queryParam(ACCOUNT_ID, accountId)
+                         .body(setAttr)
+                         .contentType(ContentType.JSON)
+                         .put(SETTINGS_ENDPOINT + "/" + settingAttrId);
+
+    return respo.jsonPath();
+  }
 
   public static JsonPath listCloudproviderConnector(String bearerToken, String accountId, String category) {
     return Setup.portal()
