@@ -9,20 +9,20 @@ import io.grpc.stub.StreamObserver;
 import io.harness.event.EventPublisherGrpc;
 import io.harness.event.PublishRequest;
 import io.harness.event.PublishResponse;
-import io.harness.event.grpc.auth.DelegateAuthCallCredentials;
+import io.harness.grpc.auth.DelegateAuthCallCredentials;
+import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.dl.WingsPersistence;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class EventPublishServer extends EventPublisherGrpc.EventPublisherImplBase {
-  private final WingsPersistence wingsPersistence;
+public class EventPublisherServerImpl extends EventPublisherGrpc.EventPublisherImplBase {
+  private final HPersistence hPersistence;
 
   @Inject
-  public EventPublishServer(WingsPersistence wingsPersistence) {
-    this.wingsPersistence = wingsPersistence;
+  public EventPublisherServerImpl(HPersistence hPersistence) {
+    this.hPersistence = hPersistence;
   }
 
   @Override
@@ -40,7 +40,7 @@ public class EventPublishServer extends EventPublisherGrpc.EventPublisherImplBas
                        .build())
             .collect(Collectors.toList());
     try {
-      wingsPersistence.save(publishedMessages);
+      hPersistence.save(publishedMessages);
       responseObserver.onNext(PublishResponse.newBuilder().build());
     } catch (Exception e) {
       logger.warn("Encountered error while persisting messages", e);

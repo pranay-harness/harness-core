@@ -2,7 +2,7 @@ package io.harness.managerclient;
 
 import com.google.inject.AbstractModule;
 
-import io.harness.security.VerificationTokenGenerator;
+import io.harness.security.ServiceTokenGenerator;
 
 /**
  * Guice Module for initializing Verification Manager client.
@@ -17,8 +17,8 @@ public class VerificationManagerClientModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    VerificationTokenGenerator tokenGenerator = new VerificationTokenGenerator();
-    bind(VerificationTokenGenerator.class).toInstance(tokenGenerator);
+    ServiceTokenGenerator tokenGenerator = new ServiceTokenGenerator();
+    bind(ServiceTokenGenerator.class).toInstance(tokenGenerator);
     bind(VerificationManagerClient.class)
         .toProvider(new VerificationManagerClientFactory(managerBaseUrl, tokenGenerator));
   }

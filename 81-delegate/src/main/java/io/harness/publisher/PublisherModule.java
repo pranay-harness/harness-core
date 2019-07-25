@@ -13,8 +13,8 @@ import io.harness.event.EventPublisherGrpc;
 import io.harness.event.EventPublisherGrpc.EventPublisherBlockingStub;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.client.EventPublisherImpl;
-import io.harness.event.grpc.auth.DelegateAuthCallCredentials;
-import io.harness.security.TokenGenerator;
+import io.harness.grpc.auth.DelegateAuthCallCredentials;
+import io.harness.security.ServiceTokenGenerator;
 
 import javax.net.ssl.SSLException;
 
@@ -38,7 +38,7 @@ public class PublisherModule extends AbstractModule {
       throw new RuntimeException(e);
     }
     Channel channel = NettyChannelBuilder.forTarget(publishTarget).sslContext(sslContext).build();
-    TokenGenerator tokenGenerator = new TokenGenerator(accountId, accountSecret);
+    ServiceTokenGenerator tokenGenerator = new ServiceTokenGenerator();
     CallCredentials callCredentials = new DelegateAuthCallCredentials(tokenGenerator, accountId, true);
     EventPublisherBlockingStub blockingStub =
         EventPublisherGrpc.newBlockingStub(channel).withCallCredentials(callCredentials);

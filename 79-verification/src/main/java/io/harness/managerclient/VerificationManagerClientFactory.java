@@ -8,8 +8,8 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.harness.network.Http;
+import io.harness.security.ServiceTokenGenerator;
 import io.harness.security.VerificationAuthInterceptor;
-import io.harness.security.VerificationTokenGenerator;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
@@ -26,12 +26,15 @@ import javax.net.ssl.X509TrustManager;
  */
 
 class ManagerClientX509TrustManager implements X509TrustManager {
+  @Override
   public X509Certificate[] getAcceptedIssuers() {
     return new X509Certificate[] {};
   }
 
+  @Override
   public void checkClientTrusted(X509Certificate[] certs, String authType) {}
 
+  @Override
   public void checkServerTrusted(X509Certificate[] certs, String authType) {}
 }
 
@@ -40,9 +43,9 @@ public class VerificationManagerClientFactory implements Provider<VerificationMa
       ImmutableList.of(new ManagerClientX509TrustManager());
 
   private String baseUrl;
-  private VerificationTokenGenerator tokenGenerator;
+  private ServiceTokenGenerator tokenGenerator;
 
-  public VerificationManagerClientFactory(String baseUrl, VerificationTokenGenerator tokenGenerator) {
+  public VerificationManagerClientFactory(String baseUrl, ServiceTokenGenerator tokenGenerator) {
     this.baseUrl = baseUrl;
     this.tokenGenerator = tokenGenerator;
   }

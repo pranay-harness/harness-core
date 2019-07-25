@@ -145,7 +145,7 @@ fi
 export HOSTNAME
 echo "host is $HOSTNAME"
 
-serviceSecret=`mongo harness --eval "db.serviceSecrets.find({ }, { serviceSecret: 1, _id: 0})"| grep serviceSecret | awk '{print $4}' | tr -d '"'`
+serviceSecret=`mongo harness --eval "db.serviceSecrets.find({ \"serviceType\" : \"LEARNING_ENGINE\" }, { serviceSecret: 1, _id: 0})"| grep serviceSecret | awk '{print $4}' | tr -d '"'`
 echo $serviceSecret
 server_url=https://$HOSTNAME:7070
 echo $server_url

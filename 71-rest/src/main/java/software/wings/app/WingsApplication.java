@@ -309,7 +309,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new SSOModule());
     modules.add(new AuthModule());
     modules.add(new GcpMarketplaceIntegrationModule());
-    modules.add(new GrpcServerModule(configuration.getGrpcServerConfig()));
 
     Injector injector = Guice.createInjector(modules);
 

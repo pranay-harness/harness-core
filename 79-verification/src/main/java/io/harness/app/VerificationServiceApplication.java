@@ -2,7 +2,7 @@ package io.harness.app;
 
 import static com.google.inject.matcher.Matchers.not;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
-import static io.harness.security.VerificationTokenGenerator.VERIFICATION_SERVICE_SECRET;
+import static io.harness.security.ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET;
 import static java.time.Duration.ofSeconds;
 import static software.wings.beans.ServiceSecretKey.ServiceType.LEARNING_ENGINE;
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_TASKS_PER_MINUTE;

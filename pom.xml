@@ -28,6 +28,7 @@
         <module>91-model-gen-tool</module>
         <module>95-e2e</module>
         <module>19-grpc-api</module>
+        <module>72-event-server</module>
     </modules>
     <scm>
         <connection>scm:git:git://github.com/wings-software/portal.git</connection>

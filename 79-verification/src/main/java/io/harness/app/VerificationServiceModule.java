@@ -8,7 +8,6 @@ import com.google.inject.name.Names;
 
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
-import io.harness.security.NoOpSecretManagerImpl;
 import io.harness.service.ContinuousVerificationServiceImpl;
 import io.harness.service.LearningEngineAnalysisServiceImpl;
 import io.harness.service.LogAnalysisServiceImpl;
@@ -28,6 +27,7 @@ import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
+import software.wings.service.impl.security.NoOpSecretManagerImpl;
 import software.wings.service.impl.verification.CVConfigurationServiceImpl;
 import software.wings.service.impl.verification.CVTaskServiceImpl;
 import software.wings.service.impl.verification.CvValidationService;

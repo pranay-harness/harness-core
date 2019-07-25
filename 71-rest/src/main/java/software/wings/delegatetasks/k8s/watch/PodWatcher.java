@@ -1,6 +1,5 @@
 package software.wings.delegatetasks.k8s.watch;
 
-import com.google.inject.Inject;
 import com.google.protobuf.Any;
 
 import io.fabric8.kubernetes.api.model.Pod;
@@ -32,9 +31,6 @@ public class PodWatcher implements Watcher<Pod> {
   private static final int POD_MAP_MAX_SIZE = 5000;
   private LRUMap podMap;
 
-  //@Inject private EventPublisher eventPublisher;
-
-  @Inject
   public PodWatcher(KubernetesClient client, String namespace) {
     watch = client.pods().inNamespace(namespace).watch(this);
     podMap = new LRUMap<String, Boolean>(POD_MAP_MAX_SIZE);
@@ -44,10 +40,7 @@ public class PodWatcher implements Watcher<Pod> {
   public void eventReceived(Action action, Pod pod) {
     String uid = pod.getMetadata().getUid();
     logger.debug("Pod Watcher received an event for pod with uid {}.", uid);
-
-    PodCondition podScheduledCondition = getPodScheduledCondition(pod);
-
-    // check if the deletion timestamp is specified
+    PodCondition podScheduledCondition = getPodScheduledCondition(pod); // check if the deletion timestamp is specified
     boolean isPodDeleted = false;
     String deletionTimestamp = pod.getMetadata().getDeletionTimestamp();
     Long deletionGracePeriodSeconds = pod.getMetadata().getDeletionGracePeriodSeconds();
