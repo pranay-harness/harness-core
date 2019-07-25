@@ -16,6 +16,7 @@ import migrations.all.DeleteOrphanNotificationGroups;
 import migrations.all.DeleteStaleThirdPartyApiCallLogsMigration;
 import migrations.all.ExplodeLogMLFeedbackRecordsMigration;
 import migrations.all.FetchAndSaveAccounts;
+import migrations.all.FetchAndSaveAccounts2;
 import migrations.all.InitInfraProvisionerCounters;
 import migrations.all.InitPipelineCounters;
 import migrations.all.InitServiceCounters;
@@ -25,6 +26,7 @@ import migrations.all.LogAnalysisBaselineMigration;
 import migrations.all.MarkSendMailFlagAsTrueInUserGroup;
 import migrations.all.MigrateLogDataRecordsToGoogle;
 import migrations.all.MigrateTimeSeriesRawDataToGoogle;
+import migrations.all.NoOpMigration;
 import migrations.all.RemoveSupportEmailFromSalesContacts;
 import migrations.all.SendInviteUrlForAllUserInvites;
 import migrations.all.SetDummyTechStackForOldAccounts;
@@ -88,6 +90,8 @@ public class MigrationBackgroundList {
         .add(Pair.of(41, BaseMigration.class))
         .add(Pair.of(42, UpdateWorkflowExecutionAccountId.class))
         .add(Pair.of(43, FetchAndSaveAccounts.class))
+        .add(Pair.of(44, NoOpMigration.class))
+        .add(Pair.of(45, FetchAndSaveAccounts2.class))
         .build();
   }
 }
