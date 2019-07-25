@@ -101,7 +101,7 @@ NOTE: the data from it is used for every git operation github does on you behave
 
 ### Run Harness without IDE (especially for the UI development)
 
-1. Start server : Replace the <Your Home Directory> with the appropriate value(such as /home/rishi) and run following commands. Do
+1. Start server : Replace the \<Your Home Directory> with the appropriate value(such as /home/rishi) and run following commands. Do
    
 `export HOSTNAME` 
 
