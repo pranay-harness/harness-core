@@ -609,14 +609,22 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public Account update(@Valid Account account) {
+    licenseService.decryptLicenseInfo(account, false);
+
     UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class)
                                                      .set("companyName", account.getCompanyName())
                                                      .set("twoFactorAdminEnforced", account.isTwoFactorAdminEnforced())
                                                      .set(AccountKeys.oauthEnabled, account.isOauthEnabled())
                                                      .set("whitelistedDomains", account.getWhitelistedDomains());
+
+    if (null != account.getLicenseInfo()) {
+      updateOperations.set(AccountKeys.licenseInfo, account.getLicenseInfo());
+    }
+
     if (account.getAuthenticationMechanism() != null) {
       updateOperations.set("authenticationMechanism", account.getAuthenticationMechanism());
     }
+
     wingsPersistence.update(account, updateOperations);
     dbCache.invalidate(Account.class, account.getUuid());
     Account updatedAccount = wingsPersistence.get(Account.class, account.getUuid());
