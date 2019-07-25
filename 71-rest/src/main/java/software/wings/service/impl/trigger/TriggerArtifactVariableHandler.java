@@ -81,9 +81,9 @@ public class TriggerArtifactVariableHandler {
         case PIPELINE:
           PipelineAction pipelineAction = (PipelineAction) trigger.getAction();
           Pipeline pipeline = pipelineService.readPipeline(appId, pipelineAction.getPipelineId(), false);
-          /* artifactVariables =
-               pipelineService.fetchDeploymentMetadata(appId, pipeline, null, null, Include.ARTIFACT_SERVICE)
-                   .getArtifactVariables(); */
+          artifactVariables =
+              pipelineService.fetchDeploymentMetadata(appId, pipeline, null, null, Include.ARTIFACT_SERVICE)
+                  .getArtifactVariables();
 
           if (artifactVariables != null) {
             artifactVariables.forEach(artifactVariable -> {

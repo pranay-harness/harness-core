@@ -35,7 +35,6 @@ import static software.wings.utils.WingsTestConstants.FILE_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
-import static software.wings.utils.WingsTestConstants.SERVICE_ID_CHANGED;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TRIGGER_DESCRIPTION;
 import static software.wings.utils.WingsTestConstants.VARIABLE_NAME;
@@ -47,7 +46,6 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
-import io.harness.data.structure.UUIDGenerator;
 import io.harness.distribution.idempotence.IdempotentLock;
 import org.junit.Before;
 import org.junit.Test;
@@ -135,15 +133,24 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
               ArtifactCondition.builder().artifactStreamId(ARTIFACT_STREAM_ID).artifactFilter("^release").build())
           .build();
 
+  List<ArtifactVariable> variables = singletonList(ArtifactVariable.builder()
+                                                       .name(VARIABLE_NAME)
+                                                       .entityId(ENTITY_ID)
+                                                       .type(VariableType.ARTIFACT)
+                                                       .value(ARTIFACT_ID)
+                                                       .build());
+
+  Pipeline pipeline = buildPipeline();
   @Before
   public void setUp() {
     List<ServiceVariable> serviceVariableList = asList(
         ServiceVariable.builder().type(Type.ARTIFACT).name(VARIABLE_NAME).value(VARIABLE_VALUE.toCharArray()).build());
-    Pipeline pipeline = buildPipeline();
+
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(buildWorkflow());
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
     when(artifactStreamServiceBindingService.listServiceIds(ARTIFACT_STREAM_ID)).thenReturn(asList(SERVICE_ID));
+    when(artifactStreamServiceBindingService.listServiceIds(ARTIFACT_ID)).thenReturn(asList(SERVICE_ID));
     when(artifactStreamServiceBindingService.getService(APP_ID, ARTIFACT_STREAM_ID, true))
         .thenReturn(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build());
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, false)).thenReturn(pipeline);
@@ -230,6 +237,11 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
                            .artifactFilter(ARTIFACT_FILTER)
                            .build())
             .build();
+    when(pipelineService.fetchDeploymentMetadata(APP_ID, pipeline, null, null, Include.ARTIFACT_SERVICE))
+        .thenReturn(DeploymentMetadata.builder()
+                        .artifactVariables(variables)
+                        .artifactRequiredServiceIds(asList(SERVICE_ID))
+                        .build());
 
     DeploymentTrigger savedTrigger = deploymentTriggerService.save(trigger);
     deploymentTriggerService.triggerExecutionPostArtifactCollectionAsync(
@@ -277,6 +289,12 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
                                 anArtifactFile().withAppId(APP_ID).withFileUuid(FILE_ID).withName(FILE_NAME).build()))
                             .build();
 
+    when(pipelineService.fetchDeploymentMetadata(APP_ID, pipeline, null, null, Include.ARTIFACT_SERVICE))
+        .thenReturn(DeploymentMetadata.builder()
+                        .artifactVariables(variables)
+                        .artifactRequiredServiceIds(asList(SERVICE_ID))
+                        .build());
+
     DeploymentTrigger savedTrigger = deploymentTriggerService.save(trigger);
 
     when(workflowExecutionService.triggerPipelineExecution(
@@ -323,6 +341,12 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
         ArtifactCondition.builder().artifactStreamId(ARTIFACT_STREAM_ID).artifactFilter("^release").build());
 
     deploymentTriggerService.save(trigger);
+    when(pipelineService.fetchDeploymentMetadata(APP_ID, pipeline, null, null, Include.ARTIFACT_SERVICE))
+        .thenReturn(DeploymentMetadata.builder()
+                        .artifactVariables(variables)
+                        .artifactRequiredServiceIds(asList(SERVICE_ID))
+                        .build());
+
     when(featureFlagService.isEnabled(FeatureName.TRIGGER_FOR_ALL_ARTIFACTS, ACCOUNT_ID)).thenReturn(true);
     when(workflowExecutionService.triggerPipelineExecution(
              anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class)))
@@ -351,11 +375,12 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldTriggerPostArtifactCollectionOneArtifactMatchesOtherDoesNotMatch() {
-    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true))
-        .thenReturn(Pipeline.builder()
-                        .appId(APP_ID)
-                        .uuid(PIPELINE_ID)
-                        .services(asList(Service.builder().uuid(SERVICE_ID_CHANGED).name("Order").build()))
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
+
+    when(pipelineService.fetchDeploymentMetadata(APP_ID, pipeline, null, null, Include.ARTIFACT_SERVICE))
+        .thenReturn(DeploymentMetadata.builder()
+                        .artifactVariables(variables)
+                        .artifactRequiredServiceIds(asList(SERVICE_ID))
                         .build());
 
     when(workflowExecutionService.triggerPipelineExecution(
@@ -372,7 +397,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
                             .build();
     Artifact artifact2 = anArtifact()
                              .withAppId(APP_ID)
-                             .withUuid(UUIDGenerator.generateUuid())
+                             .withUuid(ARTIFACT_ID)
                              .withArtifactStreamId(ARTIFACT_STREAM_ID)
                              .withMetadata(ImmutableMap.of("buildNo", "release456"))
                              .build();
@@ -382,36 +407,6 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
 
     Mockito.verify(workflowExecutionService)
         .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  public void shouldNotTriggerPostArtifactCollectionIfArtifactsMissing() {
-    when(workflowExecutionService.triggerPipelineExecution(
-             anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class)))
-        .thenReturn(WorkflowExecution.builder().appId(APP_ID).status(SUCCESS).build());
-
-    trigger.setCondition(
-        ArtifactCondition.builder().artifactStreamId(ARTIFACT_STREAM_ID).artifactFilter("^release").build());
-    deploymentTriggerService.save(trigger);
-
-    Artifact artifact = anArtifact()
-                            .withAppId(APP_ID)
-                            .withUuid(ARTIFACT_ID)
-                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
-                            .withMetadata(ImmutableMap.of("buildNo", "@33release23"))
-                            .build();
-    Artifact artifact2 = anArtifact()
-                             .withAppId(APP_ID)
-                             .withUuid(UUIDGenerator.generateUuid())
-                             .withArtifactStreamId(ARTIFACT_STREAM_ID)
-                             .withMetadata(ImmutableMap.of("buildNo", "release456"))
-                             .build();
-
-    deploymentTriggerService.triggerExecutionPostArtifactCollectionAsync(
-        ACCOUNT_ID, APP_ID, ARTIFACT_STREAM_ID, asList(artifact, artifact2));
-
-    Mockito.verify(serviceResourceService).fetchServiceNamesByUuids(APP_ID, asList(SERVICE_ID));
   }
 
   @Test
