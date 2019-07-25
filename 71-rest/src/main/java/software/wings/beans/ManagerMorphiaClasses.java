@@ -85,6 +85,7 @@ import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.prune.PruneEvent;
+import software.wings.scheduler.events.segment.SegmentGroupEventJobContext;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
@@ -206,7 +207,7 @@ public class ManagerMorphiaClasses {
       LoginSettings.class, GCPUsageReport.class, GCPBillingJobEntity.class, DashboardSettings.class,
       InfrastructureDefinition.class, GcpMarketplaceEvent.class, SupervisedTSThreshold.class, TimeSeriesRawData.class,
       AzureVaultConfig.class, ECSPollingJobEntity.class, ApplicationAccess.class, CloudFormationRollbackConfig.class,
-      SplunkCVConfiguration.class);
+      SplunkCVConfiguration.class, SegmentGroupEventJobContext.class);
 
   public static final Set<Class> dependentClasses =
       ImmutableSet.<Class>of(EncryptionConfig.class, EncryptedRecord.class, ExecutionCapabilityDemander.class);

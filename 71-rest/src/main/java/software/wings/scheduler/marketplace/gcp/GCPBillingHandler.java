@@ -46,6 +46,9 @@ public class GCPBillingHandler implements Handler<GCPBillingJobEntity> {
                                          .build();
 
       injector.injectMembers(iterator);
+
+      // this'll check every 30 minutes if there are any new jobs to process.
+      // this value must be lower than `targetInterval`
       executor.scheduleAtFixedRate(() -> iterator.process(ProcessMode.PUMP), 0, 30, TimeUnit.MINUTES);
     }
   }

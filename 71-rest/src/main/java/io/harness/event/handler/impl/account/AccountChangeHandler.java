@@ -36,6 +36,9 @@ public class AccountChangeHandler implements EventHandler {
     eventListener.registerEventHandler(this, Sets.newHashSet(EventType.ACCOUNT_ENTITY_CHANGE));
   }
 
+  // needed by Guice to allow injection of this class
+  public AccountChangeHandler() {}
+
   @Override
   public void handleEvent(final Event event) {
     EventData eventData = event.getEventData();

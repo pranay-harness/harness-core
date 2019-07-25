@@ -28,6 +28,7 @@ import migrations.all.MigrateLogDataRecordsToGoogle;
 import migrations.all.MigrateTimeSeriesRawDataToGoogle;
 import migrations.all.NoOpMigration;
 import migrations.all.RemoveSupportEmailFromSalesContacts;
+import migrations.all.ScheduleSegmentPublishJob;
 import migrations.all.SendInviteUrlForAllUserInvites;
 import migrations.all.SetDummyTechStackForOldAccounts;
 import migrations.all.SetEmailToIndividualMemberFlag;
@@ -92,6 +93,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(43, FetchAndSaveAccounts.class))
         .add(Pair.of(44, NoOpMigration.class))
         .add(Pair.of(45, FetchAndSaveAccounts2.class))
+        .add(Pair.of(46, ScheduleSegmentPublishJob.class))
         .build();
   }
 }
