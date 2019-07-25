@@ -127,6 +127,7 @@ import software.wings.scheduler.YamlChangeSetPruneJob;
 import software.wings.scheduler.ZombieHunterJob;
 import software.wings.scheduler.approval.ApprovalPollingHandler;
 import software.wings.scheduler.ecs.ECSPollingHandler;
+import software.wings.scheduler.events.segment.SegmentGroupEventJob.SegmentGroupEventJobExecutor;
 import software.wings.scheduler.instance.InstanceSyncHandler;
 import software.wings.scheduler.marketplace.gcp.GCPBillingHandler;
 import software.wings.security.AuthResponseFilter;
@@ -607,6 +608,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     ApprovalPollingHandler.ApprovalPollingExecutor.registerIterators(injector);
     ECSPollingHandler.ECSPollingExecutor.registerIterators(injector);
     GCPBillingHandler.GCPBillingExecutor.registerIterators(injector);
+    SegmentGroupEventJobExecutor.registerIterators(injector);
     BarrierServiceImpl.registerIterators(injector);
   }
 
