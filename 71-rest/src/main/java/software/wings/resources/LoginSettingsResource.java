@@ -2,13 +2,10 @@ package software.wings.resources;
 
 import com.google.inject.Inject;
 
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
-import software.wings.beans.FeatureName;
 import software.wings.beans.loginSettings.LoginSettings;
 import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.beans.loginSettings.PasswordExpirationPolicy;
@@ -52,9 +49,6 @@ public class LoginSettingsResource {
   @Consumes(MediaType.APPLICATION_JSON)
   public RestResponse<LoginSettings> updatePasswordPolicy(
       @QueryParam("accountId") String accountId, @NotNull @Valid PasswordExpirationPolicy passwordExpirationPolicy) {
-    if (!featureFlagService.isEnabled(FeatureName.LOGIN_SETTINGS, accountId)) {
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED);
-    }
     return new RestResponse<>(loginSettingsService.updatePasswordExpirationPolicy(accountId, passwordExpirationPolicy));
   }
 
@@ -63,9 +57,6 @@ public class LoginSettingsResource {
   @Consumes(MediaType.APPLICATION_JSON)
   public RestResponse<LoginSettings> updateUserLockoutSettings(
       @QueryParam("accountId") String accountId, @NotNull @Valid UserLockoutPolicy userLockoutPolicy) {
-    if (!featureFlagService.isEnabled(FeatureName.LOGIN_SETTINGS, accountId)) {
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED);
-    }
     return new RestResponse<>(loginSettingsService.updateUserLockoutPolicy(accountId, userLockoutPolicy));
   }
 
@@ -74,9 +65,6 @@ public class LoginSettingsResource {
   @Consumes(MediaType.APPLICATION_JSON)
   public RestResponse<LoginSettings> updatePasswordStrengthSettings(
       @QueryParam("accountId") String accountId, @NotNull @Valid PasswordStrengthPolicy passwordStrengthPolicy) {
-    if (!featureFlagService.isEnabled(FeatureName.LOGIN_SETTINGS, accountId)) {
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED);
-    }
     return new RestResponse<>(loginSettingsService.updatePasswordStrengthPolicy(accountId, passwordStrengthPolicy));
   }
 
@@ -84,9 +72,6 @@ public class LoginSettingsResource {
   @Path("get-login-settings")
   @Consumes(MediaType.APPLICATION_JSON)
   public RestResponse<LoginSettings> getLoginSettings(@QueryParam("accountId") String accountId) {
-    if (!featureFlagService.isEnabled(FeatureName.LOGIN_SETTINGS, accountId)) {
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED);
-    }
     return new RestResponse<>(loginSettingsService.getLoginSettings(accountId));
   }
 }

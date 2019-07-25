@@ -3,7 +3,6 @@ package software.wings.scheduler;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.FeatureName.LOGIN_SETTINGS;
 
 import com.google.inject.Inject;
 
@@ -67,10 +66,6 @@ public class AccountPasswordExpirationJob implements Job {
   }
 
   public void checkAccountPasswordExpiration() {
-    if (!featureFlagService.isEnabled(LOGIN_SETTINGS, null)) {
-      logger.info("Feature flag {} is off. Skipping password policy job", LOGIN_SETTINGS.name());
-      return;
-    }
     try {
       HIterator<User> userIterator =
           new HIterator<>(wingsPersistence.createQuery(User.class, excludeAuthority).fetch());
