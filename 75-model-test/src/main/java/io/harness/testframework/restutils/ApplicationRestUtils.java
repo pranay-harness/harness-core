@@ -29,4 +29,20 @@ public class ApplicationRestUtils {
 
     return savedApplicationResponse.getResource();
   }
+
+  public static Application updateApplication(
+      String bearerToken, Application application, String applicationId, String accountId) {
+    GenericType<RestResponse<Application>> applicationType = new GenericType<RestResponse<Application>>() {};
+
+    RestResponse<Application> savedApplicationResponse = Setup.portal()
+                                                             .auth()
+                                                             .oauth2(bearerToken)
+                                                             .queryParam("routingId", accountId)
+                                                             .body(application, ObjectMapperType.GSON)
+                                                             .contentType(ContentType.JSON)
+                                                             .put("/apps/" + applicationId)
+                                                             .as(applicationType.getType());
+
+    return savedApplicationResponse.getResource();
+  }
 }
