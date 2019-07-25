@@ -166,8 +166,8 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
       final TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricDataResponses = TreeBasedTable.create();
 
       List<Callable<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> callables = new ArrayList<>();
-      long startTime = collectionStartTime / TimeUnit.SECONDS.toMillis(1);
-      long endTime = System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1);
+      long startTime = TimeUnit.MILLISECONDS.toSeconds(collectionStartTime);
+      long endTime = startTime + TimeUnit.MINUTES.toSeconds(1);
       List<Optional<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> results;
       logger.info("fetching Prometheus metrics for {} Analysis Type {} for min {}",
           dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getTimeSeriesMlAnalysisType(),
