@@ -20,7 +20,6 @@ public enum EventType {
   ESSENTIALS_TO_PAID,
   PAID_TO_ESSENTIALS,
   TRIAL_TO_ESSENTIALS,
-
   /***
    * Usage metrics EventTypes
    */
@@ -46,5 +45,6 @@ public enum EventType {
   INSTANCE_EVENT,
 
   CUSTOM,
-  TECH_STACK
+  TECH_STACK,
+  ACCOUNT_ENTITY_CHANGE
 }

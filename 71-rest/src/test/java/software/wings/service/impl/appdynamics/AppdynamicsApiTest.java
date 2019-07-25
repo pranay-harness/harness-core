@@ -129,7 +129,8 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testInvalidCredential() throws IOException {
     Call<List<NewRelicApplication>> restCall = mock(Call.class);
-    when(restCall.execute()).thenReturn(Response.error(HttpStatus.SC_UNAUTHORIZED, new RealResponseBody(null, null)));
+    when(restCall.execute())
+        .thenReturn(Response.error(HttpStatus.SC_UNAUTHORIZED, new RealResponseBody(null, 0, null)));
     when(appdynamicsRestClient.listAllApplications(anyString())).thenReturn(restCall);
 
     String savedAttributeId = saveAppdynamicsConfig();

@@ -8,6 +8,7 @@ import io.harness.event.handler.EventHandler;
 import io.harness.event.handler.impl.MarketoHandler;
 import io.harness.event.handler.impl.NateroEventHandler;
 import io.harness.event.handler.impl.VerificationEventHandler;
+import io.harness.event.handler.impl.account.AccountChangeHandler;
 import io.harness.event.handler.impl.notifications.AlertNotificationHandler;
 import io.harness.event.handler.impl.segment.SegmentHandler;
 import io.harness.event.handler.marketo.MarketoConfig;
@@ -53,6 +54,9 @@ public class EventsModule extends AbstractModule {
 
     eventHandlerMapBinder.addBinding(AlertNotificationHandler.class.getSimpleName())
         .toInstance(new AlertNotificationHandler(eventListener));
+
+    eventHandlerMapBinder.addBinding(AccountChangeHandler.class.getSimpleName())
+        .toInstance(new AccountChangeHandler(eventListener));
 
     HarnessMetricsRegistryHandler harnessMetricsRegistryHandler = new HarnessMetricsRegistryHandler();
     eventHandlerMapBinder.addBinding("HarnessMetricsRegistryHandler").toInstance(harnessMetricsRegistryHandler);

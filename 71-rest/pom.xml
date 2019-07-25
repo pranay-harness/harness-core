@@ -296,6 +296,10 @@
             <artifactId>metrics-guice</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.segment.analytics.java</groupId>
+            <artifactId>analytics</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.smoketurner</groupId>
             <artifactId>dropwizard-swagger</artifactId>
         </dependency>
