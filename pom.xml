@@ -653,6 +653,11 @@
                 <version>3.2.0</version>
             </dependency>
             <dependency>
+                <groupId>com.segment.analytics.java</groupId>
+                <artifactId>analytics</artifactId>
+                <version>LATEST</version>
+            </dependency>
+            <dependency>
                 <groupId>com.smoketurner</groupId>
                 <artifactId>dropwizard-swagger</artifactId>
                 <version>1.0.0-1</version>

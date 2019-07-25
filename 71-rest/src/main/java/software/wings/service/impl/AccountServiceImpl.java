@@ -46,6 +46,10 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
+import io.harness.event.model.Event;
+import io.harness.event.model.EventData;
+import io.harness.event.model.EventType;
+import io.harness.event.publisher.EventPublisher;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -109,6 +113,7 @@ import software.wings.security.authentication.AccountSettingsResponse;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.OauthProviderType;
 import software.wings.service.impl.analysis.CVEnabledService;
+import software.wings.service.impl.event.AccountEntityEvent;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertNotificationRuleService;
@@ -208,6 +213,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private DashboardStatisticsService dashboardStatisticsService;
   @Inject private UsageMetricsEventPublisher usageMetricsEventPublisher;
   @Inject private HarnessUserGroupServiceImpl harnessUserGroupService;
+  @Inject private EventPublisher eventPublisher;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   private Map<String, UrlInfo> techStackDocLinks;
@@ -244,8 +250,16 @@ public class AccountServiceImpl implements AccountService {
       scheduleAccountLevelJobs(account.getUuid());
     }
 
+    publishAccountChangeEvent(account);
+
     logger.info("Successfully created account '{}' with id '{}'.", account.getAccountName(), account.getUuid());
     return account;
+  }
+
+  private void publishAccountChangeEvent(Account account) {
+    EventData eventData = EventData.builder().eventInfo(new AccountEntityEvent(account)).build();
+    eventPublisher.publishEvent(
+        Event.builder().eventData(eventData).eventType(EventType.ACCOUNT_ENTITY_CHANGE).build());
   }
 
   private void validateAccount(Account account) {
@@ -607,6 +621,9 @@ public class AccountServiceImpl implements AccountService {
     dbCache.invalidate(Account.class, account.getUuid());
     Account updatedAccount = wingsPersistence.get(Account.class, account.getUuid());
     licenseService.decryptLicenseInfo(updatedAccount, false);
+
+    publishAccountChangeEvent(updatedAccount);
+
     return updatedAccount;
   }
 
