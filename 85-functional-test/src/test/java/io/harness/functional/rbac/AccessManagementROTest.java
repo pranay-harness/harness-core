@@ -59,7 +59,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY, intermittent = true, resent = false)
+  @Owner(emails = SWAMY, resent = false)
   @Category(FunctionalTests.class)
   public void accessManagementNoPermissionTestForGet() {
     final String READ_ONLY_USER = "rbac1@harness.io";

@@ -70,9 +70,9 @@ public class SecretsFunctionalTest extends AbstractFunctionalTest {
    * Disbaling this temporarily until our team completes this from framework level.
    */
   @Test
-  @Owner(emails = SWAMY, intermittent = true)
+  @Owner(emails = SWAMY)
   @Category(FunctionalTests.class)
-  @Ignore("TODO: This has some issue with datagen model, which may turn other tests flaky.")
+  @Ignore("This has some issue with datagen model, which may turn other tests flaky. Runs in E2ETest.")
   public void secretsCRUDTests() {
     logger.info("Secrets test starts");
     String secretsName = "Secret-" + System.currentTimeMillis();
