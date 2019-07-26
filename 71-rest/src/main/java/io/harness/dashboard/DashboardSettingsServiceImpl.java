@@ -18,7 +18,9 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.beans.Event.Type;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.security.auth.DashboardAuthHandler;
 
 import javax.validation.constraints.NotNull;
@@ -28,6 +30,7 @@ import javax.validation.constraints.NotNull;
 public class DashboardSettingsServiceImpl implements DashboardSettingsService {
   @Inject private WingsPersistence persistence;
   @Inject private DashboardAuthHandler dashboardAuthHandler;
+  @Inject private AuditServiceHelper auditServiceHelper;
 
   @Override
   public DashboardSettings get(@NotNull String accountId, @NotNull String id) {
@@ -40,7 +43,9 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
   public DashboardSettings createDashboardSettings(
       @NotNull String accountId, @NotNull DashboardSettings dashboardSettings) {
     dashboardSettings.setAccountId(accountId);
-    return get(accountId, persistence.save(dashboardSettings));
+    DashboardSettings savedDashboardSettings = get(accountId, persistence.save(dashboardSettings));
+    auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, savedDashboardSettings, Type.CREATE);
+    return savedDashboardSettings;
   }
 
   @Override
@@ -50,6 +55,9 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
     if (id == null) {
       throw new WingsException(ErrorCode.INVALID_DASHBOARD_UPDATE_REQUEST, USER);
     }
+
+    DashboardSettings dashboardSettingsBeforeUpdate = get(accountId, id);
+
     UpdateOperations<DashboardSettings> updateOperations = persistence.createUpdateOperations(DashboardSettings.class);
     updateOperations.set(DashboardSettings.keys.data, dashboardSettings.getData());
     updateOperations.set(DashboardSettings.keys.name, dashboardSettings.getName());
@@ -61,14 +69,21 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
     }
 
     persistence.update(dashboardSettings, updateOperations);
-    return get(accountId, id);
+    DashboardSettings updatedDashboardSettings = get(accountId, id);
+    auditServiceHelper.reportForAuditingUsingAccountId(
+        accountId, dashboardSettingsBeforeUpdate, updatedDashboardSettings, Type.UPDATE);
+    return updatedDashboardSettings;
   }
 
   @Override
   public boolean deleteDashboardSettings(@NotNull String accountId, @NotNull String dashboardSettingsId) {
     DashboardSettings dashboardSettings = get(accountId, dashboardSettingsId);
     if (dashboardSettings != null && dashboardSettings.getAccountId().equals(accountId)) {
-      return persistence.delete(DashboardSettings.class, dashboardSettingsId);
+      boolean deleted = persistence.delete(DashboardSettings.class, dashboardSettingsId);
+      if (deleted) {
+        auditServiceHelper.reportForAuditingUsingAccountId(accountId, dashboardSettings, null, Type.DELETE);
+      }
+      return deleted;
     }
     return false;
   }
