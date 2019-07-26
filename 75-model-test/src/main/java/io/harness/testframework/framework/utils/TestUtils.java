@@ -1,5 +1,6 @@
 package io.harness.testframework.framework.utils;
 
+import com.google.common.base.Splitter;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
@@ -17,6 +18,7 @@ import software.wings.helpers.ext.mail.SmtpConfig;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -79,6 +81,27 @@ public class TestUtils {
     }
 
     return referredUrl;
+  }
+
+  public static String validateAndGetTrialUserInviteFromUrl(String url) {
+    URLConnection con = null;
+    String inviteId = "";
+    try {
+      con = new URL(url).openConnection();
+      con.getInputStream();
+    } catch (IOException e) {
+      if (con != null && con.getURL().toString().contains("userInviteId")) {
+        String query = con.getURL().getQuery();
+        Map<String, String> split = Splitter.on("&").withKeyValueSeparator("=").split(query);
+        inviteId = split.get("userInviteId");
+      }
+    }
+    if (con != null && con.getURL().toString().contains("userInviteId")) {
+      String query = con.getURL().getQuery();
+      Map<String, String> split = Splitter.on("&").withKeyValueSeparator("=").split(query);
+      inviteId = split.get("userInviteId");
+    }
+    return inviteId;
   }
 
   public static String getResetTokenFromUrl(String url) {

@@ -4,6 +4,7 @@ import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.framework.constants.UserConstants;
 import io.harness.testframework.framework.email.mailinator.MailinatorMessageDetails;
@@ -145,5 +146,19 @@ public class UserUtils {
                .post("/users/invites")
                .getStatusCode()
         == status;
+  }
+
+  public static UserInvite getTrialSignUpInvite(String email, String password) {
+    String inviteId = UUIDGenerator.generateUuid();
+    UserInvite invite = new UserInvite();
+    invite.setEmail(email);
+    invite.setName(email.replace("@harness.mailinator.com", ""));
+    invite.setUuid(inviteId);
+    String accountName = TestUtils.generateRandomUUID();
+    String companyName = TestUtils.generateRandomUUID();
+    invite.setAccountName(accountName);
+    invite.setCompanyName(companyName);
+    invite.setPassword(password.toCharArray());
+    return invite;
   }
 }
