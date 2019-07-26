@@ -85,7 +85,7 @@ public class TriggerArtifactVariableHandler {
               pipelineService.fetchDeploymentMetadata(appId, pipeline, null, null, Include.ARTIFACT_SERVICE)
                   .getArtifactVariables();
 
-          if (artifactVariables != null) {
+          if (artifactVariables != null && pipelineAction.getTriggerArgs() != null) {
             artifactVariables.forEach(artifactVariable -> {
               String value = fetchArtifactVariableValue(appId,
                   pipelineAction.getTriggerArgs().getTriggerArtifactVariables(), artifactVariable, trigger, artifacts);
@@ -96,14 +96,16 @@ public class TriggerArtifactVariableHandler {
         case ORCHESTRATION:
           WorkflowAction workflowAction = (WorkflowAction) trigger.getAction();
           Workflow workflow = workflowService.readWorkflow(appId, workflowAction.getWorkflowId());
-          Map<String, String> variables = workflowAction.getTriggerArgs().getVariables().stream().collect(
-              Collectors.toMap(Variable::getName, Variable::getValue));
-
+          Map<String, String> variables = null;
+          if (workflowAction.getTriggerArgs() != null && workflowAction.getTriggerArgs().getVariables() != null) {
+            variables = workflowAction.getTriggerArgs().getVariables().stream().collect(
+                Collectors.toMap(Variable::getName, Variable::getValue));
+          }
           artifactVariables =
               workflowService.fetchDeploymentMetadata(appId, workflow, variables, null, null, Include.ARTIFACT_SERVICE)
                   .getArtifactVariables();
 
-          if (artifactVariables != null) {
+          if (artifactVariables != null && workflowAction.getTriggerArgs() != null) {
             artifactVariables.forEach(artifactVariable -> {
               String value = fetchArtifactVariableValue(appId,
                   workflowAction.getTriggerArgs().getTriggerArtifactVariables(), artifactVariable, trigger, artifacts);
@@ -278,8 +280,8 @@ public class TriggerArtifactVariableHandler {
       case LAST_DEPLOYED:
         TriggerArtifactSelectionLastDeployed triggerArtifactSelectionLastDeployed =
             (TriggerArtifactSelectionLastDeployed) triggerArtifactVariable.getVariableValue();
-        return fetchLastDeployedArtifacts(appId, triggerArtifactSelectionLastDeployed.getWorkflowId(),
-            triggerArtifactSelectionLastDeployed.getVariableName());
+        return fetchLastDeployedArtifacts(
+            appId, triggerArtifactSelectionLastDeployed.getWorkflowId(), triggerArtifactVariable.getVariableName());
 
       default:
         unhandled(triggerArtifactVariable.getVariableValue().getArtifactSelectionType());
