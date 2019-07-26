@@ -8,6 +8,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.USER_ID;
+import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.inject.Inject;
 
@@ -24,10 +27,13 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
+import software.wings.beans.User;
 import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.beans.security.access.Whitelist;
 import software.wings.beans.security.access.WhitelistStatus;
 import software.wings.features.api.PremiumFeature;
+import software.wings.security.UserRequestContext;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.WhitelistService;
 
@@ -75,6 +81,14 @@ public class WhitelistServiceTest extends WingsBaseTest {
     when(accountService.get(anyString())).thenReturn(account);
     when(mainConfig.getGlobalWhitelistConfig()).thenReturn(getHarnessDefaults());
     when(ipWhitelistingFeature.isAvailableForAccount(accountId)).thenReturn(true);
+
+    setUserRequestContext();
+  }
+
+  private void setUserRequestContext() {
+    User user = User.Builder.anUser().withName(USER_NAME).withUuid(USER_ID).build();
+    user.setUserRequestContext(UserRequestContext.builder().accountId(ACCOUNT_ID).build());
+    UserThreadLocal.set(user);
   }
 
   private GlobalWhitelistConfig getHarnessDefaults() {

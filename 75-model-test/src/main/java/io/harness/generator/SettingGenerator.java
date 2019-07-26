@@ -4,9 +4,10 @@ import static io.harness.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROV
 import static io.harness.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.GITHUB_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.PHYSICAL_DATA_CENTER;
-import static io.harness.generator.SettingGenerator.Settings.TERRAFORM_CITY_GIT_REPO;
-import static io.harness.generator.SettingGenerator.Settings.TERRAFORM_MAIN_GIT_REPO;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.testframework.framework.utils.SettingUtils.createGitHubRepoSetting;
+import static io.harness.testframework.framework.utils.SettingUtils.createTerraformCityGitRepoSetting;
+import static io.harness.testframework.framework.utils.SettingUtils.createTerraformMainGitRepoSetting;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
@@ -26,6 +27,7 @@ import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+import io.harness.testframework.framework.utils.SettingUtils;
 import software.wings.beans.Account;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
@@ -34,7 +36,6 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.JenkinsConfig;
-import software.wings.beans.JiraConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.SettingAttribute;
@@ -55,7 +56,7 @@ import java.util.EnumSet;
 public class SettingGenerator {
   private static final String HARNESS_NEXUS = "Harness Nexus";
   private static final String HARNESS_JENKINS = "Harness Jenkins";
-  private static final String HARNESS_JIRA = "Harness Jira";
+  public static final String HARNESS_JIRA = "Harness Jira";
   private static final String SNOW_CONNECTOR = "Service Now Connector";
   private static final String HARNESS_NEXUS_THREE = "Harness Nexus 3";
   private static final String HARNESS_ARTIFACTORY = "Harness Artifactory";
@@ -171,22 +172,8 @@ public class SettingGenerator {
   private SettingAttribute ensureTerraformMainGitRepo(Seed seed, Owners owners) {
     SettingAttribute githubKey = ensurePredefined(seed, owners, GITHUB_TEST_CONNECTOR);
 
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withCategory(CONNECTOR)
-            .withName(TERRAFORM_MAIN_GIT_REPO.name())
-            .withAppId(githubKey.getAppId())
-            .withEnvId(githubKey.getEnvId())
-            .withAccountId(githubKey.getAccountId())
-            .withValue(GitConfig.builder()
-                           .repoUrl("https://github.com/wings-software/terraform.git")
-                           .username("test-harness")
-                           .password(scmSecret.decryptToCharArray(new SecretName("terraform_password")))
-                           .branch("master")
-                           .accountId(githubKey.getAccountId())
-                           .build())
-            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
-            .build();
+    char[] password = scmSecret.decryptToCharArray(new SecretName("terraform_password"));
+    SettingAttribute settingAttribute = createTerraformMainGitRepoSetting(githubKey, password);
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
@@ -294,44 +281,16 @@ public class SettingGenerator {
   private SettingAttribute ensureGithubTest(Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
 
-    final SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withCategory(CONNECTOR)
-            .withAccountId(account.getUuid())
-            .withAppId(GLOBAL_APP_ID)
-            .withEnvId(GLOBAL_ENV_ID)
-            .withName(GITHUB_TEST_CONNECTOR.name())
-            .withValue(aHostConnectionAttributes()
-                           .withConnectionType(SSH)
-                           .withAccessType(KEY)
-                           .withAccountId(account.getUuid())
-                           .withUserName("test-harness")
-                           .withKey(scmSecret.decryptToCharArray(new SecretName("playground_private_key")))
-                           .build())
-            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
-            .build();
+    char[] key = scmSecret.decryptToCharArray(new SecretName("playground_private_key"));
+    final SettingAttribute settingAttribute = createGitHubRepoSetting(account.getUuid(), key);
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
   private SettingAttribute ensureTerraformCityGitRepo(Randomizer.Seed seed, Owners owners) {
     SettingAttribute githubKey = ensurePredefined(seed, owners, GITHUB_TEST_CONNECTOR);
 
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withCategory(CONNECTOR)
-            .withName(TERRAFORM_CITY_GIT_REPO.name())
-            .withAppId(githubKey.getAppId())
-            .withEnvId(githubKey.getEnvId())
-            .withAccountId(githubKey.getAccountId())
-            .withValue(GitConfig.builder()
-                           .repoUrl("https://github.com/wings-software/terraform-test.git")
-                           .username("test-harness")
-                           .password(scmSecret.decryptToCharArray(new SecretName("terraform_password")))
-                           .branch("master")
-                           .accountId(githubKey.getAccountId())
-                           .build())
-            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
-            .build();
+    char[] password = scmSecret.decryptToCharArray(new SecretName("terraform_password"));
+    SettingAttribute settingAttribute = createTerraformCityGitRepoSetting(githubKey, password);
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
@@ -358,19 +317,8 @@ public class SettingGenerator {
   public SettingAttribute ensureHarnessJira(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
 
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withName(HARNESS_JIRA)
-            .withCategory(CONNECTOR)
-            .withAccountId(account.getUuid())
-            .withValue(JiraConfig.builder()
-                           .accountId(account.getUuid())
-                           .baseUrl("https://harness.atlassian.net")
-                           .username("jirauser@harness.io")
-                           .password(scmSecret.decryptToCharArray(new SecretName("harness_jira")))
-                           .build())
-            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
-            .build();
+    char[] password = scmSecret.decryptToCharArray(new SecretName("harness_jira"));
+    SettingAttribute settingAttribute = SettingUtils.createHarnessJIRASetting(account.getUuid(), password);
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 

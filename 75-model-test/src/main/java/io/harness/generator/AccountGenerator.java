@@ -26,6 +26,7 @@ import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+import io.harness.testframework.framework.utils.TestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
@@ -143,14 +144,16 @@ public class AccountGenerator {
    * we are not reusing `ensureGenericTest`.
    */
   public Account ensureHarnessTest() {
-    Account account = ensureAccount(getOrCreateAccount("1234567890123456789012", "Harness Test", "Harness"));
+    Account account =
+        ensureAccount(getOrCreateAccount("1234567890123456789012", "Harness Test", "Harness", AccountType.PAID));
     account = ensureAccount(account);
     ensureTestUser(account);
     return account;
   }
 
   public Account ensureRbacTest() {
-    Account account = ensureAccount(getOrCreateAccount("BAC4567890123456789012", "Rbac Test", "Harness"));
+    Account account =
+        ensureAccount(getOrCreateAccount("BAC4567890123456789012", "Rbac Test", "Harness", AccountType.PAID));
     ensureTestUser(account);
     return account;
   }
@@ -177,7 +180,7 @@ public class AccountGenerator {
     return account;
   }
 
-  public Account getOrCreateAccount(String accountId, String accountName, String companyName) {
+  public Account getOrCreateAccount(String accountId, String accountName, String companyName, String accountType) {
     Account account = anAccount().withAccountName(accountName).withCompanyName(companyName).build();
 
     account = exists(account);
@@ -189,14 +192,25 @@ public class AccountGenerator {
                     .withAccountName(accountName)
                     .withCompanyName(companyName)
                     .withLicenseInfo(LicenseInfo.builder()
-                                         .accountType(AccountType.PAID)
+                                         .accountType(accountType)
                                          .accountStatus(AccountStatus.ACTIVE)
+                                         .licenseUnits(InstanceLimitProvider.defaults(accountType))
                                          .expiryTime(-1)
                                          .build())
                     .build();
     }
 
     return account;
+  }
+
+  public Account ensureAccount(String accountName, String companyName, String accountType) {
+    Account account = getOrCreateAccount(TestUtils.generateRandomUUID(), accountName, companyName, accountType);
+    if (exists(account) == null) {
+      accountService.save(account);
+      updateAccountKey("harness_account_secret", account);
+    }
+
+    return accountService.get(account.getUuid());
   }
 
   private void updateLicenseInfo(Account account) {
@@ -264,7 +278,7 @@ public class AccountGenerator {
     return account;
   }
 
-  private void addUserToUserGroup(User user, String accountId, String userGroupName) {
+  public void addUserToUserGroup(User user, String accountId, String userGroupName) {
     PageRequest<UserGroup> pageRequest =
         aPageRequest().addFilter("accountId", EQ, accountId).addFilter("name", EQ, userGroupName).build();
     PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, true);
@@ -287,7 +301,7 @@ public class AccountGenerator {
     userGroupService.updateMembers(userGroup, false);
   }
 
-  private void addUserToHarnessUserGroup(User user) {
+  public void addUserToHarnessUserGroup(User user) {
     HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder()
                                             .actions(Sets.newHashSet(Action.READ))
                                             .applyToAllAccounts(true)
@@ -297,7 +311,7 @@ public class AccountGenerator {
     harnessUserGroupService.save(harnessUserGroup);
   }
 
-  private User ensureUser(String uuid, String userName, String email, char[] password, Account account) {
+  public User ensureUser(String uuid, String userName, String email, char[] password, Account account) {
     User user = anUser()
                     .withUuid(uuid)
                     .withName(userName)

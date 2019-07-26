@@ -481,4 +481,6 @@ public interface UserService extends OwnedByAccount {
   void sendAccountLockedNotificationMail(User user, int lockoutExpirationTime);
 
   Account getAccountByIdIfExistsElseGetDefaultAccount(User user, Optional<String> accountId);
+
+  boolean canEnableOrDisable(User user);
 }

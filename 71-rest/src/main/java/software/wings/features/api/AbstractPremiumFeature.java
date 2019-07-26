@@ -1,15 +1,24 @@
 package software.wings.features.api;
 
+import static software.wings.beans.AccountType.allAccountTypes;
+
 import com.google.inject.Inject;
 
 import software.wings.service.intfc.AccountService;
 
 import java.util.Collection;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public abstract class AbstractPremiumFeature extends AbstractRestrictedFeature implements PremiumFeature {
   @Inject
   public AbstractPremiumFeature(AccountService accountService, FeatureRestrictions featureRestrictions) {
     super(accountService, featureRestrictions);
+  }
+
+  @Override
+  public Set<String> getRestrictedAccountTypes() {
+    return allAccountTypes.stream().filter(accountType -> !isAvailable(accountType)).collect(Collectors.toSet());
   }
 
   @Override

@@ -2,9 +2,13 @@ package software.wings.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import com.google.common.collect.ImmutableSet;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Set;
 
 /**
  * Account type.
@@ -18,6 +22,8 @@ public interface AccountType {
   String PAID = "PAID";
   String COMMUNITY = "COMMUNITY";
   String ESSENTIALS = "ESSENTIALS";
+
+  Set<String> allAccountTypes = ImmutableSet.of(TRIAL, ESSENTIALS, COMMUNITY, PAID);
 
   static boolean isValid(String type) {
     if (isEmpty(type)) {

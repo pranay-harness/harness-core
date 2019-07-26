@@ -2,7 +2,9 @@ package io.harness.testframework.restutils;
 
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
+import io.restassured.http.ContentType;
 import software.wings.beans.Account;
+import software.wings.beans.LicenseUpdateInfo;
 
 import javax.ws.rs.core.GenericType;
 
@@ -14,5 +16,16 @@ public class AccountRestUtils {
                                                     .get("/account/" + accountId)
                                                     .as(new GenericType<RestResponse<Account>>() {}.getType());
     return accountRestResponse.getResource();
+  }
+
+  public static void updateAccountLicense(String accountId, String bearerToken, LicenseUpdateInfo licenseUpdateInfo) {
+    Setup.portal()
+        .auth()
+        .oauth2(bearerToken)
+        .queryParam("accountId", accountId)
+        .body(licenseUpdateInfo)
+        .contentType(ContentType.JSON)
+        .put("/account/license")
+        .as(new GenericType<RestResponse<Boolean>>() {}.getType());
   }
 }

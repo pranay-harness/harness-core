@@ -4,7 +4,6 @@ import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.EnvironmentGenerator.Environments.GENERIC_TEST;
 import static io.harness.rule.OwnerRule.RAMA;
-import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
@@ -26,11 +25,9 @@ import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
-import io.harness.rest.RestResponse;
 import io.harness.rule.OwnerRule.Owner;
+import io.harness.testframework.restutils.GovernanceUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import io.restassured.http.ContentType;
-import io.restassured.mapper.ObjectMapperType;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -40,11 +37,8 @@ import software.wings.beans.Environment;
 import software.wings.beans.GraphNode;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.governance.GovernanceConfig;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.states.HttpState;
-
-import javax.ws.rs.core.GenericType;
 
 /**
  * @author rktummala on 02/18/19
@@ -100,12 +94,12 @@ public class GovernanceFunctionalTest extends AbstractFunctionalTest {
 
     String executionUuid = workflowExecution.getUuid();
 
-    setDeploymentFreeze(application.getAccountId(), true);
+    GovernanceUtils.setDeploymentFreeze(application.getAccountId(), bearerToken, true);
 
     workflowExecution = runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), savedWorkflow.getUuid());
     assertThat(workflowExecution).isNull();
 
-    setDeploymentFreeze(application.getAccountId(), false);
+    GovernanceUtils.setDeploymentFreeze(application.getAccountId(), bearerToken, false);
 
     workflowExecution = runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), savedWorkflow.getUuid());
     assertThat(workflowExecution).isNotNull();
@@ -122,19 +116,5 @@ public class GovernanceFunctionalTest extends AbstractFunctionalTest {
                         .put(HttpState.METHOD_KEY, "GET")
                         .build())
         .build();
-  }
-
-  private void setDeploymentFreeze(String accountId, boolean freeze) {
-    GenericType<RestResponse<GovernanceConfig>> returnType = new GenericType<RestResponse<GovernanceConfig>>() {};
-    GovernanceConfig governanceConfig =
-        GovernanceConfig.builder().accountId(accountId).deploymentFreeze(freeze).build();
-    given()
-        .auth()
-        .oauth2(bearerToken)
-        .queryParam("accountId", accountId)
-        .contentType(ContentType.JSON)
-        .body(governanceConfig, ObjectMapperType.GSON)
-        .put("/compliance-config/" + accountId)
-        .as(returnType.getType());
   }
 }

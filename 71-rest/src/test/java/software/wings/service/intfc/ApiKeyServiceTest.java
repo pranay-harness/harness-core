@@ -9,11 +9,12 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_KEY;
 import static software.wings.utils.WingsTestConstants.USER_GROUP_ID;
+import static software.wings.utils.WingsTestConstants.USER_ID;
+import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.inject.Inject;
 
@@ -32,8 +33,10 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.ApiKeyEntry;
+import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
-import software.wings.features.api.PremiumFeature;
+import software.wings.security.UserRequestContext;
+import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.utils.Validator;
 
@@ -41,11 +44,16 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private UserGroupService userGroupService;
   @Inject @InjectMocks private ApiKeyService apiKeyService;
-  @Mock private PremiumFeature apiKeysFeature;
 
   @Before
   public void init() {
-    when(apiKeysFeature.isAvailableForAccount(ACCOUNT_ID)).thenReturn(true);
+    setUserRequestContext();
+  }
+
+  private void setUserRequestContext() {
+    User user = User.Builder.anUser().withName(USER_NAME).withUuid(USER_ID).build();
+    user.setUserRequestContext(UserRequestContext.builder().accountId(ACCOUNT_ID).build());
+    UserThreadLocal.set(user);
   }
 
   @Test

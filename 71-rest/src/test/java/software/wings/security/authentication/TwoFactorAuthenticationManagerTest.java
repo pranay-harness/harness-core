@@ -15,6 +15,7 @@ import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.security.authentication.TwoFactorAuthenticationMechanism.TOTP;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import com.j256.twofactorauth.TimeBasedOneTimePasswordUtil;
 import io.harness.category.element.UnitTests;
@@ -32,15 +33,19 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.User;
+import software.wings.features.TwoFactorAuthenticationFeature;
 import software.wings.features.api.PremiumFeature;
+import software.wings.licensing.LicenseService;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings.TwoFactorAuthenticationSettingsBuilder;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
+import software.wings.utils.WingsTestConstants;
 
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.UUID;
 
@@ -50,8 +55,9 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Inject @InjectMocks TOTPAuthHandler totpAuthHandler;
   @Inject @InjectMocks TwoFactorAuthenticationManager twoFactorAuthenticationManager;
   @Mock AuthenticationUtils authenticationUtils;
-  @Mock AccountService accountService;
-  @Mock private PremiumFeature twoFactorAuthenticationFeature;
+  @Inject private AccountService accountService;
+  @Inject private LicenseService licenseService;
+  @Inject @Named(TwoFactorAuthenticationFeature.FEATURE_NAME) private PremiumFeature twoFactorAuthenticationFeature;
 
   @Test
   @Repeat(times = 5, successes = 1)
@@ -161,9 +167,9 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldOverrideTwoFactorAuthentication() {
     Account account = getAccount(AccountType.PAID, false);
+    accountService.save(account);
 
     TwoFactorAdminOverrideSettings twoFactorAdminOverrideSettings = new TwoFactorAdminOverrideSettings(true);
-    when(twoFactorAuthenticationFeature.isAvailableForAccount(account.getUuid())).thenReturn(true);
 
     when(userService.overrideTwoFactorforAccount(
              account.getUuid(), twoFactorAdminOverrideSettings.isAdminOverrideTwoFactorEnabled()))
@@ -178,15 +184,21 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldNotEnableTwoFactorAuthenticationForAccountWith2FAFeatureUnavailable() {
     Account account = getAccount(AccountType.COMMUNITY, false);
+    accountService.save(account);
 
     TwoFactorAdminOverrideSettings twoFactorAdminOverrideSettings = new TwoFactorAdminOverrideSettings(true);
-    when(twoFactorAuthenticationFeature.isAvailableForAccount(account.getUuid())).thenReturn(false);
 
-    try {
-      twoFactorAuthenticationManager.overrideTwoFactorAuthentication(account.getUuid(), twoFactorAdminOverrideSettings);
-      Assert.fail();
-    } catch (WingsException e) {
-      assertEquals(ErrorCode.INVALID_REQUEST, e.getCode());
+    for (String restrictedAccountType : twoFactorAuthenticationFeature.getRestrictedAccountTypes()) {
+      LicenseInfo newLicenseInfo = getLicenseInfo();
+      newLicenseInfo.setAccountType(restrictedAccountType);
+      licenseService.updateAccountLicense(account.getUuid(), newLicenseInfo);
+      try {
+        twoFactorAuthenticationManager.overrideTwoFactorAuthentication(
+            account.getUuid(), twoFactorAdminOverrideSettings);
+        Assert.fail("Enabled 2FA");
+      } catch (WingsException e) {
+        assertEquals(ErrorCode.INVALID_REQUEST, e.getCode());
+      }
     }
   }
 
@@ -249,28 +261,36 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldNotEnableTwoFactorAuthenticationForUserWhosePrimaryAccountHas2FAFeatureUnavailable() {
-    Account account1 = getAccount(AccountType.COMMUNITY, false);
-    Account account2 = getAccount(AccountType.PAID, false);
+    Account account = getAccount(AccountType.PAID, false);
+    accountService.save(account);
 
-    User user = getUser(false);
-    user.setAccounts(Arrays.asList(account1, account2));
+    for (String restrictedAccountType : twoFactorAuthenticationFeature.getRestrictedAccountTypes()) {
+      Account primaryAccount = getAccount(restrictedAccountType, false);
+      primaryAccount.setAccountName(accountService.suggestAccountName(primaryAccount.getAccountName()));
+      accountService.save(primaryAccount);
 
-    when(twoFactorAuthenticationFeature.isAvailableForAccount(account1.getUuid())).thenReturn(false);
-    when(twoFactorAuthenticationFeature.isAvailableForAccount(account2.getUuid())).thenReturn(true);
+      User user = getUser(false);
+      user.setAccounts(Arrays.asList(primaryAccount, account));
 
-    TwoFactorAuthenticationSettings settings =
-        new TwoFactorAuthenticationSettingsBuilder().twoFactorAuthenticationEnabled(true).mechanism(TOTP).build();
+      TwoFactorAuthenticationSettings settings =
+          new TwoFactorAuthenticationSettingsBuilder().twoFactorAuthenticationEnabled(true).mechanism(TOTP).build();
 
-    try {
-      twoFactorAuthenticationManager.enableTwoFactorAuthenticationSettings(user, settings);
-      Assert.fail();
-    } catch (WingsException e) {
-      assertEquals(ErrorCode.INVALID_REQUEST, e.getCode());
+      try {
+        twoFactorAuthenticationManager.enableTwoFactorAuthenticationSettings(user, settings);
+        Assert.fail();
+      } catch (WingsException e) {
+        assertEquals(ErrorCode.INVALID_REQUEST, e.getCode());
+      }
     }
   }
 
   private Account getAccount(String accountType, boolean twoFactorAdminEnforced) {
-    Account account = anAccount().withUuid(UUID.randomUUID().toString()).withAccountName("Harness").build();
+    Account account = anAccount()
+                          .withUuid(UUID.randomUUID().toString())
+                          .withAccountName(WingsTestConstants.ACCOUNT_NAME)
+                          .withCompanyName(WingsTestConstants.COMPANY_NAME)
+                          .withWhitelistedDomains(Collections.emptySet())
+                          .build();
     account.setTwoFactorAdminEnforced(twoFactorAdminEnforced);
     LicenseInfo license = getLicenseInfo();
     license.setAccountType(accountType);

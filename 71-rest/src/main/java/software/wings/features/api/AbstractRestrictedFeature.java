@@ -9,7 +9,7 @@ import java.util.Map;
 
 public abstract class AbstractRestrictedFeature implements RestrictedFeature {
   protected final Map<String, Restrictions> restrictionsByAccountType;
-  protected final AccountService accountService;
+  protected AccountService accountService;
 
   @Inject
   public AbstractRestrictedFeature(AccountService accountService, FeatureRestrictions featureRestrictions) {

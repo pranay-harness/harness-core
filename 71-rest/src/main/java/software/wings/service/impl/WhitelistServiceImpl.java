@@ -16,7 +16,6 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
-import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.net.util.SubnetUtils;
@@ -30,6 +29,7 @@ import software.wings.beans.security.access.WhitelistConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.IpWhitelistingFeature;
 import software.wings.features.api.PremiumFeature;
+import software.wings.features.api.RestrictedApi;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WhitelistService;
 import software.wings.utils.CacheManager;
@@ -55,9 +55,8 @@ public class WhitelistServiceImpl implements WhitelistService {
   @Inject @Named(IpWhitelistingFeature.FEATURE_NAME) private PremiumFeature ipWhitelistingFeature;
 
   @Override
+  @RestrictedApi(IpWhitelistingFeature.class)
   public Whitelist save(Whitelist whitelist) {
-    checkIfOperationIsAllowed(whitelist.getAccountId());
-
     validate(whitelist);
     Whitelist savedWhitelist = wingsPersistence.saveAndGet(Whitelist.class, whitelist);
     evictWhitelistConfigCache(whitelist.getAccountId());
@@ -219,9 +218,8 @@ public class WhitelistServiceImpl implements WhitelistService {
   }
 
   @Override
+  @RestrictedApi(IpWhitelistingFeature.class)
   public Whitelist update(Whitelist whitelist) {
-    checkIfOperationIsAllowed(whitelist.getAccountId());
-
     validate(whitelist);
     UpdateOperations<Whitelist> operations = wingsPersistence.createUpdateOperations(Whitelist.class);
 
@@ -264,12 +262,6 @@ public class WhitelistServiceImpl implements WhitelistService {
         wingsPersistence.createQuery(Whitelist.class).filter(Whitelist.ACCOUNT_ID_KEY, accountId).asList();
     for (Whitelist whitelist : whitelists) {
       delete(accountId, whitelist.getUuid());
-    }
-  }
-
-  private void checkIfOperationIsAllowed(String accountId) {
-    if (!ipWhitelistingFeature.isAvailableForAccount(accountId)) {
-      throw new InvalidRequestException(String.format("Operation not permitted for account [%s]", accountId), USER);
     }
   }
 }

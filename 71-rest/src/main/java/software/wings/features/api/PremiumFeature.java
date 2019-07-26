@@ -1,8 +1,11 @@
 package software.wings.features.api;
 
 import java.util.Collection;
+import java.util.Set;
 
 public interface PremiumFeature extends RestrictedFeature {
+  Set<String> getRestrictedAccountTypes();
+
   boolean isAvailableForAccount(String accountId);
 
   boolean isAvailable(String accountType);
