@@ -21,6 +21,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
+import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.DefaultSalesContacts;
@@ -383,6 +384,7 @@ public class LicenseServiceImpl implements LicenseService {
     byte[] encryptedLicenseInfo = getEncryptedLicenseInfoForUpdate(oldLicenseInfo, licenseInfo);
 
     updateOperations.set("encryptedLicenseInfo", encryptedLicenseInfo);
+    updateOperations.set(AccountKeys.licenseInfo, licenseInfo);
 
     wingsPersistence.update(accountInDB, updateOperations);
     updateEmailSentToSales(accountId, false);
