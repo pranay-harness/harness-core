@@ -158,7 +158,7 @@ public class ArtifactTriggerProcessor implements TriggerProcessor {
       List<Artifact> artifacts = new ArrayList<>();
       if (isEmpty(artifactTriggerCondition.getArtifactFilter())) {
         logger.info("No artifact filter set. Triggering with the collected artifacts");
-        addArtifactsToBeProcess(appId, artifacts, collectedArtifacts);
+        addArtifactsToBeProcess(trigger.getAppId(), artifacts, collectedArtifacts);
       } else {
         logger.info("Artifact filter is set. Triggering with the filtered artifacts");
         addArtifactForRegex(trigger, collectedArtifacts, artifactTriggerCondition, artifacts);
@@ -170,7 +170,7 @@ public class ArtifactTriggerProcessor implements TriggerProcessor {
         return;
       }
 
-      String accountId = appService.getAccountIdByAppId(appId);
+      String accountId = appService.getAccountIdByAppId(trigger.getAppId());
       if (featureFlagService.isEnabled(FeatureName.TRIGGER_FOR_ALL_ARTIFACTS, accountId)) {
         for (Artifact artifact : artifacts) {
           List<Artifact> individualArtifact = new ArrayList();
