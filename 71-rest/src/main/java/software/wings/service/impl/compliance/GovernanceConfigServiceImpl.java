@@ -1,18 +1,14 @@
 package software.wings.service.impl.compliance;
 
-import static io.harness.exception.WingsException.USER;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
-import io.harness.exception.InvalidRequestException;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Event.Type;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.GovernanceFeature;
-import software.wings.features.api.PremiumFeature;
+import software.wings.features.api.RestrictedApi;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
@@ -26,7 +22,6 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 public class GovernanceConfigServiceImpl implements GovernanceConfigService {
   @Inject private WingsPersistence wingsPersistence;
-  @Inject @Named(GovernanceFeature.FEATURE_NAME) private PremiumFeature governanceFeature;
   @Inject private AccountService accountService;
   @Inject AuditServiceHelper auditServiceHelper;
 
@@ -45,9 +40,8 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
   }
 
   @Override
+  @RestrictedApi(GovernanceFeature.class)
   public GovernanceConfig update(String accountId, GovernanceConfig governanceConfig) {
-    checkIfOperationIsAllowed(accountId);
-
     GovernanceConfig governanceConfigInDB = get(accountId);
 
     if (governanceConfig == null) {
@@ -71,12 +65,6 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
     GovernanceConfig config = query.get();
     if (wingsPersistence.delete(query)) {
       auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, config);
-    }
-  }
-
-  private void checkIfOperationIsAllowed(String accountId) {
-    if (!governanceFeature.isAvailableForAccount(accountId)) {
-      throw new InvalidRequestException(String.format("Operation not permitted for account [%s]", accountId), USER);
     }
   }
 }

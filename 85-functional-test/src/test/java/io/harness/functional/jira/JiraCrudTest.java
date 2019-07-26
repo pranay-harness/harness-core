@@ -1,13 +1,10 @@
 package io.harness.functional.jira;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.EnvironmentGenerator.Environments.GENERIC_TEST;
 import static io.harness.generator.SettingGenerator.Settings.HARNESS_JIRA;
 import static io.harness.rule.OwnerRule.POOJA;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.sm.StateType.JIRA_CREATE_UPDATE;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
@@ -22,6 +19,7 @@ import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator;
 import io.harness.rule.OwnerRule.Owner;
+import io.harness.testframework.framework.utils.JiraUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,8 +31,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.service.intfc.WorkflowExecutionService;
-
-import java.util.Collections;
 
 public class JiraCrudTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
@@ -80,23 +76,6 @@ public class JiraCrudTest extends AbstractFunctionalTest {
   private GraphNode getJiraCreateNode() {
     SettingAttribute jiraSetting = settingGenerator.ensurePredefined(seed, owners, HARNESS_JIRA);
     assertThat(jiraSetting).isNotNull();
-    return GraphNode.builder()
-        .id(generateUuid())
-        .type(JIRA_CREATE_UPDATE.name())
-        .name("Create Jira")
-        .properties(ImmutableMap.<String, Object>builder()
-                        .put("description", "test123")
-                        .put("issueType", "Story")
-                        .put("jiraAction", "CREATE_TICKET")
-                        .put("jiraConnectorId", jiraSetting.getUuid())
-                        .put("priority", "P1")
-                        .put("project", "TJI")
-                        .put("publishAsVar", true)
-                        .put("summary", "test")
-                        .put("sweepingOutputName", "Jiravar")
-                        .put("sweepingOutputScope", "PIPELINE")
-                        .put("labels", Collections.singletonList("demo"))
-                        .build())
-        .build();
+    return JiraUtils.getJiraCreateNode(jiraSetting.getUuid());
   }
 }

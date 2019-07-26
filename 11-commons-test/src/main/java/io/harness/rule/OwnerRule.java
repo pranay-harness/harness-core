@@ -52,11 +52,12 @@ public class OwnerRule extends RepeatRule {
   public static final String ROHIT = "rohit.reddy@harness.io";
   public static final String MEENAKSHI = "meenakshi.raikwar@harness.io";
   public static final String UJJAWAL = "ujjawal.prasad@harness.io";
+  public static final String ANKIT = "ankit.singhal@harness.io";
 
   private static List<String> active =
       asList(AADITI, ADWAIT, ANSHUL, ANUBHAW, BRETT, GARVIT, GEORGE, JATIN, MARK, PARNIAN, PRANJAL, PRAVEEN, POOJA,
           PUNEET, RAMA, RAGHU, RUSHABH, SRINIVAS, SRIRAM, SUNIL, SWAMY, VAIBHAV_SI, VAIBHAV_TULSYAN, YOGESH_CHAUHAN,
-          NATARAJA, HARSH, UTKARSH, DEEPAK, SHASWAT, ROHIT, MEENAKSHI, UJJAWAL, SHUBHANSHU);
+          NATARAJA, HARSH, UTKARSH, DEEPAK, SHASWAT, ROHIT, MEENAKSHI, UJJAWAL, SHUBHANSHU, ANKIT);
 
   @Retention(RetentionPolicy.RUNTIME)
   @Target({java.lang.annotation.ElementType.METHOD})

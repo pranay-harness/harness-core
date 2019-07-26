@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
@@ -35,7 +34,10 @@ import software.wings.beans.sso.SamlSettings;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.LdapFeature;
 import software.wings.features.SamlFeature;
-import software.wings.features.api.PremiumFeature;
+import software.wings.features.api.GetAccountId;
+import software.wings.features.api.RestrictedApi;
+import software.wings.features.extractors.LdapSettingsAccountIdExtractor;
+import software.wings.features.extractors.SamlSettingsAccountIdExtractor;
 import software.wings.scheduler.LdapGroupSyncJob;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.OauthProviderType;
@@ -70,8 +72,6 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private OauthOptions oauthOptions;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
-  @Inject @Named(LdapFeature.FEATURE_NAME) private PremiumFeature ldapFeature;
-  @Inject @Named(SamlFeature.FEATURE_NAME) private PremiumFeature samlFeature;
 
   @Override
   public SamlSettings getSamlSettingsByIdpUrl(String idpUrl) {
@@ -97,8 +97,8 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   }
 
   @Override
-  public SamlSettings saveSamlSettings(SamlSettings settings) {
-    checkIfOperationIsAllowed(settings.getAccountId(), SSOType.SAML);
+  @RestrictedApi(SamlFeature.class)
+  public SamlSettings saveSamlSettings(@GetAccountId(SamlSettingsAccountIdExtractor.class) SamlSettings settings) {
     SamlSettings queriedSettings = getSamlSettingsByAccountId(settings.getAccountId());
     SamlSettings savedSettings;
     if (queriedSettings != null) {
@@ -196,8 +196,9 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   }
 
   @Override
-  public LdapSettings createLdapSettings(@NotNull LdapSettings settings) {
-    checkIfOperationIsAllowed(settings.getAccountId(), SSOType.LDAP);
+  @RestrictedApi(LdapFeature.class)
+  public LdapSettings createLdapSettings(
+      @GetAccountId(LdapSettingsAccountIdExtractor.class) @NotNull LdapSettings settings) {
     if (getLdapSettingsByAccountId(settings.getAccountId()) != null) {
       throw new InvalidRequestException("Ldap settings already exist for this account.");
     }
@@ -209,8 +210,9 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   }
 
   @Override
-  public LdapSettings updateLdapSettings(@NotNull LdapSettings settings) {
-    checkIfOperationIsAllowed(settings.getAccountId(), SSOType.LDAP);
+  @RestrictedApi(LdapFeature.class)
+  public LdapSettings updateLdapSettings(
+      @GetAccountId(LdapSettingsAccountIdExtractor.class) @NotNull LdapSettings settings) {
     LdapSettings oldSettings = getLdapSettingsByAccountId(settings.getAccountId());
     if (oldSettings == null) {
       throw new InvalidRequestException("No existing Ldap settings found for this account.");
@@ -357,12 +359,5 @@ public class SSOSettingServiceImpl implements SSOSettingService {
         .disableValidation()
         .filter(SSOSettings.ACCOUNT_ID_KEY, accountId)
         .asList();
-  }
-
-  private void checkIfOperationIsAllowed(String accountId, SSOType ssoType) {
-    if (ssoType == SSOType.LDAP && !ldapFeature.isAvailableForAccount(accountId)
-        || ssoType == SSOType.SAML && !samlFeature.isAvailableForAccount(accountId)) {
-      throw new InvalidRequestException(String.format("Operation not permitted for account [%s]", accountId), USER);
-    }
   }
 }

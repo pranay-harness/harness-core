@@ -41,11 +41,8 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
   @After
   public void tearDown() {
     // Recover the original account state.
-    Account account = accountService.get(accountId);
-    account.getLicenseInfo().setAccountStatus(AccountStatus.ACTIVE);
-    accountService.setAccountStatus(accountId, AccountStatus.ACTIVE);
-    account = accountService.get(accountId);
-    assertEquals(AccountStatus.ACTIVE, account.getLicenseInfo().getAccountStatus());
+    disableAccount(accountId, false);
+    assertEquals(AccountStatus.ACTIVE, getAccountStatus(accountId));
   }
 
   @Test
@@ -57,7 +54,9 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
     assertEquals(AccountStatus.INACTIVE, accountStatus);
     List<User> users = userService.getUsersOfAccount(accountId);
     for (User user : users) {
-      assertTrue(user.isDisabled());
+      if (userService.canEnableOrDisable(user)) {
+        assertTrue(user.isDisabled());
+      }
     }
 
     disableAccount(accountId, false);
@@ -65,7 +64,9 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
     assertEquals(AccountStatus.ACTIVE, accountStatus);
     users = userService.getUsersOfAccount(accountId);
     for (User user : users) {
-      assertFalse(user.isDisabled());
+      if (userService.canEnableOrDisable(user)) {
+        assertFalse(user.isDisabled());
+      }
     }
   }
 
@@ -124,6 +125,6 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
 
     GovernanceConfig governanceConfig = governanceConfigService.get(accountId);
     assertNotNull(governanceConfig);
-    assertEquals(!disable, governanceConfig.isDeploymentFreeze());
+    assertEquals(disable, governanceConfig.isDeploymentFreeze());
   }
 }

@@ -40,7 +40,7 @@ public class WorkflowUtils {
           "workflow execution did not succeed. Final status: " + finalWorkflowExecution.getStatus());
     }
   }
-  public Workflow buildCanaryWorkflowPostDeploymentStep(String name, String envId, GraphNode graphNode) {
+  public static Workflow buildCanaryWorkflowPostDeploymentStep(String name, String envId, GraphNode graphNode) {
     return aWorkflow()
         .name(name)
         .envId(envId)

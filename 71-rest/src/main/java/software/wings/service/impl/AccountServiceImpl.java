@@ -784,7 +784,7 @@ public class AccountServiceImpl implements AccountService {
     int count = 0;
     try (HIterator<User> records = new HIterator<>(query.fetch())) {
       for (User user : records) {
-        if (canEnableOrDisable(user)) {
+        if (userService.canEnableOrDisable(user)) {
           user.setDisabled(!enable);
           wingsPersistence.save(user);
           userService.evictUserFromCache(user.getUuid());
@@ -794,22 +794,6 @@ public class AccountServiceImpl implements AccountService {
       }
     }
     logger.info("{} users in account {} has been set to status disabled: {}", count, accountId, !enable);
-  }
-
-  /**
-   * User can NOT be disabled/enabled in account status change only when:
-   * 1. User belongs to multiple accounts
-   * 2. User belongs to Harness user group
-   */
-  private boolean canEnableOrDisable(User user) {
-    String email = user.getEmail();
-    boolean associatedWithMultipleAccounts = user.getAccounts().size() > 1;
-    logger.info("User {} is associated with {} accounts", email, user.getAccounts().size());
-    boolean isHarnessUser = harnessUserGroupService.isHarnessSupportUser(user.getUuid());
-    logger.info("User {} is in harness user group: {}", email, isHarnessUser);
-    boolean result = !(associatedWithMultipleAccounts || isHarnessUser);
-    logger.info("User {} can be set to new disabled status: {}", email, result);
-    return result;
   }
 
   @Override

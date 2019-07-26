@@ -16,7 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.features.TwoFactorAuthenticationFeature;
+import software.wings.features.api.AccountId;
 import software.wings.features.api.PremiumFeature;
+import software.wings.features.api.RestrictedApi;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
@@ -116,9 +118,8 @@ public class TwoFactorAuthenticationManager {
     return twoFactorEnabled;
   }
 
-  public boolean overrideTwoFactorAuthentication(String accountId, TwoFactorAdminOverrideSettings settings) {
-    checkIfOperationIsAllowed(accountId);
-
+  @RestrictedApi(TwoFactorAuthenticationFeature.class)
+  public boolean overrideTwoFactorAuthentication(@AccountId String accountId, TwoFactorAdminOverrideSettings settings) {
     try {
       // Update 2FA enforce flag
       accountService.updateTwoFactorEnforceInfo(accountId, settings.isAdminOverrideTwoFactorEnabled());

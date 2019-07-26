@@ -1,6 +1,7 @@
 package software.wings.features.api;
 
 import static io.harness.exception.WingsException.USER;
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -26,11 +27,11 @@ public class ApiBlocker implements MethodInterceptor {
       accountId = getAccountId(methodInvocation).orElseThrow(IllegalStateException::new);
     }
 
-    if (!getFeature(methodInvocation).isAvailable(accountId)) {
-      throw new InvalidRequestException(String.format("Operation not permitted for account [%s].", accountId), USER);
+    if (accountId.equals(GLOBAL_ACCOUNT_ID) || getFeature(methodInvocation).isAvailableForAccount(accountId)) {
+      return methodInvocation.proceed();
     }
 
-    return methodInvocation.proceed();
+    throw new InvalidRequestException(String.format("Operation not permitted for account [%s].", accountId), USER);
   }
 
   private String getAccountIdFromRequestContext() {

@@ -1,25 +1,22 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.exception.WingsException.USER;
 import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.dropwizard.jersey.caching.CacheControl;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.exception.InvalidRequestException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.audit.AuditHeaderYamlResponse;
 import software.wings.features.AuditTrailFeature;
-import software.wings.features.api.PremiumFeature;
+import software.wings.features.api.RestrictedApi;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuditService;
@@ -40,7 +37,6 @@ import javax.ws.rs.QueryParam;
 public class AuditResource {
   private AuditService httpAuditService;
   private AccountService accountService;
-  @Inject @Named(AuditTrailFeature.FEATURE_NAME) private PremiumFeature auditTrailFeature;
 
   /**
    * Gets http audit service.
@@ -73,6 +69,7 @@ public class AuditResource {
   @ExceptionMetered
   @Produces("application/json")
   @AuthRule(permissionType = AUDIT_VIEWER)
+  @RestrictedApi(AuditTrailFeature.class)
   public RestResponse<PageResponse<AuditHeader>> list(
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<AuditHeader> pageRequest) {
     pageRequest.addFilter(AuditHeaderKeys.accountId, EQ, accountId);
@@ -85,9 +82,9 @@ public class AuditResource {
   @ExceptionMetered
   @Produces("application/json")
   @AuthRule(permissionType = AUDIT_VIEWER)
+  @RestrictedApi(AuditTrailFeature.class)
   public RestResponse<PageResponse<AuditHeader>> listUsingFilter(@QueryParam("accountId") String accountId,
       @QueryParam("filter") String filter, @QueryParam("limit") String limit, @QueryParam("offset") String offset) {
-    checkIfOperationIsAllowed(accountId);
     return new RestResponse<>(httpAuditService.listUsingFilter(accountId, filter, limit, offset));
   }
 
@@ -101,11 +98,5 @@ public class AuditResource {
   public RestResponse<AuditHeaderYamlResponse> getAuditHeaderDetails(@PathParam("auditHeaderId") String auditHeaderId,
       @QueryParam("entityId") String entityId, @QueryParam("accountId") String accountId) {
     return new RestResponse<>(httpAuditService.fetchAuditEntityYamls(auditHeaderId, entityId, accountId));
-  }
-
-  private void checkIfOperationIsAllowed(String accountId) {
-    if (!auditTrailFeature.isAvailableForAccount(accountId)) {
-      throw new InvalidRequestException(String.format("Operation not permitted for account [%s]", accountId), USER);
-    }
   }
 }
