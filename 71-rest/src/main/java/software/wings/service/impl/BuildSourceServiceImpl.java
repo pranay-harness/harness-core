@@ -51,6 +51,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.RepositoryFormat;
+import software.wings.utils.RepositoryType;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -377,6 +378,16 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   }
 
   @Override
+  public Set<String> getArtifactPathsForRepositoryFormat(@NotEmpty String jobName, @NotEmpty String settingId,
+      String groupId, String artifactStreamType, String repositoryFormat) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue value = getSettingValue(settingAttribute);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) value);
+    return Sets.newTreeSet(getBuildService(artifactStreamType, settingAttribute)
+                               .getArtifactPaths(jobName, groupId, value, encryptedDataDetails, repositoryFormat));
+  }
+
+  @Override
   public BuildService getBuildService(SettingAttribute settingAttribute) {
     SyncTaskContext syncTaskContext =
         SyncTaskContext.builder()
@@ -450,7 +461,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   }
 
   @Override
-  public Map<String, String> getPlansForRepositoryType(
+  public Map<String, String> getPlansForRepositoryFormat(
       String settingId, String streamType, RepositoryFormat repositoryFormat) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue value = getSettingValue(settingAttribute);
@@ -459,11 +470,30 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   }
 
   @Override
+  public Map<String, String> getPlansForRepositoryType(
+      String settingId, String streamType, RepositoryType repositoryType) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue value = getSettingValue(settingAttribute);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) value);
+    return getBuildService(settingAttribute).getPlans(value, encryptedDataDetails, repositoryType);
+  }
+
+  @Override
   public Set<String> getGroupIds(String repoType, String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
     return Sets.newTreeSet(getBuildService(settingAttribute).getGroupIds(repoType, settingValue, encryptedDataDetails));
+  }
+
+  @Override
+  public Set<String> getGroupIdsForRepositoryFormat(
+      @NotEmpty String jobName, @NotEmpty String settingId, @NotEmpty String repositoryFormat) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    return Sets.newTreeSet(
+        getBuildService(settingAttribute).getGroupIds(jobName, repositoryFormat, settingValue, encryptedDataDetails));
   }
 
   @Override
@@ -513,6 +543,16 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
     return Sets.newTreeSet(getBuildService(settingAttribute, appId)
+                               .getGroupIds(repositoryName, repositoryFormat, settingValue, encryptedDataDetails));
+  }
+
+  @Override
+  public Set<String> fetchNexusPackageNames(
+      @NotEmpty String repositoryName, @NotEmpty String repositoryFormat, @NotEmpty String settingId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    return Sets.newTreeSet(getBuildService(settingAttribute)
                                .getGroupIds(repositoryName, repositoryFormat, settingValue, encryptedDataDetails));
   }
 }

@@ -174,8 +174,8 @@ public class NexusArtifactStream extends ArtifactStream {
   @Override
   public void validateRequiredFields() {
     if (appId.equals(GLOBAL_APP_ID)) {
-      if (isEmpty(repositoryType)) {
-        throw new InvalidRequestException("Repository Type cannot be empty", USER);
+      if (isEmpty(repositoryFormat)) {
+        throw new InvalidRequestException("Repository Format cannot be empty", USER);
       }
     }
   }

@@ -9,6 +9,7 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.utils.RepositoryFormat;
+import software.wings.utils.RepositoryType;
 
 import java.util.List;
 import java.util.Map;
@@ -204,6 +205,11 @@ public interface BuildSourceService {
     throw new UnsupportedOperationException();
   }
 
+  default Set<String> fetchNexusPackageNames(
+      @NotEmpty String repositoryName, @NotEmpty String repositoryFormat, @NotEmpty String settingId) {
+    throw new UnsupportedOperationException();
+  }
+
   /**
    * Gets group Id paths.
    *
@@ -212,6 +218,19 @@ public interface BuildSourceService {
    * @return the groupId paths
    */
   default Set<String> getGroupIds(@NotEmpty String jobName, @NotEmpty String settingId) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Gets group Id paths.
+   *
+   * @param jobName   the job name
+   * @param settingId the setting id
+   * @param repositoryFormat the repositoryFormat
+   * @return the groupId paths
+   */
+  default Set<String> getGroupIdsForRepositoryFormat(
+      @NotEmpty String jobName, @NotEmpty String settingId, @NotEmpty String repositoryFormat) {
     throw new UnsupportedOperationException();
   }
 
@@ -309,6 +328,21 @@ public interface BuildSourceService {
   }
 
   /**
+   * Gets artifact paths.
+   *
+   * @param jobName            the job name
+   * @param settingId          the setting id
+   * @param groupId            the group id
+   * @param artifactStreamType artifact stream type
+   * @param repositoryFormat   the repository Format
+   * @return the artifact paths
+   */
+  default Set<String> getArtifactPathsForRepositoryFormat(@NotEmpty String jobName, @NotEmpty String settingId,
+      String groupId, String artifactStreamType, String repositoryFormat) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
    * Gets last successful build.
    *
    * @param artifactStreamId the artifact stream id
@@ -335,15 +369,28 @@ public interface BuildSourceService {
   }
 
   /**
-   * Gets plans for repository type.
+   * Gets plans for repository format.
    *
    * @param settingId
    * @param streamType
    * @param repositoryFormat
    * @return
    */
-  default Map<String, String> getPlansForRepositoryType(
+  default Map<String, String> getPlansForRepositoryFormat(
       @NotEmpty String settingId, String streamType, RepositoryFormat repositoryFormat) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Gets plans for repository type.
+   *
+   * @param settingId
+   * @param streamType
+   * @param repositoryType
+   * @return
+   */
+  default Map<String, String> getPlansForRepositoryType(
+      @NotEmpty String settingId, String streamType, RepositoryType repositoryType) {
     throw new UnsupportedOperationException();
   }
 
