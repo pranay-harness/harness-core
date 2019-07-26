@@ -94,6 +94,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.trigger.response.TriggerDeploymentNeededResponse;
 import software.wings.helpers.ext.trigger.response.TriggerResponse;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
@@ -110,6 +111,7 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessTagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -148,6 +150,7 @@ public class TriggerServiceImpl implements TriggerService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private WorkflowService workflowService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private HarnessTagService harnessTagService;
@@ -718,6 +721,7 @@ public class TriggerServiceImpl implements TriggerService {
 
     resolveServices(trigger, triggerWorkflowVariableValues, pipelineVariables);
     resolveServiceInfrastructures(trigger, triggerWorkflowVariableValues, envId, pipelineVariables);
+    resolveInfraDefinitions(trigger, triggerWorkflowVariableValues, envId, pipelineVariables);
 
     executionArgs.setWorkflowVariables(triggerWorkflowVariableValues);
 
@@ -786,6 +790,29 @@ public class TriggerServiceImpl implements TriggerService {
     }
   }
 
+  private void resolveInfraDefinitions(
+      Trigger trigger, Map<String, String> triggerWorkflowVariableValues, String envId, List<Variable> variables) {
+    List<String> infraDefinitionWorkflowVariables =
+        WorkflowServiceTemplateHelper.getInfraDefinitionWorkflowVariables(variables);
+    for (String infraDefVarName : infraDefinitionWorkflowVariables) {
+      String infraDefIdOrName = triggerWorkflowVariableValues.get(infraDefVarName);
+      notNullCheck(
+          "There is no corresponding Workflow Variable associated to Infra Definition", infraDefIdOrName, USER);
+      logger.info("Checking  Infra Definition {} can be found by id first.", infraDefIdOrName);
+      InfrastructureDefinition infrastructureDefinition =
+          infrastructureDefinitionService.get(trigger.getAppId(), infraDefIdOrName);
+      if (infrastructureDefinition == null) {
+        logger.info("InfraDefinition does not exist by Id, checking if infra definition {} can be found by name.",
+            infraDefIdOrName);
+        infrastructureDefinition =
+            infrastructureDefinitionService.getInfraDefByName(trigger.getAppId(), envId, infraDefIdOrName);
+      }
+      notNullCheck(
+          "InfraStructure Definition [" + infraDefIdOrName + "] does not exist", infrastructureDefinition, USER);
+      triggerWorkflowVariableValues.put(infraDefVarName, infrastructureDefinition.getUuid());
+    }
+  }
+
   private WorkflowExecution triggerOrchestrationDeployment(
       Trigger trigger, ExecutionArgs executionArgs, TriggerExecution triggerExecution) {
     logger.info("Triggering  workflow execution of appId {} with with workflow id {}", trigger.getAppId(),
@@ -817,6 +844,7 @@ public class TriggerServiceImpl implements TriggerService {
 
       resolveServices(trigger, triggerWorkflowVariableValues, workflowVariables);
       resolveServiceInfrastructures(trigger, triggerWorkflowVariableValues, envId, workflowVariables);
+      resolveInfraDefinitions(trigger, triggerWorkflowVariableValues, envId, workflowVariables);
 
       /* Fetch the deployment data to find out the required entity types */
       DeploymentMetadata deploymentMetadata = workflowService.fetchDeploymentMetadata(

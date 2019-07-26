@@ -14,6 +14,7 @@ import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.api.DeploymentType;
+import software.wings.infra.InfraDefinitionDetail;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
@@ -71,6 +72,16 @@ public class InfrastructureDefinitionResource {
   public RestResponse<InfrastructureDefinition> get(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @PathParam("infraDefinitionId") String infraDefinitionId) {
     return new RestResponse<>(infrastructureDefinitionService.get(appId, infraDefinitionId));
+  }
+
+  @GET
+  @Path("detail/{infraDefinitionId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ)
+  public RestResponse<InfraDefinitionDetail> getDetail(@QueryParam("appId") String appId,
+      @QueryParam("envId") String envId, @PathParam("infraDefinitionId") String infraDefinitionId) {
+    return new RestResponse<>(infrastructureDefinitionService.getDetail(appId, infraDefinitionId));
   }
 
   @DELETE

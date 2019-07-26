@@ -16,6 +16,7 @@ import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
 import static software.wings.beans.yaml.YamlConstants.DEPLOYMENT_SPECIFICATION_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
+import static software.wings.beans.yaml.YamlConstants.INFRA_DEFINITION_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INFRA_MAPPING_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.LOAD_BALANCERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_EXPRESSION;
@@ -73,6 +74,8 @@ import software.wings.beans.container.StorageConfiguration;
 import software.wings.beans.defaults.Defaults;
 import software.wings.beans.trigger.ArtifactSelection;
 import software.wings.beans.trigger.Trigger;
+import software.wings.infra.CloudProviderInfrastructure;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.verification.CVConfiguration;
@@ -220,6 +223,12 @@ public enum YamlType {
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
           INFRA_MAPPING_FOLDER, ANY),
       InfrastructureMapping.class),
+  INFRA_DEFINITION(EntityType.INFRASTRUCTURE_DEFINITION.name(),
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          INFRA_DEFINITION_FOLDER, YAML_EXPRESSION),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          INFRA_DEFINITION_FOLDER, ANY),
+      InfrastructureDefinition.class),
   WORKFLOW(EntityType.WORKFLOW.name(),
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, WORKFLOWS_FOLDER, YAML_EXPRESSION),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, WORKFLOWS_FOLDER, ANY),
@@ -269,7 +278,8 @@ public enum YamlType {
   TRIGGER_CONDITION(ObjectType.TRIGGER_CONDITION, "", "", TriggerConditionYaml.class),
   ARTIFACT_SELECTION(ObjectType.ARTIFACT_SELECTION, "", "", ArtifactSelection.Yaml.class),
   TAG(EntityType.TAG.name(), generatePath(PATH_DELIMITER, false, SETUP_FOLDER, TAGS_YAML),
-      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, ANY), HarnessTag.class);
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, ANY), HarnessTag.class),
+  CLOUD_PROVIDER_INFRASTRUCTURE(ObjectType.CLOUD_PROVIDER_INFRASTRUCTURE, "", "", CloudProviderInfrastructure.class);
 
   private String entityType;
   private String pathExpression;

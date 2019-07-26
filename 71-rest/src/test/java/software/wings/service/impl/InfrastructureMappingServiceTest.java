@@ -90,12 +90,9 @@ import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
-import software.wings.beans.AwsAmiInfrastructureMapping.AwsAmiInfrastructureMappingKeys;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
-import software.wings.beans.AwsInfrastructureMapping.AwsInfrastructureMappingKeys;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
-import software.wings.beans.AwsLambdaInfraStructureMapping.AwsLambdaInfraStructureMappingKeys;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
@@ -1079,19 +1076,22 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   public void testValidateAwsLambdaInfrastructureMapping() {
     AwsLambdaInfraStructureMapping awsLambdaInfraStructureMapping = new AwsLambdaInfraStructureMapping();
     Mockito.when(featureFlagService.isEnabled(eq(FeatureName.INFRA_MAPPING_REFACTOR), any())).thenReturn(true);
+
     awsLambdaInfraStructureMapping.setProvisionerId("test");
-    assertThatThrownBy(
-        () -> infrastructureMappingServiceImpl.validateAwsLambdaInfrastructureMapping(awsLambdaInfraStructureMapping))
-        .isInstanceOf(InvalidRequestException.class);
-    Map<String, Object> blueprints = new HashMap<>();
-    blueprints.put(AwsLambdaInfraStructureMappingKeys.region, "region");
-    awsLambdaInfraStructureMapping.setBlueprints(blueprints);
-    assertThatThrownBy(
-        () -> infrastructureMappingServiceImpl.validateAwsLambdaInfrastructureMapping(awsLambdaInfraStructureMapping))
-        .isInstanceOf(InvalidRequestException.class);
-    blueprints.put(AwsLambdaInfraStructureMappingKeys.role, "role");
-    awsLambdaInfraStructureMapping.setBlueprints(blueprints);
+    awsLambdaInfraStructureMapping.setRegion("region");
+    awsLambdaInfraStructureMapping.setRole("role");
     infrastructureMappingServiceImpl.validateAwsLambdaInfrastructureMapping(awsLambdaInfraStructureMapping);
+
+    awsLambdaInfraStructureMapping.setRegion(null);
+    assertThatThrownBy(
+        () -> infrastructureMappingServiceImpl.validateAwsLambdaInfrastructureMapping(awsLambdaInfraStructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+
+    awsLambdaInfraStructureMapping.setRegion("region");
+    awsLambdaInfraStructureMapping.setRole(null);
+    assertThatThrownBy(
+        () -> infrastructureMappingServiceImpl.validateAwsLambdaInfrastructureMapping(awsLambdaInfraStructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
   }
 
   @Test
@@ -1110,18 +1110,18 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testValidateAwsInfraMapping() {
+    doReturn(true).when(featureFlagService).isEnabled(any(), any());
+
     AwsInfrastructureMapping infrastructureMapping = new AwsInfrastructureMapping();
     infrastructureMapping.setProvisionerId("p123");
-    Map<String, Object> blueprints = new HashMap<>();
-    infrastructureMapping.setBlueprints(blueprints);
-    doReturn(true).when(featureFlagService).isEnabled(any(), any());
     InfrastructureMappingServiceImpl infrastructureMappingService =
         (InfrastructureMappingServiceImpl) this.infrastructureMappingService;
+
     try {
       infrastructureMappingService.validateAwsInfraMapping(infrastructureMapping);
       fail("Should have thrown exception");
     } catch (WingsException ex) {
-      assertTrue(ExceptionUtils.getMessage(ex).contains("Instance filter Blueprint"));
+      assertTrue(ExceptionUtils.getMessage(ex).contains("Instance filter"));
     }
 
     infrastructureMapping.setProvisionInstances(true);
@@ -1129,17 +1129,17 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
       infrastructureMappingService.validateAwsInfraMapping(infrastructureMapping);
       fail("Should have thrown exception");
     } catch (WingsException ex) {
-      assertTrue(ExceptionUtils.getMessage(ex).contains("Auto Scaling group Blueprint"));
+      assertTrue(ExceptionUtils.getMessage(ex).contains("Auto Scaling group"));
     }
 
-    blueprints.put(AwsInfrastructureMappingKeys.autoScalingGroupName, "fad");
+    infrastructureMapping.setAutoScalingGroupName("asg");
     infrastructureMapping.setSetDesiredCapacity(true);
     infrastructureMapping.setDesiredCapacity(0);
     try {
       infrastructureMappingService.validateAwsInfraMapping(infrastructureMapping);
       fail("Should have thrown exception");
     } catch (WingsException ex) {
-      assertTrue(ExceptionUtils.getMessage(ex).contains("Desired count "));
+      assertTrue(ExceptionUtils.getMessage(ex).contains("Desired count"));
     }
   }
 
@@ -1182,20 +1182,18 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     doReturn(true).when(featureFlagService).isEnabled(any(), any());
 
     infrastructureMapping.setProvisionerId("p123");
-    Map<String, Object> blueprints = new HashMap<>();
-    infrastructureMapping.setBlueprints(blueprints);
-    blueprints.put(AwsAmiInfrastructureMappingKeys.region, "fad");
-    blueprints.put(AwsAmiInfrastructureMappingKeys.autoScalingGroupName, "fad");
+    infrastructureMapping.setRegion("region");
+    infrastructureMapping.setAutoScalingGroupName("asg");
     infrastructureMappingService.validateAwsAmiInfrastructureMapping(infrastructureMapping);
 
-    blueprints.remove(AwsAmiInfrastructureMappingKeys.region);
+    infrastructureMapping.setRegion(null);
     Assertions
         .assertThatThrownBy(
             () -> infrastructureMappingService.validateAwsAmiInfrastructureMapping(infrastructureMapping))
         .isInstanceOf(InvalidRequestException.class);
 
-    blueprints.put(AwsAmiInfrastructureMappingKeys.region, "fad");
-    blueprints.remove(AwsAmiInfrastructureMappingKeys.autoScalingGroupName);
+    infrastructureMapping.setRegion("region");
+    infrastructureMapping.setAutoScalingGroupName(null);
     Assertions.assertThatThrownBy(
         () -> infrastructureMappingService.validateAwsAmiInfrastructureMapping(infrastructureMapping));
   }

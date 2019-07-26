@@ -49,6 +49,7 @@ import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.setting.SettingValueYamlHandler;
 import software.wings.service.intfc.AppService;
@@ -59,6 +60,7 @@ import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HarnessTagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.NotificationSetupService;
@@ -107,6 +109,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private ApplicationManifestService applicationManifestService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private HarnessTagService harnessTagService;
+  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
 
   /**
    * Find by app, service and service command ids.
@@ -380,6 +383,18 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, infraMapping.getUuid(), accountId, yaml, infraMapping.getName() + YAML_EXTENSION);
+  }
+
+  @Override
+  public RestResponse<YamlPayload> getInfraDefinition(String appId, String infraDefinitionId) {
+    String accountId = appService.getAccountIdByAppId(appId);
+    InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefinitionId);
+    Validator.notNullCheck("InfraDefinition not found for appId:" + appId, infrastructureDefinition);
+    InfrastructureDefinition.Yaml infraDefinitionYaml =
+        (InfrastructureDefinition.Yaml) yamlHandlerFactory.getYamlHandler(YamlType.INFRA_DEFINITION)
+            .toYaml(infrastructureDefinition, appId);
+    return YamlHelper.getYamlRestResponse(yamlGitSyncService, infrastructureDefinition.getUuid(), accountId,
+        infraDefinitionYaml, infrastructureDefinition.getName() + YAML_EXTENSION);
   }
 
   @Override

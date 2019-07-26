@@ -31,6 +31,7 @@ import io.harness.exception.WingsException;
 import org.apache.commons.jexl3.JexlException;
 import org.mongodb.morphia.query.Query;
 import software.wings.api.DeploymentType;
+import software.wings.beans.Event.Type;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
 import software.wings.beans.Service;
@@ -40,15 +41,17 @@ import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.infra.CloudProviderInfrastructure;
 import software.wings.infra.FieldKeyValMapProvider;
-import software.wings.infra.GoogleKubernetesEngine;
+import software.wings.infra.InfraDefinitionDetail;
 import software.wings.infra.InfraMappingInfrastructureProvider;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.InfrastructureDefinition.InfrastructureDefinitionKeys;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +69,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ManagerExpressionEvaluator evaluator;
   @Inject private SettingsService settingsService;
+  @Inject private YamlPushService yamlPushService;
 
   @Override
   public PageResponse<InfrastructureDefinition> list(
@@ -95,6 +99,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
   @Override
   public InfrastructureDefinition save(InfrastructureDefinition infrastructureDefinition) {
+    String accountId = appService.getAccountIdByAppId(infrastructureDefinition.getAppId());
     validateInfraDefinition(infrastructureDefinition);
     String uuid;
     try {
@@ -105,6 +110,8 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
           WingsException.USER);
     }
     infrastructureDefinition.setUuid(uuid);
+    // TODO: look at git sync once support is added
+    yamlPushService.pushYamlChangeSet(accountId, null, infrastructureDefinition, Type.CREATE, false, false);
     return infrastructureDefinition;
   }
 
@@ -123,6 +130,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
   @Override
   public InfrastructureDefinition update(InfrastructureDefinition infrastructureDefinition) {
+    String accountId = appService.getAccountIdByAppId(infrastructureDefinition.getAppId());
     validateInfraDefinition(infrastructureDefinition);
     InfrastructureDefinition savedInfraDefinition =
         get(infrastructureDefinition.getAppId(), infrastructureDefinition.getUuid());
@@ -138,12 +146,23 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
           format("Infra definition already exists with the name : [%s]", infrastructureDefinition.getName()),
           WingsException.USER);
     }
+    boolean rename = !infrastructureDefinition.getName().equals(savedInfraDefinition.getName());
+    yamlPushService.pushYamlChangeSet(
+        accountId, savedInfraDefinition, infrastructureDefinition, Type.UPDATE, false, rename);
     return infrastructureDefinition;
   }
 
   @Override
   public void delete(String appId, String infraDefinitionId) {
+    String accountId = appService.getAccountIdByAppId(appId);
+    InfrastructureDefinition infrastructureDefinition = get(appId, infraDefinitionId);
     wingsPersistence.delete(InfrastructureDefinition.class, appId, infraDefinitionId);
+    yamlPushService.pushYamlChangeSet(accountId, infraDefinitionId, null, Type.DELETE, false, false);
+  }
+
+  @Override
+  public void deleteByYamlGit(String appid, String infraDefinitionId) {
+    delete(appid, infraDefinitionId);
   }
 
   @Override
@@ -188,6 +207,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
           infrastructureDefinition.getAppId(), serviceId, infrastructureDefinition.getEnvId());
       infraMapping.setServiceTemplateId(serviceTemplate.getUuid());
       infraMapping.setInfrastructureDefinitionId(infraDefinitionId);
+      infraMapping.setAutoPopulate(true);
       return infrastructureMappingService.save(infraMapping);
     }
   }
@@ -198,9 +218,26 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     for (Entry<String, Object> entry : fieldMapForClass.entrySet()) {
       if (entry.getValue() instanceof String) {
         entry.setValue(context.renderExpression((String) entry.getValue()));
+      } else if (entry.getValue() instanceof List) {
+        List result = new ArrayList();
+        for (Object o : (List) entry.getValue()) {
+          if (o instanceof String) {
+            result.addAll(getList(context.renderExpression((String) o)));
+          } else {
+            result.add(o);
+          }
+        }
+        entry.setValue(result);
       }
     }
     saveFieldMapForDefinition(infrastructureDefinition, fieldMapForClass);
+  }
+
+  private List getList(Object input) {
+    if (input instanceof String) {
+      return Arrays.asList(((String) input).split(","));
+    }
+    return (List) input;
   }
 
   private void saveFieldMapForDefinition(
@@ -294,27 +331,6 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   }
 
   @Override
-  public void applyProvisionerOutputs(
-      InfrastructureDefinition infrastructureDefinition, Map<String, Object> contextMap) {
-    CloudProviderInfrastructure infrastructure = infrastructureDefinition.getInfrastructure();
-    if (infrastructure instanceof GoogleKubernetesEngine) {
-      GoogleKubernetesEngine gkeInfra = (GoogleKubernetesEngine) infrastructure;
-      Object evaluated = evaluateExpression(gkeInfra.getClusterName(), contextMap);
-      if (evaluated instanceof String) {
-        gkeInfra.setClusterName((String) evaluated);
-      }
-      evaluated = evaluateExpression(gkeInfra.getNamespace(), contextMap);
-      if (evaluated instanceof String) {
-        gkeInfra.setNamespace((String) evaluated);
-      }
-      evaluated = evaluateExpression(gkeInfra.getReleaseName(), contextMap);
-      if (evaluated instanceof String) {
-        gkeInfra.setReleaseName((String) evaluated);
-      }
-    }
-  }
-
-  @Override
   public List<InfrastructureDefinition> getInfraStructureDefinitionByUuids(
       String appId, List<String> infraDefinitionIds) {
     if (isNotEmpty(infraDefinitionIds)) {
@@ -343,6 +359,26 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     return cloudProviderNameForDefinition(infrastructureDefinition);
   }
 
+  @Override
+  public InfraDefinitionDetail getDetail(String appId, String infraDefinitionId) {
+    InfraDefinitionDetail infraDefinitionDetail = InfraDefinitionDetail.builder().build();
+    InfrastructureDefinition infrastructureDefinition = get(appId, infraDefinitionId);
+    if (infrastructureDefinition == null) {
+      return infraDefinitionDetail;
+    }
+    infraDefinitionDetail.setInfrastructureDefinition(infrastructureDefinition);
+    infraDefinitionDetail.setDerivedInfraMappings(getMappings(infrastructureDefinition.getUuid(), appId));
+
+    return infraDefinitionDetail;
+  }
+
+  private List<InfrastructureMapping> getMappings(String infraDefinitionId, String appId) {
+    return wingsPersistence.createQuery(InfrastructureMapping.class)
+        .filter(InfrastructureMappingKeys.appId, appId)
+        .filter(InfrastructureMappingKeys.infrastructureDefinitionId, infraDefinitionId)
+        .asList();
+  }
+
   private Object evaluateExpression(String expression, Map<String, Object> contextMap) {
     try {
       return evaluator.evaluate(expression, contextMap);
@@ -350,5 +386,21 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       // Do nothing.
     }
     return null;
+  }
+
+  @Override
+  public void applyProvisionerOutputs(
+      InfrastructureDefinition infrastructureDefinition, Map<String, Object> contextMap) {
+    Map<String, Object> fieldMapForClass =
+        ((FieldKeyValMapProvider) infrastructureDefinition.getInfrastructure()).getFieldMapForClass();
+    for (Entry<String, Object> entry : fieldMapForClass.entrySet()) {
+      if (entry.getValue() instanceof String) {
+        Object evaluated = evaluateExpression((String) entry.getValue(), contextMap);
+        if (evaluated instanceof String) {
+          entry.setValue(evaluated);
+        }
+      }
+    }
+    saveFieldMapForDefinition(infrastructureDefinition, fieldMapForClass);
   }
 }

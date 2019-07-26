@@ -1,5 +1,6 @@
 package software.wings.infra;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import software.wings.annotation.CustomFieldMapKey;
@@ -10,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public interface FieldKeyValMapProvider {
+  @JsonIgnore
   default Map<String, Object> getFieldMapForClass() {
     Class cls = this.getClass();
     Map<String, Object> queryMap = new HashMap<>();

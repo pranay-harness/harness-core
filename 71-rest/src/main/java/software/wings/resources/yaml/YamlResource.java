@@ -37,6 +37,7 @@ import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.exception.YamlProcessingException;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserThreadLocal;
@@ -691,6 +692,26 @@ public class YamlResource {
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE, skipAuth = true)
   public RestResponse<Base> updateInfraMapping(@QueryParam("appId") String appId,
+      @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
+      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
+    return yamlService.update(yamlPayload, accountId);
+  }
+
+  @GET
+  @Path("infrastructuredefinitions/{infraDefinitionId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<YamlPayload> getInfraDefintion(@QueryParam("appId") String appId,
+      @QueryParam("accountId") String accountId, @PathParam("infraDefinitionId") String infraDefinitionId) {
+    return yamlResourceService.getInfraDefinition(appId, infraDefinitionId);
+  }
+
+  @PUT
+  @Path("infrastructuredefinitions/{infraDefinitionId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE, skipAuth = true)
+  public RestResponse<InfrastructureDefinition> updateInfraDefinition(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
     return yamlService.update(yamlPayload, accountId);

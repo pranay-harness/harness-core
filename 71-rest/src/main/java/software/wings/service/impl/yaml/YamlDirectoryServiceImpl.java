@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Collections.emptySet;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
@@ -21,6 +22,7 @@ import static software.wings.beans.yaml.YamlConstants.DEPLOYMENT_SPECIFICATION_F
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
+import static software.wings.beans.yaml.YamlConstants.INFRA_DEFINITION_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INFRA_MAPPING_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.LOAD_BALANCERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
@@ -89,6 +91,7 @@ import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.GitFileChange.Builder;
 import software.wings.beans.yaml.YamlConstants;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.AccountPermissionSummary;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
@@ -105,6 +108,7 @@ import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.NotificationSetupService;
@@ -161,6 +165,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private SettingsService settingsService;
 
   @Inject private InfrastructureMappingService infraMappingService;
+  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private CVConfigurationService cvConfigurationService;
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
@@ -1223,6 +1228,32 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         });
 
         // ------------------- END INFRA MAPPING SECTION -----------------------
+
+        // ------------------- INFRA DEFINITION SECTION ------------------------
+
+        if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)) {
+          DirectoryPath infraDefinitionPath = envPath.clone().add(INFRA_DEFINITION_FOLDER);
+          FolderNode infraDefinitionFolder = new FolderNode(accountId, INFRA_DEFINITION_FOLDER,
+              InfrastructureDefinition.class, infraDefinitionPath, environment.getAppId(), yamlGitSyncService);
+          envFolder.addChild(infraDefinitionFolder);
+          PageRequest<InfrastructureDefinition> infrastructureDefinitionPageRequest =
+              aPageRequest()
+                  .addFilter("appId", Operator.EQ, environment.getAppId())
+                  .addFilter("envId", Operator.EQ, environment.getUuid())
+                  .build();
+          PageResponse<InfrastructureDefinition> infrastructureDefinitionsList =
+              infrastructureDefinitionService.list(infrastructureDefinitionPageRequest, EMPTY, environment.getAppId());
+
+          infrastructureDefinitionsList.forEach(infraDefinition -> {
+            String infraDefinitionYamlFileName = infraDefinition.getName() + YAML_EXTENSION;
+            infraDefinitionFolder.addChild(new EnvLevelYamlNode(accountId, infraDefinition.getUuid(),
+                infraDefinition.getAppId(), infraDefinition.getEnvId(), infraDefinitionYamlFileName,
+                InfrastructureDefinition.class, infraDefinitionPath.clone().add(infraDefinitionYamlFileName),
+                yamlGitSyncService, Type.INFRA_DEFINITION));
+          });
+        }
+
+        // ------------------- END DEFINITION SECTION ------------------------
 
         // ------------------- CV CONFIG SECTION -----------------------
 

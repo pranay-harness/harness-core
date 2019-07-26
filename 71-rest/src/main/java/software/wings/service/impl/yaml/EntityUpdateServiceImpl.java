@@ -28,6 +28,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.GitFileChange.Builder;
@@ -316,6 +317,8 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       appId = (String) entity;
     } else if (entity instanceof HarnessTag) {
       appId = GLOBAL_APP_ID;
+    } else if (entity instanceof ApplicationAccess) {
+      appId = ((ApplicationAccess) entity).getAppId();
     }
 
     notNullCheck("Application id cannot be null", appId, SRE);

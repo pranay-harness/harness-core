@@ -1,17 +1,23 @@
 package software.wings.infra;
 
+import static software.wings.beans.InfrastructureType.PCF_INFRASTRUCTURE;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import software.wings.annotation.ExcludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PcfInfrastructureMapping;
+import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
 
 import java.util.List;
 
 @JsonTypeName("PCF_PCF")
 @Data
+@Builder
 public class PcfInfraStructure implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
   @ExcludeFieldMap private String cloudProviderId;
   private String organization;
@@ -39,5 +45,35 @@ public class PcfInfraStructure implements InfraMappingInfrastructureProvider, Fi
   @Override
   public CloudProviderType getCloudProviderType() {
     return CloudProviderType.PCF;
+  }
+
+  public String getCloudProviderInfrastructureType() {
+    return PCF_INFRASTRUCTURE;
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @JsonTypeName(PCF_INFRASTRUCTURE)
+  public static final class Yaml extends CloudProviderInfrastructureYaml {
+    private String cloudProviderName;
+    private String organization;
+    private String space;
+    private List<String> tempRouteMap;
+    private List<String> routeMaps;
+
+    @Builder
+    public Yaml(String type, String cloudProviderName, String organization, String space, List<String> tempRouteMap,
+        List<String> routeMaps) {
+      super(type);
+      setCloudProviderName(cloudProviderName);
+      setOrganization(organization);
+      setSpace(space);
+      setTempRouteMap(tempRouteMap);
+      setRouteMaps(routeMaps);
+    }
+
+    public Yaml() {
+      super(PCF_INFRASTRUCTURE);
+    }
   }
 }

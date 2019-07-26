@@ -8,6 +8,7 @@ import static software.wings.beans.yaml.YamlType.ARTIFACT_SERVER_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.ARTIFACT_STREAM;
 import static software.wings.beans.yaml.YamlType.CLOUD_PROVIDER;
 import static software.wings.beans.yaml.YamlType.CLOUD_PROVIDER_OVERRIDE;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -34,6 +35,7 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -41,6 +43,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
@@ -50,7 +53,6 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
-import software.wings.utils.Validator;
 import software.wings.verification.CVConfiguration;
 
 import java.util.Optional;
@@ -69,6 +71,7 @@ public class YamlHelper {
   @Inject EnvironmentService environmentService;
   @Inject ArtifactStreamService artifactStreamService;
   @Inject InfrastructureMappingService infraMappingService;
+  @Inject InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject WorkflowService workflowService;
   @Inject PipelineService pipelineService;
   @Inject SettingsService settingsService;
@@ -110,7 +113,7 @@ public class YamlHelper {
   public SettingAttribute getSettingAttribute(String accountId, YamlType yamlType, String yamlFilePath) {
     String settingAttributeName =
         extractEntityNameFromYamlPath(yamlType.getPathExpression(), yamlFilePath, PATH_DELIMITER);
-    Validator.notNullCheck("Setting Attribute name null in the given yaml file: " + yamlFilePath, settingAttributeName);
+    notNullCheck("Setting Attribute name null in the given yaml file: " + yamlFilePath, settingAttributeName);
     return settingsService.getSettingAttributeByName(accountId, settingAttributeName);
   }
 
@@ -119,8 +122,7 @@ public class YamlHelper {
       YamlType yamlType = getSettingAttributeType(yamlFilePath);
       String settingAttributeName =
           extractParentEntityName(yamlType.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
-      Validator.notNullCheck(
-          "Setting Attribute name null in the given yaml file: " + yamlFilePath, settingAttributeName);
+      notNullCheck("Setting Attribute name null in the given yaml file: " + yamlFilePath, settingAttributeName);
       return settingsService.getSettingAttributeByName(accountId, settingAttributeName);
     }
     return null;
@@ -128,14 +130,14 @@ public class YamlHelper {
 
   public String getAppId(String accountId, String yamlFilePath) {
     Application app = getApp(accountId, yamlFilePath);
-    Validator.notNullCheck("App null in the given yaml file: " + yamlFilePath, app);
+    notNullCheck("App null in the given yaml file: " + yamlFilePath, app);
     return app.getUuid();
   }
 
   public Application getApp(String accountId, String yamlFilePath) {
     String appName = extractParentEntityName(YamlType.APPLICATION.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
 
-    Validator.notNullCheck("App name null in the given yaml file: " + yamlFilePath, appName);
+    notNullCheck("App name null in the given yaml file: " + yamlFilePath, appName);
     return appService.getAppByName(accountId, appName);
   }
 
@@ -145,14 +147,14 @@ public class YamlHelper {
 
   public String getServiceId(String appId, String yamlFilePath) {
     Service service = getService(appId, yamlFilePath);
-    Validator.notNullCheck("Service null in the given yaml file: " + yamlFilePath, service);
+    notNullCheck("Service null in the given yaml file: " + yamlFilePath, service);
     return service.getUuid();
   }
 
   public Trigger getTrigger(String appId, String yamlFilePath) {
     String triggerName =
         extractEntityNameFromYamlPath(YamlType.TRIGGER.getPathExpression(), yamlFilePath, PATH_DELIMITER);
-    Validator.notNullCheck("Trigger name null in the given yaml file: " + yamlFilePath, triggerName);
+    notNullCheck("Trigger name null in the given yaml file: " + yamlFilePath, triggerName);
 
     PageRequest<Trigger> pageRequest =
         aPageRequest().addFilter("appId", Operator.EQ, appId).addFilter("name", Operator.EQ, triggerName).build();
@@ -167,7 +169,7 @@ public class YamlHelper {
 
   public Service getService(String appId, String yamlFilePath) {
     String serviceName = extractParentEntityName(YamlType.SERVICE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
-    Validator.notNullCheck("Service name null in the given yaml file: " + yamlFilePath, serviceName);
+    notNullCheck("Service name null in the given yaml file: " + yamlFilePath, serviceName);
     return serviceResourceService.getServiceByName(appId, serviceName);
   }
 
@@ -217,7 +219,7 @@ public class YamlHelper {
 
   public ManifestFile getManifestFile(String appId, String yamlFilePath, String fileName) {
     ApplicationManifest applicationManifest = getApplicationManifest(appId, yamlFilePath);
-    Validator.notNullCheck("Application Manifest Null for yaml path: " + yamlFilePath, applicationManifest);
+    notNullCheck("Application Manifest Null for yaml path: " + yamlFilePath, applicationManifest);
     return applicationManifestService.getManifestFileByFileName(applicationManifest.getUuid(), fileName);
   }
 
@@ -227,22 +229,21 @@ public class YamlHelper {
 
   public String getInfrastructureProvisionerId(String appId, String yamlFilePath) {
     InfrastructureProvisioner provisioner = getInfrastructureProvisioner(appId, yamlFilePath);
-    Validator.notNullCheck("InfrastructureProvisioner null in the given yaml file: " + yamlFilePath, provisioner);
+    notNullCheck("InfrastructureProvisioner null in the given yaml file: " + yamlFilePath, provisioner);
     return provisioner.getUuid();
   }
 
   public InfrastructureProvisioner getInfrastructureProvisioner(String accountId, String yamlFilePath) {
     String appId = getAppId(accountId, yamlFilePath);
-    Validator.notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
+    notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
     String provisionerName = getNameFromYamlFilePath(yamlFilePath);
-    Validator.notNullCheck(
-        "InfrastructureProvisioner name null in the given yaml file: " + yamlFilePath, provisionerName);
+    notNullCheck("InfrastructureProvisioner name null in the given yaml file: " + yamlFilePath, provisionerName);
     return infrastructureProvisionerService.getByName(appId, provisionerName);
   }
 
   public CVConfiguration getCVConfiguration(String accountId, String yamlFilePath) {
     String appId = getAppId(accountId, yamlFilePath);
-    Validator.notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
+    notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
     String configName = getNameFromYamlFilePath(yamlFilePath);
     String envId = getEnvironmentId(appId, yamlFilePath);
 
@@ -251,21 +252,21 @@ public class YamlHelper {
 
   public String getEnvironmentId(String appId, String yamlFilePath) {
     Environment environment = getEnvironment(appId, yamlFilePath);
-    Validator.notNullCheck("Environment null in the given yaml file: " + yamlFilePath, environment);
+    notNullCheck("Environment null in the given yaml file: " + yamlFilePath, environment);
     return environment.getUuid();
   }
 
   public Environment getEnvironment(String appId, String yamlFilePath) {
     String envName = extractParentEntityName(YamlType.ENVIRONMENT.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
-    Validator.notNullCheck("Environment name null in the given yaml file: " + yamlFilePath, envName);
+    notNullCheck("Environment name null in the given yaml file: " + yamlFilePath, envName);
     return environmentService.getEnvironmentByName(appId, envName);
   }
 
   public Environment getEnvironmentFromAccount(String accountId, String yamlFilePath) {
     String appId = getAppId(accountId, yamlFilePath);
-    Validator.notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
+    notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
     String envName = extractParentEntityName(YamlType.ENVIRONMENT.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
-    Validator.notNullCheck("Environment name null in the given yaml file: " + yamlFilePath, envName);
+    notNullCheck("Environment name null in the given yaml file: " + yamlFilePath, envName);
     return environmentService.getEnvironmentByName(appId, envName);
   }
 
@@ -280,28 +281,28 @@ public class YamlHelper {
   public ArtifactStream getArtifactStream(String accountId, String yamlFilePath) {
     if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
       String appId = getAppId(accountId, yamlFilePath);
-      Validator.notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
+      notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
       String serviceId = getServiceId(appId, yamlFilePath);
-      Validator.notNullCheck("Service null in the given yaml file: " + yamlFilePath, serviceId);
+      notNullCheck("Service null in the given yaml file: " + yamlFilePath, serviceId);
       String artifactStreamName =
           extractEntityNameFromYamlPath(YamlType.ARTIFACT_STREAM.getPathExpression(), yamlFilePath, PATH_DELIMITER);
-      Validator.notNullCheck("Artifact stream name null in the given yaml file: " + yamlFilePath, artifactStreamName);
+      notNullCheck("Artifact stream name null in the given yaml file: " + yamlFilePath, artifactStreamName);
       return artifactStreamService.getArtifactStreamByName(appId, serviceId, artifactStreamName);
     } else {
       YamlType entityType = getEntityType(yamlFilePath);
       if (entityType.equals(ARTIFACT_STREAM)) {
         String appId = getAppId(accountId, yamlFilePath);
-        Validator.notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
+        notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
         String serviceId = getServiceId(appId, yamlFilePath);
-        Validator.notNullCheck("Service null in the given yaml file: " + yamlFilePath, serviceId);
+        notNullCheck("Service null in the given yaml file: " + yamlFilePath, serviceId);
         String artifactStreamName =
             extractEntityNameFromYamlPath(YamlType.ARTIFACT_STREAM.getPathExpression(), yamlFilePath, PATH_DELIMITER);
-        Validator.notNullCheck("Artifact stream name null in the given yaml file: " + yamlFilePath, artifactStreamName);
+        notNullCheck("Artifact stream name null in the given yaml file: " + yamlFilePath, artifactStreamName);
         return artifactStreamService.getArtifactStreamByName(appId, serviceId, artifactStreamName);
       } else {
         String artifactStreamName =
             extractEntityNameFromYamlPath(entityType.getPathExpression(), yamlFilePath, PATH_DELIMITER);
-        Validator.notNullCheck("Artifact stream name null in the given yaml file: " + yamlFilePath, artifactStreamName);
+        notNullCheck("Artifact stream name null in the given yaml file: " + yamlFilePath, artifactStreamName);
         SettingAttribute settingAttribute = getSettingAttribute(accountId, yamlFilePath);
         return artifactStreamService.getArtifactStreamByName(settingAttribute.getUuid(), artifactStreamName);
       }
@@ -367,83 +368,83 @@ public class YamlHelper {
 
   public ServiceCommand getServiceCommand(String accountId, String yamlFilePath) {
     String appId = getAppId(accountId, yamlFilePath);
-    Validator.notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
+    notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
     String serviceId = getServiceId(appId, yamlFilePath);
-    Validator.notNullCheck("Service null in the given yaml file: " + yamlFilePath, serviceId);
+    notNullCheck("Service null in the given yaml file: " + yamlFilePath, serviceId);
     String serviceCommandName =
         extractEntityNameFromYamlPath(YamlType.COMMAND.getPathExpression(), yamlFilePath, PATH_DELIMITER);
-    Validator.notNullCheck("Service Command name null in the given yaml file: " + yamlFilePath, serviceCommandName);
+    notNullCheck("Service Command name null in the given yaml file: " + yamlFilePath, serviceCommandName);
     return serviceResourceService.getCommandByName(appId, serviceId, serviceCommandName);
   }
 
   public ConfigFile getServiceConfigFile(String accountId, String yamlFilePath, String targetFilePath) {
     String appId = getAppId(accountId, yamlFilePath);
-    Validator.notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
+    notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
     String serviceId = getServiceId(appId, yamlFilePath);
-    Validator.notNullCheck("Service null in the given yaml file: " + yamlFilePath, serviceId);
+    notNullCheck("Service null in the given yaml file: " + yamlFilePath, serviceId);
 
     return configService.get(appId, serviceId, EntityType.SERVICE, targetFilePath);
   }
 
   public ConfigFile getEnvironmentConfigFile(String accountId, String yamlFilePath, String targetFilePath) {
     String appId = getAppId(accountId, yamlFilePath);
-    Validator.notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
+    notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
     String envId = getEnvironmentId(appId, yamlFilePath);
-    Validator.notNullCheck("Environment null in the given yaml file: " + yamlFilePath, envId);
+    notNullCheck("Environment null in the given yaml file: " + yamlFilePath, envId);
 
     return configService.get(appId, envId, EntityType.ENVIRONMENT, targetFilePath);
   }
 
   public Workflow getWorkflow(String accountId, String yamlFilePath) {
     String appId = getAppId(accountId, yamlFilePath);
-    Validator.notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
+    notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
     String workflowName =
         extractEntityNameFromYamlPath(YamlType.WORKFLOW.getPathExpression(), yamlFilePath, PATH_DELIMITER);
-    Validator.notNullCheck("Workflow name null in the given yaml file: " + yamlFilePath, workflowName);
+    notNullCheck("Workflow name null in the given yaml file: " + yamlFilePath, workflowName);
     return workflowService.readWorkflowByName(appId, workflowName);
   }
 
   public Workflow getWorkflowFromName(String appId, String workflowName) {
     Workflow workflow = workflowService.readWorkflowByName(appId, workflowName);
-    Validator.notNullCheck("workflow name does not exist " + workflowName, workflow);
+    notNullCheck("workflow name does not exist " + workflowName, workflow);
     return workflow;
   }
 
   public Workflow getWorkflowFromId(String appId, String workflowId) {
     Workflow workflow = workflowService.readWorkflow(appId, workflowId);
-    Validator.notNullCheck("workflow name does not exist " + workflowId, workflow);
+    notNullCheck("workflow name does not exist " + workflowId, workflow);
     return workflow;
   }
 
   public String getPipelineName(String appId, String pipelineId) {
     String pipelineName = pipelineService.readPipeline(appId, pipelineId, false).getName();
-    Validator.notNullCheck("workflow name does not exist " + pipelineId, pipelineName);
+    notNullCheck("workflow name does not exist " + pipelineId, pipelineName);
     return pipelineName;
   }
 
   public String getPipelineId(String appId, String pipelineName) {
     String pipelineId = pipelineService.getPipelineByName(appId, pipelineName).getUuid();
-    Validator.notNullCheck("pipeline name does not exist " + pipelineName, pipelineId);
+    notNullCheck("pipeline name does not exist " + pipelineName, pipelineId);
     return pipelineId;
   }
 
   public Pipeline getPipeline(String accountId, String yamlFilePath) {
     String appId = getAppId(accountId, yamlFilePath);
-    Validator.notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
+    notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
     String pipelineName =
         extractEntityNameFromYamlPath(YamlType.PIPELINE.getPathExpression(), yamlFilePath, PATH_DELIMITER);
-    Validator.notNullCheck("Pipeline name null in the given yaml file: " + yamlFilePath, pipelineName);
+    notNullCheck("Pipeline name null in the given yaml file: " + yamlFilePath, pipelineName);
     return pipelineService.getPipelineByName(appId, pipelineName);
   }
 
   public InfrastructureMapping getInfraMapping(String accountId, String yamlFilePath) {
     String appId = getAppId(accountId, yamlFilePath);
-    Validator.notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
+    notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
     String envId = getEnvironmentId(appId, yamlFilePath);
-    Validator.notNullCheck("Env null in the given yaml file: " + yamlFilePath, envId);
+    notNullCheck("Env null in the given yaml file: " + yamlFilePath, envId);
     String infraMappingName =
         extractEntityNameFromYamlPath(YamlType.INFRA_MAPPING.getPathExpression(), yamlFilePath, PATH_DELIMITER);
-    Validator.notNullCheck("Inframapping with name: " + infraMappingName, infraMappingName);
+    notNullCheck("Inframapping with name: " + infraMappingName, infraMappingName);
     return infraMappingService.getInfraMappingByName(appId, envId, infraMappingName);
   }
 
@@ -528,36 +529,43 @@ public class YamlHelper {
   public InfrastructureMapping getInfraMappingByAppIdYamlPath(String applicationId, String envId, String yamlFilePath) {
     String infraMappingName =
         extractEntityNameFromYamlPath(YamlType.INFRA_MAPPING.getPathExpression(), yamlFilePath, PATH_DELIMITER);
-    Validator.notNullCheck("Inframapping with name: " + infraMappingName, infraMappingName);
+    notNullCheck("Inframapping with name: " + infraMappingName, infraMappingName);
     return infraMappingService.getInfraMappingByName(applicationId, envId, infraMappingName);
+  }
+
+  public InfrastructureDefinition getInfraDefinitionByAppIdYamlPath(
+      String applicationId, String envId, String yamlFilePath) {
+    String infraDefinitionName =
+        extractEntityNameFromYamlPath(YamlType.INFRA_DEFINITION.getPathExpression(), yamlFilePath, PATH_DELIMITER);
+    notNullCheck("InfraDefinition with name: " + infraDefinitionName, infraDefinitionName);
+    return infrastructureDefinitionService.getInfraDefByName(applicationId, envId, infraDefinitionName);
   }
 
   public InfrastructureProvisioner getInfrastructureProvisionerByAppIdYamlPath(
       String applicationId, String yamlFilePath) {
     String provisionerName = getNameFromYamlFilePath(yamlFilePath);
-    Validator.notNullCheck(
-        "InfrastructureProvisioner name null in the given yaml file: " + yamlFilePath, provisionerName);
+    notNullCheck("InfrastructureProvisioner name null in the given yaml file: " + yamlFilePath, provisionerName);
     return infrastructureProvisionerService.getByName(applicationId, provisionerName);
   }
 
   public Pipeline getPipelineByAppIdYamlPath(String applicationId, String yamlFilePath) {
     String pipelineName =
         extractEntityNameFromYamlPath(YamlType.PIPELINE.getPathExpression(), yamlFilePath, PATH_DELIMITER);
-    Validator.notNullCheck("Pipeline name null in the given yaml file: " + yamlFilePath, pipelineName);
+    notNullCheck("Pipeline name null in the given yaml file: " + yamlFilePath, pipelineName);
     return pipelineService.getPipelineByName(applicationId, pipelineName);
   }
 
   public Workflow getWorkflowByAppIdYamlPath(String applicationId, String yamlFilePath) {
     String workflowName =
         extractEntityNameFromYamlPath(YamlType.WORKFLOW.getPathExpression(), yamlFilePath, PATH_DELIMITER);
-    Validator.notNullCheck("Workflow name null in the given yaml file: " + yamlFilePath, workflowName);
+    notNullCheck("Workflow name null in the given yaml file: " + yamlFilePath, workflowName);
     return workflowService.readWorkflowByName(applicationId, workflowName);
   }
 
   public ArtifactStream getArtifactStream(String applicationId, String serviceId, String yamlFilePath) {
     String artifactStreamName =
         extractEntityNameFromYamlPath(YamlType.ARTIFACT_STREAM.getPathExpression(), yamlFilePath, PATH_DELIMITER);
-    Validator.notNullCheck("Artifact stream name null in the given yaml file: " + yamlFilePath, artifactStreamName);
+    notNullCheck("Artifact stream name null in the given yaml file: " + yamlFilePath, artifactStreamName);
     return artifactStreamService.getArtifactStreamByName(applicationId, serviceId, artifactStreamName);
   }
 
