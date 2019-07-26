@@ -1,6 +1,7 @@
 package software.wings.core.ssh.executors;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -16,6 +17,7 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
@@ -26,6 +28,7 @@ import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.FileService.FileBucket;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -43,6 +46,10 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Slf4j
 public abstract class AbstractScriptExecutor implements ScriptExecutor {
+  static final String UUID = generateUuid();
+  static final String HARNESS_START_TOKEN = "harness_start_token_" + UUID;
+  static final String HARNESS_END_TOKEN = "harness_end_token_" + UUID;
+
   /**
    * The Config.
    */
@@ -220,8 +227,53 @@ public abstract class AbstractScriptExecutor implements ScriptExecutor {
     });
   }
 
+  protected String addEnvVariablesCollector(
+      String command, List<String> envVariablesToCollect, String envVariablesOutputFilePath) {
+    StringBuilder wrapperCommand = new StringBuilder(command);
+    wrapperCommand.append('\n');
+    String redirect = ">";
+    for (String env : envVariablesToCollect) {
+      wrapperCommand.append("echo ")
+          .append(HARNESS_START_TOKEN)
+          .append(' ')
+          .append(env)
+          .append("=\"$")
+          .append(env)
+          .append("\" ")
+          .append(HARNESS_END_TOKEN)
+          .append(' ')
+          .append(redirect)
+          .append(envVariablesOutputFilePath)
+          .append('\n');
+      redirect = ">>";
+    }
+    return wrapperCommand.toString();
+  }
+
   protected void saveExecutionLog(String line) {
     saveExecutionLog(line, RUNNING);
+  }
+
+  protected void processScriptOutputFile(Map<String, String> envVariablesMap, BufferedReader br) throws IOException {
+    saveExecutionLog("Script Output: ");
+    StringBuilder sb = new StringBuilder();
+    String line;
+    while ((line = br.readLine()) != null) {
+      sb.append(line);
+      sb.append('\n');
+      if (line.endsWith(HARNESS_END_TOKEN)) {
+        String envVar = sb.toString();
+        envVar = StringUtils.substringBetween(envVar, HARNESS_START_TOKEN, HARNESS_END_TOKEN);
+        int index = envVar.indexOf('=');
+        if (index != -1) {
+          String key = envVar.substring(0, index).trim();
+          String value = envVar.substring(index + 1).trim();
+          envVariablesMap.put(key, value);
+          saveExecutionLog(key + "=" + value);
+          sb = new StringBuilder();
+        }
+      }
+    }
   }
 
   protected void saveExecutionLog(String line, CommandExecutionStatus commandExecutionStatus) {

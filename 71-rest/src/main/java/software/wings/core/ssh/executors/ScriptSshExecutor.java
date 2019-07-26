@@ -261,19 +261,8 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
                 ((ChannelSftp) channel).cd(directoryPath);
                 BoundedInputStream stream =
                     new BoundedInputStream(((ChannelSftp) channel).get(envVariablesFilename), CHUNK_SIZE);
-                saveExecutionLog("Script Output: ");
-
                 br = new BufferedReader(new InputStreamReader(stream, Charsets.UTF_8));
-                String line;
-                while ((line = br.readLine()) != null) {
-                  int index = line.indexOf('=');
-                  if (index != -1) {
-                    String key = line.substring(0, index).trim();
-                    String value = line.substring(index + 1).trim();
-                    envVariablesMap.put(key, value);
-                    saveExecutionLog(key + "=" + value);
-                  }
-                }
+                processScriptOutputFile(envVariablesMap, br);
               } catch (JSchException | SftpException | IOException e) {
                 logger.error("Exception occurred during reading file from SFTP server due to " + e.getMessage());
               } finally {
@@ -357,25 +346,6 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
     if (rethrow != null) {
       throw rethrow;
     }
-  }
-
-  private String addEnvVariablesCollector(
-      String command, List<String> envVariablesToCollect, String envVariablesOutputFilePath) {
-    StringBuilder wrapperCommand = new StringBuilder(command);
-    wrapperCommand.append('\n');
-    String redirect = ">";
-    for (String env : envVariablesToCollect) {
-      wrapperCommand.append("echo $")
-          .append(env)
-          .append("| xargs echo \"")
-          .append(env)
-          .append("=\" ")
-          .append(redirect)
-          .append(envVariablesOutputFilePath)
-          .append('\n');
-      redirect = ">>";
-    }
-    return wrapperCommand.toString();
   }
 
   private void passwordPromptResponder(String line, OutputStream outputStream) throws IOException {

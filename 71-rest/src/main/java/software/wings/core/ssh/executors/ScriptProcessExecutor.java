@@ -258,18 +258,7 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
       if (commandExecutionStatus == SUCCESS && envVariablesOutputFile != null) {
         try (BufferedReader br =
                  new BufferedReader(new InputStreamReader(new FileInputStream(envVariablesOutputFile), "UTF-8"))) {
-          String sCurrentLine;
-          saveExecutionLog("Script Output: ", INFO);
-          while ((sCurrentLine = br.readLine()) != null) {
-            int index = sCurrentLine.indexOf('=');
-            if (index != -1) {
-              String key = sCurrentLine.substring(0, index).trim();
-              String value = sCurrentLine.substring(index + 1).trim();
-              envVariablesMap.put(key, value);
-              saveExecutionLog(key + "=" + value, INFO);
-            }
-          }
-
+          processScriptOutputFile(envVariablesMap, br);
         } catch (IOException e) {
           saveExecutionLog("IOException:" + e, ERROR);
         }
@@ -294,25 +283,6 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
     commandExecutionResult.status(commandExecutionStatus);
     commandExecutionResult.commandExecutionData(executionDataBuilder.build());
     return commandExecutionResult.build();
-  }
-
-  private String addEnvVariablesCollector(
-      String command, List<String> envVariablesToCollect, String envVariablesOutputFilePath) {
-    StringBuilder wrapperCommand = new StringBuilder(command);
-    wrapperCommand.append('\n');
-    String redirect = ">";
-    for (String env : envVariablesToCollect) {
-      wrapperCommand.append("echo $")
-          .append(env)
-          .append("| xargs echo \"")
-          .append(env)
-          .append("=\" ")
-          .append(redirect)
-          .append(envVariablesOutputFilePath)
-          .append('\n');
-      redirect = ">>";
-    }
-    return wrapperCommand.toString();
   }
 
   @Override
