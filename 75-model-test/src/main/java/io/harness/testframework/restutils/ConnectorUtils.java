@@ -8,7 +8,9 @@ import static software.wings.utils.UsageRestrictionsUtils.getAllAppAllEnvUsageRe
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.restassured.path.json.JsonPath;
+import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DockerConfig;
+import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.config.ArtifactoryConfig;
@@ -105,6 +107,56 @@ public class ConnectorUtils {
 
     JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
     assertNotNull(setAttrResponse);
+    return setAttrResponse.getString("resource.uuid").trim();
+  }
+
+  /**
+   * Connector util to create a Verification Provider: AppDynamics Connector
+   */
+  public static String createAppDynamicsConnector(String bearerToken, String connectorName, String accountId) {
+    String APPDYNAMICS_URL = "https://harness-test.saas.appdynamics.com/controller";
+
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withCategory(SettingCategory.CONNECTOR)
+            .withName(connectorName)
+            .withAccountId(accountId)
+            .withValue(AppDynamicsConfig.builder()
+                           .controllerUrl(APPDYNAMICS_URL)
+                           .accountname(String.valueOf(
+                               new ScmSecret().decryptToCharArray(new SecretName("appd_config_accountname"))))
+                           .username(String.valueOf(
+                               new ScmSecret().decryptToCharArray(new SecretName("appd_config_username"))))
+                           .password(new ScmSecret().decryptToCharArray(new SecretName("appd_config_password_test")))
+                           .build())
+            .build();
+
+    JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
+    assertNotNull(setAttrResponse);
+
+    return setAttrResponse.getString("resource.uuid").trim();
+  }
+
+  /**
+   * Connector util to create a Verification Provider: NewRelic Connector
+   */
+  public static String createNewrelicConnector(String bearerToken, String connectorName, String accountId) {
+    String NEW_RELIC_URL = "https://api.newrelic.com";
+
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withCategory(SettingCategory.CONNECTOR)
+            .withName(connectorName)
+            .withAccountId(accountId)
+            .withValue(NewRelicConfig.builder()
+                           .newRelicUrl(NEW_RELIC_URL)
+                           .apiKey(new ScmSecret().decryptToCharArray(new SecretName("new_relic_api_key")))
+                           .build())
+            .build();
+
+    JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
+    assertNotNull(setAttrResponse);
+
     return setAttrResponse.getString("resource.uuid").trim();
   }
 }
