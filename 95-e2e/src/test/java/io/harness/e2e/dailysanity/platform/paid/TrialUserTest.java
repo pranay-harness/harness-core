@@ -38,7 +38,7 @@ public class TrialUserTest extends AbstractE2ETest {
   }
 
   @Test()
-  @Owner(emails = NATARAJA, intermittent = true)
+  @Owner(emails = NATARAJA, intermittent = false)
   @Category(E2ETests.class)
   public void testUserInvite() throws IOException, MessagingException {
     Account account = getTrialAccount();

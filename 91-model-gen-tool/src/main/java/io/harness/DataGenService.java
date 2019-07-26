@@ -84,7 +84,6 @@ import software.wings.beans.SystemCatalog;
 import software.wings.beans.Workflow;
 import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.dl.WingsPersistence;
-import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppContainerService;
@@ -234,23 +233,23 @@ public class DataGenService {
 
     UsageRestrictions defaultUsageRestrictions = getAllAppAllEnvUsageRestrictions();
 
-    SettingAttribute smtpSettingAttribute =
-        aSettingAttribute()
-            .withCategory(SettingCategory.CONNECTOR)
-            .withName("SMTP")
-            .withAccountId(account.getUuid())
-            .withValue(SmtpConfig.builder()
-                           .accountId(account.getUuid())
-                           .fromAddress("systemsupport2@harness.io")
-                           .username("systemsupport2@harness.io")
-                           .host("smtp.gmail.com")
-                           .password(scmSecret.decryptToCharArray(new SecretName("smtp_config_password")))
-                           .port(465)
-                           .useSSL(true)
-                           .build())
-            .withUsageRestrictions(defaultUsageRestrictions)
-            .build();
-    wingsPersistence.save(smtpSettingAttribute);
+    //    SettingAttribute smtpSettingAttribute =
+    //        aSettingAttribute()
+    //            .withCategory(SettingCategory.CONNECTOR)
+    //            .withName("SMTP")
+    //            .withAccountId(account.getUuid())
+    //            .withValue(SmtpConfig.builder()
+    //                           .accountId(account.getUuid())
+    //                           .fromAddress("systemsupport2@harness.io")
+    //                           .username("systemsupport2@harness.io")
+    //                           .host("smtp.gmail.com")
+    //                           .password(scmSecret.decryptToCharArray(new SecretName("smtp_config_password")))
+    //                           .port(465)
+    //                           .useSSL(true)
+    //                           .build())
+    //            .withUsageRestrictions(defaultUsageRestrictions)
+    //            .build();
+    //    wingsPersistence.save(smtpSettingAttribute);
 
     SettingAttribute splunkSettingAttribute =
         aSettingAttribute()
