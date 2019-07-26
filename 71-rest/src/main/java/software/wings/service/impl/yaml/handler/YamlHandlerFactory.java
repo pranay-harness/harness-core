@@ -33,6 +33,8 @@ import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
+import software.wings.service.impl.yaml.handler.CloudProviderInfrastructure.CloudProviderInfrastructureYamlHandler;
+import software.wings.service.impl.yaml.handler.InfraDefinition.InfrastructureDefinitionYamlHandler;
 import software.wings.service.impl.yaml.handler.app.ApplicationYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.ArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.command.CommandUnitYamlHandler;
@@ -112,6 +114,7 @@ public class YamlHandlerFactory {
   @Inject private Map<String, CollaborationProviderYamlHandler> collaborationProviderYamlHelperMap;
   @Inject private Map<String, CloudProviderYamlHandler> cloudProviderYamlHelperMap;
   @Inject private Map<String, HelmRepoYamlHandler> helmRepoYamlHelperMap;
+  @Inject private Map<String, CloudProviderInfrastructureYamlHandler> cloudProviderInfrastructureYamlHandlerMap;
 
   @Inject private ApplicationYamlHandler applicationYamlHandler;
   @Inject private TriggerYamlHandler triggerYamlHandler;
@@ -145,6 +148,7 @@ public class YamlHandlerFactory {
   @Inject private UsageRestrictionsYamlHandler usageRestrictionsYamlHandler;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private HarnessTagYamlHandler harnessTagYamlHandler;
+  @Inject private InfrastructureDefinitionYamlHandler infrastructureDefinitionYamlHandler;
 
   public <T extends BaseYamlHandler> T getYamlHandler(YamlType yamlType) {
     return getYamlHandler(yamlType, null);
@@ -296,6 +300,12 @@ public class YamlHandlerFactory {
         break;
       case ARTIFACT_SELECTION:
         yamlHandler = artifactSelectionYamlHandler;
+        break;
+      case CLOUD_PROVIDER_INFRASTRUCTURE:
+        yamlHandler = cloudProviderInfrastructureYamlHandlerMap.get(subType);
+        break;
+      case INFRA_DEFINITION:
+        yamlHandler = infrastructureDefinitionYamlHandler;
         break;
 
       case TAG:

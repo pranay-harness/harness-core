@@ -4,6 +4,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.infra.InfraDefinitionDetail;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
@@ -19,6 +20,7 @@ public interface InfrastructureDefinitionService {
   InfrastructureDefinition get(String appId, String infraDefinitionId);
   InfrastructureDefinition update(@Valid InfrastructureDefinition infrastructureDefinition);
   void delete(String appId, String infraDefinitionId);
+  void deleteByYamlGit(String appid, String infraDefinitionId);
 
   Map<DeploymentType, List<SettingVariableTypes>> getDeploymentTypeCloudProviderOptions();
 
@@ -38,4 +40,6 @@ public interface InfrastructureDefinitionService {
   String cloudProviderNameForDefinition(InfrastructureDefinition infrastructureDefinition);
 
   String cloudProviderNameForDefinition(String appId, String infraDefinitionId);
+
+  InfraDefinitionDetail getDetail(String appId, String infraDefinitionId);
 }

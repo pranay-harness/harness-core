@@ -1,9 +1,10 @@
 package software.wings.infra;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import software.wings.beans.InfrastructureMapping;
 
 public interface InfraMappingInfrastructureProvider extends CloudProviderInfrastructure {
-  InfrastructureMapping getInfraMapping();
+  @JsonIgnore InfrastructureMapping getInfraMapping();
 
-  Class<? extends InfrastructureMapping> getMappingClass();
+  @JsonIgnore Class<? extends InfrastructureMapping> getMappingClass();
 }

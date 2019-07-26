@@ -1,27 +1,32 @@
 package software.wings.infra;
 
 import static software.wings.beans.AzureInfrastructureMapping.Builder.anAzureInfrastructureMapping;
+import static software.wings.beans.InfrastructureType.AZURE_SSH;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import software.wings.annotation.ExcludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.AzureInfrastructureMapping;
 import software.wings.beans.AzureTag;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
+import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @JsonTypeName("AZURE_SSH")
 @Data
+@Builder
 public class AzureInstanceInfrastructure implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
   @ExcludeFieldMap private String cloudProviderId;
 
   private String subscriptionId;
   private String resourceGroup;
-  private List<AzureTag> tags = new ArrayList<>();
+  @Builder.Default private List<AzureTag> tags = new ArrayList<>();
   private String hostConnectionAttrs;
   private String winRmConnectionAttributes;
   private boolean usePublicDns;
@@ -49,5 +54,33 @@ public class AzureInstanceInfrastructure implements InfraMappingInfrastructurePr
   @Override
   public CloudProviderType getCloudProviderType() {
     return CloudProviderType.AZURE;
+  }
+
+  public String getCloudProviderInfrastructureType() {
+    return AZURE_SSH;
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @JsonTypeName(AZURE_SSH)
+  public static final class Yaml extends CloudProviderInfrastructureYaml {
+    private String cloudProviderName;
+    private String resourceGroup;
+    private String subscriptionId;
+    private List<AzureTag> tags;
+
+    @Builder
+    public Yaml(
+        String type, String cloudProviderName, String resourceGroup, String subscriptionId, List<AzureTag> tags) {
+      super(type);
+      setCloudProviderName(cloudProviderName);
+      setResourceGroup(resourceGroup);
+      setSubscriptionId(subscriptionId);
+      setTags(tags);
+    }
+
+    public Yaml() {
+      super(AZURE_SSH);
+    }
   }
 }

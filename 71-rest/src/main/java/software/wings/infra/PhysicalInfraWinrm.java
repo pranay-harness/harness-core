@@ -1,20 +1,25 @@
 package software.wings.infra;
 
+import static software.wings.beans.InfrastructureType.PHYSICAL_INFRA_WINRM;
 import static software.wings.beans.PhysicalInfrastructureMappingWinRm.Builder.aPhysicalInfrastructureMappingWinRm;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import software.wings.annotation.ExcludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhysicalInfrastructureMappingWinRm;
 import software.wings.beans.infrastructure.Host;
+import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
 
 import java.util.List;
 
 @JsonTypeName("PHYSICAL_DATA_CENTER_WINRM")
 @Data
+@Builder
 public class PhysicalInfraWinrm
     implements PhysicalDataCenterInfra, InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
   @ExcludeFieldMap private String cloudProviderId;
@@ -41,8 +46,38 @@ public class PhysicalInfraWinrm
     return PhysicalInfrastructureMappingWinRm.class;
   }
 
+  public String getCloudProviderInfrastructureType() {
+    return PHYSICAL_INFRA_WINRM;
+  }
+
   @Override
   public CloudProviderType getCloudProviderType() {
     return CloudProviderType.PHYSICAL_DATA_CENTER;
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @JsonTypeName(PHYSICAL_INFRA_WINRM)
+  public static final class Yaml extends CloudProviderInfrastructureYaml {
+    private String cloudProviderName;
+    private List<String> hostNames;
+    private List<Host> hosts;
+    private String loadBalancerName;
+    private String hostConnectionAttrs;
+
+    @Builder
+    public Yaml(String type, String cloudProviderName, List<String> hostNames, List<Host> hosts,
+        String loadBalancerName, String hostConnectionAttrs) {
+      super(type);
+      setCloudProviderName(cloudProviderName);
+      setHostNames(hostNames);
+      setHosts(hosts);
+      setLoadBalancerName(loadBalancerName);
+      setHostConnectionAttrs(hostConnectionAttrs);
+    }
+
+    public Yaml() {
+      super(PHYSICAL_INFRA_WINRM);
+    }
   }
 }

@@ -143,6 +143,7 @@ public class YamlVersion extends Base implements YamlHistory {
     TRIGGER,
     ARTIFACT_STREAM,
     INFRA_MAPPING,
+    INFRA_DEFINITION,
     DEPLOYMENT_SPEC,
     APPLICATION_DEFAULTS,
     ACCOUNT_DEFAULTS,

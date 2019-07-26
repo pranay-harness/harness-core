@@ -18,6 +18,12 @@ import static software.wings.beans.InfrastructureMappingType.GCP_KUBERNETES;
 import static software.wings.beans.InfrastructureMappingType.PCF_PCF;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM;
+import static software.wings.beans.InfrastructureType.AWS_INSTANCE;
+import static software.wings.beans.InfrastructureType.AZURE_SSH;
+import static software.wings.beans.InfrastructureType.GCP_KUBERNETES_ENGINE;
+import static software.wings.beans.InfrastructureType.PCF_INFRASTRUCTURE;
+import static software.wings.beans.InfrastructureType.PHYSICAL_INFRA;
+import static software.wings.beans.InfrastructureType.PHYSICAL_INFRA_WINRM;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
@@ -60,6 +66,7 @@ import com.google.inject.multibindings.MapBinder;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureProvisionerType;
+import software.wings.beans.InfrastructureType;
 import software.wings.service.impl.yaml.AppYamlResourceServiceImpl;
 import software.wings.service.impl.yaml.YamlArtifactStreamServiceImpl;
 import software.wings.service.impl.yaml.YamlDirectoryServiceImpl;
@@ -67,6 +74,19 @@ import software.wings.service.impl.yaml.YamlGitServiceImpl;
 import software.wings.service.impl.yaml.YamlHistoryServiceImpl;
 import software.wings.service.impl.yaml.YamlPushServiceImpl;
 import software.wings.service.impl.yaml.YamlResourceServiceImpl;
+import software.wings.service.impl.yaml.handler.CloudProviderInfrastructure.CloudProviderInfrastructureYamlHandler;
+import software.wings.service.impl.yaml.handler.InfraDefinition.AwsAmiInfrastructureYamlHandler;
+import software.wings.service.impl.yaml.handler.InfraDefinition.AwsEcsInfrastructureYamlHandler;
+import software.wings.service.impl.yaml.handler.InfraDefinition.AwsInstanceInfrastructureYamlHandler;
+import software.wings.service.impl.yaml.handler.InfraDefinition.AwsLambdaInfrastructureYamlHandler;
+import software.wings.service.impl.yaml.handler.InfraDefinition.AzureInstanceInfrastructureYamlHandler;
+import software.wings.service.impl.yaml.handler.InfraDefinition.AzureKubernetesServiceYamlHandler;
+import software.wings.service.impl.yaml.handler.InfraDefinition.CodeDeployInfrastructureYamlHandler;
+import software.wings.service.impl.yaml.handler.InfraDefinition.DirectKubernetesInfrastructureYamlHandler;
+import software.wings.service.impl.yaml.handler.InfraDefinition.GoogleKubernetesEngineYamlHandler;
+import software.wings.service.impl.yaml.handler.InfraDefinition.PcfInfraStructureYamlHandler;
+import software.wings.service.impl.yaml.handler.InfraDefinition.PhysicalInfraWinrmYamlHandler;
+import software.wings.service.impl.yaml.handler.InfraDefinition.PhysicalInfraYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.artifactstream.AcrArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.AmazonS3ArtifactStreamYamlHandler;
@@ -254,6 +274,32 @@ public class YamlModule extends AbstractModule {
     infraMappingYamlHelperMapBinder.addBinding(PHYSICAL_DATA_CENTER_WINRM.name())
         .to(PhysicalInfraMappingWinRmYamlHandler.class);
     infraMappingYamlHelperMapBinder.addBinding(PCF_PCF.name()).to(PcfInfraMappingYamlHandler.class);
+
+    MapBinder<String, CloudProviderInfrastructureYamlHandler> cloudProviderInfrastructureYamlHandlerMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, CloudProviderInfrastructureYamlHandler.class);
+    cloudProviderInfrastructureYamlHandlerMapBinder.addBinding(InfrastructureType.AWS_AMI)
+        .to(AwsAmiInfrastructureYamlHandler.class);
+    cloudProviderInfrastructureYamlHandlerMapBinder.addBinding(InfrastructureType.AWS_ECS)
+        .to(AwsEcsInfrastructureYamlHandler.class);
+    cloudProviderInfrastructureYamlHandlerMapBinder.addBinding(AWS_INSTANCE)
+        .to(AwsInstanceInfrastructureYamlHandler.class);
+    cloudProviderInfrastructureYamlHandlerMapBinder.addBinding(InfrastructureType.AWS_LAMBDA)
+        .to(AwsLambdaInfrastructureYamlHandler.class);
+    cloudProviderInfrastructureYamlHandlerMapBinder.addBinding(AZURE_SSH).to(
+        AzureInstanceInfrastructureYamlHandler.class);
+    cloudProviderInfrastructureYamlHandlerMapBinder.addBinding(InfrastructureType.AZURE_KUBERNETES)
+        .to(AzureKubernetesServiceYamlHandler.class);
+    cloudProviderInfrastructureYamlHandlerMapBinder.addBinding(InfrastructureType.CODE_DEPLOY)
+        .to(CodeDeployInfrastructureYamlHandler.class);
+    cloudProviderInfrastructureYamlHandlerMapBinder.addBinding(InfrastructureType.DIRECT_KUBERNETES)
+        .to(DirectKubernetesInfrastructureYamlHandler.class);
+    cloudProviderInfrastructureYamlHandlerMapBinder.addBinding(GCP_KUBERNETES_ENGINE)
+        .to(GoogleKubernetesEngineYamlHandler.class);
+    cloudProviderInfrastructureYamlHandlerMapBinder.addBinding(PCF_INFRASTRUCTURE)
+        .to(PcfInfraStructureYamlHandler.class);
+    cloudProviderInfrastructureYamlHandlerMapBinder.addBinding(PHYSICAL_INFRA).to(PhysicalInfraYamlHandler.class);
+    cloudProviderInfrastructureYamlHandlerMapBinder.addBinding(PHYSICAL_INFRA_WINRM)
+        .to(PhysicalInfraWinrmYamlHandler.class);
 
     MapBinder<String, DeploymentSpecificationYamlHandler> deploymentSpecYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, DeploymentSpecificationYamlHandler.class);

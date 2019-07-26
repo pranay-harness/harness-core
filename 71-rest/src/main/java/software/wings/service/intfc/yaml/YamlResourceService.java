@@ -80,6 +80,8 @@ public interface YamlResourceService {
 
   RestResponse<YamlPayload> getInfraMapping(String accountId, String appId, String infraMappingId);
 
+  RestResponse<YamlPayload> getInfraDefinition(String appId, String infraDefinitionId);
+
   RestResponse<YamlPayload> getContainerTask(String accountId, String appId, String containerTaskId);
 
   RestResponse<YamlPayload> getHelmChartSpecification(String accountId, String appId, String helmChartSpecificationId);

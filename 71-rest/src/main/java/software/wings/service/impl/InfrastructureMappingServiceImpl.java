@@ -75,21 +75,16 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
-import software.wings.beans.AwsAmiInfrastructureMapping.AwsAmiInfrastructureMappingKeys;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
-import software.wings.beans.AwsInfrastructureMapping.AwsInfrastructureMappingKeys;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
-import software.wings.beans.AwsLambdaInfraStructureMapping.AwsLambdaInfraStructureMappingKeys;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureInfrastructureMapping;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
-import software.wings.beans.ContainerInfrastructureMapping.ContainerInfrastructureMappingKeys;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
-import software.wings.beans.EcsInfrastructureMapping.EcsInfrastructureMappingKeys;
 import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
@@ -722,25 +717,24 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   public void validateEcsInfraMapping(EcsInfrastructureMapping infraMapping) {
     if (isNotEmpty(infraMapping.getProvisionerId())) {
       if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infraMapping.getAccountId())) {
-        Map<String, Object> blueprints = infraMapping.getBlueprints();
-        if (blueprints.get(EcsInfrastructureMappingKeys.region) == null) {
-          throw new InvalidRequestException("Region Blueprint is required.");
+        if (isEmpty(infraMapping.getRegion())) {
+          throw new InvalidRequestException("Region is required.");
         }
-        if (blueprints.get(ContainerInfrastructureMappingKeys.clusterName) == null) {
-          throw new InvalidRequestException("Cluster Name Blueprint is required.");
+        if (isEmpty(infraMapping.getClusterName())) {
+          throw new InvalidRequestException("Cluster Name is required.");
         }
         if (infraMapping.getLaunchType() == LaunchType.FARGATE.toString()) {
-          if (blueprints.get(EcsInfrastructureMappingKeys.executionRole) == null) {
-            throw new InvalidRequestException("executionRole Blueprint is required.");
+          if (isEmpty(infraMapping.getExecutionRole())) {
+            throw new InvalidRequestException("execution role is required with Fargate Launch Type.");
           }
-          if (blueprints.get(EcsInfrastructureMappingKeys.vpcId) == null) {
-            throw new InvalidRequestException("vpcId Blueprint is required.");
+          if (isEmpty(infraMapping.getVpcId())) {
+            throw new InvalidRequestException("vpc-id is required with Fargate Launch Type.");
           }
-          if (blueprints.get(EcsInfrastructureMappingKeys.securityGroupIds) == null) {
-            throw new InvalidRequestException("securityGroupIds Blueprint is required.");
+          if (isEmpty(infraMapping.getSecurityGroupIds())) {
+            throw new InvalidRequestException("security-groupIds are required with Fargate Launch Type.");
           }
-          if (blueprints.get(EcsInfrastructureMappingKeys.subnetIds) == null) {
-            throw new InvalidRequestException("subnetIds Blueprint is required.");
+          if (isEmpty(infraMapping.getSubnetIds())) {
+            throw new InvalidRequestException("subnet-ids are required with Fargate Launch Type.");
           }
         }
       }
@@ -770,7 +764,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @VisibleForTesting
   public void validateAwsInfraMapping(AwsInfrastructureMapping infraMapping) {
-    if (infraMapping.getProvisionerId() == null) {
+    if (infraMapping.getProvisionerId() == null
+        || featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infraMapping.getAccountId())) {
       if (infraMapping.isProvisionInstances()) {
         if (isEmpty(infraMapping.getAutoScalingGroupName())) {
           throw new WingsException(INVALID_ARGUMENT)
@@ -783,23 +778,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         if (infraMapping.getAwsInstanceFilter() == null) {
           throw new WingsException(INVALID_ARGUMENT)
               .addParam("args", "Instance filter must not be null when provision instances is false.");
-        }
-      }
-    } else {
-      if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infraMapping.getAccountId())) {
-        if (infraMapping.isProvisionInstances()) {
-          if (infraMapping.getBlueprints().get(AwsInfrastructureMappingKeys.autoScalingGroupName) == null) {
-            throw new InvalidRequestException(
-                "Auto Scaling group Blueprint must not be empty when provision instances is true.", USER);
-          }
-          if (infraMapping.isSetDesiredCapacity() && infraMapping.getDesiredCapacity() <= 0) {
-            throw new WingsException(INVALID_ARGUMENT).addParam("args", "Desired count must be greater than zero.");
-          }
-        } else {
-          if (infraMapping.getBlueprints().get(AwsInfrastructureMappingKeys.awsInstanceFilter) == null) {
-            throw new WingsException(INVALID_ARGUMENT)
-                .addParam("args", "Instance filter Blueprint must not be empty when provision instances is false.");
-          }
         }
       }
     }
@@ -877,6 +855,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     String subscriptionId = infraMapping.getSubscriptionId();
     String resourceGroup = infraMapping.getResourceGroup();
     String namespace = infraMapping.getNamespace();
+
+    if (isNotEmpty(infraMapping.getProvisionerId())) {
+      return;
+    }
     KubernetesHelperService.validateNamespace(namespace);
 
     List<EncryptedDataDetail> encryptionDetails =
@@ -913,6 +895,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   private void validateDirectKubernetesInfraMapping(DirectKubernetesInfrastructureMapping infraMapping) {
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
     String namespace = infraMapping.getNamespace();
+
+    if (isNotEmpty(infraMapping.getProvisionerId())) {
+      return;
+    }
+
     KubernetesHelperService.validateNamespace(namespace);
 
     List<EncryptedDataDetail> encryptionDetails =
@@ -982,10 +969,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   private void validatePyInfraMapping(PhysicalInfrastructureMapping pyInfraMapping) {
-    if (pyInfraMapping.getProvisionerId() != null) {
-      return;
+    if (isEmpty(pyInfraMapping.getProvisionerId())
+        || featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, pyInfraMapping.getAccountId())) {
+      pyInfraMapping.setHostNames(getUniqueHostNames(pyInfraMapping));
     }
-    pyInfraMapping.setHostNames(getUniqueHostNames(pyInfraMapping));
   }
 
   private void validatePhysicalInfrastructureMappingWinRm(PhysicalInfrastructureMappingWinRm infraMapping) {
@@ -1009,28 +996,15 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @VisibleForTesting
-  public void validateAwsLambdaInfrastructureMapping(AwsLambdaInfraStructureMapping lambdaInfraStructureMapping) {
-    if (!StringUtils.isEmpty(lambdaInfraStructureMapping.getProvisionerId())) {
-      if (featureFlagService.isEnabled(
-              FeatureName.INFRA_MAPPING_REFACTOR, lambdaInfraStructureMapping.getAccountId())) {
-        if (lambdaInfraStructureMapping.getBlueprints() == null) {
-          throw new InvalidRequestException("Blueprints can't be empty with provisioner", USER);
-        }
-        BlueprintProcessor.validateKeys(lambdaInfraStructureMapping, lambdaInfraStructureMapping.getBlueprints());
-        if (lambdaInfraStructureMapping.getBlueprints().get(AwsLambdaInfraStructureMappingKeys.region) == null) {
-          throw new InvalidRequestException("Blueprint Region is mandatory", USER);
-        }
-        if (lambdaInfraStructureMapping.getBlueprints().get(AwsLambdaInfraStructureMappingKeys.role) == null) {
-          throw new InvalidRequestException("Blueprint IAM Role is mandatory", USER);
-        }
+  public void validateAwsLambdaInfrastructureMapping(AwsLambdaInfraStructureMapping infraMapping) {
+    if (isEmpty(infraMapping.getProvisionerId())
+        || featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infraMapping.getAccountId())) {
+      if (StringUtils.isEmpty(infraMapping.getRegion())) {
+        throw new InvalidRequestException("Region is mandatory");
       }
-      return;
-    }
-    if (StringUtils.isEmpty(lambdaInfraStructureMapping.getRegion())) {
-      throw new InvalidRequestException("Region is mandatory");
-    }
-    if (StringUtils.isEmpty(lambdaInfraStructureMapping.getRole())) {
-      throw new InvalidRequestException("IAM Role is mandatory");
+      if (StringUtils.isEmpty(infraMapping.getRole())) {
+        throw new InvalidRequestException("IAM Role is mandatory");
+      }
     }
   }
 
@@ -1038,12 +1012,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   public void validateAwsAmiInfrastructureMapping(AwsAmiInfrastructureMapping infrastructureMapping) {
     if (isNotEmpty(infrastructureMapping.getProvisionerId())
         && featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infrastructureMapping.getAccountId())) {
-      Map<String, Object> blueprints = infrastructureMapping.getBlueprints();
-      if (blueprints.get(AwsAmiInfrastructureMappingKeys.region) == null) {
-        throw new InvalidRequestException("Region blueprint is mandatory");
+      if (isEmpty(infrastructureMapping.getRegion())) {
+        throw new InvalidRequestException("Region is mandatory");
       }
-      if (blueprints.get(AwsAmiInfrastructureMappingKeys.autoScalingGroupName) == null) {
-        throw new InvalidRequestException("Auto Scaling Group blueprint is mandatory");
+      if (isEmpty(infrastructureMapping.getAutoScalingGroupName())) {
+        throw new InvalidRequestException("Auto Scaling Group is mandatory");
       }
     }
   }
