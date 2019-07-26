@@ -1,5 +1,6 @@
 package io.harness.testframework.restutils;
 
+import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.junit.Assert.assertNotNull;
 
 import io.harness.beans.PageResponse;
@@ -15,6 +16,7 @@ import software.wings.beans.UserInvite;
 import software.wings.resources.UserResource;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import javax.ws.rs.core.GenericType;
@@ -52,6 +54,17 @@ public class UserRestUtils {
     List<UserInvite> inviteList = inviteListResponse.getResource();
     assertNotNull(inviteList);
     return inviteList;
+  }
+
+  public static User loginUserOrNull(String email, String password) {
+    String basicAuthValue =
+        "Basic " + encodeBase64String(String.format("%s:%s", email, password).getBytes(StandardCharsets.UTF_8));
+    GenericType<RestResponse<User>> genericType = new GenericType<RestResponse<User>>() {};
+    RestResponse<User> userRestResponse =
+        Setup.portal().header("Authorization", basicAuthValue).get("/users/login").as(genericType.getType());
+    assertNotNull(userRestResponse);
+    User user = userRestResponse.getResource();
+    return user;
   }
 
   public static void sendResetPasswordMail(String emailId) {
@@ -133,6 +146,19 @@ public class UserRestUtils {
                                                     .as(new GenericType<RestResponse<Boolean>>() {}.getType());
 
     return trialInviteResponse.getResource();
+  }
+
+  public static User unlockUser(String accountId, String bearerToken, String email) {
+    RestResponse<User> userRestResponse = Setup.portal()
+                                              .auth()
+                                              .oauth2(bearerToken)
+                                              .queryParam("accountId", accountId)
+                                              .queryParam("email", email)
+                                              .contentType(ContentType.JSON)
+                                              .put("/users/unlock-user")
+                                              .as(new GenericType<RestResponse<User>>() {}.getType());
+
+    return userRestResponse.getResource();
   }
 
   public static Integer deleteUser(String accountId, String bearerToken, String userId) {

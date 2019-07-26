@@ -41,7 +41,6 @@ public class Setup {
         Setup.portal().header("Authorization", basicAuthValue).get("/users/login").as(genericType.getType());
     assertNotNull(userRestResponse);
     User user = userRestResponse.getResource();
-    assertNotNull(user);
     return user;
   }
 
