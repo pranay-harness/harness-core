@@ -150,6 +150,30 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   @Override
+  public List<NewRelicMetricHostAnalysisValue> getToolTipForDemo(String stateExecutionId, String workflowExecutionId,
+      int analysisMinute, String transactionName, String metricName, String groupName) {
+    StateExecutionInstance stateExecutionInstance =
+        wingsPersistence.createQuery(StateExecutionInstance.class).field("_id").equal(stateExecutionId).get();
+    if (stateExecutionInstance == null) {
+      logger.error("State execution instance not found for {}", stateExecutionId);
+      throw new WingsException(ErrorCode.STATE_EXECUTION_INSTANCE_NOT_FOUND, stateExecutionId);
+    }
+    SettingAttribute settingAttribute =
+        settingsService.get(((VerificationStateAnalysisExecutionData) stateExecutionInstance.fetchStateExecutionData())
+                                .getServerConfigId());
+
+    if (settingAttribute.getName().toLowerCase().endsWith("dev")
+        || settingAttribute.getName().toLowerCase().endsWith("prod")) {
+      if (stateExecutionInstance.getStatus() == ExecutionStatus.SUCCESS) {
+        stateExecutionId = DEMO_SUCCESS_TS_STATE_EXECUTION_ID + stateExecutionInstance.getStateType();
+      } else {
+        stateExecutionId = DEMO_FAILURE_TS_STATE_EXECUTION_ID + stateExecutionInstance.getStateType();
+      }
+    }
+    return getToolTip(stateExecutionId, workflowExecutionId, analysisMinute, transactionName, metricName, groupName);
+  }
+
+  @Override
   public List<NewRelicMetricHostAnalysisValue> getToolTip(String stateExecutionId, String workflowExecutionId,
       int analysisMinute, String transactionName, String metricName, String groupName) {
     /* Ignore analysisMinutue. Leaving it as a parameter since UI sends it.
