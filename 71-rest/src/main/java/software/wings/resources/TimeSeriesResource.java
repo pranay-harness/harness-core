@@ -65,6 +65,10 @@ public class TimeSeriesResource {
       @QueryParam("workflowExecutionId") String workflowExecutionId,
       @QueryParam("analysisMinute") Integer analysisMinute, @QueryParam("transactionName") String transactionName,
       @QueryParam("metricName") String metricName, @QueryParam("groupName") String groupName) {
+    if (featureFlagService.isEnabledReloadCache(FeatureName.CV_DEMO, accountId)) {
+      return new RestResponse<>(metricDataAnalysisService.getToolTipForDemo(
+          stateExecutionId, workflowExecutionId, analysisMinute, transactionName, metricName, groupName));
+    }
     return new RestResponse<>(metricDataAnalysisService.getToolTip(
         stateExecutionId, workflowExecutionId, analysisMinute, transactionName, metricName, groupName));
   }
