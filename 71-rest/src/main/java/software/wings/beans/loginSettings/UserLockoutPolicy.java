@@ -1,5 +1,6 @@
 package software.wings.beans.loginSettings;
 
+import io.harness.annotation.HarnessExportableEntity;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -8,6 +9,7 @@ import software.wings.beans.security.UserGroup;
 
 import java.util.List;
 
+@HarnessExportableEntity
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
