@@ -9,6 +9,7 @@ import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryFormat;
+import software.wings.utils.RepositoryType;
 
 import java.util.Collection;
 import java.util.List;
@@ -170,6 +171,18 @@ public interface BuildService<T> {
    */
   default Map<String, String> getPlans(
       T config, List<EncryptedDataDetail> encryptionDetails, RepositoryFormat repositoryFormat) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Gets plans.
+   *
+   * @param config the  config
+   * @param config
+   * @return the plans
+   */
+  default Map<String, String> getPlans(
+      T config, List<EncryptedDataDetail> encryptionDetails, RepositoryType repositoryType) {
     throw new UnsupportedOperationException();
   }
 

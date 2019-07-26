@@ -57,6 +57,7 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.utils.RepositoryFormat;
+import software.wings.utils.RepositoryType;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -442,8 +443,21 @@ public class SettingResource {
   @ExceptionMetered
   public RestResponse<Set<String>> getArtifactPaths(@PathParam("jobName") String jobName,
       @QueryParam("settingId") String settingId, @QueryParam("groupId") String groupId,
-      @QueryParam("streamType") String streamType) {
+      @QueryParam("streamType") String streamType, @QueryParam("repositoryFormat") String repositoryFormat) {
+    if (isNotEmpty(repositoryFormat)) {
+      return new RestResponse<>(buildSourceService.getArtifactPathsForRepositoryFormat(
+          jobName, settingId, groupId, streamType, repositoryFormat));
+    }
     return new RestResponse<>(buildSourceService.getArtifactPaths(jobName, settingId, groupId, streamType));
+  }
+
+  @GET
+  @Path("build-sources/nexus/repositories/{repositoryName}/packageNames")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Set<String>> fetchPackageNames(@PathParam("repositoryName") String repositoryName,
+      @QueryParam("repositoryFormat") String repositoryFormat, @QueryParam("settingId") String settingId) {
+    return new RestResponse<>(buildSourceService.fetchNexusPackageNames(repositoryName, repositoryFormat, settingId));
   }
 
   /**
@@ -457,10 +471,15 @@ public class SettingResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Map<String, String>> getBuildPlans(@QueryParam("settingId") String settingId,
-      @QueryParam("streamType") String streamType, @QueryParam("repositoryFormat") String repositoryFormat) {
+      @QueryParam("streamType") String streamType, @QueryParam("repositoryType") String repositoryType,
+      @QueryParam("repositoryFormat") String repositoryFormat) {
     if (repositoryFormat != null) {
-      return new RestResponse<>(buildSourceService.getPlansForRepositoryType(
+      return new RestResponse<>(buildSourceService.getPlansForRepositoryFormat(
           settingId, streamType, RepositoryFormat.valueOf(repositoryFormat)));
+    }
+    if (repositoryType != null) {
+      return new RestResponse<>(
+          buildSourceService.getPlansForRepositoryType(settingId, streamType, RepositoryType.valueOf(repositoryType)));
     }
     return new RestResponse<>(buildSourceService.getPlans(settingId, streamType));
   }
@@ -476,8 +495,12 @@ public class SettingResource {
   @Path("build-sources/jobs/{jobName}/groupIds")
   @Timed
   @ExceptionMetered
-  public RestResponse<Set<String>> getGroupIds(
-      @PathParam("jobName") String jobName, @QueryParam("settingId") String settingId) {
+  public RestResponse<Set<String>> getGroupIds(@PathParam("jobName") String jobName,
+      @QueryParam("settingId") String settingId, @QueryParam("repositoryFormat") String repositoryFormat) {
+    if (isNotEmpty(repositoryFormat)) {
+      return new RestResponse<>(
+          buildSourceService.getGroupIdsForRepositoryFormat(jobName, settingId, repositoryFormat));
+    }
     return new RestResponse<>(buildSourceService.getGroupIds(jobName, settingId));
   }
 
