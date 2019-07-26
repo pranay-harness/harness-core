@@ -10,9 +10,11 @@ import io.harness.scm.SecretName;
 import io.restassured.path.json.JsonPath;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DockerConfig;
+import software.wings.beans.ElkConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
+import software.wings.beans.SplunkConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.settings.UsageRestrictions;
@@ -151,6 +153,50 @@ public class ConnectorUtils {
             .withValue(NewRelicConfig.builder()
                            .newRelicUrl(NEW_RELIC_URL)
                            .apiKey(new ScmSecret().decryptToCharArray(new SecretName("new_relic_api_key")))
+                           .build())
+            .build();
+
+    JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
+    assertNotNull(setAttrResponse);
+
+    return setAttrResponse.getString("resource.uuid").trim();
+  }
+
+  /**
+   * Connector util to create a Verification Provider: ELK Connector
+   */
+  public static String createELKConnector(String bearerToken, String connectorName, String accountId) {
+    String ELK_URL = "http://ec2-34-227-84-170.compute-1.amazonaws.com:9200/";
+
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withCategory(SettingCategory.CONNECTOR)
+                                            .withName(connectorName)
+                                            .withAccountId(accountId)
+                                            .withValue(ElkConfig.builder().elkUrl(ELK_URL).build())
+                                            .build();
+
+    JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
+    assertNotNull(setAttrResponse);
+
+    return setAttrResponse.getString("resource.uuid").trim();
+  }
+
+  /**
+   * Connector util to create a Verification Provider: Splunk Connector
+   */
+  public static String createSplunkConnector(String bearerToken, String connectorName, String accountId) {
+    String SPLUNK_URL = "https://input-prd-p-429h4vj2lsng.cloud.splunk.com:8089/";
+
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withCategory(SettingCategory.CONNECTOR)
+            .withName(connectorName)
+            .withAccountId(accountId)
+            .withValue(SplunkConfig.builder()
+                           .splunkUrl(SPLUNK_URL)
+                           .username(String.valueOf(
+                               new ScmSecret().decryptToCharArray(new SecretName("splunk_cloud_username"))))
+                           .password(new ScmSecret().decryptToCharArray(new SecretName("splunk_cloud_password")))
                            .build())
             .build();
 
