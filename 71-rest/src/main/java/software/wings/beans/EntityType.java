@@ -214,5 +214,7 @@ public enum EntityType {
 
   CV_CONFIGURATION,
 
-  TAG
+  TAG,
+
+  CUSTOM_DASHBOARD
 }

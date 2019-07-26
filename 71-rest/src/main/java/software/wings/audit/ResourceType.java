@@ -22,5 +22,6 @@ public enum ResourceType {
   TEMPLATE_FOLDER,
   USER_GROUP,
   GOVERNANCE,
-  TAG
+  TAG,
+  CUSTOM_DASHBOARD
 }

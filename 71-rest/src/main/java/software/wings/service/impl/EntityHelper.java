@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.context.GlobalContextData;
+import io.harness.dashboard.DashboardSettings;
 import io.harness.exception.InvalidRequestException;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.EntityOperationIdentifier;
@@ -457,6 +458,15 @@ public class EntityHelper {
       affectedResourceId = harnessTag.getUuid();
       affectedResourceName = ResourceType.TAG.name();
       affectedResourceType = ResourceType.TAG.name();
+      affectedResourceOperation = type.name();
+    } else if (entity instanceof DashboardSettings) {
+      DashboardSettings dashboardSettings = (DashboardSettings) entity;
+      entityType = ResourceType.CUSTOM_DASHBOARD.name();
+      entityName = dashboardSettings.getName();
+      appId = Application.GLOBAL_APP_ID;
+      affectedResourceId = dashboardSettings.getUuid();
+      affectedResourceName = ResourceType.CUSTOM_DASHBOARD.name();
+      affectedResourceType = ResourceType.CUSTOM_DASHBOARD.name();
       affectedResourceOperation = type.name();
     } else {
       logger.error(format("Unhandled class for auditing: [%s]", entity.getClass().getSimpleName()));
