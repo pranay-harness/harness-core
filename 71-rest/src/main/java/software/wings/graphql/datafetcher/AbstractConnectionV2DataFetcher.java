@@ -39,6 +39,7 @@ public abstract class AbstractConnectionV2DataFetcher<F, S, O> extends BaseDataF
   private static final String SORT_CRITERIA = "sortCriteria";
   private static final String LIMIT = "limit";
   private static final String OFFSET = "offset";
+  private static final int MAX_RECORD_LIMIT = 100;
 
   public void addDataFetcherDirectiveAttributesForParent(
       String parentTypeName, DataFetcherDirectiveAttributes dataFetcherDirectiveAttributes) {
@@ -106,7 +107,7 @@ public abstract class AbstractConnectionV2DataFetcher<F, S, O> extends BaseDataF
     }
 
     return QLPageQueryParameterImpl.builder()
-        .limit(limit == null ? 50 : limit)
+        .limit(limit == null ? MAX_RECORD_LIMIT : limit > MAX_RECORD_LIMIT ? MAX_RECORD_LIMIT : limit)
         .offset(offset == null ? 0 : offset)
         .selectionSet(dataFetchingEnvironment.getSelectionSet())
         .build();

@@ -19,6 +19,7 @@ import io.fabric8.utils.Lists;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.WingsException;
 import io.harness.timescaledb.TimeScaleDBService;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcher;
@@ -58,6 +59,7 @@ import software.wings.graphql.schema.type.aggregation.QLStringOperator;
 import software.wings.graphql.schema.type.aggregation.QLTimeDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLTimeDataPoint.QLTimeDataPointBuilder;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
+import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesData;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesData.QLTimeSeriesDataBuilder;
@@ -79,6 +81,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -92,6 +95,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
   @Inject TimeScaleDBService timeScaleDBService;
   @Inject QLStatsHelper statsHelper;
   private DeploymentTableSchema schema = new DeploymentTableSchema();
+  private static final long weekOffset = 7 * 24 * 60 * 60 * 1000;
 
   @Override
   protected QLData fetch(String accountId, QLDeploymentAggregationFunction aggregateFunction,
@@ -457,6 +461,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
       decorateQueryWithFilters(selectQuery, filters);
     }
 
+    validateTimeFilters(filters, selectQuery);
+
     if (isValidGroupByTime(groupByTime)) {
       decorateQueryWithGroupByTime(fieldNames, selectQuery, groupByTime);
     }
@@ -483,6 +489,85 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
     queryMetaDataBuilder.groupByFields(groupByFields);
     queryMetaDataBuilder.sortCriteria(finalSortCriteria);
     return queryMetaDataBuilder.build();
+  }
+
+  private void validateTimeFilters(List<QLDeploymentFilter> filters, SelectQuery selectQuery) {
+    TimeFilterQueryResult timeFilterQueryResult = checkTimeFilters(filters);
+    if (!timeFilterQueryResult.isT1Present() && !timeFilterQueryResult.isT2Present()) {
+      /**
+       * No timeFilter present anywhere
+       */
+      long currentTime = System.currentTimeMillis();
+      long timeWeekAgo = currentTime - weekOffset;
+      logger.info("T1 and T2, both not present, adding T1:[{}], T2:[{}]", new Date(timeWeekAgo), new Date(currentTime));
+      Filter t1Filter = QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(timeWeekAgo).build();
+      Filter t2Filter = QLTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(currentTime).build();
+      addSimpleTimeFilter(selectQuery, t1Filter, QLDeploymentFilterType.EndTime);
+      addSimpleTimeFilter(selectQuery, t2Filter, QLDeploymentFilterType.EndTime);
+    } else if (!timeFilterQueryResult.isT1Present()) {
+      /**
+       * No T1 present, only T2 present
+       */
+      long t1Time = timeFilterQueryResult.getT2() - weekOffset;
+      logger.info("T1 not present, adding T1:[{}]", new Date(t1Time));
+      Filter t1Filter = QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(t1Time).build();
+      addSimpleTimeFilter(selectQuery, t1Filter, timeFilterQueryResult.getT2Type());
+    } else if (!timeFilterQueryResult.isT2Present()) {
+      /**
+       * No T2 present, only T1 present
+       */
+      long t2Time = timeFilterQueryResult.getT1() + weekOffset;
+      logger.info("T2 not present, adding T2:[{}]", new Date(t2Time));
+      Filter t2Filter = QLTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(t2Time).build();
+      addSimpleTimeFilter(selectQuery, t2Filter, timeFilterQueryResult.getT1Type());
+    }
+  }
+
+  private TimeFilterQueryResult checkTimeFilters(List<QLDeploymentFilter> filters) {
+    TimeFilterQueryResult result = new TimeFilterQueryResult();
+    if (filters != null) {
+      filters.forEach(filter -> {
+        evaluateTimeFilter(result, filter.getEndTime(), QLDeploymentFilterType.EndTime);
+        evaluateTimeFilter(result, filter.getStartTime(), QLDeploymentFilterType.StartTime);
+      });
+    }
+    return result;
+  }
+
+  private TimeFilterQueryResult evaluateTimeFilter(
+      TimeFilterQueryResult result, QLTimeFilter timeOperator, QLDeploymentFilterType type) {
+    if (timeOperator != null) {
+      if (timeOperator.getOperator().equals(QLTimeOperator.BEFORE)) {
+        result.setT2Present(true);
+        if (result.getT2() == null) {
+          result.setT2(timeOperator.getValue().longValue());
+          result.setT2Type(type);
+        }
+      } else if (timeOperator.getOperator().equals(QLTimeOperator.AFTER)) {
+        result.setT1Present(true);
+        if (result.getT1() == null) {
+          result.setT1(timeOperator.getValue().longValue());
+          result.setT1Type(type);
+        }
+      }
+    }
+    return result;
+  }
+
+  @Data
+  class TimeFilterQueryResult {
+    /**
+     * Not using startTime and endTime in this datastructure to prevent any confusion from
+     * startTime and endTime in the Deployment table
+     * t1 -> startTime of the filter
+     * t2 -> endTime of the filter
+     */
+    QLDeploymentFilterType t1Type;
+    QLDeploymentFilterType t2Type;
+    boolean t1Present;
+    boolean t2Present;
+    Long t1;
+    Long t2;
   }
 
   private void addParentIdFilter(SelectQuery selectQuery) {
