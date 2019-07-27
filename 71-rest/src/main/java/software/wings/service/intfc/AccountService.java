@@ -14,6 +14,7 @@ import software.wings.beans.Service;
 import software.wings.beans.TechStack;
 import software.wings.beans.User;
 import software.wings.security.authentication.AccountSettingsResponse;
+import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.service.impl.analysis.CVEnabledService;
 
 import java.util.Collection;
@@ -90,6 +91,8 @@ public interface AccountService {
   Collection<FeatureFlag> getFeatureFlags(@NotBlank String accountId);
 
   boolean setAccountStatus(String accountId, String accountStatus);
+
+  boolean setAuthenticationMechanism(String accountId, AuthenticationMechanism authenticationMechanism);
 
   boolean isFeatureFlagEnabled(String featureName, String accountId);
 

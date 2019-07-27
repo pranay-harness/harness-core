@@ -946,6 +946,16 @@ public class AccountServiceImpl implements AccountService {
     return true;
   }
 
+  @Override
+  public boolean setAuthenticationMechanism(String accountId, AuthenticationMechanism authenticationMechanism) {
+    Account account = get(accountId);
+    wingsPersistence.update(account,
+        wingsPersistence.createUpdateOperations(Account.class)
+            .set(AccountKeys.authenticationMechanism, authenticationMechanism));
+
+    return true;
+  }
+
   private void setDeploymentFreeze(String accountId, boolean freeze) {
     GovernanceConfig governanceConfig = governanceConfigService.get(accountId);
     if (governanceConfig == null) {

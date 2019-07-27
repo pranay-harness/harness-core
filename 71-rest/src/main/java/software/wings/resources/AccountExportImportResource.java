@@ -499,8 +499,7 @@ public class AccountExportImportResource {
     // account/cluster.
     account = accountService.get(accountId);
     if (AuthenticationMechanism.LDAP.equals(account.getAuthenticationMechanism())) {
-      account.setAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD);
-      accountService.save(account);
+      accountService.setAuthenticationMechanism(accountId, AuthenticationMechanism.USER_PASSWORD);
       logger.info(
           "Changed account {}'s authentication mechanism from LDAP to USER_PASSWORD till new delegate has been setup in the migrated account.",
           accountId);
