@@ -2,8 +2,10 @@ package software.wings.service.impl.trigger;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
+import static net.redhogs.cronparser.CronExpressionDescriptor.getDescription;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -11,6 +13,10 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
+import net.redhogs.cronparser.DescriptionTypeEnum;
+import net.redhogs.cronparser.I18nMessages;
+import net.redhogs.cronparser.Options;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.trigger.Action;
 import software.wings.beans.trigger.Action.ActionType;
 import software.wings.beans.trigger.DeploymentTrigger;
@@ -19,6 +25,7 @@ import software.wings.beans.trigger.TriggerArgs;
 import software.wings.beans.trigger.TriggerArtifactVariable;
 import software.wings.beans.trigger.WorkflowAction;
 import software.wings.dl.WingsPersistence;
+import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowService;
 
@@ -101,6 +108,16 @@ public class DeploymentTriggerServiceHelper {
         break;
       default:
         unhandled(deploymentTrigger.getAction().getActionType());
+    }
+  }
+
+  public static String getCronDescription(String cronExpression) {
+    try {
+      String description = getDescription(DescriptionTypeEnum.FULL, ScheduledTriggerJob.PREFIX + cronExpression,
+          new Options(), I18nMessages.DEFAULT_LOCALE);
+      return StringUtils.lowerCase("" + description.charAt(0)) + description.substring(1);
+    } catch (Exception e) {
+      throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "Invalid cron expression" + cronExpression);
     }
   }
 

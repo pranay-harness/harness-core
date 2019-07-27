@@ -1,6 +1,8 @@
 package software.wings.service.impl.trigger;
 
 import static io.harness.exception.WingsException.USER;
+import static software.wings.beans.trigger.Condition.Type.NEW_ARTIFACT;
+import static software.wings.beans.trigger.Condition.Type.SCHEDULED;
 import static software.wings.utils.Validator.equalCheck;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -14,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Event;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.trigger.Condition;
-import software.wings.beans.trigger.Condition.Type;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
@@ -44,8 +45,9 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
 
   @Override
   public DeploymentTrigger save(DeploymentTrigger trigger) {
-    validateTrigger(trigger);
-
+    String accountId = appService.getAccountIdByAppId(trigger.getAppId());
+    trigger.setAccountId(accountId);
+    validateTrigger(trigger, null);
     String uuid = Validator.duplicateCheck(() -> wingsPersistence.save(trigger), "name", trigger.getName());
     return get(trigger.getAppId(), uuid);
     // Todo Uncomment once YAML support is added  actionsAfterTriggerSave(deploymentTrigger);
@@ -53,12 +55,15 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
 
   @Override
   public DeploymentTrigger update(DeploymentTrigger trigger) {
+    String accountId = appService.getAccountIdByAppId(trigger.getAppId());
+    trigger.setAccountId(accountId);
+
     DeploymentTrigger existingTrigger =
         wingsPersistence.getWithAppId(DeploymentTrigger.class, trigger.getAppId(), trigger.getUuid());
     notNullCheck("Trigger was deleted ", existingTrigger, USER);
     equalCheck(trigger.getAction().getActionType(), existingTrigger.getAction().getActionType());
 
-    validateTrigger(trigger);
+    validateTrigger(trigger, existingTrigger);
     String uuid = Validator.duplicateCheck(() -> wingsPersistence.save(trigger), "name", trigger.getName());
     return get(trigger.getAppId(), uuid);
     // Todo Uncomment once YAML support is added actionsAfterTriggerUpdate(existingTrigger, deploymentTrigger);
@@ -85,14 +90,21 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
 
   @Override
   public PageResponse<DeploymentTrigger> list(PageRequest<DeploymentTrigger> pageRequest) {
-    return wingsPersistence.query(DeploymentTrigger.class, pageRequest);
+    PageResponse<DeploymentTrigger> response = wingsPersistence.query(DeploymentTrigger.class, pageRequest);
+
+    response.getResponse().forEach(deploymentTrigger -> {
+      TriggerProcessor triggerProcessor = obtainTriggerProcessor(deploymentTrigger);
+      triggerProcessor.transformTriggerConditionRead(deploymentTrigger);
+      triggerProcessor.transformTriggerActionRead(deploymentTrigger);
+    });
+    return response;
   }
 
   @Override
   public void triggerExecutionPostArtifactCollectionAsync(
       String accountId, String appId, String artifactStreamId, List<Artifact> artifacts) {
     ArtifactTriggerProcessor triggerProcessor =
-        (ArtifactTriggerProcessor) triggerProcessorMapBinder.get(Type.NEW_ARTIFACT.name());
+        (ArtifactTriggerProcessor) triggerProcessorMapBinder.get(NEW_ARTIFACT.name());
 
     triggerProcessor.executeTriggerOnEvent(appId,
         ArtifactTriggerProcessor.ArtifactTriggerExecutionParams.builder()
@@ -101,11 +113,11 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
             .build());
   }
 
-  private void validateTrigger(DeploymentTrigger trigger) {
+  private void validateTrigger(DeploymentTrigger trigger, DeploymentTrigger existingTrigger) {
     TriggerProcessor triggerProcessor = obtainTriggerProcessor(trigger);
 
-    triggerProcessor.validateTriggerConditionSetup(trigger);
-    triggerProcessor.validateTriggerActionSetup(trigger);
+    triggerProcessor.validateTriggerConditionSetup(trigger, existingTrigger);
+    triggerProcessor.validateTriggerActionSetup(trigger, existingTrigger);
   }
 
   private TriggerProcessor obtainTriggerProcessor(DeploymentTrigger deploymentTrigger) {
@@ -113,7 +125,7 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
   }
 
   private String obtainTriggerConditionType(Condition condition) {
-    if (condition.getType().equals(Type.NEW_ARTIFACT)) {
+    if (condition.getType().equals(NEW_ARTIFACT) || condition.getType().equals(SCHEDULED)) {
       return condition.getType().name();
     }
     throw new InvalidRequestException("Invalid Trigger Condition for trigger " + condition.getType().name(), USER);

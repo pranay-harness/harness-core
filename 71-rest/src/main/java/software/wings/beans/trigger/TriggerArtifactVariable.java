@@ -14,7 +14,7 @@ public class TriggerArtifactVariable {
 
   @NotEmpty private String entityId;
   @NotEmpty private EntityType entityType;
-  @NotEmpty private transient String entityName;
+  private transient String entityName;
 
   private TriggerArtifactSelectionValue variableValue;
 

@@ -7,16 +7,15 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.NotNull;
 
-@JsonTypeName("NEW_ARTIFACT")
+@JsonTypeName("SCHEDULED")
 @Value
 @Builder
-public class ArtifactCondition implements Condition {
-  @NotEmpty private String artifactStreamId;
-  private transient String artifactSourceName;
-  private transient String artifactStreamType;
-  private String artifactFilter;
-  @NotNull private Type type = Type.NEW_ARTIFACT;
+public class ScheduledCondition implements Condition {
+  @NotEmpty private String cronExpression;
+  private String cronDescription;
+  @NotNull private Type type = Type.SCHEDULED;
 
+  @Builder.Default private boolean onNewArtifactOnly = true;
   @Override
   public Type getType() {
     return type;

@@ -66,7 +66,7 @@ public class ArtifactTriggerProcessor implements TriggerProcessor {
   @Inject private transient FeatureFlagService featureFlagService;
   @Inject private transient AppService appService;
   @Override
-  public void validateTriggerConditionSetup(DeploymentTrigger trigger) {
+  public void validateTriggerConditionSetup(DeploymentTrigger trigger, DeploymentTrigger existingTrigger) {
     // TODO: ASR: update when index added on setting_id + name
     ArtifactCondition artifactCondition = (ArtifactCondition) trigger.getCondition();
 
@@ -81,7 +81,7 @@ public class ArtifactTriggerProcessor implements TriggerProcessor {
   }
 
   @Override
-  public void validateTriggerActionSetup(DeploymentTrigger deploymentTrigger) {
+  public void validateTriggerActionSetup(DeploymentTrigger deploymentTrigger, DeploymentTrigger existingTrigger) {
     triggerServiceHelper.validateTriggerAction(deploymentTrigger);
   }
 
