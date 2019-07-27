@@ -1,9 +1,13 @@
 package software.wings.scheduler.events.segment;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.event.handler.impl.account.AccountChangeHandler;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
@@ -69,8 +73,12 @@ public class SegmentGroupEventJob implements Handler<SegmentGroupEventJobContext
 
   @Override
   public void handle(SegmentGroupEventJobContext entity) {
-    List<Account> accounts = accountService.listAllAccounts();
+    PageRequest<Account> request =
+        aPageRequest().addFilter("_id", Operator.IN, entity.getAccountIds().toArray()).build();
 
+    List<Account> accounts = accountService.list(request);
+
+    logger.info("Segment publish job with accounts. count={}", accounts.size());
     for (Account account : accounts) {
       if (Account.GLOBAL_ACCOUNT_ID.equals(account.getUuid())) {
         continue;

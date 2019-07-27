@@ -90,6 +90,7 @@ import migrations.all.RemoveResizeFromStatefulSetWorkflows;
 import migrations.all.RemoveServiceVariablesFromActivity;
 import migrations.all.RemoveUnusedLogDataRecordMigration;
 import migrations.all.ResourceLookupMigration;
+import migrations.all.ScheduleSegmentPublishJob;
 import migrations.all.SecretManagerConfigMigration;
 import migrations.all.SecretTextNameKeyWordsMigration;
 import migrations.all.ServiceAddArtifactStreamIdsMigration;
@@ -272,6 +273,7 @@ public class MigrationList {
         .add(Pair.of(272, CloudWatchCVMigration.class))
         .add(Pair.of(273, AddTagManagementPermissionToAdminUserGroup.class))
         .add(Pair.of(274, PrometheusCVMigration.class))
+        .add(Pair.of(275, ScheduleSegmentPublishJob.class))
         .build();
   }
 }
