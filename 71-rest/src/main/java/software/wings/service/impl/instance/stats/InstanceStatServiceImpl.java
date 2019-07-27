@@ -31,6 +31,7 @@ import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -176,8 +177,10 @@ public class InstanceStatServiceImpl implements InstanceStatService {
                                                  .field("timestamp")
                                                  .lessThan(to)
                                                  .project("total", true)
-                                                 .order(Sort.ascending("total"))
-                                                 .asList();
+                                                 .asList()
+                                                 .stream()
+                                                 .sorted(Comparator.comparingInt(InstanceStatsSnapshot::getTotal))
+                                                 .collect(Collectors.toList());
 
     List<Integer> counts = dataPoints.stream().map(InstanceStatsSnapshot::getTotal).collect(Collectors.toList());
     return new SimplePercentile(counts).evaluate(p);

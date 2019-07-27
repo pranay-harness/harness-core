@@ -2,6 +2,7 @@ package software.wings.scheduler.events.segment;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.UpdatedAtAccess;
@@ -13,6 +14,7 @@ import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.jersey.JsonViews;
 
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @Value
@@ -20,11 +22,14 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "SegmentGroupEventJobContextKeys")
 public class SegmentGroupEventJobContext implements PersistentRegularIterable, CreatedAtAccess, UpdatedAtAccess {
   @Id private String uuid;
+
+  private List<String> accountIds;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore @NotNull private long createdAt;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore @NotNull private long lastUpdatedAt;
 
-  public SegmentGroupEventJobContext(Long nextIteration) {
+  public SegmentGroupEventJobContext(Long nextIteration, List<String> accountIds) {
     this.uuid = null;
+    this.accountIds = CollectionUtils.emptyIfNull(accountIds);
     this.createdAt = System.currentTimeMillis();
     this.lastUpdatedAt = System.currentTimeMillis();
     this.nextIteration = nextIteration;
