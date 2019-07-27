@@ -31,6 +31,7 @@ import software.wings.dl.exportimport.WingsMongoExportImport;
 import software.wings.licensing.LicenseService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.AccountPermissionUtils;
@@ -50,6 +51,7 @@ public class AccountExportImportResourceTest extends CategoryTest {
   @Mock private LicenseService licenseService;
   @Mock private UsageRestrictionsService usageRestrictionsService;
   @Mock private UserService userService;
+  @Mock private AuthService authService;
   @Mock private AccountPermissionUtils accountPermissionUtils;
   @Mock private PersistentScheduler persistentScheduler;
 
@@ -71,8 +73,8 @@ public class AccountExportImportResourceTest extends CategoryTest {
     when(morphia.getMapper()).thenReturn(mapper);
 
     accountExportImportResource = new AccountExportImportResource(wingsMongoPersistence, morphia,
-        wingsMongoExportImport, accountService, licenseService, appService, usageRestrictionsService, userService,
-        accountPermissionUtils, persistentScheduler);
+        wingsMongoExportImport, accountService, licenseService, appService, authService, usageRestrictionsService,
+        userService, accountPermissionUtils, persistentScheduler);
 
     accountId = UUIDGenerator.generateUuid();
     userId = UUIDGenerator.generateUuid();

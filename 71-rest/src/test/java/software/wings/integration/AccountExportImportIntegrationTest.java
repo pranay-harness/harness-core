@@ -222,8 +222,8 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
     FormDataBodyPart formDataBodyPart = new FormDataBodyPart("file", fileToImport, MediaType.MULTIPART_FORM_DATA_TYPE);
     multiPart.bodyPart(formDataBodyPart);
 
-    WebTarget target = client.target(
-        API_BASE + "/account/import?accountId=" + accountId + "&disableSchemaCheck=true&disableNaturalKeyCheck=false");
+    WebTarget target = client.target(API_BASE + "/account/import?accountId=" + accountId
+        + "&disableSchemaCheck=true&adminPassword=admin&adminUser=mark.lu@harness.io");
     RestResponse<ImportStatusReport> restResponse = getRequestBuilderWithAuthHeader(target).post(
         entity(multiPart, MediaType.MULTIPART_FORM_DATA_TYPE), new GenericType<RestResponse<ImportStatusReport>>() {});
     // Verify vault config was successfully created.

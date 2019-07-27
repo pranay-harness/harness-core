@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.dl.exportimport.WingsMongoExportImport.getCollectionName;
 
@@ -27,8 +28,10 @@ import io.harness.scheduler.PersistentScheduler;
 import io.harness.security.encryption.EncryptionType;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.mindrot.jbcrypt.BCrypt;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Account;
@@ -40,6 +43,7 @@ import software.wings.beans.KmsConfig;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.Schema;
 import software.wings.beans.User;
+import software.wings.beans.User.UserKeys;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapSettings.LdapSettingsKeys;
 import software.wings.beans.sso.SSOType;
@@ -59,9 +63,11 @@ import software.wings.scheduler.LimitVicinityCheckerJob;
 import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
+import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -127,6 +133,7 @@ public class AccountExportImportResource {
   private LicenseService licenseService;
   private AppService appService;
   private UserService userService;
+  private AuthService authService;
   private UsageRestrictionsService usageRestrictionsService;
   private AccountPermissionUtils accountPermissionUtils;
 
@@ -149,8 +156,9 @@ public class AccountExportImportResource {
   @Inject
   public AccountExportImportResource(WingsMongoPersistence wingsPersistence, Morphia morphia,
       WingsMongoExportImport mongoExportImport, AccountService accountService, LicenseService licenseService,
-      AppService appService, UsageRestrictionsService usageRestrictionsService, UserService userService,
-      AccountPermissionUtils accountPermissionUtils, @Named("BackgroundJobScheduler") PersistentScheduler scheduler) {
+      AppService appService, AuthService authService, UsageRestrictionsService usageRestrictionsService,
+      UserService userService, AccountPermissionUtils accountPermissionUtils,
+      @Named("BackgroundJobScheduler") PersistentScheduler scheduler) {
     this.wingsPersistence = wingsPersistence;
     this.morphia = morphia;
     this.mongoExportImport = mongoExportImport;
@@ -159,6 +167,7 @@ public class AccountExportImportResource {
     this.licenseService = licenseService;
     this.appService = appService;
     this.userService = userService;
+    this.authService = authService;
     this.usageRestrictionsService = usageRestrictionsService;
     this.accountPermissionUtils = accountPermissionUtils;
 
@@ -369,8 +378,9 @@ public class AccountExportImportResource {
   @ExceptionMetered
   public RestResponse<ImportStatusReport> importAccountData(@QueryParam("accountId") final String accountId,
       @QueryParam("mode") @DefaultValue("UPSERT") ImportMode importMode,
-      @QueryParam("disableSchemaCheck") boolean disableSchemaCheck,
-      @FormDataParam("file") final InputStream uploadInputStream) throws Exception {
+      @QueryParam("disableSchemaCheck") boolean disableSchemaCheck, @QueryParam("adminUser") String adminUserEmail,
+      @QueryParam("adminPassword") String adminPassword, @FormDataParam("file") final InputStream uploadInputStream)
+      throws Exception {
     // Only if the user the account administrator or in the Harness user group can perform the export operation.
     if (!userService.isAccountAdmin(accountId)) {
       String errorMessage = "User is not account administrator and can't perform the import operation.";
@@ -463,7 +473,7 @@ public class AccountExportImportResource {
       }
     }
 
-    // And import kmsConfig as a special handling.
+    // 7. import kmsConfig as a special handling.
     String kmsConfigCollectionName = getCollectionName(KmsConfig.class);
     JsonArray kmsConfigs = getJsonArray(zipEntryDataMap, kmsConfigCollectionName, clashedUserIdMapping);
     if (kmsConfigs != null) {
@@ -474,19 +484,53 @@ public class AccountExportImportResource {
       }
     }
 
+    // 8. Update license to the previously set license (unit, type etc.)
     if (licenseInfo != null) {
       licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
       licenseService.updateAccountLicense(accountId, licenseInfo);
       logger.info("Updated license of account {} to: {}", accountId, licenseInfo);
     }
 
-    // 7. Reinstantiate Quartz jobs (recreate through APIs) in the new cluster
+    // 9. Update the first account administrator's password for post-migration validation by CSE team if specified
+    if (!StringUtils.isEmpty(adminUserEmail) && !StringUtils.isEmpty(adminPassword)) {
+      updateAdminUserPassword(accountId, adminUserEmail, adminPassword);
+    }
+    // If user account is using LDAP, change it to USER_PASSWORD till the delegate has been setup in the migrated
+    // account/cluster.
+    account = accountService.get(accountId);
+    if (AuthenticationMechanism.LDAP.equals(account.getAuthenticationMechanism())) {
+      account.setAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD);
+      accountService.save(account);
+      logger.info(
+          "Changed account {}'s authentication mechanism from LDAP to USER_PASSWORD till new delegate has been setup in the migrated account.",
+          accountId);
+    }
+
+    // 10. Reinstantiate Quartz jobs (recreate through APIs) in the new cluster
     reinstantiateQuartzJobs(accountId, importStatuses);
 
     logger.info("{} collections has been imported.", importStatuses.size());
     logger.info("Finished importing data for account '{}'.", accountId);
 
     return new RestResponse<>(ImportStatusReport.builder().statuses(importStatuses).mode(importMode).build());
+  }
+
+  private void updateAdminUserPassword(String accountId, String adminUserEmail, String adminPassword) {
+    User adminUser = userService.getUserByEmail(adminUserEmail);
+    if (adminUser != null) {
+      String adminUserId = adminUser.getUuid();
+      // CSE should notify the admin user of the customer to reset password after validated the migrated account.
+      String hashed = hashpw(adminPassword, BCrypt.gensalt());
+      wingsPersistence.update(adminUser,
+          wingsPersistence.createUpdateOperations(User.class)
+              .set(UserKeys.passwordHash, hashed)
+              .set(UserKeys.passwordExpired, false)
+              .set(UserKeys.passwordChangedAt, System.currentTimeMillis()));
+      authService.invalidateAllTokensForUser(adminUserId);
+
+      logger.info("Updated password of admin user {} with id {} for account {} during account import",
+          adminUser.getEmail(), adminUserId, accountId);
+    }
   }
 
   private void reinstantiateQuartzJobs(String accountId, List<ImportStatus> importStatuses) {
