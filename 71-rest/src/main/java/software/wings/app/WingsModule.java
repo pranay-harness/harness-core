@@ -57,7 +57,7 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.beans.loginSettings.LoginSettingsServiceImpl;
 import software.wings.beans.security.UserGroup;
-import software.wings.beans.trigger.Condition;
+import software.wings.beans.trigger.Condition.Type;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.AwsClusterServiceImpl;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
@@ -295,6 +295,7 @@ import software.wings.service.impl.stackdriver.StackDriverServiceImpl;
 import software.wings.service.impl.sumo.SumoLogicAnalysisServiceImpl;
 import software.wings.service.impl.trigger.ArtifactTriggerProcessor;
 import software.wings.service.impl.trigger.DeploymentTriggerServiceImpl;
+import software.wings.service.impl.trigger.ScheduleTriggerProcessor;
 import software.wings.service.impl.trigger.TriggerExecutionServiceImpl;
 import software.wings.service.impl.trigger.TriggerProcessor;
 import software.wings.service.impl.trigger.TriggerServiceImpl;
@@ -788,7 +789,8 @@ public class WingsModule extends DependencyModule {
     MapBinder<String, TriggerProcessor> triggerProcessorMapBinder =
         MapBinder.newMapBinder(binder(), String.class, TriggerProcessor.class);
 
-    triggerProcessorMapBinder.addBinding(Condition.Type.NEW_ARTIFACT.name()).to(ArtifactTriggerProcessor.class);
+    triggerProcessorMapBinder.addBinding(Type.NEW_ARTIFACT.name()).to(ArtifactTriggerProcessor.class);
+    triggerProcessorMapBinder.addBinding(Type.SCHEDULED.name()).to(ScheduleTriggerProcessor.class);
 
     // To support storing 'Files' in google cloud storage besides default Mongo GridFs.
     if (configuration.getFileStorageMode() == null) {

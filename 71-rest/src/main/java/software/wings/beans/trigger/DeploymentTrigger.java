@@ -44,7 +44,8 @@ import javax.validation.constraints.NotNull;
 public class DeploymentTrigger
     implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
   @Id @NotNull(groups = {DeploymentTrigger.class}) @SchemaIgnore private String uuid;
-  @Indexed @NotNull @SchemaIgnore protected String appId;
+  @NotNull protected String appId;
+  @Indexed protected String accountId;
   @SchemaIgnore private EmbeddedUser createdBy;
   @SchemaIgnore @Indexed private long createdAt;
 
