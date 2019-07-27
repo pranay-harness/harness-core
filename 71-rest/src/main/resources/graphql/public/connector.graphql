@@ -47,6 +47,9 @@ enum ConnectorType {
   JIRA
   SFTP
   SERVICENOW
+  HTTP_HELM_REPO
+  AMAZON_S3_HELM_REPO
+  GCS_HELM_REPO
 }
 
 interface Connector {
@@ -252,6 +255,30 @@ type SplunkConnector implements Connector {
   createdBy: User
 }
 type SumoConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+
+type GCSHelmConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+
+type HttpHelmConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+
+type AmazonS3HelmConnector implements Connector {
   id: String
   name: String
   description: String

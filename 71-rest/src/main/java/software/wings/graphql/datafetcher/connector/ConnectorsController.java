@@ -18,7 +18,9 @@ import software.wings.graphql.schema.type.connector.QLElbConnector;
 import software.wings.graphql.schema.type.connector.QLElkConnector;
 import software.wings.graphql.schema.type.connector.QLGCRConnector;
 import software.wings.graphql.schema.type.connector.QLGCSConnector;
+import software.wings.graphql.schema.type.connector.QLGCSHelmConnector;
 import software.wings.graphql.schema.type.connector.QLGitConnector;
+import software.wings.graphql.schema.type.connector.QLHttpHelmConnector;
 import software.wings.graphql.schema.type.connector.QLJenkinsConnector;
 import software.wings.graphql.schema.type.connector.QLJiraConnector;
 import software.wings.graphql.schema.type.connector.QLLogzConnector;
@@ -101,6 +103,12 @@ public class ConnectorsController {
         return QLSmtpConnector.builder();
       case SFTP:
         return QLSftpConnector.builder();
+      case HTTP_HELM_REPO:
+        return QLHttpHelmConnector.builder();
+      case AMAZON_S3_HELM_REPO:
+        return QLAmazonS3Connector.builder();
+      case GCS_HELM_REPO:
+        return QLGCSHelmConnector.builder();
       default:
         throw new WingsException("Unsupported Connector " + settingType);
     }

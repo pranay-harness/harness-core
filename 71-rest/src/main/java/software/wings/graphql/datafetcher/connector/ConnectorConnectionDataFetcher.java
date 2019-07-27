@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher.connector;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import graphql.schema.DataFetchingEnvironment;
@@ -38,8 +39,10 @@ public class ConnectorConnectionDataFetcher
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   protected QLConnectorsConnection fetchConnection(List<QLConnectorFilter> filters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
-    Query<SettingAttribute> query = populateFilters(wingsPersistence, filters, SettingAttribute.class)
-                                        .filter(SettingAttributeKeys.category, SettingCategory.CONNECTOR);
+    final Iterable<SettingCategory> settingValues =
+        Lists.newArrayList(SettingCategory.CONNECTOR, SettingCategory.HELM_REPO);
+    Query<SettingAttribute> query = populateFilters(wingsPersistence, filters, SettingAttribute.class);
+    query = query.field(SettingAttributeKeys.category).in(settingValues);
 
     final List<SettingAttribute> settingAttributes = query.asList();
 
