@@ -19,6 +19,7 @@ public class ConnectorControllerTest {
   public void testConnectorImplementations() {
     SettingAttribute attribute = new SettingAttribute();
     List<SettingVariableTypes> settingVariableTypes = SettingCategory.CONNECTOR.getSettingVariableTypes();
+    settingVariableTypes.addAll(SettingCategory.HELM_REPO.getSettingVariableTypes());
     try {
       for (SettingVariableTypes types : settingVariableTypes) {
         SettingValue settingValue = Mockito.mock(SettingValue.class);
