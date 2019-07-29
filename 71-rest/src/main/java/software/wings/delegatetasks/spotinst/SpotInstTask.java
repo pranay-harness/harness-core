@@ -1,0 +1,67 @@
+package software.wings.delegatetasks.spotinst;
+
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
+import static java.lang.String.format;
+
+import com.google.inject.Inject;
+
+import io.harness.beans.DelegateTask;
+import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
+import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
+import software.wings.beans.DelegateTaskResponse;
+import software.wings.delegatetasks.AbstractDelegateRunnableTask;
+import software.wings.delegatetasks.spotinst.taskhandler.SpotInstDeployTaskHandler;
+import software.wings.delegatetasks.spotinst.taskhandler.SpotInstSetupTaskHandler;
+import software.wings.delegatetasks.spotinst.taskhandler.SpotInstTaskHandler;
+
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
+@Slf4j
+public class SpotInstTask extends AbstractDelegateRunnableTask {
+  @Inject private SpotInstSetupTaskHandler setupTaskHandler;
+  @Inject private SpotInstDeployTaskHandler deployTaskHandler;
+
+  public SpotInstTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
+      Supplier<Boolean> preExecute) {
+    super(delegateId, delegateTask, consumer, preExecute);
+  }
+
+  @Override
+  public SpotInstTaskExecutionResponse run(Object[] parameters) {
+    throw new NotImplementedException("Not implemented.");
+  }
+
+  @Override
+  public SpotInstTaskExecutionResponse run(TaskParameters parameters) {
+    if (!(parameters instanceof SpotInstTaskParameters)) {
+      String message =
+          format("Unrecognized task params while running spot inst task: [%s]", parameters.getClass().getSimpleName());
+      logger.error(message);
+      return SpotInstTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).errorMessage(message).build();
+    }
+
+    SpotInstTaskParameters spotInstTaskParameters = (SpotInstTaskParameters) parameters;
+    SpotInstTaskHandler handler;
+    switch (spotInstTaskParameters.getCommandType()) {
+      case SPOT_INST_SETUP: {
+        handler = setupTaskHandler;
+        break;
+      }
+      case SPOT_INST_DEPLOY: {
+        handler = deployTaskHandler;
+        break;
+      }
+      default: {
+        String message = format("Unrecognized task params type running spot inst task: [%s]. Workflow execution: [%s]",
+            spotInstTaskParameters.getCommandType().name(), spotInstTaskParameters.getWorkflowExecutionId());
+        logger.error(message);
+        return SpotInstTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).errorMessage(message).build();
+      }
+    }
+    return handler.executeTask(spotInstTaskParameters);
+  }
+}

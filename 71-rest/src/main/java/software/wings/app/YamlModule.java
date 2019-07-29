@@ -173,6 +173,7 @@ import software.wings.service.impl.yaml.handler.setting.collaborationprovider.Ji
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.ServiceNowConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.SlackConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.SmtpConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.collaborationprovider.SpotInstConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.AppDynamicsConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.DynaTraceConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.ElkConfigYamlHandler;
@@ -387,6 +388,8 @@ public class YamlModule extends AbstractModule {
         .to(JiraConfigYamlHandler.class);
     collaborationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.SERVICENOW.name())
         .to(ServiceNowConfigYamlHandler.class);
+    collaborationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.SPOT_INST.name())
+        .to(SpotInstConfigYamlHandler.class);
 
     MapBinder<String, CloudProviderYamlHandler> cloudProviderYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CloudProviderYamlHandler.class);

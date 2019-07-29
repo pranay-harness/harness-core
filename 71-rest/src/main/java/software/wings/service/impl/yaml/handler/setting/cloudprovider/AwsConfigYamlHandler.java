@@ -10,9 +10,6 @@ import software.wings.beans.yaml.ChangeContext;
 
 import java.util.List;
 
-/**
- * @author rktummala on 11/19/17
- */
 @Singleton
 public class AwsConfigYamlHandler extends CloudProviderYamlHandler<Yaml, AwsConfig> {
   @Override

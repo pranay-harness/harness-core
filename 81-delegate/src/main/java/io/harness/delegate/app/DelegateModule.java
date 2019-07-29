@@ -24,6 +24,8 @@ import io.harness.govern.DependencyModule;
 import io.harness.security.encryption.DelegateDecryptionService;
 import io.harness.shell.ShellExecutionService;
 import io.harness.shell.ShellExecutionServiceImpl;
+import io.harness.spotinst.SpotInstHelperServiceDelegate;
+import io.harness.spotinst.SpotInstHelperServiceDelegateImpl;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
@@ -410,6 +412,7 @@ public class DelegateModule extends DependencyModule {
     bind(DelegateDecryptionService.class).to(DelegateDecryptionServiceImpl.class);
     bind(ServiceNowDelegateService.class).to(ServiceNowDelegateServiceImpl.class);
     bind(ChartMuseumClient.class).to(ChartMuseumClientImpl.class);
+    bind(SpotInstHelperServiceDelegate.class).to(SpotInstHelperServiceDelegateImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);
