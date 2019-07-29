@@ -96,7 +96,8 @@ public class MainDashboardFunctionalTests extends AbstractFunctionalTest {
     AggregatedDayStats updatedDashboardStats = dashBoardResponse.getStatsMap().get(all);
     int updatedTotalCount = updatedDashboardStats.getTotalCount();
     // Main Dashboard update check (after executing a workflow)
-    assertThat(updatedTotalCount - totalCount).isEqualTo(1);
+    // Handled the case of parallel workflow executions
+    assertThat(updatedTotalCount - totalCount).isGreaterThan(0);
   }
 
   @Test
