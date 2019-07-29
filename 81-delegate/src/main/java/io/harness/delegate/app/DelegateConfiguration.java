@@ -38,4 +38,6 @@ public class DelegateConfiguration {
   private String helmPath;
 
   private String publishTarget;
+
+  private String queueFilePath;
 }
