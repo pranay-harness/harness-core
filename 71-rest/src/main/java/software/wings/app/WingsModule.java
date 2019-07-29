@@ -295,6 +295,7 @@ import software.wings.service.impl.stackdriver.StackDriverServiceImpl;
 import software.wings.service.impl.sumo.SumoLogicAnalysisServiceImpl;
 import software.wings.service.impl.trigger.ArtifactTriggerProcessor;
 import software.wings.service.impl.trigger.DeploymentTriggerServiceImpl;
+import software.wings.service.impl.trigger.PipelineTriggerProcessor;
 import software.wings.service.impl.trigger.ScheduleTriggerProcessor;
 import software.wings.service.impl.trigger.TriggerExecutionServiceImpl;
 import software.wings.service.impl.trigger.TriggerProcessor;
@@ -791,6 +792,7 @@ public class WingsModule extends DependencyModule {
 
     triggerProcessorMapBinder.addBinding(Type.NEW_ARTIFACT.name()).to(ArtifactTriggerProcessor.class);
     triggerProcessorMapBinder.addBinding(Type.SCHEDULED.name()).to(ScheduleTriggerProcessor.class);
+    triggerProcessorMapBinder.addBinding(Type.PIPELINE_COMPLETION.name()).to(PipelineTriggerProcessor.class);
 
     // To support storing 'Files' in google cloud storage besides default Mongo GridFs.
     if (configuration.getFileStorageMode() == null) {

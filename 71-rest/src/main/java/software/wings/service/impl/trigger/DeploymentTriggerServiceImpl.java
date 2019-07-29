@@ -2,6 +2,7 @@ package software.wings.service.impl.trigger;
 
 import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.trigger.Condition.Type.NEW_ARTIFACT;
+import static software.wings.beans.trigger.Condition.Type.PIPELINE_COMPLETION;
 import static software.wings.beans.trigger.Condition.Type.SCHEDULED;
 import static software.wings.utils.Validator.equalCheck;
 import static software.wings.utils.Validator.notNullCheck;
@@ -125,7 +126,8 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
   }
 
   private String obtainTriggerConditionType(Condition condition) {
-    if (condition.getType().equals(NEW_ARTIFACT) || condition.getType().equals(SCHEDULED)) {
+    if (condition.getType().equals(NEW_ARTIFACT) || condition.getType().equals(SCHEDULED)
+        || condition.getType().equals(PIPELINE_COMPLETION)) {
       return condition.getType().name();
     }
     throw new InvalidRequestException("Invalid Trigger Condition for trigger " + condition.getType().name(), USER);
