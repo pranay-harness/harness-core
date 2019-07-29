@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static java.lang.String.format;
 import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -22,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.FeatureName;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactFile;
@@ -38,6 +40,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 
@@ -65,6 +68,8 @@ public class ArtifactTriggerProcessor implements TriggerProcessor {
   @Inject private transient PipelineService pipelineService;
   @Inject private transient FeatureFlagService featureFlagService;
   @Inject private transient AppService appService;
+  @Inject private SettingsService settingsService;
+
   @Override
   public void validateTriggerConditionSetup(DeploymentTrigger trigger, DeploymentTrigger existingTrigger) {
     // TODO: ASR: update when index added on setting_id + name
@@ -90,9 +95,17 @@ public class ArtifactTriggerProcessor implements TriggerProcessor {
     ArtifactCondition artifactCondition = (ArtifactCondition) deploymentTrigger.getCondition();
     ArtifactStream artifactStream = artifactStreamService.get(artifactCondition.getArtifactStreamId());
 
+    SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
+
+    if (settingAttribute == null) {
+      throw new WingsException(
+          format("Unable to find Connector/Cloud Provider for artifact stream %s", artifactStream.getSourceName()),
+          WingsException.USER);
+    }
     deploymentTrigger.setCondition(ArtifactCondition.builder()
                                        .artifactStreamId(artifactCondition.getArtifactStreamId())
-                                       .artifactSourceName(artifactStream.getSourceName())
+                                       .artifactStreamName(artifactStream.getName())
+                                       .artifactServerName(settingAttribute.getName())
                                        .artifactStreamType(artifactStream.getArtifactStreamType())
                                        .artifactFilter(artifactCondition.getArtifactFilter())
                                        .build());

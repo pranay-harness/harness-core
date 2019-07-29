@@ -12,7 +12,8 @@ import javax.validation.constraints.NotNull;
 @Builder
 public class ArtifactCondition implements Condition {
   @NotEmpty private String artifactStreamId;
-  private transient String artifactSourceName;
+  private transient String artifactServerName;
+  private transient String artifactStreamName;
   private transient String artifactStreamType;
   private String artifactFilter;
   @NotNull private Type type = Type.NEW_ARTIFACT;
