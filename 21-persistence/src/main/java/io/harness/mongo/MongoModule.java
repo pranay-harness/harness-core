@@ -2,6 +2,7 @@ package io.harness.mongo;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.mongo.IndexManager.ensureIndex;
+import static io.harness.mongo.IndexManager.updateMovedClasses;
 import static org.mongodb.morphia.logging.MorphiaLoggerFactory.registerLogger;
 
 import com.google.inject.AbstractModule;
@@ -52,9 +53,15 @@ public class MongoModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public Morphia morphia(@Named("morphiaClasses") Set<Class> classes) {
+  public HObjectFactory objectFactory() {
+    return new HObjectFactory();
+  }
+
+  @Provides
+  @Singleton
+  public Morphia morphia(@Named("morphiaClasses") Set<Class> classes, HObjectFactory objectFactory) {
     Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
+    morphia.getMapper().getOptions().setObjectFactory(objectFactory);
     morphia.getMapper().getOptions().setMapSubPackages(true);
     morphia.map(classes);
     return morphia;
@@ -62,7 +69,7 @@ public class MongoModule extends AbstractModule {
 
   @Provides
   @Named("primaryDatastore")
-  public AdvancedDatastore primaryDatastore(MongoConfig mongoConfig, Morphia morphia) {
+  public AdvancedDatastore primaryDatastore(MongoConfig mongoConfig, Morphia morphia, HObjectFactory objectFactory) {
     MongoClientURI uri = new MongoClientURI(mongoConfig.getUri(), MongoClientOptions.builder(mongoClientOptions));
     MongoClient mongoClient = new MongoClient(uri);
 
@@ -70,6 +77,10 @@ public class MongoModule extends AbstractModule {
     primaryDatastore.setQueryFactory(new QueryFactory());
 
     ensureIndex(primaryDatastore, morphia);
+    updateMovedClasses(primaryDatastore, objectFactory.getMorphiaInterfaceImplementers());
+
+    objectFactory.setDatastore(primaryDatastore);
+
     return primaryDatastore;
   }
 

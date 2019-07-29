@@ -382,6 +382,7 @@ import software.wings.helpers.ext.k8s.request.K8sScaleTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters.K8sTaskType;
 import software.wings.helpers.ext.k8s.request.K8sTrafficSplitTaskParameters;
+import software.wings.helpers.ext.k8s.response.K8sAddWatchResponse;
 import software.wings.helpers.ext.k8s.response.K8sApplyResponse;
 import software.wings.helpers.ext.k8s.response.K8sBlueGreenDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sCanaryDeployResponse;
@@ -615,6 +616,7 @@ import software.wings.sm.StateTypeScope;
 import software.wings.sm.StepExecutionSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.APMVerificationState;
+import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
 import software.wings.sm.states.BambooState;
 import software.wings.sm.states.CustomLogVerificationState;
@@ -1309,10 +1311,11 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(DeploymentConfiguration.class, 7211);
     kryo.register(ServiceNowImportSetResponse.class, 7212);
     kryo.register(ServiceNowImportSetResult.class, 7213);
-    kryo.register(software.wings.helpers.ext.k8s.response.K8sAddWatchResponse.class, 7214);
+    kryo.register(K8sAddWatchResponse.class, 7214);
     kryo.register(StandardUnit.class, 7215);
     kryo.register(CloudFormationRollbackInfo.class, 7216);
     kryo.register(InfraDefinitionSummary.class, 7217);
     kryo.register(InfrastructureDefinition.Yaml.class, 7218);
+    kryo.register(ApprovalState.class, 7219);
   }
 }

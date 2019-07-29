@@ -18,7 +18,9 @@ import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoCommandException;
 import com.mongodb.ReadPreference;
 import io.harness.exception.UnexpectedException;
+import io.harness.mongo.MorphiaMove.MorphiaMoveKeys;
 import io.harness.mongo.SampleEntity.SampleEntityKeys;
+import io.harness.persistence.HPersistence;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +32,8 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.mapping.MappedClass;
 import org.mongodb.morphia.mapping.MappedField;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 import java.time.Duration;
 import java.time.ZonedDateTime;
@@ -39,6 +43,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 @Slf4j
@@ -140,6 +145,21 @@ public class IndexManager {
           logger.error(
               format("Index %s.%s is not used at for %d days", collection.getName(), entry.getKey(), passed.toDays()));
         });
+  }
+
+  public static void updateMovedClasses(
+      AdvancedDatastore primaryDatastore, Map<String, Class> morphiaInterfaceImplementers) {
+    for (Entry<String, Class> entry : morphiaInterfaceImplementers.entrySet()) {
+      final String target = entry.getValue().getCanonicalName();
+      if (!entry.getKey().equals(target)) {
+        Query<MorphiaMove> query =
+            primaryDatastore.createQuery(MorphiaMove.class).filter(MorphiaMoveKeys.target, target);
+        final UpdateOperations<MorphiaMove> updateOperations =
+            primaryDatastore.createUpdateOperations(MorphiaMove.class)
+                .addToSet(MorphiaMoveKeys.sources, entry.getKey());
+        primaryDatastore.findAndModify(query, updateOperations, HPersistence.upsertReturnNewOptions);
+      }
+    }
   }
 
   public static void ensureIndex(AdvancedDatastore primaryDatastore, Morphia morphia) {
