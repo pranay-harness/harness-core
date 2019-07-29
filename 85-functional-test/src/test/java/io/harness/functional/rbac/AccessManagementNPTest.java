@@ -57,16 +57,18 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY, resent = false)
+  @Owner(emails = SWAMY)
   @Category(FunctionalTests.class)
   public void accessManagementNoPermissionTestForGet() {
+    logger.info("No permission test for GET");
     final String READ_ONLY_USER = "readonlyuser@harness.io";
     AccessManagementUtils.runAllGetTests(getAccount(), bearerToken, READ_ONLY_USER, "readonlyuser",
         HttpStatus.SC_BAD_REQUEST, HttpStatus.SC_BAD_REQUEST);
+    logger.info("No permission test for GET ends");
   }
 
   @Test
-  @Owner(emails = SWAMY, resent = false)
+  @Owner(emails = SWAMY)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForUser() {
     final String READ_ONLY_USER = "readonlyuser@harness.io";

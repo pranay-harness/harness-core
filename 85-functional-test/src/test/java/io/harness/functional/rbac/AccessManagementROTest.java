@@ -59,12 +59,14 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY, resent = false)
+  @Owner(emails = SWAMY)
   @Category(FunctionalTests.class)
   public void accessManagementNoPermissionTestForGet() {
+    logger.info("Readonly test for GET");
     final String READ_ONLY_USER = "rbac1@harness.io";
     AccessManagementUtils.runAllGetTests(
         getAccount(), bearerToken, READ_ONLY_USER, "rbac1", HttpStatus.SC_OK, HttpStatus.SC_BAD_REQUEST);
+    logger.info("Readonly test for GET ends");
   }
 
   @Test
