@@ -30,5 +30,6 @@ public class PersistenceMorphiaClasses {
       UuidAccess.class, CreatedAtAware.class, CreatedAtAccess.class, CreatedByAware.class, CreatedByAccess.class,
       UpdatedAtAware.class, UpdatedAtAccess.class, UpdatedByAware.class, UpdatedByAccess.class, PersistentEntity.class,
       GoogleDataStoreAware.class, PersistentIterable.class, PersistentRegularIterable.class,
-      PersistentIrregularIterable.class, NameAccess.class, MigrationJobInstance.class, TagAware.class);
+      PersistentIrregularIterable.class, NameAccess.class, MigrationJobInstance.class, TagAware.class,
+      MorphiaMove.class);
 }

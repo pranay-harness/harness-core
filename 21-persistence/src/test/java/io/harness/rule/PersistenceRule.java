@@ -69,13 +69,17 @@ public class PersistenceRule
     String databaseName = databaseName();
     MongoInfo mongoInfo = testMongo(annotations, closingFactory);
 
+    final HObjectFactory objectFactory = new HObjectFactory();
+
     Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
+    morphia.getMapper().getOptions().setObjectFactory(objectFactory);
     morphia.map(TestQueuableObject.class);
     morphia.map(RegularIterableEntity.class);
     morphia.map(IrregularIterableEntity.class);
     datastore = (AdvancedDatastore) morphia.createDatastore(mongoInfo.getClient(), databaseName);
     datastore.setQueryFactory(new QueryFactory());
+
+    objectFactory.setDatastore(datastore);
 
     DistributedLockSvc distributedLockSvc = distributedLockSvc(mongoInfo.getClient(), databaseName, closingFactory);
 
