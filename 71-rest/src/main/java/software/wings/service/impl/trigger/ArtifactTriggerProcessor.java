@@ -35,14 +35,10 @@ import software.wings.beans.trigger.DeploymentTrigger.DeploymentTriggerKeys;
 import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.FeatureFlagService;
-import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.service.intfc.WorkflowService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,17 +54,12 @@ public class ArtifactTriggerProcessor implements TriggerProcessor {
   @Inject private transient ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private transient DeploymentTriggerServiceHelper triggerServiceHelper;
   @Inject private transient TriggerArtifactVariableHandler triggerArtifactVariableHandler;
-
   @Inject private transient TriggerDeploymentExecution triggerDeploymentExecution;
   @Inject private transient ExecutorService executorService;
-  @Inject private transient WorkflowExecutionService workflowExecutionService;
-  @Inject private transient WorkflowService workflowService;
-  @Inject private transient ArtifactService artifactService;
   @Inject private transient WingsPersistence wingsPersistence;
-  @Inject private transient PipelineService pipelineService;
   @Inject private transient FeatureFlagService featureFlagService;
   @Inject private transient AppService appService;
-  @Inject private SettingsService settingsService;
+  @Inject private transient SettingsService settingsService;
 
   @Override
   public void validateTriggerConditionSetup(DeploymentTrigger trigger, DeploymentTrigger existingTrigger) {
