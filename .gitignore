@@ -32,6 +32,7 @@ repository/
 rest/delegate.zip
 rest/harness-delegate/
 rest/wingsui
+queue.db
 target
 wingsui
 node_modules/

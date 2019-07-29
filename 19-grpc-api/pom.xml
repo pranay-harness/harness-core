@@ -17,6 +17,10 @@
             <artifactId>protobuf-java</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.squareup.tape2</groupId>
+            <artifactId>tape</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-netty-shaded</artifactId>
         </dependency>
@@ -31,6 +35,12 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>12-commons</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
