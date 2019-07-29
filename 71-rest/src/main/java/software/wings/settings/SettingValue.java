@@ -290,7 +290,9 @@ public abstract class SettingValue implements ExecutionCapabilityDemander {
 
     AMAZON_S3_HELM_REPO("Amazon S3 Helm Repository"),
 
-    GCS_HELM_REPO("GCS Helm Repository");
+    GCS_HELM_REPO("GCS Helm Repository"),
+
+    SPOT_INST("SpotInst");
 
     @Getter private String displayName;
 
