@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactFile.Builder.anArtifactFile;
@@ -24,9 +25,9 @@ import static software.wings.service.impl.trigger.TriggerServiceTestHelper.build
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACTORY_URL;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_FILTER;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
-import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ENTITY_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -36,6 +37,8 @@ import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
+import static software.wings.utils.WingsTestConstants.SETTING_NAME;
 import static software.wings.utils.WingsTestConstants.TRIGGER_DESCRIPTION;
 import static software.wings.utils.WingsTestConstants.VARIABLE_NAME;
 import static software.wings.utils.WingsTestConstants.VARIABLE_VALUE;
@@ -62,12 +65,14 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.JenkinsArtifactStream;
+import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.deployment.DeploymentMetadata.Include;
 import software.wings.beans.trigger.ArtifactCondition;
@@ -90,6 +95,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
@@ -110,6 +116,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
   @Mock private MongoIdempotentRegistry<TriggerIdempotentResult> idempotentRegistry;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private AppService appService;
+  @Mock private SettingsService settingsService;
 
   @Inject @InjectMocks private DeploymentTriggerService deploymentTriggerService;
   @Inject @InjectMocks private DeploymentTriggerServiceHelper deploymentTriggerServiceHelper;
@@ -143,6 +150,15 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
   Pipeline pipeline = buildPipeline();
   @Before
   public void setUp() {
+    SettingAttribute artifactorySetting = aSettingAttribute()
+                                              .withUuid(SETTING_ID)
+                                              .withName(SETTING_NAME)
+                                              .withValue(ArtifactoryConfig.builder()
+                                                             .artifactoryUrl(ARTIFACTORY_URL)
+                                                             .username("admin")
+                                                             .password("dummy123!".toCharArray())
+                                                             .build())
+                                              .build();
     List<ServiceVariable> serviceVariableList = asList(
         ServiceVariable.builder().type(Type.ARTIFACT).name(VARIABLE_NAME).value(VARIABLE_VALUE.toCharArray()).build());
 
@@ -160,6 +176,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
     when(artifactService.getArtifactByBuildNumber(jenkinsArtifactStream, ARTIFACT_FILTER, false)).thenReturn(artifact);
     when(featureFlagService.isEnabled(any(), anyString())).thenReturn(false);
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    when(settingsService.get(SETTING_ID)).thenReturn(artifactorySetting);
 
     when(serviceResourceService.get(ENTITY_ID))
         .thenReturn(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build());
@@ -199,9 +216,9 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
         .isNotNull()
         .isEqualTo(ARTIFACT_STREAM_ID);
 
-    assertThat(((ArtifactCondition) savedTrigger.getCondition()).getArtifactSourceName())
+    assertThat(((ArtifactCondition) savedTrigger.getCondition()).getArtifactServerName())
         .isNotNull()
-        .isEqualTo(ARTIFACT_SOURCE_NAME);
+        .isEqualTo(SETTING_NAME);
 
     savedTrigger = deploymentTriggerService.get(savedTrigger.getAppId(), savedTrigger.getUuid());
 
