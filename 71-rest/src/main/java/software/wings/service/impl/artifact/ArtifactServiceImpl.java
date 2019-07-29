@@ -684,4 +684,9 @@ public class ArtifactServiceImpl implements ArtifactService {
 
     return listByAccountId(appService.getAccountIdByAppId(appId));
   }
+
+  @Override
+  public List<Artifact> sortByBuildNo(List<Artifact> artifacts) {
+    return artifacts.stream().sorted(new ArtifactComparator()).collect(toList());
+  }
 }

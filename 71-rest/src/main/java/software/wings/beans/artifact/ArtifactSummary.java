@@ -7,5 +7,6 @@ import lombok.Value;
 @Builder
 public class ArtifactSummary {
   private String artifactId;
-  private String displayName;
+  private String uiDisplayName;
+  private String buildNo;
 }
