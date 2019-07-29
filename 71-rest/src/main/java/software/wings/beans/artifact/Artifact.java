@@ -6,6 +6,7 @@ import com.google.common.collect.Maps;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.data.structure.EmptyPredicate;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
@@ -55,6 +56,7 @@ public class Artifact extends Base {
     public static final String appId = "appId";
     public static final String metadata_image = metadata + "." + ArtifactMetadataKeys.image;
     public static final String metadata_tag = metadata + "." + ArtifactMetadataKeys.tag;
+    public static final String metadata_buildNo = metadata + "." + ArtifactMetadataKeys.buildNo;
   }
 
   private String artifactStreamId;
@@ -174,6 +176,12 @@ public class Artifact extends Base {
     return null;
   }
 
+  public String getUiDisplayName() {
+    if (EmptyPredicate.isNotEmpty(uiDisplayName)) {
+      return uiDisplayName;
+    }
+    return "Build# " + getBuildNo();
+  }
   /**
    * The Enum Status.
    */

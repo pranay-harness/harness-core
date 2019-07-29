@@ -166,9 +166,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         PageRequest<Artifact> artifactPageRequest = PageRequestBuilder.aPageRequest().build();
         artifactPageRequest.addFilter(ArtifactKeys.accountId, EQ, accountId);
         artifactPageRequest.addFilter(ArtifactKeys.artifactStreamId, IN, (Object[]) artifactStreamIds);
-        artifactPageRequest.setFieldsIncluded(asList(ArtifactKeys.artifactStreamId, ArtifactKeys.uiDisplayName));
+        artifactPageRequest.setFieldsIncluded(
+            asList(ArtifactKeys.artifactStreamId, ArtifactKeys.uiDisplayName, ArtifactKeys.metadata));
         if (isNotEmpty(artifactSearchString)) {
-          artifactPageRequest.addFilter(ArtifactKeys.uiDisplayName, CONTAINS, artifactSearchString);
+          artifactPageRequest.addFilter(ArtifactKeys.metadata_buildNo, CONTAINS, artifactSearchString);
         }
         PageResponse<Artifact> artifactPageResponse = artifactService.listUnsorted(artifactPageRequest);
         List<Artifact> artifacts = artifactPageResponse.getResponse();
@@ -179,8 +180,11 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         Map<String, List<ArtifactSummary>> artifactStreamIdToArtifactSummaries = new HashMap<>();
         artifacts.forEach(artifact -> {
           String artifactStreamId = artifact.getArtifactStreamId();
-          ArtifactSummary artifactSummary =
-              ArtifactSummary.builder().artifactId(artifact.getUuid()).displayName(artifact.getUiDisplayName()).build();
+          ArtifactSummary artifactSummary = ArtifactSummary.builder()
+                                                .artifactId(artifact.getUuid())
+                                                .uiDisplayName(artifact.getUiDisplayName())
+                                                .buildNo(artifact.getBuildNo())
+                                                .build();
           if (artifactStreamIdToArtifactSummaries.containsKey(artifactStreamId)) {
             artifactStreamIdToArtifactSummaries.get(artifactStreamId).add(artifactSummary);
           } else {
