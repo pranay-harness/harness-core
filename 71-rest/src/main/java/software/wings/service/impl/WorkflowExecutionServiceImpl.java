@@ -1081,6 +1081,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setStateMachine(stateMachine);
     workflowExecution.setPipelineExecutionId(pipelineExecutionId);
     workflowExecution.setExecutionArgs(executionArgs);
+    workflowExecution.setStageName(executionArgs.getStageName());
 
     Map<String, String> workflowVariables = executionArgs.getWorkflowVariables();
     List<Service> services = workflowService.getResolvedServices(workflow, workflowVariables);

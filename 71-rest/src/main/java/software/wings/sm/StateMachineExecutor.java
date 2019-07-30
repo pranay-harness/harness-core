@@ -280,6 +280,7 @@ public class StateMachineExecutor implements StateInspectionListener {
       EnvState envState = (EnvState) state;
       stateExecutionInstance.setPipelineStageElementId(envState.getPipelineStageElementId());
       stateExecutionInstance.setPipelineStageParallelIndex(envState.getPipelineStageParallelIndex());
+      stateExecutionInstance.setStageName(envState.getStageName());
     }
 
     if (state instanceof PhaseStepSubWorkflow) {

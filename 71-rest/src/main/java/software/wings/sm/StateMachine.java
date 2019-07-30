@@ -220,12 +220,13 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Pipeline Stage: pipelineStage");
     }
     if (pipelineStage.getPipelineStageElements().size() == 1) {
-      return convertToState(pipelineStage.getPipelineStageElements().get(0), pipeline, stencilMap);
+      return convertToState(
+          pipelineStage.getPipelineStageElements().get(0), pipeline, stencilMap, pipelineStage.getName());
     } else {
       String forkName = getForkStateName(pipelineStage);
       ForkState forkState = new ForkState(forkName);
       for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
-        State state = convertToState(pipelineStageElement, pipeline, stencilMap);
+        State state = convertToState(pipelineStageElement, pipeline, stencilMap, pipelineStage.getName());
         forkState.addForkState(state);
       }
       addState(forkState);
@@ -243,8 +244,8 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
     return forkName;
   }
 
-  private State convertToState(
-      PipelineStageElement pipelineStageElement, Pipeline pipeline, Map<String, StateTypeDescriptor> stencilMap) {
+  private State convertToState(PipelineStageElement pipelineStageElement, Pipeline pipeline,
+      Map<String, StateTypeDescriptor> stencilMap, String stageName) {
     StateTypeDescriptor stateTypeDesc = stencilMap.get(pipelineStageElement.getType());
 
     State state = stateTypeDesc.newInstance(pipelineStageElement.getName());
@@ -255,6 +256,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
     properties.put(EnvStateKeys.pipelineStageElementId, pipelineStageElement.getUuid());
     properties.put(EnvStateKeys.pipelineStageParallelIndex, pipelineStageElement.getParallelIndex());
     properties.put(EnvStateKeys.disable, pipelineStageElement.isDisable());
+    properties.put(EnvStateKeys.stageName, stageName);
 
     if (pipelineStageElement.getWorkflowVariables() != null) {
       properties.put(EnvStateKeys.workflowVariables, pipelineStageElement.getWorkflowVariables());

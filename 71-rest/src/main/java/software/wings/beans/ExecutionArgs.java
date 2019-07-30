@@ -38,6 +38,7 @@ public class ExecutionArgs {
   private String pipelineId;
   private String pipelinePhaseElementId;
   @Getter @Setter private int pipelinePhaseParallelIndex;
+  @Getter @Setter private String stageName;
   private Map<String, String> workflowVariables;
   private String notes;
   @Deprecated @JsonIgnore private EmbeddedUser triggeredBy;

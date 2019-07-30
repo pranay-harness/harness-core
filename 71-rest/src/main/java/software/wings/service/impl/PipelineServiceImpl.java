@@ -207,9 +207,18 @@ public class PipelineServiceImpl implements PipelineService {
     }
 
     int parallelIndex = 0;
+    String firstParallelStageName = pipelineStages.get(0).getName();
     for (PipelineStage stage : pipelineStages) {
       if (!stage.isParallel()) {
         ++parallelIndex;
+      }
+      if (isEmpty(stage.getName())) {
+        stage.setName("STAGE " + parallelIndex);
+      }
+      if (!stage.isParallel()) {
+        firstParallelStageName = stage.getName();
+      } else {
+        stage.setName(firstParallelStageName);
       }
       for (PipelineStageElement element : stage.getPipelineStageElements()) {
         // The UI or other agents my try to update the pipeline with new stages without uuid. This makes sure that
