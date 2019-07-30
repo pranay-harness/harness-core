@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
@@ -40,6 +39,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.EcrConfig;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.AcrArtifactStream;
@@ -73,6 +73,7 @@ import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.aws.manager.AwsEcrHelperServiceManager;
@@ -103,6 +104,7 @@ public class ArtifactCollectionUtils {
   @Inject private ExpressionEvaluator evaluator;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Transient
   private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
@@ -524,13 +526,15 @@ public class ArtifactCollectionUtils {
     ArtifactStreamAttributes artifactStreamAttributes;
     BuildSourceRequestType requestType;
     String appId = artifactStream.fetchAppId();
-    if (!GLOBAL_APP_ID.equals(appId)) {
+    boolean multiArtifact =
+        featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, settingAttribute.getAccountId());
+    if (multiArtifact) {
+      artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+      requestType = getRequestType(artifactStream);
+    } else {
       Service service = artifactStreamServiceBindingService.getService(appId, artifactStream.getUuid(), true);
       artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
       requestType = getRequestType(artifactStream, service.getArtifactType());
-    } else {
-      artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
-      requestType = getRequestType(artifactStream);
     }
 
     return BuildSourceParameters.builder()

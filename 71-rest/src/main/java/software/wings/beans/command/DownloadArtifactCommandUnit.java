@@ -39,7 +39,6 @@ import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.SftpHelperService;
 import software.wings.service.impl.SmbHelperService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.stencils.DefaultValue;
 
 import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
@@ -69,7 +68,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
   @Inject private SftpHelperService sftpHelperService;
   private static Map<String, String> bucketRegions = new HashMap<>();
 
-  @DefaultValue("artifact") private String artifactVariableName;
+  private String artifactVariableName = "artifact";
 
   public String getArtifactVariableName() {
     return artifactVariableName;

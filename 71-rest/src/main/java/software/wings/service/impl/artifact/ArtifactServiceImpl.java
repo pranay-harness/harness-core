@@ -686,7 +686,11 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   @Override
-  public List<Artifact> sortByBuildNo(List<Artifact> artifacts) {
-    return artifacts.stream().sorted(new ArtifactComparator()).collect(toList());
+  public List<ArtifactFile> fetchArtifactFiles(String artifactId) {
+    return wingsPersistence.createQuery(Artifact.class)
+        .project(ArtifactKeys.artifactFiles, true)
+        .filter(ArtifactKeys.uuid, artifactId)
+        .get()
+        .getArtifactFiles();
   }
 }

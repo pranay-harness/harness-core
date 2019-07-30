@@ -19,6 +19,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +55,7 @@ public class ScpCommandUnit extends SshCommandUnit {
   private ScpFileCategory fileCategory;
 
   @Attributes(title = "Destination Path") @DefaultValue("$WINGS_RUNTIME_PATH") private String destinationDirectoryPath;
-  @Attributes(title = "Artifact Variable") @DefaultValue("artifact") private String artifactVariableName;
+  private String artifactVariableName = "artifact";
 
   /**
    * Instantiates a new Scp command unit.
@@ -76,13 +77,16 @@ public class ScpCommandUnit extends SshCommandUnit {
           Map<String, Artifact> multiArtifactMap = context.getMultiArtifactMap();
           Map<String, ArtifactStreamAttributes> artifactStreamAttributesMap = context.getArtifactStreamAttributesMap();
           artifact = multiArtifactMap.get(artifactVariableName);
-          if (artifact != null) {
-            artifactStreamAttributes = artifactStreamAttributesMap.get(artifact.getUuid());
-            if (artifactStreamAttributes == null) {
-              throw new InvalidRequestException(
-                  format("ArtifactStreamAttributes not found for artifact: %s", artifactVariableName));
-            }
+          if (artifact == null) {
+            throw new InvalidRequestException(
+                format(
+                    "Artifact with variable name [%s] does not exist. Please check artifact variable name provided in Copy Artifact Command.",
+                    artifactVariableName),
+                WingsException.USER);
           }
+
+          artifactStreamAttributes = artifactStreamAttributesMap.get(artifact.getUuid());
+
         } else {
           artifactStreamAttributes = context.getArtifactStreamAttributes();
         }

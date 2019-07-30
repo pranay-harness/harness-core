@@ -1580,6 +1580,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         keywords.add(artifact.getBuildNo());
       });
     }
+    stdParams.setArtifactIds(filteredArtifacts.stream().map(Artifact::getUuid).collect(toList()));
+    workflowExecution.setArtifacts(filteredArtifacts);
 
     Set<String> serviceIdsSet = new HashSet<>();
     List<ServiceElement> services = new ArrayList<>();
