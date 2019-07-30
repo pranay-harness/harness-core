@@ -87,6 +87,7 @@ public class LearningEngineExperimentalAnalysisTask extends Base {
   private String tag;
   private AnalysisComparisonStrategy analysis_comparison_strategy;
   @Indexed private ExecutionStatus executionStatus;
+  private Double alertThreshold;
 
   @Builder.Default
   private ServiceApiVersion version = ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];
