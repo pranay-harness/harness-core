@@ -79,7 +79,7 @@ public class KryoUtils {
 
   public static byte[] asBytes(Object obj) {
     final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    toStream(obj, outputStream);
+    writeToStream(obj, outputStream);
     return outputStream.toByteArray();
   }
 
@@ -87,7 +87,7 @@ public class KryoUtils {
     try {
       final ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
       final DeflaterOutputStream outputStream = new DeflaterOutputStream(byteStream);
-      toStream(obj, outputStream);
+      writeToStream(obj, outputStream);
       outputStream.finish();
       return byteStream.toByteArray();
     } catch (Exception exception) {
@@ -95,20 +95,7 @@ public class KryoUtils {
     }
   }
 
-  private static void toStream(Object obj, OutputStream outputStream) {
-    try {
-      Output output = new Output(outputStream);
-      pool.run(kryo -> {
-        kryo.writeClassAndObject(output, obj);
-        return null;
-      });
-      output.flush();
-    } catch (Exception exception) {
-      throw new RuntimeException(exception);
-    }
-  }
-
-  public static void writeBytes(Object obj, OutputStream outputStream) {
+  private static void writeToStream(Object obj, OutputStream outputStream) {
     try {
       Output output = new Output(outputStream);
       pool.run(kryo -> {

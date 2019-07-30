@@ -3,6 +3,7 @@ package software.wings.jersey;
 import com.google.common.io.ByteStreams;
 
 import io.harness.serializer.KryoUtils;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +22,7 @@ import javax.ws.rs.ext.Provider;
 /**
  * @author peeyushaggarwal
  */
+@Slf4j
 @Provider
 @Consumes("application/x-kryo")
 @Produces("application/x-kryo")
@@ -45,7 +47,18 @@ public class KryoMessageBodyProvider implements MessageBodyWriter<Object>, Messa
   public void writeTo(final Object object, final Class<?> type, final Type genericType, final Annotation[] annotations,
       final MediaType mediaType, final MultivaluedMap<String, Object> httpHeaders, final OutputStream entityStream)
       throws IOException, WebApplicationException {
-    KryoUtils.writeBytes(object, entityStream);
+    byte[] bytes = null;
+    try {
+      // We are seeing occasional failures writing delegate tasks where it fails with broken pipe.
+      // Separating the kryo serialization from writing to the stream to identify the real cause of the issue.
+      bytes = KryoUtils.asBytes(object);
+      entityStream.write(bytes);
+      entityStream.flush();
+    } catch (Exception e) {
+      logger.error(String.format("Failed to write %s to stream. %d bytes deserialized.",
+                       object.getClass().getCanonicalName(), bytes == null ? 0 : bytes.length),
+          e);
+    }
   }
 
   //
