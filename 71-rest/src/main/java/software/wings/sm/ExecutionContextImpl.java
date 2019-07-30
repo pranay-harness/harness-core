@@ -772,6 +772,11 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   @Override
+  public String getPipelineStageName() {
+    return stateExecutionInstance.getStageName();
+  }
+
+  @Override
   public String getAppId() {
     final ContextElement contextElement = getContextElement(ContextElementType.STANDARD);
     if (!(contextElement instanceof WorkflowStandardParams)) {

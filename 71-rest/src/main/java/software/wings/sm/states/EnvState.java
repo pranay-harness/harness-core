@@ -82,6 +82,7 @@ public class EnvState extends State {
   @Setter @SchemaIgnore private String pipelineId;
   @Setter @SchemaIgnore private String pipelineStageElementId;
   @Setter @SchemaIgnore private int pipelineStageParallelIndex;
+  @Setter @SchemaIgnore private String stageName;
 
   @JsonIgnore @SchemaIgnore private Map<String, String> workflowVariables;
 
@@ -143,6 +144,7 @@ public class EnvState extends State {
     executionArgs.setPipelineId(pipelineId);
     executionArgs.setPipelinePhaseElementId(context.getPipelineStageElementId());
     executionArgs.setPipelinePhaseParallelIndex(context.getPipelineStageParallelIndex());
+    executionArgs.setStageName(context.getPipelineStageName());
     executionArgs.setWorkflowVariables(populatePipelineVariables(workflow, workflowStandardParams));
     executionArgs.setExcludeHostsWithSameArtifact(workflowStandardParams.isExcludeHostsWithSameArtifact());
     executionArgs.setNotifyTriggeredUserOnly(workflowStandardParams.isNotifyTriggeredUserOnly());
@@ -248,6 +250,10 @@ public class EnvState extends State {
   }
   public Map<String, String> getWorkflowVariables() {
     return workflowVariables;
+  }
+
+  public String getStageName() {
+    return stageName;
   }
 
   @SchemaIgnore

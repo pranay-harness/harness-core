@@ -274,6 +274,7 @@ public class MigrationList {
         .add(Pair.of(273, AddTagManagementPermissionToAdminUserGroup.class))
         .add(Pair.of(274, PrometheusCVMigration.class))
         .add(Pair.of(275, ScheduleSegmentPublishJob.class))
+        .add(Pair.of(276, BaseMigration.class))
         .build();
   }
 }

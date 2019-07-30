@@ -112,6 +112,7 @@ public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAt
   private PipelineExecution pipelineExecution; // used for pipeline details.
 
   private String pipelineExecutionId;
+  private String stageName;
   private ErrorStrategy errorStrategy;
 
   private String name;

@@ -73,7 +73,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
     notNullCheck("Could not retrieve valid app from path: " + change.getFilePath(), appId, USER);
 
     PipelineStage stage = PipelineStage.builder().build();
-    stage.setName(yaml.getName());
+    stage.setName(yaml.getStageName());
     stage.setParallel(yaml.isParallel());
 
     String stageElementId = null;
@@ -176,6 +176,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
 
     PipelineStageElement pipelineStageElement = PipelineStageElement.builder()
                                                     .uuid(stageElementId)
+                                                    .disable(yaml.isDisable())
                                                     .name(yaml.getName())
                                                     .type(yaml.getType())
                                                     .properties(properties)
@@ -324,6 +325,8 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
 
     return Yaml.builder()
         .name(stageElement.getName())
+        .stageName(bean.getName())
+        .disable(stageElement.isDisable())
         .parallel(bean.isParallel())
         .type(stageElement.getType())
         .workflowName(workflowName)

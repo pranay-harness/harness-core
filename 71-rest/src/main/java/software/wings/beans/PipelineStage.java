@@ -50,17 +50,21 @@ public class PipelineStage {
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends BaseYamlWithType {
     private String name;
+    private String stageName;
+    private boolean disable;
     private boolean parallel;
     private String workflowName;
     private List<WorkflowVariable> workflowVariables = Lists.newArrayList();
     private Map<String, Object> properties = new HashMap<>();
 
     @Builder
-    public Yaml(String type, String name, boolean parallel, String workflowName,
+    public Yaml(String type, String name, String stageName, boolean disable, boolean parallel, String workflowName,
         List<WorkflowVariable> workflowVariables, Map<String, Object> properties) {
       super(type);
       this.name = name;
+      this.stageName = stageName;
       this.parallel = parallel;
+      this.disable = disable;
       this.workflowName = workflowName;
       this.workflowVariables = workflowVariables;
       this.properties = properties;

@@ -110,6 +110,7 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
   @Transient private String workflowId;
   @Transient private String pipelineStageElementId;
   @Transient private int pipelineStageParallelIndex;
+  @Transient private String stageName;
   @Transient private String phaseSubWorkflowId;
   @Transient private String stepId;
 
