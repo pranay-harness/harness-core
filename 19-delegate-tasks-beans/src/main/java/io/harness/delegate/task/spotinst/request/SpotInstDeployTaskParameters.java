@@ -11,8 +11,9 @@ public class SpotInstDeployTaskParameters extends SpotInstTaskParameters {
   private int newElastiGroupDesiredInstances;
 
   public SpotInstDeployTaskParameters(String accountId, String appId, String commandName, String activityId,
-      Integer timeoutIntervalInMin, int newElastiGroupDesiredInstances, String workflowExecutionId) {
-    super(appId, accountId, activityId, commandName, workflowExecutionId, timeoutIntervalInMin, SPOT_INST_DEPLOY);
+      Integer timeoutIntervalInMin, int newElastiGroupDesiredInstances, String workflowExecutionId, String awsRegion) {
+    super(appId, accountId, activityId, commandName, workflowExecutionId, timeoutIntervalInMin, SPOT_INST_DEPLOY,
+        awsRegion);
     this.newElastiGroupDesiredInstances = newElastiGroupDesiredInstances;
   }
 }

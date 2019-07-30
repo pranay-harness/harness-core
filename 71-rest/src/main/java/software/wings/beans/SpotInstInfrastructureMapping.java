@@ -18,6 +18,7 @@ import java.util.Map;
 @JsonTypeName("SpotInst")
 @FieldNameConstants(innerTypeName = "SpotInstInfrastructureMappingKeys")
 public class SpotInstInfrastructureMapping extends InfrastructureMapping {
+  @Blueprint @Getter @Setter private String awsRegion;
   @Blueprint @Getter @Setter private String elasticGroupJson;
   @Blueprint @Getter @Setter private String spotinstConnectorId;
 
@@ -45,17 +46,19 @@ public class SpotInstInfrastructureMapping extends InfrastructureMapping {
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends YamlWithComputeProvider {
-    @Blueprint private String elasticGroupJson;
-    @Blueprint private String spotinstConnectorId;
+    private String elasticGroupJson;
+    private String spotinstConnectorId;
+    private String awsRegion;
 
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
         String infraMappingType, String deploymentType, String computeProviderName, Map<String, Object> blueprints,
-        String elasticGroupJson, String spotinstConnectorId) {
+        String elasticGroupJson, String spotinstConnectorId, String awsRegion) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
           computeProviderName, blueprints);
       this.elasticGroupJson = elasticGroupJson;
       this.spotinstConnectorId = spotinstConnectorId;
+      this.awsRegion = awsRegion;
     }
   }
 }

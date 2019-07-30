@@ -137,6 +137,9 @@ public class SpotInstServiceSetup extends State {
         (SpotInstSetupStateExecutionData) context.getStateExecutionData();
     stateExecutionData.setStatus(executionStatus);
     stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
+    stateExecutionData.setElastiGroupId(spotInstSetupTaskResponse.getNewElastiGroup().getId());
+    stateExecutionData.setElastiGroupName(spotInstSetupTaskResponse.getNewElastiGroup().getName());
+    stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
 
     SpotInstSetupContextElement spotInstSetupContextElement =
         SpotInstSetupContextElement.builder()
