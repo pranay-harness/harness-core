@@ -10,8 +10,12 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.NameValuePair.Yaml;
 import software.wings.service.impl.yaml.handler.NameValuePairYamlHandler;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -145,5 +149,25 @@ public class Utils {
       str = str.substring(0, str.length() - 1) + "\\\\";
     }
     return str;
+  }
+
+  public static String urlEncode(String decoded) {
+    String encoded = decoded;
+    try {
+      encoded = URLEncoder.encode(decoded, StandardCharsets.UTF_8.name());
+    } catch (UnsupportedEncodingException e) {
+      // Should not happen and ignore.
+    }
+    return encoded;
+  }
+
+  public static String urlDecode(String encoded) {
+    String decoded = encoded;
+    try {
+      decoded = URLDecoder.decode(encoded, StandardCharsets.UTF_8.name());
+    } catch (UnsupportedEncodingException e) {
+      // Should not happen and ignore.
+    }
+    return decoded;
   }
 }

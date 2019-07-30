@@ -765,17 +765,27 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
-  public boolean disableAccount(String accountId) {
+  public boolean disableAccount(String accountId, String migratedToClusterUrl) {
+    Account account = get(accountId);
+    updateMigratedToClusterUrl(account, migratedToClusterUrl);
     // Also need to prevent all existing users in the migration account from logging in after completion of migration.
     setUserStatusInAccount(accountId, false);
-    return setAccountStatus(accountId, AccountStatus.INACTIVE);
+    return setAccountStatusInternal(account, AccountStatus.INACTIVE);
   }
 
   @Override
   public boolean enableAccount(String accountId) {
-    // Also need to prevent all existing users in the migration account from logging in after completion of migration.
+    Account account = get(accountId);
     setUserStatusInAccount(accountId, true);
-    return setAccountStatus(accountId, AccountStatus.ACTIVE);
+    return setAccountStatusInternal(account, AccountStatus.ACTIVE);
+  }
+
+  private void updateMigratedToClusterUrl(Account account, String migratedToClusterUrl) {
+    if (isNotEmpty(migratedToClusterUrl)) {
+      wingsPersistence.update(account,
+          wingsPersistence.createUpdateOperations(Account.class)
+              .set(AccountKeys.migratedToClusterUrl, migratedToClusterUrl));
+    }
   }
 
   private void setUserStatusInAccount(String accountId, boolean enable) {
@@ -794,6 +804,19 @@ public class AccountServiceImpl implements AccountService {
       }
     }
     logger.info("{} users in account {} has been set to status disabled: {}", count, accountId, !enable);
+  }
+
+  @Override
+  public boolean isAccountMigrated(String accountId) {
+    Account account = get(accountId);
+    return AccountStatus.INACTIVE.equals(account.getLicenseInfo().getAccountStatus())
+        && isNotEmpty(account.getMigratedToClusterUrl());
+  }
+
+  @Override
+  public String getMigratedToClusterUrl(String accountId) {
+    Account account = get(accountId);
+    return account.getMigratedToClusterUrl();
   }
 
   @Override
@@ -925,11 +948,14 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public boolean setAccountStatus(String accountId, String accountStatus) {
+    return setAccountStatusInternal(get(accountId), accountStatus);
+  }
+
+  private boolean setAccountStatusInternal(Account account, String accountStatus) {
+    String accountId = account.getUuid();
     if (!AccountStatus.isValid(accountStatus)) {
       throw new WingsException("Invalid account status: " + accountStatus, USER);
     }
-
-    Account account = get(accountId);
 
     LicenseInfo newLicenseInfo = account.getLicenseInfo();
     newLicenseInfo.setAccountStatus(accountStatus);

@@ -69,6 +69,8 @@ public class Account extends Base {
   // It's a transient field and won't be persisted.
   @Transient private boolean forImport;
 
+  @Getter @Setter private String migratedToClusterUrl;
+
   /**
    * If this flag is set, all encryption/decryption activities will go through LOCAL security manager.
    * No VAULT/KMS secret manager can be configured. This helps for accounts whose delegate can't access

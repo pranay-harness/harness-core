@@ -10,6 +10,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
+import static software.wings.utils.Utils.urlDecode;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -69,10 +70,7 @@ import software.wings.service.intfc.UserService;
 import software.wings.utils.AccountPermissionUtils;
 import software.wings.utils.CacheManager;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -1161,16 +1159,6 @@ public class UserResource {
     }
     List<UserGroup> userGroupSummaryList = userGroupService.getUserGroupSummary(userGroups);
     user.setUserGroups(userGroupSummaryList);
-  }
-
-  private String urlDecode(String encoded) {
-    String decoded = encoded;
-    try {
-      decoded = URLDecoder.decode(encoded, StandardCharsets.UTF_8.name());
-    } catch (UnsupportedEncodingException e) {
-      // Should not happen and ignore.
-    }
-    return decoded;
   }
 
   /**

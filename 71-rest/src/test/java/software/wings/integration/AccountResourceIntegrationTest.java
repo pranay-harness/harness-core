@@ -21,6 +21,7 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.User;
 import software.wings.beans.governance.GovernanceConfig;
+import software.wings.utils.Utils;
 
 import java.util.List;
 import javax.ws.rs.client.WebTarget;
@@ -115,7 +116,9 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
 
   private void disableAccount(String accountId, boolean disable) {
     String operation = disable ? "disable" : "enable";
-    WebTarget target = client.target(API_BASE + "/account/" + operation + "?accountId=" + accountId);
+    String migratedToClusterUrl = "https://localhost:9090/api";
+    WebTarget target = client.target(API_BASE + "/account/" + operation + "?accountId=" + accountId
+        + "&migratedTo=" + Utils.urlEncode(migratedToClusterUrl));
     RestResponse<Boolean> restResponse =
         getRequestBuilderWithAuthHeader(target).post(null, new GenericType<RestResponse<Boolean>>() {});
     assertEquals(0, restResponse.getResponseMessages().size());
@@ -126,5 +129,10 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
     GovernanceConfig governanceConfig = governanceConfigService.get(accountId);
     assertNotNull(governanceConfig);
     assertEquals(disable, governanceConfig.isDeploymentFreeze());
+
+    if (disable) {
+      Account account = wingsPersistence.get(Account.class, accountId);
+      assertEquals(migratedToClusterUrl, account.getMigratedToClusterUrl());
+    }
   }
 }

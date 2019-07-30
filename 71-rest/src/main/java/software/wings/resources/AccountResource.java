@@ -3,6 +3,7 @@ package software.wings.resources;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+import static software.wings.utils.Utils.urlDecode;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -89,10 +90,11 @@ public class AccountResource {
   @Path("disable")
   @Timed
   @ExceptionMetered
-  public RestResponse<Boolean> disableAccount(@QueryParam("accountId") String accountId) {
+  public RestResponse<Boolean> disableAccount(
+      @QueryParam("accountId") String accountId, @QueryParam("migratedTo") String migratedToClusterUrl) {
     RestResponse<Boolean> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to disable account");
     if (response == null) {
-      response = new RestResponse<>(accountService.disableAccount(accountId));
+      response = new RestResponse<>(accountService.disableAccount(accountId, urlDecode(migratedToClusterUrl)));
     }
     return response;
   }
