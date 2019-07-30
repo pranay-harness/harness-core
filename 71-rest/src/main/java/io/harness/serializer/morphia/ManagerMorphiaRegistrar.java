@@ -20,6 +20,7 @@ import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.ScriptStateExecutionSummary;
+import software.wings.api.SelectNodeStepExecutionSummary;
 import software.wings.api.SelectedNodeExecutionData;
 import software.wings.api.ServiceArtifactElement;
 import software.wings.api.ServiceElement;
@@ -149,7 +150,7 @@ import software.wings.service.impl.event.AccountEntityEvent;
 import software.wings.service.impl.event.AlertEvent;
 import software.wings.service.impl.event.timeseries.TimeSeriesBatchEventInfo;
 import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
-import software.wings.service.impl.trigger.TriggerServiceImpl;
+import software.wings.service.impl.trigger.TriggerServiceImpl.TriggerIdempotentResult;
 import software.wings.service.impl.yaml.GitCommandCallback;
 import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionWaitRetryCallback;
@@ -171,6 +172,7 @@ import software.wings.sm.states.EcsServiceDeploy;
 import software.wings.sm.states.EcsServiceRollback;
 import software.wings.sm.states.ElkAnalysisState;
 import software.wings.sm.states.EnvState;
+import software.wings.sm.states.EnvState.EnvExecutionResponseData;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.ForkState.ForkStateExecutionData;
 import software.wings.sm.states.HelmDeployState;
@@ -241,7 +243,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     map.put(pkgWings + "api.ScriptStateExecutionData", ScriptStateExecutionData.class);
     map.put(pkgWings + "api.ScriptStateExecutionSummary", ScriptStateExecutionSummary.class);
     map.put(pkgWings + "api.SelectedNodeExecutionData", SelectedNodeExecutionData.class);
-    map.put(pkgWings + "api.SelectNodeStepExecutionSummary", ApprovalState.class);
+    map.put(pkgWings + "api.SelectNodeStepExecutionSummary", SelectNodeStepExecutionSummary.class);
     map.put(pkgWings + "api.ServiceArtifactElement", ServiceArtifactElement.class);
     map.put(pkgWings + "api.ServiceElement", ServiceElement.class);
     map.put(pkgWings + "api.ServiceInstanceIdsParam", ServiceInstanceIdsParam.class);
@@ -367,8 +369,8 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     map.put(pkgWings + "service.impl.event.AlertEvent", AlertEvent.class);
     map.put(pkgWings + "service.impl.event.timeseries.TimeSeriesBatchEventInfo", TimeSeriesBatchEventInfo.class);
     map.put(pkgWings + "service.impl.event.timeseries.TimeSeriesEventInfo", TimeSeriesEventInfo.class);
-    map.put(pkgWings + "service.impl.trigger.TriggerServiceImpl$TriggerIdempotentResult",
-        TriggerServiceImpl.TriggerIdempotentResult.class);
+    map.put(
+        pkgWings + "service.impl.trigger.TriggerServiceImpl$TriggerIdempotentResult", TriggerIdempotentResult.class);
     map.put(pkgWings + "service.impl.WorkflowExecutionUpdate", WorkflowExecutionUpdate.class);
     map.put(pkgWings + "service.impl.yaml.GitCommandCallback", GitCommandCallback.class);
     map.put(pkgWings + "sm.ElementNotifyResponseData", ElementNotifyResponseData.class);
@@ -391,7 +393,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     map.put(pkgWings + "sm.states.EcsServiceRollback", EcsServiceRollback.class);
     map.put(pkgWings + "sm.states.ElkAnalysisState", ElkAnalysisState.class);
     map.put(pkgWings + "sm.states.EnvState", EnvState.class);
-    map.put(pkgWings + "sm.states.EnvState$EnvExecutionResponseData", EnvState.EnvExecutionResponseData.class);
+    map.put(pkgWings + "sm.states.EnvState$EnvExecutionResponseData", EnvExecutionResponseData.class);
     map.put(pkgWings + "sm.states.ForkState", ForkState.class);
     map.put(pkgWings + "sm.states.ForkState$ForkStateExecutionData", ForkStateExecutionData.class);
     map.put(pkgWings + "sm.states.HelmDeployState", HelmDeployState.class);
