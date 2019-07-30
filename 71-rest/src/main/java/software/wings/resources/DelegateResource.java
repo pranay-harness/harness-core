@@ -8,6 +8,7 @@ import static software.wings.common.Constants.ECS_DELEGATE;
 import static software.wings.common.Constants.KUBERNETES_DELEGATE;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
+import static software.wings.service.impl.DelegateServiceImpl.HARNESS_DELEGATE_VALUES_YAML;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -436,6 +437,25 @@ public class DelegateResource {
         .header("Content-Transfer-Encoding", "binary")
         .type("application/zip; charset=binary")
         .header("Content-Disposition", "attachment; filename=" + ECS_DELEGATE + ".tar.gz")
+        .build();
+  }
+
+  @PublicApi
+  @GET
+  @Path("delegate-helm-values-yaml")
+  @Timed
+  @ExceptionMetered
+  public Response downloadDelegateValuesYaml(@Context HttpServletRequest request,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("delegateName") @NotEmpty String delegateName,
+      @QueryParam("delegateProfileId") String delegateProfileId, @QueryParam("token") @NotEmpty String token)
+      throws IOException, TemplateException {
+    downloadTokenService.validateDownloadToken("delegate." + accountId, token);
+    File delegateFile = delegateService.downloadDelegateValuesYamlFile(
+        getManagerUrl(request), getVerificationUrl(request), accountId, delegateName, delegateProfileId);
+    return Response.ok(delegateFile)
+        .header("Content-Transfer-Encoding", "binary")
+        .type("text/plain; charset=UTF-8")
+        .header("Content-Disposition", "attachment; filename=" + HARNESS_DELEGATE_VALUES_YAML + ".yaml")
         .build();
   }
 
