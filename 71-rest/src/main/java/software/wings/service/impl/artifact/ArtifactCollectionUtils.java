@@ -219,13 +219,15 @@ public class ArtifactCollectionUtils {
   }
 
   public String getDockerConfig(String artifactStreamId) {
-    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+    return getDockerConfig(artifactStreamService.get(artifactStreamId));
+  }
+
+  public String getDockerConfig(ArtifactStream artifactStream) {
     if (artifactStream == null) {
       return "";
     }
 
     ImageDetails imageDetails = getDockerImageDetailsInternal(artifactStream, null);
-
     if (isNotBlank(imageDetails.getRegistryUrl()) && isNotBlank(imageDetails.getUsername())
         && isNotBlank(imageDetails.getPassword())) {
       return encodeBase64(format(DOCKER_REGISTRY_CREDENTIAL_TEMPLATE, imageDetails.getRegistryUrl(),

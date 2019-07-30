@@ -71,7 +71,7 @@ public class Artifact extends Base {
   private String description;
   private String errorMessage;
   private ContentStatus contentStatus;
-  private transient Map<String, String> source;
+  private Map<String, String> source;
   private String settingId;
   private String accountId;
   private String artifactStreamType;

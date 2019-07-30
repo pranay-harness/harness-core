@@ -38,7 +38,6 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.infra.InfrastructureDefinition;
-import software.wings.service.impl.MultiArtifactWorkflowExecutionServiceHelper;
 import software.wings.service.impl.SweepingOutputServiceImpl;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -100,9 +99,6 @@ public class PhaseSubWorkflow extends SubWorkflowState {
   @Inject @Transient private transient SweepingOutputService sweepingOutputService;
 
   @Inject @Transient private transient FeatureFlagService featureFlagService;
-  @Inject
-  @Transient
-  private transient MultiArtifactWorkflowExecutionServiceHelper multiArtifactWorkflowExecutionServiceHelper;
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
