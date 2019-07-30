@@ -325,6 +325,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .is24x7Task(true)
             .service_guard_backoff_count(nextBackoffCount)
             .tag(tag)
+            .alertThreshold(getAlertThreshold(cvConfiguration, endMin))
             .build();
     learningEngineAnalysisTask.setAppId(cvConfiguration.getAppId());
     learningEngineAnalysisTask.setUuid(learningTaskId);
@@ -379,6 +380,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .is24x7Task(true)
             .tag(tag)
             .experiment_name(experimentName)
+            .alertThreshold(getAlertThreshold(cvConfiguration, endMin))
             .build();
     learningEngineAnalysisTask.setAppId(cvConfiguration.getAppId());
     learningEngineAnalysisTask.setUuid(learningTaskId);
@@ -629,6 +631,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                       .query(Lists.newArrayList(((LogsCVConfiguration) cvConfiguration).getQuery()))
                       .is24x7Task(true)
                       .cvConfigId(cvConfiguration.getUuid())
+                      .alertThreshold(getAlertThreshold(cvConfiguration, logRecordMinute))
                       .build();
               analysisTask.setAppId(cvConfiguration.getAppId());
               analysisTask.setUuid(taskId);
@@ -658,6 +661,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                         .is24x7Task(true)
                         .cvConfigId(cvConfiguration.getUuid())
                         .experiment_name(experiment.getExperimentName())
+                        .alertThreshold(getAlertThreshold(cvConfiguration, logRecordMinute))
                         .build();
                 expTask.setAppId(cvConfiguration.getAppId());
                 learningEngineService.addLearningEngineExperimentalAnalysisTask(expTask);
@@ -774,6 +778,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                       .query(Lists.newArrayList(((LogsCVConfiguration) cvConfiguration).getQuery()))
                       .is24x7Task(true)
                       .cvConfigId(cvConfiguration.getUuid())
+                      .alertThreshold(getAlertThreshold(cvConfiguration, maxLogRecordL1Minute))
                       .build();
               analysisTask.setAppId(cvConfiguration.getAppId());
               analysisTask.setUuid(taskId);
@@ -802,6 +807,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                         .is24x7Task(true)
                         .cvConfigId(cvConfiguration.getUuid())
                         .experiment_name(experiment.getExperimentName())
+                        .alertThreshold(getAlertThreshold(cvConfiguration, maxLogRecordL1Minute))
                         .build();
                 expTask.setAppId(cvConfiguration.getAppId());
                 learningEngineService.addLearningEngineExperimentalAnalysisTask(expTask);
@@ -921,6 +927,16 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       return learningEngineService.addLearningEngineAnalysisTask(feedbackTask);
     }
     return false;
+  }
+
+  private Double getAlertThreshold(CVConfiguration cvConfiguration, long analysisMin) {
+    Double alertThreshold = null;
+    if (cvConfiguration.isAlertEnabled()
+        && !(analysisMin <= TimeUnit.MILLISECONDS.toMinutes(cvConfiguration.getSnoozeEndTime())
+               && analysisMin >= TimeUnit.MILLISECONDS.toMinutes(cvConfiguration.getSnoozeStartTime()))) {
+      alertThreshold = cvConfiguration.getAlertThreshold();
+    }
+    return alertThreshold;
   }
 
   @Override
@@ -1073,6 +1089,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                       .stateType(logsCVConfiguration.getStateType())
                       .cvConfigId(logsCVConfiguration.getUuid())
                       .analysis_comparison_strategy(logsCVConfiguration.getComparisonStrategy())
+                      .alertThreshold(getAlertThreshold(cvConfiguration, analysisEndMin))
                       .build();
 
               analysisTask.setAppId(logsCVConfiguration.getAppId());
@@ -1123,6 +1140,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                         .cvConfigId(logsCVConfiguration.getUuid())
                         .analysis_comparison_strategy(logsCVConfiguration.getComparisonStrategy())
                         .experiment_name(experiment.getExperimentName())
+                        .alertThreshold(getAlertThreshold(cvConfiguration, analysisEndMin))
                         .build();
                 expTask.setAppId(cvConfiguration.getAppId());
                 expTask.setUuid(taskId);
