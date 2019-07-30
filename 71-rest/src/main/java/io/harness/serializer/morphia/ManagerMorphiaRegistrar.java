@@ -249,7 +249,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     map.put(pkgWings + "api.ServiceInstanceIdsParam", ServiceInstanceIdsParam.class);
     map.put(pkgWings + "api.shellscript.provision.ShellScriptProvisionExecutionData",
         ShellScriptProvisionExecutionData.class);
-    map.put(pkgWings + "artifact.ArtifactFile", ArtifactFile.class);
     map.put(pkgWings + "beans.alert.ArtifactCollectionFailedAlert", ArtifactCollectionFailedAlert.class);
     map.put(pkgWings + "beans.alert.cv.ContinuousVerificationAlertData", ContinuousVerificationAlertData.class);
     map.put(pkgWings + "beans.alert.cv.ContinuousVerificationDataCollectionAlert",
