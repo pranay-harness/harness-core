@@ -24,5 +24,5 @@ public interface CommandUnitExecutorService {
    * @param activityId the activity id
    * @param host       the host
    */
-  void cleanup(String activityId, Host host);
+  default void cleanup(String activityId, Host host) {}
 }
