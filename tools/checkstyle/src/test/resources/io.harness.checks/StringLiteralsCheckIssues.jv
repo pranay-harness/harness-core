@@ -2,6 +2,6 @@ package io.harness.checks;
 
 public class Class {
  public void method() {
-    wingsPersistence.createQuery(Class.class).filter("accountId", "");
+    persistence.createQuery(Class.class).filter("accountId", "");
   }
 }

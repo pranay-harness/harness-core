@@ -11,10 +11,10 @@ public class TestPersistenceMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void register(Map<String, Class> map) {
     // from commons
-    map.put(harnessPackage + "persistence.MorphiaOldClass", MorphiaClass.class);
-    map.put(harnessPackage + "limits.impl.model.RateLimit", RateLimit.class);
+    map.put(pkgHarness + "persistence.MorphiaOldClass", MorphiaClass.class);
+    map.put(pkgHarness + "limits.impl.model.RateLimit", RateLimit.class);
 
     // from api-service
-    map.put(harnessPackage + "globalcontex.AuditGlobalContextData", AuditGlobalContextData.class);
+    map.put(pkgHarness + "globalcontex.AuditGlobalContextData", AuditGlobalContextData.class);
   }
 }

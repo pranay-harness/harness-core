@@ -23,6 +23,7 @@ import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.rest.RestResponse;
+import io.harness.security.EncryptionUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
@@ -34,7 +35,6 @@ import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.SetupScheduler;
-import software.wings.security.encryption.EncryptionUtils;
 import software.wings.service.impl.LicenseUtils;
 
 import java.io.IOException;
