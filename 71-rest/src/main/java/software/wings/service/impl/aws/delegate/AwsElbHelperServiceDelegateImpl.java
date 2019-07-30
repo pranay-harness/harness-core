@@ -1,7 +1,9 @@
 package software.wings.service.impl.aws.delegate;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INIT_TIMEOUT;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
@@ -13,6 +15,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.LogLevel.ERROR;
+import static software.wings.service.impl.aws.model.AwsConstants.FORWARD_LISTENER_ACTION;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -56,6 +59,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.aws.delegate.AwsAsgHelperServiceDelegate;
@@ -651,5 +655,22 @@ public class AwsElbHelperServiceDelegateImpl
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String listenerArn, String region) {
     AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
     return client.describeListeners(new DescribeListenersRequest().withListenerArns(listenerArn));
+  }
+
+  @Override
+  public String getTargetGroupForDefaultAction(Listener listener, ExecutionLogCallback executionLogCallback) {
+    Optional<Action> action = listener.getDefaultActions()
+                                  .stream()
+                                  .filter(listenerAction
+                                      -> isNotEmpty(listenerAction.getTargetGroupArn())
+                                          && FORWARD_LISTENER_ACTION.equalsIgnoreCase(listenerAction.getType()))
+                                  .findFirst();
+
+    if (!action.isPresent()) {
+      String message = format("Did not find any default forward actions for listener: [%s]", listener.getListenerArn());
+      executionLogCallback.saveExecutionLog(message, LogLevel.ERROR);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, message, USER).addParam("message", message);
+    }
+    return action.get().getTargetGroupArn();
   }
 }

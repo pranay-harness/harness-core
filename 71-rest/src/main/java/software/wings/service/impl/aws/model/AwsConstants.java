@@ -9,4 +9,5 @@ public interface AwsConstants {
   String AMI_SETUP_COMMAND_NAME = "AMI Service Setup";
   String AWS_AMI_ALL_PHASE_ROLLBACK_NAME = "Aws Ami All Phase Rollback";
   String PHASE_PARAM = "PHASE_PARAM";
+  String FORWARD_LISTENER_ACTION = "forward";
 }

@@ -1,12 +1,19 @@
 package io.harness.spotinst;
 
 import io.harness.spotinst.model.ElastiGroup;
+import io.harness.spotinst.model.ElastiGroupInstanceHealth;
 
 import java.util.List;
 
 public interface SpotInstHelperServiceDelegate {
   List<ElastiGroup> listAllElastiGroups(String spotInstToken, String spotInstAccountId, String elastiGroupNamePrefix)
       throws Exception;
-  void createElastiGroup(String spotInstToken, String spotInstAccountId, String jsonPayload) throws Exception;
+  ElastiGroup createElastiGroup(String spotInstToken, String spotInstAccountId, String jsonPayload) throws Exception;
   void deleteElastiGroup(String spotInstToken, String spotInstAccountId, String elastiGroupId) throws Exception;
+  void scaleUpElastiGroup(String spotInstToken, String spotInstAccountId, String elastiGroupId, int adjustment)
+      throws Exception;
+  void scaleDownElastiGroup(String spotInstToken, String spotInstAccountId, String elastiGroupId, int adjustment)
+      throws Exception;
+  List<ElastiGroupInstanceHealth> listElastiGroupInstancesHealth(
+      String spotInstToken, String spotInstAccountId, String elastiGroupId) throws Exception;
 }

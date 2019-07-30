@@ -13,6 +13,8 @@ import static java.util.stream.Collectors.toList;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
 import io.harness.spotinst.model.ElastiGroup;
+import io.harness.spotinst.model.ElastiGroupInstanceHealth;
+import io.harness.spotinst.model.SpotInstListElastiGroupInstancesHealthResponse;
 import io.harness.spotinst.model.SpotInstListElastiGroupsResponse;
 import lombok.extern.slf4j.Slf4j;
 import retrofit2.Call;
@@ -74,10 +76,12 @@ public class SpotInstHelperServiceDelegateImpl implements SpotInstHelperServiceD
   }
 
   @Override
-  public void createElastiGroup(String spotInstToken, String spotInstAccountId, String jsonPayload) throws Exception {
+  public ElastiGroup createElastiGroup(String spotInstToken, String spotInstAccountId, String jsonPayload)
+      throws Exception {
     String auth = getAuthToken(spotInstToken);
-    executeRestCall(
+    SpotInstListElastiGroupsResponse spotInstListElastiGroupsResponse = executeRestCall(
         getSpotInstRestClient().createElastiGroup(spotInstContentType, auth, spotInstAccountId, jsonPayload));
+    return spotInstListElastiGroupsResponse.getResponse().getItems().get(0);
   }
 
   @Override
@@ -85,5 +89,31 @@ public class SpotInstHelperServiceDelegateImpl implements SpotInstHelperServiceD
     String auth = getAuthToken(spotInstToken);
     executeRestCall(
         getSpotInstRestClient().deleteElastiGroup(spotInstContentType, auth, spotInstAccountId, elastiGroupId));
+  }
+
+  @Override
+  public void scaleUpElastiGroup(String spotInstToken, String spotInstAccountId, String elastiGroupId, int adjustment)
+      throws Exception {
+    String auth = getAuthToken(spotInstToken);
+    executeRestCall(getSpotInstRestClient().scaleUpElastiGroup(
+        spotInstContentType, auth, spotInstAccountId, elastiGroupId, adjustment));
+  }
+
+  @Override
+  public void scaleDownElastiGroup(String spotInstToken, String spotInstAccountId, String elastiGroupId, int adjustment)
+      throws Exception {
+    String auth = getAuthToken(spotInstToken);
+    executeRestCall(getSpotInstRestClient().scaleDownElastiGroup(
+        spotInstContentType, auth, spotInstAccountId, elastiGroupId, adjustment));
+  }
+
+  @Override
+  public List<ElastiGroupInstanceHealth> listElastiGroupInstancesHealth(
+      String spotInstToken, String spotInstAccountId, String elastiGroupId) throws Exception {
+    String auth = getAuthToken(spotInstToken);
+    SpotInstListElastiGroupInstancesHealthResponse response =
+        executeRestCall(getSpotInstRestClient().listElastiGroupInstancesHealth(
+            spotInstContentType, auth, spotInstAccountId, elastiGroupId));
+    return response.getResponse().getItems();
   }
 }
