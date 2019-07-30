@@ -12,7 +12,7 @@ public class SpotInstDeployTaskParameters extends SpotInstTaskParameters {
 
   public SpotInstDeployTaskParameters(String accountId, String appId, String commandName, String activityId,
       Integer timeoutIntervalInMin, int newElastiGroupDesiredInstances, String workflowExecutionId) {
-    super(accountId, appId, commandName, workflowExecutionId, activityId, timeoutIntervalInMin, SPOT_INST_DEPLOY);
+    super(appId, accountId, activityId, commandName, workflowExecutionId, timeoutIntervalInMin, SPOT_INST_DEPLOY);
     this.newElastiGroupDesiredInstances = newElastiGroupDesiredInstances;
   }
 }

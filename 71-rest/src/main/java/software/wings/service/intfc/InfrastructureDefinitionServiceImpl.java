@@ -12,6 +12,7 @@ import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.PCF;
+import static software.wings.api.DeploymentType.SPOTINST;
 import static software.wings.api.DeploymentType.WINRM;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -182,6 +183,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     deploymentCloudProviderOptions.put(
         WINRM, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS, SettingVariableTypes.AZURE));
     deploymentCloudProviderOptions.put(PCF, asList(SettingVariableTypes.PCF));
+    deploymentCloudProviderOptions.put(SPOTINST, asList(SettingVariableTypes.SPOT_INST));
 
     return deploymentCloudProviderOptions;
   }

@@ -180,6 +180,7 @@ import software.wings.beans.SftpConfig;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SmbConfig;
 import software.wings.beans.SplunkConfig;
+import software.wings.beans.SpotInstConfig;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.Tag;
 import software.wings.beans.TaskType;
@@ -583,6 +584,7 @@ import software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowMetaDTO;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
+import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverMetric;
@@ -1317,5 +1319,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(InfraDefinitionSummary.class, 7217);
     kryo.register(InfrastructureDefinition.Yaml.class, 7218);
     kryo.register(ApprovalState.class, 7219);
+    kryo.register(SpotInstCommandRequest.class, 7220);
+    kryo.register(SpotInstConfig.class, 7221);
   }
 }

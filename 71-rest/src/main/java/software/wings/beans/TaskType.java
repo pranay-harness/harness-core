@@ -65,6 +65,7 @@ import software.wings.delegatetasks.k8s.K8sTask;
 import software.wings.delegatetasks.pcf.PcfCommandTask;
 import software.wings.delegatetasks.servicenow.ServicenowTask;
 import software.wings.delegatetasks.shellscript.provisioner.ShellScriptProvisionTask;
+import software.wings.delegatetasks.spotinst.SpotInstTask;
 import software.wings.delegatetasks.validation.APMValidation;
 import software.wings.delegatetasks.validation.AcrValidation;
 import software.wings.delegatetasks.validation.AlwaysTrueValidation;
@@ -291,6 +292,7 @@ public enum TaskType {
   KUBERNETES_STEADY_STATE_CHECK_TASK(
       TaskGroup.CONTAINER, KubernetesSteadyStateCheckTask.class, KubernetesSteadyStateCheckValidation.class),
   PCF_COMMAND_TASK(TaskGroup.PCF, PcfCommandTask.class, PCFCommandValidation.class),
+  SPOTINST_COMMAND_TASK(TaskGroup.SPOTINST, SpotInstTask.class, ShellScriptApprovalValidation.class),
   ECS_COMMAND_TASK(TaskGroup.AWS, EcsCommandTask.class, AwsConnectionValidation.class),
   COLLABORATION_PROVIDER_TASK(
       TaskGroup.COLLABORATION_PROVIDER, CollaborationProviderTask.class, CollaborationProviderTaskValidation.class),

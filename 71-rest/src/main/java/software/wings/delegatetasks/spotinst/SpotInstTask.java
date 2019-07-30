@@ -16,6 +16,7 @@ import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.spotinst.taskhandler.SpotInstDeployTaskHandler;
 import software.wings.delegatetasks.spotinst.taskhandler.SpotInstSetupTaskHandler;
 import software.wings.delegatetasks.spotinst.taskhandler.SpotInstTaskHandler;
+import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -37,14 +38,15 @@ public class SpotInstTask extends AbstractDelegateRunnableTask {
 
   @Override
   public SpotInstTaskExecutionResponse run(TaskParameters parameters) {
-    if (!(parameters instanceof SpotInstTaskParameters)) {
+    if (!(parameters instanceof SpotInstCommandRequest)) {
       String message =
           format("Unrecognized task params while running spot inst task: [%s]", parameters.getClass().getSimpleName());
       logger.error(message);
       return SpotInstTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).errorMessage(message).build();
     }
 
-    SpotInstTaskParameters spotInstTaskParameters = (SpotInstTaskParameters) parameters;
+    SpotInstCommandRequest spotInstCommandRequest = (SpotInstCommandRequest) parameters;
+    SpotInstTaskParameters spotInstTaskParameters = spotInstCommandRequest.getSpotInstTaskParameters();
     SpotInstTaskHandler handler;
     switch (spotInstTaskParameters.getCommandType()) {
       case SPOT_INST_SETUP: {

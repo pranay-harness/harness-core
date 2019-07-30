@@ -34,7 +34,8 @@ public enum StencilCategory {
   SCRIPTS,
   SUB_WORKFLOW(100, true),
   VERIFICATIONS(2),
-  ECS("Ecs", 0);
+  ECS("Ecs", 0),
+  SPOTINST("Spotinst", 0);
 
   @Getter boolean hidden;
 

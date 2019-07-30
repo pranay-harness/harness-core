@@ -207,7 +207,7 @@ public class ManagerMorphiaClasses {
       LoginSettings.class, GCPUsageReport.class, GCPBillingJobEntity.class, DashboardSettings.class,
       InfrastructureDefinition.class, GcpMarketplaceEvent.class, SupervisedTSThreshold.class, TimeSeriesRawData.class,
       AzureVaultConfig.class, ECSPollingJobEntity.class, ApplicationAccess.class, CloudFormationRollbackConfig.class,
-      SplunkCVConfiguration.class, SegmentGroupEventJobContext.class);
+      SplunkCVConfiguration.class, SegmentGroupEventJobContext.class, SpotInstInfrastructureMapping.class);
 
   public static final Set<Class> dependentClasses =
       ImmutableSet.<Class>of(EncryptionConfig.class, EncryptedRecord.class, ExecutionCapabilityDemander.class);
