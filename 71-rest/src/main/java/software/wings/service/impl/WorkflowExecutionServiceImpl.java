@@ -42,6 +42,8 @@ import static software.wings.beans.ApprovalDetails.Action.REJECT;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.EntityType.DEPLOYMENT;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
+import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY;
+import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_DOCKER_CONFIG_PLACEHOLDER;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
 import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;
 import static software.wings.sm.ExecutionInterruptType.PAUSE_ALL;
@@ -169,11 +171,13 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.WorkflowExecutionServiceImpl.Tree.TreeBuilder;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.BarrierService;
 import software.wings.service.intfc.BarrierService.OrchestrationWorkflowInfo;
@@ -276,12 +280,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private AuthHandler authHandler;
   @Inject private SweepingOutputService sweepingOutputService;
   @Inject private PreDeploymentChecks preDeploymentChecks;
-
   @Inject private AlertService alertService;
   @Inject private WorkflowServiceHelper workflowServiceHelper;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private MultiArtifactWorkflowExecutionServiceHelper multiArtifactWorkflowExecutionServiceHelper;
+  @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private ArtifactCollectionUtils artifactCollectionUtils;
 
   @Inject @RateLimitCheck private PreDeploymentChecker deployLimitChecker;
   @Inject @ServiceInstanceUsage private PreDeploymentChecker siUsageChecker;
@@ -1542,29 +1547,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   private void populateArtifacts(WorkflowExecution workflowExecution, WorkflowStandardParams stdParams,
       Set<String> keywords, ExecutionArgs executionArgs, String accountId) {
-    // set artifacts in executionArgs
-    // TODO: filter for services
-    // check if artifact var exits in workflow
     List<ArtifactVariable> artifactVariables = executionArgs.getArtifactVariables();
-    List<Artifact> artifacts = new ArrayList<>();
-    if (isNotEmpty(artifactVariables)) {
-      for (ArtifactVariable variable : artifactVariables) {
-        Artifact artifact = artifactService.get(accountId, variable.getValue());
-        if (artifact == null) {
-          throw new InvalidRequestException(
-              format("Unable to get artifact for artifact variable: [%s]", variable.getName()), USER);
-        }
-        artifacts.add(artifact);
-      }
-    }
-    executionArgs.setArtifacts(artifacts); // todo: artifacts distinct by key
-    workflowExecution.setArtifacts(artifacts); // todo: consolidated workflow ids should we filter - go over all
+    List<Artifact> filteredArtifacts = multiArtifactWorkflowExecutionServiceHelper.filterArtifactsForExecution(
+        artifactVariables, workflowExecution, accountId);
+
+    executionArgs.setArtifacts(filteredArtifacts);
+    workflowExecution.setArtifacts(filteredArtifacts);
 
     List<String> serviceIds =
         isEmpty(workflowExecution.getServiceIds()) ? new ArrayList<>() : workflowExecution.getServiceIds();
-
-    List<Artifact> filteredArtifacts = multiArtifactWorkflowExecutionServiceHelper.filterArtifactsForExecution(
-        artifactVariables, workflowExecution, accountId);
     if (isNotEmpty(filteredArtifacts)) {
       executionArgs.setArtifactIdNames(
           filteredArtifacts.stream().collect(toMap(Artifact::getUuid, Artifact::getDisplayName)));
@@ -1573,18 +1564,26 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         artifact.setCreatedBy(null);
         artifact.setLastUpdatedBy(null);
         artifact.setServiceIds(artifactStreamServiceBindingService.listServiceIds(artifact.getArtifactStreamId()));
+
+        Map<String, String> source =
+            artifactStreamService.fetchArtifactSourceProperties(accountId, artifact.getArtifactStreamId());
+        if (!source.containsKey(ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY)
+            || ARTIFACT_SOURCE_DOCKER_CONFIG_PLACEHOLDER.equals(source.get(ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY))) {
+          source.put(ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY,
+              artifactCollectionUtils.getDockerConfig(artifact.getArtifactStreamId()));
+        }
+        artifact.setSource(source);
+
         keywords.add(artifact.getArtifactSourceName());
         keywords.add(artifact.getDescription());
         keywords.add(artifact.getRevision());
         keywords.add(artifact.getBuildNo());
       });
     }
-    workflowExecution.setArtifacts(filteredArtifacts);
 
     Set<String> serviceIdsSet = new HashSet<>();
     List<ServiceElement> services = new ArrayList<>();
 
-    // todo: check if this logic is needed
     if (isNotEmpty(serviceIds)) {
       for (String serviceId : serviceIds) {
         if (serviceIdsSet.contains(serviceId)) {
@@ -1595,11 +1594,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         ServiceElement se = new ServiceElement();
         MapperUtils.mapObject(service, se);
         services.add(se);
-        services.add(se);
         keywords.add(se.getName());
       }
     }
-    // Set the services in the context
+
+    // Set the services in the context.
     stdParams.setServices(services);
   }
 
