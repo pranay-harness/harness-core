@@ -150,7 +150,7 @@ public class IndexManager {
   public static void updateMovedClasses(
       AdvancedDatastore primaryDatastore, Map<String, Class> morphiaInterfaceImplementers) {
     for (Entry<String, Class> entry : morphiaInterfaceImplementers.entrySet()) {
-      final String target = entry.getValue().getCanonicalName();
+      final String target = entry.getValue().getName();
       if (!entry.getKey().equals(target)) {
         Query<MorphiaMove> query =
             primaryDatastore.createQuery(MorphiaMove.class).filter(MorphiaMoveKeys.target, target);
