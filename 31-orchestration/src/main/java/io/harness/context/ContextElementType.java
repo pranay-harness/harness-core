@@ -99,6 +99,8 @@ public enum ContextElementType {
 
   PCF_INSTANCE,
 
+  SPOTINST_SERVICE_SETUP,
+
   ARTIFACT,
 
   /**

@@ -18,6 +18,7 @@ import static software.wings.sm.states.pcf.MapRouteState.PCF_MAP_ROUTE_COMMAND;
 import static software.wings.sm.states.pcf.PcfDeployState.PCF_RESIZE_COMMAND;
 import static software.wings.sm.states.pcf.PcfSetupState.PCF_SETUP_COMMAND;
 import static software.wings.sm.states.pcf.PcfSwitchBlueGreenRoutes.PCF_BG_SWAP_ROUTE_COMMAND;
+import static software.wings.sm.states.spotinst.SpotInstServiceSetup.SPOTINST_SERVICE_SETUP_COMMAND;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import lombok.AllArgsConstructor;
@@ -49,6 +50,7 @@ public class CommandUnitDetails {
     KUBERNETES_STEADY_STATE_CHECK(KUBERNETES_STEADY_STATE_CHECK_COMMAND_NAME),
     ECS_STEADY_STATE_CHECK(ECS_STEADY_STATE_CHECK_COMMAND_NAME),
     PCF_SETUP(PCF_SETUP_COMMAND),
+    SPOTINST_SETUP(SPOTINST_SERVICE_SETUP_COMMAND),
     PCF_RESIZE(PCF_RESIZE_COMMAND),
     PCF_MAP_ROUTE(PCF_MAP_ROUTE_COMMAND),
     PCF_BG_SWAP_ROUTE(PCF_BG_SWAP_ROUTE_COMMAND),

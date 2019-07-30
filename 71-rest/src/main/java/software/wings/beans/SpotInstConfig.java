@@ -1,12 +1,13 @@
 package software.wings.beans;
 
-import static io.harness.delegate.task.mixin.IgnoreValidationCapabilityGenerator.buildIgnoreValidationCapability;
-import static java.util.Collections.singletonList;
-
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
+import io.harness.encryption.Encrypted;
+import io.harness.spotinst.model.SpotInstConstants;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -20,6 +21,7 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.CollaborationProviderYaml;
 
+import java.util.Arrays;
 import java.util.List;
 
 @JsonTypeName("SPOT_INST")
@@ -27,9 +29,9 @@ import java.util.List;
 @Builder
 @ToString(exclude = "spotInstToken")
 @EqualsAndHashCode(callSuper = false)
-public class SpotInstConfig extends SettingValue implements EncryptableSetting {
+public class SpotInstConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
   @NotEmpty @SchemaIgnore private String accountId;
-  private char[] spotInstToken;
+  @Encrypted private char[] spotInstToken;
   private String spotInstAccountId;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedSpotInstToken;
 
@@ -51,9 +53,11 @@ public class SpotInstConfig extends SettingValue implements EncryptableSetting {
     return ResourceType.COLLABORATION_PROVIDER.name();
   }
 
+  // It is expected to fail with 401, unauthorized access
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return singletonList(buildIgnoreValidationCapability());
+    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+        SpotInstConstants.spotInstBaseUrl));
   }
 
   @Data

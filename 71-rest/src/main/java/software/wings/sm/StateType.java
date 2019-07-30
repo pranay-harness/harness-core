@@ -68,6 +68,7 @@ import static software.wings.stencils.StencilCategory.FLOW_CONTROLS;
 import static software.wings.stencils.StencilCategory.KUBERNETES;
 import static software.wings.stencils.StencilCategory.OTHERS;
 import static software.wings.stencils.StencilCategory.PROVISIONERS;
+import static software.wings.stencils.StencilCategory.SPOTINST;
 import static software.wings.stencils.StencilCategory.VERIFICATIONS;
 
 import com.google.common.base.Charsets;
@@ -179,6 +180,7 @@ import software.wings.sm.states.provision.CloudFormationRollbackStackState;
 import software.wings.sm.states.provision.DestroyTerraformProvisionState;
 import software.wings.sm.states.provision.ShellScriptProvisionState;
 import software.wings.sm.states.provision.TerraformRollbackState;
+import software.wings.sm.states.spotinst.SpotInstServiceSetup;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
 
@@ -445,6 +447,9 @@ public enum StateType implements StateTypeDescriptor {
 
   ECS_SERVICE_SETUP(EcsServiceSetup.class, ECS, WorkflowServiceHelper.ECS_SERVICE_SETUP, Lists.newArrayList(AWS_ECS),
       asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
+
+  SPOTINST_SETUP(SpotInstServiceSetup.class, SPOTINST, WorkflowServiceHelper.SPOTINST_SETUP,
+      asList(InfrastructureMappingType.SPOTINST), asList(PhaseStepType.SPOTINST_SETUP), ORCHESTRATION_STENCILS),
 
   ECS_SERVICE_SETUP_ROLLBACK(EcsSetupRollback.class, ECS, StateType.ROLLBACK_ECS_SETUP, Lists.newArrayList(AWS_ECS),
       asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),

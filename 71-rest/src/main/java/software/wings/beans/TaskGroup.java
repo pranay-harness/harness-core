@@ -37,6 +37,7 @@ public enum TaskGroup {
   HELM,
   COLLABORATION_PROVIDER,
   PCF,
+  SPOTINST,
   APM,
   LOG,
   CLOUD_FORMATION,
