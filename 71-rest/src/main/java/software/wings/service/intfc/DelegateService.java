@@ -113,4 +113,7 @@ public interface DelegateService extends OwnedByAccount {
   Delegate updateHeartbeatForDelegateWithPollingEnabled(Delegate delegate);
 
   Delegate handleEcsDelegateRequest(Delegate delegate);
+
+  File downloadDelegateValuesYamlFile(String managerHost, String verificationUrl, String accountId, String delegateName,
+      String delegateProfile) throws IOException, TemplateException;
 }

@@ -207,6 +207,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   private static final String DELIMITER = "_";
   public static final String ECS = "ECS";
 
+  public static final String HARNESS_DELEGATE_VALUES_YAML = "harness-delegate-values";
+
   static {
     cfg.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
   }
@@ -946,6 +948,29 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     compressGzipFile(kubernetesDelegateFile, gzipKubernetesDelegateFile);
 
     return gzipKubernetesDelegateFile;
+  }
+
+  @Override
+  public File downloadDelegateValuesYamlFile(String managerHost, String verificationUrl, String accountId,
+      String delegateName, String delegateProfile) throws IOException, TemplateException {
+    String version;
+
+    if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
+      List<String> delegateVersions = accountService.getDelegateConfiguration(accountId).getDelegateVersions();
+      version = delegateVersions.get(delegateVersions.size() - 1);
+    } else {
+      version = "0.0.0";
+    }
+
+    ImmutableMap<String, String> params = getJarAndScriptRunTimeParamMap(
+        accountId, version, managerHost, verificationUrl, delegateName, delegateProfile == null ? "" : delegateProfile);
+
+    File yaml = File.createTempFile(HARNESS_DELEGATE_VALUES_YAML, ".yaml");
+    try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(yaml), UTF_8)) {
+      cfg.getTemplate("delegate-helm-values.yaml.ftl").process(params, fileWriter);
+    }
+
+    return yaml;
   }
 
   @Override
