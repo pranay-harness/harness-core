@@ -111,7 +111,14 @@ public interface AccountService {
    * Once the account migration completed. All existing delegates belonging to this account will be redirected to the
    * new cluster that the account has been migrated into.
    */
-  boolean disableAccount(String accountId);
+  boolean disableAccount(String accountId, String migratedToClusterUrl);
+
+  /**
+   * If an account is inactivated and a 'migratedToClusterUrl' field is set, the the account has been migrated.
+   */
+  boolean isAccountMigrated(String accountId);
+
+  String getMigratedToClusterUrl(String accountId);
 
   boolean isCommunityAccount(String accountId);
 
