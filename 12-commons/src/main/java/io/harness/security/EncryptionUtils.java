@@ -1,4 +1,4 @@
-package software.wings.security.encryption;
+package io.harness.security;
 
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;

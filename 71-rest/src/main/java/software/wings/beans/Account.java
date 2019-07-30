@@ -8,6 +8,8 @@ import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.encryption.Encrypted;
+import io.harness.security.EncryptionInterface;
+import io.harness.security.SimpleEncryption;
 import io.harness.validation.Create;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -20,8 +22,6 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.security.authentication.AuthenticationMechanism;
-import software.wings.security.encryption.EncryptionInterface;
-import software.wings.security.encryption.SimpleEncryption;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;

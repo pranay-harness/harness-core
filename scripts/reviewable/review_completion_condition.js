@@ -18,7 +18,6 @@ const discussionBlockers = _(review.discussions)
 
 let pendingReviewers = _(discussionBlockers)
   .map(user => _.pick(user, 'username'))
-  .concat(review.pullRequest.requestedReviewers)
   .value();
 
 const required = _.pluck(review.pullRequest.assignees, 'username');
