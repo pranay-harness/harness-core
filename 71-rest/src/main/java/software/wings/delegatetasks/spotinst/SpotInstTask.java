@@ -17,6 +17,7 @@ import software.wings.delegatetasks.spotinst.taskhandler.SpotInstDeployTaskHandl
 import software.wings.delegatetasks.spotinst.taskhandler.SpotInstSetupTaskHandler;
 import software.wings.delegatetasks.spotinst.taskhandler.SpotInstTaskHandler;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -25,6 +26,7 @@ import java.util.function.Supplier;
 public class SpotInstTask extends AbstractDelegateRunnableTask {
   @Inject private SpotInstSetupTaskHandler setupTaskHandler;
   @Inject private SpotInstDeployTaskHandler deployTaskHandler;
+  @Inject private EncryptionService encryptionService;
 
   public SpotInstTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {
@@ -47,6 +49,9 @@ public class SpotInstTask extends AbstractDelegateRunnableTask {
 
     SpotInstCommandRequest spotInstCommandRequest = (SpotInstCommandRequest) parameters;
     SpotInstTaskParameters spotInstTaskParameters = spotInstCommandRequest.getSpotInstTaskParameters();
+    encryptionService.decrypt(spotInstCommandRequest.getAwsConfig(), spotInstCommandRequest.getAwsEncryptionDetails());
+    encryptionService.decrypt(
+        spotInstCommandRequest.getSpotInstConfig(), spotInstCommandRequest.getSpotinstEncryptionDetails());
     SpotInstTaskHandler handler;
     switch (spotInstTaskParameters.getCommandType()) {
       case SPOT_INST_SETUP: {
@@ -64,6 +69,7 @@ public class SpotInstTask extends AbstractDelegateRunnableTask {
         return SpotInstTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).errorMessage(message).build();
       }
     }
-    return handler.executeTask(spotInstTaskParameters);
+    return handler.executeTask(
+        spotInstTaskParameters, spotInstCommandRequest.getSpotInstConfig(), spotInstCommandRequest.getAwsConfig());
   }
 }

@@ -50,4 +50,5 @@ public interface AwsElbHelperServiceDelegate {
       String stageListenerArn, String region);
   DescribeListenersResult describeListenerResult(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String prodListenerArn, String region);
+  String getTargetGroupForDefaultAction(Listener listener, ExecutionLogCallback executionLogCallback);
 }
