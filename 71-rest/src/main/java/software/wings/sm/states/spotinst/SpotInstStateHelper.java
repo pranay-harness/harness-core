@@ -144,6 +144,7 @@ public class SpotInstStateHelper {
             .targetListenerPort(serviceSetup.getTargetListenerPort())
             .targetListenerProtocol(serviceSetup.getTargetListenerProtocol())
             .image(artifact.getRevision())
+            .awsRegion(spotInstInfrastructureMapping.getAwsRegion())
             .build();
 
     SpotInstCommandRequest commandRequest = SpotInstCommandRequest.builder()

@@ -15,6 +15,7 @@ public class SpotInstTaskParameters implements TaskParameters {
   private String workflowExecutionId;
   private Integer timeoutIntervalInMin;
   @NotEmpty private SpotInstTaskType commandType;
+  @NotEmpty private String awsRegion;
 
   public enum SpotInstTaskType { SPOT_INST_SETUP, SPOT_INST_DEPLOY }
 }

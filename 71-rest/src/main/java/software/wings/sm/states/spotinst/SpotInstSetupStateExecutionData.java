@@ -1,7 +1,5 @@
 package software.wings.sm.states.spotinst;
 
-import com.google.common.collect.Maps;
-
 import io.harness.delegate.beans.ResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +7,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.api.ExecutionDataValue;
-import software.wings.api.pcf.PcfSetupExecutionSummary;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.sm.StateExecutionData;
 
@@ -21,6 +18,9 @@ import java.util.Map;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class SpotInstSetupStateExecutionData extends StateExecutionData implements ResponseData {
+  private String activityId;
+  private String elastiGroupId;
+  private String elastiGroupName;
   private String serviceId;
   private String envId;
   private String infraMappingId;
@@ -29,6 +29,7 @@ public class SpotInstSetupStateExecutionData extends StateExecutionData implemen
   private boolean useCurrentRunningInstanceCount;
   private Integer currentRunningInstanceCount;
   private boolean rollback;
+
   private SpotInstCommandRequest spotinstCommandRequest;
 
   @Override
@@ -42,7 +43,7 @@ public class SpotInstSetupStateExecutionData extends StateExecutionData implemen
   }
 
   private Map<String, ExecutionDataValue> getInternalExecutionDetails() {
-    Map<String, ExecutionDataValue> executionDetails = Maps.newLinkedHashMap();
+    Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     // putting activityId is very important, as without it UI wont make call to fetch commandLogs that are shown
     // in activity window
     putNotNull(executionDetails, "activityId",
@@ -50,14 +51,16 @@ public class SpotInstSetupStateExecutionData extends StateExecutionData implemen
             .value(spotinstCommandRequest.getSpotInstTaskParameters().getActivityId())
             .displayName("Activity Id")
             .build());
+    putNotNull(executionDetails, "elastiGroupId",
+        ExecutionDataValue.builder().value(elastiGroupId).displayName("Elasti Group ID").build());
+    putNotNull(executionDetails, "elastiGroupName",
+        ExecutionDataValue.builder().value(elastiGroupName).displayName("Elasti Group Name").build());
 
     return executionDetails;
   }
 
   @Override
-  public PcfSetupExecutionSummary getStepExecutionSummary() {
-    return PcfSetupExecutionSummary.builder()
-        .maxInstanceCount(useCurrentRunningInstanceCount ? currentRunningInstanceCount : maxInstanceCount)
-        .build();
+  public SpotInstSetupExecutionSummary getStepExecutionSummary() {
+    return SpotInstSetupExecutionSummary.builder().build();
   }
 }

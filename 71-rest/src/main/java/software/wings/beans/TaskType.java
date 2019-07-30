@@ -292,7 +292,7 @@ public enum TaskType {
   KUBERNETES_STEADY_STATE_CHECK_TASK(
       TaskGroup.CONTAINER, KubernetesSteadyStateCheckTask.class, KubernetesSteadyStateCheckValidation.class),
   PCF_COMMAND_TASK(TaskGroup.PCF, PcfCommandTask.class, PCFCommandValidation.class),
-  SPOTINST_COMMAND_TASK(TaskGroup.SPOTINST, SpotInstTask.class, ShellScriptApprovalValidation.class),
+  SPOTINST_COMMAND_TASK(TaskGroup.SPOTINST, SpotInstTask.class, AlwaysTrueValidation.class),
   ECS_COMMAND_TASK(TaskGroup.AWS, EcsCommandTask.class, AwsConnectionValidation.class),
   COLLABORATION_PROVIDER_TASK(
       TaskGroup.COLLABORATION_PROVIDER, CollaborationProviderTask.class, CollaborationProviderTaskValidation.class),
