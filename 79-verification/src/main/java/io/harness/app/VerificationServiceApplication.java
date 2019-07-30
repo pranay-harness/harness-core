@@ -64,6 +64,7 @@ import io.harness.mongo.PersistenceMorphiaClasses;
 import io.harness.persistence.HPersistence;
 import io.harness.resources.LogVerificationResource;
 import io.harness.scheduler.PersistentScheduler;
+import io.harness.scheduler.ServiceGuardAccountPoller;
 import io.harness.scheduler.WorkflowVerificationTaskPoller;
 import io.harness.security.VerificationServiceAuthenticationFilter;
 import io.harness.serializer.JsonSubtypeResolver;
@@ -300,7 +301,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
       // and they will initialize the jobs.
       if (acquiredLock != null) {
         VerificationJob.removeJob(jobScheduler);
-        ServiceGuardMainJob.addJob(jobScheduler);
+        ServiceGuardMainJob.removeJob(jobScheduler);
         VerificationMetricJob.removeJob(jobScheduler);
         UsageMetricsJob.addJob(jobScheduler);
       }
@@ -315,5 +316,6 @@ public class VerificationServiceApplication extends Application<VerificationServ
 
   private void initializeServiceTaskPoll(Injector injector) {
     injector.getInstance(WorkflowVerificationTaskPoller.class).scheduleTaskPoll();
+    injector.getInstance(ServiceGuardAccountPoller.class).scheduleAccountPolling();
   }
 }
