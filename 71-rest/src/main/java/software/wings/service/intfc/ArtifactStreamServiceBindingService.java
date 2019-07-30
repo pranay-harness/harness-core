@@ -22,9 +22,9 @@ public interface ArtifactStreamServiceBindingService extends OwnedByArtifactStre
 
   ArtifactStreamBinding get(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String name);
 
-  List<ServiceVariable> getServiceVariables(String appId, String serviceId);
+  List<ServiceVariable> fetchArtifactServiceVariables(String appId, String serviceId);
 
-  List<ServiceVariable> getServiceVariablesByName(String appId, String serviceId, String name);
+  List<ServiceVariable> fetchArtifactServiceVariableByName(String appId, String serviceId, String name);
 
   /**
    * Create artifact stream service binding.

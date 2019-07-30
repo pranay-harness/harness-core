@@ -147,19 +147,24 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
                   .build());
           throw e;
         }
-      } else {
-        logger.error("Error while executing command", e);
         logService.save(context.getAccountId(),
             logBuilder.withLogLevel(ERROR)
-                .withLogLine("Command execution failed")
+                .withLogLine("Command execution failed: Reason:" + messageList.get(0).getMessage())
                 .withExecutionResult(commandExecutionStatus)
                 .build());
-        throw new WingsException(ErrorCode.UNKNOWN_ERROR, e);
+        throw e;
+      } else {
+        logService.save(context.getAccountId(),
+            logBuilder.withLogLevel(ERROR)
+                .withLogLine("Command execution failed. Reason:" + e.getMessage())
+                .withExecutionResult(commandExecutionStatus)
+                .build());
+        throw e;
       }
     } catch (Exception e) {
       logService.save(context.getAccountId(),
           logBuilder.withLogLevel(ERROR)
-              .withLogLine("Command execution failed")
+              .withLogLine("Command execution failed. Reason: " + e.getMessage())
               .withExecutionResult(commandExecutionStatus)
               .build());
       throw new WingsException(ErrorCode.UNKNOWN_ERROR, e);

@@ -610,9 +610,7 @@ public class CommandState extends State {
         artifactStreamAttributes.setArtifactType(service.getArtifactType());
         artifactStreamAttributesMap.put(artifact.getUuid(), artifactStreamAttributes);
 
-        // todo: check if this is needed
-        //        commandExecutionContextBuilder.withArtifactFiles(artifact.getArtifactFiles());
-        //        executionDataBuilder.withArtifactName(artifact.getDisplayName()).withActivityId(artifact.getUuid());
+        artifact.setArtifactFiles(artifactService.fetchArtifactFiles(artifact.getUuid()));
       }
       commandExecutionContextBuilder.withArtifactStreamAttributesMap(artifactStreamAttributesMap);
       commandExecutionContextBuilder.withArtifactServerEncryptedDataDetailsMap(artifactServerEncryptedDataDetailsMap);

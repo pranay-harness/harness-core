@@ -94,7 +94,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
     }
 
     // check if artifact variable being updated exists
-    List<ServiceVariable> variables = getServiceVariablesByName(appId, serviceId, name);
+    List<ServiceVariable> variables = fetchArtifactServiceVariableByName(appId, serviceId, name);
     if (isEmpty(variables)) {
       throw new InvalidRequestException("Artifact stream binding does not exist", USER);
     }
@@ -102,7 +102,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
     // check if new artifact variable name provided is unique within the service
     if (!name.equals(artifactStreamBinding.getName())) {
       List<ServiceVariable> collidingVariables =
-          getServiceVariablesByName(appId, serviceId, artifactStreamBinding.getName());
+          fetchArtifactServiceVariableByName(appId, serviceId, artifactStreamBinding.getName());
       if (isNotEmpty(collidingVariables)) {
         throw new InvalidRequestException(
             format("Artifact variable with name [%s] already exists in service", artifactStreamBinding.getName()),
@@ -134,7 +134,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
       throw new InvalidRequestException("Service does not exist", USER);
     }
 
-    List<ServiceVariable> variables = getServiceVariablesByName(appId, serviceId, name);
+    List<ServiceVariable> variables = fetchArtifactServiceVariableByName(appId, serviceId, name);
     if (isEmpty(variables)) {
       throw new InvalidRequestException("Artifact stream binding does not exist", USER);
     }
@@ -144,7 +144,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
 
   @Override
   public List<ArtifactStreamBinding> list(@NotEmpty String appId, @NotEmpty String serviceId) {
-    List<ServiceVariable> variables = getServiceVariables(appId, serviceId);
+    List<ServiceVariable> variables = fetchArtifactServiceVariables(appId, serviceId);
     return variables.stream()
         .map(variable -> {
           List<ArtifactStreamSummary> artifactStreams = new ArrayList<>();
@@ -175,7 +175,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
   }
 
   private ArtifactStreamBinding getInternal(String appId, String serviceId, String name) {
-    List<ServiceVariable> variables = getServiceVariablesByName(appId, serviceId, name);
+    List<ServiceVariable> variables = fetchArtifactServiceVariableByName(appId, serviceId, name);
     if (isEmpty(variables)) {
       return null;
     }
@@ -197,7 +197,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
   }
 
   @Override
-  public List<ServiceVariable> getServiceVariables(String appId, String serviceId) {
+  public List<ServiceVariable> fetchArtifactServiceVariables(String appId, String serviceId) {
     return serviceVariableService.list(aPageRequest()
                                            .addFilter(ServiceVariableKeys.appId, Operator.EQ, appId)
                                            .addFilter(ServiceVariableKeys.entityType, Operator.EQ, EntityType.SERVICE)
@@ -207,7 +207,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
   }
 
   @Override
-  public List<ServiceVariable> getServiceVariablesByName(String appId, String serviceId, String name) {
+  public List<ServiceVariable> fetchArtifactServiceVariableByName(String appId, String serviceId, String name) {
     return serviceVariableService.list(aPageRequest()
                                            .addFilter(ServiceVariableKeys.appId, Operator.EQ, appId)
                                            .addFilter(ServiceVariableKeys.entityType, Operator.EQ, EntityType.SERVICE)
@@ -307,7 +307,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
       return service.getArtifactStreamIds();
     }
 
-    List<ServiceVariable> serviceVariables = getServiceVariables(service.getAppId(), service.getUuid());
+    List<ServiceVariable> serviceVariables = fetchArtifactServiceVariables(service.getAppId(), service.getUuid());
     if (isEmpty(serviceVariables)) {
       return new ArrayList<>();
     }
@@ -452,7 +452,6 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
     if (GLOBAL_APP_ID.equals(appId)) {
       return getService(artifactStreamId, throwException);
     }
-
     return getService(listServices(appId, artifactStreamId), artifactStreamId, throwException);
   }
 
