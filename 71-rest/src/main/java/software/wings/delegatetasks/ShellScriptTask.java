@@ -18,6 +18,7 @@ import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.core.local.executors.ShellExecutorFactory;
 import software.wings.core.ssh.executors.ScriptExecutor;
 import software.wings.core.ssh.executors.ScriptProcessExecutor;
+import software.wings.core.ssh.executors.ScriptSshExecutor;
 import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.core.winrm.executors.WinRmExecutor;
@@ -81,6 +82,8 @@ public class ShellScriptTask extends AbstractDelegateRunnableTask {
           return executor.executeCommandString(parameters.getScript(), items);
         } catch (Exception e) {
           throw new WingsException(e);
+        } finally {
+          ScriptSshExecutor.evictAndDisconnectCachedSession(parameters.getActivityId(), parameters.getHost());
         }
       }
       case WINRM: {

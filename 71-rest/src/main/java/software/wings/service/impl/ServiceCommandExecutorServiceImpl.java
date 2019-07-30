@@ -96,16 +96,11 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
         command.getCommandUnits().add(new CleanupPowerShellCommandUnit());
       }
 
-      CommandExecutionStatus commandExecutionStatus = executeShellCommand(commandUnitExecutorService, command, context);
+      return executeShellCommand(commandUnitExecutorService, command, context);
+    } finally {
       if (!context.isExecuteOnDelegate()) {
         commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
       }
-      return commandExecutionStatus;
-    } catch (Exception ex) {
-      if (!context.isExecuteOnDelegate()) {
-        commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
-      }
-      throw ex;
     }
   }
   private List<CommandUnit> getFlattenCommandUnitList(Command command) {

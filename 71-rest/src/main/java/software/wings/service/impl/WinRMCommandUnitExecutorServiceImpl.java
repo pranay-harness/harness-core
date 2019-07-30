@@ -27,7 +27,6 @@ import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.InitPowerShellCommandUnit;
 import software.wings.beans.command.ShellCommandExecutionContext;
-import software.wings.beans.infrastructure.Host;
 import software.wings.core.winrm.executors.WinRmExecutor;
 import software.wings.core.winrm.executors.WinRmExecutorFactory;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
@@ -48,9 +47,6 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
   @Inject private TimeLimiter timeLimiter;
   @Inject private Injector injector;
   @Inject private WinRmExecutorFactory winRmExecutorFactory;
-
-  @Override
-  public void cleanup(String activityId, Host host) {}
 
   @Override
   public CommandExecutionStatus execute(CommandUnit commandUnit, CommandExecutionContext context) {

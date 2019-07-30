@@ -16,7 +16,6 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit;
-import software.wings.beans.infrastructure.Host;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.CommandUnitExecutorService;
 
@@ -37,11 +36,6 @@ public class CodeDeployCommandUnitExecutorServiceImpl implements CommandUnitExec
   @Inject private TimeLimiter timeLimiter;
 
   @Inject private Injector injector;
-
-  @Override
-  public void cleanup(String activityId, Host host) {
-    // TODO::
-  }
 
   @Override
   public CommandExecutionStatus execute(CommandUnit commandUnit, CommandExecutionContext context) {
