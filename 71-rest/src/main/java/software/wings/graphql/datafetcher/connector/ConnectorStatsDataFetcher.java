@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher.connector;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
@@ -45,7 +46,8 @@ public class ConnectorStatsDataFetcher extends SettingsAttributeStatsDataFetcher
   protected Query populateFilters(
       WingsPersistence wingsPersistence, String accountId, List<QLConnectorFilter> filters, Class entityClass) {
     Query query = super.populateFilters(wingsPersistence, accountId, filters, entityClass);
-    query.filter(SettingAttributeKeys.category, SettingCategory.CONNECTOR);
+    query.field(SettingAttributeKeys.category)
+        .in(Lists.newArrayList(SettingCategory.CONNECTOR, SettingCategory.HELM_REPO));
     return query;
   }
 
