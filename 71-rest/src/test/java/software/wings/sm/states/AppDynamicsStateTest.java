@@ -169,7 +169,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
 
     when(metricAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
-             StateType.APP_DYNAMICS, appId, workflowId, serviceId, infraMappingId))
+             StateType.APP_DYNAMICS, appId, workflowId, serviceId, infraMappingId, environment.getUuid()))
         .thenReturn(workflowExecutionId);
     return spyAppDynamicsState;
   }
@@ -228,7 +228,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     doReturn(serviceId).when(spyAppDynamicsState).getPhaseServiceId(executionContext);
 
     when(metricAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
-             StateType.APP_DYNAMICS, appId, workflowId, serviceId, infraMappingId))
+             StateType.APP_DYNAMICS, appId, workflowId, serviceId, infraMappingId, environment.getUuid()))
         .thenReturn(workflowExecutionId);
     when(executionContext.renderExpression("${workflow.variables.AppDynamics_Server}"))
         .thenReturn(settingAttribute.getUuid());

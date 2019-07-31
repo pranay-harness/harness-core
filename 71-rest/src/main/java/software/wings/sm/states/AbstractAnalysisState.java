@@ -1,8 +1,6 @@
 package software.wings.sm.states;
 
 import static io.harness.beans.DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT;
-import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
@@ -29,10 +27,6 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.PageRequest;
-import io.harness.beans.PageResponse;
-import io.harness.beans.SearchFilter.Operator;
-import io.harness.beans.SortOrder.OrderType;
 import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
@@ -61,7 +55,6 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
@@ -108,6 +101,7 @@ import software.wings.sm.states.k8s.K8sStateHelper;
 import software.wings.stencils.DefaultValue;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -395,63 +389,57 @@ public abstract class AbstractAnalysisState extends State {
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
+    String phaseInfraMappingId = getPhaseInfraMappingId(context);
 
-    final PageRequest<WorkflowExecution> pageRequest =
-        aPageRequest()
-            .addFilter("appId", Operator.EQ, context.getAppId())
-            .addFilter("workflowId", Operator.EQ, getWorkflowId(context))
-            .addFilter("_id", Operator.NOT_EQ, context.getWorkflowExecutionId())
-            .addFilter("envId", Operator.EQ, envId)
-            .addFilter("status", Operator.EQ, SUCCESS)
-            .addOrder(WorkflowExecutionKeys.createdAt, OrderType.DESC)
-            .withOffset(String.valueOf(offset))
-            .withLimit(String.valueOf(PageRequest.DEFAULT_PAGE_SIZE))
-            .build();
+    List<WorkflowExecution> successfulExecutions = new ArrayList<>();
+    List<WorkflowExecution> executions = workflowExecutionService.getLastSuccessfulWorkflowExecutions(
+        context.getAppId(), getWorkflowId(context), service.getUuid());
 
-    PageResponse<WorkflowExecution> workflowExecutions;
-    do {
-      workflowExecutions = workflowExecutionService.listExecutions(pageRequest, false);
-
-      if (workflowExecutions == null) {
-        getLogger().info("Did not find a successful workflow with service {}. It will be a baseline run", serviceId);
-        return emptyMap();
+    // Filter the list of executions by the correct infra mapping ID also.
+    for (WorkflowExecution execution : executions) {
+      if (execution.getInfraMappingIds().contains(phaseInfraMappingId) && execution.getEnvId().equals(envId)) {
+        getLogger().info("Execution {} matches infraMappingID {} or envId {}. So adding to successful list.",
+            execution.getUuid(), infraMappingId, envId);
+        successfulExecutions.add(execution);
       }
+    }
 
-      for (WorkflowExecution workflowExecution : workflowExecutions) {
-        ElementExecutionSummary executionSummary = null;
-        for (ElementExecutionSummary summary : workflowExecution.getServiceExecutionSummaries()) {
-          if (summary.getContextElement().getUuid().equals(serviceId)) {
-            executionSummary = summary;
-            break;
-          }
-        }
+    if (isEmpty(successfulExecutions)) {
+      getLogger().info("Did not find a successful workflow with service {}. It will be a baseline run", serviceId);
+      return emptyMap();
+    }
 
-        if (executionSummary != null) {
-          if (isEmpty(executionSummary.getInstanceStatusSummaries())) {
-            return emptyMap();
-          }
-          Map<String, String> hosts = new HashMap<>();
-          for (InstanceStatusSummary instanceStatusSummary : executionSummary.getInstanceStatusSummaries()) {
-            if (isEmpty(getHostnameTemplate())) {
-              hosts.put(instanceStatusSummary.getInstanceElement().getHostName(), DEFAULT_GROUP_NAME);
-            } else {
-              fillHostDetail(instanceStatusSummary.getInstanceElement(), context);
-              hosts.put(context.renderExpression(getHostnameTemplate(),
-                            StateExecutionContext.builder()
-                                .contextElements(Lists.newArrayList(instanceStatusSummary.getInstanceElement()))
-                                .build()),
-                  DEFAULT_GROUP_NAME);
-            }
-          }
-          getLogger().info("hosts deployed with last workflow execution: {}", hosts);
-          phaseHosts.keySet().forEach(host -> hosts.remove(host));
-          return hosts;
+    for (WorkflowExecution workflowExecution : successfulExecutions) {
+      ElementExecutionSummary executionSummary = null;
+      for (ElementExecutionSummary summary : workflowExecution.getServiceExecutionSummaries()) {
+        if (summary.getContextElement().getUuid().equals(serviceId)) {
+          executionSummary = summary;
+          break;
         }
       }
 
-      offset = offset + PageRequest.DEFAULT_PAGE_SIZE;
-      pageRequest.setOffset(String.valueOf(offset));
-    } while (workflowExecutions.size() >= PageRequest.DEFAULT_PAGE_SIZE);
+      if (executionSummary != null) {
+        if (isEmpty(executionSummary.getInstanceStatusSummaries())) {
+          return emptyMap();
+        }
+        Map<String, String> hosts = new HashMap<>();
+        for (InstanceStatusSummary instanceStatusSummary : executionSummary.getInstanceStatusSummaries()) {
+          if (isEmpty(getHostnameTemplate())) {
+            hosts.put(instanceStatusSummary.getInstanceElement().getHostName(), DEFAULT_GROUP_NAME);
+          } else {
+            fillHostDetail(instanceStatusSummary.getInstanceElement(), context);
+            hosts.put(context.renderExpression(getHostnameTemplate(),
+                          StateExecutionContext.builder()
+                              .contextElements(Lists.newArrayList(instanceStatusSummary.getInstanceElement()))
+                              .build()),
+                DEFAULT_GROUP_NAME);
+          }
+        }
+        getLogger().info("hosts deployed with last workflow execution: {}", hosts);
+        phaseHosts.keySet().forEach(host -> hosts.remove(host));
+        return hosts;
+      }
+    }
 
     getLogger().info("Did not find a successful workflow with service {}. It will be a baseline run", serviceId);
     return emptyMap();

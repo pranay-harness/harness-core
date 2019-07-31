@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -87,7 +88,9 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   private final String appId = UUID.randomUUID().toString();
   private final String serviceId = UUID.randomUUID().toString();
   private final String previousWorkflowExecutionId = UUID.randomUUID().toString();
+  private final String infraMappingId = generateUuid();
 
+  private static final String PHASE_PARAM = "PHASE_PARAM";
   @Before
   public void setup() {
     initMocks(this);
@@ -123,6 +126,8 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
             .uuid(previousWorkflowExecutionId)
             .workflowId(workflowId)
             .envId(envId)
+            .serviceIds(Arrays.asList(serviceId))
+            .infraMappingIds(Arrays.asList(infraMappingId))
             .status(ExecutionStatus.SUCCESS)
             .serviceExecutionSummaries(elementExecutionSummary)
             .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
@@ -134,9 +139,12 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     wingsPersistence.save(workflowExecution);
 
     ExecutionContext context = spy(new ExecutionContextImpl(new StateExecutionInstance()));
-    doReturn(aPhaseElement().withServiceElement(aServiceElement().withUuid("serviceA").build()).build())
+    doReturn(aPhaseElement()
+                 .withInfraMappingId(infraMappingId)
+                 .withServiceElement(aServiceElement().withUuid("serviceA").build())
+                 .build())
         .when(context)
-        .getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+        .getContextElement(ContextElementType.PARAM, PHASE_PARAM);
     WorkflowStandardParams wsp = WorkflowStandardParams.Builder.aWorkflowStandardParams().build();
     Reflect.on(wsp).set("env", Environment.Builder.anEnvironment().uuid(envId).build());
     doReturn(wsp).when(context).getContextElement(ContextElementType.STANDARD);
@@ -195,6 +203,8 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
             .uuid(previousWorkflowExecutionId)
             .workflowId(workflowId)
             .envId(envId)
+            .serviceIds(Arrays.asList(serviceId))
+            .infraMappingIds(Arrays.asList(infraMappingId))
             .status(ExecutionStatus.SUCCESS)
             .serviceExecutionSummaries(elementExecutionSummary)
             .breakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
@@ -229,9 +239,12 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     ExecutionContext context = spy(new ExecutionContextImpl(stateExecutionInstance));
     when(stateExecutionInstance.getStateExecutionMap()).thenReturn(stateExecutionDataMap);
 
-    doReturn(aPhaseElement().withServiceElement(aServiceElement().withUuid("serviceA").build()).build())
+    doReturn(aPhaseElement()
+                 .withInfraMappingId(infraMappingId)
+                 .withServiceElement(aServiceElement().withUuid("serviceA").build())
+                 .build())
         .when(context)
-        .getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+        .getContextElement(ContextElementType.PARAM, PHASE_PARAM);
     doReturn(appId).when(context).getAppId();
     doReturn(UUID.randomUUID().toString()).when(context).getWorkflowExecutionId();
 

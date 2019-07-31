@@ -49,7 +49,7 @@ public interface AnalysisService {
   boolean isStateValid(String appId, String stateExecutionID);
 
   String getLastSuccessfulWorkflowExecutionIdWithLogs(String stateExecutionId, StateType stateType, String appId,
-      String serviceId, String workflowId, String query, String infraMappingId);
+      String serviceId, String workflowId, String query, String infraMappingId, String envId);
 
   boolean saveFeedback(LogMLFeedback feedback, StateType stateType);
 
