@@ -24,6 +24,18 @@ public class AccountManagementConstants {
       public String toString() {
         return "ACCOUNT_ADMIN";
       }
+    },
+
+    ACCOUNT_MANAGEMENT {
+      public String toString() {
+        return "ACCOUNT_MANAGEMENT";
+      }
+    },
+
+    APPLICATION_CREATE_DELETE {
+      public String toString() {
+        return "APPLICATION_CREATE_DELETE";
+      }
     }
   }
 }

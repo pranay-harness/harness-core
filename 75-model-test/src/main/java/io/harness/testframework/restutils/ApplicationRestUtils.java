@@ -45,4 +45,14 @@ public class ApplicationRestUtils {
 
     return savedApplicationResponse.getResource();
   }
+
+  public static int deleteApplication(String bearerToken, String applicationId, String accountId) {
+    return Setup.portal()
+        .auth()
+        .oauth2(bearerToken)
+        .queryParam("routingId", accountId)
+        .contentType(ContentType.JSON)
+        .delete("/apps/" + applicationId)
+        .statusCode();
+  }
 }

@@ -112,6 +112,14 @@ public class UserGroupUtils {
     return accountPermissions;
   }
 
+  public static AccountPermissions buildAccountManagement() {
+    Set<PermissionType> permissionTypes = new HashSet<>();
+    permissionTypes.add(PermissionType.ACCOUNT_MANAGEMENT);
+    AccountPermissions accountPermissions = AccountPermissions.builder().build();
+    accountPermissions.setPermissions(permissionTypes);
+    return accountPermissions;
+  }
+
   public static void deleteMembers(Account account, String bearerToken, UserGroup userGroup) {
     List<String> emptyList = new ArrayList<>();
     userGroup.setMemberIds(emptyList);
@@ -134,6 +142,8 @@ public class UserGroupUtils {
       accountPermissions = buildAccountAdmin();
     } else if (userGroupPermission.equals(PermissionTypes.ACCOUNT_NOPERMISSION.toString())) {
       accountPermissions = buildNoPermission();
+    } else if (userGroupPermission.equals(PermissionTypes.ACCOUNT_MANAGEMENT.toString())) {
+      accountPermissions = buildAccountManagement();
     } else {
       logger.warn("Unknown permission type found : " + userGroupPermission + ": proceeding with No Permission Type");
       accountPermissions = buildNoPermission();

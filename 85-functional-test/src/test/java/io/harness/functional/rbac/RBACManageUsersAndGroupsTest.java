@@ -2,6 +2,8 @@ package io.harness.functional.rbac;
 
 import static io.harness.rule.OwnerRule.SWAMY;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static software.wings.beans.Application.Builder.anApplication;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -11,13 +13,17 @@ import io.harness.testframework.framework.constants.AccountManagementConstants.P
 import io.harness.testframework.framework.utils.AccessManagementUtils;
 import io.harness.testframework.framework.utils.UserGroupUtils;
 import io.harness.testframework.framework.utils.UserUtils;
+import io.harness.testframework.restutils.ApplicationRestUtils;
 import io.harness.testframework.restutils.UserGroupRestUtils;
+import io.restassured.http.ContentType;
+import io.restassured.mapper.ObjectMapperType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import software.wings.beans.Application;
 import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
 
@@ -44,12 +50,12 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY, resent = false)
+  @Owner(emails = SWAMY)
   @Category(FunctionalTests.class)
   public void accessManagementPermissionTestForList() {
     logger.info("Logging in as a rbac2 user");
     String roBearerToken = Setup.getAuthToken(RBAC_USER, "rbac2");
-    AccessManagementUtils.runUserAndGroupsListTest(getAccount(), roBearerToken);
+    AccessManagementUtils.runUserAndGroupsListTest(getAccount(), roBearerToken, HttpStatus.SC_OK);
     // AccessManagementUtils.runNoAccessTest(getAccount(), roBearerToken, userGroupManagementId);
     Setup.signOut(userGroupManagementId, roBearerToken);
   }
@@ -62,6 +68,43 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
     String email = "testemail2@harness.mailinator.com";
     String password = "rbac2";
     AccessManagementUtils.runUserPostTest(getAccount(), bearerToken, READ_ONLY_USER, email, password, HttpStatus.SC_OK);
+  }
+
+  @Test
+  @Owner(emails = SWAMY)
+  @Category(FunctionalTests.class)
+  public void createApplicationFail() {
+    logger.info("Check if create application test fails");
+    String roBearerToken = Setup.getAuthToken(RBAC_USER, "rbac2");
+    final String appName = "TestApp" + System.currentTimeMillis();
+    Application application = anApplication().name(appName).build();
+    assertTrue(Setup.portal()
+                   .auth()
+                   .oauth2(roBearerToken)
+                   .queryParam("accountId", getAccount().getUuid())
+                   .body(application, ObjectMapperType.GSON)
+                   .contentType(ContentType.JSON)
+                   .post("/apps")
+                   .getStatusCode()
+        == HttpStatus.SC_BAD_REQUEST);
+    Setup.signOut(userGroupManagementId, roBearerToken);
+  }
+
+  @Test
+  @Owner(emails = SWAMY)
+  @Category(FunctionalTests.class)
+  public void deleteApplicationFail() {
+    logger.info("Check if delete application test fails");
+    String roBearerToken = Setup.getAuthToken(RBAC_USER, "rbac2");
+    final String appName = "TestApp" + System.currentTimeMillis();
+    Application application = anApplication().name(appName).build();
+    Application createdApp = ApplicationRestUtils.createApplication(bearerToken, getAccount(), application);
+    assertNotNull(createdApp);
+    assertTrue(ApplicationRestUtils.deleteApplication(roBearerToken, createdApp.getUuid(), getAccount().getUuid())
+        == HttpStatus.SC_BAD_REQUEST);
+    assertTrue(ApplicationRestUtils.deleteApplication(bearerToken, createdApp.getUuid(), getAccount().getUuid())
+        == HttpStatus.SC_OK);
+    Setup.signOut(userGroupManagementId, roBearerToken);
   }
 
   //  @Test
