@@ -3,7 +3,7 @@ package software.wings.graphql.datafetcher.connector;
 import io.harness.exception.WingsException;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.user.UserController;
-import software.wings.graphql.schema.type.connector.QLAmazonS3Connector;
+import software.wings.graphql.schema.type.connector.QLAmazonS3RepoConnector;
 import software.wings.graphql.schema.type.connector.QLApmVerificationConnector;
 import software.wings.graphql.schema.type.connector.QLAppDynamicsConnector;
 import software.wings.graphql.schema.type.connector.QLArtifactoryConnector;
@@ -18,9 +18,9 @@ import software.wings.graphql.schema.type.connector.QLElbConnector;
 import software.wings.graphql.schema.type.connector.QLElkConnector;
 import software.wings.graphql.schema.type.connector.QLGCRConnector;
 import software.wings.graphql.schema.type.connector.QLGCSConnector;
-import software.wings.graphql.schema.type.connector.QLGCSHelmConnector;
+import software.wings.graphql.schema.type.connector.QLGCSHelmRepoConnector;
 import software.wings.graphql.schema.type.connector.QLGitConnector;
-import software.wings.graphql.schema.type.connector.QLHttpHelmConnector;
+import software.wings.graphql.schema.type.connector.QLHttpHelmRepoConnector;
 import software.wings.graphql.schema.type.connector.QLJenkinsConnector;
 import software.wings.graphql.schema.type.connector.QLJiraConnector;
 import software.wings.graphql.schema.type.connector.QLLogzConnector;
@@ -94,7 +94,7 @@ public class ConnectorsController {
       case ARTIFACTORY:
         return QLArtifactoryConnector.builder();
       case AMAZON_S3:
-        return QLAmazonS3Connector.builder();
+        return QLAmazonS3RepoConnector.builder();
       case GCS:
         return QLGCSConnector.builder();
       case GIT:
@@ -104,11 +104,11 @@ public class ConnectorsController {
       case SFTP:
         return QLSftpConnector.builder();
       case HTTP_HELM_REPO:
-        return QLHttpHelmConnector.builder();
+        return QLHttpHelmRepoConnector.builder();
       case AMAZON_S3_HELM_REPO:
-        return QLAmazonS3Connector.builder();
+        return QLAmazonS3RepoConnector.builder();
       case GCS_HELM_REPO:
-        return QLGCSHelmConnector.builder();
+        return QLGCSHelmRepoConnector.builder();
       default:
         throw new WingsException("Unsupported Connector " + settingType);
     }

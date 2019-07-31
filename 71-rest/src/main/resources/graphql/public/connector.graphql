@@ -262,7 +262,7 @@ type SumoConnector implements Connector {
   createdBy: User
 }
 
-type GCSHelmConnector implements Connector {
+type GCSHelmRepoConnector implements Connector {
   id: String
   name: String
   description: String
@@ -270,7 +270,7 @@ type GCSHelmConnector implements Connector {
   createdBy: User
 }
 
-type HttpHelmConnector implements Connector {
+type HttpHelmRepoConnector implements Connector {
   id: String
   name: String
   description: String
@@ -278,7 +278,7 @@ type HttpHelmConnector implements Connector {
   createdBy: User
 }
 
-type AmazonS3HelmConnector implements Connector {
+type AmazonS3HelmRepoConnector implements Connector {
   id: String
   name: String
   description: String

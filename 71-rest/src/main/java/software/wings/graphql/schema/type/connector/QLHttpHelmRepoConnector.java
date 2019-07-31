@@ -9,11 +9,11 @@ import software.wings.security.annotations.Scope;
 @Value
 @Builder
 @Scope(ResourceType.SETTING)
-public class QLHttpHelmConnector implements QLConnector {
+public class QLHttpHelmRepoConnector implements QLConnector {
   private String id;
   private String name;
   private Long createdAt;
   private QLUser createdBy;
 
-  public static class QLHttpHelmConnectorBuilder implements QLConnectorBuilder {}
+  public static class QLHttpHelmRepoConnectorBuilder implements QLConnectorBuilder {}
 }

@@ -9,11 +9,11 @@ import software.wings.security.annotations.Scope;
 @Value
 @Builder
 @Scope(ResourceType.SETTING)
-public class QLAmazonS3Connector implements QLConnector {
+public class QLAmazonS3RepoConnector implements QLConnector {
   private String id;
   private String name;
   private Long createdAt;
   private QLUser createdBy;
 
-  public static class QLAmazonS3ConnectorBuilder implements QLConnectorBuilder {}
+  public static class QLAmazonS3RepoConnectorBuilder implements QLConnectorBuilder {}
 }
