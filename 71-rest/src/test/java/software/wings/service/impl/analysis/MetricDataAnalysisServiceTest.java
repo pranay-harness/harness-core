@@ -29,7 +29,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;
   @Inject MetricDataAnalysisService metricDataAnalysisService;
 
-  String appId, workflowId, serviceId, infraMappingId;
+  String appId, workflowId, serviceId, infraMappingId, envId;
 
   @Before
   public void setup() {
@@ -37,6 +37,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
     serviceId = generateUuid();
     workflowId = generateUuid();
     infraMappingId = generateUuid();
+    envId = generateUuid();
   }
 
   @Test
@@ -48,6 +49,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
                                       .workflowId(workflowId)
                                       .infraMappingIds(Arrays.asList(infraMappingId))
                                       .serviceIds(Arrays.asList(serviceId))
+                                      .envId(envId)
                                       .status(SUCCESS)
                                       .uuid(execId)
                                       .build();
@@ -64,7 +66,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
     wingsPersistence.save(record);
 
     String lastId = metricDataAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
-        StateType.NEW_RELIC, appId, workflowId, serviceId, infraMappingId);
+        StateType.NEW_RELIC, appId, workflowId, serviceId, infraMappingId, envId);
 
     assertNotNull(lastId);
     assertEquals(execId, lastId);
@@ -81,6 +83,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
                                       .infraMappingIds(Arrays.asList(newInfra))
                                       .serviceIds(Arrays.asList(serviceId))
                                       .status(SUCCESS)
+                                      .envId(envId)
                                       .uuid(execId)
                                       .build();
 
@@ -96,7 +99,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
     wingsPersistence.save(record);
 
     String lastId = metricDataAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
-        StateType.NEW_RELIC, appId, workflowId, serviceId, infraMappingId);
+        StateType.NEW_RELIC, appId, workflowId, serviceId, infraMappingId, envId);
 
     assertNull(lastId);
   }

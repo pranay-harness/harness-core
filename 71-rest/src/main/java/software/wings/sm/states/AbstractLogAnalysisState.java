@@ -178,7 +178,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           baselineWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
               analysisContext.getStateExecutionId(), analysisContext.getStateType(), analysisContext.getAppId(),
               analysisContext.getServiceId(), analysisContext.getWorkflowId(), analysisContext.getQuery(),
-              getPhaseInfraMappingId(executionContext));
+              getPhaseInfraMappingId(executionContext), workflowStandardParams.getEnvId());
         } else {
           responseMessage = "Baseline is pinned for the workflow. Analyzing against pinned baseline.";
           getLogger().info("Baseline is pinned for stateExecution: {}, baselineId: ",

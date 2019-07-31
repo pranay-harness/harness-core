@@ -170,9 +170,10 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
         if (isEmpty(baselineWorkflowExecutionId)) {
           responseMessage = "No baseline was set for the workflow. Workflow running with auto baseline.";
           getLogger().info(responseMessage);
-          baselineWorkflowExecutionId = metricAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
-              analysisContext.getStateType(), analysisContext.getAppId(), analysisContext.getWorkflowId(),
-              analysisContext.getServiceId(), getPhaseInfraMappingId(context));
+          baselineWorkflowExecutionId =
+              metricAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(analysisContext.getStateType(),
+                  analysisContext.getAppId(), analysisContext.getWorkflowId(), analysisContext.getServiceId(),
+                  getPhaseInfraMappingId(context), workflowStandardParams.getEnv().getUuid());
         } else {
           responseMessage = "Baseline is fixed for the workflow. Analyzing against fixed baseline.";
           getLogger().info(

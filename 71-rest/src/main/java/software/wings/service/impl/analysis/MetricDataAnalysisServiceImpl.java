@@ -90,14 +90,16 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
   @Override
   public String getLastSuccessfulWorkflowExecutionIdWithData(
-      StateType stateType, String appId, String workflowId, String serviceId, String infraMappingId) {
+      StateType stateType, String appId, String workflowId, String serviceId, String infraMappingId, String envId) {
     List<String> successfulExecutions = new ArrayList<>();
     List<WorkflowExecution> executions =
         workflowExecutionService.getLastSuccessfulWorkflowExecutions(appId, workflowId, serviceId);
 
     // Filter the list of executions by the correct infra mapping ID also.
     for (WorkflowExecution execution : executions) {
-      if (execution.getInfraMappingIds().contains(infraMappingId)) {
+      if (execution.getInfraMappingIds().contains(infraMappingId) && execution.getEnvId().equals(envId)) {
+        logger.info("Execution {} contains infraMappingID {} and envId {}. So adding to successfulExecutions.",
+            execution.getUuid(), infraMappingId, envId);
         successfulExecutions.add(execution.getUuid());
       }
     }
