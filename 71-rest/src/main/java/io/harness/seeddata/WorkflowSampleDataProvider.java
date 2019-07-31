@@ -5,6 +5,7 @@ import static io.harness.seeddata.SampleDataProviderConstants.K8S_CANARY_WORKFLO
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_ROLLING_WORKFLOW_NAME;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
+import static software.wings.beans.RollingOrchestrationWorkflow.RollingOrchestrationWorkflowBuilder.aRollingOrchestrationWorkflow;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.sm.states.ContainerServiceSetup.DESIRED_INSTANCE_COUNT_KEY;
@@ -108,7 +109,7 @@ public class WorkflowSampleDataProvider {
                             .serviceId(serviceId)
                             .infraMappingId(infraMappingId)
                             .workflowType(WorkflowType.ORCHESTRATION)
-                            .orchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
+                            .orchestrationWorkflow(aRollingOrchestrationWorkflow().build())
                             .build();
 
     workflow.getOrchestrationWorkflow().setOrchestrationWorkflowType(OrchestrationWorkflowType.ROLLING);
