@@ -30,7 +30,9 @@ import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.Protocol;
 import okhttp3.Request;
+import okhttp3.Response.Builder;
 import okhttp3.internal.http.RealResponseBody;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.http.HttpStatus;
@@ -125,12 +127,17 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = RAGHU, intermittent = true)
   @Category(UnitTests.class)
   public void testInvalidCredential() throws IOException {
     Call<List<NewRelicApplication>> restCall = mock(Call.class);
     when(restCall.execute())
-        .thenReturn(Response.error(HttpStatus.SC_UNAUTHORIZED, new RealResponseBody(null, 0, null)));
+        .thenReturn(Response.error(new RealResponseBody("Invalid credential", 0, null),
+            new Builder()
+                .code(HttpStatus.SC_UNAUTHORIZED)
+                .request(new Request.Builder().url("https://app.harness.io").build())
+                .protocol(Protocol.HTTP_1_1)
+                .message("Invalid Credential")
+                .build()));
     when(appdynamicsRestClient.listAllApplications(anyString())).thenReturn(restCall);
 
     String savedAttributeId = saveAppdynamicsConfig();
