@@ -9,7 +9,11 @@ import java.util.Map;
 public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void register(Map<String, Class> map) {
-    map.put(pkgHarness + "waiter.ListNotifyResponseData", ListNotifyResponseData.class);
-    map.put(pkgHarness + "waiter.ErrorNotifyResponseData", ErrorNotifyResponseData.class);
+    final HelperPut h = (name, clazz) -> {
+      map.put(pkgHarness + name, clazz);
+    };
+
+    h.put("waiter.ListNotifyResponseData", ListNotifyResponseData.class);
+    h.put("waiter.ErrorNotifyResponseData", ErrorNotifyResponseData.class);
   }
 }

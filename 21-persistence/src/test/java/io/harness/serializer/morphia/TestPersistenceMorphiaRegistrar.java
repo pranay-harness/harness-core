@@ -10,11 +10,15 @@ import java.util.Map;
 public class TestPersistenceMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void register(Map<String, Class> map) {
+    final HelperPut h = (name, clazz) -> {
+      map.put(pkgHarness + name, clazz);
+    };
+
     // from commons
-    map.put(pkgHarness + "persistence.MorphiaOldClass", MorphiaClass.class);
-    map.put(pkgHarness + "limits.impl.model.RateLimit", RateLimit.class);
+    h.put("persistence.MorphiaOldClass", MorphiaClass.class);
+    h.put("limits.impl.model.RateLimit", RateLimit.class);
 
     // from api-service
-    map.put(pkgHarness + "globalcontex.AuditGlobalContextData", AuditGlobalContextData.class);
+    h.put("globalcontex.AuditGlobalContextData", AuditGlobalContextData.class);
   }
 }
