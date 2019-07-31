@@ -5,6 +5,7 @@ import static software.wings.common.Constants.ML_RECORDS_TTL_MONTHS;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.IgnoreUnusedIndex;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
@@ -34,6 +35,7 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "ExperimentalLogMLAnalysisRecordKeys")
+@IgnoreUnusedIndex
 public class ExperimentalLogMLAnalysisRecord extends Base {
   @NotEmpty @Indexed private String stateExecutionId;
 

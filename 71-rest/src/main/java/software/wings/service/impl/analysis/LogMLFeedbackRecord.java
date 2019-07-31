@@ -9,6 +9,7 @@ import static software.wings.service.impl.GoogleDataStoreServiceImpl.readString;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Key;
 
+import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.beans.EmbeddedUser;
 import io.harness.persistence.GoogleDataStoreAware;
 import lombok.Builder;
@@ -38,6 +39,7 @@ import software.wings.sm.StateType;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "LogMLFeedbackRecordKeys")
+@IgnoreUnusedIndex
 public class LogMLFeedbackRecord extends Base implements GoogleDataStoreAware {
   @NotEmpty @Indexed private String serviceId;
 

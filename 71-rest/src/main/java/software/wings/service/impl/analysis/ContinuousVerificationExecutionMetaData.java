@@ -48,7 +48,7 @@ public class ContinuousVerificationExecutionMetaData extends Base {
   @NotEmpty @Indexed private String accountId;
   @NotEmpty private String envId;
   @NotEmpty @Indexed private String applicationId;
-  @NotEmpty @Indexed private String serviceId;
+  @NotEmpty private String serviceId;
   @NotEmpty private String workflowId;
   @NotEmpty private String workflowExecutionId;
   @NotEmpty @Indexed private String stateExecutionId;

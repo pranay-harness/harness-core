@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.beans.EmbeddedUser;
 import io.harness.persistence.GoogleDataStoreAware;
 import io.harness.serializer.JsonUtils;
@@ -68,6 +69,7 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil", "values", "deeplinkMetadata", "deeplinkUrl"})
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "NewRelicMetricDataRecordKeys")
+@IgnoreUnusedIndex
 public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAware {
   @Transient public static String DEFAULT_GROUP_NAME = "default";
 

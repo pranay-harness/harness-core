@@ -69,10 +69,6 @@ import java.util.Map;
         , @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("analysisStatus"),
             @Field(value = "lastUpdatedAt", type = IndexType.DESC)
       }, options = @IndexOptions(name = "analysisSummaryIdx")), @Index(fields = {
-        @Field("stateExecutionId"), @Field(value = "logCollectionMinute", type = IndexType.DESC)
-      }, options = @IndexOptions(name = "stateIdx")), @Index(fields = {
-        @Field("cvConfigId"), @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("deprecated")
-      }, options = @IndexOptions(name = "cvConfigLogCollectionMinIdx")), @Index(fields = {
         @Field("cvConfigId")
         , @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("deprecated"),
             @Field(value = "lastUpdatedAt", type = IndexType.DESC),

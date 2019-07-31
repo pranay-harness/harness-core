@@ -2,6 +2,7 @@ package software.wings.service.impl.newrelic;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.beans.ExecutionStatus;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -42,6 +43,7 @@ import java.util.concurrent.TimeUnit;
 @Builder
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @FieldNameConstants(innerTypeName = "LearningEngineExperimentalAnalysisTaskKeys")
+@IgnoreUnusedIndex
 public class LearningEngineExperimentalAnalysisTask extends Base {
   public static long TIME_SERIES_ANALYSIS_TASK_TIME_OUT = TimeUnit.MINUTES.toMillis(2);
   public static final int RETRIES = 3;
