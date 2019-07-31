@@ -415,7 +415,7 @@ public class AccessManagementUtils {
     logger.info("Readonly user logout successful");
   }
 
-  public static void runUserAndGroupsListTest(Account account, String bearerToken) {
+  public static void runUserAndGroupsListTest(Account account, String bearerToken, int httpStatus) {
     logger.info("List the users using ReadOnly permission");
     assertTrue(Setup.portal()
                    .auth()
@@ -423,7 +423,7 @@ public class AccessManagementUtils {
                    .queryParam("accountId", account.getUuid())
                    .get("/users")
                    .getStatusCode()
-        == HttpStatus.SC_OK);
+        == httpStatus);
     logger.info("List users failed with Bad request as expected");
     logger.info("List the user groups using ReadOnly permission");
     assertTrue(Setup.portal()
@@ -432,6 +432,6 @@ public class AccessManagementUtils {
                    .queryParam("accountId", account.getUuid())
                    .get("/userGroups")
                    .getStatusCode()
-        == HttpStatus.SC_OK);
+        == httpStatus);
   }
 }
