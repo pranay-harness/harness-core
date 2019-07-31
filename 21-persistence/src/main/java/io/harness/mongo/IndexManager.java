@@ -17,6 +17,7 @@ import com.mongodb.DBObject;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoCommandException;
 import com.mongodb.ReadPreference;
+import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.exception.UnexpectedException;
 import io.harness.mongo.MorphiaMove.MorphiaMoveKeys;
 import io.harness.mongo.SampleEntity.SampleEntityKeys;
@@ -230,7 +231,9 @@ public class IndexManager {
       });
 
       try {
-        checkForUnusedIndexes(collection);
+        if (mc.getClazz().getAnnotation(IgnoreUnusedIndex.class) == null) {
+          checkForUnusedIndexes(collection);
+        }
       } catch (Exception exception) {
         logger.warn("", exception);
       }

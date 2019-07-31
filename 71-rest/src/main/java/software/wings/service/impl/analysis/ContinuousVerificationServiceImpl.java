@@ -1033,16 +1033,15 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       Map<String, Map<String, Map<String, TimeSeriesOfMetric>>> observedTimeSeriesWithTag) {
     observedTimeSeriesWithTag.forEach((tag, observedTimeSeries) -> {
       Query<TimeSeriesRiskSummary> timeSeriesRiskSummaryQuery =
-          wingsPersistence.createQuery(TimeSeriesRiskSummary.class)
-              .filter("appId", cvConfiguration.getAppId())
+          wingsPersistence.createQuery(TimeSeriesRiskSummary.class, excludeAuthority)
               .filter(TimeSeriesRiskSummaryKeys.cvConfigId, cvConfiguration.getUuid())
-              .field("analysisMinute")
+              .field(TimeSeriesRiskSummaryKeys.analysisMinute)
               .greaterThan(TimeUnit.MILLISECONDS.toMinutes(startTime))
-              .field("analysisMinute")
+              .field(TimeSeriesRiskSummaryKeys.analysisMinute)
               .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(endTime))
-              .order("analysisMinute");
+              .order(TimeSeriesRiskSummaryKeys.analysisMinute);
       if (!tag.equals(HARNESS_DEFAULT_TAG)) {
-        timeSeriesRiskSummaryQuery.filter("tag", tag);
+        timeSeriesRiskSummaryQuery.filter(TimeSeriesRiskSummaryKeys.tag, tag);
       }
       List<TimeSeriesRiskSummary> riskSummaries = timeSeriesRiskSummaryQuery.asList();
 

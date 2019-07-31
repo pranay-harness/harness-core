@@ -44,10 +44,10 @@ public class MetricAnalysisRecord extends Base implements Comparable<MetricAnaly
 
   @NotEmpty private String workflowExecutionId;
 
-  @NotEmpty @Indexed private String stateExecutionId;
+  @NotEmpty private String stateExecutionId;
 
   // no. of minutes of analysis
-  @NotEmpty @Indexed private int analysisMinute;
+  @NotEmpty private int analysisMinute;
 
   private String groupName = DEFAULT_GROUP_NAME;
 
@@ -65,7 +65,7 @@ public class MetricAnalysisRecord extends Base implements Comparable<MetricAnaly
 
   private String message;
 
-  @Indexed private String cvConfigId;
+  private String cvConfigId;
 
   private int aggregatedRisk = -1;
 

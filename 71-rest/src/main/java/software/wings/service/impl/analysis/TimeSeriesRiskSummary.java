@@ -21,7 +21,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
@@ -35,9 +34,9 @@ import java.util.Map;
  */
 
 @Entity(value = "timeSeriesRiskSummary", noClassnameStored = true)
-@Indexes(@Index(fields = { @Field("appId")
-                           , @Field("cvConfigId"), @Field("analysisMinute"), @Field("tag") },
-    options = @IndexOptions(name = "minuteIndex")))
+@Indexes(@Index(fields = { @Field("cvConfigId")
+                           , @Field("analysisMinute"), @Field("tag") },
+    options = @IndexOptions(name = "minute_idx")))
 @Data
 @Builder
 @NoArgsConstructor
@@ -46,8 +45,8 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "TimeSeriesRiskSummaryKeys")
 public class TimeSeriesRiskSummary extends Base {
-  @NotEmpty @Indexed private String cvConfigId;
-  @NotEmpty @Indexed private int analysisMinute;
+  @NotEmpty private String cvConfigId;
+  @NotEmpty private int analysisMinute;
   @Transient Map<String, Map<String, Integer>> txnMetricRisk;
   @Transient Map<String, Map<String, Integer>> txnMetricLongTermPattern;
   private transient Map<String, Map<String, TimeSeriesRiskData>> txnMetricRiskData;

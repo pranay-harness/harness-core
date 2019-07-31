@@ -1,6 +1,7 @@
 package software.wings.service.impl.analysis;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotation.IgnoreUnusedIndex;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -27,6 +28,7 @@ import org.mongodb.morphia.annotations.Indexes;
 @EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "ExperimentalMetricAnalysisRecordKeys")
+@IgnoreUnusedIndex
 public class ExperimentalMetricAnalysisRecord extends MetricAnalysisRecord {
   private String envId;
   @NotEmpty private String experimentName;

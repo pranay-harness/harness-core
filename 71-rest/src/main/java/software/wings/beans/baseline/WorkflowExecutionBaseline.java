@@ -32,7 +32,7 @@ public class WorkflowExecutionBaseline extends Base {
   public static final String SERVICE_ID_KEY = "serviceId";
 
   @NotEmpty private String workflowId;
-  @NotEmpty @Indexed private String envId;
+  @NotEmpty private String envId;
   @NotEmpty private String serviceId;
   @NotEmpty @Indexed private String workflowExecutionId;
   private String pipelineExecutionId;
