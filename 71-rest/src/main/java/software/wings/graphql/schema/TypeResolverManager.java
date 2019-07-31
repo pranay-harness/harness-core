@@ -21,7 +21,8 @@ import software.wings.graphql.schema.type.cloudProvider.QLGcpCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLKubernetesClusterCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLPcfCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLPhysicalDataCenterCloudProvider;
-import software.wings.graphql.schema.type.connector.QLAmazonS3Connector;
+import software.wings.graphql.schema.type.connector.QLAmazonS3HelmConnector;
+import software.wings.graphql.schema.type.connector.QLAmazonS3RepoConnector;
 import software.wings.graphql.schema.type.connector.QLApmVerificationConnector;
 import software.wings.graphql.schema.type.connector.QLAppDynamicsConnector;
 import software.wings.graphql.schema.type.connector.QLArtifactoryConnector;
@@ -35,7 +36,9 @@ import software.wings.graphql.schema.type.connector.QLElbConnector;
 import software.wings.graphql.schema.type.connector.QLElkConnector;
 import software.wings.graphql.schema.type.connector.QLGCRConnector;
 import software.wings.graphql.schema.type.connector.QLGCSConnector;
+import software.wings.graphql.schema.type.connector.QLGCSHelmRepoConnector;
 import software.wings.graphql.schema.type.connector.QLGitConnector;
+import software.wings.graphql.schema.type.connector.QLHttpHelmRepoConnector;
 import software.wings.graphql.schema.type.connector.QLJenkinsConnector;
 import software.wings.graphql.schema.type.connector.QLJiraConnector;
 import software.wings.graphql.schema.type.connector.QLLogzConnector;
@@ -129,6 +132,9 @@ public class TypeResolverManager {
     public static final String SmtpConnector = "SmtpConnector";
     public static final String SplunkConnector = "SplunkConnector";
     public static final String SumoConnector = "SumoConnector";
+    public static final String GCSHelmRepoConnector = "GCSHelmRepoConnector";
+    public static final String HttpHelmRepoConnector = "HttpHelmRepoConnector";
+    public static final String AmazonS3HelmRepoConnector = "AmazonS3HelmRepoConnector";
   }
 
   /**
@@ -159,7 +165,7 @@ public class TypeResolverManager {
         .put(TypeResolverManagerUnifaces.Connector,
             getResultTypeResolver(
                 ImmutableMap.<Class, String>builder()
-                    .put(QLAmazonS3Connector.class, TypeResolverManagerTypes.AmazonS3Connector)
+                    .put(QLAmazonS3RepoConnector.class, TypeResolverManagerTypes.AmazonS3Connector)
                     .put(QLApmVerificationConnector.class, TypeResolverManagerTypes.ApmVerificationConnector)
                     .put(QLAppDynamicsConnector.class, TypeResolverManagerTypes.AppDynamicsConnector)
                     .put(QLArtifactoryConnector.class, TypeResolverManagerTypes.ArtifactoryConnector)
@@ -187,6 +193,9 @@ public class TypeResolverManager {
                     .put(QLSmtpConnector.class, TypeResolverManagerTypes.SmtpConnector)
                     .put(QLSplunkConnector.class, TypeResolverManagerTypes.SplunkConnector)
                     .put(QLSumoConnector.class, TypeResolverManagerTypes.SumoConnector)
+                    .put(QLGCSHelmRepoConnector.class, TypeResolverManagerTypes.GCSHelmRepoConnector)
+                    .put(QLHttpHelmRepoConnector.class, TypeResolverManagerTypes.HttpHelmRepoConnector)
+                    .put(QLAmazonS3HelmConnector.class, TypeResolverManagerTypes.AmazonS3HelmRepoConnector)
                     .build()))
         .put(TypeResolverManagerUnifaces.Execution,
             getResultTypeResolver(ImmutableMap.<Class, String>builder()
