@@ -20,4 +20,6 @@ public interface SpotInstConstants {
   String CAPACITY = "capacity";
   String UNIT_INSTANCE = "instance";
   String PHASE_PARAM = "PHASE_PARAM";
+  String PROD_ELASTI_GROUP_NAME_SUFFIX = "PRODUCTION";
+  String STAGE_ELASTI_GROUP_NAME_SUFFIX = "STAGE";
 }

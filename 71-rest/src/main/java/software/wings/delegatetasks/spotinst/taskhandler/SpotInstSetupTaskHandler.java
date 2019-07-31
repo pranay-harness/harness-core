@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_NAME_PLACEHOLDER;
+import static io.harness.spotinst.model.SpotInstConstants.STAGE_ELASTI_GROUP_NAME_SUFFIX;
 import static io.harness.spotinst.model.SpotInstConstants.TG_ARN_PLACEHOLDER;
 import static io.harness.spotinst.model.SpotInstConstants.TG_NAME_PLACEHOLDER;
 import static io.harness.spotinst.model.SpotInstConstants.elastiGroupsToKeep;
@@ -50,6 +51,14 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
     String spotInstAccountId = spotInstConfig.getSpotInstAccountId();
     String spotInstToken = String.valueOf(spotInstConfig.getSpotInstToken());
     SpotInstSetupTaskParameters setupTaskParameters = (SpotInstSetupTaskParameters) spotInstTaskParameters;
+
+    if (setupTaskParameters.isBlueGreen()) {
+      // Handle Blue Green
+      return executeTaskInternalForBlueGreen(
+          setupTaskParameters, spotInstAccountId, spotInstToken, awsConfig, logCallback);
+    }
+
+    // Handle canary and basic
     String prefix = format("%s__", setupTaskParameters.getElastiGroupNamePrefix());
     int elastiGroupVersion = 1;
     logCallback.saveExecutionLog(format("Querying spot inst for existing elasti groups with prefix: [%s]", prefix));
@@ -61,7 +70,7 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
     }
     String newElastiGroupName = format("%s%d", prefix, elastiGroupVersion);
     TargetGroup stageTargetGroup =
-        getTargetGroup(awsConfig, spotInstTaskParameters.getAwsRegion(), setupTaskParameters.getLoadBalancerName(),
+        getTargetGroup(awsConfig, setupTaskParameters.getAwsRegion(), setupTaskParameters.getLoadBalancerName(),
             setupTaskParameters.getTargetListenerPort(), logCallback, setupTaskParameters.getWorkflowExecutionId());
     String finalJson = setupTaskParameters.getElastiGroupJson()
                            .replace(ELASTI_GROUP_NAME_PLACEHOLDER, newElastiGroupName)
@@ -72,7 +81,7 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
     ElastiGroup elastiGroup =
         spotInstHelperServiceDelegate.createElastiGroup(spotInstToken, spotInstAccountId, finalJson);
     String newElastiGroupId = elastiGroup.getId();
-    logCallback.saveExecutionLog(format("Create elasti group with id: [%s]", newElastiGroupId));
+    logCallback.saveExecutionLog(format("Created elasti group with id: [%s]", newElastiGroupId));
 
     List<ElastiGroup> groupsWithInstances = newArrayList();
     List<ElastiGroup> groupsWithoutInstances = newArrayList();
@@ -101,6 +110,44 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
                                   .newElastiGroup(elastiGroup)
                                   .groupsToBeDownsized(groupsWithInstances)
                                   .build())
+        .build();
+  }
+
+  private SpotInstTaskExecutionResponse executeTaskInternalForBlueGreen(SpotInstSetupTaskParameters setupTaskParameters,
+      String spotInstAccountId, String spotInstToken, AwsConfig awsConfig, ExecutionLogCallback logCallback)
+      throws Exception {
+    logCallback.saveExecutionLog(format("Querying aws to get the stage target group details for load balancer: [%s]",
+        setupTaskParameters.getLoadBalancerName()));
+    TargetGroup stageTargetGroup =
+        getTargetGroup(awsConfig, setupTaskParameters.getAwsRegion(), setupTaskParameters.getLoadBalancerName(),
+            setupTaskParameters.getTargetListenerPort(), logCallback, setupTaskParameters.getWorkflowExecutionId());
+    logCallback.saveExecutionLog(format("Found stage target group: [%s] with Arn: [%s]",
+        stageTargetGroup.getTargetGroupName(), stageTargetGroup.getTargetGroupArn()));
+    String stageElastiGroupName =
+        format("%s__%s", setupTaskParameters.getElastiGroupNamePrefix(), STAGE_ELASTI_GROUP_NAME_SUFFIX);
+    String finalJson = setupTaskParameters.getElastiGroupJson()
+                           .replace(ELASTI_GROUP_NAME_PLACEHOLDER, stageElastiGroupName)
+                           .replace(TG_NAME_PLACEHOLDER, stageTargetGroup.getTargetGroupName())
+                           .replace(TG_ARN_PLACEHOLDER, stageTargetGroup.getTargetGroupArn());
+    logCallback.saveExecutionLog(format("Querying to find elasti group with name: [%s]", stageElastiGroupName));
+    Optional<ElastiGroup> stageOptionalElastiGroup =
+        spotInstHelperServiceDelegate.getElastiGroup(spotInstToken, spotInstAccountId, stageElastiGroupName);
+    ElastiGroup stageElastiGroup;
+    if (stageOptionalElastiGroup.isPresent()) {
+      stageElastiGroup = stageOptionalElastiGroup.get();
+      logCallback.saveExecutionLog(format("Found stage elasti group with id: [%s]", stageElastiGroup.getId()));
+      spotInstHelperServiceDelegate.updateElastiGroup(
+          spotInstToken, spotInstAccountId, stageElastiGroup.getId(), finalJson);
+    } else {
+      logCallback.saveExecutionLog(format("Did not find elasti group with name: [%s]", stageElastiGroupName));
+      stageElastiGroup = spotInstHelperServiceDelegate.createElastiGroup(spotInstToken, spotInstAccountId, finalJson);
+      String stageElastiGroupId = stageElastiGroup.getId();
+      logCallback.saveExecutionLog(
+          format("Created elasti group with name: [%s] and id: [%s]", stageElastiGroupName, stageElastiGroupId));
+    }
+    return SpotInstTaskExecutionResponse.builder()
+        .commandExecutionStatus(SUCCESS)
+        .spotInstTaskResponse(SpotInstSetupTaskResponse.builder().newElastiGroup(stageElastiGroup).build())
         .build();
   }
 
