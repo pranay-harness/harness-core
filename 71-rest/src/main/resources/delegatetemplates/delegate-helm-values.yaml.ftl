@@ -2,6 +2,7 @@
 # of the harness-delegate helm chart.
 
 # You can download the harness-delegate helm chart at
+# https://app.harness.io/storage/harness-download/harness-helm-charts/
 
 
 # Account Id to which the delegate will be connecting
