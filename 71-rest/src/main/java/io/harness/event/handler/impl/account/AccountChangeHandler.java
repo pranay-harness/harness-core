@@ -96,6 +96,7 @@ public class AccountChangeHandler implements EventHandler {
                                           .put("usage_service_instances_30d", usage)
                                           .build();
 
+    logger.info("Enqueuing group event. accountId={} traits={}", accountId, groupTraits);
     // group
     analytics.enqueue(GroupMessage.builder(accountId).userId(user.getId()).traits(groupTraits));
   }
