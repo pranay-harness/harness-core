@@ -7,6 +7,7 @@ import static io.harness.spotinst.model.SpotInstConstants.spotInstBaseUrl;
 import static io.harness.spotinst.model.SpotInstConstants.spotInstContentType;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
+import static java.util.Optional.empty;
 import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.stream.Collectors.toList;
 
@@ -25,6 +26,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 public class SpotInstHelperServiceDelegateImpl implements SpotInstHelperServiceDelegate {
@@ -49,19 +51,33 @@ public class SpotInstHelperServiceDelegateImpl implements SpotInstHelperServiceD
     return format("Bearer %s", spotInstToken);
   }
 
-  @Override
-  public List<ElastiGroup> listAllElastiGroups(
-      String spotInstToken, String spotInstAccountId, String elastiGroupNamePrefix) throws Exception {
+  private List<ElastiGroup> listAllElstiGroups(String spotInstToken, String spotInstAccountId) throws Exception {
     String auth = getAuthToken(spotInstToken);
-    String prefix = format("%s__", elastiGroupNamePrefix);
     long max = System.currentTimeMillis();
     long min = max - DAYS.toMillis(listElastiGroupsQueryTime);
     SpotInstListElastiGroupsResponse response = executeRestCall(
         getSpotInstRestClient().listAllElastiGroups(spotInstContentType, auth, min, max, spotInstAccountId));
-    List<ElastiGroup> items = response.getResponse().getItems();
+    return response.getResponse().getItems();
+  }
+
+  @Override
+  public Optional<ElastiGroup> getElastiGroup(String spotInstToken, String spotInstAccountId, String elastiGroupName)
+      throws Exception {
+    List<ElastiGroup> items = listAllElstiGroups(spotInstToken, spotInstAccountId);
+    if (isEmpty(items)) {
+      return empty();
+    }
+    return items.stream().filter(group -> elastiGroupName.equals(group.getName())).findFirst();
+  }
+
+  @Override
+  public List<ElastiGroup> listAllElastiGroups(
+      String spotInstToken, String spotInstAccountId, String elastiGroupNamePrefix) throws Exception {
+    List<ElastiGroup> items = listAllElstiGroups(spotInstToken, spotInstAccountId);
     if (isEmpty(items)) {
       return emptyList();
     }
+    String prefix = format("%s__", elastiGroupNamePrefix);
     return items.stream()
         .filter(item -> {
           String name = item.getName();
@@ -73,6 +89,14 @@ public class SpotInstHelperServiceDelegateImpl implements SpotInstHelperServiceD
         })
         .sorted(Comparator.comparingInt(g -> Integer.parseInt(g.getName().substring(prefix.length()))))
         .collect(toList());
+  }
+
+  @Override
+  public void updateElastiGroup(
+      String spotInstToken, String spotInstAccountId, String elastiGroupId, String jsonPayload) throws Exception {
+    String auth = getAuthToken(spotInstToken);
+    executeRestCall(getSpotInstRestClient().updateElastiGroup(
+        spotInstContentType, auth, spotInstAccountId, elastiGroupId, jsonPayload));
   }
 
   @Override

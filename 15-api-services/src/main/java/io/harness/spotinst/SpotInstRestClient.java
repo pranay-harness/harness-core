@@ -4,6 +4,7 @@ import io.harness.spotinst.model.SpotInstDeleteElastiGroupResponse;
 import io.harness.spotinst.model.SpotInstListElastiGroupInstancesHealthResponse;
 import io.harness.spotinst.model.SpotInstListElastiGroupsResponse;
 import io.harness.spotinst.model.SpotInstScaleDownElastiGroupResponse;
+import io.harness.spotinst.model.SpotInstUpdateElastiGroupResponse;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
@@ -24,6 +25,11 @@ public interface SpotInstRestClient {
   Call<SpotInstListElastiGroupsResponse> createElastiGroup(@Header("Content-Type") String contentType,
       @Header("Authorization") String authorization, @Query("accountId") String spotInstAccountId,
       @Body Object jsonPayload);
+
+  @PUT("aws/ec2/group/{groupId}")
+  Call<SpotInstUpdateElastiGroupResponse> updateElastiGroup(@Header("Content-Type") String contentType,
+      @Header("Authorization") String authorization, @Query("accountId") String spotInstAccountId,
+      @Path("groupId") String elastiGroupId, @Body Object jsonPayload);
 
   @DELETE("aws/ec2/group/{groupId}")
   Call<SpotInstDeleteElastiGroupResponse> deleteElastiGroup(@Header("Content-Type") String contentType,
