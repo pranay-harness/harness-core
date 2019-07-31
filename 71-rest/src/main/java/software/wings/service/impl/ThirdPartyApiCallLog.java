@@ -109,7 +109,7 @@ public class ThirdPartyApiCallLog implements GoogleDataStoreAware, CreatedAtAwar
     if (this.response == null) {
       this.response = new ArrayList<>();
     }
-    String jsonResponse = fieldType == FieldType.JSON ? JsonUtils.asJson(response) : response.toString();
+    String jsonResponse = getResponseToLog(response, fieldType);
     this.response.add(ThirdPartyApiCallField.builder()
                           .type(FieldType.NUMBER)
                           .name(STATUS_CODE)
@@ -122,6 +122,22 @@ public class ThirdPartyApiCallLog implements GoogleDataStoreAware, CreatedAtAwar
             .value(jsonResponse.substring(
                 0, jsonResponse.length() < MAX_JSON_RESPONSE_LENGTH ? jsonResponse.length() : MAX_JSON_RESPONSE_LENGTH))
             .build());
+  }
+
+  private String getResponseToLog(Object response, FieldType fieldType) {
+    if (fieldType == null) {
+      return response.toString();
+    }
+    switch (fieldType) {
+      case JSON:
+        try {
+          return JsonUtils.asJson(response);
+        } catch (Exception e) {
+          return response.toString();
+        }
+      default:
+        return response.toString();
+    }
   }
 
   public void addFieldToRequest(ThirdPartyApiCallField field) {
