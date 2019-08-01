@@ -149,7 +149,7 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
                                 .filter(ResourceLookupKeys.accountId, resourceLookup.getAccountId())
                                 .filter(ResourceLookupKeys.resourceType, resourceLookup.getResourceType())
                                 .filter(ResourceLookupKeys.appId, resourceLookup.getAppId())
-                                .filter(resourceLookup.getResourceName(), resourceLookup.getResourceName())
+                                .filter(ResourceLookupKeys.resourceName, resourceLookup.getResourceName())
                                 .project(ResourceLookupKeys.uuid, true)
                                 .get();
 
