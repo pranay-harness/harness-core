@@ -28,6 +28,7 @@ import javax.validation.constraints.NotNull;
 
 @Entity(value = "resourceConstraintInstances", noClassnameStored = true)
 @Data
+@Builder
 @EqualsAndHashCode(callSuper = false)
 @Indexes(@Index(options = @IndexOptions(unique = true, name = "uniqueUnitOrder"),
     fields = { @Field("resourceConstraintId")
@@ -61,21 +62,4 @@ public class ResourceConstraintInstance
   @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
-
-  @Builder
-  private ResourceConstraintInstance(String uuid, String accountId, String appId, String resourceConstraintId,
-      String resourceUnit, int order, String state, int permits, String releaseEntityType, String releaseEntityId,
-      long acquiredAt) {
-    setUuid(uuid);
-    setAccountId(accountId);
-    setAppId(appId);
-    this.resourceConstraintId = resourceConstraintId;
-    this.resourceUnit = resourceUnit;
-    this.order = order;
-    this.state = state;
-    this.permits = permits;
-    this.releaseEntityType = releaseEntityType;
-    this.releaseEntityId = releaseEntityId;
-    this.acquiredAt = acquiredAt;
-  }
 }

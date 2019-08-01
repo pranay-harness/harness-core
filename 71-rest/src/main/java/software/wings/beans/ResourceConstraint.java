@@ -15,7 +15,6 @@ import io.harness.validation.Update;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -36,7 +35,7 @@ import javax.validation.constraints.NotNull;
                                                                             , @Field("name") }))
 @HarnessExportableEntity
 @Data
-@NoArgsConstructor
+@Builder
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "ResourceConstraintKeys")
 public class ResourceConstraint
@@ -55,13 +54,4 @@ public class ResourceConstraint
   @NotEmpty @Trimmed private String name;
   @Min(value = 1) @Max(value = 1000) private int capacity;
   private Constraint.Strategy strategy;
-
-  @Builder
-  private ResourceConstraint(String uuid, String accountId, String name, int capacity, Constraint.Strategy strategy) {
-    setUuid(uuid);
-    this.accountId = accountId;
-    this.name = name;
-    this.capacity = capacity;
-    this.strategy = strategy;
-  }
 }
