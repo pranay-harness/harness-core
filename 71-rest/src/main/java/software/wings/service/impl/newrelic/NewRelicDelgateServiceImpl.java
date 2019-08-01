@@ -200,6 +200,11 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
           "Application Name " + newRelicApplicationName + " could not be resolved to a valid NewRelic Application.");
     }
     if (newRelicApplications.size() > 1) {
+      for (NewRelicApplication application : newRelicApplications) {
+        if (isNotEmpty(newRelicApplicationName) && newRelicApplicationName.equals(application.getName())) {
+          return application;
+        }
+      }
       throw new WingsException(
           "Application Name " + newRelicApplicationName + " matched more than one NewRelic Application.");
     }
