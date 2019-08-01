@@ -7,7 +7,9 @@ import static io.harness.spotinst.model.SpotInstConstants.CAPACITY_MINIMUM_CONFI
 import static io.harness.spotinst.model.SpotInstConstants.CAPACITY_TARGET_CONFIG_ELEMENT;
 import static io.harness.spotinst.model.SpotInstConstants.CAPACITY_UNIT_CONFIG_ELEMENT;
 import static io.harness.spotinst.model.SpotInstConstants.COMPUTE;
+import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_IMAGE_CONFIG;
 import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_NAME_PLACEHOLDER;
+import static io.harness.spotinst.model.SpotInstConstants.GROUP_CONFIG_ELEMENT;
 import static io.harness.spotinst.model.SpotInstConstants.LAUNCH_SPECIFICATION;
 import static io.harness.spotinst.model.SpotInstConstants.LB_TYPE_TG;
 import static io.harness.spotinst.model.SpotInstConstants.LOAD_BALANCERS_CONFIG;
@@ -35,6 +37,8 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.exception.WingsException;
+import io.harness.spotinst.model.ElastiGroup;
+import io.harness.spotinst.model.ElastiGroupLoadBalancer;
 import io.harness.spotinst.model.ElastiGroupLoadBalancerConfig;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.PhaseElement;
@@ -105,7 +109,7 @@ public class SpotInstStateHelper {
         (SpotInstInfrastructureMapping) infrastructureMappingService.get(
             app.getUuid(), phaseElement.getInfraMappingId());
 
-    Activity activity = createActivity(context, artifact, serviceSetup);
+    Activity activity = createActivity(context, artifact, serviceSetup.getStateType());
 
     SettingAttribute settingAttribute =
         settingsService.get(spotInstInfrastructureMapping.getComputeProviderSettingId());
@@ -127,8 +131,8 @@ public class SpotInstStateHelper {
         : Misc.normalizeExpression(context.renderExpression(elastiGroupNamePrefix));
 
     boolean blueGreen = serviceSetup.isBlueGreen();
-    String elastiGroupJson = context.renderExpression(spotInstInfrastructureMapping.getElasticGroupJson());
-    elastiGroupJson = updateElastiGroupJsonWithPlaceholders(elastiGroupJson, serviceSetup);
+    String elastiGroupJson = generateElastiGroupJsonForDelegateRequest(
+        context, serviceSetup, spotInstInfrastructureMapping, artifact.getRevision());
 
     SpotInstTaskParameters spotInstTaskParameters =
         SpotInstSetupTaskParameters.builder()
@@ -141,6 +145,8 @@ public class SpotInstStateHelper {
             .elastiGroupJson(elastiGroupJson)
             .blueGreen(blueGreen)
             .elastiGroupNamePrefix(elastiGroupNamePrefix)
+            .loadBalancerName(serviceSetup.getLoadBalancerName())
+            .classicLoadBalancer(serviceSetup.isClassicLoadBalancer())
             .targetListenerPort(serviceSetup.getTargetListenerPort())
             .targetListenerProtocol(serviceSetup.getTargetListenerProtocol())
             .image(artifact.getRevision())
@@ -164,7 +170,19 @@ public class SpotInstStateHelper {
         .currentRunningInstanceCount(fetchCurrentRunningCountForSetupRequest(serviceSetup))
         .serviceId(serviceElement.getUuid())
         .spotinstCommandRequest(commandRequest)
+        .elastiGroupOriginalConfig(generateConfigFromJson(elastiGroupJson))
         .build();
+  }
+
+  private ElastiGroup generateConfigFromJson(String elastiGroupJson) {
+    java.lang.reflect.Type mapType = new TypeToken<Map<String, Object>>() {}.getType();
+    Gson gson = new Gson();
+
+    // Map<"group": {...entire config...}>, this is elastiGroupConfig json that spotinst exposes
+    Map<String, Object> jsonConfigMap = gson.fromJson(elastiGroupJson, mapType);
+    Map<String, Object> elastiGroupConfigMap = (Map<String, Object>) jsonConfigMap.get(GROUP_CONFIG_ELEMENT);
+    String groupConfigJson = gson.toJson(elastiGroupConfigMap);
+    return gson.fromJson(groupConfigJson, ElastiGroup.class);
   }
 
   public ActivityBuilder generateActivityBuilder(String appName, String appId, String commandName, Type type,
@@ -214,18 +232,27 @@ public class SpotInstStateHelper {
         .build();
   }
 
-  private String updateElastiGroupJsonWithPlaceholders(String elastiGroupJson, SpotInstServiceSetup serviceSetup) {
+  private String generateElastiGroupJsonForDelegateRequest(ExecutionContext context, SpotInstServiceSetup serviceSetup,
+      SpotInstInfrastructureMapping spotInstInfrastructureMapping, String image) {
+    String elastiGroupJson = context.renderExpression(spotInstInfrastructureMapping.getElasticGroupJson());
+    elastiGroupJson =
+        updateElastiGroupJsonWithPlaceholders(elastiGroupJson, serviceSetup, spotInstInfrastructureMapping, image);
+    return elastiGroupJson;
+  }
+
+  private String updateElastiGroupJsonWithPlaceholders(String elastiGroupJson, SpotInstServiceSetup serviceSetup,
+      SpotInstInfrastructureMapping spotInstInfrastructureMapping, String image) {
     java.lang.reflect.Type mapType = new TypeToken<Map<String, Object>>() {}.getType();
     Gson gson = new Gson();
 
     // Map<"group": {...entire config...}>, this is elastiGroupConfig json that spotinst exposes
     Map<String, Object> jsonConfigMap = gson.fromJson(elastiGroupJson, mapType);
 
-    Map<String, Object> elastiGroupConfigMap = (Map<String, Object>) jsonConfigMap.get("group");
+    Map<String, Object> elastiGroupConfigMap = (Map<String, Object>) jsonConfigMap.get(GROUP_CONFIG_ELEMENT);
     // update name value with "${ELASTI_GROUP_NAME}"
     updateName(elastiGroupConfigMap);
     updateInitialCapacity(elastiGroupConfigMap);
-    updateLoadBalancerDetailsIfApplicable(serviceSetup, elastiGroupConfigMap);
+    updateLaunchSpecification(serviceSetup, elastiGroupConfigMap, spotInstInfrastructureMapping, image);
     return gson.toJson(jsonConfigMap);
   }
 
@@ -241,37 +268,45 @@ public class SpotInstStateHelper {
     }
   }
 
-  private void updateLoadBalancerDetailsIfApplicable(
-      SpotInstServiceSetup serviceSetup, Map<String, Object> elastiGroupConfigMap) {
+  private void updateLaunchSpecification(SpotInstServiceSetup serviceSetup, Map<String, Object> elastiGroupConfigMap,
+      SpotInstInfrastructureMapping spotInstInfrastructureMapping, String image) {
     Map<String, Object> computeConfigMap = (Map<String, Object>) elastiGroupConfigMap.get(COMPUTE);
     Map<String, Object> launchSpecificationMap = (Map<String, Object>) computeConfigMap.get(LAUNCH_SPECIFICATION);
 
-    if (serviceSetup.isBlueGreen()) {
-      launchSpecificationMap.put(LOAD_BALANCERS_CONFIG, generateALBConfigWithPlaceholders());
+    updateLoadBalancerDetailsIfApplicable(serviceSetup, launchSpecificationMap);
+    updateImageDetails(launchSpecificationMap, image);
+  }
+
+  private void updateImageDetails(Map<String, Object> launchSpecificationMap, String image) {
+    launchSpecificationMap.put(ELASTI_GROUP_IMAGE_CONFIG, image);
+  }
+
+  private void updateLoadBalancerDetailsIfApplicable(
+      SpotInstServiceSetup serviceSetup, Map<String, Object> launchSpecificationMap) {
+    if (serviceSetup.isBlueGreen() || (serviceSetup.isUseLoadBalancer() && !serviceSetup.isClassicLoadBalancer())) {
+      launchSpecificationMap.put(LOAD_BALANCERS_CONFIG,
+          ElastiGroupLoadBalancerConfig.builder().loadBalancers(generateALBConfigWithPlaceholders()).build());
     }
   }
 
-  private List<ElastiGroupLoadBalancerConfig> generateALBConfigWithPlaceholders() {
-    return Arrays.asList(ElastiGroupLoadBalancerConfig.builder()
-                             .targetGroupArn(TG_ARN_PLACEHOLDER)
-                             .targetGroupName(TG_NAME_PLACEHOLDER)
-                             .type(LB_TYPE_TG)
-                             .build());
+  private List<ElastiGroupLoadBalancer> generateALBConfigWithPlaceholders() {
+    return Arrays.asList(
+        ElastiGroupLoadBalancer.builder().arn(TG_ARN_PLACEHOLDER).name(TG_NAME_PLACEHOLDER).type(LB_TYPE_TG).build());
   }
 
   private void updateName(Map<String, Object> elastiGroupConfigMap) {
     elastiGroupConfigMap.put(NAME_CONFIG_ELEMENT, ELASTI_GROUP_NAME_PLACEHOLDER);
   }
 
-  protected Activity createActivity(
-      ExecutionContext executionContext, Artifact artifact, SpotInstServiceSetup serviceSetup) {
+  public Activity createActivity(ExecutionContext executionContext, Artifact artifact, String stateType) {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
-    ActivityBuilder activityBuilder =
-        generateActivityBuilder(app.getName(), app.getUuid(), SPOTINST_SERVICE_SETUP_COMMAND, Type.Command,
-            executionContext, serviceSetup.getStateType(), CommandUnitType.SPOTINST_SETUP, env);
+    ActivityBuilder activityBuilder = generateActivityBuilder(app.getName(), app.getUuid(),
+        SPOTINST_SERVICE_SETUP_COMMAND, Type.Command, executionContext, stateType, CommandUnitType.SPOTINST_SETUP, env);
 
-    activityBuilder.artifactName(artifact.getDisplayName()).artifactId(artifact.getUuid());
+    if (artifact != null) {
+      activityBuilder.artifactName(artifact.getDisplayName()).artifactId(artifact.getUuid());
+    }
 
     return activityService.save(activityBuilder.build());
   }

@@ -18,26 +18,21 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class SpotInstSetupStateExecutionData extends StateExecutionData implements ResponseData {
+public class SpotInstDeployStateExecutionData extends StateExecutionData implements ResponseData {
+  private String appId;
+  private String infraId;
+  private String envId;
+  private String serviceId;
   private String activityId;
   private String elastiGroupId;
   private String elastiGroupName;
-  private String serviceId;
-  private String envId;
-  private String infraMappingId;
+  private Integer desiredCount;
+  private Integer downsizeCount;
   private String commandName;
-  private Integer maxInstanceCount;
-  private boolean useCurrentRunningInstanceCount;
-  private Integer currentRunningInstanceCount;
-  private ElastiGroup elastiGroupOriginalConfig;
-  private boolean rollback;
+  private ElastiGroup newElastiGroupOriginalConfig;
+  private ElastiGroup oldElastiGroupOriginalConfig;
 
   private SpotInstCommandRequest spotinstCommandRequest;
-
-  @Override
-  public Map<String, ExecutionDataValue> getExecutionDetails() {
-    return getInternalExecutionDetails();
-  }
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
@@ -54,11 +49,17 @@ public class SpotInstSetupStateExecutionData extends StateExecutionData implemen
             .displayName("Activity Id")
             .build());
     putNotNull(executionDetails, "elastiGroupId",
-        ExecutionDataValue.builder().value(elastiGroupId).displayName("Elasti Group ID").build());
+        ExecutionDataValue.builder().value(elastiGroupId).displayName("New Elasti Group ID").build());
     putNotNull(executionDetails, "elastiGroupName",
-        ExecutionDataValue.builder().value(elastiGroupName).displayName("Elasti Group Name").build());
-
+        ExecutionDataValue.builder().value(elastiGroupName).displayName("New Elasti Group Name").build());
+    putNotNull(executionDetails, "desiredCount",
+        ExecutionDataValue.builder().value(desiredCount).displayName("Desired Instance Count").build());
     return executionDetails;
+  }
+
+  @Override
+  public Map<String, ExecutionDataValue> getExecutionDetails() {
+    return getInternalExecutionDetails();
   }
 
   @Override

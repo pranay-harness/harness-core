@@ -10,6 +10,6 @@ import java.util.List;
 @Builder
 public class SpotInstSetupTaskResponse implements SpotInstTaskResponse {
   private ElastiGroup newElastiGroup;
-  // Will be used during rollback, to restore these groups to previous capacity
-  private List<ElastiGroup> groupsToBeDownsized;
+  // Will be used during rollback, to restore this group to previous capacity
+  private List<ElastiGroup> groupToBeDownsized;
 }

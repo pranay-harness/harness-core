@@ -3,10 +3,10 @@ package io.harness.spotinst.model;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Builder
 public class ElastiGroupLoadBalancerConfig {
-  private String targetGroupName;
-  private String targetGroupArn;
-  private String type;
+  private List<ElastiGroupLoadBalancer> loadBalancers;
 }

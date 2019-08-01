@@ -3,6 +3,7 @@ package software.wings.sm.states.spotinst;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.spotinst.response.SpotInstSetupTaskResponse;
+import io.harness.spotinst.model.ElastiGroup;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,8 +29,14 @@ public class SpotInstSetupContextElement implements ContextElement {
   private Integer currentRunningInstanceCount;
   private ResizeStrategy resizeStrategy;
   private boolean isBlueGreen;
+  private String appId;
+  private String envId;
+  private String serviceId;
+  private String infraMappingId;
   private SpotInstCommandRequest commandRequest;
   private SpotInstSetupTaskResponse spotInstSetupTaskResponse;
+  private ElastiGroup newElastiGroupOriginalConfig;
+  private ElastiGroup oldElastiGroupOriginalConfig;
 
   @Override
   public ContextElementType getElementType() {
