@@ -8,17 +8,23 @@ import static software.wings.utils.UsageRestrictionsUtils.getAllAppAllEnvUsageRe
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.restassured.path.json.JsonPath;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.BugsnagConfig;
+import software.wings.beans.DatadogConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.NewRelicConfig;
+import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.SplunkConfig;
+import software.wings.beans.SumoConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.settings.UsageRestrictions;
 
+@Slf4j
 public class ConnectorUtils {
   public static String USER_NAME = "admin";
 
@@ -199,6 +205,97 @@ public class ConnectorUtils {
                            .password(new ScmSecret().decryptToCharArray(new SecretName("splunk_cloud_password")))
                            .build())
             .build();
+
+    JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
+    assertNotNull(setAttrResponse);
+
+    return setAttrResponse.getString("resource.uuid").trim();
+  }
+
+  /**
+   * Connector util to create a Verification Provider: Bugsnag Connector
+   */
+  public static String createBugsnagConnector(String bearerToken, String connectorName, String accountId) {
+    String BUGSNAG_URL = "https://api.bugsnag.com/";
+
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withCategory(SettingCategory.CONNECTOR)
+            .withName(connectorName)
+            .withAccountId(accountId)
+            .withValue(BugsnagConfig.builder()
+                           .url(BUGSNAG_URL)
+                           .authToken(new ScmSecret().decryptToCharArray(new SecretName("bugsnag_config_auth_token")))
+                           .build())
+            .build();
+
+    JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
+    assertNotNull(setAttrResponse);
+
+    return setAttrResponse.getString("resource.uuid").trim();
+  }
+
+  /**
+   * Connector util to create a Verification Provider: Datadog Connector
+   */
+  public static String createDatadogConnector(String bearerToken, String connectorName, String accountId) {
+    String DATADOG_URL = "https://app.datadoghq.com/api/v1/";
+
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withCategory(SettingCategory.CONNECTOR)
+            .withName(connectorName)
+            .withAccountId(accountId)
+            .withValue(
+                DatadogConfig.builder()
+                    .url(DATADOG_URL)
+                    .apiKey(new ScmSecret().decryptToCharArray(new SecretName("datadog_api_key")))
+                    .applicationKey(new ScmSecret().decryptToCharArray(new SecretName("datadog_application_key")))
+                    .build())
+            .build();
+
+    JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
+    assertNotNull(setAttrResponse);
+
+    return setAttrResponse.getString("resource.uuid").trim();
+  }
+
+  /**
+   * Connector util to create a Verification Provider: Sumo Logic Connector
+   */
+  public static String createSumoLogicConnector(String bearerToken, String connectorName, String accountId) {
+    String SUMOLOGIC_URL = "https://api.us2.sumologic.com/api/v1/";
+
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withCategory(SettingCategory.CONNECTOR)
+            .withName(connectorName)
+            .withAccountId(accountId)
+            .withValue(SumoConfig.builder()
+                           .sumoUrl(SUMOLOGIC_URL)
+                           .accessId(new ScmSecret().decryptToCharArray(new SecretName("sumo_config_access_id")))
+                           .accessKey(new ScmSecret().decryptToCharArray(new SecretName("sumo_config_access_key")))
+                           .build())
+            .build();
+
+    JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
+    assertNotNull(setAttrResponse);
+
+    return setAttrResponse.getString("resource.uuid").trim();
+  }
+
+  /**
+   * Connector util to create a Verification Provider: Prometheus Connector
+   */
+  public static String createPrometheusConnector(String bearerToken, String connectorName, String accountId) {
+    String PROMETHEUS_URL = "http://35.188.150.89:8080/";
+
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withCategory(SettingCategory.CONNECTOR)
+                                            .withName(connectorName)
+                                            .withAccountId(accountId)
+                                            .withValue(PrometheusConfig.builder().url(PROMETHEUS_URL).build())
+                                            .build();
 
     JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
     assertNotNull(setAttrResponse);

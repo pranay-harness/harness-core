@@ -29,9 +29,9 @@ import java.util.List;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 public class PrometheusConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
-  @SchemaIgnore @NotEmpty private String accountId;
-
   @Attributes(title = "URL", required = true) private String url;
+
+  @SchemaIgnore @NotEmpty private String accountId;
 
   public PrometheusConfig() {
     super(StateType.PROMETHEUS.name());
