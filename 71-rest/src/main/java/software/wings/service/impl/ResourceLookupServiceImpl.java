@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.audit.ResourceType.APPLICATION;
 import static software.wings.audit.ResourceType.ARTIFACT_SERVER;
@@ -22,7 +23,7 @@ import static software.wings.audit.ResourceType.TRIGGER;
 import static software.wings.audit.ResourceType.USER_GROUP;
 import static software.wings.audit.ResourceType.VERIFICATION_PROVIDER;
 import static software.wings.audit.ResourceType.WORKFLOW;
-import static software.wings.service.impl.HarnessTagServiceImpl.supportedEntityTypes;
+import static software.wings.service.impl.HarnessTagServiceImpl.supportedTagEntityTypes;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
@@ -276,6 +277,7 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
     pageRequest.addFilter(ResourceLookupKeys.accountId, EQ, accountId);
     pageRequest.setOffset("0");
     pageRequest.setLimit(String.valueOf(Integer.MAX_VALUE));
+    pageRequest.addFilter(ResourceLookupKeys.resourceType, IN, supportedTagEntityTypes.toArray());
     resourceLookupFilterHelper.addResourceLookupFiltersToPageRequest(pageRequest, filter);
 
     PageResponse<ResourceLookup> pageResponse = wingsPersistence.query(ResourceLookup.class, pageRequest);
@@ -312,7 +314,7 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
       try {
         EntityType entityType = EntityType.valueOf(resourceLookup.getResourceType());
 
-        if (supportedEntityTypes.contains(entityType)) {
+        if (supportedTagEntityTypes.contains(entityType)) {
           harnessTagService.validateTagResourceAccess(resourceLookup.getAppId(), resourceLookup.getAccountId(),
               resourceLookup.getResourceId(), entityType, Action.READ);
           filteredResourceLookupList.add(resourceLookup);

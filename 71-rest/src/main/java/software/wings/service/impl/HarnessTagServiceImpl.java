@@ -87,7 +87,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   @Inject private AppService appService;
   @Inject private EntityNameCache entityNameCache;
 
-  public static final Set<EntityType> supportedEntityTypes =
+  public static final Set<EntityType> supportedTagEntityTypes =
       ImmutableSet.of(SERVICE, ENVIRONMENT, WORKFLOW, PROVISIONER, PIPELINE, TRIGGER, APPLICATION);
 
   private static final String ALLOWED_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_ /";
@@ -430,7 +430,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   }
 
   private void validateAndSanitizeTagLink(HarnessTagLink tagLink) {
-    if (!supportedEntityTypes.contains(tagLink.getEntityType())) {
+    if (!supportedTagEntityTypes.contains(tagLink.getEntityType())) {
       throw new InvalidRequestException("Unsupported entityType specified. " + tagLink.getEntityType());
     }
 
