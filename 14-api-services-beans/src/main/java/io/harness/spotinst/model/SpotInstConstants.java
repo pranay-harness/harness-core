@@ -2,7 +2,6 @@ package io.harness.spotinst.model;
 
 public interface SpotInstConstants {
   String spotInstBaseUrl = "https://api.spotinst.io/";
-  String spotInstContentType = "application/json";
   int listElastiGroupsQueryTime = 365;
   int elastiGroupsToKeep = 3;
   String ELASTI_GROUP_NAME_PLACEHOLDER = "${ELASTI_GROUP_NAME}";
