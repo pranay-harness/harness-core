@@ -48,6 +48,8 @@ import io.harness.k8s.model.K8sPod;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.spotinst.model.ElastiGroup;
+import io.harness.spotinst.model.ElastiGroupCapacity;
 import org.json.JSONException;
 
 public class ApiServiceKryoRegister implements KryoRegistrar {
@@ -101,5 +103,7 @@ public class ApiServiceKryoRegister implements KryoRegistrar {
     kryo.register(K8sContainer.class, 7146);
     kryo.register(AuditGlobalContextData.class, 7172);
     kryo.register(PurgeGlobalContextData.class, 7173);
+    kryo.register(ElastiGroup.class, 1025);
+    kryo.register(ElastiGroupCapacity.class, 1026);
   }
 }

@@ -16,9 +16,12 @@ public interface SpotInstConstants {
   String COMPUTE = "compute";
   String LAUNCH_SPECIFICATION = "launchSpecification";
   String LOAD_BALANCERS_CONFIG = "loadBalancersConfig";
+  String LOAD_BALANCERS = "loadBalancers";
   String CAPACITY = "capacity";
   String UNIT_INSTANCE = "instance";
   String PHASE_PARAM = "PHASE_PARAM";
   String PROD_ELASTI_GROUP_NAME_SUFFIX = "PRODUCTION";
   String STAGE_ELASTI_GROUP_NAME_SUFFIX = "STAGE";
+  String ELASTI_GROUP_IMAGE_CONFIG = "imageId";
+  String GROUP_CONFIG_ELEMENT = "group";
 }

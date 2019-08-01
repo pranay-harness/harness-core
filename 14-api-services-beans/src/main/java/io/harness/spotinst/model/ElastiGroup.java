@@ -10,5 +10,9 @@ import lombok.Data;
 public class ElastiGroup {
   private String id;
   private String name;
-  private ElastiGroupCapacity elastiGroupCapacity;
+  private ElastiGroupCapacity capacity;
+
+  public ElastiGroup clone() {
+    return ElastiGroup.builder().id(id).name(name).capacity(capacity).build();
+  }
 }

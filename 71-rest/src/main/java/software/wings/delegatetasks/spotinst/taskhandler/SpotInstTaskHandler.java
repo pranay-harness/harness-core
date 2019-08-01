@@ -1,7 +1,6 @@
 package software.wings.delegatetasks.spotinst.taskhandler;
 
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
-import static io.harness.exception.ExceptionUtils.getMessage;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
@@ -30,7 +29,7 @@ public abstract class SpotInstTaskHandler {
     try {
       return executeTaskInternal(spotInstTaskParameters, logCallback, spotInstConfig, awsConfig);
     } catch (Exception ex) {
-      String message = getMessage(ex);
+      String message = ex.getMessage();
       logCallback.saveExecutionLog(message);
       logger.error(format("Exception: [%s] while processing spotinst task: [%s]. Workflow execution id: [%s]", message,
                        spotInstTaskParameters.getCommandType().name(), spotInstTaskParameters.getWorkflowExecutionId()),

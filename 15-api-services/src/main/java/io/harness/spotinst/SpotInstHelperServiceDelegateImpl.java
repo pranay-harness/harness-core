@@ -106,7 +106,7 @@ public class SpotInstHelperServiceDelegateImpl implements SpotInstHelperServiceD
       String spotInstToken, String spotInstAccountId, String elastiGroupId, String jsonPayload) throws Exception {
     String auth = getAuthToken(spotInstToken);
     executeRestCall(getSpotInstRestClient().updateElastiGroup(
-        auth, spotInstAccountId, elastiGroupId, convertRawJsonToMap(jsonPayload)));
+        auth, elastiGroupId, spotInstAccountId, convertRawJsonToMap(jsonPayload)));
   }
 
   @Override

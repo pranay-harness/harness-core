@@ -23,18 +23,11 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.TaskType;
 
-import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ActivityService;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
-import software.wings.sm.states.EcsStateHelper;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -44,27 +37,24 @@ import java.util.Map;
 public class SpotInstServiceSetup extends State {
   public static final String SPOTINST_SERVICE_SETUP_COMMAND = "Spotinst Service Setup";
 
-  @Getter @Setter private Integer targetListenerPort;
-  @Getter @Setter private String targetListenerProtocol;
   @Getter @Setter private Integer maxInstances;
   @Getter @Setter private Integer currentRunningCount;
   @Getter @Setter private String elastiGroupNamePrefix;
-  @Getter @Setter private boolean useLoadBalancer;
   @Getter @Setter private Integer timeoutIntervalInMin;
   @Getter @Setter private Integer olderActiveVersionCountToKeep;
   @Getter @Setter private boolean blueGreen;
   @Getter @Setter private boolean useCurrentRunningCount;
   @Getter @Setter private ResizeStrategy resizeStrategy;
 
-  @Inject private transient AppService appService;
-  @Inject private transient SecretManager secretManager;
-  @Inject private transient EcsStateHelper ecsStateHelper;
+  // LoadBalancer details
+  @Getter @Setter private boolean useLoadBalancer;
+  @Getter @Setter private String loadBalancerName;
+  @Getter @Setter private boolean classicLoadBalancer;
+  @Getter @Setter private Integer targetListenerPort;
+  @Getter @Setter private String targetListenerProtocol;
+
   @Inject private transient ActivityService activityService;
-  @Inject private transient SettingsService settingsService;
   @Inject private transient DelegateService delegateService;
-  @Inject private transient ArtifactCollectionUtils artifactCollectionUtils;
-  @Inject private transient ServiceResourceService serviceResourceService;
-  @Inject private transient InfrastructureMappingService infrastructureMappingService;
   @Inject private transient SpotInstStateHelper spotinstStateHelper;
 
   public SpotInstServiceSetup(String name) {
@@ -151,6 +141,10 @@ public class SpotInstServiceSetup extends State {
             .resizeStrategy(resizeStrategy)
             .spotInstSetupTaskResponse(spotInstSetupTaskResponse)
             .isBlueGreen(blueGreen)
+            .serviceId(stateExecutionData.getServiceId())
+            .infraMappingId(stateExecutionData.getInfraMappingId())
+            .newElastiGroupOriginalConfig(stateExecutionData.getElastiGroupOriginalConfig())
+            .oldElastiGroupOriginalConfig(spotInstSetupTaskResponse.getGroupToBeDownsized().get(0))
             .build();
 
     return anExecutionResponse()

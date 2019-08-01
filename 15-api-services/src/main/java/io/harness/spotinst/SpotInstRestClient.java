@@ -33,7 +33,7 @@ public interface SpotInstRestClient {
   @PUT("aws/ec2/group/{groupId}")
   @Headers("Content-Type: application/json")
   Call<SpotInstUpdateElastiGroupResponse> updateElastiGroup(@Header("Authorization") String authorization,
-      @Query("accountId") String spotInstAccountId, @Path("groupId") String elastiGroupId,
+      @Path("groupId") String elastiGroupId, @Query("accountId") String spotInstAccountId,
       @Body Map<String, Object> group);
 
   @DELETE("aws/ec2/group/{groupId}")

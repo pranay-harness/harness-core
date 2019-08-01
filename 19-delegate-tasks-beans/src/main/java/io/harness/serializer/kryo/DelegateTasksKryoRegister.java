@@ -23,6 +23,10 @@ import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters.SpotInstTaskType;
+import io.harness.delegate.task.spotinst.response.SpotInstDeployTaskResponse;
+import io.harness.delegate.task.spotinst.response.SpotInstSetupTaskResponse;
+import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
+import io.harness.delegate.task.spotinst.response.SpotInstTaskResponse;
 import io.harness.serializer.KryoRegistrar;
 
 public class DelegateTasksKryoRegister implements KryoRegistrar {
@@ -50,5 +54,9 @@ public class DelegateTasksKryoRegister implements KryoRegistrar {
     kryo.register(SpotInstTaskParameters.class, 19011);
     kryo.register(SpotInstSetupTaskParameters.class, 19012);
     kryo.register(SpotInstTaskType.class, 19013);
+    kryo.register(SpotInstTaskExecutionResponse.class, 19014);
+    kryo.register(SpotInstTaskResponse.class, 19015);
+    kryo.register(SpotInstSetupTaskResponse.class, 19016);
+    kryo.register(SpotInstDeployTaskResponse.class, 19017);
   }
 }

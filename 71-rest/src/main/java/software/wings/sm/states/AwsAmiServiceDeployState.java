@@ -127,6 +127,7 @@ public class AwsAmiServiceDeployState extends State {
   @Inject private transient HostService hostService;
   @Inject private transient AwsUtils awsUtils;
   @Inject private transient AwsAsgHelperServiceManager awsAsgHelperServiceManager;
+  @Inject private transient AwsStateHelper awsStateHelper;
 
   public AwsAmiServiceDeployState(String name) {
     this(name, StateType.AWS_AMI_SERVICE_DEPLOY.name());

@@ -87,7 +87,7 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
     List<ElastiGroup> groupsWithoutInstances = newArrayList();
     if (isNotEmpty(elastiGroups)) {
       elastiGroups.forEach(group -> {
-        if (group.getElastiGroupCapacity().getTarget() > 0) {
+        if (group.getCapacity().getTarget() > 0) {
           groupsWithInstances.add(group);
         } else {
           groupsWithoutInstances.add(group);
@@ -108,7 +108,7 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
         .commandExecutionStatus(SUCCESS)
         .spotInstTaskResponse(SpotInstSetupTaskResponse.builder()
                                   .newElastiGroup(elastiGroup)
-                                  .groupsToBeDownsized(groupsWithInstances)
+                                  .groupToBeDownsized(groupsWithInstances)
                                   .build())
         .build();
   }
