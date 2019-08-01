@@ -166,6 +166,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       String cvConfigId, MetricAnalysisRecord mlAnalysisResponse, String tag) {
     logger.info("saveAnalysisRecordsML stateType  {} stateExecutionId {} analysisMinute {}", stateType,
         stateExecutionId, analysisMinute);
+
     mlAnalysisResponse.setStateType(stateType);
     mlAnalysisResponse.setAppId(appId);
     mlAnalysisResponse.setWorkflowExecutionId(workflowExecutionId);
@@ -252,17 +253,17 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     riskSummary.compressMaps();
 
     mlAnalysisResponse.setAggregatedRisk(aggregatedRisk);
-
-    saveTimeSeriesMLScores(timeSeriesMLScores);
-    bumpCollectionMinuteToProcess(appId, stateExecutionId, workflowExecutionId, groupName, analysisMinute);
+    mlAnalysisResponse.compressTransactions();
 
     if (mlAnalysisResponse instanceof ExperimentalMetricAnalysisRecord) {
       learningEngineService.markExpTaskCompleted(taskId);
+      wingsPersistence.save(mlAnalysisResponse);
+      return true;
     } else {
+      saveTimeSeriesMLScores(timeSeriesMLScores);
+      bumpCollectionMinuteToProcess(appId, stateExecutionId, workflowExecutionId, groupName, analysisMinute);
       learningEngineService.markCompleted(taskId);
     }
-
-    mlAnalysisResponse.compressTransactions();
 
     if (isNotEmpty(mlAnalysisResponse.getAnomalies())) {
       TimeSeriesAnomaliesRecord anomaliesRecord = wingsPersistence.createQuery(TimeSeriesAnomaliesRecord.class)
