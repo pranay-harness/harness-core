@@ -18,10 +18,14 @@ import org.junit.runners.MethodSorters;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest {
-  private static String CONNECTOR_APPDYNAMICS_PREFIX = "Automation-Appdynamics-Connector";
-  private static String CONNECTOR_NEWRELIC_PREFIX = "Automation-Newrelic-Connector";
-  private static String CONNECTOR_ELK_PREFIX = "Automation-ELK-Connector";
-  private static String CONNECTOR_SPLUNK_PREFIX = "Automation-SPLUNK-Connector";
+  private static String CONNECTOR_APPDYNAMICS_PREFIX = "Automation-Appdynamics-Connector-";
+  private static String CONNECTOR_NEWRELIC_PREFIX = "Automation-Newrelic-Connector-";
+  private static String CONNECTOR_ELK_PREFIX = "Automation-ELK-Connector-";
+  private static String CONNECTOR_SPLUNK_PREFIX = "Automation-Splunk-Connector-";
+  private static String CONNECTOR_BUGSNAG_PREFIX = "Automation-Bugsnag-Connector-";
+  private static String CONNECTOR_DATADOG_PREFIX = "Automation-Datadog-Connector-";
+  private static String CONNECTOR_PROMETHEUS_PREFIX = "Automation-Prometheus-Connector-";
+  private static String CONNECTOR_SUMOLOGIC_PREFIX = "Automation-SumoLogic-Connector-";
   private static String CATEGORY = "CONNECTOR";
 
   @Test
@@ -101,6 +105,90 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
   public void TC4_createAndDeleteSplunkConnector() {
     String connectorName = CONNECTOR_SPLUNK_PREFIX + System.currentTimeMillis();
     String connectorId = ConnectorUtils.createSplunkConnector(bearerToken, connectorName, getAccount().getUuid());
+
+    // Verify connector is created i.e connector with specific name exist
+    boolean connectorFound =
+        SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, connectorName);
+    assertTrue(connectorFound);
+
+    // Delete the created connector
+    SettingsUtils.delete(bearerToken, getAccount().getUuid(), connectorId);
+
+    // Verify connector is deleted i.e connector with specific name doesn't exist
+    connectorFound =
+        SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, connectorName);
+    assertFalse(connectorFound);
+  }
+
+  @Test
+  @Owner(emails = SHASWAT, resent = false)
+  @Category(FunctionalTests.class)
+  public void TC5_createAndDeleteBugsnagConnector() {
+    String connectorName = CONNECTOR_BUGSNAG_PREFIX + System.currentTimeMillis();
+    String connectorId = ConnectorUtils.createBugsnagConnector(bearerToken, connectorName, getAccount().getUuid());
+
+    // Verify connector is created i.e connector with specific name exist
+    boolean connectorFound =
+        SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, connectorName);
+    assertTrue(connectorFound);
+
+    // Delete the created connector
+    SettingsUtils.delete(bearerToken, getAccount().getUuid(), connectorId);
+
+    // Verify connector is deleted i.e connector with specific name doesn't exist
+    connectorFound =
+        SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, connectorName);
+    assertFalse(connectorFound);
+  }
+
+  @Test
+  @Owner(emails = SHASWAT, resent = false)
+  @Category(FunctionalTests.class)
+  public void TC6_createAndDeleteDatadogConnector() {
+    String connectorName = CONNECTOR_DATADOG_PREFIX + System.currentTimeMillis();
+    String connectorId = ConnectorUtils.createDatadogConnector(bearerToken, connectorName, getAccount().getUuid());
+
+    // Verify connector is created i.e connector with specific name exist
+    boolean connectorFound =
+        SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, connectorName);
+    assertTrue(connectorFound);
+
+    // Delete the created connector
+    SettingsUtils.delete(bearerToken, getAccount().getUuid(), connectorId);
+
+    // Verify connector is deleted i.e connector with specific name doesn't exist
+    connectorFound =
+        SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, connectorName);
+    assertFalse(connectorFound);
+  }
+
+  @Test
+  @Owner(emails = SHASWAT, resent = false)
+  @Category(FunctionalTests.class)
+  public void TC7_createAndDeleteSumoLogicConnector() {
+    String connectorName = CONNECTOR_SUMOLOGIC_PREFIX + System.currentTimeMillis();
+    String connectorId = ConnectorUtils.createSumoLogicConnector(bearerToken, connectorName, getAccount().getUuid());
+
+    // Verify connector is created i.e connector with specific name exist
+    boolean connectorFound =
+        SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, connectorName);
+    assertTrue(connectorFound);
+
+    // Delete the created connector
+    SettingsUtils.delete(bearerToken, getAccount().getUuid(), connectorId);
+
+    // Verify connector is deleted i.e connector with specific name doesn't exist
+    connectorFound =
+        SettingsUtils.checkCloudproviderConnectorExist(bearerToken, getAccount().getUuid(), CATEGORY, connectorName);
+    assertFalse(connectorFound);
+  }
+
+  @Test
+  @Owner(emails = SHASWAT, resent = false)
+  @Category(FunctionalTests.class)
+  public void TC8_createAndDeletePrometheusConnector() {
+    String connectorName = CONNECTOR_PROMETHEUS_PREFIX + System.currentTimeMillis();
+    String connectorId = ConnectorUtils.createPrometheusConnector(bearerToken, connectorName, getAccount().getUuid());
 
     // Verify connector is created i.e connector with specific name exist
     boolean connectorFound =
