@@ -421,7 +421,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
     return builder.build();
   }
 
-  private DeploymentStatsQueryMetaData formQuery(String accountId, QLDeploymentAggregationFunction aggregateFunction,
+  protected DeploymentStatsQueryMetaData formQuery(String accountId, QLDeploymentAggregationFunction aggregateFunction,
       List<QLDeploymentFilter> filters, List<QLDeploymentAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
       List<QLDeploymentSortCriteria> sortCriteria) {
     DeploymentStatsQueryMetaDataBuilder queryMetaDataBuilder = DeploymentStatsQueryMetaData.builder();
@@ -659,8 +659,9 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
     switch (idFilter.getOperator()) {
       case IN:
       case EQUALS:
-        selectQuery.addCondition(new CustomCondition(key + " @>"
-            + "'" + filterValue + "'"));
+        selectQuery.addCondition(
+            new CustomCondition(schema.getDeploymentTable().getAlias() + "." + key.getColumnNameSQL() + " @>"
+                + "'" + filterValue + "'"));
         break;
       default:
         throw new RuntimeException("Unsupported operator for ArrayStringFilter" + idFilter.getOperator());
@@ -681,8 +682,9 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
     switch (operator) {
       case IN:
       case EQUALS:
-        selectQuery.addCondition(new CustomCondition(key + " @>"
-            + "'" + filterValue + "'"));
+        selectQuery.addCondition(
+            new CustomCondition(schema.getDeploymentTable().getAlias() + "." + key.getColumnNameSQL() + " @>"
+                + "'" + filterValue + "'"));
         break;
       default:
         throw new RuntimeException("Unsupported operator for EnvTypeFilter" + operator);
@@ -696,8 +698,9 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
     switch (stringFilter.getOperator()) {
       case IN:
       case EQUALS:
-        selectQuery.addCondition(new CustomCondition(key + " @>"
-            + "'" + filterValue + "'"));
+        selectQuery.addCondition(
+            new CustomCondition(schema.getDeploymentTable().getAlias() + "." + key.getColumnNameSQL() + " @>"
+                + "'" + filterValue + "'"));
         break;
       default:
         throw new RuntimeException("Unsupported operator for ArrayStringFilter" + stringFilter.getOperator());
