@@ -326,11 +326,13 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     userInvite = wingsPersistence.createQuery(UserInvite.class).filter(UserInviteKeys.email, email).get();
     assertNotNull(userInvite);
     assertFalse(userInvite.isCompleted());
+    assertEquals(name, userInvite.getName());
     String inviteId = userInvite.getUuid();
     assertNotNull(inviteId);
 
     // Complete the trial invitation.
     User user = completeTrialUserInviteAndSignin(inviteId);
+    assertEquals(name, user.getName());
     assertNotNull(user.getToken());
 
     // Verify the account get created.
@@ -341,6 +343,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     User savedUser = wingsPersistence.createQuery(User.class).filter(UserKeys.email, email).get();
     assertNotNull(savedUser);
     assertTrue(savedUser.isEmailVerified());
+    assertEquals(name, savedUser.getName());
     assertEquals(1, savedUser.getAccounts().size());
 
     userInvite.setPassword(pwd.toCharArray());
