@@ -154,7 +154,9 @@ public class Utils {
   public static String urlEncode(String decoded) {
     String encoded = decoded;
     try {
-      encoded = URLEncoder.encode(decoded, StandardCharsets.UTF_8.name());
+      if (decoded != null) {
+        encoded = URLEncoder.encode(decoded, StandardCharsets.UTF_8.name());
+      }
     } catch (UnsupportedEncodingException e) {
       // Should not happen and ignore.
     }
@@ -164,7 +166,9 @@ public class Utils {
   public static String urlDecode(String encoded) {
     String decoded = encoded;
     try {
-      decoded = URLDecoder.decode(encoded, StandardCharsets.UTF_8.name());
+      if (encoded != null) {
+        decoded = URLDecoder.decode(encoded, StandardCharsets.UTF_8.name());
+      }
     } catch (UnsupportedEncodingException e) {
       // Should not happen and ignore.
     }

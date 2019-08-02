@@ -43,7 +43,7 @@ public class UserInvite extends Base {
   // This flag denote if the user has agreed to the terms and conditions.
   private boolean agreement;
 
-  @Transient private String name;
+  private String name;
 
   @Getter @Setter @Transient private char[] password;
   @JsonIgnore private String passwordHash;
