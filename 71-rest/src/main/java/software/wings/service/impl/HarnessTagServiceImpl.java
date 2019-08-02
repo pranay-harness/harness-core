@@ -8,6 +8,7 @@ import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.atteo.evo.inflector.English.plural;
 import static software.wings.beans.EntityType.APPLICATION;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.PIPELINE;
@@ -137,7 +138,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
       throw new InvalidRequestException("Tag with given Tag Name does not exist");
     }
 
-    validateAllowedValuesUpdate(tag, existingTag);
+    validateAllowedValuesUpdate(tag);
 
     Map<String, Object> keyValuePairsToAdd = new HashMap<>();
     Set<String> fieldsToRemove = new HashSet<>();
@@ -161,26 +162,23 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     return updateTag(tag, false);
   }
 
-  private void validateAllowedValuesUpdate(HarnessTag harnessTag, HarnessTag existingTag) {
-    Set<String> existingAllowedValues = existingTag.getAllowedValues();
-    if (isEmpty(existingAllowedValues)) {
-      return;
-    }
-
-    Set<String> removedAllowedValues = existingAllowedValues;
-    if (isNotEmpty(harnessTag.getAllowedValues())) {
-      removedAllowedValues.removeAll(harnessTag.getAllowedValues());
-    }
-
-    if (isEmpty(removedAllowedValues)) {
-      return;
-    }
-
+  private void validateAllowedValuesUpdate(HarnessTag harnessTag) {
     Set<String> inUseValues = getInUseValues(harnessTag.getAccountId(), harnessTag.getKey());
-    inUseValues.retainAll(removedAllowedValues);
 
-    if (isNotEmpty(inUseValues)) {
-      throw new InvalidRequestException(format("Tag value %s is in use. Cannot delete", String.join(",", inUseValues)));
+    if (isEmpty(inUseValues)) {
+      return;
+    }
+
+    if (isEmpty(harnessTag.getAllowedValues()) || !harnessTag.getAllowedValues().containsAll(inUseValues)) {
+      if (isNotEmpty(harnessTag.getAllowedValues())) {
+        inUseValues.removeAll(harnessTag.getAllowedValues());
+      }
+
+      String msg = format(
+          "Allowed values must contain all in used values. %s [%s] %s missing in current allowed values list",
+          plural("Value", inUseValues.size()), String.join(",", inUseValues), inUseValues.size() > 1 ? "are" : "is");
+
+      throw new InvalidRequestException(msg, USER);
     }
   }
 

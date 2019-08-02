@@ -124,6 +124,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @RealMongo
   @Category(UnitTests.class)
   public void updateTest() {
     harnessTagService.create(colorTag);
@@ -267,7 +268,9 @@ public class HarnessTagServiceTest extends WingsBaseTest {
       harnessTagService.update(colorTag);
       fail("Expected an InvalidRequestException to be thrown");
     } catch (InvalidRequestException exception) {
-      assertThat(exception.getParams().get("message")).isEqualTo("Tag value red is in use. Cannot delete");
+      assertThat(exception.getParams().get("message"))
+          .isEqualTo(
+              "Allowed values must contain all in used values. Value [red] is missing in current allowed values list");
     }
   }
 
@@ -472,5 +475,54 @@ public class HarnessTagServiceTest extends WingsBaseTest {
     harnessTagService.update(savedTag);
     HarnessTag savedTag3 = harnessTagService.get(TEST_ACCOUNT_ID, colorTagKey);
     assertThat(savedTag3.getAllowedValues()).isEqualTo(Sets.newHashSet("red", "blue", "green"));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testUpdateAllowedValuesDifferentFromInUseValues() {
+    harnessTagService.attachTag(HarnessTagLink.builder()
+                                    .accountId(TEST_ACCOUNT_ID)
+                                    .appId(APP_ID)
+                                    .entityId("id")
+                                    .entityType(SERVICE)
+                                    .key(colorTagKey)
+                                    .value("red")
+                                    .build());
+
+    colorTag.setAllowedValues(Collections.emptySet());
+    try {
+      harnessTagService.update(colorTag);
+      fail("Expected an InvalidRequestException to be thrown");
+    } catch (InvalidRequestException exception) {
+      assertThat(exception.getParams().get("message"))
+          .isEqualTo(
+              "Allowed values must contain all in used values. Value [red] is missing in current allowed values list");
+    }
+
+    colorTag.setAllowedValues(Sets.newHashSet("green"));
+    try {
+      harnessTagService.update(colorTag);
+      fail("Expected an InvalidRequestException to be thrown");
+    } catch (InvalidRequestException exception) {
+      assertThat(exception.getParams().get("message"))
+          .isEqualTo(
+              "Allowed values must contain all in used values. Value [red] is missing in current allowed values list");
+    }
+
+    colorTag.setAllowedValues(Sets.newHashSet("red"));
+    colorTag = harnessTagService.update(colorTag);
+
+    colorTag.getAllowedValues().add("green");
+    colorTag = harnessTagService.update(colorTag);
+
+    colorTag.setAllowedValues(Sets.newHashSet("blue"));
+    try {
+      harnessTagService.update(colorTag);
+      fail("Expected an InvalidRequestException to be thrown");
+    } catch (InvalidRequestException exception) {
+      assertThat(exception.getParams().get("message"))
+          .isEqualTo(
+              "Allowed values must contain all in used values. Value [red] is missing in current allowed values list");
+    }
   }
 }
