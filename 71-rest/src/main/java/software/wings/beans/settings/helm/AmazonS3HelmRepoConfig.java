@@ -54,7 +54,7 @@ public class AmazonS3HelmRepoConfig extends SettingValue implements HelmRepoConf
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     List<ExecutionCapability> executionCapabilityList = new ArrayList<>();
     executionCapabilityList.addAll(CapabilityHelper.generateExecutionCapabilitiesForHelm(new ArrayList<>()));
-    executionCapabilityList.addAll(CapabilityHelper.generateExecutionCapabilitiesForChartMeuseum(new ArrayList<>()));
+    executionCapabilityList.addAll(CapabilityHelper.generateExecutionCapabilitiesForChartMuseum(new ArrayList<>()));
     executionCapabilityList.add(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(AWS_URL));
     return executionCapabilityList;

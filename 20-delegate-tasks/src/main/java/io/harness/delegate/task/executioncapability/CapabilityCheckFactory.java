@@ -2,6 +2,8 @@ package io.harness.delegate.task.executioncapability;
 
 import static io.harness.delegate.beans.executioncapability.CapabilityType.ALWAYS_TRUE;
 import static io.harness.delegate.beans.executioncapability.CapabilityType.AWS_REGION;
+import static io.harness.delegate.beans.executioncapability.CapabilityType.CHART_MUSEUM;
+import static io.harness.delegate.beans.executioncapability.CapabilityType.HELM;
 import static io.harness.delegate.beans.executioncapability.CapabilityType.HTTP;
 import static io.harness.delegate.beans.executioncapability.CapabilityType.PROCESS_EXECUTOR;
 import static io.harness.delegate.beans.executioncapability.CapabilityType.SOCKET;
@@ -20,6 +22,8 @@ public class CapabilityCheckFactory {
   @Inject AwsRegionCapabilityCheck awsRegionCapabilityCheck;
   @Inject SystemEnvCapabilityCheck systemEnvCapabilityCheck;
   @Inject HttpConnectionExecutionCapabilityCheck httpConnectionExecutionCapabilityCheck;
+  @Inject HelmCapabilityCheck helmCapabilityCheck;
+  @Inject ChartMuseumCapabilityCheck chartMuseumCapabilityCheck;
 
   public CapabilityCheck obtainCapabilityCheck(CapabilityType capabilityCheckType) {
     if (SOCKET.equals(capabilityCheckType)) {
@@ -44,6 +48,14 @@ public class CapabilityCheckFactory {
 
     if (HTTP.equals(capabilityCheckType)) {
       return httpConnectionExecutionCapabilityCheck;
+    }
+
+    if (HELM.equals(capabilityCheckType)) {
+      return helmCapabilityCheck;
+    }
+
+    if (CHART_MUSEUM.equals(capabilityCheckType)) {
+      return chartMuseumCapabilityCheck;
     }
 
     return null;

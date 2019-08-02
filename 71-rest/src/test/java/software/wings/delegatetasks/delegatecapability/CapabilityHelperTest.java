@@ -142,7 +142,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
   public void testGetHttpCapabilityForDecryption_VaultConfig() throws Exception {
     EncryptionConfig encryptionConfig = VaultConfig.builder().vaultUrl(HTTP_VAUTL_URL).build();
     HttpConnectionExecutionCapability capability = CapabilityHelper.getHttpCapabilityForDecryption(encryptionConfig);
-    capability.fetchCapabilityBasis().equals(HTTP_VAUTL_URL);
+    assertEquals(capability.fetchCapabilityBasis(), HTTP_VAUTL_URL + ":" + HTTP_PORT);
   }
 
   @Test
@@ -150,6 +150,6 @@ public class CapabilityHelperTest extends WingsBaseTest {
   public void testGetHttpCapabilityForDecryption_KmsConfig() throws Exception {
     EncryptionConfig encryptionConfig = KmsConfig.builder().region(US_EAST_2).build();
     HttpConnectionExecutionCapability capability = CapabilityHelper.getHttpCapabilityForDecryption(encryptionConfig);
-    capability.fetchCapabilityBasis().equals(AWS_KMS_URL);
+    assertEquals(capability.fetchCapabilityBasis(), AWS_KMS_URL + ":" + HTTPS_PORT);
   }
 }

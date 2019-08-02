@@ -1,11 +1,10 @@
-package io.harness.delegate.service;
+package io.harness.delegate.configuration;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.network.Http.getBaseUrl;
 import static java.lang.String.format;
 
-import io.harness.delegate.app.DelegateConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -51,7 +50,7 @@ public class InstallUtils {
     return chartMuseumPath;
   }
 
-  static boolean installKubectl(DelegateConfiguration configuration) {
+  public static boolean installKubectl(DelegateConfiguration configuration) {
     try {
       if (StringUtils.isNotEmpty(configuration.getKubectlPath())) {
         kubectlPath = configuration.getKubectlPath();
@@ -151,7 +150,7 @@ public class InstallUtils {
         + "/amd64/kubectl";
   }
 
-  static boolean installGoTemplateTool(DelegateConfiguration configuration) {
+  public static boolean installGoTemplateTool(DelegateConfiguration configuration) {
     try {
       if (isWindows()) {
         logger.info("Skipping go-template install on Windows");
@@ -322,7 +321,7 @@ public class InstallUtils {
     }
   }
 
-  static boolean installHelm(DelegateConfiguration configuration) {
+  public static boolean installHelm(DelegateConfiguration configuration) {
     try {
       if (isNotEmpty(configuration.getHelmPath())) {
         helmPath = configuration.getHelmPath();
@@ -416,7 +415,7 @@ public class InstallUtils {
         + "/amd64/chartmuseum";
   }
 
-  static boolean installChartMuseum(DelegateConfiguration configuration) {
+  public static boolean installChartMuseum(DelegateConfiguration configuration) {
     try {
       if (isWindows()) {
         logger.info("Skipping chart museum install on Windows");

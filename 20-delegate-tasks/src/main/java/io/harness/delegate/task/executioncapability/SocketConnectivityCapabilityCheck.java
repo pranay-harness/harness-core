@@ -30,9 +30,10 @@ public class SocketConnectivityCapabilityCheck implements CapabilityCheck {
   public static boolean connectableHost(String host, int port) {
     try (Socket socket = new Socket()) {
       socket.connect(new InetSocketAddress(host, port), 5000); // 5 sec timeout
+      logger.info("[Delegate Capability] Socket Connection Succeeded for url " + host + "on port" + port);
       return true;
     } catch (IOException ignored) {
-      // Do nothing
+      logger.error("[Delegate Capability] Socket Connection Failed for url " + host + "on port" + port);
     }
     return false; // Either timeout or unreachable or failed DNS lookup.
   }

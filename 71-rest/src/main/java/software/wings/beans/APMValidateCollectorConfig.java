@@ -7,12 +7,14 @@ import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
+import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.sm.states.APMVerificationState.Method;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -41,6 +43,10 @@ public class APMValidateCollectorConfig implements ExecutionCapabilityDemander {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(getUrl()));
+    List<ExecutionCapability> executionCapabilities = new ArrayList<>();
+    executionCapabilities.addAll(CapabilityHelper.generateKmsHttpCapabilities(encryptedDataDetails));
+    executionCapabilities.addAll(Collections.singletonList(
+        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(baseUrl)));
+    return executionCapabilities;
   }
 }

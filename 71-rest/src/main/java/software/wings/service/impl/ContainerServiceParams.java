@@ -17,7 +17,7 @@ import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.settings.SettingValue;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -49,17 +49,18 @@ public class ContainerServiceParams implements ExecutionCapabilityDemander {
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     if (settingAttribute == null) {
-      return CapabilityHelper.generateVaultHttpCapabilities(encryptionDetails);
+      return CapabilityHelper.generateKmsHttpCapabilities(encryptionDetails);
     }
     SettingValue value = settingAttribute.getValue();
 
     if (value instanceof AwsConfig) {
-      return Arrays.asList(AwsRegionCapabilityGenerator.buildAwsRegionCapability(region));
+      return Collections.singletonList(AwsRegionCapabilityGenerator.buildAwsRegionCapability(region));
     } else if (value instanceof KubernetesClusterConfig) {
       return CapabilityHelper.generateDelegateCapabilities(value, encryptionDetails);
     } else if ("None".equals(clusterName)) {
-      return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-          "https://container.googleapis.com/"));
+      return Collections.singletonList(
+          HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+              "https://container.googleapis.com/"));
     } else {
       return CapabilityHelper.generateDelegateCapabilities(value, encryptionDetails);
     }

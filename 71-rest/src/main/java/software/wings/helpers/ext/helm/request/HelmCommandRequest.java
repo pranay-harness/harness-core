@@ -1,6 +1,8 @@
 package software.wings.helpers.ext.helm.request;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -11,6 +13,7 @@ import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -18,7 +21,7 @@ import java.util.List;
  */
 @Data
 @AllArgsConstructor
-public class HelmCommandRequest {
+public class HelmCommandRequest implements ExecutionCapabilityDemander {
   @NotEmpty private HelmCommandType helmCommandType;
   private String accountId;
   private String appId;
@@ -37,6 +40,14 @@ public class HelmCommandRequest {
 
   public HelmCommandRequest(HelmCommandType helmCommandType) {
     this.helmCommandType = helmCommandType;
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    List<ExecutionCapability> executionCapabilities = new ArrayList<>();
+    executionCapabilities.addAll(gitConfig.fetchRequiredExecutionCapabilities());
+    executionCapabilities.addAll(containerServiceParams.fetchRequiredExecutionCapabilities());
+    return executionCapabilities;
   }
 
   public enum HelmCommandType { INSTALL, ROLLBACK, LIST_RELEASE, RELEASE_HISTORY }

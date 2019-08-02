@@ -10,7 +10,7 @@ import com.google.common.io.Files;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.app.DelegateConfiguration;
+import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.service.DelegateFileManagerImpl;
 import io.harness.managerclient.ManagerClient;
 import io.harness.rule.RepeatRule.Repeat;
