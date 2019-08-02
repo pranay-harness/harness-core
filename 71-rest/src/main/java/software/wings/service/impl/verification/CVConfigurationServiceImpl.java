@@ -8,6 +8,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
+import static software.wings.common.VerificationConstants.CV_META_DATA;
 import static software.wings.sm.StateType.STACK_DRIVER_LOG;
 
 import com.google.common.base.Preconditions;
@@ -18,6 +19,7 @@ import com.mongodb.DuplicateKeyException;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.WingsException;
+import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.persistence.HIterator;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -87,6 +89,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   @Inject CvValidationService cvValidationService;
   @Inject private YamlPushService yamlPushService;
   @Inject private ExecutorService executorService;
+
+  @Inject private HarnessMetricRegistry harnessMetricRegistry;
 
   @Override
   public String saveConfiguration(String accountId, String appId, StateType stateType, Object params) {
@@ -183,7 +187,18 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     cvConfiguration.setAppId(appId);
     cvConfiguration.setStateType(stateType);
     cvConfiguration.setUuid(generateUuid());
-    return saveToDatabase(cvConfiguration, createdFromYaml).getUuid();
+
+    String dbConfiguration = saveToDatabase(cvConfiguration, createdFromYaml).getUuid();
+
+    try {
+      harnessMetricRegistry.recordGaugeInc(CV_META_DATA,
+          new String[] {cvConfiguration.getAccountId(), cvConfiguration.getStateType().name(),
+              String.valueOf(cvConfiguration.isEnabled24x7())});
+    } catch (Exception e) {
+      logger.info("Unable to increase the metric for the CVConfiguration: " + cvConfiguration.getName(), e);
+    }
+
+    return dbConfiguration;
   }
 
   public CVConfiguration saveToDatabase(CVConfiguration cvConfiguration, boolean createdFromYaml) {
@@ -366,6 +381,11 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         getUpdateOperations(stateType, updatedConfig, savedConfiguration);
     try {
       wingsPersistence.update(savedConfiguration, updateOperations);
+      harnessMetricRegistry.recordGaugeInc(
+          CV_META_DATA, new String[] {accountId, stateType.name(), String.valueOf(updatedConfig.isEnabled24x7())});
+      harnessMetricRegistry.recordGaugeDec(CV_META_DATA,
+          new String[] {savedConfiguration.getAccountId(), savedConfiguration.getStateType().name(),
+              String.valueOf(savedConfiguration.isEnabled24x7())});
     } catch (DuplicateKeyException ex) {
       throw new WingsException("A Service Verification with the name " + updatedConfig.getName()
           + " already exists. Please choose a unique name.");
@@ -390,10 +410,21 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     if (savedConfig == null) {
       return false;
     }
+
     wingsPersistence.delete(CVConfiguration.class, serviceConfigurationId);
     deleteTemplate(accountId, serviceConfigurationId, ((CVConfiguration) savedConfig).getStateType());
 
     yamlPushService.pushYamlChangeSet(accountId, savedConfig, null, Type.DELETE, isSyncFromGit, false);
+
+    try {
+      harnessMetricRegistry.recordGaugeDec(CV_META_DATA,
+          new String[] {((CVConfiguration) savedConfig).getAccountId(),
+              ((CVConfiguration) savedConfig).getStateType().name(),
+              String.valueOf(((CVConfiguration) savedConfig).isEnabled24x7())});
+    } catch (Exception e) {
+      logger.info("Unable to decrease the metric for CVConfiguration: " + ((CVConfiguration) savedConfig).getName(), e);
+    }
+
     return true;
   }
 

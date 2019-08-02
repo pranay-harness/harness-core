@@ -67,6 +67,8 @@ public class UsageMetricsService {
             publisher.publishSetupDataMetric(account.getUuid(), account.getAccountName(),
                 getNumberOfWorkflowsForAccount(account.getUuid()), EventConstants.NUMBER_OF_WORKFLOWS);
             publisher.publishAccountMetadataMetric(account);
+            publisher.publishCV247MetadataMetric(account.getUuid(), true);
+            publisher.publishCV247MetadataMetric(account.getUuid(), false);
           } catch (Exception e) {
             logger.warn("Failed to get Usage metrics for for accountId:[{}], accountName:[{}]", account.getUuid(),
                 account.getAccountName(), e);

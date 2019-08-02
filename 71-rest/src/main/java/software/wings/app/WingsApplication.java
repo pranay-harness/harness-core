@@ -10,6 +10,8 @@ import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static software.wings.beans.FeatureName.GLOBAL_DISABLE_HEALTH_CHECK;
+import static software.wings.common.VerificationConstants.CV_24X7_METRIC_LABELS;
+import static software.wings.common.VerificationConstants.CV_META_DATA;
 import static software.wings.common.VerificationConstants.VERIFICATION_DEPLOYMENTS;
 import static software.wings.common.VerificationConstants.VERIFICATION_METRIC_LABELS;
 import static software.wings.utils.CacheManager.USER_CACHE;
@@ -428,6 +430,7 @@ public class WingsApplication extends Application<MainConfiguration> {
   private void initMetrics() {
     harnessMetricRegistry.registerCounterMetric(
         VERIFICATION_DEPLOYMENTS, VERIFICATION_METRIC_LABELS.toArray(new String[0]), " ");
+    harnessMetricRegistry.registerGaugeMetric(CV_META_DATA, CV_24X7_METRIC_LABELS, " ");
   }
 
   private void initializeFeatureFlags(Injector injector) {
