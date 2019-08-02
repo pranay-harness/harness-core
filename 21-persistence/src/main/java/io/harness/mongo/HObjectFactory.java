@@ -50,6 +50,8 @@ public class HObjectFactory extends DefaultCreator {
     return className.startsWith("software.wings") || className.startsWith("io.harness");
   }
 
+  interface NotFoundClass {}
+
   @SuppressWarnings("unchecked")
   private Class getClass(final DBObject dbObj) {
     // see if there is a className value
@@ -80,9 +82,14 @@ public class HObjectFactory extends DefaultCreator {
         } catch (ClassNotFoundException e) {
           logger.warn("Class not found defined in dbObj: ", e);
         }
-        return null;
+        return NotFoundClass.class;
       });
     }
+
+    if (clazz == NotFoundClass.class) {
+      return null;
+    }
+
     return clazz;
   }
 

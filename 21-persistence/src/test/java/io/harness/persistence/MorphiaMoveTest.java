@@ -37,6 +37,31 @@ public class MorphiaMoveTest extends PersistenceTest {
 
   @Test
   @Category(UnitTests.class)
+  @SuppressWarnings("PMD")
+  public void shouldCacheMissingClass() {
+    HolderEntity entity =
+        HolderEntity.builder()
+            .uuid(generateUuid())
+            .morphiaObj(
+                HackMorphiaClass.builder().test("test").className("io.harness.persistence.MorphiaMissingClass").build())
+            .build();
+    String id = persistence.save(entity);
+    assertThat(id).isNotNull();
+
+    try {
+      persistence.get(HolderEntity.class, id);
+    } catch (Throwable ignore) {
+      // do nothing
+    }
+    try {
+      persistence.get(HolderEntity.class, id);
+    } catch (Throwable ignore) {
+      // do nothing
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void shouldReadOldClass() {
     HolderEntity entity =
         HolderEntity.builder()
