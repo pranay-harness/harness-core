@@ -185,7 +185,7 @@ public class EcsBlueGreenServiceSetupRoute53DNS extends State {
 
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
-    Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceId);
+    Artifact artifact = ((DeploymentExecutionContext) context).getDefaultArtifactForService(serviceId);
     if (artifact == null) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Artifact is null");
     }

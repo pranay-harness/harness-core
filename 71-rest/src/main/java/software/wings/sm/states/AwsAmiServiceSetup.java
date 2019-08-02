@@ -182,7 +182,7 @@ public class AwsAmiServiceSetup extends State {
     notNullCheck("workflowStandardParams", workflowStandardParams, USER);
     notNullCheck("currentUser", workflowStandardParams.getCurrentUser(), USER);
 
-    Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceId);
+    Artifact artifact = ((DeploymentExecutionContext) context).getDefaultArtifactForService(serviceId);
     if (artifact == null) {
       throw new WingsException(format("Unable to find artifact for service id: %s", serviceId));
     }

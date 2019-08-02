@@ -160,7 +160,7 @@ public class AwsAmiServiceDeployState extends State {
     Environment env = workflowStandardParams.getEnv();
     Service service = serviceResourceService.get(app.getUuid(), serviceId);
 
-    Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceId);
+    Artifact artifact = ((DeploymentExecutionContext) context).getDefaultArtifactForService(serviceId);
     if (artifact == null) {
       throw new WingsException(format("Unable to find artifact for service %s", service.getName()));
     }
@@ -493,7 +493,7 @@ public class AwsAmiServiceDeployState extends State {
     Key<ServiceTemplate> serviceTemplateKey =
         serviceTemplateService.getTemplateRefKeysByService(app.getUuid(), serviceId, env.getUuid()).get(0);
 
-    Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceId);
+    Artifact artifact = ((DeploymentExecutionContext) context).getDefaultArtifactForService(serviceId);
     if (artifact == null) {
       throw new WingsException(format("Unable to find artifact for service %s", service.getName()));
     }

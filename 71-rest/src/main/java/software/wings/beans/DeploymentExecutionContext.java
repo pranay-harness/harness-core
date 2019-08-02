@@ -12,4 +12,6 @@ public interface DeploymentExecutionContext extends ExecutionContext {
   Artifact getArtifactForService(String serviceId);
 
   Map<String, Artifact> getArtifactsForService(String serviceId);
+
+  Artifact getDefaultArtifactForService(String serviceId);
 }
