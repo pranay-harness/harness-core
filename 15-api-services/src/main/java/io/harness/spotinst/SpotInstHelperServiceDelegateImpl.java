@@ -7,6 +7,7 @@ import static io.harness.spotinst.model.SpotInstConstants.spotInstBaseUrl;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.stream.Collectors.toList;
 
@@ -71,13 +72,23 @@ public class SpotInstHelperServiceDelegateImpl implements SpotInstHelperServiceD
   }
 
   @Override
-  public Optional<ElastiGroup> getElastiGroup(String spotInstToken, String spotInstAccountId, String elastiGroupName)
-      throws Exception {
+  public Optional<ElastiGroup> getElastiGroupByName(
+      String spotInstToken, String spotInstAccountId, String elastiGroupName) throws Exception {
     List<ElastiGroup> items = listAllElstiGroups(spotInstToken, spotInstAccountId);
     if (isEmpty(items)) {
       return empty();
     }
     return items.stream().filter(group -> elastiGroupName.equals(group.getName())).findFirst();
+  }
+
+  @Override
+  public Optional<ElastiGroup> getElastiGroupById(String spotInstToken, String spotInstAccountId, String elastiGroupId)
+      throws Exception {
+    String auth = getAuthToken(spotInstToken);
+    SpotInstListElastiGroupsResponse spotInstListElastiGroupsResponse =
+        executeRestCall(getSpotInstRestClient().listElastiGroup(auth, elastiGroupId, spotInstAccountId));
+    List<ElastiGroup> items = spotInstListElastiGroupsResponse.getResponse().getItems();
+    return isEmpty(items) ? empty() : of(items.get(0));
   }
 
   @Override
@@ -99,6 +110,13 @@ public class SpotInstHelperServiceDelegateImpl implements SpotInstHelperServiceD
         })
         .sorted(Comparator.comparingInt(g -> Integer.parseInt(g.getName().substring(prefix.length()))))
         .collect(toList());
+  }
+
+  @Override
+  public void updateElastiGroup(String spotInstToken, String spotInstAccountId, String elastiGroupId, ElastiGroup group)
+      throws Exception {
+    String auth = getAuthToken(spotInstToken);
+    executeRestCall(getSpotInstRestClient().updateElastiGroup(auth, elastiGroupId, spotInstAccountId, group));
   }
 
   @Override

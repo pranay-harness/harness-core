@@ -17,5 +17,5 @@ public class SpotInstTaskParameters implements TaskParameters {
   @NotEmpty private SpotInstTaskType commandType;
   @NotEmpty private String awsRegion;
 
-  public enum SpotInstTaskType { SPOT_INST_SETUP, SPOT_INST_DEPLOY }
+  public enum SpotInstTaskType { SPOT_INST_SETUP, SPOT_INST_DEPLOY, SPOT_INST_SWAP_ROUTES }
 }

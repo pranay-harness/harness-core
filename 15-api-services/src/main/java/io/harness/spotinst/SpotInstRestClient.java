@@ -1,5 +1,6 @@
 package io.harness.spotinst;
 
+import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.SpotInstDeleteElastiGroupResponse;
 import io.harness.spotinst.model.SpotInstListElastiGroupInstancesHealthResponse;
 import io.harness.spotinst.model.SpotInstListElastiGroupsResponse;
@@ -25,10 +26,20 @@ public interface SpotInstRestClient {
       @Query("minCreatedAt") long minCreatedAt, @Query("maxCreatedAt") long maxCreatedAt,
       @Query("accountId") String spotInstAccountId);
 
+  @GET("aws/ec2/group/{groupId}")
+  @Headers("Content-Type: application/json")
+  Call<SpotInstListElastiGroupsResponse> listElastiGroup(@Header("Authorization") String authorization,
+      @Path("groupId") String elastiGroupId, @Query("accountId") String spotInstAccountId);
+
   @POST("aws/ec2/group")
   @Headers("Content-Type: application/json")
   Call<SpotInstListElastiGroupsResponse> createElastiGroup(@Header("Authorization") String authorization,
       @Query("accountId") String spotInstAccountId, @Body Map<String, Object> group);
+
+  @PUT("aws/ec2/group/{groupId}")
+  @Headers("Content-Type: application/json")
+  Call<SpotInstUpdateElastiGroupResponse> updateElastiGroup(@Header("Authorization") String authorization,
+      @Path("groupId") String elastiGroupId, @Query("accountId") String spotInstAccountId, @Body ElastiGroup group);
 
   @PUT("aws/ec2/group/{groupId}")
   @Headers("Content-Type: application/json")
@@ -39,23 +50,22 @@ public interface SpotInstRestClient {
   @DELETE("aws/ec2/group/{groupId}")
   @Headers("Content-Type: application/json")
   Call<SpotInstDeleteElastiGroupResponse> deleteElastiGroup(@Header("Authorization") String authorization,
-      @Query("accountId") String spotInstAccountId, @Path("groupId") String elastiGroupId);
+      @Path("groupId") String elastiGroupId, @Query("accountId") String spotInstAccountId);
 
   @PUT("aws/ec2/group/{groupId}/scale/up")
   @Headers("Content-Type: application/json")
-  Call<Void> scaleUpElastiGroup(@Header("Authorization") String authorization,
-      @Query("accountId") String spotInstAccountId, @Path("groupId") String elastiGroupId,
-      @Query("adjustment") int adjustment);
+  Call<Void> scaleUpElastiGroup(@Header("Authorization") String authorization, @Path("groupId") String elastiGroupId,
+      @Query("accountId") String spotInstAccountId, @Query("adjustment") int adjustment);
 
   @PUT("aws/ec2/group/{groupId}/scale/down")
   @Headers("Content-Type: application/json")
   Call<SpotInstScaleDownElastiGroupResponse> scaleDownElastiGroup(@Header("Authorization") String authorization,
-      @Query("accountId") String spotInstAccountId, @Path("groupId") String elastiGroupId,
+      @Path("groupId") String elastiGroupId, @Query("accountId") String spotInstAccountId,
       @Query("adjustment") int adjustment);
 
   @GET("aws/ec2/group/{groupId}/instanceHealthiness")
   @Headers("Content-Type: application/json")
   Call<SpotInstListElastiGroupInstancesHealthResponse> listElastiGroupInstancesHealth(
-      @Header("Authorization") String authorization, @Query("accountId") String spotInstAccountId,
-      @Path("groupId") String elastiGroupId);
+      @Header("Authorization") String authorization, @Path("groupId") String elastiGroupId,
+      @Query("accountId") String spotInstAccountId);
 }

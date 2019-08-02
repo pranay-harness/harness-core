@@ -1,16 +1,19 @@
 package software.wings.delegatetasks.spotinst.taskhandler;
 
 import static com.google.api.client.util.Lists.newArrayList;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_NAME_PLACEHOLDER;
+import static io.harness.spotinst.model.SpotInstConstants.PROD_ELASTI_GROUP_NAME_SUFFIX;
 import static io.harness.spotinst.model.SpotInstConstants.STAGE_ELASTI_GROUP_NAME_SUFFIX;
 import static io.harness.spotinst.model.SpotInstConstants.TG_ARN_PLACEHOLDER;
 import static io.harness.spotinst.model.SpotInstConstants.TG_NAME_PLACEHOLDER;
 import static io.harness.spotinst.model.SpotInstConstants.elastiGroupsToKeep;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 
 import com.google.inject.Singleton;
 
@@ -20,6 +23,7 @@ import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstSetupTaskResponse;
+import io.harness.delegate.task.spotinst.response.SpotInstSetupTaskResponse.SpotInstSetupTaskResponseBuilder;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
@@ -59,6 +63,7 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
     }
 
     // Handle canary and basic
+    SpotInstSetupTaskResponseBuilder builder = SpotInstSetupTaskResponse.builder();
     String prefix = format("%s__", setupTaskParameters.getElastiGroupNamePrefix());
     int elastiGroupVersion = 1;
     logCallback.saveExecutionLog(format("Querying spot inst for existing elasti groups with prefix: [%s]", prefix));
@@ -69,9 +74,9 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
           Integer.parseInt(elastiGroups.get(elastiGroups.size() - 1).getName().substring(prefix.length())) + 1;
     }
     String newElastiGroupName = format("%s%d", prefix, elastiGroupVersion);
-    TargetGroup stageTargetGroup =
-        getTargetGroup(awsConfig, setupTaskParameters.getAwsRegion(), setupTaskParameters.getLoadBalancerName(),
-            setupTaskParameters.getTargetListenerPort(), logCallback, setupTaskParameters.getWorkflowExecutionId());
+    TargetGroup stageTargetGroup = getTargetGroup(awsConfig, setupTaskParameters.getAwsRegion(),
+        setupTaskParameters.getLoadBalancerName(), setupTaskParameters.getStageListenerPort(), logCallback,
+        setupTaskParameters.getWorkflowExecutionId(), setupTaskParameters.getProdListenerPort(), builder);
     String finalJson = setupTaskParameters.getElastiGroupJson()
                            .replace(ELASTI_GROUP_NAME_PLACEHOLDER, newElastiGroupName)
                            .replace(TG_NAME_PLACEHOLDER, stageTargetGroup.getTargetGroupName())
@@ -116,11 +121,12 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
   private SpotInstTaskExecutionResponse executeTaskInternalForBlueGreen(SpotInstSetupTaskParameters setupTaskParameters,
       String spotInstAccountId, String spotInstToken, AwsConfig awsConfig, ExecutionLogCallback logCallback)
       throws Exception {
+    SpotInstSetupTaskResponseBuilder builder = SpotInstSetupTaskResponse.builder();
     logCallback.saveExecutionLog(format("Querying aws to get the stage target group details for load balancer: [%s]",
         setupTaskParameters.getLoadBalancerName()));
-    TargetGroup stageTargetGroup =
-        getTargetGroup(awsConfig, setupTaskParameters.getAwsRegion(), setupTaskParameters.getLoadBalancerName(),
-            setupTaskParameters.getTargetListenerPort(), logCallback, setupTaskParameters.getWorkflowExecutionId());
+    TargetGroup stageTargetGroup = getTargetGroup(awsConfig, setupTaskParameters.getAwsRegion(),
+        setupTaskParameters.getLoadBalancerName(), setupTaskParameters.getStageListenerPort(), logCallback,
+        setupTaskParameters.getWorkflowExecutionId(), setupTaskParameters.getProdListenerPort(), builder);
     logCallback.saveExecutionLog(format("Found stage target group: [%s] with Arn: [%s]",
         stageTargetGroup.getTargetGroupName(), stageTargetGroup.getTargetGroupArn()));
     String stageElastiGroupName =
@@ -131,7 +137,7 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
                            .replace(TG_ARN_PLACEHOLDER, stageTargetGroup.getTargetGroupArn());
     logCallback.saveExecutionLog(format("Querying to find elasti group with name: [%s]", stageElastiGroupName));
     Optional<ElastiGroup> stageOptionalElastiGroup =
-        spotInstHelperServiceDelegate.getElastiGroup(spotInstToken, spotInstAccountId, stageElastiGroupName);
+        spotInstHelperServiceDelegate.getElastiGroupByName(spotInstToken, spotInstAccountId, stageElastiGroupName);
     ElastiGroup stageElastiGroup;
     if (stageOptionalElastiGroup.isPresent()) {
       stageElastiGroup = stageOptionalElastiGroup.get();
@@ -145,36 +151,64 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
       logCallback.saveExecutionLog(
           format("Created elasti group with name: [%s] and id: [%s]", stageElastiGroupName, stageElastiGroupId));
     }
+    builder.newElastiGroup(stageElastiGroup);
+
+    String prodElastiGroupName =
+        format("%s__%s", setupTaskParameters.getElastiGroupNamePrefix(), PROD_ELASTI_GROUP_NAME_SUFFIX);
+    logCallback.saveExecutionLog(format("Querying spot inst for elasti group with name: [%s]", prodElastiGroupName));
+    Optional<ElastiGroup> prodOptionalElastiGroup =
+        spotInstHelperServiceDelegate.getElastiGroupByName(spotInstToken, spotInstAccountId, prodElastiGroupName);
+    List<ElastiGroup> prodElastiGroup =
+        prodOptionalElastiGroup.isPresent() ? singletonList(prodOptionalElastiGroup.get()) : emptyList();
+    builder.groupToBeDownsized(prodElastiGroup);
+
     return SpotInstTaskExecutionResponse.builder()
         .commandExecutionStatus(SUCCESS)
-        .spotInstTaskResponse(SpotInstSetupTaskResponse.builder().newElastiGroup(stageElastiGroup).build())
+        .spotInstTaskResponse(builder.build())
         .build();
   }
 
-  private TargetGroup getTargetGroup(AwsConfig awsConfig, String region, String loadBalancerName, int stageListenerPort,
-      ExecutionLogCallback logCallback, String workflowExecutionId) {
-    // Aws Config is already decrypted
-    List<AwsElbListener> listeners =
-        awsElbHelperServiceDelegate.getElbListenersForLoadBalaner(awsConfig, emptyList(), region, loadBalancerName);
-    Optional<AwsElbListener> optionalListener =
-        listeners.stream().filter(listener -> stageListenerPort == listener.getPort()).findFirst();
-    if (!optionalListener.isPresent()) {
-      String message =
-          format("Did not find any listener on port: [%d] for load balancer: [%s]. Workflow execution: [%s]",
-              stageListenerPort, loadBalancerName, workflowExecutionId);
+  private AwsElbListener getListenerOnPort(List<AwsElbListener> listeners, int port, String loadBalancerName,
+      String workflowExecutionId, ExecutionLogCallback logCallback) {
+    if (isEmpty(listeners)) {
+      String message = format("Did not find any listeners for load balancer: [%s]. Workflow execution: [%s]",
+          loadBalancerName, workflowExecutionId);
       logger.error(message);
       logCallback.saveExecutionLog(message);
       throw new WingsException(message, EnumSet.of(ReportTarget.UNIVERSAL));
     }
-    AwsElbListener awsElbListener = optionalListener.get();
+    Optional<AwsElbListener> optionalListener =
+        listeners.stream().filter(listener -> port == listener.getPort()).findFirst();
+    if (!optionalListener.isPresent()) {
+      String message =
+          format("Did not find any listeners on port: [%d] for load balancer: [%s]. Workflow execution: [%s]", port,
+              loadBalancerName, workflowExecutionId);
+      logger.error(message);
+      logCallback.saveExecutionLog(message);
+      throw new WingsException(message, EnumSet.of(ReportTarget.UNIVERSAL));
+    }
+    return optionalListener.get();
+  }
+
+  private TargetGroup getTargetGroup(AwsConfig awsConfig, String region, String loadBalancerName, int stageListenerPort,
+      ExecutionLogCallback logCallback, String workflowExecutionId, int prodListenerPort,
+      SpotInstSetupTaskResponseBuilder builder) throws Exception {
+    List<AwsElbListener> listeners =
+        awsElbHelperServiceDelegate.getElbListenersForLoadBalaner(awsConfig, emptyList(), region, loadBalancerName);
+    AwsElbListener prodListener =
+        getListenerOnPort(listeners, prodListenerPort, loadBalancerName, workflowExecutionId, logCallback);
+    builder.prodListenerArn(prodListener.getListenerArn());
+    AwsElbListener stageListener =
+        getListenerOnPort(listeners, stageListenerPort, loadBalancerName, workflowExecutionId, logCallback);
+    builder.stageListenerArn(stageListener.getListenerArn());
     Listener listener =
-        awsElbHelperServiceDelegate.getElbListener(awsConfig, emptyList(), region, awsElbListener.getListenerArn());
+        awsElbHelperServiceDelegate.getElbListener(awsConfig, emptyList(), region, stageListener.getListenerArn());
     String targetGroupArn = awsElbHelperServiceDelegate.getTargetGroupForDefaultAction(listener, logCallback);
     Optional<TargetGroup> targetGroup =
         awsElbHelperServiceDelegate.getTargetGroup(awsConfig, emptyList(), region, targetGroupArn);
     if (!targetGroup.isPresent()) {
-      String message = format(
-          "Did not find any target group with arn: [%s].Workflow execution: [%s]", targetGroupArn, workflowExecutionId);
+      String message = format("Did not find any target group with arn: [%s]. Workflow execution: [%s]", targetGroupArn,
+          workflowExecutionId);
       logger.error(message);
       logCallback.saveExecutionLog(message);
       throw new WingsException(message, EnumSet.of(ReportTarget.UNIVERSAL));
