@@ -64,7 +64,7 @@ public class DelegateFileResource {
 
   @Value
   @Builder
-  private static class FileIdempotentResult implements IdempotentResult {
+  public static class FileIdempotentResult implements IdempotentResult {
     private String fileId;
   }
 

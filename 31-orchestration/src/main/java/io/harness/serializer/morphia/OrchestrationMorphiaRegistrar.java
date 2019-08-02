@@ -1,6 +1,7 @@
 package io.harness.serializer.morphia;
 
 import io.harness.mongo.MorphiaRegistrar;
+import io.harness.state.inspection.ExpressionVariableUsage;
 import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.ListNotifyResponseData;
 
@@ -15,5 +16,6 @@ public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
 
     h.put("waiter.ListNotifyResponseData", ListNotifyResponseData.class);
     h.put("waiter.ErrorNotifyResponseData", ErrorNotifyResponseData.class);
+    h.put("state.inspection.ExpressionVariableUsage", ExpressionVariableUsage.class);
   }
 }
