@@ -538,6 +538,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       case GCS_HELM_REPO:
       case SMB:
       case SFTP:
+      case CUSTOM:
         return yamlHandlerFactory.getYamlHandler(YamlType.ARTIFACT_SERVER, settingVariableType.name());
 
       // collaboration providers

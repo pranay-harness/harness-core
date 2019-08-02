@@ -29,11 +29,13 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.BugsnagConfig;
+import software.wings.beans.CustomArtifactServerConfig;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.ElkConfig;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
@@ -396,6 +398,17 @@ public class PluginServiceImpl implements PluginService {
                        .withUiSchema(readUiSchema("SERVICENOW"))
                        .build());
 
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+      pluginList.add(anAccountPlugin()
+                         .withSettingClass(CustomArtifactServerConfig.class)
+                         .withAccountId(accountId)
+                         .withIsEnabled(true)
+                         .withDisplayName(SettingVariableTypes.CUSTOM.getDisplayName())
+                         .withType(SettingVariableTypes.CUSTOM.name())
+                         .withPluginCategories(asList(Artifact))
+                         .withUiSchema(readUiSchema(SettingVariableTypes.CUSTOM.name()))
+                         .build());
+    }
     return pluginList;
   }
 

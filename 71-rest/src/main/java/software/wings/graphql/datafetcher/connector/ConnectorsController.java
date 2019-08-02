@@ -10,6 +10,7 @@ import software.wings.graphql.schema.type.connector.QLArtifactoryConnector;
 import software.wings.graphql.schema.type.connector.QLBambooConnector;
 import software.wings.graphql.schema.type.connector.QLBugSnagConnector;
 import software.wings.graphql.schema.type.connector.QLConnectorBuilder;
+import software.wings.graphql.schema.type.connector.QLCustomConnector;
 import software.wings.graphql.schema.type.connector.QLDataDogConnector;
 import software.wings.graphql.schema.type.connector.QLDockerConnector;
 import software.wings.graphql.schema.type.connector.QLDynaTraceConnector;
@@ -109,6 +110,8 @@ public class ConnectorsController {
         return QLAmazonS3RepoConnector.builder();
       case GCS_HELM_REPO:
         return QLGCSHelmRepoConnector.builder();
+      case CUSTOM:
+        return QLCustomConnector.builder();
       default:
         throw new WingsException("Unsupported Connector " + settingType);
     }

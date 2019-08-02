@@ -4,7 +4,6 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.network.Http.connectableHttpUrl;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.singletonList;
-import static software.wings.common.Constants.ALWAYS_TRUE_CRITERIA;
 import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 import static software.wings.utils.SshHelperUtils.createSshSessionConfig;
@@ -47,6 +46,8 @@ import java.util.function.Consumer;
  */
 @Slf4j
 public class CommandValidation extends AbstractDelegateValidateTask {
+  private static final String ALWAYS_TRUE_CRITERIA = "ALWAYS_TRUE_CRITERIA";
+
   @Inject private transient EncryptionService encryptionService;
   @Inject private transient GkeClusterService gkeClusterService;
   @Inject private transient AzureHelperService azureHelperService;

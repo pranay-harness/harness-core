@@ -116,8 +116,12 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
   }
 
   protected void toYaml(Y yaml, B bean) {
-    if (!CUSTOM.name().equals(yaml.getType())) {
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, bean.getAccountId())) {
       yaml.setServerName(getSettingName(bean.getSettingId()));
+    } else {
+      if (!CUSTOM.name().equals(yaml.getType())) {
+        yaml.setServerName(getSettingName(bean.getSettingId()));
+      }
     }
     yaml.setHarnessApiVersion(getHarnessApiVersion());
     String templateUri = null;
@@ -182,11 +186,16 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
 
   protected void toBean(B bean, ChangeContext<Y> changeContext, String appId) {
     Y yaml = changeContext.getYaml();
+    String accountId = changeContext.getChange().getAccountId();
     String name = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
     bean.setName(name);
     bean.setAutoPopulate(false);
-    if (!CUSTOM.name().equals(yaml.getType())) {
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
       bean.setSettingId(getSettingId(changeContext.getChange().getAccountId(), appId, yaml.getServerName()));
+    } else {
+      if (!CUSTOM.name().equals(yaml.getType())) {
+        bean.setSettingId(getSettingId(changeContext.getChange().getAccountId(), appId, yaml.getServerName()));
+      }
     }
 
     String templateUri = yaml.getTemplateUri();

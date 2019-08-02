@@ -2,7 +2,6 @@ package software.wings.delegatetasks.validation;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.network.Http.connectableHttpUrl;
-import static software.wings.common.Constants.ALWAYS_TRUE_CRITERIA;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -32,6 +31,8 @@ import java.util.List;
 @Singleton
 @Slf4j
 public class ContainerValidationHelper {
+  private static final String ALWAYS_TRUE_CRITERIA = "ALWAYS_TRUE_CRITERIA";
+
   @Inject @Transient private transient GkeClusterService gkeClusterService;
   @Inject @Transient private transient AzureHelperService azureHelperService;
   @Inject @Transient private transient EncryptionService encryptionService;

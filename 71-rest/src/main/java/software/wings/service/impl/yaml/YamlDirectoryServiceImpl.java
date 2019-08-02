@@ -1609,7 +1609,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     doArtifactServerType(accountId, artifactServersFolder, SettingVariableTypes.GCS_HELM_REPO, directoryPath.clone());
     doArtifactServerType(accountId, artifactServersFolder, SettingVariableTypes.SMB, directoryPath.clone());
     doArtifactServerType(accountId, artifactServersFolder, SettingVariableTypes.SFTP, directoryPath.clone());
-
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+      doArtifactServerType(accountId, artifactServersFolder, SettingVariableTypes.CUSTOM, directoryPath.clone());
+    }
     return artifactServersFolder;
   }
 
@@ -2023,6 +2025,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       case GCS_HELM_REPO:
       case SMB:
       case SFTP:
+      case CUSTOM:
         sb.append(ARTIFACT_SOURCES_FOLDER);
         if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, settingAttribute.getAccountId())) {
           sb.append(PATH_DELIMITER);

@@ -2,7 +2,6 @@ package software.wings.delegatetasks.validation;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static software.wings.common.Constants.ALWAYS_TRUE_CRITERIA;
 
 import io.harness.beans.DelegateTask;
 
@@ -10,6 +9,8 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class CustomArtifactSourceValidation extends AbstractDelegateValidateTask {
+  private static final String ALWAYS_TRUE_CRITERIA = "ALWAYS_TRUE_CRITERIA";
+
   public CustomArtifactSourceValidation(
       String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
     super(delegateId, delegateTask, postExecute);
