@@ -3,7 +3,6 @@ package software.wings.service.impl.analysis;
 import static io.harness.data.encoding.EncodingUtils.compressString;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static software.wings.common.Constants.ML_RECORDS_TTL_MONTHS;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.addFieldIfNotEmpty;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.readBlob;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.readLong;
@@ -163,9 +162,6 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware {
     }
     addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.host, host, true);
 
-    if (validUntil == null) {
-      validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
-    }
     dataStoreRecordBuilder.set(LogDataRecordKeys.validUntil, validUntil.getTime());
 
     return dataStoreRecordBuilder.build();
@@ -189,6 +185,7 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware {
             .workflowId(readString(entity, LogDataRecordKeys.workflowId))
             .workflowExecutionId(readString(entity, LogDataRecordKeys.workflowExecutionId))
             .stateExecutionId(readString(entity, LogDataRecordKeys.stateExecutionId))
+            .validUntil(new Date(readLong(entity, LogDataRecordKeys.validUntil)))
             .build();
 
     try {

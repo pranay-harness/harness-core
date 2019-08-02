@@ -249,6 +249,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
       if (dataStoreService instanceof GoogleDataStoreServiceImpl && clusterLevel == L2) {
         try {
+          logDataRecords.forEach(
+              logRecord -> logRecord.setValidUntil(Date.from(OffsetDateTime.now().plusMonths(6).toInstant())));
           dataStoreService.save(LogDataRecord.class, logDataRecords, true);
         } catch (Exception e) {
           logger.info("Error saving log records for cvConfig {} stateExecution {}", cvConfigId, stateExecutionId, e);

@@ -389,7 +389,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
         PageRequestBuilder.aPageRequest()
             .addFilter(LogDataRecordKeys.serviceId, Operator.EQ, serviceId)
             .addFilter(LogDataRecordKeys.timeStamp, Operator.GE,
-                Timestamp.currentMinuteBoundary() - TimeUnit.DAYS.toMillis(30))
+                Timestamp.currentMinuteBoundary() - TimeUnit.DAYS.toMillis(180))
             .build();
 
     List<LogDataRecord> logs = dataStoreService.list(LogDataRecord.class, logDataRecordPageRequest);
@@ -435,8 +435,14 @@ public class LogLabelingServiceImpl implements LogLabelingService {
 
         // update the timesLabeled field in L2 records
         if (labeledLogRecord.getLogDataRecordIds() != null) {
-          labeledLogRecord.getLogDataRecordIds().forEach(
-              id -> dataStoreService.incrementField(LogDataRecord.class, id, LogDataRecordKeys.timesLabeled, 1));
+          List<LogDataRecord> logDataRecordsToSave = new ArrayList<>();
+          labeledLogRecord.getLogDataRecordIds().forEach(id -> {
+            LogDataRecord record = dataStoreService.getEntity(LogDataRecord.class, id);
+            record.setTimesLabeled(record.getTimesLabeled() + 1);
+            record.setValidUntil(null);
+            logDataRecordsToSave.add(record);
+          });
+          dataStoreService.save(LogDataRecord.class, logDataRecordsToSave, false);
         }
 
         if (labeledLogRecord.getFeedbackIds() != null) {
