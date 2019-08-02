@@ -91,7 +91,7 @@ public class SpotInstStateHelper {
     Environment env = workflowStandardParams.getEnv();
     ServiceElement serviceElement = phaseElement.getServiceElement();
 
-    Artifact artifact = ((DeploymentExecutionContext) context).getDefaultArtifactForService(serviceElement.getUuid());
+    Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceElement.getUuid());
     if (artifact == null) {
       throw new WingsException(format("Unable to find artifact for service id: %s", serviceElement.getUuid()));
     }
@@ -108,7 +108,7 @@ public class SpotInstStateHelper {
         (SpotInstInfrastructureMapping) infrastructureMappingService.get(
             app.getUuid(), phaseElement.getInfraMappingId());
 
-    Activity activity = createActivity(context, artifact, serviceSetup.getStateType());
+    Activity activity = createActivity(context, artifact, serviceSetup.getStateType(), SPOTINST_SERVICE_SETUP_COMMAND);
 
     SettingAttribute settingAttribute =
         settingsService.get(spotInstInfrastructureMapping.getComputeProviderSettingId());
@@ -148,6 +148,7 @@ public class SpotInstStateHelper {
             .classicLoadBalancer(serviceSetup.isClassicLoadBalancer())
             .stageListenerPort(serviceSetup.getTargetListenerPort())
             .targetListenerProtocol(serviceSetup.getTargetListenerProtocol())
+            .prodListenerPort(serviceSetup.getProdListenerPort())
             .image(artifact.getRevision())
             .awsRegion(spotInstInfrastructureMapping.getAwsRegion())
             .build();
@@ -297,11 +298,12 @@ public class SpotInstStateHelper {
     elastiGroupConfigMap.put(NAME_CONFIG_ELEMENT, ELASTI_GROUP_NAME_PLACEHOLDER);
   }
 
-  public Activity createActivity(ExecutionContext executionContext, Artifact artifact, String stateType) {
+  public Activity createActivity(
+      ExecutionContext executionContext, Artifact artifact, String stateType, String command) {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
-    ActivityBuilder activityBuilder = generateActivityBuilder(app.getName(), app.getUuid(),
-        SPOTINST_SERVICE_SETUP_COMMAND, Type.Command, executionContext, stateType, CommandUnitType.SPOTINST_SETUP, env);
+    ActivityBuilder activityBuilder = generateActivityBuilder(app.getName(), app.getUuid(), command, Type.Command,
+        executionContext, stateType, CommandUnitType.SPOTINST_SETUP, env);
 
     if (artifact != null) {
       activityBuilder.artifactName(artifact.getDisplayName()).artifactId(artifact.getUuid());

@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.TaskType;
 
+import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionContext;
@@ -52,6 +53,7 @@ public class SpotInstServiceSetup extends State {
   @Getter @Setter private boolean classicLoadBalancer;
   @Getter @Setter private Integer targetListenerPort;
   @Getter @Setter private String targetListenerProtocol;
+  @Getter @Setter private Integer prodListenerPort;
 
   @Inject private transient ActivityService activityService;
   @Inject private transient DelegateService delegateService;
@@ -131,9 +133,10 @@ public class SpotInstServiceSetup extends State {
     stateExecutionData.setElastiGroupName(spotInstSetupTaskResponse.getNewElastiGroup().getName());
     stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
 
+    SpotInstCommandRequest spotInstCommandRequest = stateExecutionData.getSpotinstCommandRequest();
     SpotInstSetupContextElement spotInstSetupContextElement =
         SpotInstSetupContextElement.builder()
-            .commandRequest(stateExecutionData.getSpotinstCommandRequest())
+            .commandRequest(spotInstCommandRequest)
             .commandName(SPOTINST_SERVICE_SETUP_COMMAND)
             .maxInstanceCount(stateExecutionData.getMaxInstanceCount())
             .useCurrentRunningInstanceCount(stateExecutionData.isUseCurrentRunningInstanceCount())
@@ -145,6 +148,10 @@ public class SpotInstServiceSetup extends State {
             .infraMappingId(stateExecutionData.getInfraMappingId())
             .newElastiGroupOriginalConfig(stateExecutionData.getElastiGroupOriginalConfig())
             .oldElastiGroupOriginalConfig(spotInstSetupTaskResponse.getGroupToBeDownsized().get(0))
+            .prodListenerArn(spotInstSetupTaskResponse.getProdListenerArn())
+            .stageListenerArn(spotInstSetupTaskResponse.getStageListenerArn())
+            .stageTargetGroupArn(spotInstSetupTaskResponse.getStageTargetGroupArn())
+            .prodTargetGroupArn(spotInstSetupTaskResponse.getProdTargetGroupArn())
             .build();
 
     return anExecutionResponse()

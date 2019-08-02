@@ -37,6 +37,10 @@ public class SpotInstSetupContextElement implements ContextElement {
   private SpotInstSetupTaskResponse spotInstSetupTaskResponse;
   private ElastiGroup newElastiGroupOriginalConfig;
   private ElastiGroup oldElastiGroupOriginalConfig;
+  private String prodListenerArn;
+  private String stageListenerArn;
+  private String prodTargetGroupArn;
+  private String stageTargetGroupArn;
 
   @Override
   public ContextElementType getElementType() {
