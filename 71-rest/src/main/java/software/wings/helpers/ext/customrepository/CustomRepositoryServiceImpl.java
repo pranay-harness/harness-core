@@ -95,7 +95,11 @@ public class CustomRepositoryServiceImpl implements CustomRepositoryService {
                     buildNo);
                 return;
               }
-              buildDetails.add(aBuildDetails().withNumber(buildNo).withMetadata(result.getMetadata()).build());
+              buildDetails.add(aBuildDetails()
+                                   .withNumber(buildNo)
+                                   .withMetadata(result.getMetadata())
+                                   .withUiDisplayName("Build# " + buildNo)
+                                   .build());
               buildNumbers.add(buildNo);
             } else {
               logger.warn("There is an object in output without mandatory build number");
