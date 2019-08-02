@@ -29,6 +29,7 @@ public enum EventType {
   SETUP_DATA,
   INSTANCE_COUNT,
   LICENSE_UNITS,
+  CV_META_DATA,
 
   OPEN_ALERT,
 

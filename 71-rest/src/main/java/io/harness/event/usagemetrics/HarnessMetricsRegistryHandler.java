@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.event.handler.EventHandler;
+import io.harness.event.harnessmetrics.CV247Metric;
 import io.harness.event.harnessmetrics.DeploymentDurationEvent;
 import io.harness.event.harnessmetrics.DeploymentMetadataEvent;
 import io.harness.event.harnessmetrics.HarnessMetricsEvent;
@@ -31,6 +32,7 @@ public class HarnessMetricsRegistryHandler implements EventHandler {
     registerMetrics(new SetupDataMetric());
     registerMetrics(new InstanceMetric());
     registerMetrics(new LicenseDataMetric());
+    registerMetrics(new CV247Metric());
   }
 
   public void registerWithEventListener(EventListener eventListener) {

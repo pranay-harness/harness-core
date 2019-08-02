@@ -120,6 +120,7 @@ public class VerificationConstants {
       "learning_engine_feedback_task_queued_time_in_seconds";
   public static final String LEARNING_ENGINE_EXP_TASK_QUEUED_TIME_IN_SECONDS =
       "learning_engine_exp_task_queued_time_in_seconds";
+  public static final String CV_META_DATA = "cv_meta_data";
 
   public static final Set<String> VERIFICATION_SERVICE_METRICS =
       Sets.newHashSet(LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS,
@@ -197,6 +198,9 @@ public class VerificationConstants {
       unmodifiableList(Arrays.asList(EventConstants.ACCOUNT_ID, EventConstants.SERVICE_ID,
           EventConstants.VERIFICATION_TYPE, EventConstants.VERIFICATION_STATUS, EventConstants.VERIFICATION_HAS_DATA,
           EventConstants.VERIFICATION_247_CONFIGURED, EventConstants.IS_ROLLED_BACK));
+
+  public static final String[] CV_24X7_METRIC_LABELS =
+      new String[] {EventConstants.ACCOUNT_ID, EventConstants.VERIFICATION_STATE_TYPE, EventConstants.IS_24X7_ENABLED};
 
   public static final String[] IGNORED_ERRORS_METRIC_LABELS = new String[] {EventConstants.LOG_ML_FEEDBACKTYPE,
       EventConstants.VERIFICATION_STATE_TYPE, EventConstants.APPLICATION_ID, EventConstants.WORKFLOW_ID};

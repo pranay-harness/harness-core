@@ -11,9 +11,11 @@ import static io.harness.event.model.EventConstants.APPLICATION_NAME;
 import static io.harness.event.model.EventConstants.AUTOMATIC_WORKFLOW_TYPE;
 import static io.harness.event.model.EventConstants.COMPANY_NAME;
 import static io.harness.event.model.EventConstants.INSTANCE_COUNT_TYPE;
+import static io.harness.event.model.EventConstants.IS_24X7_ENABLED;
 import static io.harness.event.model.EventConstants.MANUAL_WORKFLOW_TYPE;
 import static io.harness.event.model.EventConstants.SETUP_DATA_TYPE;
 import static io.harness.event.model.EventConstants.USER_LOGGED_IN;
+import static io.harness.event.model.EventConstants.VERIFICATION_STATE_TYPE;
 import static io.harness.event.model.EventConstants.WORKFLOW_EXECUTION_STATUS;
 import static io.harness.event.model.EventConstants.WORKFLOW_ID;
 import static io.harness.event.model.EventConstants.WORKFLOW_NAME;
@@ -35,9 +37,13 @@ import software.wings.beans.Account;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.common.VerificationConstants;
 import software.wings.service.impl.event.timeseries.TimeSeriesBatchEventInfo;
 import software.wings.service.impl.event.timeseries.TimeSeriesBatchEventInfo.DataPoint;
 import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
+import software.wings.service.intfc.verification.CVConfigurationService;
+import software.wings.sm.StateType;
+import software.wings.verification.CVConfiguration;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -54,6 +60,7 @@ import java.util.stream.Collectors;
 public class UsageMetricsEventPublisher {
   @Inject EventPublisher eventPublisher;
   @Inject private ExecutorService executorService;
+  @Inject CVConfigurationService cvConfigurationService;
   SimpleDateFormat sdf;
 
   public UsageMetricsEventPublisher() {
@@ -230,6 +237,28 @@ public class UsageMetricsEventPublisher {
     EventData eventData =
         EventData.builder().properties(properties).value(account.getLicenseInfo().getLicenseUnits()).build();
     publishEvent(Event.builder().eventType(EventType.LICENSE_UNITS).eventData(eventData).build());
+  }
+
+  public void publishCV247MetadataMetric(String accountId, boolean isEnabled) {
+    List<StateType> stateTypes = VerificationConstants.getAnalysisStates();
+    List<CVConfiguration> cvConfigurations = cvConfigurationService.listConfigurations(accountId);
+
+    for (StateType stateType : stateTypes) {
+      Map properties = new HashMap();
+      properties.put(ACCOUNT_ID, accountId);
+      properties.put(VERIFICATION_STATE_TYPE, stateType.name());
+      properties.put(IS_24X7_ENABLED, String.valueOf(isEnabled));
+
+      int count = cvConfigurations.stream()
+                      .filter(cvConfiguration
+                          -> isEnabled == (cvConfiguration.isEnabled24x7())
+                              && cvConfiguration.getStateType().name().equals(stateType.name()))
+                      .collect(Collectors.toList())
+                      .size();
+
+      EventData eventData = EventData.builder().properties(properties).value(count).build();
+      publishEvent(Event.builder().eventType(EventType.CV_META_DATA).eventData(eventData).build());
+    }
   }
 
   /**
