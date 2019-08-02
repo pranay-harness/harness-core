@@ -213,7 +213,11 @@ public class PcfSetupState extends State {
     Environment env = workflowStandardParams.getEnv();
     ServiceElement serviceElement = phaseElement.getServiceElement();
 
-    Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceElement.getUuid());
+    Artifact artifact = ((DeploymentExecutionContext) context).getDefaultArtifactForService(serviceElement.getUuid());
+    if (artifact == null) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, WingsException.USER).addParam("args", "Artifact is null");
+    }
+
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
     // Observed NPE in alerts
     if (artifactStream == null) {

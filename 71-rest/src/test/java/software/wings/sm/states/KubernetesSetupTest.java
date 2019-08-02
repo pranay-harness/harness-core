@@ -304,6 +304,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldExecute() {
     on(context).set("serviceTemplateService", serviceTemplateService);
+    on(context).set("featureFlagService", featureFlagService);
     when(artifactCollectionUtils.fetchContainerImageDetails(artifact, context.getWorkflowExecutionId()))
         .thenReturn(ImageDetails.builder().name(artifactStream.getSourceName()).tag(artifact.getBuildNo()).build());
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.KUBERNETES);

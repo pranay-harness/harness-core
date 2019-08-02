@@ -82,6 +82,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ExecutionContextImpl implements DeploymentExecutionContext {
   private static final String ARTIFACT_FILE_NAME_VARIABLE = "ARTIFACT_FILE_NAME";
+  private static final String DEFAULT_ARTIFACT_VARIABLE = "artifact";
   public static final String PHASE_PARAM = "PHASE_PARAM";
 
   private static final Pattern wildCharPattern = Pattern.compile("[+*/\\\\ &$\"'.|]");
@@ -294,6 +295,16 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       }
     }
     return map;
+  }
+
+  @Override
+  public Artifact getDefaultArtifactForService(String serviceId) {
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, getAccountId())) {
+      Map<String, Artifact> map = getArtifactsForService(serviceId);
+      return map.getOrDefault(DEFAULT_ARTIFACT_VARIABLE, null);
+    } else {
+      return getArtifactForService(serviceId);
+    }
   }
 
   private Map<String, Artifact> getArtifactVariablesForPhase() {

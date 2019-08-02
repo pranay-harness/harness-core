@@ -243,6 +243,7 @@ public class AwsLambdaState extends State {
     if (artifact == null) {
       throw new WingsException(format("Unable to find artifact for service %s", service.getName()));
     }
+
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
 
     activityBuilder.artifactStreamId(artifactStream.getUuid())
@@ -409,7 +410,7 @@ public class AwsLambdaState extends State {
    */
   protected Artifact getArtifact(String appId, String serviceId, String workflowExecutionId,
       DeploymentExecutionContext deploymentExecutionContext) {
-    return deploymentExecutionContext.getArtifactForService(serviceId);
+    return deploymentExecutionContext.getDefaultArtifactForService(serviceId);
   }
 
   @Override
