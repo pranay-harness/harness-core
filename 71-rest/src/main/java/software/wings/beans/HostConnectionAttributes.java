@@ -18,6 +18,7 @@ import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
@@ -57,12 +58,12 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
     return CONNECTION_ATTRIBUTES.name();
   }
 
-  // Just Returning null here as id the task type is HostValidation adding an additional parameter which is a
+  // Just Returning [] here as id the task type is HostValidation adding an additional parameter which is a
   // combination of hosts and port instance type of ConnectivityCapabilityDemander
   // The implementation is in DelegateServiceImpl.addMergedParamsForCapabilityCheck
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return null;
+    return new ArrayList<>();
   }
 
   public enum AuthenticationScheme { SSH_KEY, KERBEROS, HTTP_PASSWORD }

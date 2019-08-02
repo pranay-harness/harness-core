@@ -50,7 +50,7 @@ public class GCSHelmRepoConfig extends SettingValue implements HelmRepoConfig {
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     List<ExecutionCapability> executionCapabilityList = new ArrayList<>();
     executionCapabilityList.addAll(CapabilityHelper.generateExecutionCapabilitiesForHelm(new ArrayList<>()));
-    executionCapabilityList.addAll(CapabilityHelper.generateExecutionCapabilitiesForChartMeuseum(new ArrayList<>()));
+    executionCapabilityList.addAll(CapabilityHelper.generateExecutionCapabilitiesForChartMuseum(new ArrayList<>()));
     return executionCapabilityList;
   }
 

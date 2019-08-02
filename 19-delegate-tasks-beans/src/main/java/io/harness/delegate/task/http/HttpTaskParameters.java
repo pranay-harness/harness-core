@@ -1,7 +1,5 @@
 package io.harness.delegate.task.http;
 
-import static java.util.Arrays.asList;
-
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
@@ -10,6 +8,7 @@ import io.harness.expression.Expression;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.Collections;
 import java.util.List;
 
 @Value
@@ -22,6 +21,7 @@ public class HttpTaskParameters implements TaskParameters, ExecutionCapabilityDe
   private int socketTimeoutMillis;
 
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(url));
+    return Collections.singletonList(
+        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(url));
   }
 }

@@ -62,8 +62,8 @@ public class HttpHelmRepoConfig extends SettingValue implements HelmRepoConfig {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    List<ExecutionCapability> executionCapabilityList =
-        new ArrayList<>(CapabilityHelper.generateExecutionCapabilitiesForHelm(new ArrayList<>()));
+    List<ExecutionCapability> executionCapabilityList = new ArrayList<>();
+    executionCapabilityList.addAll(CapabilityHelper.generateExecutionCapabilitiesForHelm(new ArrayList<>()));
     executionCapabilityList.add(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(chartRepoUrl));
     return executionCapabilityList;

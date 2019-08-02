@@ -1,4 +1,4 @@
-package io.harness.delegate.app;
+package io.harness.delegate.configuration;
 
 import lombok.Builder;
 import lombok.Data;

@@ -2,7 +2,6 @@ package software.wings.delegatetasks.delegatecapability;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 
@@ -11,8 +10,10 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.executioncapability.ChartMuseumCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.beans.executioncapability.HelmCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
@@ -81,12 +82,11 @@ public class CapabilityHelper {
       return executionCapabilities;
     }
 
-    executionCapabilities.addAll(generateVaultHttpCapabilities(encryptedDataDetails));
+    executionCapabilities.addAll(generateKmsHttpCapabilities(encryptedDataDetails));
     return executionCapabilities;
   }
 
-  public static List<ExecutionCapability> generateVaultHttpCapabilities(
-      List<EncryptedDataDetail> encryptedDataDetails) {
+  public static List<ExecutionCapability> generateKmsHttpCapabilities(List<EncryptedDataDetail> encryptedDataDetails) {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
 
     if (isEmpty(encryptedDataDetails)) {
@@ -219,7 +219,7 @@ public class CapabilityHelper {
         ProcessExecutorCapabilityGenerator.buildProcessExecutorCapability(category, processExecutorArguments));
 
     if (isNotEmpty(encryptedDataDetails)) {
-      List<ExecutionCapability> capabilitiesForEncryption = generateVaultHttpCapabilities(encryptedDataDetails);
+      List<ExecutionCapability> capabilitiesForEncryption = generateKmsHttpCapabilities(encryptedDataDetails);
       if (isNotEmpty(capabilitiesForEncryption)) {
         executionCapabilities.addAll(capabilitiesForEncryption);
       }
@@ -239,21 +239,28 @@ public class CapabilityHelper {
 
   public static List<ExecutionCapability> generateExecutionCapabilitiesForHelm(
       List<EncryptedDataDetail> encryptedDataDetails) {
-    String helmPath = k8sGlobalConfigService.getHelmPath();
-    String helmVersionCommand = HELM_VERSION_COMMAND.replace("${HELM_PATH}", encloseWithQuotesIfNeeded(helmPath));
+    List<ExecutionCapability> executionCapabilities = new ArrayList<>();
+    executionCapabilities.add(HelmCapability.builder().helmCommand(HELM_VERSION_COMMAND).build());
 
-    List<String> processExecutorArguments = Arrays.asList(helmVersionCommand.split("\\s+"));
-    return generateExecutionCapabilitiesForProcessExecutor(HELM, processExecutorArguments, encryptedDataDetails);
+    if (isNotEmpty(encryptedDataDetails)) {
+      List<ExecutionCapability> capabilitiesForEncryption = generateKmsHttpCapabilities(encryptedDataDetails);
+      if (isNotEmpty(capabilitiesForEncryption)) {
+        executionCapabilities.addAll(capabilitiesForEncryption);
+      }
+    }
+    return executionCapabilities;
   }
 
-  public static List<ExecutionCapability> generateExecutionCapabilitiesForChartMeuseum(
+  public static List<ExecutionCapability> generateExecutionCapabilitiesForChartMuseum(
       List<EncryptedDataDetail> encryptedDataDetails) {
-    String chartMuseumPath = k8sGlobalConfigService.getChartMuseumPath();
-    String chartMuseumVersionCommand =
-        CHART_MUSEUM_VERSION_COMMAND.replace("${CHART_MUSEUM_PATH}", encloseWithQuotesIfNeeded(chartMuseumPath));
-
-    List<String> processExecutorArguments = Arrays.asList(chartMuseumVersionCommand.split("\\s+"));
-    return generateExecutionCapabilitiesForProcessExecutor(
-        CHART_MUSEUM, processExecutorArguments, encryptedDataDetails);
+    List<ExecutionCapability> executionCapabilities = new ArrayList<>();
+    executionCapabilities.add(ChartMuseumCapability.builder().chartMuseumCommand(CHART_MUSEUM_VERSION_COMMAND).build());
+    if (isNotEmpty(encryptedDataDetails)) {
+      List<ExecutionCapability> capabilitiesForEncryption = generateKmsHttpCapabilities(encryptedDataDetails);
+      if (isNotEmpty(capabilitiesForEncryption)) {
+        executionCapabilities.addAll(capabilitiesForEncryption);
+      }
+    }
+    return executionCapabilities;
   }
 }

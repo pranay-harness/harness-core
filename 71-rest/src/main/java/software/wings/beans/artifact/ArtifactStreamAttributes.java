@@ -2,20 +2,25 @@ package software.wings.beans.artifact;
 
 import com.google.common.collect.Maps;
 
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
 import software.wings.beans.SettingAttribute;
+import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.ArtifactType;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 @Data
 @Builder
 @ToString(exclude = {"serverSetting", "artifactServerEncryptedDataDetails"})
-public class ArtifactStreamAttributes {
+public class ArtifactStreamAttributes implements ExecutionCapabilityDemander {
   private String jobName;
   private String imageName;
   private String registryHostName;
@@ -51,4 +56,15 @@ public class ArtifactStreamAttributes {
   private String buildNoPath;
   private Map<String, String> artifactAttributes;
   private boolean customAttributeMappingNeeded;
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+    List<ExecutionCapability> executionCapabilities = new ArrayList<>();
+    if (registryHostName != null) {
+      executionCapabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+          "https://" + registryHostName + (registryHostName.endsWith("/") ? "" : "/")));
+    }
+    executionCapabilities.addAll(CapabilityHelper.generateKmsHttpCapabilities(artifactServerEncryptedDataDetails));
+    return executionCapabilities;
+  }
 }

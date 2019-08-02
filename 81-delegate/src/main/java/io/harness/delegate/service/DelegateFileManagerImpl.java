@@ -11,7 +11,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.delegate.app.DelegateConfiguration;
+import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.ManagerClient;

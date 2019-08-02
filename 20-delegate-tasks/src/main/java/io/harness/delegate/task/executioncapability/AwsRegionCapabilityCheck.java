@@ -27,12 +27,12 @@ public class AwsRegionCapabilityCheck implements CapabilityCheck {
     }
     // When delegate is running as fargate task, rely on ENV variable: AWS_REGION
     String currentRegion = System.getenv("AWS_REGION");
-    logger.info("ECS Current Region Value from ENV var {AWS_REGION}: " + currentRegion);
+    logger.info("[Delegate Capability] ECS Current Region Value from ENV var {AWS_REGION}: " + currentRegion);
     if (isNotBlank(currentRegion)) {
       return currentRegion.equals(region);
     }
 
-    logger.info("Failed in ECS validation, failed to fetch current region");
+    logger.info("[Delegate Capability] Failed in ECS validation, failed to fetch current region");
     return false;
   }
 

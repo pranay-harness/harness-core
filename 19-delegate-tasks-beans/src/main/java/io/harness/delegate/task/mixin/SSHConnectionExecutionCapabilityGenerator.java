@@ -5,6 +5,8 @@ import io.harness.expression.DummySubstitutor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -12,7 +14,7 @@ import java.util.regex.Pattern;
 public class SSHConnectionExecutionCapabilityGenerator {
   public static SocketConnectivityExecutionCapability buildSSHConnectionExecutionCapability(String urlString) {
     try {
-      SSHUriParser sshUriParser = SSHUriParser.parse(DummySubstitutor.substitute(urlString));
+      SSHUriParser sshUriParser = SSHUriParser.parse(DummySubstitutor.substitute(sanitizeUrl(urlString)));
 
       if (sshUriParser != null) {
         return SocketConnectivityExecutionCapability.builder()
@@ -60,14 +62,29 @@ public class SSHConnectionExecutionCapabilityGenerator {
         SSHUriParser sshUriParser = new SSHUriParser();
         sshUriParser.url = url;
         sshUriParser.scheme = m.group(1).replace("://", "");
-        sshUriParser.user = m.group(2).replace("@", "");
-        sshUriParser.host = m.group(3).replace("://", "");
+        sshUriParser.user = m.group(2) != null ? m.group(2).replace("@", "") : null;
+        sshUriParser.host = m.group(3) != null ? m.group(3).replace("://", "") : null;
         sshUriParser.port = m.group(4) == null ? "22" : m.group(4);
         sshUriParser.path = m.group(5);
         return sshUriParser;
       } else {
-        return null;
+        try {
+          URI uri = new URI(url);
+          SSHUriParser sshUriParser = new SSHUriParser();
+          sshUriParser.host = uri.getHost();
+          sshUriParser.scheme = uri.getScheme();
+          sshUriParser.path = uri.getPath();
+          sshUriParser.port = uri.getPort() != -1 ? "" + uri.getPort() : "22";
+          return sshUriParser;
+        } catch (URISyntaxException e) {
+          return null;
+        }
       }
     }
+  }
+
+  private static String sanitizeUrl(String urlString) {
+    String sanitizedUrl = urlString.replaceAll("\\\\", "/");
+    return sanitizedUrl.trim();
   }
 }
