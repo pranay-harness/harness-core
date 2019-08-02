@@ -15,6 +15,7 @@ import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.spotinst.taskhandler.SpotInstDeployTaskHandler;
 import software.wings.delegatetasks.spotinst.taskhandler.SpotInstSetupTaskHandler;
+import software.wings.delegatetasks.spotinst.taskhandler.SpotInstSwapRoutesTaskHandler;
 import software.wings.delegatetasks.spotinst.taskhandler.SpotInstTaskHandler;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.intfc.security.EncryptionService;
@@ -26,6 +27,7 @@ import java.util.function.Supplier;
 public class SpotInstTask extends AbstractDelegateRunnableTask {
   @Inject private SpotInstSetupTaskHandler setupTaskHandler;
   @Inject private SpotInstDeployTaskHandler deployTaskHandler;
+  @Inject private SpotInstSwapRoutesTaskHandler swapRoutesTaskHandler;
   @Inject private EncryptionService encryptionService;
 
   public SpotInstTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
@@ -60,6 +62,10 @@ public class SpotInstTask extends AbstractDelegateRunnableTask {
       }
       case SPOT_INST_DEPLOY: {
         handler = deployTaskHandler;
+        break;
+      }
+      case SPOT_INST_SWAP_ROUTES: {
+        handler = swapRoutesTaskHandler;
         break;
       }
       default: {

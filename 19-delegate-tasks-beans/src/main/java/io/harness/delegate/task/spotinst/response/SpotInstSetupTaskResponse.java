@@ -12,4 +12,7 @@ public class SpotInstSetupTaskResponse implements SpotInstTaskResponse {
   private ElastiGroup newElastiGroup;
   // Will be used during rollback, to restore this group to previous capacity
   private List<ElastiGroup> groupToBeDownsized;
+
+  private String prodListenerArn;
+  private String stageListenerArn;
 }

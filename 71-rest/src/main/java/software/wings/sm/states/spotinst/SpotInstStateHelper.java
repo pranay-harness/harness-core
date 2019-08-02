@@ -18,7 +18,6 @@ import static io.harness.spotinst.model.SpotInstConstants.PHASE_PARAM;
 import static io.harness.spotinst.model.SpotInstConstants.TG_ARN_PLACEHOLDER;
 import static io.harness.spotinst.model.SpotInstConstants.TG_NAME_PLACEHOLDER;
 import static io.harness.spotinst.model.SpotInstConstants.UNIT_INSTANCE;
-
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.sm.states.spotinst.SpotInstServiceSetup.SPOTINST_SERVICE_SETUP_COMMAND;
@@ -147,7 +146,7 @@ public class SpotInstStateHelper {
             .elastiGroupNamePrefix(elastiGroupNamePrefix)
             .loadBalancerName(serviceSetup.getLoadBalancerName())
             .classicLoadBalancer(serviceSetup.isClassicLoadBalancer())
-            .targetListenerPort(serviceSetup.getTargetListenerPort())
+            .stageListenerPort(serviceSetup.getTargetListenerPort())
             .targetListenerProtocol(serviceSetup.getTargetListenerProtocol())
             .image(artifact.getRevision())
             .awsRegion(spotInstInfrastructureMapping.getAwsRegion())
