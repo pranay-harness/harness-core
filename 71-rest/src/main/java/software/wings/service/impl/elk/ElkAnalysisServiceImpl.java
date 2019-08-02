@@ -185,7 +185,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
                           .totalHits(totalHitsPerMinute)
                           .totalHitsThreshold(VerificationConstants.TOTAL_HITS_PER_MIN_THRESHOLD)
                           .loadResponse(logElementsWithoutHost)
-                          .isLoadPresent(!logElementsWithHost.isEmpty())
+                          .isLoadPresent(!logElementsWithoutHost.isEmpty())
                           .build())
         .dataForNode(logElementsWithHost.isEmpty() ? null : logElementsWithoutHost)
         .build();
