@@ -101,6 +101,8 @@ public enum ContextElementType {
 
   SPOTINST_SERVICE_SETUP,
 
+  SPOTINST_SERVICE_DEPLOY,
+
   ARTIFACT,
 
   /**

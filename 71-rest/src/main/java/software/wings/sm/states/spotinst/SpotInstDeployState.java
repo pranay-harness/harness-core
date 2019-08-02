@@ -32,6 +32,7 @@ import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.InstanceUnitType;
+import software.wings.beans.ResizeStrategy;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
 import software.wings.beans.SpotInstInfrastructureMapping;
@@ -75,7 +76,7 @@ public class SpotInstDeployState extends State {
   @Getter @Setter private InstanceUnitType instanceUnitType = InstanceUnitType.PERCENTAGE;
   @Getter @Setter private Integer downsizeInstanceCount;
   @Getter @Setter private InstanceUnitType downsizeInstanceUnitType = InstanceUnitType.PERCENTAGE;
-  public static final String SPOTINST_DEPLOY = "SpotInst Deploy";
+  public static final String SPOTINST_DEPLOY_COMMAND = "SpotInst Deploy";
 
   /**
    * Instantiates a new state.
@@ -88,6 +89,10 @@ public class SpotInstDeployState extends State {
 
   public SpotInstDeployState(String name, String stateType) {
     super(name, stateType);
+  }
+
+  public boolean isRollback() {
+    return false;
   }
 
   @Override
@@ -119,7 +124,7 @@ public class SpotInstDeployState extends State {
             .orElse(SpotInstSetupContextElement.builder().build());
 
     // create activity
-    Activity activity = spotInstStateHelper.createActivity(context, null, getStateType());
+    Activity activity = spotInstStateHelper.createActivity(context, null, getStateType(), SPOTINST_DEPLOY_COMMAND);
 
     // Details for SpotInstConfig
     SettingAttribute settingAttribute = settingsService.get(spotInstInfrastructureMapping.getSpotinstConnectorId());
@@ -202,35 +207,51 @@ public class SpotInstDeployState extends State {
         .build();
   }
 
-  private SpotInstTaskParameters getDeployTaskParameters(ExecutionContext context, Application app, String activityId,
+  protected SpotInstTaskParameters getDeployTaskParameters(ExecutionContext context, Application app, String activityId,
       Integer upsizeUpdateCount, Integer downsizeUpdateCount,
       SpotInstInfrastructureMapping spotInstInfrastructureMapping,
       SpotInstSetupContextElement spotInstSetupContextElement) {
-    //
     ElastiGroup newElastiGroup = spotInstSetupContextElement.getNewElastiGroupOriginalConfig().clone();
     ElastiGroupCapacity newElastiGroupCapacity = newElastiGroup.getCapacity();
+
     newElastiGroupCapacity.setTarget(upsizeUpdateCount);
-    if (newElastiGroupCapacity.getMinimum() > newElastiGroupCapacity.getTarget()) {
-      newElastiGroupCapacity.setMinimum(newElastiGroupCapacity.getTarget());
+    boolean isFinalDeployState = isFinalDeployState(spotInstSetupContextElement);
+    if (!isFinalDeployState) {
+      newElastiGroupCapacity.setMinimum(upsizeUpdateCount);
+      newElastiGroupCapacity.setMaximum(upsizeUpdateCount);
     }
 
     ElastiGroup oldElastiGroup = spotInstSetupContextElement.getOldElastiGroupOriginalConfig().clone();
     ElastiGroupCapacity oldElastiGroupCapacity = oldElastiGroup.getCapacity();
     oldElastiGroupCapacity.setTarget(upsizeUpdateCount);
-    if (oldElastiGroupCapacity.getMinimum() > oldElastiGroupCapacity.getTarget()) {
-      oldElastiGroupCapacity.setMinimum(oldElastiGroupCapacity.getTarget());
-    }
+    oldElastiGroupCapacity.setMaximum(upsizeUpdateCount);
+    oldElastiGroupCapacity.setMinimum(upsizeUpdateCount);
 
+    SpotInstCommandRequest commandRequest = spotInstSetupContextElement.getCommandRequest();
     return SpotInstDeployTaskParameters.builder()
         .accountId(app.getAccountId())
         .appId(app.getAppId())
         .activityId(activityId)
         .awsRegion(spotInstInfrastructureMapping.getAwsRegion())
-        .commandName(SPOTINST_DEPLOY)
+        .commandName(SPOTINST_DEPLOY_COMMAND)
         .workflowExecutionId(context.getWorkflowExecutionId())
         .newElastiGroupWithUpdatedCapacity(newElastiGroup)
         .oldElastiGroupWithUpdatedCapacity(oldElastiGroup)
+        .resizeNewFirst(ResizeStrategy.RESIZE_NEW_FIRST.equals(spotInstSetupContextElement.getResizeStrategy()))
+        .timeoutIntervalInMin(commandRequest.getSpotInstTaskParameters().getTimeoutIntervalInMin())
         .build();
+  }
+
+  private boolean isFinalDeployState(SpotInstSetupContextElement spotInstSetupContextElement) {
+    if (PERCENTAGE == instanceUnitType && instanceCount == 100) {
+      return true;
+    }
+
+    if (PERCENTAGE != instanceUnitType && getMaxInstanceCountToBeUsed(spotInstSetupContextElement) <= instanceCount) {
+      return true;
+    }
+
+    return false;
   }
 
   private SpotInstDeployStateExecutionData geDeployStateExecutionData(SpotInstSetupContextElement setupContextElement,
@@ -239,7 +260,7 @@ public class SpotInstDeployState extends State {
 
     return SpotInstDeployStateExecutionData.builder()
         .activityId(activity.getUuid())
-        .commandName(SPOTINST_DEPLOY)
+        .commandName(SPOTINST_DEPLOY_COMMAND)
         .elastiGroupName(elastiGroup.getName())
         .elastiGroupId(elastiGroup.getId())
         .desiredCount(upsizeUpdateCount)
@@ -254,10 +275,13 @@ public class SpotInstDeployState extends State {
   }
 
   protected Integer getUpsizeUpdateCount(SpotInstSetupContextElement setupContextElement) {
-    Integer count = setupContextElement.isUseCurrentRunningInstanceCount()
-        ? setupContextElement.getCurrentRunningInstanceCount()
-        : setupContextElement.getMaxInstanceCount();
+    Integer count = getMaxInstanceCountToBeUsed(setupContextElement);
     return getInstanceCountToUpdate(count, instanceCount, instanceUnitType, true);
+  }
+
+  private Integer getMaxInstanceCountToBeUsed(SpotInstSetupContextElement setupContextElement) {
+    return setupContextElement.isUseCurrentRunningInstanceCount() ? setupContextElement.getCurrentRunningInstanceCount()
+                                                                  : setupContextElement.getMaxInstanceCount();
   }
 
   @VisibleForTesting
@@ -265,9 +289,7 @@ public class SpotInstDeployState extends State {
     // if downsizeInstanceCount is not set, use same updateCount as upsize
     Integer downsizeUpdationCount = updateCount;
 
-    Integer instanceCount = setupContextElement.isUseCurrentRunningInstanceCount()
-        ? setupContextElement.getCurrentRunningInstanceCount()
-        : setupContextElement.getMaxInstanceCount();
+    Integer instanceCount = getMaxInstanceCountToBeUsed(setupContextElement);
     if (downsizeInstanceCount != null) {
       downsizeUpdationCount =
           getInstanceCountToUpdate(instanceCount, downsizeInstanceCount, downsizeInstanceUnitType, false);
@@ -285,8 +307,6 @@ public class SpotInstDeployState extends State {
         // if use inputs 30%, means count after this phase deployment should be 30% of maxInstances
         updateCount = Math.max(count, 1);
       } else {
-        // if use inputs 30%, means 70% (100 - 30) of maxInstances should be downsized for old apps
-        // so only 40% of the max instances would remain
         updateCount = Math.max(count, 0);
         updateCount = maxInstanceCount - updateCount;
       }

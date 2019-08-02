@@ -74,9 +74,12 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
           Integer.parseInt(elastiGroups.get(elastiGroups.size() - 1).getName().substring(prefix.length())) + 1;
     }
     String newElastiGroupName = format("%s%d", prefix, elastiGroupVersion);
+
+    // Target Group associated with stageListener
     TargetGroup stageTargetGroup = getTargetGroup(awsConfig, setupTaskParameters.getAwsRegion(),
-        setupTaskParameters.getLoadBalancerName(), setupTaskParameters.getStageListenerPort(), logCallback,
-        setupTaskParameters.getWorkflowExecutionId(), setupTaskParameters.getProdListenerPort(), builder);
+        setupTaskParameters.getLoadBalancerName(), setupTaskParameters.getStageListenerPort(),
+        setupTaskParameters.getProdListenerPort(), logCallback, setupTaskParameters.getWorkflowExecutionId(), builder);
+
     String finalJson = setupTaskParameters.getElastiGroupJson()
                            .replace(ELASTI_GROUP_NAME_PLACEHOLDER, newElastiGroupName)
                            .replace(TG_NAME_PLACEHOLDER, stageTargetGroup.getTargetGroupName())
@@ -124,9 +127,19 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
     SpotInstSetupTaskResponseBuilder builder = SpotInstSetupTaskResponse.builder();
     logCallback.saveExecutionLog(format("Querying aws to get the stage target group details for load balancer: [%s]",
         setupTaskParameters.getLoadBalancerName()));
+
+    // Target Group associated with StageListener
     TargetGroup stageTargetGroup = getTargetGroup(awsConfig, setupTaskParameters.getAwsRegion(),
-        setupTaskParameters.getLoadBalancerName(), setupTaskParameters.getStageListenerPort(), logCallback,
-        setupTaskParameters.getWorkflowExecutionId(), setupTaskParameters.getProdListenerPort(), builder);
+        setupTaskParameters.getLoadBalancerName(), setupTaskParameters.getStageListenerPort(),
+        setupTaskParameters.getProdListenerPort(), logCallback, setupTaskParameters.getWorkflowExecutionId(), builder);
+
+    // Target Group associated with ProdListener
+    TargetGroup prodTargetGroup = getTargetGroupUsingListenerArn(awsConfig, setupTaskParameters.getAwsRegion(),
+        builder.build().getProdListenerArn(), logCallback, setupTaskParameters.getWorkflowExecutionId());
+
+    builder.prodTargetGroupArn(prodTargetGroup.getTargetGroupArn());
+    builder.stageTargetGroupArn(stageTargetGroup.getTargetGroupArn());
+
     logCallback.saveExecutionLog(format("Found stage target group: [%s] with Arn: [%s]",
         stageTargetGroup.getTargetGroupName(), stageTargetGroup.getTargetGroupArn()));
     String stageElastiGroupName =
@@ -191,7 +204,7 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
   }
 
   private TargetGroup getTargetGroup(AwsConfig awsConfig, String region, String loadBalancerName, int stageListenerPort,
-      ExecutionLogCallback logCallback, String workflowExecutionId, int prodListenerPort,
+      int prodListenerPort, ExecutionLogCallback logCallback, String workflowExecutionId,
       SpotInstSetupTaskResponseBuilder builder) throws Exception {
     List<AwsElbListener> listeners =
         awsElbHelperServiceDelegate.getElbListenersForLoadBalaner(awsConfig, emptyList(), region, loadBalancerName);
@@ -203,6 +216,22 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
     builder.stageListenerArn(stageListener.getListenerArn());
     Listener listener =
         awsElbHelperServiceDelegate.getElbListener(awsConfig, emptyList(), region, stageListener.getListenerArn());
+    String targetGroupArn = awsElbHelperServiceDelegate.getTargetGroupForDefaultAction(listener, logCallback);
+    Optional<TargetGroup> targetGroup =
+        awsElbHelperServiceDelegate.getTargetGroup(awsConfig, emptyList(), region, targetGroupArn);
+    if (!targetGroup.isPresent()) {
+      String message = format("Did not find any target group with arn: [%s]. Workflow execution: [%s]", targetGroupArn,
+          workflowExecutionId);
+      logger.error(message);
+      logCallback.saveExecutionLog(message);
+      throw new WingsException(message, EnumSet.of(ReportTarget.UNIVERSAL));
+    }
+    return targetGroup.get();
+  }
+
+  private TargetGroup getTargetGroupUsingListenerArn(AwsConfig awsConfig, String region, String listenerArn,
+      ExecutionLogCallback logCallback, String workflowExecutionId) throws Exception {
+    Listener listener = awsElbHelperServiceDelegate.getElbListener(awsConfig, emptyList(), region, listenerArn);
     String targetGroupArn = awsElbHelperServiceDelegate.getTargetGroupForDefaultAction(listener, logCallback);
     Optional<TargetGroup> targetGroup =
         awsElbHelperServiceDelegate.getTargetGroup(awsConfig, emptyList(), region, targetGroupArn);

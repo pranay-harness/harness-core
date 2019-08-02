@@ -15,4 +15,6 @@ public class SpotInstSetupTaskResponse implements SpotInstTaskResponse {
 
   private String prodListenerArn;
   private String stageListenerArn;
+  private String prodTargetGroupArn;
+  private String stageTargetGroupArn;
 }
