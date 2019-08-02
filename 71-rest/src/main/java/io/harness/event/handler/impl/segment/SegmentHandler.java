@@ -52,6 +52,7 @@ import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.network.Http;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.Account;
@@ -85,7 +86,9 @@ public class SegmentHandler implements EventHandler {
   @Inject
   public SegmentHandler(SegmentConfig segmentConfig, EventListener eventListener) {
     this.segmentConfig = segmentConfig;
-    if (isSegmentEnabled()) {
+    // segment API url format take from https://segment.com/docs/sources/server/http/
+    boolean validApiUrl = StringUtils.contains(segmentConfig.getUrl(), "https://api.segment.io");
+    if (isSegmentEnabled() && validApiUrl) {
       registerEventHandlers(eventListener);
       retrofit = new Retrofit.Builder()
                      .baseUrl(segmentConfig.getUrl())
@@ -130,6 +133,11 @@ public class SegmentHandler implements EventHandler {
     if (isEmpty(properties)) {
       logger.error("Event data properties are null");
       return;
+    }
+
+    boolean validApiUrl = StringUtils.contains(segmentConfig.getUrl(), "https://api.segment.io");
+    if (!isSegmentEnabled() || !validApiUrl) {
+      logger.info("Segment not enabled or incorrect URL. Config: {}", segmentConfig);
     }
 
     try {
