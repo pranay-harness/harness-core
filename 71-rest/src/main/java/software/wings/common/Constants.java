@@ -270,7 +270,6 @@ public interface Constants {
    */
   String HARNESS_NAME = "Harness";
 
-  String ALWAYS_TRUE_CRITERIA = "ALWAYS_TRUE_CRITERIA";
   /**
    * The constant DEFAULT_AWS_HOST_NAME_CONVENTION.
    */

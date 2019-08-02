@@ -3,7 +3,6 @@ package software.wings.delegatetasks.validation;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
-import static software.wings.common.Constants.ALWAYS_TRUE_CRITERIA;
 
 import io.harness.beans.DelegateTask;
 import software.wings.beans.BambooConfig;
@@ -22,6 +21,8 @@ import java.util.function.Consumer;
  * Created by anubhaw on 7/19/18.
  */
 public class BuildSourceTaskValidation extends AbstractDelegateValidateTask {
+  private static final String ALWAYS_TRUE_CRITERIA = "ALWAYS_TRUE_CRITERIA";
+
   public BuildSourceTaskValidation(
       String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> consumer) {
     super(delegateId, delegateTask, consumer);

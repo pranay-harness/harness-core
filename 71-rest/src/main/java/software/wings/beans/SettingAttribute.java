@@ -13,6 +13,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.AZURE;
 import static software.wings.settings.SettingValue.SettingVariableTypes.BAMBOO;
 import static software.wings.settings.SettingValue.SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.settings.SettingValue.SettingVariableTypes.BUG_SNAG;
+import static software.wings.settings.SettingValue.SettingVariableTypes.CUSTOM;
 import static software.wings.settings.SettingValue.SettingVariableTypes.DATA_DOG;
 import static software.wings.settings.SettingValue.SettingVariableTypes.DOCKER;
 import static software.wings.settings.SettingValue.SettingVariableTypes.DYNA_TRACE;
@@ -114,7 +115,7 @@ public class SettingAttribute extends Base implements NameAccess {
 
     CONNECTOR(Lists.newArrayList(SMTP, JENKINS, BAMBOO, SPLUNK, ELK, LOGZ, SUMO, APP_DYNAMICS, NEW_RELIC, DYNA_TRACE,
         BUG_SNAG, DATA_DOG, APM_VERIFICATION, PROMETHEUS, ELB, SLACK, DOCKER, ECR, GCR, NEXUS, ARTIFACTORY, AMAZON_S3,
-        GCS, GIT, SMB, JIRA, SFTP, SERVICENOW)),
+        GCS, GIT, SMB, JIRA, SFTP, SERVICENOW, CUSTOM)),
 
     SETTING(Lists.newArrayList(HOST_CONNECTION_ATTRIBUTES, BASTION_HOST_CONNECTION_ATTRIBUTES, STRING)),
 

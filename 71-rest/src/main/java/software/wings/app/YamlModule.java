@@ -152,6 +152,7 @@ import software.wings.service.impl.yaml.handler.setting.artifactserver.AmazonS3H
 import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactServerYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactoryConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.BambooConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.artifactserver.CustomArtifactServerConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.DockerRegistryConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.GcsHelmRepoConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.GitConfigYamlHandler;
@@ -330,6 +331,8 @@ public class YamlModule extends AbstractModule {
     artifactServerYamlHelperMapBinder.addBinding(SettingVariableTypes.NEXUS.name()).to(NexusConfigYamlHandler.class);
     artifactServerYamlHelperMapBinder.addBinding(SettingVariableTypes.SMB.name()).to(SmbConfigYamlHandler.class);
     artifactServerYamlHelperMapBinder.addBinding(SettingVariableTypes.SFTP.name()).to(SftpConfigYamlHandler.class);
+    artifactServerYamlHelperMapBinder.addBinding(SettingVariableTypes.CUSTOM.name())
+        .to(CustomArtifactServerConfigYamlHandler.class);
 
     MapBinder<String, HelmRepoYamlHandler> helmRepoYamlHandlerMapBinder =
         MapBinder.newMapBinder(binder(), String.class, HelmRepoYamlHandler.class);

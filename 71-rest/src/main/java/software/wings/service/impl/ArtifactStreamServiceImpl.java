@@ -280,10 +280,13 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
 
     if (artifactStream.getTemplateUuid() != null) {
+      String version = artifactStream.getTemplateVersion() != null ? artifactStream.getTemplateVersion() : LATEST_TAG;
+      ArtifactStream artifactStream1 = (ArtifactStream) templateService.constructEntityFromTemplate(
+          artifactStream.getTemplateUuid(), version, EntityType.ARTIFACT_STREAM);
+      if (artifactStream instanceof CustomArtifactStream) {
+        ((CustomArtifactStream) artifactStream).setScripts(((CustomArtifactStream) artifactStream1).getScripts());
+      }
       if (isEmpty(artifactStream.getTemplateVariables())) {
-        String version = artifactStream.getTemplateVersion() != null ? artifactStream.getTemplateVersion() : LATEST_TAG;
-        ArtifactStream artifactStream1 = (ArtifactStream) templateService.constructEntityFromTemplate(
-            artifactStream.getTemplateUuid(), version, EntityType.ARTIFACT_STREAM);
         artifactStream.setTemplateVariables(artifactStream1.getTemplateVariables());
       } else {
         if (validate) {

@@ -48,8 +48,7 @@ public class CustomArtifactStream extends ArtifactStream {
   @Builder
   public CustomArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
-      String name, String serviceId, String scriptString, List<Script> scripts, List<String> tags, String accountId,
-      Set<String> keywords) {
+      String name, String serviceId, List<Script> scripts, List<String> tags, String accountId, Set<String> keywords) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath,
         ArtifactStreamType.CUSTOM.name(), sourceName, settingId, name, false, serviceId, true, accountId, keywords);
     this.scripts = scripts;
@@ -79,8 +78,8 @@ public class CustomArtifactStream extends ArtifactStream {
     private List<String> delegateTags = new ArrayList<>();
 
     @lombok.Builder
-    public Yaml(String harnessApiVersion, List<Script> scripts, List<String> delegateTags) {
-      super(CUSTOM.name(), harnessApiVersion);
+    public Yaml(String harnessApiVersion, String serverName, List<Script> scripts, List<String> delegateTags) {
+      super(CUSTOM.name(), harnessApiVersion, serverName);
       this.scripts = scripts;
       this.delegateTags = delegateTags;
     }

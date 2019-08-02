@@ -64,6 +64,8 @@ public class ArtifactVariableYamlHelper {
         settingVariableTypes = SettingVariableTypes.SFTP;
         break;
       case CUSTOM:
+        settingVariableTypes = SettingVariableTypes.CUSTOM;
+        break;
       default:
         throw new IllegalStateException("Unexpected value: " + artifactStreamType);
     }

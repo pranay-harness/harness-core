@@ -31,6 +31,7 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.CustomArtifactServerConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
@@ -150,6 +151,9 @@ public class SettingResource {
       if (variable.getValue() instanceof EncryptableSetting) {
         ((EncryptableSetting) variable.getValue()).setAccountId(variable.getAccountId());
         ((EncryptableSetting) variable.getValue()).setDecrypted(true);
+      }
+      if (variable.getValue() instanceof CustomArtifactServerConfig) {
+        ((CustomArtifactServerConfig) variable.getValue()).setAccountId(variable.getAccountId());
       }
     }
     variable.setCategory(SettingCategory.getCategory(SettingVariableTypes.valueOf(variable.getValue().getType())));
