@@ -29,6 +29,7 @@ public class Schema implements PersistentEntity, UuidAware, CreatedAtAware, Upda
   public static final String BACKGROUND_VERSION = "backgroundVersion";
   public static final String SEED_DATA_VERSION = "seedDataVersion";
   public static final String TIMESCALEDB_VERSION = "timescaleDbVersion";
+  public static final String TIMESCALEDB_DATA_VERSION = "timescaleDBDataVersion";
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @SchemaIgnore @Indexed private long createdAt;
   @SchemaIgnore @NotNull private long lastUpdatedAt;
@@ -37,7 +38,7 @@ public class Schema implements PersistentEntity, UuidAware, CreatedAtAware, Upda
   private int backgroundVersion;
   private int seedDataVersion;
   private int timescaleDbVersion;
-
+  private int timescaleDBDataVersion;
   @Override
   public String getUuid() {
     return SCHEMA_ID;

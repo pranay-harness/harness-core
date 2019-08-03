@@ -26,7 +26,9 @@ import migrations.MigrationBackgroundList;
 import migrations.MigrationList;
 import migrations.SeedDataMigration;
 import migrations.SeedDataMigrationList;
+import migrations.TimeScaleDBDataMigration;
 import migrations.TimeScaleDBMigration;
+import migrations.TimescaleDBDataMigrationList;
 import migrations.TimescaleDBMigrationList;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.query.Query;
@@ -71,6 +73,11 @@ public class MigrationServiceImpl implements MigrationService {
         TimescaleDBMigrationList.getMigrations().stream().collect(Collectors.toMap(Pair::getKey, Pair::getValue));
     int maxTimeScaleDBMigration = timescaleDBMigrations.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
 
+    Map<Integer, Class<? extends TimeScaleDBDataMigration>> backgroundTimeScaleDBDataMigrations =
+        TimescaleDBDataMigrationList.getMigrations().stream().collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+    int maxTimeScaleDBDataMigration =
+        backgroundTimeScaleDBDataMigrations.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
+
     try (
         AcquiredLock lock = persistentLocker.waitToAcquireLock(Schema.class, SCHEMA_ID, ofMinutes(25), ofMinutes(27))) {
       if (lock == null) {
@@ -90,6 +97,7 @@ public class MigrationServiceImpl implements MigrationService {
                      .backgroundVersion(maxBackgroundVersion)
                      .seedDataVersion(0)
                      .timescaleDbVersion(0)
+                     .timescaleDBDataVersion(0)
                      .build();
         wingsPersistence.save(schema);
       }
@@ -226,6 +234,55 @@ public class MigrationServiceImpl implements MigrationService {
       } else {
         logger.info(
             "No TimescaleDB migration required, schema version is valid : [{}]", schema.getTimescaleDbVersion());
+      }
+
+      int currentTimeScaleDBDataMigration = schema.getTimescaleDBDataVersion();
+      if (currentTimeScaleDBDataMigration < maxTimeScaleDBDataMigration) {
+        executorService.submit(() -> {
+          try (AcquiredLock ignore =
+                   persistentLocker.acquireLock(Schema.class, "Background-" + SCHEMA_ID, ofMinutes(120 + 1))) {
+            timeLimiter.<Boolean>callWithTimeout(() -> {
+              logger.info("[TimeScaleDBDataMigration] - Updating schema background version from {} to {}",
+                  currentTimeScaleDBDataMigration, maxTimeScaleDBDataMigration);
+
+              boolean successfulMigration = true;
+
+              for (int i = currentTimeScaleDBDataMigration + 1; i <= maxTimeScaleDBDataMigration; i++) {
+                if (!backgroundTimeScaleDBDataMigrations.containsKey(i)) {
+                  continue;
+                }
+                Class<? extends TimeScaleDBDataMigration> migration = backgroundTimeScaleDBDataMigrations.get(i);
+                logger.info("[TimeScaleDBDataMigration] - Migrating to background version {}: {} ...", i,
+                    migration.getSimpleName());
+                try {
+                  successfulMigration = successfulMigration && injector.getInstance(migration).migrate();
+                } catch (Exception ex) {
+                  logger.error("Error while running timeScaleDBDataMigration {}", migration.getSimpleName(), ex);
+                  break;
+                }
+                if (successfulMigration) {
+                  final UpdateOperations<Schema> updateOperations =
+                      wingsPersistence.createUpdateOperations(Schema.class);
+                  updateOperations.set(Schema.TIMESCALEDB_DATA_VERSION, i);
+                  wingsPersistence.update(wingsPersistence.createQuery(Schema.class), updateOperations);
+                } else {
+                  break;
+                }
+              }
+              if (successfulMigration) {
+                logger.info("TimeScaleDB migration was successfully completed");
+              } else {
+                logger.info("TimeScaleDB migration was not successful ");
+              }
+              return true;
+            }, 2, TimeUnit.HOURS, true);
+          } catch (Exception ex) {
+            logger.warn("background work", ex);
+          }
+        });
+      } else {
+        logger.info("No TimescaleDB Data migration required, schema version is valid : [{}]",
+            schema.getTimescaleDBDataVersion());
       }
 
     } catch (RuntimeException e) {
