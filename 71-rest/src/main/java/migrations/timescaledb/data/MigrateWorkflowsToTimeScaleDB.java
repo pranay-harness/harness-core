@@ -7,6 +7,7 @@ import com.google.inject.Singleton;
 
 import com.mongodb.ReadPreference;
 import io.fabric8.utils.Lists;
+import io.harness.beans.ExecutionStatus;
 import io.harness.persistence.HIterator;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
@@ -69,8 +70,14 @@ public class MigrateWorkflowsToTimeScaleDB implements TimeScaleDBDataMigration {
                                    .greaterThanOrEq(System.currentTimeMillis() - (30 * 24 * 3600 * 1000L))
                                    .field(WorkflowExecutionKeys.pipelineExecutionId)
                                    .doesNotExist()
+                                   .field(WorkflowExecutionKeys.startTs)
+                                   .exists()
+                                   .field(WorkflowExecutionKeys.endTs)
+                                   .exists()
                                    .field(WorkflowExecutionKeys.accountId)
                                    .exists()
+                                   .field(WorkflowExecutionKeys.status)
+                                   .in(ExecutionStatus.finalStatuses())
                                    .order(Sort.descending(WorkflowExecutionKeys.createdAt))
                                    .fetch(findOptions))) {
         while (iterator.hasNext()) {
@@ -119,6 +126,9 @@ public class MigrateWorkflowsToTimeScaleDB implements TimeScaleDBDataMigration {
           logger.info("Failed to save workflowExecution,[{}],retryCount=[{}]", workflowExecution.getUuid(), retryCount);
         }
         retryCount++;
+      } catch (Exception e) {
+        logger.error("Failed to save workflowExecution,[{}]", workflowExecution.getUuid(), e);
+        retryCount = MAX_RETRY + 1;
       } finally {
         logger.info("Total time =[{}] for workflowExecution:[{}]", System.currentTimeMillis() - startTime,
             workflowExecution.getUuid());
