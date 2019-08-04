@@ -89,11 +89,12 @@ public class MigrationBackgroundList {
         .add(Pair.of(39, BaseMigration.class))
         .add(Pair.of(40, UpdateWorkflowExecutionDuration.class))
         .add(Pair.of(41, BaseMigration.class))
-        .add(Pair.of(42, UpdateWorkflowExecutionAccountId.class))
+        .add(Pair.of(42, BaseMigration.class))
         .add(Pair.of(43, FetchAndSaveAccounts.class))
         .add(Pair.of(44, NoOpMigration.class))
         .add(Pair.of(45, FetchAndSaveAccounts2.class))
         .add(Pair.of(46, ScheduleSegmentPublishJob.class))
+        .add(Pair.of(47, UpdateWorkflowExecutionAccountId.class))
         .build();
   }
 }
