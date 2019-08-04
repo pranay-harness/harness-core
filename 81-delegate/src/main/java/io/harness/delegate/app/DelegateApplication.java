@@ -28,7 +28,6 @@ import io.harness.managerclient.ManagerClientModule;
 import io.harness.serializer.YamlUtils;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
-import io.harness.verification.VerificationServiceClientModule;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -100,10 +99,9 @@ public class DelegateApplication {
       }
     });
 
-    modules.add(new ManagerClientModule(
-        configuration.getManagerUrl(), configuration.getAccountId(), configuration.getAccountSecret()));
+    modules.add(new ManagerClientModule(configuration.getManagerUrl(), configuration.getVerificationServiceUrl(),
+        configuration.getAccountId(), configuration.getAccountSecret()));
     modules.addAll(new DelegateModule().cumulativeDependencies());
-    modules.add(new VerificationServiceClientModule(configuration.getVerificationServiceUrl()));
 
     Injector injector = Guice.createInjector(modules);
     final MessageService messageService = injector.getInstance(MessageService.class);
