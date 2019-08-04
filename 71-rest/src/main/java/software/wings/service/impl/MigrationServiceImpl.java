@@ -239,8 +239,8 @@ public class MigrationServiceImpl implements MigrationService {
       int currentTimeScaleDBDataMigration = schema.getTimescaleDBDataVersion();
       if (currentTimeScaleDBDataMigration < maxTimeScaleDBDataMigration) {
         executorService.submit(() -> {
-          try (AcquiredLock ignore =
-                   persistentLocker.acquireLock(Schema.class, "Background-" + SCHEMA_ID, ofMinutes(120 + 1))) {
+          try (AcquiredLock ignore = persistentLocker.acquireLock(
+                   Schema.class, "TimeScaleDBBackground-" + SCHEMA_ID, ofMinutes(120 + 1))) {
             timeLimiter.<Boolean>callWithTimeout(() -> {
               logger.info("[TimeScaleDBDataMigration] - Updating schema background version from {} to {}",
                   currentTimeScaleDBDataMigration, maxTimeScaleDBDataMigration);
@@ -270,14 +270,14 @@ public class MigrationServiceImpl implements MigrationService {
                 }
               }
               if (successfulMigration) {
-                logger.info("TimeScaleDB migration was successfully completed");
+                logger.info("TimeScaleDBData migration was successfully completed");
               } else {
-                logger.info("TimeScaleDB migration was not successful ");
+                logger.info("TimeScaleDBData migration was not successful ");
               }
               return true;
             }, 2, TimeUnit.HOURS, true);
           } catch (Exception ex) {
-            logger.warn("background work", ex);
+            logger.warn("timescaledbData background work", ex);
           }
         });
       } else {
