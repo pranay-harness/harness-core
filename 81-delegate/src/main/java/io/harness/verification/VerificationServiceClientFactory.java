@@ -7,9 +7,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.harness.managerclient.DelegateAuthInterceptor;
 import io.harness.network.Http;
-import io.harness.security.ServiceTokenGenerator;
-import io.harness.security.VerificationAuthInterceptor;
+import io.harness.security.TokenGenerator;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
@@ -42,11 +42,11 @@ public class VerificationServiceClientFactory implements Provider<VerificationSe
       ImmutableList.of(new ManagerClientX509TrustManager());
 
   private String baseUrl;
-  private ServiceTokenGenerator tokenGenerator;
+  private TokenGenerator tokenGenerator;
 
-  VerificationServiceClientFactory(String baseUrl, ServiceTokenGenerator tokenGenerator) {
+  public VerificationServiceClientFactory(String baseUrl, TokenGenerator delegateTokenGenerator) {
     this.baseUrl = baseUrl;
-    this.tokenGenerator = tokenGenerator;
+    this.tokenGenerator = delegateTokenGenerator;
   }
 
   @Override
@@ -74,7 +74,7 @@ public class VerificationServiceClientFactory implements Provider<VerificationSe
       return Http.getOkHttpClientWithProxyAuthSetup()
           .connectionPool(new ConnectionPool())
           .retryOnConnectionFailure(true)
-          .addInterceptor(new VerificationAuthInterceptor(tokenGenerator))
+          .addInterceptor(new DelegateAuthInterceptor(tokenGenerator))
           .sslSocketFactory(sslSocketFactory, (X509TrustManager) TRUST_ALL_CERTS.get(0))
           .hostnameVerifier((hostname, session) -> true)
           .build();

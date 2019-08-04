@@ -144,6 +144,8 @@ public class VerificationConstants {
       "{baseUrl}/graph?g0.range_input={rangeInput}m&g0.end_input={endTime}&"
       + "g0.expr={metricString}&g0.tab=0";
 
+  public static final String DELEGATE_DATA_COLLETION = "delegate-data-collection";
+
   public static final Map<String, String> ERROR_METRIC_NAMES =
       Collections.unmodifiableMap(new HashMap<String, String>() {
         {
