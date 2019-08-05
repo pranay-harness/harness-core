@@ -4,7 +4,7 @@
   "createdAt": 1557257908384,
   "lastUpdatedAt": 1557257908384,
   "cvConfigId": "77BpIUVCR5Ohv_xyZ4Jv6g",
-  "analysisStatus":"FEEDBACK_ANALYSIS_COMPLETE",
+  "analysisStatus":"LE_ANALYSIS_COMPLETE",
   "logCollectionMinute": 25954290,
   "query": "{\n    \"bool\": {\n      \"filter\": [\n        {\n          \"bool\": {\n            \"should\": [\n              {\n                \"match\": {\n                  \"kubernetes.container.name\": \"manager\"\n                }\n              }\n            ]\n          }\n        },\n        {\n          \"regexp\": {\n            \"log\": {\n              \"value\": \"1;31merror\"\n            }\n          }\n        }\n      ]\n    }\n}",
   "score": 1.0,

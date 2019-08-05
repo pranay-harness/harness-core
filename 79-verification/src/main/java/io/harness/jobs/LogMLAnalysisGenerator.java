@@ -266,7 +266,7 @@ public class LogMLAnalysisGenerator implements Runnable {
         + "&applicationId=" + applicationId + "&stateExecutionId=" + context.getStateExecutionId()
         + "&logCollectionMinute=" + logAnalysisMinute + "&isBaselineCreated=" + isBaselineCreated + "&taskId=" + taskId
         + "&stateType=" + context.getStateType() + "&isFeedbackAnalysis=true";
-    //
+
     final String logMLResultUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
         + LogAnalysisResource.WORKFLOW_GET_ANALYSIS_RECORDS_URL + "?appId=" + context.getAppId()
         + "&accountId=" + context.getAccountId() + "&stateExecutionId=" + context.getStateExecutionId()

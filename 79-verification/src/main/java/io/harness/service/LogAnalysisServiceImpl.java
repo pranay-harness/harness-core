@@ -731,7 +731,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
             .filter(fieldName, fieldValue) // field will be either cvConfigId or stateExecutionId
             .field(LogMLAnalysisRecordKeys.logCollectionMinute)
             .lessThanOrEq(analysisMinute)
-            .order(Sort.descending(LogMLAnalysisRecordKeys.logCollectionMinute), Sort.descending("lastUpdatedAt"));
+            .filter(LogMLAnalysisRecordKeys.analysisStatus, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE.name())
+            .order(Sort.descending(LogMLAnalysisRecordKeys.logCollectionMinute));
 
     if (fieldName.equals(LogMLAnalysisRecordKeys.cvConfigId)) {
       logMLAnalysisRecordQuery = logMLAnalysisRecordQuery.filter(LogMLAnalysisRecordKeys.deprecated, false);
