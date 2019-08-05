@@ -19,9 +19,6 @@ public class SegmentClientBuilderImpl implements SegmentClientBuilder {
       return analytics;
     }
 
-    // log added for debugging purpose, will be removed
-    logger.info("Segment API key: {}", this.writeKey);
-
     this.analytics = Analytics.builder(this.writeKey).build();
     return this.analytics;
   }

@@ -31,6 +31,7 @@ import io.swagger.annotations.Api;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.app.DeployMode;
@@ -61,6 +62,7 @@ import software.wings.security.authentication.TwoFactorAdminOverrideSettings;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
+import software.wings.service.impl.ReCaptchaVerifier;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -76,6 +78,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
@@ -123,13 +126,15 @@ public class UserResource {
   private AccountPermissionUtils accountPermissionUtils;
   private MainConfiguration mainConfiguration;
   private AccountPasswordExpirationJob accountPasswordExpirationJob;
+  private ReCaptchaVerifier reCaptchaVerifier;
 
   @Inject
   public UserResource(UserService userService, AuthService authService, AccountService accountService,
       UsageRestrictionsService usageRestrictionsService, AccountPermissionUtils accountPermissionUtils,
       AuthenticationManager authenticationManager, TwoFactorAuthenticationManager twoFactorAuthenticationManager,
       CacheManager cacheManager, HarnessUserGroupService harnessUserGroupService, UserGroupService userGroupService,
-      MainConfiguration mainConfiguration, AccountPasswordExpirationJob accountPasswordExpirationJob) {
+      MainConfiguration mainConfiguration, AccountPasswordExpirationJob accountPasswordExpirationJob,
+      ReCaptchaVerifier reCaptchaVerifier) {
     this.userService = userService;
     this.authService = authService;
     this.accountService = accountService;
@@ -142,6 +147,7 @@ public class UserResource {
     this.userGroupService = userGroupService;
     this.mainConfiguration = mainConfiguration;
     this.accountPasswordExpirationJob = accountPasswordExpirationJob;
+    this.reCaptchaVerifier = reCaptchaVerifier;
   }
 
   /**
@@ -541,8 +547,12 @@ public class UserResource {
   @PublicApi
   @Timed
   @ExceptionMetered
-  public RestResponse<User> login(
-      @HeaderParam(HttpHeaders.AUTHORIZATION) String authorization, @QueryParam("accountId") String accountId) {
+  public RestResponse<User> login(@HeaderParam(HttpHeaders.AUTHORIZATION) String authorization,
+      @QueryParam("accountId") String accountId, @QueryParam("captcha") @Nullable String captchaToken) {
+    if (!StringUtils.isEmpty(captchaToken)) {
+      reCaptchaVerifier.verify(captchaToken);
+    }
+
     // accountId field is optional, it could be null.
     return new RestResponse<>(authenticationManager.defaultLoginAccount(
         authenticationManager.extractToken(authorization, "Basic"), accountId));

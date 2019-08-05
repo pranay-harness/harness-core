@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -23,12 +24,15 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Matchers;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountChecker;
+import software.wings.security.authentication.recaptcha.MaxLoginAttemptExceededException;
 import software.wings.security.saml.SSORequest;
 import software.wings.security.saml.SamlClientService;
 import software.wings.service.intfc.AccountService;
@@ -54,6 +58,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   @Mock private AuthenticationUtils AUTHENTICATION_UTL;
   @Mock private AuthService AUTHSERVICE;
   @Mock private FeatureFlagService FEATURE_FLAG_SERVICE;
+  @Mock private FailedLoginAttemptCountChecker failedLoginAttemptCountChecker;
 
   @Inject @InjectMocks private AuthenticationManager authenticationManager;
 
@@ -126,9 +131,11 @@ public class AuthenticationManagerTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testGetLoginType_emailUnverified_shouldFail() {
+  public void testGetLoginType_emailUnverified_shouldFail() throws MaxLoginAttemptExceededException {
     User mockUser = mock(User.class);
     Account account1 = mock(Account.class);
+
+    doNothing().when(failedLoginAttemptCountChecker).check(Mockito.any(User.class));
 
     when(FEATURE_FLAG_SERVICE.isEnabled(LOGIN_PROMPT_WHEN_NO_USER, GLOBAL_ACCOUNT_ID)).thenReturn(false);
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1));

@@ -12,10 +12,13 @@ import static org.mindrot.jbcrypt.BCrypt.checkpw;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.loginSettings.LoginSettingsService;
+import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountChecker;
+import software.wings.security.authentication.recaptcha.MaxLoginAttemptExceededException;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 
@@ -26,16 +29,19 @@ public class PasswordBasedAuthHandler implements AuthHandler {
   private AuthenticationUtils authenticationUtils;
   private AccountService accountService;
   private DomainWhitelistCheckerService domainWhitelistCheckerService;
+  private FailedLoginAttemptCountChecker failedLoginAttemptCountChecker;
 
   @Inject
   public PasswordBasedAuthHandler(UserService userService, LoginSettingsService loginSettingsService,
       AuthenticationUtils authenticationUtils, AccountService accountService,
-      DomainWhitelistCheckerService domainWhitelistCheckerService) {
+      DomainWhitelistCheckerService domainWhitelistCheckerService,
+      FailedLoginAttemptCountChecker failedLoginAttemptCountChecker) {
     this.userService = userService;
     this.loginSettingsService = loginSettingsService;
     this.authenticationUtils = authenticationUtils;
     this.accountService = accountService;
     this.domainWhitelistCheckerService = domainWhitelistCheckerService;
+    this.failedLoginAttemptCountChecker = failedLoginAttemptCountChecker;
   }
 
   @Override
@@ -52,6 +58,7 @@ public class PasswordBasedAuthHandler implements AuthHandler {
     String password = credentials[1];
 
     User user = getUser(userName);
+
     if (user == null) {
       throw new WingsException(USER_DOES_NOT_EXIST, USER);
     }
@@ -70,10 +77,17 @@ public class PasswordBasedAuthHandler implements AuthHandler {
         updateFailedLoginAttemptCount(user);
       }
     } else {
-      if (checkpw(password, user.getPasswordHash())) {
+      boolean validCredentials = checkpw(password, user.getPasswordHash());
+      if (validCredentials) {
         return getAuthenticationResponse(user);
       } else {
         updateFailedLoginAttemptCount(user);
+
+        try {
+          failedLoginAttemptCountChecker.check(user);
+        } catch (MaxLoginAttemptExceededException e) {
+          throw new WingsException(ErrorCode.MAX_FAILED_ATTEMPT_COUNT_EXCEEDED, "Too many incorrect login attempts");
+        }
       }
     }
     throw new WingsException(INVALID_CREDENTIAL, USER);

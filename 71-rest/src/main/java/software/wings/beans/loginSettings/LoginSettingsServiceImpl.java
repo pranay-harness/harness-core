@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -177,11 +178,10 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
   @Override
   public void updateUserLockoutInfo(User user, Account account, int newCountOfFailedLoginAttempts) {
     UserLockoutPolicy userLockoutPolicy = getLoginSettings(account.getUuid()).getUserLockoutPolicy();
-    logger.info(String.format("Updating user lockout info: [%s] for user: [%s], new failedCount: [%s] ",
-        userLockoutPolicy.isEnableLockoutPolicy(), user.getEmail(), newCountOfFailedLoginAttempts));
-    if (userLockoutPolicy.isEnableLockoutPolicy()) {
-      createUserLockoutInfoOperationsAndUpdateUser(user, newCountOfFailedLoginAttempts, userLockoutPolicy);
-    }
+    logger.info("Updating user lockout info: {} for user: {}, new failedCount: {}",
+        userLockoutPolicy.isEnableLockoutPolicy(), user.getEmail(), newCountOfFailedLoginAttempts);
+
+    createUserLockoutInfoOperationsAndUpdateUser(user, newCountOfFailedLoginAttempts, userLockoutPolicy);
   }
 
   private void createUserLockoutInfoOperationsAndUpdateUser(
@@ -193,24 +193,24 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
 
   private void updateUserLockoutInfoOperations(User user, int newCountOfFailedLoginAttempts,
       UserLockoutPolicy userLockoutPolicy, UpdateOperations<User> operations) {
-    if (lockUser(newCountOfFailedLoginAttempts, userLockoutPolicy)) {
-      logger.info(String.format("Locking user: [%s] because of %s incorrect password attempts", user.getUuid(),
-          newCountOfFailedLoginAttempts));
+    boolean shouldLockUser = userLockoutPolicy.isEnableLockoutPolicy()
+        && newCountOfFailedLoginAttempts >= userLockoutPolicy.getNumberOfFailedAttemptsBeforeLockout();
+
+    //    boolean shouldUnlockUser =
+    //        newCountOfFailedLoginAttempts < userLockoutPolicy.getNumberOfFailedAttemptsBeforeLockout();
+
+    if (shouldLockUser) {
+      logger.info("Locking user: [{}] because of {} incorrect password attempts", user.getUuid(),
+          newCountOfFailedLoginAttempts);
       UserLockoutInfo userLockoutInfo =
           createUserLockoutInfoInstance(newCountOfFailedLoginAttempts, System.currentTimeMillis());
       updateUserLockoutOperations(operations, true, userLockoutInfo);
       sendNotifications(user, userLockoutPolicy);
-    } else if (unlockUser(newCountOfFailedLoginAttempts)) {
-      logger.info(String.format("Unlocking user: [%s]", user.getUuid()));
+    } else {
+      logger.info("Unlocking user: {}, current lock state = {}", user.getUuid(), user.isUserLocked());
       UserLockoutInfo userLockoutInfo =
           createUserLockoutInfoInstance(newCountOfFailedLoginAttempts, user.getUserLockoutInfo().getUserLockedAt());
       updateUserLockoutOperations(operations, false, userLockoutInfo);
-    } else {
-      logger.info(String.format("Updating user lockout info for user: [%s], incorrect attempt count [%s]",
-          user.getUuid(), newCountOfFailedLoginAttempts));
-      UserLockoutInfo userLockoutInfo =
-          createUserLockoutInfoInstance(newCountOfFailedLoginAttempts, user.getUserLockoutInfo().getUserLockedAt());
-      updateUserLockoutOperations(operations, user.isUserLocked(), userLockoutInfo);
     }
   }
 
@@ -245,18 +245,10 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
         .build();
   }
 
-  private boolean unlockUser(int numberOfFailedLoginAttempts) {
-    return numberOfFailedLoginAttempts == 0;
-  }
-
-  private boolean lockUser(int numberOfFailedLoginAttempts, UserLockoutPolicy userLockoutPolicy) {
-    return numberOfFailedLoginAttempts == userLockoutPolicy.getNumberOfFailedAttemptsBeforeLockout();
-  }
-
   private void updateUserLockoutOperations(
-      UpdateOperations<User> operations, boolean isUserLocked, UserLockoutInfo userLockoutInfo) {
-    setUnset(operations, UserKeys.userLocked, isUserLocked);
-    setUnset(operations, UserKeys.userLockoutInfo, userLockoutInfo);
+      UpdateOperations<User> operations, boolean isUserLocked, @Nonnull UserLockoutInfo userLockoutInfo) {
+    operations.set(UserKeys.userLocked, isUserLocked);
+    operations.set(UserKeys.userLockoutInfo, userLockoutInfo);
   }
 
   @Override
@@ -269,6 +261,8 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
     int maxLockOutPeriod = userLockoutPolicy.getLockOutPeriod();
     long userLockoutPeriod =
         Instant.ofEpochMilli(user.getUserLockoutInfo().getUserLockedAt()).until(Instant.now(), ChronoUnit.HOURS);
+
+    // auto unlock
     return userLockoutPeriod < maxLockOutPeriod;
   }
 

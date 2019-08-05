@@ -137,6 +137,8 @@ import software.wings.licensing.LicenseService;
 import software.wings.licensing.LicenseServiceImpl;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.scheduler.ServiceJobScheduler;
+import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountChecker;
+import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountCheckerImpl;
 import software.wings.security.saml.SamlUserGroupSync;
 import software.wings.service.EcrClassicBuildServiceImpl;
 import software.wings.service.impl.AccountServiceImpl;
@@ -778,6 +780,7 @@ public class WingsModule extends DependencyModule {
     bind(ApprovalPolingService.class).to(ApprovalPolingServiceImpl.class);
     // Start of deployment trigger dependencies
     bind(TriggerExecutionService.class).to(TriggerExecutionServiceImpl.class);
+    bind(FailedLoginAttemptCountChecker.class).to(FailedLoginAttemptCountCheckerImpl.class);
 
     if (null != configuration.getSegmentConfig()
         && !StringUtils.isEmpty(configuration.getSegmentConfig().getApiKey())) {
