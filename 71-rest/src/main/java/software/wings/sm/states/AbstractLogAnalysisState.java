@@ -279,9 +279,9 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       getLogger().info(
           "for {} got failed execution response {}", executionContext.getStateExecutionInstanceId(), executionResponse);
       continuousVerificationService.setMetaDataExecutionStatus(
-          executionContext.getStateExecutionInstanceId(), ExecutionStatus.ERROR, true);
+          executionContext.getStateExecutionInstanceId(), executionResponse.getExecutionStatus(), true);
       return anExecutionResponse()
-          .withExecutionStatus(ExecutionStatus.ERROR)
+          .withExecutionStatus(executionResponse.getExecutionStatus())
           .withStateExecutionData(executionResponse.getStateExecutionData())
           .withErrorMessage(executionResponse.getStateExecutionData().getErrorMsg())
           .build();

@@ -26,6 +26,8 @@ import static software.wings.common.VerificationConstants.ERROR_METRIC_NAMES;
 import static software.wings.common.VerificationConstants.HEARTBEAT_METRIC_NAME;
 import static software.wings.common.VerificationConstants.NEW_RELIC_DEEPLINK_FORMAT;
 import static software.wings.common.VerificationConstants.PROMETHEUS_DEEPLINK_FORMAT;
+import static software.wings.common.VerificationConstants.getLogAnalysisStates;
+import static software.wings.common.VerificationConstants.getMetricAnalysisStates;
 import static software.wings.resources.PrometheusResource.renderFetchQueries;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.AbstractLogAnalysisState.HOST_BATCH_SIZE;
@@ -81,7 +83,6 @@ import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
-import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
@@ -89,6 +90,7 @@ import software.wings.metrics.appdynamics.AppdynamicsConstants;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
@@ -106,6 +108,7 @@ import software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
+import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord.NewRelicMetricDataRecordKeys;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
@@ -209,6 +212,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private AlertService alertService;
   @Inject private MainConfiguration mainConfiguration;
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private ContinuousVerificationService continuousVerificationService;
 
   private static final int PAGE_LIMIT = 999;
   private static final int START_OFFSET = 0;
@@ -368,9 +372,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
     List<StateType> stateTypeList;
     if (isTimeSeries) {
-      stateTypeList = VerificationConstants.getMetricAnalysisStates();
+      stateTypeList = getMetricAnalysisStates();
     } else {
-      stateTypeList = VerificationConstants.getLogAnalysisStates();
+      stateTypeList = getLogAnalysisStates();
     }
 
     pageRequest.addFilter("stateType", Operator.IN, stateTypeList.toArray());
@@ -631,7 +635,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
     List<Callable<Void>> callables = new ArrayList<>();
     cvConfigurations.stream()
-        .filter(cvConfig -> !VerificationConstants.getLogAnalysisStates().contains(cvConfig.getStateType()))
+        .filter(cvConfig -> !getLogAnalysisStates().contains(cvConfig.getStateType()))
         .forEach(cvConfig -> callables.add(() -> {
           cvConfigurationService.fillInServiceAndConnectorNames(cvConfig);
           String envName = cvConfig.getEnvName();
@@ -1454,7 +1458,44 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       logger.error("for app {} could not find context for {}", appId, stateExecutionId);
       return false;
     }
+    final User user = UserThreadLocal.get();
+    String message = user == null
+        ? "The state was marked " + status.name().toLowerCase()
+        : "The state was marked " + status.name().toLowerCase() + " by " + user.getName() + "(" + user.getEmail() + ")";
 
+    if (getLogAnalysisStates().contains(analysisContext.getStateType())) {
+      final LogMLAnalysisRecord analysisRecord = LogMLAnalysisRecord.builder()
+                                                     .logCollectionMinute(-1)
+                                                     .stateType(analysisContext.getStateType())
+                                                     .appId(appId)
+                                                     .stateExecutionId(stateExecutionId)
+                                                     .query(analysisContext.getQuery())
+                                                     .analysisSummaryMessage(message)
+                                                     .control_events(Collections.emptyMap())
+                                                     .test_events(Collections.emptyMap())
+                                                     .logCollectionMinute(analysisContext.getTimeDuration())
+                                                     .build();
+
+      analysisRecord.setAnalysisStatus(
+          featureFlagService.isEnabled(FeatureName.CV_FEEDBACKS, appService.getAccountIdByAppId(appId))
+              ? LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE
+              : LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
+      wingsPersistence.saveIgnoringDuplicateKeys(Lists.newArrayList(analysisRecord));
+    } else if (getMetricAnalysisStates().contains(analysisContext.getStateType())) {
+      NewRelicMetricAnalysisRecord metricAnalysisRecord =
+          NewRelicMetricAnalysisRecord.builder()
+              .message(message)
+              .appId(appId)
+              .stateType(analysisContext.getStateType())
+              .stateExecutionId(stateExecutionId)
+              .workflowExecutionId(analysisContext.getWorkflowExecutionId())
+              .analysisMinute(analysisContext.getTimeDuration())
+              .build();
+      wingsPersistence.saveIgnoringDuplicateKeys(Lists.newArrayList(metricAnalysisRecord));
+    } else {
+      throw new WingsException("Invalid state type :" + analysisContext.getStateType());
+    }
+    continuousVerificationService.setMetaDataExecutionStatus(stateExecutionId, status, true);
     try {
       final VerificationStateAnalysisExecutionData stateAnalysisExecutionData =
           VerificationStateAnalysisExecutionData.builder()
