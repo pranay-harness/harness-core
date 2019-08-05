@@ -6,6 +6,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.metrics.RiskLevel.HIGH;
 import static software.wings.metrics.RiskLevel.LOW;
 import static software.wings.metrics.RiskLevel.MEDIUM;
+import static software.wings.metrics.RiskLevel.NA;
 import static software.wings.metrics.RiskLevel.getRiskLevel;
 
 import com.google.inject.Inject;
@@ -31,6 +32,7 @@ import software.wings.sm.StateType;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -131,6 +133,12 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
             .get();
 
     experimentalAnalysisRecord.decompressTransactions();
+
+    if (analysisRecord == null) {
+      logger.error("Actual analysis not done for this state execution id: {}", stateExecutionId);
+      throw new WingsException("Actual analysis not done for this state execution id");
+    }
+
     analysisRecord.decompressTransactions();
 
     ExperimentalMetricRecord metricRecord = ExperimentalMetricRecord.builder()
@@ -147,7 +155,7 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
     if (isNotEmpty(analysisRecord.getTransactions())) {
       if (isEmpty(experimentalAnalysisRecord.getTransactions())) {
         logger.error("Experimental transactions not found: {}", stateExecutionId);
-        throw new WingsException("Incorrect experimental record for this execution");
+        experimentalAnalysisRecord.setTransactions(new HashMap<>());
       }
 
       for (Map.Entry<String, TimeSeriesMLTxnSummary> txnSummaryEntry : analysisRecord.getTransactions().entrySet()) {
@@ -163,10 +171,13 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
         for (Map.Entry<String, TimeSeriesMLMetricSummary> metricSummaryEntry : txnSummary.getMetrics().entrySet()) {
           TimeSeriesMLMetricSummary metricSummary = metricSummaryEntry.getValue();
           TimeSeriesMLMetricSummary experimentalMetricSummary =
-              experimentalTxnSummary.getMetrics().get(metricSummaryEntry.getKey());
+              experimentalTxnSummary == null || isEmpty(experimentalTxnSummary.getMetrics())
+              ? null
+              : experimentalTxnSummary.getMetrics().get(metricSummaryEntry.getKey());
 
           RiskLevel riskLevel = getRiskLevel(metricSummary.getMax_risk());
-          RiskLevel experimentalRiskLevel = getRiskLevel(experimentalMetricSummary.getMax_risk());
+          RiskLevel experimentalRiskLevel =
+              experimentalMetricSummary == null ? NA : getRiskLevel(experimentalMetricSummary.getMax_risk());
 
           if (riskLevel.compareTo(globalRisk) < 0) {
             globalRisk = riskLevel;
