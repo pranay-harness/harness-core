@@ -20,14 +20,6 @@ enum CountAggregateOperation {
   SUM
 }
 
-type Request {
-  entityType: EntityType
-  filters: [Filter]
-  groupBy: [GroupBy]
-  #  aggregateFunction: AggregateFunction
-  #  groupByTime: TimeSeriesAggregation
-}
-
 enum EntityType {
   APPLICATION
   SERVICE
@@ -52,19 +44,13 @@ type GroupBy {
   entityType: String
 }
 
-interface Data {
-  request: Request
-}
-
 #This structure will serve pie charts / donut charts
-type AggregatedData implements Data {
+type AggregatedData {
   dataPoints: [DataPoint]
-  request: Request
 }
 
-type SinglePointData implements Data {
+type SinglePointData {
   dataPoint: DataPoint
-  request: Request
 }
 
 type StackedDataPoint {
@@ -72,9 +58,8 @@ type StackedDataPoint {
   values: [DataPoint]
 }
 
-type StackedData implements Data {
+type StackedData {
   dataPoints: [StackedDataPoint]
-  request: Request
 }
 
 type TimeSeriesDataPoint {
@@ -83,9 +68,8 @@ type TimeSeriesDataPoint {
 }
 
 #This data structure will serve timeseries graphs
-type TimeSeriesData implements Data {
+type TimeSeriesData {
   dataPoints: [TimeSeriesDataPoint]
-  request: Request
   label: String
 }
 
@@ -116,8 +100,9 @@ type StackedTimeSeriesDataPoint {
   time: DateTime
 }
 
-type StackedTimeSeriesData implements Data {
+type StackedTimeSeriesData {
   data: [StackedTimeSeriesDataPoint]
   label: String
-  request: Request
 }
+
+union Data = AggregatedData | SinglePointData | StackedData | TimeSeriesData | StackedTimeSeriesData

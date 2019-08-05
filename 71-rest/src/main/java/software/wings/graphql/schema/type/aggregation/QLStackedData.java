@@ -9,5 +9,4 @@ import java.util.List;
 @Builder
 public class QLStackedData implements QLData {
   List<QLStackedDataPoint> dataPoints;
-  QLRequest request;
 }

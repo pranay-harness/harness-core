@@ -6,6 +6,5 @@ import lombok.Value;
 @Value
 @Builder
 public class QLSinglePointData implements QLData {
-  QLRequest request;
   QLDataPoint dataPoint;
 }
