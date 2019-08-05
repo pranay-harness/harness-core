@@ -252,7 +252,7 @@ public class SpotInstStateHelper {
     // update name value with "${ELASTI_GROUP_NAME}"
     updateName(elastiGroupConfigMap);
     updateInitialCapacity(elastiGroupConfigMap);
-    updateLaunchSpecification(serviceSetup, elastiGroupConfigMap, spotInstInfrastructureMapping, image);
+    updateLaunchSpecification(serviceSetup, elastiGroupConfigMap, image);
     return gson.toJson(jsonConfigMap);
   }
 
@@ -268,8 +268,8 @@ public class SpotInstStateHelper {
     }
   }
 
-  private void updateLaunchSpecification(SpotInstServiceSetup serviceSetup, Map<String, Object> elastiGroupConfigMap,
-      SpotInstInfrastructureMapping spotInstInfrastructureMapping, String image) {
+  private void updateLaunchSpecification(
+      SpotInstServiceSetup serviceSetup, Map<String, Object> elastiGroupConfigMap, String image) {
     Map<String, Object> computeConfigMap = (Map<String, Object>) elastiGroupConfigMap.get(COMPUTE);
     Map<String, Object> launchSpecificationMap = (Map<String, Object>) computeConfigMap.get(LAUNCH_SPECIFICATION);
 
