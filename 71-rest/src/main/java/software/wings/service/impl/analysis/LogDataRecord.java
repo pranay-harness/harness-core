@@ -2,6 +2,7 @@ package software.wings.service.impl.analysis;
 
 import static io.harness.data.encoding.EncodingUtils.compressString;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.addFieldIfNotEmpty;
 import static software.wings.service.impl.GoogleDataStoreServiceImpl.readBlob;
@@ -178,7 +179,7 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware {
             .clusterLabel(readString(entity, LogDataRecordKeys.clusterLabel))
             .host(readString(entity, LogDataRecordKeys.host))
             .timeStamp(readLong(entity, LogDataRecordKeys.timeStamp))
-            .timesLabeled((int) readLong(entity, LogDataRecordKeys.timesLabeled))
+
             .count((int) readLong(entity, LogDataRecordKeys.count))
             .logMD5Hash(readString(entity, LogDataRecordKeys.logMD5Hash))
             .clusterLevel(ClusterLevel.valueOf(readString(entity, LogDataRecordKeys.clusterLevel)))
@@ -187,6 +188,15 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware {
             .stateExecutionId(readString(entity, LogDataRecordKeys.stateExecutionId))
             .validUntil(new Date(readLong(entity, LogDataRecordKeys.validUntil)))
             .build();
+
+    try {
+      dataRecord.setTimesLabeled((int) readLong(entity, LogDataRecordKeys.timesLabeled));
+    } catch (ClassCastException ex) {
+      String timesLabeledValue = readString(entity, LogDataRecordKeys.timesLabeled);
+      if (isNotEmpty(timesLabeledValue)) {
+        dataRecord.setTimesLabeled(Integer.parseInt(timesLabeledValue));
+      }
+    }
 
     try {
       byte[] byteCompressedMsg = readBlob(entity, LogDataRecordKeys.logMessage);
