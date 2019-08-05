@@ -137,6 +137,7 @@ import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.DatadogState.Metric;
 import software.wings.sm.states.DynatraceState;
 import software.wings.sm.states.NewRelicState;
+import software.wings.utils.Misc;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
 import software.wings.verification.HeatMap;
@@ -1971,7 +1972,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     VerificationStateAnalysisExecutionData executionData =
         createLogAnalysisExecutionData(context, canaryNewHostNames.keySet(), lastExecutionNodes);
     List<DelegateTask> delegateTasks = new ArrayList<>();
-    List<String> hostList = hostsToBeCollected.keySet().stream().collect(Collectors.toList());
+    List<String> hostList =
+        hostsToBeCollected.keySet().stream().map(Misc::replaceUnicodeWithDot).collect(Collectors.toList());
     switch (context.getStateType()) {
       case SUMO:
         try {
