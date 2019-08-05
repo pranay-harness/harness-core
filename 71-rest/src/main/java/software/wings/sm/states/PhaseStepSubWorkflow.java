@@ -75,6 +75,7 @@ import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.StepExecutionSummary;
+import software.wings.sm.states.spotinst.SpotInstSetupContextElement;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -577,6 +578,15 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     } else if (phaseStepType == PhaseStepType.PROVISION_INFRASTRUCTURE) {
       addProvisionerElements(elementNotifyResponseData, contextElements);
       addNotifyElement = true;
+    } else if (phaseStepType == PhaseStepType.SPOTINST_SETUP) {
+      SpotInstSetupContextElement setupContextElement = (SpotInstSetupContextElement) notifiedElement(
+          elementNotifyResponseData, SpotInstSetupContextElement.class, "Missing SpotInstSetupContextElement");
+      contextElements.add(setupContextElement);
+      addNotifyElement = true;
+    } else if (phaseStepType == PhaseStepType.SPOTINST_DEPLOY) {
+      InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
+          elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceElementListParam Element");
+      contextElements.add(instanceElementListParam);
     }
 
     if (isNotEmpty(contextElements)) {

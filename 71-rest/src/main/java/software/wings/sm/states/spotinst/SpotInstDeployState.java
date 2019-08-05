@@ -221,11 +221,15 @@ public class SpotInstDeployState extends State {
       newElastiGroupCapacity.setMaximum(upsizeUpdateCount);
     }
 
-    ElastiGroup oldElastiGroup = spotInstSetupContextElement.getOldElastiGroupOriginalConfig().clone();
-    ElastiGroupCapacity oldElastiGroupCapacity = oldElastiGroup.getCapacity();
-    oldElastiGroupCapacity.setTarget(upsizeUpdateCount);
-    oldElastiGroupCapacity.setMaximum(upsizeUpdateCount);
-    oldElastiGroupCapacity.setMinimum(upsizeUpdateCount);
+    ElastiGroup oldElastiGroup = spotInstSetupContextElement.getOldElastiGroupOriginalConfig() != null
+        ? spotInstSetupContextElement.getOldElastiGroupOriginalConfig().clone()
+        : null;
+    if (oldElastiGroup != null) {
+      ElastiGroupCapacity oldElastiGroupCapacity = oldElastiGroup.getCapacity();
+      oldElastiGroupCapacity.setTarget(upsizeUpdateCount);
+      oldElastiGroupCapacity.setMaximum(upsizeUpdateCount);
+      oldElastiGroupCapacity.setMinimum(upsizeUpdateCount);
+    }
 
     SpotInstCommandRequest commandRequest = spotInstSetupContextElement.getCommandRequest();
     return SpotInstDeployTaskParameters.builder()

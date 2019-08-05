@@ -18,6 +18,7 @@ import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupInstanceHealth;
+import io.harness.spotinst.model.SpotInstConstants;
 import io.harness.spotinst.model.SpotInstListElastiGroupInstancesHealthResponse;
 import io.harness.spotinst.model.SpotInstListElastiGroupsResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 import java.lang.reflect.Type;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -116,7 +118,21 @@ public class SpotInstHelperServiceDelegateImpl implements SpotInstHelperServiceD
   public void updateElastiGroup(String spotInstToken, String spotInstAccountId, String elastiGroupId, ElastiGroup group)
       throws Exception {
     String auth = getAuthToken(spotInstToken);
-    executeRestCall(getSpotInstRestClient().updateElastiGroup(auth, elastiGroupId, spotInstAccountId, group));
+    Map<String, Object> groupMap = new HashMap<>();
+    groupMap.put(SpotInstConstants.GROUP_CONFIG_ELEMENT, group);
+
+    executeRestCall(getSpotInstRestClient().updateElastiGroup(auth, elastiGroupId, spotInstAccountId, groupMap));
+  }
+
+  @Override
+  public void updateElastiGroupCapacity(
+      String spotInstToken, String spotInstAccountId, String elastiGroupId, ElastiGroup group) throws Exception {
+    String auth = getAuthToken(spotInstToken);
+    Map<String, Object> groupCapacityMap = new HashMap<>();
+    groupCapacityMap.put(SpotInstConstants.CAPACITY, group.getCapacity());
+
+    executeRestCall(
+        getSpotInstRestClient().updateElastiGroupCapacity(auth, elastiGroupId, spotInstAccountId, groupCapacityMap));
   }
 
   @Override
@@ -161,7 +177,7 @@ public class SpotInstHelperServiceDelegateImpl implements SpotInstHelperServiceD
       String spotInstToken, String spotInstAccountId, String elastiGroupId) throws Exception {
     String auth = getAuthToken(spotInstToken);
     SpotInstListElastiGroupInstancesHealthResponse response =
-        executeRestCall(getSpotInstRestClient().listElastiGroupInstancesHealth(auth, spotInstAccountId, elastiGroupId));
+        executeRestCall(getSpotInstRestClient().listElastiGroupInstancesHealth(auth, elastiGroupId, spotInstAccountId));
     return response.getResponse().getItems();
   }
 }

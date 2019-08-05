@@ -1,5 +1,6 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.SPOTINST_SETUP;
@@ -16,6 +17,7 @@ import io.harness.delegate.task.spotinst.response.SpotInstSetupTaskResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.spotinst.model.ElastiGroup;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -129,8 +131,17 @@ public class SpotInstServiceSetup extends State {
         (SpotInstSetupStateExecutionData) context.getStateExecutionData();
     stateExecutionData.setStatus(executionStatus);
     stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
-    stateExecutionData.setElastiGroupId(spotInstSetupTaskResponse.getNewElastiGroup().getId());
-    stateExecutionData.setElastiGroupName(spotInstSetupTaskResponse.getNewElastiGroup().getName());
+
+    if (ExecutionStatus.SUCCESS.equals(executionStatus) && spotInstSetupTaskResponse != null) {
+      if (spotInstSetupTaskResponse.getNewElastiGroup() != null) {
+        stateExecutionData.getElastiGroupOriginalConfig().setId(spotInstSetupTaskResponse.getNewElastiGroup().getId());
+        stateExecutionData.getElastiGroupOriginalConfig().setName(
+            spotInstSetupTaskResponse.getNewElastiGroup().getName());
+        stateExecutionData.setElastiGroupId(spotInstSetupTaskResponse.getNewElastiGroup().getId());
+        stateExecutionData.setElastiGroupName(spotInstSetupTaskResponse.getNewElastiGroup().getName());
+      }
+    }
+
     stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
 
     SpotInstCommandRequest spotInstCommandRequest = stateExecutionData.getSpotinstCommandRequest();
@@ -147,12 +158,10 @@ public class SpotInstServiceSetup extends State {
             .serviceId(stateExecutionData.getServiceId())
             .infraMappingId(stateExecutionData.getInfraMappingId())
             .newElastiGroupOriginalConfig(stateExecutionData.getElastiGroupOriginalConfig())
-            .oldElastiGroupOriginalConfig(spotInstSetupTaskResponse.getGroupToBeDownsized().get(0))
-            .prodListenerArn(spotInstSetupTaskResponse.getProdListenerArn())
-            .stageListenerArn(spotInstSetupTaskResponse.getStageListenerArn())
-            .stageTargetGroupArn(spotInstSetupTaskResponse.getStageTargetGroupArn())
-            .prodTargetGroupArn(spotInstSetupTaskResponse.getProdTargetGroupArn())
             .build();
+
+    // Add these details only if spotInstSetupTaskResponse is not NULL
+    addDetailsForSuccessfulExecution(spotInstSetupContextElement, spotInstSetupTaskResponse);
 
     return anExecutionResponse()
         .withExecutionStatus(executionStatus)
@@ -161,5 +170,26 @@ public class SpotInstServiceSetup extends State {
         .addContextElement(spotInstSetupContextElement)
         .addNotifyElement(spotInstSetupContextElement)
         .build();
+  }
+
+  private void addDetailsForSuccessfulExecution(
+      SpotInstSetupContextElement spotInstSetupContextElement, SpotInstSetupTaskResponse spotInstSetupTaskResponse) {
+    if (spotInstSetupTaskResponse == null) {
+      return;
+    }
+
+    spotInstSetupContextElement.setOldElastiGroupOriginalConfig(fetchOldElasticGroup(spotInstSetupTaskResponse));
+    spotInstSetupContextElement.setProdListenerArn(spotInstSetupTaskResponse.getProdListenerArn());
+    spotInstSetupContextElement.setStageListenerArn(spotInstSetupTaskResponse.getStageListenerArn());
+    spotInstSetupContextElement.setStageTargetGroupArn(spotInstSetupTaskResponse.getStageTargetGroupArn());
+    spotInstSetupContextElement.setProdTargetGroupArn(spotInstSetupTaskResponse.getProdTargetGroupArn());
+  }
+
+  private ElastiGroup fetchOldElasticGroup(SpotInstSetupTaskResponse spotInstSetupTaskResponse) {
+    if (isEmpty(spotInstSetupTaskResponse.getGroupToBeDownsized())) {
+      return null;
+    }
+
+    return spotInstSetupTaskResponse.getGroupToBeDownsized().get(0);
   }
 }

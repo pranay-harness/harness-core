@@ -20,6 +20,7 @@ import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
+import io.harness.delegate.task.spotinst.request.SpotInstDeployTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters.SpotInstTaskType;
@@ -58,5 +59,6 @@ public class DelegateTasksKryoRegister implements KryoRegistrar {
     kryo.register(SpotInstTaskResponse.class, 19015);
     kryo.register(SpotInstSetupTaskResponse.class, 19016);
     kryo.register(SpotInstDeployTaskResponse.class, 19017);
+    kryo.register(SpotInstDeployTaskParameters.class, 19018);
   }
 }

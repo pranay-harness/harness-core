@@ -80,7 +80,8 @@ public abstract class SpotInstTaskHandler {
     logCallback.saveExecutionLog(
         format("Sending request to Spot Inst to update elasti group: [%s] with min: [%d], max: [%d] and target: [%d]",
             elastiGroupId, minInstances, maxInstances, targetInstances));
-    spotInstHelperServiceDelegate.updateElastiGroup(spotInstToken, spotInstAccountId, elastiGroupId, elastiGroup);
+    spotInstHelperServiceDelegate.updateElastiGroupCapacity(
+        spotInstToken, spotInstAccountId, elastiGroupId, elastiGroup);
     logCallback.saveExecutionLog(format("Waiting for elasti group: [%s] to reach steady state", elastiGroupId));
     try {
       timeLimiter.callWithTimeout(() -> {

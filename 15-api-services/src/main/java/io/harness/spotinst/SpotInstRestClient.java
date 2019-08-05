@@ -1,6 +1,5 @@
 package io.harness.spotinst;
 
-import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.SpotInstDeleteElastiGroupResponse;
 import io.harness.spotinst.model.SpotInstListElastiGroupInstancesHealthResponse;
 import io.harness.spotinst.model.SpotInstListElastiGroupsResponse;
@@ -39,13 +38,14 @@ public interface SpotInstRestClient {
   @PUT("aws/ec2/group/{groupId}")
   @Headers("Content-Type: application/json")
   Call<SpotInstUpdateElastiGroupResponse> updateElastiGroup(@Header("Authorization") String authorization,
-      @Path("groupId") String elastiGroupId, @Query("accountId") String spotInstAccountId, @Body ElastiGroup group);
-
-  @PUT("aws/ec2/group/{groupId}")
-  @Headers("Content-Type: application/json")
-  Call<SpotInstUpdateElastiGroupResponse> updateElastiGroup(@Header("Authorization") String authorization,
       @Path("groupId") String elastiGroupId, @Query("accountId") String spotInstAccountId,
       @Body Map<String, Object> group);
+
+  @PUT("aws/ec2/group/{groupId}/capacity")
+  @Headers("Content-Type: application/json")
+  Call<SpotInstUpdateElastiGroupResponse> updateElastiGroupCapacity(@Header("Authorization") String authorization,
+      @Path("groupId") String elastiGroupId, @Query("accountId") String spotInstAccountId,
+      @Body Map<String, Object> groupCapacityConfig);
 
   @DELETE("aws/ec2/group/{groupId}")
   @Headers("Content-Type: application/json")

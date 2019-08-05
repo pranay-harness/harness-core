@@ -18,6 +18,8 @@ public interface SpotInstHelperServiceDelegate {
       throws Exception;
   void updateElastiGroup(String spotInstToken, String spotInstAccountId, String elastiGroupId, ElastiGroup group)
       throws Exception;
+  void updateElastiGroupCapacity(
+      String spotInstToken, String spotInstAccountId, String elastiGroupId, ElastiGroup group) throws Exception;
   void deleteElastiGroup(String spotInstToken, String spotInstAccountId, String elastiGroupId) throws Exception;
   void scaleUpElastiGroup(String spotInstToken, String spotInstAccountId, String elastiGroupId, int adjustment)
       throws Exception;
