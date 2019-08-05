@@ -292,9 +292,9 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       getLogger().info(
           "for {} got failed execution response {}", context.getStateExecutionInstanceId(), executionResponse);
       continuousVerificationService.setMetaDataExecutionStatus(
-          context.getStateExecutionInstanceId(), ExecutionStatus.ERROR, true);
+          context.getStateExecutionInstanceId(), executionResponse.getExecutionStatus(), true);
       return anExecutionResponse()
-          .withExecutionStatus(ExecutionStatus.ERROR)
+          .withExecutionStatus(executionResponse.getExecutionStatus())
           .withStateExecutionData(executionResponse.getStateExecutionData())
           .withErrorMessage(executionResponse.getStateExecutionData().getErrorMsg())
           .build();
