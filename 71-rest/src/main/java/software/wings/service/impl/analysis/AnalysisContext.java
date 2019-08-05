@@ -19,12 +19,14 @@ import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.sm.StateType;
+import software.wings.utils.Misc;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Created by sriram_parthasarathy on 8/23/17.
@@ -145,8 +147,8 @@ public class AnalysisContext extends Base {
         .workflowExecutionId(workflowExecutionId)
         .stateExecutionId(stateExecutionId)
         .serviceId(serviceId)
-        .controlNodes(controlNodes.keySet())
-        .testNodes(testNodes.keySet())
+        .controlNodes(controlNodes.keySet().stream().map(Misc::replaceUnicodeWithDot).collect(Collectors.toSet()))
+        .testNodes(testNodes.keySet().stream().map(Misc::replaceUnicodeWithDot).collect(Collectors.toSet()))
         .query(query)
         .isSSL(isSSL)
         .appPort(appPort)
