@@ -139,9 +139,10 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
 
     builder.prodTargetGroupArn(prodTargetGroup.getTargetGroupArn());
     builder.stageTargetGroupArn(stageTargetGroup.getTargetGroupArn());
-
     logCallback.saveExecutionLog(format("Found stage target group: [%s] with Arn: [%s]",
         stageTargetGroup.getTargetGroupName(), stageTargetGroup.getTargetGroupArn()));
+
+    // Stage Elasti Groups
     String stageElastiGroupName =
         format("%s__%s", setupTaskParameters.getElastiGroupNamePrefix(), STAGE_ELASTI_GROUP_NAME_SUFFIX);
     String finalJson = setupTaskParameters.getElastiGroupJson()
@@ -154,26 +155,34 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
     ElastiGroup stageElastiGroup;
     if (stageOptionalElastiGroup.isPresent()) {
       stageElastiGroup = stageOptionalElastiGroup.get();
-      logCallback.saveExecutionLog(format("Found stage elasti group with id: [%s]", stageElastiGroup.getId()));
-      spotInstHelperServiceDelegate.updateElastiGroup(
-          spotInstToken, spotInstAccountId, stageElastiGroup.getId(), finalJson);
-    } else {
-      logCallback.saveExecutionLog(format("Did not find elasti group with name: [%s]", stageElastiGroupName));
-      stageElastiGroup = spotInstHelperServiceDelegate.createElastiGroup(spotInstToken, spotInstAccountId, finalJson);
-      String stageElastiGroupId = stageElastiGroup.getId();
       logCallback.saveExecutionLog(
-          format("Created elasti group with name: [%s] and id: [%s]", stageElastiGroupName, stageElastiGroupId));
+          format("Found stage elasti group with id: [%s]. Deleting it. ", stageElastiGroup.getId()));
+      spotInstHelperServiceDelegate.deleteElastiGroup(spotInstToken, spotInstAccountId, stageElastiGroup.getId());
     }
+    logCallback.saveExecutionLog(
+        format("Sending request to create new Elasti Group with name: [%s]", stageElastiGroupName));
+    stageElastiGroup = spotInstHelperServiceDelegate.createElastiGroup(spotInstToken, spotInstAccountId, finalJson);
+    String stageElastiGroupId = stageElastiGroup.getId();
+    logCallback.saveExecutionLog(
+        format("Created elasti group with name: [%s] and id: [%s]", stageElastiGroupName, stageElastiGroupId));
     builder.newElastiGroup(stageElastiGroup);
 
+    // Prod ELasti Groups
     String prodElastiGroupName =
         format("%s__%s", setupTaskParameters.getElastiGroupNamePrefix(), PROD_ELASTI_GROUP_NAME_SUFFIX);
     logCallback.saveExecutionLog(format("Querying spot inst for elasti group with name: [%s]", prodElastiGroupName));
     Optional<ElastiGroup> prodOptionalElastiGroup =
         spotInstHelperServiceDelegate.getElastiGroupByName(spotInstToken, spotInstAccountId, prodElastiGroupName);
-    List<ElastiGroup> prodElastiGroup =
-        prodOptionalElastiGroup.isPresent() ? singletonList(prodOptionalElastiGroup.get()) : emptyList();
-    builder.groupToBeDownsized(prodElastiGroup);
+    List<ElastiGroup> prodElastiGroupList;
+    if (prodOptionalElastiGroup.isPresent()) {
+      ElastiGroup prodElastiGroup = prodOptionalElastiGroup.get();
+      logCallback.saveExecutionLog(format("Found existing Prod Elasti group with name: [%s] and id: [%s]",
+          prodElastiGroup.getName(), prodElastiGroup.getId()));
+      prodElastiGroupList = singletonList(prodElastiGroup);
+    } else {
+      prodElastiGroupList = emptyList();
+    }
+    builder.groupToBeDownsized(prodElastiGroupList);
 
     return SpotInstTaskExecutionResponse.builder()
         .commandExecutionStatus(SUCCESS)
