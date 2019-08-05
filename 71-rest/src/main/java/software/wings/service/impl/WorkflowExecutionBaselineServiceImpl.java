@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.common.Constants.ML_RECORDS_TTL_MONTHS;
+import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;

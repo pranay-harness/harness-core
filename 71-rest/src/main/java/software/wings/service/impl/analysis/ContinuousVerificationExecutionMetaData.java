@@ -1,6 +1,6 @@
 package software.wings.service.impl.analysis;
 
-import static software.wings.common.Constants.ML_RECORDS_TTL_MONTHS;
+import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;

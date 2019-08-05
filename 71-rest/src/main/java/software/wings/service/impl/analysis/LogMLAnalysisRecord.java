@@ -3,7 +3,7 @@ package software.wings.service.impl.analysis;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.common.Constants.ML_RECORDS_TTL_MONTHS;
+import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 

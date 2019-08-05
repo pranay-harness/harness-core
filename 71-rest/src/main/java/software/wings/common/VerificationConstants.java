@@ -19,9 +19,10 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class VerificationConstants {
+  public static final long ML_RECORDS_TTL_MONTHS = 6;
   /*
-  New Relic constants
-   */
+    New Relic constants
+     */
   private static final String NEWRELIC_METRICS_YAML_URL = "/apm/newrelic_metrics.yml";
 
   public static final long TOTAL_HITS_PER_MIN_THRESHOLD = 1000;
@@ -74,6 +75,7 @@ public class VerificationConstants {
   public static final String DD_HOST_NAME_EXPRESSION = "${host_identifier}";
   public static final String IS_EXPERIMENTAL = "isExperimental";
   public static final String URL_STRING = "Url";
+  public static final String CONNECTOR = ":";
 
   public static final String STATIC_CLOUD_WATCH_METRIC_URL = "/configs/cloudwatch_metrics.yml";
 
