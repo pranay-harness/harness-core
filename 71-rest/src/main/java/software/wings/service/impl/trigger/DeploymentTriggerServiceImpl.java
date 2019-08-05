@@ -19,6 +19,8 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.trigger.Condition;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.trigger.PipelineTriggerProcessor.PipelineTriggerExecutionParams;
+import software.wings.service.impl.trigger.ScheduleTriggerProcessor.ScheduledTriggerExecutionParams;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.PipelineService;
@@ -49,6 +51,7 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
     String accountId = appService.getAccountIdByAppId(trigger.getAppId());
     trigger.setAccountId(accountId);
     validateTrigger(trigger, null);
+    setConditionTypeInTrigger(trigger);
     String uuid = Validator.duplicateCheck(() -> wingsPersistence.save(trigger), "name", trigger.getName());
     return get(trigger.getAppId(), uuid);
     // Todo Uncomment once YAML support is added  actionsAfterTriggerSave(deploymentTrigger);
@@ -65,6 +68,7 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
     equalCheck(trigger.getAction().getActionType(), existingTrigger.getAction().getActionType());
 
     validateTrigger(trigger, existingTrigger);
+    setConditionTypeInTrigger(trigger);
     String uuid = Validator.duplicateCheck(() -> wingsPersistence.save(trigger), "name", trigger.getName());
     return get(trigger.getAppId(), uuid);
     // Todo Uncomment once YAML support is added actionsAfterTriggerUpdate(existingTrigger, deploymentTrigger);
@@ -114,11 +118,33 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
             .build());
   }
 
+  @Override
+  public void triggerScheduledExecutionAsync(DeploymentTrigger trigger) {
+    ScheduleTriggerProcessor triggerProcessor =
+        (ScheduleTriggerProcessor) triggerProcessorMapBinder.get(SCHEDULED.name());
+
+    triggerProcessor.executeTriggerOnEvent(
+        trigger.getAppId(), ScheduledTriggerExecutionParams.builder().trigger(trigger).build());
+  }
+
+  @Override
+  public void triggerExecutionPostPipelineCompletionAsync(String appId, String pipelineId) {
+    PipelineTriggerProcessor triggerProcessor =
+        (PipelineTriggerProcessor) triggerProcessorMapBinder.get(PIPELINE_COMPLETION.name());
+
+    triggerProcessor.executeTriggerOnEvent(
+        appId, PipelineTriggerExecutionParams.builder().pipelineId(pipelineId).build());
+  }
+
   private void validateTrigger(DeploymentTrigger trigger, DeploymentTrigger existingTrigger) {
     TriggerProcessor triggerProcessor = obtainTriggerProcessor(trigger);
 
     triggerProcessor.validateTriggerConditionSetup(trigger, existingTrigger);
     triggerProcessor.validateTriggerActionSetup(trigger, existingTrigger);
+  }
+
+  private void setConditionTypeInTrigger(DeploymentTrigger trigger) {
+    trigger.setType(trigger.getCondition().getType());
   }
 
   private TriggerProcessor obtainTriggerProcessor(DeploymentTrigger deploymentTrigger) {

@@ -139,13 +139,14 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
 
         Duration sleepInterval = maximumDelayForCheck == null ? targetInterval : maximumDelayForCheck;
 
-        if (entity != null) {
-          final Long nextIteration = entity.obtainNextIteration(fieldName);
-          if (first != null && nextIteration != null) {
-            final Duration nextEntity = ofMillis(Math.max(0, nextIteration - currentTimeMillis()));
-            if (nextEntity.compareTo(maximumDelayForCheck) < 0) {
-              sleepInterval = nextEntity;
-            }
+        if (first != null) {
+          final Long nextIteration = first.obtainNextIteration(fieldName);
+          if (nextIteration == null) {
+            continue;
+          }
+          final Duration nextEntity = ofMillis(Math.max(0, nextIteration - currentTimeMillis()));
+          if (nextEntity.compareTo(maximumDelayForCheck) < 0) {
+            sleepInterval = nextEntity;
           }
         }
         synchronized (this) {

@@ -546,6 +546,7 @@ public class WingsModule extends DependencyModule {
     bind(StateExecutionService.class).to(StateExecutionServiceImpl.class);
     bind(ConfigService.class).to(ConfigServiceImpl.class);
     bind(AppContainerService.class).to(AppContainerServiceImpl.class);
+    bind(DeploymentTriggerService.class).to(DeploymentTriggerServiceImpl.class);
     bind(CatalogService.class).to(CatalogServiceImpl.class);
     bind(HostService.class).to(HostServiceImpl.class);
     bind(JenkinsBuildService.class).to(JenkinsBuildServiceImpl.class);
@@ -776,7 +777,6 @@ public class WingsModule extends DependencyModule {
     bind(PagerDutyService.class).to(PagerDutyServiceImpl.class);
     bind(ApprovalPolingService.class).to(ApprovalPolingServiceImpl.class);
     // Start of deployment trigger dependencies
-    bind(DeploymentTriggerService.class).to(DeploymentTriggerServiceImpl.class);
     bind(TriggerExecutionService.class).to(TriggerExecutionServiceImpl.class);
 
     if (null != configuration.getSegmentConfig()
