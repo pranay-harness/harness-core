@@ -1451,6 +1451,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     for (int i = 0; i < numOfRecords; i++) {
       logMLAnalysisRecord.setUuid(null);
       logMLAnalysisRecord.setLogCollectionMinute(i + 1);
+      logMLAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
       wingsPersistence.save(logMLAnalysisRecord);
     }
 
