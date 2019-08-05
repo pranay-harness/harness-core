@@ -32,7 +32,6 @@ import software.wings.beans.trigger.ArtifactCondition;
 import software.wings.beans.trigger.ArtifactTriggerCondition.ArtifactTriggerConditionKeys;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.DeploymentTrigger.DeploymentTriggerKeys;
-import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -131,11 +130,9 @@ public class ArtifactTriggerProcessor implements TriggerProcessor {
       return fetchNewArtifactTriggersForAllApps(artifactStreamId);
     }
 
-    return triggerServiceHelper.getTriggersByApp(appId)
+    return triggerServiceHelper.getTriggersByApp(appId, NEW_ARTIFACT)
         .stream()
-        .filter(tr
-            -> tr.getCondition().getType().equals(NEW_ARTIFACT)
-                && ((ArtifactCondition) tr.getCondition()).getArtifactStreamId().equals(artifactStreamId))
+        .filter(tr -> ((ArtifactCondition) tr.getCondition()).getArtifactStreamId().equals(artifactStreamId))
         .collect(toList());
   }
 
@@ -263,7 +260,7 @@ public class ArtifactTriggerProcessor implements TriggerProcessor {
       } catch (WingsException exception) {
         exception.addContext(Application.class, trigger.getAppId());
         exception.addContext(ArtifactStream.class, artifactStreamId);
-        exception.addContext(Trigger.class, trigger.getUuid());
+        exception.addContext(DeploymentTrigger.class, trigger.getUuid());
         ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
       }
     } else {

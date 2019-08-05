@@ -6,16 +6,23 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
+import lombok.Builder;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.PipelineCondition;
 import software.wings.service.intfc.PipelineService;
+
+import java.util.concurrent.ExecutorService;
 
 @Singleton
 @Slf4j
 public class PipelineTriggerProcessor implements TriggerProcessor {
   @Inject private transient DeploymentTriggerServiceHelper triggerServiceHelper;
   @Inject private transient PipelineService pipelineService;
+  @Inject private transient TriggerDeploymentExecution triggerDeploymentExecution;
+  @Inject private transient ExecutorService executorService;
+  @Inject private transient TriggerArtifactVariableHandler triggerArtifactVariableHandler;
 
   @Override
   public void validateTriggerConditionSetup(DeploymentTrigger deploymentTrigger, DeploymentTrigger existingTrigger) {
@@ -48,7 +55,21 @@ public class PipelineTriggerProcessor implements TriggerProcessor {
   }
 
   @Override
-  public void executeTriggerOnEvent(String appId, TriggerExecutionParams triggerExecutionParams) {}
+  public void executeTriggerOnEvent(String appId, TriggerExecutionParams triggerExecutionParams) {
+    PipelineTriggerExecutionParams pipelineTriggerExecutionParams =
+        (PipelineTriggerExecutionParams) triggerExecutionParams;
+
+    logger.info(
+        "Received Pipeline completion request for pipeline id {}", pipelineTriggerExecutionParams.getPipelineId());
+
+    executorService.execute(() -> {
+      triggerServiceHelper.getTriggersMatchesWorkflow(appId, pipelineTriggerExecutionParams.getPipelineId())
+          .forEach(trigger -> {
+            triggerDeploymentExecution.executeDeployment(trigger,
+                triggerArtifactVariableHandler.fetchArtifactVariablesForExecution(trigger.getAppId(), trigger, null));
+          });
+    });
+  }
 
   private void validatePipelineId(DeploymentTrigger deploymentTrigger, PipelineCondition pipelineCondition) {
     try {
@@ -56,5 +77,11 @@ public class PipelineTriggerProcessor implements TriggerProcessor {
     } catch (WingsException exception) {
       throw new WingsException("Pipeline does not exist for pipeline id " + pipelineCondition.getPipelineId(), USER);
     }
+  }
+
+  @Value
+  @Builder
+  public static class PipelineTriggerExecutionParams implements TriggerExecutionParams {
+    String pipelineId;
   }
 }

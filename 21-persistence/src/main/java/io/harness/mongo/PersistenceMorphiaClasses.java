@@ -3,6 +3,7 @@ package io.harness.mongo;
 import com.google.common.collect.ImmutableSet;
 
 import io.harness.beans.Encryptable;
+import io.harness.iterator.PersistentCronIterable;
 import io.harness.iterator.PersistentIrregularIterable;
 import io.harness.iterator.PersistentIterable;
 import io.harness.iterator.PersistentRegularIterable;
@@ -31,5 +32,5 @@ public class PersistenceMorphiaClasses {
       UpdatedAtAware.class, UpdatedAtAccess.class, UpdatedByAware.class, UpdatedByAccess.class, PersistentEntity.class,
       GoogleDataStoreAware.class, PersistentIterable.class, PersistentRegularIterable.class,
       PersistentIrregularIterable.class, NameAccess.class, MigrationJobInstance.class, TagAware.class,
-      MorphiaMove.class);
+      MorphiaMove.class, PersistentCronIterable.class);
 }

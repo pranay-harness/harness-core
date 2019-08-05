@@ -6,6 +6,7 @@ import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static net.redhogs.cronparser.CronExpressionDescriptor.getDescription;
+import static software.wings.beans.trigger.Condition.Type.PIPELINE_COMPLETION;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -19,17 +20,18 @@ import net.redhogs.cronparser.Options;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.trigger.Action;
 import software.wings.beans.trigger.Action.ActionType;
+import software.wings.beans.trigger.Condition.Type;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.PipelineAction;
 import software.wings.beans.trigger.TriggerArgs;
 import software.wings.beans.trigger.TriggerArtifactVariable;
 import software.wings.beans.trigger.WorkflowAction;
 import software.wings.dl.WingsPersistence;
-import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowService;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 @Singleton
 @Slf4j
@@ -39,8 +41,10 @@ public class DeploymentTriggerServiceHelper {
   @Inject private transient PipelineService pipelineService;
   @Inject private transient WorkflowService workflowService;
 
-  public List<DeploymentTrigger> getTriggersByApp(String appId) {
-    return wingsPersistence.query(DeploymentTrigger.class, aPageRequest().addFilter("appId", EQ, appId).build())
+  public List<DeploymentTrigger> getTriggersByApp(String appId, Type condition) {
+    return wingsPersistence
+        .query(DeploymentTrigger.class,
+            aPageRequest().addFilter("type", EQ, condition).addFilter("appId", EQ, appId).build())
         .getResponse();
   }
 
@@ -113,12 +117,18 @@ public class DeploymentTriggerServiceHelper {
 
   public static String getCronDescription(String cronExpression) {
     try {
-      String description = getDescription(DescriptionTypeEnum.FULL, ScheduledTriggerJob.PREFIX + cronExpression,
-          new Options(), I18nMessages.DEFAULT_LOCALE);
+      String description =
+          getDescription(DescriptionTypeEnum.FULL, cronExpression, new Options(), I18nMessages.DEFAULT_LOCALE);
       return StringUtils.lowerCase("" + description.charAt(0)) + description.substring(1);
     } catch (Exception e) {
       throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "Invalid cron expression" + cronExpression);
     }
+  }
+
+  public Stream<DeploymentTrigger> getTriggersMatchesWorkflow(String appId, String sourcePipelineId) {
+    return getTriggersByApp(appId, PIPELINE_COMPLETION)
+        .stream()
+        .filter(trigger -> ((PipelineAction) trigger.getAction()).getPipelineId().equals(sourcePipelineId));
   }
 
   private void validateTriggerArgs(String appId, TriggerArgs triggerArgs) {

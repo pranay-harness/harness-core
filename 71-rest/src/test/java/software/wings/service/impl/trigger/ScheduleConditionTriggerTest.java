@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildJenkinsArtifactStream;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildPipeline;
@@ -59,6 +60,7 @@ import java.util.Optional;
 
 public class ScheduleConditionTriggerTest extends WingsBaseTest {
   @Mock private ArtifactStreamService artifactStreamService;
+  @Mock private ScheduleTriggerHandler scheduleTriggerHandler;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private PipelineService pipelineService;
   @Mock private WorkflowService workflowService;
@@ -107,8 +109,11 @@ public class ScheduleConditionTriggerTest extends WingsBaseTest {
     when(artifactStreamServiceBindingService.getService(APP_ID, ARTIFACT_STREAM_ID, false))
         .thenReturn(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build());
     on(triggerArtifactVariableHandler).set("serviceVariablesService", serviceVariablesService);
+    on(scheduleTriggerProcessor).set("scheduleTriggerHandler", scheduleTriggerHandler);
     when(serviceVariablesService.getServiceVariablesForEntity(APP_ID, ENTITY_ID, OBTAIN_VALUE))
         .thenReturn(serviceVariableList);
+
+    doNothing().when(scheduleTriggerHandler).wakeup();
   }
   @Test
   @Category(UnitTests.class)
@@ -119,7 +124,7 @@ public class ScheduleConditionTriggerTest extends WingsBaseTest {
     assertThat(savedScheduledTrigger.getUuid()).isNotEmpty();
     assertThat(savedScheduledTrigger.getCondition()).isInstanceOf(ScheduledCondition.class);
     assertThat(((ScheduledCondition) trigger.getCondition()).getCronDescription()).isNotNull();
-    assertThat(((ScheduledCondition) trigger.getCondition()).getCronExpression()).isNotNull().isEqualTo("* * * * ?");
+    assertThat(((ScheduledCondition) trigger.getCondition()).getCronExpression()).isNotNull().isEqualTo("0 * * * * ?");
   }
 
   @Test
@@ -135,7 +140,7 @@ public class ScheduleConditionTriggerTest extends WingsBaseTest {
     assertThat(((ScheduledCondition) updatedTrigger.getCondition()).getCronDescription()).isNotNull();
     assertThat(((ScheduledCondition) updatedTrigger.getCondition()).getCronExpression())
         .isNotNull()
-        .isEqualTo("* * * * ?");
+        .isEqualTo("0 * * * * ?");
     assertThat(updatedTrigger.getDescription()).isNotNull().isEqualTo("updated description");
   }
 }

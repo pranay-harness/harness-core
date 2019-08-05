@@ -26,17 +26,21 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
+import software.wings.beans.FeatureName;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.BarrierService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ResourceConstraintService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.StateMachineExecutionCallback;
@@ -63,6 +67,9 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   @Inject private Queue<ExecutionEvent> executionEventQueue;
   @Inject private AlertService alertService;
   @Inject private TriggerService triggerService;
+  @Inject private transient DeploymentTriggerService deploymentTriggerService;
+  @Inject private transient AppService appService;
+  @Inject private FeatureFlagService featureFlagService;
   @Inject private ResourceConstraintService resourceConstraintService;
   @Inject private BarrierService barrierService;
   @Inject private StateExecutionService stateExecutionService;
@@ -170,7 +177,12 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
       }
     } else {
       if (status == SUCCESS) {
-        triggerService.triggerExecutionPostPipelineCompletionAsync(appId, workflowId);
+        String accountId = appService.getAccountIdByAppId(appId);
+        if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+          triggerService.triggerExecutionPostPipelineCompletionAsync(appId, workflowId);
+        } else {
+          deploymentTriggerService.triggerExecutionPostPipelineCompletionAsync(appId, workflowId);
+        }
       }
     }
     if (ExecutionStatus.isFinalStatus(status)) {

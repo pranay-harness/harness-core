@@ -146,6 +146,7 @@ import software.wings.service.impl.SettingsServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.instance.DeploymentEventListener;
 import software.wings.service.impl.security.KmsTransitionEventListener;
+import software.wings.service.impl.trigger.ScheduleTriggerHandler;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.impl.yaml.YamlPushServiceImpl;
 import software.wings.service.intfc.AuditService;
@@ -609,6 +610,7 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     InstanceSyncHandler.InstanceSyncExecutor.registerIterators(injector);
     ApprovalPollingHandler.ApprovalPollingExecutor.registerIterators(injector);
+    ScheduleTriggerHandler.registerIterators(injector);
     ECSPollingHandler.ECSPollingExecutor.registerIterators(injector);
     GCPBillingHandler.GCPBillingExecutor.registerIterators(injector);
     SegmentGroupEventJobExecutor.registerIterators(injector);

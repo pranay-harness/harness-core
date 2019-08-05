@@ -1,10 +1,13 @@
 package software.wings.beans.trigger;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
+import io.harness.iterator.PersistentCronIterable;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -14,7 +17,6 @@ import io.harness.persistence.UuidAware;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -24,7 +26,10 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
+import software.wings.beans.trigger.Condition.Type;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -34,15 +39,21 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "deploymentTriggers", noClassnameStored = true)
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-@Indexes(@Index(
-    options = @IndexOptions(name = "uniqueTriggerIdx", unique = true), fields = { @Field("appId")
-                                                                                  , @Field("name") }))
+@Indexes({
+  @Index(
+      options = @IndexOptions(name = "uniqueTriggerIdx", unique = true), fields = { @Field("appId")
+                                                                                    , @Field("name") })
+  ,
+      @Index(options = @IndexOptions(name = "uniqueTypeIdx", unique = true), fields = {
+        @Field("accountId"), @Field("appId"), @Field("type")
+      }), @Index(options = @IndexOptions(name = "iterations"), fields = { @Field("type")
+                                                                          , @Field("nextIterations") })
+})
 @HarnessExportableEntity
 @FieldNameConstants(innerTypeName = "DeploymentTriggerKeys")
-public class DeploymentTrigger
-    implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
+public class DeploymentTrigger implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
+                                          UpdatedByAware, PersistentCronIterable {
   @Id @NotNull(groups = {DeploymentTrigger.class}) @SchemaIgnore private String uuid;
   @NotNull protected String appId;
   @Indexed protected String accountId;
@@ -55,6 +66,32 @@ public class DeploymentTrigger
   @EntityName @NotEmpty @Trimmed private String name;
   private String description;
 
+  private List<Long> nextIterations;
   private Action action;
   @NotNull private Condition condition;
+  private Type type;
+
+  @Override
+  public boolean skipMissed() {
+    return true;
+  }
+
+  @Override
+  public List<Long> recalculateNextIterations(String fieldName) {
+    if (nextIterations == null) {
+      nextIterations = new ArrayList<>();
+    }
+
+    ScheduledCondition scheduledCondition = (ScheduledCondition) condition;
+    if (expandNextIterations(scheduledCondition.getCronExpression(), nextIterations)) {
+      return nextIterations;
+    }
+
+    return null;
+  }
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    return isEmpty(nextIterations) ? null : nextIterations.get(0);
+  }
 }

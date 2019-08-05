@@ -25,4 +25,8 @@ public interface DeploymentTriggerService {
 
   void triggerExecutionPostArtifactCollectionAsync(
       String accountId, String appId, String artifactStreamId, List<Artifact> artifacts);
+
+  void triggerScheduledExecutionAsync(DeploymentTrigger trigger);
+
+  void triggerExecutionPostPipelineCompletionAsync(String appId, String pipelineId);
 }

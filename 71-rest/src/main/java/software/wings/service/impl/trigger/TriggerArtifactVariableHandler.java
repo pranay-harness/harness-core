@@ -258,7 +258,7 @@ public class TriggerArtifactVariableHandler {
 
       if (artifactVariableOpt.isPresent()) {
         TriggerArtifactVariable triggerArtifactVariable = artifactVariableOpt.get();
-        return mapTriggerArtifactVariableToValue(appId, triggerArtifactVariable, artifacts);
+        return mapTriggerArtifactVariableToValue(appId, triggerArtifactVariable, artifacts, trigger);
       } else {
         throw new WingsException("artifact variable " + artifactVariable.getName() + " does not exist");
       }
@@ -266,8 +266,8 @@ public class TriggerArtifactVariableHandler {
     return null;
   }
 
-  private String mapTriggerArtifactVariableToValue(
-      String appId, TriggerArtifactVariable triggerArtifactVariable, List<Artifact> artifacts) {
+  private String mapTriggerArtifactVariableToValue(String appId, TriggerArtifactVariable triggerArtifactVariable,
+      List<Artifact> artifacts, DeploymentTrigger trigger) {
     switch (triggerArtifactVariable.getVariableValue().getArtifactSelectionType()) {
       case LAST_COLLECTED:
         TriggerArtifactSelectionLastCollected triggerArtifactVariableValueArtifact =
@@ -277,6 +277,9 @@ public class TriggerArtifactVariableHandler {
             triggerArtifactVariableValueArtifact.getArtifactFilter());
       case ARTIFACT_SOURCE:
         return artifacts.stream().findFirst().get().getUuid();
+      case PIPELINE_SOURCE:
+        return fetchLastDeployedArtifacts(
+            appId, ((PipelineAction) trigger.getAction()).getPipelineId(), triggerArtifactVariable.getVariableName());
       case LAST_DEPLOYED:
         TriggerArtifactSelectionLastDeployed triggerArtifactSelectionLastDeployed =
             (TriggerArtifactSelectionLastDeployed) triggerArtifactVariable.getVariableValue();
@@ -315,7 +318,8 @@ public class TriggerArtifactVariableHandler {
         workflowExecutionService.obtainLastGoodDeployedArtifactsVariables(appId, workflowId);
 
     if (isEmpty(lastDeployedArtifacts)) {
-      logger.warn("Last deployed workflow {} does not have last deployed artifacts for app {}", workflowId, appId);
+      logger.warn(
+          "Last deployed workflow/Pipeline {} does not have last deployed artifacts for app {}", workflowId, appId);
     }
     Optional<ArtifactVariable> artifactVariable =
         lastDeployedArtifacts.stream()
@@ -325,7 +329,8 @@ public class TriggerArtifactVariableHandler {
     if (artifactVariable.isPresent()) {
       return artifactVariable.get().getValue();
     } else {
-      throw new WingsException("selected workflow does not have variable name " + variableName + " for trigger ");
+      throw new WingsException("selected workflow/Pipeline " + workflowId + " does not have variable name "
+          + variableName + " for trigger ");
     }
   }
 }

@@ -5,6 +5,7 @@ import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.stream.Collectors.toList;
@@ -22,7 +23,9 @@ import com.google.inject.Singleton;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.Application;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.DeploymentTriggerExecutionArgs;
 import software.wings.beans.Environment;
@@ -120,6 +123,25 @@ public class TriggerDeploymentExecution {
     }
 
     return null;
+  }
+
+  public void executeDeployment(DeploymentTrigger trigger, List<ArtifactVariable> artifactVariables) {
+    if (trigger.getAction() != null) {
+      if (!artifactVariables.isEmpty()) {
+        logger.info("The artifact variables set for the trigger {} are {}", trigger.getUuid(),
+            artifactVariables.stream().map(ArtifactVariable::getName).collect(toList()));
+      }
+      try {
+        WorkflowExecution WorkflowExecution = triggerDeployment(artifactVariables, trigger, null);
+      } catch (WingsException exception) {
+        exception.addContext(Application.class, trigger.getAppId());
+        exception.addContext(DeploymentTrigger.class, trigger.getUuid());
+        ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
+      }
+    } else {
+      logger.info("No action exist. Hence Skipping the deployment");
+      return;
+    }
   }
 
   private void matchTriggerAndDeploymentArtifactVariables(String trigerId, String appId,
