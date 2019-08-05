@@ -293,8 +293,6 @@ public interface Constants {
   String DEPLOYMENT_TRIGGERED_BY = "deploymentTriggeredBy";
   long ARTIFACT_FILE_SIZE_LIMIT = 4L * 1024L * 1024L * 1024L; // 4GB
 
-  long ML_RECORDS_TTL_MONTHS = 6;
-
   /**
    * Quartz job detail key names
    */

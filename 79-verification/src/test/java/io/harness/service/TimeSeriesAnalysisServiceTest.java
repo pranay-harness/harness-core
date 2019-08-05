@@ -3,7 +3,10 @@ package io.harness.service;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
+import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
@@ -14,6 +17,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.dl.WingsPersistence;
+import software.wings.metrics.TimeSeriesDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.sm.StateType;
 
@@ -99,5 +103,53 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
       }
     }));
     assertEquals(expectedRecords, metricRecords);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCompressTimeSeriesMetricRecords() {
+    int numOfTxns = 5;
+    int numOfMetrics = 40;
+
+    TreeBasedTable<String, String, Double> values = TreeBasedTable.create();
+    TreeBasedTable<String, String, String> deeplinkMetadata = TreeBasedTable.create();
+
+    List<String> txns = new ArrayList<>();
+    for (int i = 0; i < numOfTxns; i++) {
+      for (int j = 0; j < numOfMetrics; j++) {
+        values.put("txn-" + i, "metric-" + j, randomizer.nextDouble());
+        deeplinkMetadata.put("txn-" + i, "metric-" + j, generateUuid());
+      }
+    }
+
+    final TimeSeriesDataRecord timeSeriesDataRecord = TimeSeriesDataRecord.builder()
+                                                          .cvConfigId(cvConfigId)
+                                                          .serviceId(serviceId)
+                                                          .stateType(StateType.NEW_RELIC)
+                                                          .timeStamp(1000)
+                                                          .dataCollectionMinute(100)
+                                                          .host(generateUuid())
+                                                          .values(values)
+                                                          .deeplinkMetadata(deeplinkMetadata)
+                                                          .build();
+
+    timeSeriesDataRecord.compress();
+
+    final String recordId = wingsPersistence.save(timeSeriesDataRecord);
+
+    TimeSeriesDataRecord savedRecord = wingsPersistence.get(TimeSeriesDataRecord.class, recordId);
+
+    assertNull(savedRecord.getValues());
+    assertNull(savedRecord.getDeeplinkMetadata());
+    assertNotNull(savedRecord.getValuesBytes());
+
+    savedRecord.decompress();
+
+    assertNotNull(savedRecord.getValues());
+    assertNotNull(savedRecord.getDeeplinkMetadata());
+    assertNull(savedRecord.getValuesBytes());
+
+    assertEquals(values, savedRecord.getValues());
+    assertEquals(deeplinkMetadata, savedRecord.getDeeplinkMetadata());
   }
 }

@@ -45,6 +45,7 @@ import software.wings.metrics.MetricType;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.Threshold;
 import software.wings.metrics.ThresholdCategory;
+import software.wings.metrics.TimeSeriesDataRecord;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.ExperimentalMetricAnalysisRecord;
 import software.wings.service.impl.analysis.MetricAnalysisRecord;
@@ -109,10 +110,15 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Inject private DataCollectionExecutorService dataCollectionService;
 
   @Override
+  @SuppressWarnings("PMD")
   public boolean saveMetricData(final String accountId, final String appId, final String stateExecutionId,
       String delegateTaskId, List<NewRelicMetricDataRecord> metricData) {
     if (isEmpty(metricData)) {
       logger.info("For state {} received empty collection", stateExecutionId);
+      return false;
+    }
+    if (!learningEngineService.isStateValid(appId, stateExecutionId)) {
+      logger.info("State is no longer active {}. Sending delegate abort request {}", stateExecutionId, delegateTaskId);
       return false;
     }
     metricData.forEach(metric -> {
@@ -120,17 +126,15 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         metric.setValidUntil(Date.from(OffsetDateTime.now().plusMonths(1).toInstant()));
       }
     });
-    if (!learningEngineService.isStateValid(appId, stateExecutionId)) {
-      logger.info("State is no longer active {}. Sending delegate abort request {}", stateExecutionId, delegateTaskId);
-      return false;
-    }
-    if (logger.isDebugEnabled()) {
-      logger.debug("inserting " + metricData.size() + " pieces of new relic metrics data");
-    }
     dataStoreService.save(NewRelicMetricDataRecord.class, metricData, true);
 
-    if (logger.isDebugEnabled()) {
-      logger.debug("inserted " + metricData.size() + " NewRelicMetricDataRecord to persistence layer.");
+    try {
+      final List<TimeSeriesDataRecord> dataRecords =
+          TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(metricData);
+      dataRecords.forEach(TimeSeriesDataRecord::compress);
+      dataStoreService.save(TimeSeriesDataRecord.class, dataRecords, true);
+    } catch (Throwable t) {
+      logger.info("Error converting to TimeSeriesDataRecord", t);
     }
     return true;
   }
