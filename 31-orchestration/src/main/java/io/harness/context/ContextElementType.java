@@ -105,6 +105,8 @@ public enum ContextElementType {
 
   ARTIFACT,
 
+  ARTIFACT_VARIABLE,
+
   /**
    * Helm deploy context element type.
    */

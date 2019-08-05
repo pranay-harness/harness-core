@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.ServiceVariable.Type.TEXT;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
@@ -27,7 +26,6 @@ import io.harness.expression.LateBindingMap;
 import io.harness.expression.LateBindingValue;
 import io.harness.expression.SecretString;
 import io.harness.expression.VariableResolverTracker;
-import io.harness.serializer.KryoUtils;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -35,9 +33,7 @@ import org.mongodb.morphia.Key;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceArtifactElement;
 import software.wings.beans.Application;
-import software.wings.beans.ArtifactVariable;
 import software.wings.beans.DeploymentExecutionContext;
-import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.FeatureName;
@@ -242,15 +238,28 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Override
   public List<Artifact> getArtifacts() {
     WorkflowStandardParams workflowStandardParams = getContextElement(ContextElementType.STANDARD);
-    List<ContextElement> contextElementList = getContextElementList(ContextElementType.ARTIFACT);
-    if (isEmpty(contextElementList)) {
-      return workflowStandardParams.getArtifacts();
+    String accountId = workflowStandardParams.getApp().getAccountId();
+    if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+      List<ContextElement> contextElementList = getContextElementList(ContextElementType.ARTIFACT);
+      if (isEmpty(contextElementList)) {
+        return workflowStandardParams.getArtifacts();
+      }
+      List<Artifact> list = new ArrayList<>();
+      for (ContextElement contextElement : contextElementList) {
+        list.add(artifactService.get(contextElement.getUuid()));
+      }
+      return list;
+    } else {
+      List<ContextElement> contextElementList = getContextElementList(ContextElementType.ARTIFACT_VARIABLE);
+      if (isEmpty(contextElementList)) {
+        return workflowStandardParams.getArtifacts();
+      }
+      List<Artifact> list = new ArrayList<>();
+      for (ContextElement contextElement : contextElementList) {
+        list.add(artifactService.get(contextElement.getUuid()));
+      }
+      return list;
     }
-    List<Artifact> list = new ArrayList<>();
-    for (ContextElement contextElement : contextElementList) {
-      list.add(artifactService.get(contextElement.getUuid()));
-    }
-    return list;
   }
 
   @Override
@@ -260,6 +269,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     if (contextElementList == null) {
       return workflowStandardParams.getArtifactForService(serviceId);
     }
+
     Optional<ContextElement> contextElementOptional =
         contextElementList.stream()
             .filter(art
@@ -276,25 +286,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @Override
   public Map<String, Artifact> getArtifactsForService(String serviceId) {
-    Map<String, Artifact> map = new HashMap<>();
     WorkflowStandardParams workflowStandardParams = getContextElement(ContextElementType.STANDARD);
-    List<ArtifactVariable> artifactVariables = workflowStandardParams.getWorkflowElement().getArtifactVariables();
-    Map<String, Artifact> artifactVariablesForPhase = getArtifactVariablesForPhase();
-    Artifact artifact = null;
-    if (isNotEmpty(artifactVariables) && isNotEmpty(artifactVariablesForPhase)) {
-      for (ArtifactVariable artifactVariable : artifactVariables) {
-        if (SERVICE.equals(artifactVariable.getEntityType()) && artifactVariable.getEntityId().equals(serviceId)) {
-          artifact = artifactVariablesForPhase.get(artifactVariable.getName());
-        } else if (EntityType.WORKFLOW.equals(artifactVariable.getEntityType())) {
-          artifact = artifactVariablesForPhase.get(artifactVariable.getName());
-        }
-        // todo: throw error if null?
-        if (artifact != null) {
-          map.put(artifactVariable.getName(), artifact);
-        }
-      }
-    }
-    return map;
+    return workflowStandardParams.getArtifactsForService(serviceId);
   }
 
   @Override
@@ -305,18 +298,6 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     } else {
       return getArtifactForService(serviceId);
     }
-  }
-
-  private Map<String, Artifact> getArtifactVariablesForPhase() {
-    SweepingOutput sweepingOutputInput = this.prepareSweepingOutputBuilder(Scope.PHASE).name("artifacts").build();
-    SweepingOutput result = sweepingOutputService.find(sweepingOutputInput.getAppId(), sweepingOutputInput.getName(),
-        sweepingOutputInput.getPipelineExecutionId(), sweepingOutputInput.getWorkflowExecutionId(),
-        sweepingOutputInput.getPhaseExecutionId(), null);
-
-    if (result == null) {
-      return null;
-    }
-    return (Map<String, Artifact>) KryoUtils.asInflatedObject(result.getOutput());
   }
 
   @Override

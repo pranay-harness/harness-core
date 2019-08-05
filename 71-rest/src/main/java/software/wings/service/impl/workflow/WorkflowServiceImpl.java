@@ -2610,6 +2610,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
+    boolean isBuildWorkflow = BUILD.equals(canaryOrchestrationWorkflow.getOrchestrationWorkflowType());
 
     // map of serviceId to artifact variables used in the workflow
     Map<String, Set<String>> serviceArtifactVariableNamesMap = new HashMap<>();
@@ -2618,7 +2619,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Set<String> workflowVariableNames = new HashSet<>();
 
     // process PreDeploymentSteps
-    // TODO: ASR: IMP: what serviceId to take?
     updateArtifactVariableNames(appId, "", canaryOrchestrationWorkflow.getPreDeploymentSteps(), null, null,
         serviceArtifactVariableNamesMap, workflowVariableNames);
 
@@ -2642,6 +2642,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           workflow.getUuid(), appId);
     }
 
+    if (serviceArtifactVariableNamesMap.containsKey("")) {
+      Set<String> implicitWorkflowVariableNames = serviceArtifactVariableNamesMap.get("");
+      if (isNotEmpty(implicitWorkflowVariableNames)) {
+        workflowVariableNames.addAll(implicitWorkflowVariableNames);
+      }
+    }
+
     serviceArtifactVariableNamesMap = serviceArtifactVariableNamesMap.entrySet()
                                           .stream()
                                           .filter(entry -> isNotEmpty(entry.getKey()) && isNotEmpty(entry.getValue()))
@@ -2662,59 +2669,61 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         computeServiceVariables(appId, workflow.getEnvId(), serviceArtifactVariableNamesMap.keySet());
 
     // loop over serviceIds and add artifact variables used based on the above computed service variables
-    for (Entry<String, Set<String>> entry : serviceArtifactVariableNamesMap.entrySet()) {
-      String serviceId = entry.getKey();
-      Set<String> serviceArtifactVariableNames = entry.getValue();
+    if (!isBuildWorkflow) {
+      for (Entry<String, Set<String>> entry : serviceArtifactVariableNamesMap.entrySet()) {
+        String serviceId = entry.getKey();
+        Set<String> serviceArtifactVariableNames = entry.getValue();
 
-      List<ServiceVariable> serviceVariables = serviceVariablesMap.getOrDefault(serviceId, null);
-      if (serviceVariables == null) {
-        continue;
-      }
-
-      Map<String, ServiceVariable> variableNames =
-          serviceVariables.stream().collect(Collectors.toMap(ServiceVariable::getName, Function.identity()));
-      int count = 0;
-      for (String variableName : serviceArtifactVariableNames) {
-        if (!variableNames.containsKey(variableName)) {
+        List<ServiceVariable> serviceVariables = serviceVariablesMap.getOrDefault(serviceId, null);
+        if (serviceVariables == null) {
           continue;
         }
 
-        ServiceVariable serviceVariable = variableNames.get(variableName);
-        List<ArtifactVariable> overriddenArtifactVariables = new ArrayList<>();
-        if (serviceVariable.getOverriddenServiceVariable() != null
-            && !serviceVariable.getEntityType().equals(EntityType.ENVIRONMENT)) {
-          ServiceVariable overriddenServiceVariable = serviceVariable.getOverriddenServiceVariable();
-          overriddenArtifactVariables.add(ArtifactVariable.builder()
-                                              .type(VariableType.ARTIFACT)
-                                              .name(variableName)
-                                              .entityType(overriddenServiceVariable.getEntityType())
-                                              .entityId(overriddenServiceVariable.getEntityId())
-                                              .allowedList(overriddenServiceVariable.getAllowedList())
-                                              .build());
-        }
+        Map<String, ServiceVariable> variableNames =
+            serviceVariables.stream().collect(Collectors.toMap(ServiceVariable::getName, Function.identity()));
+        int count = 0;
+        for (String variableName : serviceArtifactVariableNames) {
+          if (!variableNames.containsKey(variableName)) {
+            continue;
+          }
 
-        EntityType entityType = serviceVariable.getEntityType();
-        String entityId = serviceVariable.getEntityId();
-        if (entityType.equals(EntityType.SERVICE_TEMPLATE)) {
-          entityType = EntityType.ENVIRONMENT;
-          entityId = serviceVariable.getEnvId();
-        }
-
-        ArtifactVariable artifactVariable = ArtifactVariable.builder()
+          ServiceVariable serviceVariable = variableNames.get(variableName);
+          List<ArtifactVariable> overriddenArtifactVariables = new ArrayList<>();
+          if (serviceVariable.getOverriddenServiceVariable() != null
+              && !serviceVariable.getEntityType().equals(EntityType.ENVIRONMENT)) {
+            ServiceVariable overriddenServiceVariable = serviceVariable.getOverriddenServiceVariable();
+            overriddenArtifactVariables.add(ArtifactVariable.builder()
                                                 .type(VariableType.ARTIFACT)
                                                 .name(variableName)
-                                                .entityType(entityType)
-                                                .entityId(entityId)
-                                                .allowedList(serviceVariable.getAllowedList())
-                                                .overriddenArtifactVariables(overriddenArtifactVariables)
-                                                .build();
+                                                .entityType(overriddenServiceVariable.getEntityType())
+                                                .entityId(overriddenServiceVariable.getEntityId())
+                                                .allowedList(overriddenServiceVariable.getAllowedList())
+                                                .build());
+          }
 
-        artifactVariables.add(artifactVariable);
-        count++;
-      }
+          EntityType entityType = serviceVariable.getEntityType();
+          String entityId = serviceVariable.getEntityId();
+          if (entityType.equals(EntityType.SERVICE_TEMPLATE)) {
+            entityType = EntityType.ENVIRONMENT;
+            entityId = serviceVariable.getEnvId();
+          }
 
-      if (count > 0) {
-        artifactNeededServiceIds.add(serviceId);
+          ArtifactVariable artifactVariable = ArtifactVariable.builder()
+                                                  .type(VariableType.ARTIFACT)
+                                                  .name(variableName)
+                                                  .entityType(entityType)
+                                                  .entityId(entityId)
+                                                  .allowedList(serviceVariable.getAllowedList())
+                                                  .overriddenArtifactVariables(overriddenArtifactVariables)
+                                                  .build();
+
+          artifactVariables.add(artifactVariable);
+          count++;
+        }
+
+        if (count > 0) {
+          artifactNeededServiceIds.add(serviceId);
+        }
       }
     }
 
@@ -2848,7 +2857,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     if (serviceId == null) {
-      // TODO: ASR: IMP: what serviceId to take?
       serviceId = "";
     }
 
@@ -2864,6 +2872,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private void updateArtifactVariableNames(String appId, String serviceId, PhaseStep phaseStep,
       WorkflowPhase workflowPhase, Map<String, String> workflowVariables,
       Map<String, Set<String>> serviceArtifactVariableNamesMap, Set<String> workflowVariableNames) {
+    // NOTE: if serviceId is "", we assume those artifact variables to be workflow variables
     Set<String> serviceArtifactVariableNames;
     if (serviceArtifactVariableNamesMap.containsKey(serviceId)) {
       serviceArtifactVariableNames = serviceArtifactVariableNamesMap.get(serviceId);

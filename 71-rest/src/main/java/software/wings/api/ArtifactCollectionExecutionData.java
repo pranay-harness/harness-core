@@ -6,6 +6,7 @@ import io.harness.delegate.beans.ResponseData;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import software.wings.beans.EntityType;
 import software.wings.sm.StateExecutionData;
 
 import java.util.Map;
@@ -28,6 +29,10 @@ public class ArtifactCollectionExecutionData extends StateExecutionData implemen
   private String artifactId;
   private String message;
   private String timeout;
+  private EntityType entityType;
+  private String entityId;
+  private String serviceId;
+  private String artifactVariableName;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
@@ -62,6 +67,7 @@ public class ArtifactCollectionExecutionData extends StateExecutionData implemen
               .value(String.valueOf(removeNullValues(metadata)))
               .build());
     }
+
     putNotNull(executionDetails, "message", ExecutionDataValue.builder().displayName("Message").value(message).build());
     return executionDetails;
   }
