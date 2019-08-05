@@ -42,6 +42,7 @@ import software.wings.api.WorkflowElement;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Application;
+import software.wings.beans.FeatureName;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.common.VariableProcessor;
@@ -51,6 +52,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -72,6 +74,7 @@ public class ArtifactCollectionStateTest extends CategoryTest {
   @Mock VariableProcessor variableProcessor;
   @Mock DelayEventHelper delayEventHelper;
   @Mock AccountService accountService;
+  @Mock FeatureFlagService featureFlagService;
 
   private ManagerExpressionEvaluator expressionEvaluator = new ManagerExpressionEvaluator();
 
@@ -122,6 +125,7 @@ public class ArtifactCollectionStateTest extends CategoryTest {
     when(artifactService.fetchLastCollectedApprovedArtifactForArtifactStream(jenkinsArtifactStream))
         .thenReturn(anArtifact().withAppId(APP_ID).withStatus(Status.APPROVED).build());
     when(delayEventHelper.delay(anyInt(), any())).thenReturn("anyGUID");
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
   }
 
   @Test

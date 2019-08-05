@@ -26,10 +26,10 @@ public class TemplateUtils {
   private void processArtifactVariable(ExecutionContext context, Variable variable) {
     String expression = getExpression(variable.getValue());
     Artifact artifact = (Artifact) context.evaluateExpression(expression);
-    saveArtifactVariablesInSweepingOutput(context, variable.getName(), artifact);
+    saveArtifactToSweepingOutput(context, variable.getName(), artifact);
   }
 
-  private void saveArtifactVariablesInSweepingOutput(ExecutionContext context, String name, Artifact artifact) {
+  private void saveArtifactToSweepingOutput(ExecutionContext context, String name, Artifact artifact) {
     if (artifact != null) {
       // this is to avoid saving the same artifact to sweeping output at state level in case of linked command template
       SweepingOutput sweepingOutputInput =

@@ -3,11 +3,13 @@ package software.wings.sm.states;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static java.util.Arrays.asList;
 import static software.wings.api.EnvStateExecutionData.Builder.anEnvStateExecutionData;
 import static software.wings.api.ServiceArtifactElement.ServiceArtifactElementBuilder.aServiceArtifactElement;
+import static software.wings.api.ServiceArtifactVariableElement.ServiceArtifactVariableElementBuilder.aServiceArtifactVariableElement;
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.common.Constants.ENV_STATE_TIMEOUT_MILLIS;
@@ -30,17 +32,26 @@ import io.harness.logging.ExceptionLogger;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.ArtifactCollectionExecutionData;
 import software.wings.api.EnvStateExecutionData;
+import software.wings.api.ServiceArtifactVariableElement;
+import software.wings.beans.ArtifactVariable;
 import software.wings.beans.DeploymentExecutionContext;
+import software.wings.beans.EntityType;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.FeatureName;
+import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElement;
@@ -49,6 +60,7 @@ import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptType;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
@@ -56,8 +68,11 @@ import software.wings.stencils.Expand;
 import software.wings.utils.Misc;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 /**
  * A Env state to pause state machine execution.
@@ -88,7 +103,9 @@ public class EnvState extends State {
 
   @Transient @Inject private WorkflowService workflowService;
   @Transient @Inject private WorkflowExecutionService executionService;
+  @Transient @Inject private ArtifactService artifactService;
   @Transient @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Transient @Inject private FeatureFlagService featureFlagService;
 
   @JsonIgnore private boolean disable;
 
@@ -133,12 +150,14 @@ public class EnvState extends State {
     }
 
     List<Artifact> artifacts = ((DeploymentExecutionContext) context).getArtifacts();
+    List<ArtifactVariable> artifactVariables =
+        getArtifactVariables((DeploymentExecutionContext) context, workflowStandardParams);
 
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
     executionArgs.setOrchestrationId(workflowId);
     executionArgs.setArtifacts(artifacts);
-    executionArgs.setArtifactVariables(workflowStandardParams.getWorkflowElement().getArtifactVariables());
+    executionArgs.setArtifactVariables(artifactVariables);
     executionArgs.setExecutionCredential(aSSHExecutionCredential().withExecutionType(SSH).build());
     executionArgs.setTriggeredFromPipeline(true);
     executionArgs.setPipelineId(pipelineId);
@@ -168,6 +187,107 @@ public class EnvState extends State {
           .withStateExecutionData(envStateExecutionData)
           .build();
     }
+  }
+
+  private List<ArtifactVariable> getArtifactVariables(
+      DeploymentExecutionContext context, WorkflowStandardParams workflowStandardParams) {
+    List<ArtifactVariable> artifactVariables;
+    List<ContextElement> contextElementList = context.getContextElementList(ContextElementType.ARTIFACT_VARIABLE);
+    if (isEmpty(contextElementList)) {
+      artifactVariables = workflowStandardParams.getWorkflowElement().getArtifactVariables();
+      return isEmpty(artifactVariables) ? new ArrayList<>() : artifactVariables;
+    }
+
+    artifactVariables = new ArrayList<>();
+    Map<String, ArtifactVariable> workflowVariablesMap = new HashMap<>();
+    for (ContextElement contextElement : contextElementList) {
+      ServiceArtifactVariableElement savElement = (ServiceArtifactVariableElement) contextElement;
+      Artifact artifact = artifactService.get(savElement.getUuid());
+      if (artifact == null) {
+        continue;
+      }
+
+      List<String> allowedList = new ArrayList<>();
+      allowedList.add(artifact.getArtifactStreamId());
+
+      EntityType entityType = savElement.getEntityType();
+      String entityId = savElement.getEntityId();
+      if (entityType == null) {
+        entityType = EntityType.SERVICE;
+        entityId = savElement.getServiceId();
+      }
+
+      List<String> serviceIds;
+      switch (entityType) {
+        case WORKFLOW:
+          // Skip if workflow ids are different.
+          if (!workflowId.equals(entityId)) {
+            continue;
+          }
+          break;
+        case ENVIRONMENT:
+        case SERVICE:
+          // Skip if entity id is blank.
+          // envId/serviceId is not checked with workflow envIds/serviceIds here, it is checked in
+          // WorkflowExecutionService.populateArtifacts.
+          if (StringUtils.isBlank(savElement.getEntityId())) {
+            continue;
+          }
+          break;
+        default:
+          // Skip any other entity type.
+          continue;
+      }
+
+      ArtifactVariable artifactVariable = ArtifactVariable.builder()
+                                              .type(VariableType.ARTIFACT)
+                                              .name(savElement.getArtifactVariableName())
+                                              .value(savElement.getUuid())
+                                              .entityType(entityType)
+                                              .entityId(entityId)
+                                              .allowedList(allowedList)
+                                              .build();
+
+      if (EntityType.ENVIRONMENT.equals(entityType)) {
+        List<ArtifactVariable> overriddenArtifactVariables = new ArrayList<>();
+        if (!StringUtils.isBlank(savElement.getServiceId())) {
+          overriddenArtifactVariables.add(ArtifactVariable.builder()
+                                              .type(VariableType.ARTIFACT)
+                                              .name(savElement.getArtifactVariableName())
+                                              .value(savElement.getUuid())
+                                              .entityType(EntityType.SERVICE)
+                                              .entityId(savElement.getServiceId())
+                                              .allowedList(allowedList)
+                                              .build());
+        }
+        artifactVariable.setOverriddenArtifactVariables(overriddenArtifactVariables);
+      }
+
+      // NOTE: collisions here should be fixed later as we some artifact variables might get filtered out because of
+      // envId/serviceId resolved later.
+      if (EntityType.WORKFLOW.equals(entityType)) {
+        workflowVariablesMap.put(artifactVariable.getName(), artifactVariable);
+      } else {
+        artifactVariables.add(artifactVariable);
+      }
+    }
+
+    for (Entry<String, ArtifactVariable> entry : workflowVariablesMap.entrySet()) {
+      String name = entry.getKey();
+      List<ArtifactVariable> overriddenArtifactVariables =
+          artifactVariables.stream()
+              .filter(artifactVariable -> artifactVariable.getName().equals(name))
+              .collect(Collectors.toList());
+      if (isNotEmpty(overriddenArtifactVariables)) {
+        artifactVariables.removeIf(artifactVariable -> artifactVariable.getName().equals(name));
+      }
+
+      ArtifactVariable artifactVariable = entry.getValue();
+      artifactVariable.setOverriddenArtifactVariables(overriddenArtifactVariables);
+      artifactVariables.add(artifactVariable);
+    }
+
+    return artifactVariables;
   }
 
   private Map<String, String> populatePipelineVariables(
@@ -215,18 +335,44 @@ public class EnvState extends State {
 
     EnvStateExecutionData stateExecutionData = (EnvStateExecutionData) context.getStateExecutionData();
     if (stateExecutionData.getOrchestrationWorkflowType() == OrchestrationWorkflowType.BUILD) {
-      List<Artifact> artifacts =
-          executionService.getArtifactsCollected(context.getAppId(), stateExecutionData.getWorkflowExecutionId());
-      if (isNotEmpty(artifacts)) {
-        List<ContextElement> artifactElements = new ArrayList<>();
-        artifacts.forEach(artifact
-            -> artifactElements.add(
-                aServiceArtifactElement()
+      if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, context.getAccountId())) {
+        List<Artifact> artifacts =
+            executionService.getArtifactsCollected(context.getAppId(), stateExecutionData.getWorkflowExecutionId());
+        if (isNotEmpty(artifacts)) {
+          List<ContextElement> artifactElements = new ArrayList<>();
+          artifacts.forEach(artifact
+              -> artifactElements.add(aServiceArtifactElement()
+                                          .withUuid(artifact.getUuid())
+                                          .withName(artifact.getDisplayName())
+                                          .withServiceIds(artifactStreamServiceBindingService.listServiceIds(
+                                              artifact.getArtifactStreamId()))
+                                          .build()));
+          executionResponse.setContextElements(artifactElements);
+        }
+      } else {
+        List<StateExecutionInstance> allStateExecutionInstances = executionService.getStateExecutionInstances(
+            context.getAppId(), stateExecutionData.getWorkflowExecutionId());
+        if (isNotEmpty(allStateExecutionInstances)) {
+          List<ContextElement> artifactElements = new ArrayList<>();
+
+          allStateExecutionInstances.forEach(stateExecutionInstance -> {
+            ArtifactCollectionExecutionData artifactCollectionExecutionData =
+                (ArtifactCollectionExecutionData) stateExecutionInstance.fetchStateExecutionData();
+
+            Artifact artifact = artifactService.get(artifactCollectionExecutionData.getArtifactId());
+            artifactElements.add(
+                aServiceArtifactVariableElement()
                     .withUuid(artifact.getUuid())
                     .withName(artifact.getDisplayName())
-                    .withServiceIds(artifactStreamServiceBindingService.listServiceIds(artifact.getArtifactStreamId()))
-                    .build()));
-        executionResponse.setContextElements(artifactElements);
+                    .withEntityType(artifactCollectionExecutionData.getEntityType())
+                    .withEntityId(artifactCollectionExecutionData.getEntityId())
+                    .withServiceId(artifactCollectionExecutionData.getServiceId())
+                    .withArtifactVariableName(artifactCollectionExecutionData.getArtifactVariableName())
+                    .build());
+          });
+
+          executionResponse.setContextElements(artifactElements);
+        }
       }
     }
 

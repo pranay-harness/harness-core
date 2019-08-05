@@ -233,6 +233,7 @@ import java.util.ConcurrentModificationException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.LongSummaryStatistics;
@@ -1245,7 +1246,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     //    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, app.getAccountId())) {
     //      if (workflowExecution.getWorkflowType().equals(ORCHESTRATION)) {
-    //        multiArtifactWorkflowExecutionServiceHelper.saveArtifactVariablesInSweepingOutput(
+    //        multiArtifactWorkflowExecutionServiceHelper.saveArtifactsToSweepingOutput(
     //            executionArgs, workflowExecution, workflowExecution.getWorkflowId(), app.getAccountId());
     //      }
     //    }
@@ -1551,8 +1552,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     List<Artifact> filteredArtifacts = multiArtifactWorkflowExecutionServiceHelper.filterArtifactsForExecution(
         artifactVariables, workflowExecution, accountId);
 
+    removeDuplicates(filteredArtifacts);
     executionArgs.setArtifacts(filteredArtifacts);
     workflowExecution.setArtifacts(filteredArtifacts);
+    stdParams.setArtifactIds(filteredArtifacts.stream().map(Artifact::getUuid).collect(toList()));
 
     List<String> serviceIds =
         isEmpty(workflowExecution.getServiceIds()) ? new ArrayList<>() : workflowExecution.getServiceIds();
@@ -1580,12 +1583,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         keywords.add(artifact.getBuildNo());
       });
     }
-    stdParams.setArtifactIds(filteredArtifacts.stream().map(Artifact::getUuid).collect(toList()));
-    workflowExecution.setArtifacts(filteredArtifacts);
 
     Set<String> serviceIdsSet = new HashSet<>();
     List<ServiceElement> services = new ArrayList<>();
-
     if (isNotEmpty(serviceIds)) {
       for (String serviceId : serviceIds) {
         if (serviceIdsSet.contains(serviceId)) {
@@ -1602,6 +1602,20 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     // Set the services in the context.
     stdParams.setServices(services);
+  }
+
+  private static void removeDuplicates(List<Artifact> artifacts) {
+    if (isEmpty(artifacts)) {
+      return;
+    }
+
+    Map<String, Artifact> map = new LinkedHashMap<>();
+    for (Artifact artifact : artifacts) {
+      map.put(artifact.getUuid(), artifact);
+    }
+
+    artifacts.clear();
+    artifacts.addAll(map.values());
   }
 
   private void lastGoodReleaseInfo(WorkflowElement workflowElement, WorkflowExecution workflowExecution) {
@@ -2657,6 +2671,21 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       artifacts.add(artifactService.get(artifactCollectionExecutionData.getArtifactId()));
     });
     return artifacts;
+  }
+
+  @Override
+  public List<StateExecutionInstance> getStateExecutionInstances(String appId, String executionUuid) {
+    List<StateExecutionInstance> allStateExecutionInstances =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .filter(StateExecutionInstanceKeys.appId, appId)
+            .filter(StateExecutionInstanceKeys.executionUuid, executionUuid)
+            .filter(StateExecutionInstanceKeys.stateType, ARTIFACT_COLLECTION.name())
+            .asList();
+
+    if (allStateExecutionInstances == null) {
+      return new ArrayList<>();
+    }
+    return allStateExecutionInstances;
   }
 
   @Override

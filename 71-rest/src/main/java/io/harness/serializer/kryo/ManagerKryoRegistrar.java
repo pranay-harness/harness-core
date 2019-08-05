@@ -65,6 +65,7 @@ import software.wings.api.ScriptStateExecutionSummary;
 import software.wings.api.SelectNodeStepExecutionSummary;
 import software.wings.api.SelectedNodeExecutionData;
 import software.wings.api.ServiceArtifactElement;
+import software.wings.api.ServiceArtifactVariableElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.api.ServiceInstanceIdsParam;
@@ -1321,5 +1322,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ApprovalState.class, 7219);
     kryo.register(SpotInstCommandRequest.class, 7220);
     kryo.register(SpotInstConfig.class, 7221);
+    kryo.register(ServiceArtifactVariableElement.class, 7222);
   }
 }

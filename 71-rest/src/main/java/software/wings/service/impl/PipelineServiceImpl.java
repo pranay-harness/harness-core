@@ -85,11 +85,13 @@ import software.wings.sm.StateMachine;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Stream;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -818,6 +820,8 @@ public class PipelineServiceImpl implements PipelineService {
                                                      .deploymentTypes(new ArrayList<>())
                                                      .artifactVariables(new ArrayList<>())
                                                      .build();
+
+    boolean isBuildPipeline = false;
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
       for (PipelineStageElement pse : pipelineStage.getPipelineStageElements()) {
         if (ENV_STATE.name().equals(pse.getType())) {
@@ -830,10 +834,29 @@ public class PipelineServiceImpl implements PipelineService {
           Validator.notNullCheck("Workflow does not exist", workflow, USER);
           Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow(), USER);
 
+          OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+          if (orchestrationWorkflow == null) {
+            continue;
+          }
+
           DeploymentMetadata deploymentMetadata = workflowService.fetchDeploymentMetadata(
               appId, workflow, pse.getWorkflowVariables(), null, null, includeList);
           if (deploymentMetadata == null) {
             continue;
+          }
+
+          if (!isBuildPipeline && BUILD.equals(orchestrationWorkflow.getOrchestrationWorkflowType())) {
+            // If pipeline is a build pipeline, don't get artifact variable metadata.
+            isBuildPipeline = true;
+
+            // Remove any existing artifact variables.
+            finalDeploymentMetadata.setArtifactVariables(new ArrayList<>());
+
+            // Remove ARTIFACT_SERVICE from includeList.
+            Stream<Include> includeStream =
+                isEmpty(includeList) ? Arrays.stream(Include.values()) : Arrays.stream(includeList);
+            includeList =
+                includeStream.filter(include -> !Include.ARTIFACT_SERVICE.equals(include)).toArray(Include[] ::new);
           }
 
           if (finalDeploymentMetadata == null) {

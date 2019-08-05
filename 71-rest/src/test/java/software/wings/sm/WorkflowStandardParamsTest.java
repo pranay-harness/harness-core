@@ -39,6 +39,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
+import software.wings.beans.FeatureName;
 import software.wings.beans.artifact.Artifact;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.AccountService;
@@ -47,6 +48,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -83,12 +85,14 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock private LimitCheckerFactory limitCheckerFactory;
   @Mock private ServiceResourceService serviceResourceService;
+  @Mock private FeatureFlagService featureFlagService;
 
   @Before
   public void setup() {
     when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.APP_DYNAMICS.name()))
         .thenReturn(Lists.newArrayList(aSettingAttribute().withUuid("id").build()));
     on(appService).set("settingsService", settingsService);
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
   }
 
   /**
@@ -168,6 +172,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
     on(std).set("artifactService", artifactService);
     on(std).set("artifactStreamService", artifactStreamService);
     on(std).set("artifactStreamServiceBindingService", artifactStreamServiceBindingService);
+    on(std).set("featureFlagService", featureFlagService);
 
     std.setAppId(app.getUuid());
     std.setEnvId(env.getUuid());

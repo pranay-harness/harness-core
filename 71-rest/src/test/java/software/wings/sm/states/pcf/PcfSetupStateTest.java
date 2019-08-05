@@ -212,6 +212,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     on(workflowStandardParams).set("artifactStreamService", artifactStreamService);
     on(workflowStandardParams).set("serviceResourceService", serviceResourceService);
     on(workflowStandardParams).set("artifactStreamServiceBindingService", artifactStreamServiceBindingService);
+    on(workflowStandardParams).set("featureFlagService", featureFlagService);
 
     when(artifactService.get(any())).thenReturn(artifact);
     when(artifactStreamService.get(any())).thenReturn(artifactStream);

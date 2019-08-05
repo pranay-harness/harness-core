@@ -15,8 +15,11 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.SweepingOutput;
+import io.harness.beans.SweepingOutput.Scope;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
+import io.harness.serializer.KryoUtils;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -36,11 +39,14 @@ import software.wings.api.WorkflowElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
+import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
+import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.ExecutionCredential;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PcfInfrastructureMapping;
@@ -53,9 +59,11 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.WorkflowExecutionService;
 
 import java.net.URISyntaxException;
@@ -92,6 +100,10 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   @Inject private transient ServiceResourceService serviceResourceService;
 
   @Inject private transient ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+
+  @Inject private transient SweepingOutputService sweepingOutputService;
+
+  @Inject private transient FeatureFlagService featureFlagService;
 
   private String appId;
   private String envId;
@@ -168,15 +180,18 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     }
 
     ServiceElement serviceElement = fetchServiceElement(context);
-    Artifact artifact;
     if (serviceElement == null) {
       if (isNotEmpty(artifactIds)) {
-        artifact = artifactService.get(artifactIds.get(0));
+        Artifact artifact = artifactService.get(artifactIds.get(0));
         ExecutionContextImpl.addArtifactToContext(artifactStreamService, getApp().getAccountId(), map, artifact);
       }
     } else {
-      artifact = getArtifactForService(serviceElement.getUuid());
-      ExecutionContextImpl.addArtifactToContext(artifactStreamService, getApp().getAccountId(), map, artifact);
+      String accountId = getApp().getAccountId();
+      String serviceId = serviceElement.getUuid();
+      if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+        Artifact artifact = getArtifactForService(serviceId);
+        ExecutionContextImpl.addArtifactToContext(artifactStreamService, accountId, map, artifact);
+      }
     }
 
     return map;
@@ -580,6 +595,40 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
         .filter(artifact -> artifactStreamIds.contains(artifact.getArtifactStreamId()))
         .findFirst()
         .orElse(null);
+  }
+
+  public Map<String, Artifact> getArtifactsForService(String serviceId) {
+    Map<String, Artifact> map = new HashMap<>();
+    List<ArtifactVariable> artifactVariables = getWorkflowElement().getArtifactVariables();
+    Map<String, Artifact> artifactVariablesForPhase = getArtifactVariablesForPhase();
+    Artifact artifact = null;
+    if (isNotEmpty(artifactVariables) && isNotEmpty(artifactVariablesForPhase)) {
+      for (ArtifactVariable artifactVariable : artifactVariables) {
+        if (EntityType.SERVICE.equals(artifactVariable.getEntityType())
+            && artifactVariable.getEntityId().equals(serviceId)) {
+          artifact = artifactVariablesForPhase.get(artifactVariable.getName());
+        } else if (EntityType.WORKFLOW.equals(artifactVariable.getEntityType())) {
+          artifact = artifactVariablesForPhase.get(artifactVariable.getName());
+        }
+        // TODO: ASR: throw error if null?
+        if (artifact != null) {
+          map.put(artifactVariable.getName(), artifact);
+        }
+      }
+    }
+    return map;
+  }
+
+  private Map<String, Artifact> getArtifactVariablesForPhase() {
+    SweepingOutput sweepingOutputInput = context.prepareSweepingOutputBuilder(Scope.PHASE).name("artifacts").build();
+    SweepingOutput result = sweepingOutputService.find(sweepingOutputInput.getAppId(), sweepingOutputInput.getName(),
+        sweepingOutputInput.getPipelineExecutionId(), sweepingOutputInput.getWorkflowExecutionId(),
+        sweepingOutputInput.getPhaseExecutionId(), null);
+
+    if (result == null) {
+      return null;
+    }
+    return (Map<String, Artifact>) KryoUtils.asInflatedObject(result.getOutput());
   }
 
   @Override

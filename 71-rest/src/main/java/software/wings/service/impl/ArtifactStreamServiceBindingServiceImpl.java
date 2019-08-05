@@ -473,6 +473,32 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
   }
 
   @Override
+  public String getServiceId(String appId, String artifactStreamId, boolean throwException) {
+    if (GLOBAL_APP_ID.equals(appId)) {
+      return getServiceId(artifactStreamId, throwException);
+    }
+
+    return getServiceId(listServiceIds(appId, artifactStreamId), artifactStreamId, throwException);
+  }
+
+  @Override
+  public String getServiceId(String artifactStreamId, boolean throwException) {
+    return getServiceId(listServiceIds(artifactStreamId), artifactStreamId, throwException);
+  }
+
+  private String getServiceId(List<String> serviceIds, String artifactStreamId, boolean throwException) {
+    if (isEmpty(serviceIds)) {
+      if (throwException) {
+        throw new WingsException(ErrorCode.GENERAL_ERROR, USER)
+            .addParam("message", format("Artifact stream %s is a zombie.", artifactStreamId));
+      }
+      return null;
+    }
+
+    return serviceIds.get(0);
+  }
+
+  @Override
   public void pruneByArtifactStream(String appId, String artifactStreamId) {
     List<Service> services = listServices(artifactStreamId);
     if (isEmpty(services)) {

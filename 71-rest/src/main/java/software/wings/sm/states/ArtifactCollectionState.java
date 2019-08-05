@@ -22,12 +22,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.ArtifactCollectionExecutionData;
 import software.wings.beans.BuildExecutionSummary;
+import software.wings.beans.EntityType;
+import software.wings.beans.FeatureName;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.service.impl.DelayEventHelper;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -40,6 +43,11 @@ import java.util.Map;
 
 @Slf4j
 public class ArtifactCollectionState extends State {
+  @Attributes(title = "Entity Type") @Getter @Setter private EntityType entityType;
+  @Attributes(title = "Entity") @Getter @Setter private String entityId;
+  @Attributes(title = "Service") @Getter @Setter private String serviceId;
+  @Attributes(title = "Artifact Variable Name") @Getter @Setter private String artifactVariableName;
+
   @Attributes(title = "Artifact Source") @NotEmpty @Getter @Setter private String artifactStreamId;
 
   @Attributes(title = "Regex") @Getter @Setter private boolean regex;
@@ -49,6 +57,7 @@ public class ArtifactCollectionState extends State {
   @Inject private transient ArtifactService artifactService;
   @Inject private transient WorkflowExecutionService workflowExecutionService;
   @Inject private transient DelayEventHelper delayEventHelper;
+  @Inject private transient FeatureFlagService featureFlagService;
 
   private static int DELAY_TIME_IN_SEC = 60;
 
@@ -82,6 +91,7 @@ public class ArtifactCollectionState extends State {
       artifactCollectionExecutionData.setBuildNo(lastCollectedArtifact.getBuildNo());
       artifactCollectionExecutionData.setMetadata(lastCollectedArtifact.getMetadata());
       artifactCollectionExecutionData.setArtifactId(lastCollectedArtifact.getUuid());
+      updateArtifactCollectionExecutionData(context, artifactCollectionExecutionData);
 
       addBuildExecutionSummary(context, artifactCollectionExecutionData, artifactStream);
       return anExecutionResponse()
@@ -146,6 +156,7 @@ public class ArtifactCollectionState extends State {
     artifactCollectionExecutionData.setBuildNo(lastCollectedArtifact.getBuildNo());
     artifactCollectionExecutionData.setMetadata(lastCollectedArtifact.getMetadata());
     artifactCollectionExecutionData.setArtifactId(lastCollectedArtifact.getUuid());
+    updateArtifactCollectionExecutionData(context, artifactCollectionExecutionData);
 
     addBuildExecutionSummary(context, artifactCollectionExecutionData, artifactStream);
     return anExecutionResponse()
@@ -223,11 +234,44 @@ public class ArtifactCollectionState extends State {
     return super.getTimeoutMillis();
   }
 
+  private void updateArtifactCollectionExecutionData(
+      ExecutionContext context, ArtifactCollectionExecutionData artifactCollectionExecutionData) {
+    if (isMultiArtifact(context.getAccountId())) {
+      artifactCollectionExecutionData.setEntityType(fetchEntityType());
+      artifactCollectionExecutionData.setEntityId(fetchEntityId());
+      artifactCollectionExecutionData.setServiceId(fetchServiceId());
+      artifactCollectionExecutionData.setArtifactVariableName(fetchArtifactVariableName());
+    }
+  }
+
   private Artifact fetchCollectedArtifact(ArtifactStream artifactStream, String buildNo) {
     if (isBlank(buildNo)) {
       return artifactService.fetchLastCollectedApprovedArtifactForArtifactStream(artifactStream);
     } else {
       return artifactService.getArtifactByBuildNumber(artifactStream, buildNo, isRegex());
     }
+  }
+
+  private EntityType fetchEntityType() {
+    // TODO: ASR: observations:
+    //   1. if entityType is present, entityId should not be blank
+    //   2. if entityType is WORKFLOW, serviceId is ignored
+    return entityType == null ? EntityType.SERVICE : entityType;
+  }
+
+  private String fetchEntityId() {
+    return isBlank(entityId) ? fetchServiceId() : entityId;
+  }
+
+  private String fetchServiceId() {
+    return serviceId;
+  }
+
+  private String fetchArtifactVariableName() {
+    return isBlank(artifactVariableName) ? "artifact" : artifactVariableName;
+  }
+
+  private boolean isMultiArtifact(String accountId) {
+    return featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId);
   }
 }

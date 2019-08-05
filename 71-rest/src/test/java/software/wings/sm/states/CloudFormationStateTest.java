@@ -76,6 +76,7 @@ import software.wings.beans.BlueprintProperty;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
@@ -104,6 +105,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -150,6 +152,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Inject @InjectMocks private TemplateExpressionProcessor templateExpressionProcessor;
   @Mock private ExecutionContextImpl executionContext;
+  @Mock private FeatureFlagService featureFlagService;
 
   @InjectMocks
   private CloudFormationCreateStackState cloudFormationCreateStackState = new CloudFormationCreateStackState("name");
@@ -268,6 +271,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
     on(workflowStandardParams).set("infrastructureMappingService", infrastructureMappingService);
     on(workflowStandardParams).set("serviceResourceService", serviceResourceService);
     on(workflowStandardParams).set("artifactStreamServiceBindingService", artifactStreamServiceBindingService);
+    on(workflowStandardParams).set("featureFlagService", featureFlagService);
 
     workflowStandardParams.setCurrentUser(EmbeddedUser.builder().name("test").email("test@harness.io").build());
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
@@ -301,6 +305,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
     portalConfig.setUrl(BASE_URL);
     when(configuration.getPortal()).thenReturn(portalConfig);
     doNothing().when(serviceHelper).addPlaceholderTexts(any());
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
   }
 
   @Test
