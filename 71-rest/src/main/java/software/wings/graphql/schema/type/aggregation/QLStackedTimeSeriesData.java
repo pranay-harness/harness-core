@@ -10,5 +10,4 @@ import java.util.List;
 public class QLStackedTimeSeriesData implements QLData {
   List<QLStackedTimeSeriesDataPoint> data;
   String label;
-  QLRequest request;
 }

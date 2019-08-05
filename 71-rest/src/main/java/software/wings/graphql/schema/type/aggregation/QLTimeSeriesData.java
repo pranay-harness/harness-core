@@ -9,6 +9,5 @@ import java.util.List;
 @Builder
 public class QLTimeSeriesData implements QLData {
   List<QLTimeSeriesDataPoint> dataPoints;
-  QLRequest request;
   String label;
 }
