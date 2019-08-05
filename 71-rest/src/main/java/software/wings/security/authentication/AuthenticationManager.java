@@ -8,6 +8,7 @@ import static io.harness.eraro.ErrorCode.DOMAIN_WHITELIST_FILTER_CHECK_FAILED;
 import static io.harness.eraro.ErrorCode.EMAIL_NOT_VERIFIED;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
+import static io.harness.eraro.ErrorCode.MAX_FAILED_ATTEMPT_COUNT_EXCEEDED;
 import static io.harness.eraro.ErrorCode.PASSWORD_EXPIRED;
 import static io.harness.eraro.ErrorCode.USER_DISABLED;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
@@ -36,6 +37,8 @@ import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.authentication.LoginTypeResponse.LoginTypeResponseBuilder;
 import software.wings.security.authentication.oauth.OauthBasedAuthHandler;
 import software.wings.security.authentication.oauth.OauthOptions;
+import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountChecker;
+import software.wings.security.authentication.recaptcha.MaxLoginAttemptExceededException;
 import software.wings.security.saml.SSORequest;
 import software.wings.security.saml.SamlClientService;
 import software.wings.service.intfc.AccountService;
@@ -46,6 +49,7 @@ import software.wings.service.intfc.UserService;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,9 +75,13 @@ public class AuthenticationManager {
   @Inject private SSOSettingService ssoSettingService;
   @Inject private LicenseService licenseService;
   @Inject private MainConfiguration mainConfiguration;
+  @Inject private FailedLoginAttemptCountChecker failedLoginAttemptCountChecker;
 
   private static final String LOGIN_ERROR_CODE_INVALIDSSO = "#/login?errorCode=invalidsso";
   private static final String LOGIN_ERROR_CODE_SAMLTESTSUCCESS = "#/login?errorCode=samltestsuccess";
+
+  private static final List<ErrorCode> NON_INVALID_CREDENTIALS_ERROR_CODES =
+      Arrays.asList(USER_LOCKED, PASSWORD_EXPIRED, MAX_FAILED_ATTEMPT_COUNT_EXCEEDED);
 
   public AuthHandler getAuthHandler(AuthenticationMechanism mechanism) {
     switch (mechanism) {
@@ -149,7 +157,7 @@ public class AuthenticationManager {
   }
 
   public LoginTypeResponse getLoginTypeResponse(String userName, String accountId) {
-    LoginTypeResponseBuilder builder = LoginTypeResponse.builder();
+    final LoginTypeResponseBuilder builder = LoginTypeResponse.builder();
 
     /*
      * To prevent possibility of user enumeration (https://harness.atlassian.net/browse/HAR-7188),
@@ -159,6 +167,17 @@ public class AuthenticationManager {
      */
     try {
       User user = authenticationUtils.getUser(userName, USER);
+
+      boolean showCaptcha = false;
+      try {
+        failedLoginAttemptCountChecker.check(user);
+      } catch (MaxLoginAttemptExceededException e) {
+        logger.info("User exceeded max failed login attemts. {}", e.getMessage());
+        showCaptcha = true;
+      }
+
+      builder.showCaptcha(showCaptcha);
+
       Account account = userService.getAccountByIdIfExistsElseGetDefaultAccount(
           user, isEmpty(accountId) ? Optional.empty() : Optional.of(accountId));
       AuthenticationMechanism authenticationMechanism = account.getAuthenticationMechanism();
@@ -328,7 +347,7 @@ public class AuthenticationManager {
       }
     } catch (WingsException we) {
       logger.warn("Failed to login via default mechanism", we);
-      if (we.getCode().equals(USER_LOCKED) || we.getCode().equals(PASSWORD_EXPIRED)) {
+      if (NON_INVALID_CREDENTIALS_ERROR_CODES.contains(we.getCode())) {
         throw we;
       } else {
         throw new WingsException(INVALID_CREDENTIAL, USER);
