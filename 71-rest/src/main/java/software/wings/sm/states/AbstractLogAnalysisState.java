@@ -543,6 +543,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .serviceId(analysisContext.getServiceId())
             .collectionTime(Integer.parseInt(getTimeDuration()))
             .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
+            .accountId(analysisContext.getAccountId())
             .query(getRenderedQuery())
             .initialDelayMinutes(0)
             .build();
