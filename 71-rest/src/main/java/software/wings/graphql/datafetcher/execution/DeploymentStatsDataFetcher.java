@@ -5,6 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import com.google.inject.Inject;
 
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
+import com.healthmarketscience.sqlbuilder.ComboCondition;
+import com.healthmarketscience.sqlbuilder.ComboCondition.Op;
 import com.healthmarketscience.sqlbuilder.Converter;
 import com.healthmarketscience.sqlbuilder.CustomCondition;
 import com.healthmarketscience.sqlbuilder.CustomExpression;
@@ -26,7 +28,6 @@ import software.wings.graphql.datafetcher.AbstractStatsDataFetcher;
 import software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.DeploymentMetaDataFields;
 import software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.DeploymentStatsQueryMetaDataBuilder;
 import software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.ResultType;
-import software.wings.graphql.schema.type.QLEnvironmentType;
 import software.wings.graphql.schema.type.aggregation.Filter;
 import software.wings.graphql.schema.type.aggregation.QLAggregatedData;
 import software.wings.graphql.schema.type.aggregation.QLAggregatedData.QLAggregatedDataBuilder;
@@ -79,7 +80,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -655,56 +655,72 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
   private void addArrayIdFilter(SelectQuery selectQuery, Filter filter, QLDeploymentFilterType type) {
     DbColumn key = getFilterKey(type);
     QLIdFilter idFilter = (QLIdFilter) filter;
-    String filterValue = "{" + String.join(",", idFilter.getValues()) + "}";
-    switch (idFilter.getOperator()) {
-      case IN:
-      case EQUALS:
-        selectQuery.addCondition(
-            new CustomCondition(schema.getDeploymentTable().getAlias() + "." + key.getColumnNameSQL() + " @>"
-                + "'" + filterValue + "'"));
-        break;
-      default:
-        throw new RuntimeException("Unsupported operator for ArrayStringFilter" + idFilter.getOperator());
+    if (isEmpty(filter.getValues())) {
+      throw new RuntimeException("No values are provided for IdFilter" + filter);
     }
+    CustomCondition[] customConditions = new CustomCondition[idFilter.getValues().length];
+    for (int i = 0; i < idFilter.getValues().length; i++) {
+      String filterValue = "{" + idFilter.getValues()[i] + "}";
+      switch (idFilter.getOperator()) {
+        case IN:
+        case EQUALS:
+          customConditions[i] =
+              new CustomCondition(schema.getDeploymentTable().getAlias() + "." + key.getColumnNameSQL() + " @>"
+                  + "'" + filterValue + "'");
+          break;
+        default:
+          throw new RuntimeException("Unsupported operator for ArrayIdFilter" + idFilter.getOperator());
+      }
+    }
+    selectQuery.addCondition(new ComboCondition(Op.OR, customConditions).setDisableParens(false));
   }
 
   private void addEnvTypeFilter(SelectQuery selectQuery, QLEnvironmentTypeFilter filter, QLDeploymentFilterType type) {
     DbColumn key = getFilterKey(type);
     QLEnumOperator operator = filter.getOperator();
-    QLEnvironmentType[] values = filter.getValues();
-    if (isEmpty(values)) {
+    if (isEmpty(filter.getValues())) {
       throw new RuntimeException("No values are provided for EnvTypeFilter" + operator);
     }
+    CustomCondition[] customConditions = new CustomCondition[filter.getValues().length];
 
-    Set<String> envTypeSet = Arrays.stream(values).map(value -> value.name()).collect(Collectors.toSet());
-
-    String filterValue = "{" + String.join(",", envTypeSet) + "}";
-    switch (operator) {
-      case IN:
-      case EQUALS:
-        selectQuery.addCondition(
-            new CustomCondition(schema.getDeploymentTable().getAlias() + "." + key.getColumnNameSQL() + " @>"
-                + "'" + filterValue + "'"));
-        break;
-      default:
-        throw new RuntimeException("Unsupported operator for EnvTypeFilter" + operator);
+    for (int i = 0; i < filter.getValues().length; i++) {
+      String filterValue = "{" + filter.getValues()[i] + "}";
+      switch (operator) {
+        case IN:
+        case EQUALS:
+          customConditions[i] =
+              new CustomCondition(schema.getDeploymentTable().getAlias() + "." + key.getColumnNameSQL() + " @>"
+                  + "'" + filterValue + "'");
+          break;
+        default:
+          throw new RuntimeException("Unsupported operator for EnvTypeFilter" + operator);
+      }
     }
+
+    selectQuery.addCondition(new ComboCondition(Op.OR, customConditions).setDisableParens(false));
   }
 
   private void addArrayStringFilter(SelectQuery selectQuery, Filter filter, QLDeploymentFilterType type) {
     DbColumn key = getFilterKey(type);
     QLStringFilter stringFilter = (QLStringFilter) filter;
-    String filterValue = "{" + String.join(",", stringFilter.getValues()) + "}";
-    switch (stringFilter.getOperator()) {
-      case IN:
-      case EQUALS:
-        selectQuery.addCondition(
-            new CustomCondition(schema.getDeploymentTable().getAlias() + "." + key.getColumnNameSQL() + " @>"
-                + "'" + filterValue + "'"));
-        break;
-      default:
-        throw new RuntimeException("Unsupported operator for ArrayStringFilter" + stringFilter.getOperator());
+    if (isEmpty(filter.getValues())) {
+      throw new RuntimeException("No values are provided for StringFilter" + filter);
     }
+    CustomCondition[] customConditions = new CustomCondition[filter.getValues().length];
+    for (int i = 0; i < filter.getValues().length; i++) {
+      String filterValue = "{" + filter.getValues()[i] + "}";
+      switch (stringFilter.getOperator()) {
+        case IN:
+        case EQUALS:
+          customConditions[i] =
+              new CustomCondition(schema.getDeploymentTable().getAlias() + "." + key.getColumnNameSQL() + " @>"
+                  + "'" + filterValue + "'");
+          break;
+        default:
+          throw new RuntimeException("Unsupported operator for ArrayStringFilter" + stringFilter.getOperator());
+      }
+    }
+    selectQuery.addCondition(new ComboCondition(Op.OR, customConditions).setDisableParens(false));
   }
 
   private void decorateSimpleFilter(SelectQuery selectQuery, QLDeploymentFilter filter, QLDeploymentFilterType type) {
