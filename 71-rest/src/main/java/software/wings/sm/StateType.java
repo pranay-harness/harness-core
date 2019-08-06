@@ -174,6 +174,7 @@ import software.wings.sm.states.pcf.PcfSetupState;
 import software.wings.sm.states.pcf.PcfSwitchBlueGreenRoutes;
 import software.wings.sm.states.pcf.UnmapRouteState;
 import software.wings.sm.states.provision.ApplyTerraformProvisionState;
+import software.wings.sm.states.provision.ApplyTerraformState;
 import software.wings.sm.states.provision.CloudFormationCreateStackState;
 import software.wings.sm.states.provision.CloudFormationDeleteStackState;
 import software.wings.sm.states.provision.CloudFormationRollbackStackState;
@@ -548,6 +549,8 @@ public enum StateType implements StateTypeDescriptor {
   TERRAFORM_PROVISION(ApplyTerraformProvisionState.class, PROVISIONERS, 0, "Terraform Provision",
       asList(InfrastructureMappingType.AWS_SSH), asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE),
       ORCHESTRATION_STENCILS),
+
+  TERRAFORM_APPLY(ApplyTerraformState.class, OTHERS, 5, "Terraform Apply", asList(), ORCHESTRATION_STENCILS, COMMON),
 
   SHELL_SCRIPT_PROVISION(ShellScriptProvisionState.class, PROVISIONERS, 2, PROVISION_SHELL_SCRIPT,
       asList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),

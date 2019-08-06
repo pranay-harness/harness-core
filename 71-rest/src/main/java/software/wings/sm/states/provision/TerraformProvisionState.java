@@ -13,6 +13,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
@@ -710,8 +711,8 @@ public abstract class TerraformProvisionState extends State {
 
   protected String generateEntityId(ExecutionContext context, String workspace) {
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
-    return isEmpty(workspace) ? (provisionerId + "-" + executionContext.getEnv().getUuid())
-                              : (provisionerId + "-" + executionContext.getEnv().getUuid() + "-" + workspace);
+    String envId = executionContext.getEnv() != null ? executionContext.getEnv().getUuid() : EMPTY;
+    return isEmpty(workspace) ? (provisionerId + "-" + envId) : (provisionerId + "-" + envId + "-" + workspace);
   }
 
   protected void deleteTerraformConfig(ExecutionContext context, TerraformExecutionData terraformExecutionData) {
