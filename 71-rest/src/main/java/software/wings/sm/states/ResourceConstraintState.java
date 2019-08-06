@@ -27,6 +27,7 @@ import io.harness.distribution.constraint.ConsumerId;
 import io.harness.exception.InvalidRequestException;
 import lombok.Getter;
 import lombok.Setter;
+import software.wings.api.PhaseElement;
 import software.wings.api.ResourceConstraintExecutionData;
 import software.wings.beans.Application;
 import software.wings.beans.NotificationGroup;
@@ -37,6 +38,7 @@ import software.wings.beans.ResourceConstraintNotification;
 import software.wings.beans.ResourceConstraintUsage;
 import software.wings.beans.ResourceConstraintUsage.ActiveScope;
 import software.wings.beans.WorkflowExecution;
+import software.wings.common.Constants;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
@@ -132,7 +134,16 @@ public class ResourceConstraintState extends State {
     String releaseEntityId = null;
     switch (HoldingScope.valueOf(holdingScope)) {
       case WORKFLOW:
-        releaseEntityId = context.getWorkflowExecutionId();
+        releaseEntityId = ResourceConstraintService.releaseEntityId(context.getWorkflowExecutionId());
+        break;
+      case PHASE:
+        PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+        if (phaseElement == null) {
+          throw new InvalidRequestException(
+              "Resource constraint with holding scope 'Phase' cannot be used outside a phase");
+        }
+        releaseEntityId =
+            ResourceConstraintService.releaseEntityId(context.getWorkflowExecutionId(), phaseElement.getPhaseName());
         break;
       default:
         throw new InvalidRequestException(String.format("Unhandled holding scope %s", holdingScope));

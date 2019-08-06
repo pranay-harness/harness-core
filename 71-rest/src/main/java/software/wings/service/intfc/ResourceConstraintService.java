@@ -39,4 +39,20 @@ public interface ResourceConstraintService extends OwnedByAccount {
   void updateBlockedConstraints(Set<String> constraintIds);
 
   List<ResourceConstraintUsage> usage(String accountId, List<String> resourceConstraintIds);
+
+  static String workflowExecutionIdFromReleaseEntityId(String releaseEntityId) {
+    return releaseEntityId.split("[|]")[0];
+  }
+
+  static String phaseNameFromReleaseEntityId(String releaseEntityId) {
+    return releaseEntityId.split("[|]")[1];
+  }
+
+  static String releaseEntityId(String workflowExecutionId) {
+    return workflowExecutionId;
+  }
+
+  static String releaseEntityId(String workflowExecutionId, String phaseName) {
+    return workflowExecutionId + "|" + phaseName;
+  }
 }
