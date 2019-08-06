@@ -1019,7 +1019,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public void pruneByApplication(String appId) {
     String accountId = null;
 
-    List<Service> services = findServicesByApp(appId);
+    List<Service> services = findServicesByAppInternal(appId);
 
     for (Service service : services) {
       wingsPersistence.delete(Service.class, service.getUuid());
@@ -1036,8 +1036,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public List<Service> findServicesByApp(String appId) {
-    PageRequest<Service> pageRequest = aPageRequest().addFilter("appId", EQ, appId).build();
+    PageRequest<Service> pageRequest = aPageRequest().addFilter(ServiceKeys.appId, EQ, appId).build();
     return wingsPersistence.query(Service.class, pageRequest).getResponse();
+  }
+
+  public List<Service> findServicesByAppInternal(String appId) {
+    return wingsPersistence.createQuery(Service.class).filter(ServiceKeys.appId, appId).asList();
   }
 
   @Override

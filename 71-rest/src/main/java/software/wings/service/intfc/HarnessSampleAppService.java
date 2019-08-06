@@ -5,5 +5,5 @@ import software.wings.beans.SampleAppStatus;
 
 public interface HarnessSampleAppService {
   SampleAppStatus getSampleAppHealth(String accountId, String deploymentType);
-  Application restoreSampleApp(String accountId, String deploymentType, Application application);
+  Application restoreSampleApp(String accountId, String deploymentType);
 }

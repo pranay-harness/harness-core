@@ -104,10 +104,9 @@ public class SampleDataProviderService {
       createK8sV2SampleApp(account, kubernetesClusterConfig, dockerConnector, HARNESS_SAMPLE_APP);
 
     } catch (Exception ex) {
-      throw new WingsException(ErrorCode.GENERAL_ERROR, WingsException.USER)
-          .addParam("Failed to create Sample Application for the account [" + account.getUuid()
-                  + "]. Reason: " + ExceptionUtils.getMessage(ex),
-              ex);
+      String errorMessage = "Failed to create Sample Application for the account [" + account.getUuid() + "]";
+      throw new WingsException(ErrorCode.GENERAL_ERROR, errorMessage, WingsException.USER, ex)
+          .addParam("message", errorMessage);
     }
   }
 

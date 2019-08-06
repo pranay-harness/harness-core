@@ -50,8 +50,8 @@ public class HarnessSampleAppResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
-  public RestResponse<Application> restoreApp(@QueryParam("accountId") String accountId,
-      @QueryParam("deploymentType") String deploymentType, Application application) {
-    return new RestResponse<>(sampleAppService.restoreSampleApp(accountId, deploymentType, application));
+  public RestResponse<Application> restoreApp(
+      @QueryParam("accountId") String accountId, @QueryParam("deploymentType") String deploymentType) {
+    return new RestResponse<>(sampleAppService.restoreSampleApp(accountId, deploymentType));
   }
 }
