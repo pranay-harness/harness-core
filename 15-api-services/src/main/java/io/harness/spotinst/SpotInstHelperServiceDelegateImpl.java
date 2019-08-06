@@ -115,7 +115,7 @@ public class SpotInstHelperServiceDelegateImpl implements SpotInstHelperServiceD
   }
 
   @Override
-  public void updateElastiGroup(String spotInstToken, String spotInstAccountId, String elastiGroupId, ElastiGroup group)
+  public void updateElastiGroup(String spotInstToken, String spotInstAccountId, String elastiGroupId, Object group)
       throws Exception {
     String auth = getAuthToken(spotInstToken);
     Map<String, Object> groupMap = new HashMap<>();

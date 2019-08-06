@@ -23,30 +23,23 @@ import io.harness.spotinst.model.ElastiGroupCapacity;
 import io.harness.spotinst.model.SpotInstConstants;
 import lombok.Getter;
 import lombok.Setter;
-import software.wings.annotation.EncryptableSetting;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
-import software.wings.beans.AwsConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.ResizeStrategy;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.SpotInstConfig;
 import software.wings.beans.SpotInstInfrastructureMapping;
 import software.wings.beans.TaskType;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
+import software.wings.service.impl.spotinst.SpotInstCommandRequest.SpotInstCommandRequestBuilder;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
@@ -55,18 +48,14 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.AwsStateHelper;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SpotInstDeployState extends State {
   @Inject private transient AppService appService;
-  @Inject private transient ServiceResourceService serviceResourceService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
   @Inject private transient DelegateService delegateService;
-  @Inject private transient SecretManager secretManager;
   @Inject private transient SettingsService settingsService;
-  @Inject private transient ServiceTemplateService serviceTemplateService;
   @Inject private transient ActivityService activityService;
   @Inject private transient SpotInstStateHelper spotInstStateHelper;
   @Inject private transient AwsStateHelper awsStateHelper;
@@ -125,18 +114,6 @@ public class SpotInstDeployState extends State {
     // create activity
     Activity activity = spotInstStateHelper.createActivity(context, null, getStateType(), SPOTINST_DEPLOY_COMMAND);
 
-    // Details for SpotInstConfig
-    SettingAttribute settingAttribute = settingsService.get(spotInstInfrastructureMapping.getSpotinstConnectorId());
-    SpotInstConfig spotInstConfig = (SpotInstConfig) settingAttribute.getValue();
-    List<EncryptedDataDetail> spotinstEncryptedDataDetails = secretManager.getEncryptionDetails(
-        (EncryptableSetting) spotInstConfig, context.getAppId(), context.getWorkflowExecutionId());
-
-    // Details for AwsConfig
-    settingAttribute = settingsService.get(spotInstInfrastructureMapping.getComputeProviderSettingId());
-    AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
-    List<EncryptedDataDetail> awsEncryptedDataDetails = secretManager.getEncryptionDetails(
-        (EncryptableSetting) awsConfig, context.getAppId(), context.getWorkflowExecutionId());
-
     // Calculate upsize and downsize counts
     Integer upsizeUpdateCount = getUpsizeUpdateCount(spotInstSetupContextElement);
     Integer downsizeUpdateCount = getDownsizeUpdateCount(upsizeUpdateCount, spotInstSetupContextElement);
@@ -146,18 +123,12 @@ public class SpotInstDeployState extends State {
         geDeployStateExecutionData(spotInstSetupContextElement, activity, upsizeUpdateCount, downsizeUpdateCount);
 
     // Generate CommandRequest to be sent to delegate
-
+    SpotInstCommandRequestBuilder requestBuilder =
+        spotInstStateHelper.generateSpotInstCommandRequest(spotInstInfrastructureMapping, context);
     SpotInstTaskParameters spotInstTaskParameters = getDeployTaskParameters(context, app, activity.getUuid(),
         upsizeUpdateCount, downsizeUpdateCount, spotInstInfrastructureMapping, spotInstSetupContextElement);
 
-    SpotInstCommandRequest request = SpotInstCommandRequest.builder()
-                                         .awsConfig(awsConfig)
-                                         .spotInstConfig(spotInstConfig)
-                                         .awsEncryptionDetails(awsEncryptedDataDetails)
-                                         .spotinstEncryptionDetails(spotinstEncryptedDataDetails)
-                                         .spotInstTaskParameters(spotInstTaskParameters)
-                                         .build();
-
+    SpotInstCommandRequest request = requestBuilder.spotInstTaskParameters(spotInstTaskParameters).build();
     stateExecutionData.setSpotinstCommandRequest(request);
     DelegateTask task =
         spotInstStateHelper.getDelegateTask(app.getAccountId(), app.getUuid(), TaskType.SPOTINST_COMMAND_TASK,

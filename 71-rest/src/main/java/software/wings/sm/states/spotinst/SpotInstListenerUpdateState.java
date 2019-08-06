@@ -1,0 +1,201 @@
+package software.wings.sm.states.spotinst;
+
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+
+import com.google.inject.Inject;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.beans.DelegateTask;
+import io.harness.beans.ExecutionStatus;
+import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.delegate.task.spotinst.request.SpotInstSwapRoutesTaskParameters;
+import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
+import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
+import io.harness.spotinst.model.SpotInstConstants;
+import lombok.Getter;
+import lombok.Setter;
+import software.wings.api.PhaseElement;
+import software.wings.beans.Activity;
+import software.wings.beans.Application;
+import software.wings.beans.Environment;
+import software.wings.beans.SpotInstInfrastructureMapping;
+import software.wings.beans.TaskType;
+import software.wings.service.impl.spotinst.SpotInstCommandRequest;
+import software.wings.service.impl.spotinst.SpotInstCommandRequest.SpotInstCommandRequestBuilder;
+import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.SettingsService;
+import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionResponse;
+import software.wings.sm.State;
+import software.wings.sm.StateType;
+import software.wings.sm.WorkflowStandardParams;
+
+import java.util.Arrays;
+import java.util.Map;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class SpotInstListenerUpdateState extends State {
+  @Inject private transient AppService appService;
+  @Inject private transient InfrastructureMappingService infrastructureMappingService;
+  @Inject private transient DelegateService delegateService;
+  @Inject private transient SettingsService settingsService;
+  @Inject private transient ActivityService activityService;
+  @Inject private transient SpotInstStateHelper spotInstStateHelper;
+
+  @Getter @Setter private boolean downsizeOldElastiGroup;
+  public static final String SPOTINST_LISTENER_UPDATE_COMMAND = "SpotInst Listener Update";
+
+  /**
+   * Instantiates a new state.
+   *
+   * @param name      the name
+   */
+  public SpotInstListenerUpdateState(String name) {
+    super(name, StateType.SPOTINST_LISTENER_UPDATE.name());
+  }
+
+  public SpotInstListenerUpdateState(String name, String stateType) {
+    super(name, stateType);
+  }
+
+  public boolean isRollback() {
+    return false;
+  }
+
+  @Override
+  public ExecutionResponse execute(ExecutionContext context) {
+    try {
+      return executeInternal(context);
+    } catch (Exception e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
+  }
+
+  protected ExecutionResponse executeInternal(ExecutionContext context) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, SpotInstConstants.PHASE_PARAM);
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+
+    Environment env = workflowStandardParams.getEnv();
+    Application app = appService.get(context.getAppId());
+    SpotInstInfrastructureMapping spotInstInfrastructureMapping =
+        (SpotInstInfrastructureMapping) infrastructureMappingService.get(
+            app.getUuid(), phaseElement.getInfraMappingId());
+
+    // retrieve SpotInstSetupContextElement
+    SpotInstSetupContextElement spotInstSetupContextElement =
+        context.<SpotInstSetupContextElement>getContextElementList(ContextElementType.SPOTINST_SERVICE_SETUP)
+            .stream()
+            .filter(cse -> phaseElement.getInfraMappingId().equals(cse.getInfraMappingId()))
+            .findFirst()
+            .orElse(SpotInstSetupContextElement.builder().build());
+
+    // create activity with details
+    Activity activity =
+        spotInstStateHelper.createActivity(context, null, getStateType(), SPOTINST_LISTENER_UPDATE_COMMAND);
+
+    // Generate SpotInstListenerUpdateStateExecutionData
+    SpotInstListenerUpdateStateExecutionData stateExecutionData =
+        geStateExecutionData(spotInstSetupContextElement, activity);
+
+    SpotInstTaskParameters spotInstTaskParameters =
+        getTaskParameters(context, app, activity.getUuid(), spotInstInfrastructureMapping, spotInstSetupContextElement);
+
+    // Generate CommandRequest to be sent to delegate
+    SpotInstCommandRequestBuilder requestBuilder =
+        spotInstStateHelper.generateSpotInstCommandRequest(spotInstInfrastructureMapping, context);
+    SpotInstCommandRequest spotInstCommandRequest =
+        requestBuilder.spotInstTaskParameters(spotInstTaskParameters).build();
+
+    stateExecutionData.setSpotinstCommandRequest(spotInstCommandRequest);
+    DelegateTask task = spotInstStateHelper.getDelegateTask(app.getAccountId(), app.getUuid(),
+        TaskType.SPOTINST_COMMAND_TASK, activity.getUuid(), env.getUuid(), spotInstInfrastructureMapping.getUuid(),
+        new Object[] {spotInstCommandRequest},
+        spotInstStateHelper.generateTimeOutForDelegateTask(spotInstTaskParameters.getTimeoutIntervalInMin()));
+
+    delegateService.queueTask(task);
+    return anExecutionResponse()
+        .withStateExecutionData(stateExecutionData)
+        .withCorrelationIds(Arrays.asList(activity.getUuid()))
+        .withAsync(true)
+        .build();
+  }
+
+  protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
+    String activityId = response.keySet().iterator().next();
+    SpotInstTaskExecutionResponse executionResponse =
+        (SpotInstTaskExecutionResponse) response.values().iterator().next();
+    ExecutionStatus executionStatus =
+        executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
+                                                                                             : ExecutionStatus.FAILED;
+    activityService.updateStatus(activityId, context.getAppId(), executionStatus);
+
+    SpotInstListenerUpdateStateExecutionData stateExecutionData =
+        (SpotInstListenerUpdateStateExecutionData) context.getStateExecutionData();
+    stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
+    stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
+    stateExecutionData.setStatus(executionStatus);
+
+    return anExecutionResponse()
+        .withExecutionStatus(executionStatus)
+        .withStateExecutionData(stateExecutionData)
+        .withErrorMessage(executionResponse.getErrorMessage())
+        .build();
+  }
+
+  protected SpotInstTaskParameters getTaskParameters(ExecutionContext context, Application app, String activityId,
+      SpotInstInfrastructureMapping spotInstInfrastructureMapping, SpotInstSetupContextElement setupContextElement) {
+    SpotInstCommandRequest commandRequest = setupContextElement.getCommandRequest();
+    return SpotInstSwapRoutesTaskParameters.builder()
+        .accountId(app.getAccountId())
+        .appId(app.getAppId())
+        .activityId(activityId)
+        .awsRegion(spotInstInfrastructureMapping.getAwsRegion())
+        .commandName(SPOTINST_LISTENER_UPDATE_COMMAND)
+        .workflowExecutionId(context.getWorkflowExecutionId())
+        .downsizeOldElastiGroup(downsizeOldElastiGroup)
+        .newElastiGroup(setupContextElement.getNewElastiGroupOriginalConfig())
+        .oldElastiGroup(setupContextElement.getOldElastiGroupOriginalConfig())
+        .elastiGroupNamePrefix(setupContextElement.getElstiGroupNamePrefix())
+        .targetGroupArnForNewElastiGroup(setupContextElement.getStageTargetGroupArn())
+        .targetGroupArnForOldElastiGroup(setupContextElement.getProdTargetGroupArn())
+        .prodListenerArn(setupContextElement.getProdListenerArn())
+        .stageListenerArn(setupContextElement.getStageListenerArn())
+        .timeoutIntervalInMin(commandRequest.getSpotInstTaskParameters().getTimeoutIntervalInMin())
+        .rollback(isRollback())
+        .build();
+  }
+
+  private SpotInstListenerUpdateStateExecutionData geStateExecutionData(
+      SpotInstSetupContextElement setupContextElement, Activity activity) {
+    return SpotInstListenerUpdateStateExecutionData.builder()
+        .activityId(activity.getUuid())
+        .commandName(SPOTINST_LISTENER_UPDATE_COMMAND)
+        .appId(setupContextElement.getAppId())
+        .envId(setupContextElement.getEnvId())
+        .infraId(setupContextElement.getInfraMappingId())
+        .serviceId(setupContextElement.getServiceId())
+        .downsizeOldElastiGroup(downsizeOldElastiGroup)
+        .prodTargetGroupArn(setupContextElement.getProdTargetGroupArn())
+        .stageTargetGroupArn(setupContextElement.getStageTargetGroupArn())
+        .build();
+  }
+
+  @Override
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+    try {
+      return handleAsyncInternal(context, response);
+    } catch (Exception e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
+  }
+
+  @Override
+  public void handleAbortEvent(ExecutionContext context) {}
+}
