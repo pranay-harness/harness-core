@@ -81,7 +81,7 @@ public class HarnessSampleAppServiceImpl implements HarnessSampleAppService {
   }
 
   @Override
-  public Application restoreSampleApp(@NotEmpty String accountId, String deploymentType, Application application) {
+  public Application restoreSampleApp(@NotEmpty String accountId, String deploymentType) {
     if (isEmpty(deploymentType)) {
       throw new WingsException("Please specify deployment type for restoring sample app.", WingsException.USER);
     }

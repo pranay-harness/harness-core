@@ -267,12 +267,18 @@ public interface ServiceResourceService extends OwnedByApplication {
       @NotEmpty String appId, @NotEmpty String serviceId, String commandName, boolean onlyScriptCommands);
 
   /**
-   * Find services by app list.
+   * Find services by app list which the current caller user that has access
    *
    * @param appId the app id
    * @return the list
    */
   List<Service> findServicesByApp(String appId);
+
+  /**
+   * Find services associated with the given application regardless if the current user has access to.
+   * This API should be used internally. Should not be used in code path that will need to enforce RBAC!
+   */
+  List<Service> findServicesByAppInternal(String appId);
 
   Artifact findPreviousArtifact(String appId, String workflowExecutionId, ContextElement instanceElement);
 

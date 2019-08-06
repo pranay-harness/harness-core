@@ -258,7 +258,7 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
     // Restore app
     Application dummy = createHarnessSampleApp();
     Application restoredApp =
-        harnessSampleAppService.restoreSampleApp(sampleApp.getAccountId(), DeploymentType.KUBERNETES.name(), dummy);
+        harnessSampleAppService.restoreSampleApp(sampleApp.getAccountId(), DeploymentType.KUBERNETES.name());
     assertThat(restoredApp).isNotNull();
 
     // Get app health again
