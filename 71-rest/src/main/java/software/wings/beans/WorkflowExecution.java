@@ -125,9 +125,11 @@ public class WorkflowExecution implements PersistentEntity, UuidAware, CreatedAt
   private LinkedHashMap<ExecutionStatus, StatusInstanceBreakdown> statusInstanceBreakdownMap;
 
   private Long startTs;
+  private Long rollbackStartTs;
   private Long endTs;
   // Pre-calculated difference from endTs and startTs for indexing purposes
   private Long duration;
+  private Long rollbackDuration;
 
   private EmbeddedUser triggeredBy;
 
