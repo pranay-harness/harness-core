@@ -122,6 +122,7 @@ import software.wings.service.impl.yaml.gitdiff.gitaudit.AuditYamlHelperForFaile
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
+import software.wings.verification.CVActivityLog;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVTask;
 import software.wings.verification.apm.APMCVServiceConfiguration;
@@ -209,7 +210,7 @@ public class ManagerMorphiaClasses {
       InfrastructureDefinition.class, GcpMarketplaceEvent.class, SupervisedTSThreshold.class, TimeSeriesRawData.class,
       AzureVaultConfig.class, ECSPollingJobEntity.class, ApplicationAccess.class, CloudFormationRollbackConfig.class,
       SplunkCVConfiguration.class, SegmentGroupEventJobContext.class, SpotInstInfrastructureMapping.class,
-      TimeSeriesDataRecord.class);
+      TimeSeriesDataRecord.class, CVActivityLog.class);
 
   public static final Set<Class> dependentClasses =
       ImmutableSet.<Class>of(EncryptionConfig.class, EncryptedRecord.class, ExecutionCapabilityDemander.class);

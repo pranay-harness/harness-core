@@ -71,6 +71,7 @@ import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
+import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.verification.CVTaskService;
 import software.wings.sm.StateType;
@@ -108,6 +109,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UsageMetricsHelper usageMetricsHelper;
   @Inject private CVTaskService cvTaskService;
+  @Inject private CVActivityLogService cvActivityLogService;
 
   @Override
   @Counted
@@ -129,6 +131,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           long endTime = TimeUnit.MINUTES.toMillis(endMinute);
           if (endTime - startTime >= TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES / 3)) {
             enqueueTask(accountId, cvConfiguration.getUuid(), startTime, endTime);
+            activityLogCVDataCollection(cvConfiguration.getUuid(), endMinute, startTime, endTime);
             logger.info("triggering data collection for state {} config {} startTime {} endTime {} collectionMinute {}",
                 cvConfiguration.getStateType(), cvConfiguration.getUuid(), startTime, endTime, endMinute);
             verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVDataCollection(
@@ -138,6 +141,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         });
     metricRegistry.recordGaugeValue(DATA_COLLECTION_TASKS_PER_MINUTE, null, totalDataCollectionTasks.get());
     return true;
+  }
+
+  private void activityLogCVDataCollection(String cvConfigId, long endMinute, long startTime, long endTime) {
+    cvActivityLogService.getLoggerByCVConfigId(cvConfigId, TimeUnit.MINUTES.toMillis(endMinute))
+        .info("Submitting Data collection task to manager for time range %t to %t", startTime, endTime);
   }
 
   private void enqueueTask(String accountId, String cvConfigId, long startTime, long endTime) {
@@ -488,6 +496,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               logger.info(
                   "triggering data collection for state {} config {} startTime {} endTime {} collectionMinute {}",
                   cvConfiguration.getStateType(), cvConfiguration.getUuid(), startTime, endTime, endMinute);
+              activityLogCVDataCollection(cvConfiguration.getUuid(), endMinute, startTime, endTime);
               verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVDataCollection(
                   cvConfiguration.getUuid(), cvConfiguration.getStateType(), startTime, endTime));
               totalDataCollectionTasks.getAndIncrement();

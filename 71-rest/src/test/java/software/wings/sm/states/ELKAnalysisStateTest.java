@@ -5,16 +5,18 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.contains;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.ElkAnalysisState.DEFAULT_TIME_FIELD;
 
 import com.google.common.collect.Sets;
-import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.Status;
@@ -44,8 +46,8 @@ import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.elk.ElkAnalysisService;
+import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 import software.wings.verification.VerificationDataAnalysisResponse;
@@ -64,8 +66,6 @@ import java.util.UUID;
  * Created by rsingh on 10/9/17.
  */
 public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
-  @Inject private AnalysisService analysisService;
-
   @Mock private ElkAnalysisService elkAnalysisService;
   private ElkAnalysisState elkAnalysisState;
 
@@ -86,22 +86,10 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
     elkAnalysisState = new ElkAnalysisState("ElkAnalysisState");
     elkAnalysisState.setQuery("exception");
     elkAnalysisState.setTimeDuration("15");
-    FieldUtils.writeField(elkAnalysisState, "appService", appService, true);
-    FieldUtils.writeField(elkAnalysisState, "configuration", configuration, true);
-    FieldUtils.writeField(elkAnalysisState, "analysisService", analysisService, true);
-    FieldUtils.writeField(elkAnalysisState, "settingsService", settingsService, true);
-    FieldUtils.writeField(elkAnalysisState, "waitNotifyEngine", waitNotifyEngine, true);
-    FieldUtils.writeField(elkAnalysisState, "delegateService", delegateService, true);
-    FieldUtils.writeField(elkAnalysisState, "wingsPersistence", wingsPersistence, true);
-    FieldUtils.writeField(elkAnalysisState, "secretManager", secretManager, true);
-    FieldUtils.writeField(elkAnalysisState, "workflowExecutionService", workflowExecutionService, true);
-    FieldUtils.writeField(elkAnalysisState, "continuousVerificationService", continuousVerificationService, true);
-    FieldUtils.writeField(elkAnalysisState, "workflowExecutionBaselineService", workflowExecutionBaselineService, true);
-    FieldUtils.writeField(elkAnalysisState, "featureFlagService", featureFlagService, true);
-    FieldUtils.writeField(elkAnalysisState, "versionInfoManager", versionInfoManager, true);
+    setupCommonFields(elkAnalysisState);
     FieldUtils.writeField(elkAnalysisState, "elkAnalysisService", elkAnalysisService, true);
-    FieldUtils.writeField(elkAnalysisState, "appService", appService, true);
     FieldUtils.writeField(elkAnalysisState, "accountService", accountService, true);
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(mock(Logger.class));
   }
 
   @Test
@@ -236,7 +224,8 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
     when(elkAnalysisService.validateQuery(anyString(), anyString(), anyString(), anyString(), anyString(), anyString(),
              anyString(), anyString(), anyString()))
         .thenReturn(true);
-
+    Logger activityLogger = mock(Logger.class);
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(activityLogger);
     ExecutionResponse response = spyState.execute(executionContext);
     assertEquals(ExecutionStatus.RUNNING, response.getExecutionStatus());
     assertEquals("Log Verification running.", response.getErrorMessage());
@@ -245,7 +234,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
     assertEquals(1, tasks.size());
     DelegateTask task = tasks.get(0);
     assertEquals(TaskType.ELK_COLLECT_LOG_DATA.name(), task.getData().getTaskType());
-
+    verify(activityLogger).info(contains("Triggered data collection"), anyLong(), anyLong());
     final ElkDataCollectionInfo expectedCollectionInfo =
         ElkDataCollectionInfo.builder()
             .elkConfig(elkConfig)

@@ -5,15 +5,17 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.contains;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.Sets;
-import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.Status;
@@ -39,7 +41,7 @@ import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.analysis.AnalysisService;
+import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 import software.wings.verification.VerificationDataAnalysisResponse;
@@ -60,7 +62,6 @@ import java.util.UUID;
  * Created by rsingh on 10/9/17.
  */
 public class SplunkV2StateTest extends APMStateVerificationTestBase {
-  @Inject private AnalysisService analysisService;
   private SplunkV2State splunkState;
 
   @Before
@@ -80,19 +81,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     splunkState = new SplunkV2State("SplunkState");
     splunkState.setQuery("exception");
     splunkState.setTimeDuration("15");
-    FieldUtils.writeField(splunkState, "appService", this.appService, true);
-    FieldUtils.writeField(splunkState, "configuration", configuration, true);
-    FieldUtils.writeField(splunkState, "analysisService", analysisService, true);
-    FieldUtils.writeField(splunkState, "settingsService", settingsService, true);
-    FieldUtils.writeField(splunkState, "waitNotifyEngine", waitNotifyEngine, true);
-    FieldUtils.writeField(splunkState, "delegateService", delegateService, true);
-    FieldUtils.writeField(splunkState, "wingsPersistence", wingsPersistence, true);
-    FieldUtils.writeField(splunkState, "secretManager", secretManager, true);
-    FieldUtils.writeField(splunkState, "workflowExecutionService", workflowExecutionService, true);
-    FieldUtils.writeField(splunkState, "continuousVerificationService", continuousVerificationService, true);
-    FieldUtils.writeField(splunkState, "workflowExecutionBaselineService", workflowExecutionBaselineService, true);
-    FieldUtils.writeField(splunkState, "featureFlagService", featureFlagService, true);
-    FieldUtils.writeField(splunkState, "versionInfoManager", versionInfoManager, true);
+    setupCommonFields(splunkState);
     FieldUtils.writeField(splunkState, "appService", appService, true);
     FieldUtils.writeField(splunkState, "accountService", accountService, true);
   }
@@ -200,6 +189,8 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
                                             .build();
     wingsPersistence.save(settingAttribute);
     splunkState.setAnalysisServerConfigId(settingAttribute.getUuid());
+    Logger activityLogger = mock(Logger.class);
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(activityLogger);
     SplunkV2State spyState = spy(splunkState);
     doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
         .when(spyState)
@@ -223,7 +214,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     assertEquals(1, tasks.size());
     DelegateTask task = tasks.get(0);
     assertEquals(TaskType.SPLUNK_COLLECT_LOG_DATA.name(), task.getData().getTaskType());
-
+    verify(activityLogger).info(contains("Triggered data collection"), anyLong(), anyLong());
     final SplunkDataCollectionInfo expectedCollectionInfo =
         SplunkDataCollectionInfo.builder()
             .splunkConfig(splunkConfig)
@@ -274,7 +265,6 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     Map<String, ResponseData> responseMap = new HashMap<>();
     responseMap.put("somekey", logAnalysisResponse);
     splunkState.handleAsyncResponse(executionContext, responseMap);
-
     cvExecutionMetaData =
         continuousVerificationService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L, user);
     continuousVerificationExecutionMetaData1 = cvExecutionMetaData.get(1519171200000L)

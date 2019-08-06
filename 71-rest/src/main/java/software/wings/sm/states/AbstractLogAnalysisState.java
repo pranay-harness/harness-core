@@ -42,7 +42,7 @@ import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.service.intfc.analysis.AnalysisService;
-import software.wings.service.intfc.analysis.LogAnalysisResource;
+import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
@@ -72,27 +72,11 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
   @Transient @Inject @SchemaIgnore protected AnalysisService analysisService;
   @Transient @Inject @SchemaIgnore protected VersionInfoManager versionInfoManager;
+
   @SchemaIgnore @Transient private String renderedQuery;
 
   public AbstractLogAnalysisState(String name, String stateType) {
     super(name, stateType);
-  }
-
-  @SchemaIgnore
-  public static String getStateBaseUrl(StateType stateType) {
-    switch (stateType) {
-      case ELK:
-        return LogAnalysisResource.ELK_RESOURCE_BASE_URL;
-      case LOGZ:
-        return LogAnalysisResource.LOGZ_RESOURCE_BASE_URL;
-      case SPLUNKV2:
-        return LogAnalysisResource.SPLUNK_RESOURCE_BASE_URL;
-      case SUMO:
-        return LogAnalysisResource.SUMO_RESOURCE_BASE_URL;
-
-      default:
-        throw new IllegalArgumentException("invalid stateType: " + stateType);
-    }
   }
 
   @Attributes(required = true, title = "Search Keywords")
@@ -116,6 +100,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   @Override
   public ExecutionResponse execute(ExecutionContext executionContext) {
     String corelationId = UUID.randomUUID().toString();
+    Logger activityLogger =
+        cvActivityLogService.getLoggerByStateExecutionId(executionContext.getStateExecutionInstanceId());
     String delegateTaskId = null;
     try {
       renderedQuery = executionContext.renderExpression(query);
@@ -223,13 +209,11 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
       // In case of predictive the data collection will be handled as per 24x7 logic
       // Or in case when feature flag CV_DATA_COLLECTION_JOB is enabled. Delegate task creation will be every minute
-      if (getComparisonStrategy() == PREDICTIVE
-          || (featureFlagService.isEnabled(FeatureName.CV_DATA_COLLECTION_JOB, executionContext.getAccountId())
-                 && (PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))))
-          || GA_PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))) {
+      if (isEligibleForPerMinuteTask(executionContext.getAccountId())) {
         getLogger().info("Per Minute data collection will be done for triggering delegate task");
       } else {
         delegateTaskId = triggerAnalysisDataCollection(executionContext, executionData, hostsToBeCollected);
+        logDataCollectionTriggeredMessage(activityLogger);
         getLogger().info("triggered data collection for {} state, id: {}, delgateTaskId: {}", getStateType(),
             executionContext.getStateExecutionInstanceId(), delegateTaskId);
       }
@@ -237,7 +221,6 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       analysisContext.setQuery(getRenderedQuery());
 
       scheduleAnalysisCronJob(analysisContext, delegateTaskId);
-
       return anExecutionResponse()
           .withAsync(true)
           .withCorrelationIds(Collections.singletonList(analysisContext.getCorrelationId()))
@@ -249,6 +232,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     } catch (Exception ex) {
       getLogger().error("log analysis state failed ", ex);
       // set the CV Metadata status to ERROR as well.
+      activityLogger.error("Data collection failed: " + ex.getMessage());
       continuousVerificationService.setMetaDataExecutionStatus(
           executionContext.getStateExecutionInstanceId(), ExecutionStatus.ERROR, true);
       return anExecutionResponse()

@@ -13,7 +13,6 @@ import io.harness.beans.DelegateTask;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
-import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import software.wings.api.PhaseElement;
@@ -167,7 +166,7 @@ public class StackDriverState extends AbstractMetricAnalysisState {
     final GcpConfig gcpConfig = (GcpConfig) settingAttribute.getValue();
 
     // StartTime will be current time in milliseconds
-    final long dataCollectionStartTimeStamp = Timestamp.minuteBoundary(System.currentTimeMillis());
+    final long dataCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
     Map<String, List<StackDriverMetric>> stackDriverMetrics = stackDriverService.getMetrics();
 
     metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.STACK_DRIVER,
@@ -213,8 +212,12 @@ public class StackDriverState extends AbstractMetricAnalysisState {
                                     .envId(envId)
                                     .infrastructureMappingId(infrastructureMappingId)
                                     .build();
-    waitNotifyEngine.waitForAll(
-        DataCollectionCallback.builder().appId(context.getAppId()).executionData(executionData).build(), waitId);
+    waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
+                                    .appId(context.getAppId())
+                                    .stateExecutionId(context.getStateExecutionInstanceId())
+                                    .executionData(executionData)
+                                    .build(),
+        waitId);
     return delegateService.queueTask(delegateTask);
   }
 

@@ -303,6 +303,7 @@ import software.wings.service.impl.trigger.TriggerExecutionServiceImpl;
 import software.wings.service.impl.trigger.TriggerProcessor;
 import software.wings.service.impl.trigger.TriggerServiceImpl;
 import software.wings.service.impl.verification.CV24x7DashboardServiceImpl;
+import software.wings.service.impl.verification.CVActivityLogServiceImpl;
 import software.wings.service.impl.verification.CVConfigurationServiceImpl;
 import software.wings.service.impl.verification.CVTaskServiceImpl;
 import software.wings.service.impl.verification.CvValidationService;
@@ -470,6 +471,7 @@ import software.wings.service.intfc.sumo.SumoLogicAnalysisService;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.service.intfc.trigger.TriggerExecutionService;
 import software.wings.service.intfc.verification.CV24x7DashboardService;
+import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.verification.CVTaskService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
@@ -760,6 +762,7 @@ public class WingsModule extends DependencyModule {
     bind(LogVerificationService.class).to(LogVerificationServiceImpl.class);
     bind(CVConfigurationService.class).to(CVConfigurationServiceImpl.class);
     bind(CVTaskService.class).to(CVTaskServiceImpl.class);
+    bind(CVActivityLogService.class).to(CVActivityLogServiceImpl.class);
     bind(CvValidationService.class).to(CvValidationServiceImpl.class);
 
     bind(LimitCheckerFactory.class).to(LimitCheckerFactoryImpl.class);

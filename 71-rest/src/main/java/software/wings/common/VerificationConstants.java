@@ -43,6 +43,7 @@ public class VerificationConstants {
   public static final String HEATMAP = "/heatmap";
   public static final String VERIFICATION_SERVICE_BASE_URL = "/verification";
   public static final String HEATMAP_SUMMARY = "/heatmap-summary";
+  public static final String CV_ACTIVITY_LOGS_PATH = "/cv-activity-logs";
   public static final String TIMESERIES = "/timeseries";
   public static final String LOG_24x7_SUMMARY = "/log-24x7-summary";
   public static final String GET_LOG_FEEDBACKS = "/log-ml-feedbacks";

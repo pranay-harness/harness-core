@@ -49,6 +49,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
+import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 
@@ -117,6 +118,8 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     FieldUtils.writeField(appDynamicsState, "serviceResourceService", serviceResourceService, true);
     FieldUtils.writeField(appDynamicsState, "appService", appService, true);
     FieldUtils.writeField(appDynamicsState, "accountService", accountService, true);
+    FieldUtils.writeField(appDynamicsState, "cvActivityLogService", cvActivityLogService, true);
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(mock(Logger.class));
 
     when(executionContext.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM)).thenReturn(phaseElement);
     when(phaseElement.getInfraMappingId()).thenReturn(infraMappingId);
@@ -125,7 +128,6 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
         .thenReturn(anAwsInfrastructureMapping().withDeploymentType(DeploymentType.AWS_CODEDEPLOY.name()).build());
     when(serviceResourceService.getDeploymentType(anyObject(), anyObject(), anyObject()))
         .thenReturn(DeploymentType.AWS_CODEDEPLOY);
-
     setupCommonMocks();
   }
 
