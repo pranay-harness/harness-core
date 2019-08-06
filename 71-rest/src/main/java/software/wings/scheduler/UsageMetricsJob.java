@@ -54,11 +54,10 @@ public class UsageMetricsJob implements Job {
                         .withDescription("Administrative job ")
                         .build();
 
-    Trigger trigger =
-        TriggerBuilder.newTrigger()
-            .withIdentity(CRON_NAME, CRON_GROUP)
-            .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(30).repeatForever())
-            .build();
+    Trigger trigger = TriggerBuilder.newTrigger()
+                          .withIdentity(CRON_NAME, CRON_GROUP)
+                          .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInHours(24).repeatForever())
+                          .build();
 
     jobScheduler.ensureJob__UnderConstruction(job, trigger);
   }

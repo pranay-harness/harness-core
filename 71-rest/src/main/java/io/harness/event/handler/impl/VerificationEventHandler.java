@@ -2,6 +2,10 @@ package io.harness.event.handler.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.event.model.EventConstants.ACCOUNT_ID;
+import static io.harness.event.model.EventConstants.IS_24X7_ENABLED;
+import static io.harness.event.model.EventConstants.VERIFICATION_STATE_TYPE;
+import static io.harness.event.model.EventType.CV_META_DATA;
 import static io.harness.event.model.EventType.DEPLOYMENT_VERIFIED;
 import static software.wings.common.VerificationConstants.VERIFICATION_DEPLOYMENTS;
 
@@ -10,7 +14,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.hazelcast.util.Preconditions;
-import groovy.util.logging.Slf4j;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter;
@@ -18,14 +21,16 @@ import io.harness.event.handler.EventHandler;
 import io.harness.event.listener.EventListener;
 import io.harness.event.model.Event;
 import io.harness.metrics.HarnessMetricRegistry;
+import lombok.extern.slf4j.Slf4j;
+import software.wings.common.VerificationConstants;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 
 import java.util.List;
 import java.util.Map;
 
-@Singleton
 @Slf4j
+@Singleton
 public class VerificationEventHandler implements EventHandler {
   @Inject private HarnessMetricRegistry harnessMetricRegistry;
   @Inject private ContinuousVerificationService continuousVerificationService;
@@ -36,13 +41,24 @@ public class VerificationEventHandler implements EventHandler {
   }
 
   private void registerEventHandlers(EventListener eventListener) {
-    eventListener.registerEventHandler(this, Sets.newHashSet(DEPLOYMENT_VERIFIED));
+    eventListener.registerEventHandler(this, Sets.newHashSet(DEPLOYMENT_VERIFIED, CV_META_DATA));
   }
 
   @Override
   public void handleEvent(Event event) {
-    Preconditions.checkTrue(event.getEventType() == DEPLOYMENT_VERIFIED, "Unknown event type " + event.getEventType());
+    switch (event.getEventType()) {
+      case DEPLOYMENT_VERIFIED:
+        handleDeploymentEvent(event);
+        break;
+      case CV_META_DATA:
+        handleCVMetaDataEvent(event);
+        break;
+      default:
+        logger.error("Invalid event type, dropping event : [{}]", event);
+    }
+  }
 
+  private void handleDeploymentEvent(Event event) {
     Map<String, String> properties = event.getEventData().getProperties();
 
     Preconditions.checkNotNull(properties.get("accountId"));
@@ -69,5 +85,18 @@ public class VerificationEventHandler implements EventHandler {
             String.valueOf(rolledback && cvExecutionMetaData.getExecutionStatus() == ExecutionStatus.FAILED));
       }
     }
+  }
+
+  private void handleCVMetaDataEvent(Event event) {
+    Map<String, String> properties = event.getEventData().getProperties();
+
+    Preconditions.checkNotNull(properties.get(ACCOUNT_ID));
+    Preconditions.checkNotNull(properties.get(VERIFICATION_STATE_TYPE));
+    Preconditions.checkNotNull(properties.get(IS_24X7_ENABLED));
+
+    harnessMetricRegistry.recordGaugeValue(VerificationConstants.CV_META_DATA,
+        new String[] {properties.get(ACCOUNT_ID), properties.get(VERIFICATION_STATE_TYPE),
+            String.valueOf(properties.get(IS_24X7_ENABLED))},
+        event.getEventData().getValue());
   }
 }
