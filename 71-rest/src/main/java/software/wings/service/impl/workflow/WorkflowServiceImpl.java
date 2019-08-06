@@ -84,6 +84,7 @@ import static software.wings.sm.StateType.KUBERNETES_SWAP_SERVICE_SELECTORS;
 import static software.wings.sm.StateType.PCF_RESIZE;
 import static software.wings.sm.StateType.PCF_SETUP;
 import static software.wings.sm.StateType.SHELL_SCRIPT;
+import static software.wings.sm.StateType.TERRAFORM_APPLY;
 import static software.wings.sm.StateType.TERRAFORM_ROLLBACK;
 import static software.wings.sm.StateType.values;
 import static software.wings.sm.states.provision.TerraformProvisionState.INHERIT_APPROVED_PLAN;
@@ -476,6 +477,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (!buildWorkflow) {
       maps = filterArtifactCollectionState(maps);
     }
+    removeStencil(maps, appId, FeatureName.TF_ALL, StateTypeScope.ORCHESTRATION_STENCILS, TERRAFORM_APPLY);
     return maps;
   }
 

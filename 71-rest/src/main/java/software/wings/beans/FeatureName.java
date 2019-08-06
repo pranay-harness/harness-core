@@ -49,7 +49,8 @@ public enum FeatureName {
   GRAPHQL_DEV,
   SUPERVISED_TS_THRESHOLD,
   REJECT_TRIGGER_IF_ARTIFACTS_NOT_MATCH,
-  TAGS_YAML;
+  TAGS_YAML,
+  TF_ALL; // TODO: Yogesh, Remove this once UI is done
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;
