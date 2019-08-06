@@ -16,7 +16,7 @@ public interface SpotInstHelperServiceDelegate {
   ElastiGroup createElastiGroup(String spotInstToken, String spotInstAccountId, String jsonPayload) throws Exception;
   void updateElastiGroup(String spotInstToken, String spotInstAccountId, String elastiGroupId, String jsonPayload)
       throws Exception;
-  void updateElastiGroup(String spotInstToken, String spotInstAccountId, String elastiGroupId, ElastiGroup group)
+  void updateElastiGroup(String spotInstToken, String spotInstAccountId, String elastiGroupId, Object group)
       throws Exception;
   void updateElastiGroupCapacity(
       String spotInstToken, String spotInstAccountId, String elastiGroupId, ElastiGroup group) throws Exception;

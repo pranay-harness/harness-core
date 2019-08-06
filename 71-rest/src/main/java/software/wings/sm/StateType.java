@@ -182,6 +182,7 @@ import software.wings.sm.states.provision.DestroyTerraformProvisionState;
 import software.wings.sm.states.provision.ShellScriptProvisionState;
 import software.wings.sm.states.provision.TerraformRollbackState;
 import software.wings.sm.states.spotinst.SpotInstDeployState;
+import software.wings.sm.states.spotinst.SpotInstListenerUpdateState;
 import software.wings.sm.states.spotinst.SpotInstServiceSetup;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
@@ -455,6 +456,10 @@ public enum StateType implements StateTypeDescriptor {
 
   SPOTINST_DEPLOY(SpotInstDeployState.class, SPOTINST, WorkflowServiceHelper.SPOTINST_DEPLOY,
       asList(InfrastructureMappingType.SPOTINST), asList(PhaseStepType.SPOTINST_DEPLOY), ORCHESTRATION_STENCILS),
+
+  SPOTINST_LISTENER_UPDATE(SpotInstListenerUpdateState.class, SPOTINST, WorkflowServiceHelper.SPOTINST_LISTENER_UPDATE,
+      asList(InfrastructureMappingType.SPOTINST), asList(PhaseStepType.SPOTINST_LISTENER_UPDATE),
+      ORCHESTRATION_STENCILS),
 
   ECS_SERVICE_SETUP_ROLLBACK(EcsSetupRollback.class, ECS, StateType.ROLLBACK_ECS_SETUP, Lists.newArrayList(AWS_ECS),
       asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),

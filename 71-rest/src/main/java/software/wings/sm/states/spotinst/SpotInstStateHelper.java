@@ -57,6 +57,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
+import software.wings.service.impl.spotinst.SpotInstCommandRequest.SpotInstCommandRequestBuilder;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -334,5 +335,26 @@ public class SpotInstStateHelper {
 
   public int generateTimeOutForDelegateTask(Integer timeoutIntervalInMin) {
     return 5 + fetchTimeoutIntervalInMin(timeoutIntervalInMin);
+  }
+
+  public SpotInstCommandRequestBuilder generateSpotInstCommandRequest(
+      SpotInstInfrastructureMapping spotInstInfrastructureMapping, ExecutionContext context) {
+    // Details for SpotInstConfig
+    SettingAttribute settingAttribute = settingsService.get(spotInstInfrastructureMapping.getSpotinstConnectorId());
+    SpotInstConfig spotInstConfig = (SpotInstConfig) settingAttribute.getValue();
+    List<EncryptedDataDetail> spotinstEncryptedDataDetails = secretManager.getEncryptionDetails(
+        (EncryptableSetting) spotInstConfig, context.getAppId(), context.getWorkflowExecutionId());
+
+    // Details for AwsConfig
+    settingAttribute = settingsService.get(spotInstInfrastructureMapping.getComputeProviderSettingId());
+    AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
+    List<EncryptedDataDetail> awsEncryptedDataDetails = secretManager.getEncryptionDetails(
+        (EncryptableSetting) awsConfig, context.getAppId(), context.getWorkflowExecutionId());
+
+    return SpotInstCommandRequest.builder()
+        .awsConfig(awsConfig)
+        .awsEncryptionDetails(awsEncryptedDataDetails)
+        .spotInstConfig(spotInstConfig)
+        .spotinstEncryptionDetails(spotinstEncryptedDataDetails);
   }
 }

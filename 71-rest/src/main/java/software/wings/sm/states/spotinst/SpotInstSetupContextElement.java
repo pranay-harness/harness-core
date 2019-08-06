@@ -41,6 +41,7 @@ public class SpotInstSetupContextElement implements ContextElement {
   private String stageListenerArn;
   private String prodTargetGroupArn;
   private String stageTargetGroupArn;
+  private String elstiGroupNamePrefix;
 
   @Override
   public ContextElementType getElementType() {

@@ -18,6 +18,7 @@ import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
+import io.harness.spotinst.model.ElastiGroupRenameRequest;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
@@ -67,13 +68,13 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
       logCallback.saveExecutionLog(format(
           "Sending request to rename Elasti Group with Id: [%s] to [%s]", newElastiGroupId, prodElastiGroupName));
       spotInstHelperServiceDelegate.updateElastiGroup(spotInstToken, spotInstAccountId, newElastiGroupId,
-          ElastiGroup.builder().id(newElastiGroupId).name(prodElastiGroupName).build());
+          ElastiGroupRenameRequest.builder().name(prodElastiGroupName).build());
     }
     if (isNotEmpty(oldElastiGroupId)) {
       logCallback.saveExecutionLog(
           format("Sending request to rename Elasti Group with Id: [%s] to [%s]", oldElastiGroup, stageElastiGroupName));
       spotInstHelperServiceDelegate.updateElastiGroup(spotInstToken, spotInstAccountId, oldElastiGroupId,
-          ElastiGroup.builder().id(oldElastiGroupId).name(stageElastiGroupName).build());
+          ElastiGroupRenameRequest.builder().name(stageElastiGroupName).build());
     }
     awsElbHelperServiceDelegate.updateListenersForEcsBG(awsConfig, emptyList(),
         swapRoutesParameters.getProdListenerArn(), swapRoutesParameters.getStageListenerArn(),
