@@ -63,7 +63,9 @@ db.getCollection('userGroups').insert({
             "USER_PERMISSION_MANAGEMENT",
             "USER_PERMISSION_READ",
             "APPLICATION_CREATE_DELETE",
-            "TEMPLATE_MANAGEMENT"
+            "TEMPLATE_MANAGEMENT",
+            "AUDIT_VIEWER",
+            "TAG_MANAGEMENT"
         ]
     },
     "memberIds" : [
@@ -168,6 +170,12 @@ db.getCollection('userGroups').insert({
             ]
         }
     ],
+    "accountPermissions" : {
+        "permissions" : [
+            "AUDIT_VIEWER",
+            "TAG_MANAGEMENT"
+        ]
+    },
     "memberIds" : [
         "c0RigPdWTlOCUeeAsdolJQ"
     ],
@@ -270,6 +278,12 @@ db.getCollection('userGroups').insert({
             ]
         }
     ],
+    "accountPermissions" : {
+        "permissions" : [
+            "AUDIT_VIEWER",
+            "TAG_MANAGEMENT"
+        ]
+    },
     "memberIds" : [
         "c0RigPdWTlOCUeeAsdolJQ"
     ],
