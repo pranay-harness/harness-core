@@ -331,4 +331,8 @@ public class SpotInstStateHelper {
 
     return serviceSetup.getCurrentRunningCount();
   }
+
+  public int generateTimeOutForDelegateTask(Integer timeoutIntervalInMin) {
+    return 5 + fetchTimeoutIntervalInMin(timeoutIntervalInMin);
+  }
 }

@@ -155,7 +155,7 @@ public class SpotInstHelperServiceDelegateImpl implements SpotInstHelperServiceD
   @Override
   public void deleteElastiGroup(String spotInstToken, String spotInstAccountId, String elastiGroupId) throws Exception {
     String auth = getAuthToken(spotInstToken);
-    executeRestCall(getSpotInstRestClient().deleteElastiGroup(auth, spotInstAccountId, elastiGroupId));
+    executeRestCall(getSpotInstRestClient().deleteElastiGroup(auth, elastiGroupId, spotInstAccountId));
   }
 
   @Override
