@@ -86,7 +86,7 @@ public class InstallUtils {
 
       logger.info("download Url is {}", downloadUrl);
 
-      String script = "curl $MANAGER_PROXY_CURL -LO " + downloadUrl + "\n"
+      String script = "curl $MANAGER_PROXY_CURL -kLO " + downloadUrl + "\n"
           + "chmod +x ./kubectl\n"
           + "./kubectl version --short --client\n";
 
@@ -175,7 +175,7 @@ public class InstallUtils {
 
       logger.info("download Url is {}", downloadUrl);
 
-      String script = "curl $MANAGER_PROXY_CURL -LO " + downloadUrl + "\n"
+      String script = "curl $MANAGER_PROXY_CURL -kLO " + downloadUrl + "\n"
           + "chmod +x ./go-template\n"
           + "./go-template -v\n";
 
@@ -348,7 +348,7 @@ public class InstallUtils {
       String downloadUrl = getHelmDownloadUrl(getManagerBaseUrl(configuration.getManagerUrl()), helmVersion);
       logger.info("Download Url is " + downloadUrl);
 
-      String script = "curl $MANAGER_PROXY_CURL -LO " + downloadUrl + " \n"
+      String script = "curl $MANAGER_PROXY_CURL -kLO " + downloadUrl + " \n"
           + "chmod +x ./helm \n"
           + "./helm version -c \n"
           + "./helm init -c --skip-refresh \n";
@@ -436,7 +436,7 @@ public class InstallUtils {
           getChartMuseumDownloadUrl(getManagerBaseUrl(configuration.getManagerUrl()), chartMuseumVersion);
       logger.info("Download Url is " + downloadUrl);
 
-      String script = "curl $MANAGER_PROXY_CURL -LO " + downloadUrl + "\n"
+      String script = "curl $MANAGER_PROXY_CURL -kLO " + downloadUrl + "\n"
           + "chmod +x ./chartmuseum \n"
           + "./chartmuseum -v \n";
 
