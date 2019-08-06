@@ -2,12 +2,7 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.beans.EmbeddedUser;
-import io.harness.persistence.CreatedAtAware;
-import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
-import io.harness.persistence.UpdatedAtAware;
-import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
 import lombok.Builder;
@@ -34,15 +29,9 @@ import javax.validation.constraints.NotNull;
     fields = { @Field("resourceConstraintId")
                , @Field("resourceUnit"), @Field("order") }))
 @FieldNameConstants(innerTypeName = "ResourceConstraintInstanceKeys")
-public class ResourceConstraintInstance
-    implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
+public class ResourceConstraintInstance implements PersistentEntity, UuidAware {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @Indexed @NotNull @SchemaIgnore protected String appId;
-  @SchemaIgnore private EmbeddedUser createdBy;
-  @SchemaIgnore @Indexed private long createdAt;
-
-  @SchemaIgnore private EmbeddedUser lastUpdatedBy;
-  @SchemaIgnore @NotNull private long lastUpdatedAt;
 
   private String accountId;
 

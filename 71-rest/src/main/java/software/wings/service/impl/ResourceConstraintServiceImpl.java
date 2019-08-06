@@ -55,8 +55,10 @@ import software.wings.beans.ResourceConstraintUsage.ActiveScope.ActiveScopeBuild
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ResourceConstraintService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ResourceConstraintStatusData;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.states.ResourceConstraintState.HoldingScope;
 
 import java.util.ArrayList;
@@ -72,6 +74,7 @@ import javax.validation.executable.ValidateOnExecution;
 @Slf4j
 public class ResourceConstraintServiceImpl implements ResourceConstraintService, ConstraintRegistry {
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private StateExecutionService stateExecutionService;
 
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private WingsPersistence wingsPersistence;
@@ -158,24 +161,33 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
     try (HIterator<ResourceConstraintInstance> iterator = new HIterator<ResourceConstraintInstance>(query.fetch())) {
       for (ResourceConstraintInstance instance : iterator) {
         final HoldingScope holdingScope = HoldingScope.valueOf(instance.getReleaseEntityType());
+        boolean finished = false;
         switch (holdingScope) {
           case WORKFLOW:
             final WorkflowExecution workflowExecution =
                 workflowExecutionService.getWorkflowExecution(instance.getAppId(), instance.getReleaseEntityId());
-            if (workflowExecution == null || ExecutionStatus.isFinalStatus(workflowExecution.getStatus())) {
-              Map<String, Object> constraintContext =
-                  ImmutableMap.of(ResourceConstraintInstanceKeys.appId, instance.getAppId());
-
-              if (getRegistry().consumerFinished(new ConstraintId(instance.getResourceConstraintId()),
-                      new ConstraintUnit(instance.getResourceUnit()), new ConsumerId(instance.getUuid()),
-                      constraintContext)) {
-                constraintIds.add(instance.getResourceConstraintId());
-              }
-            }
+            finished = workflowExecution != null && ExecutionStatus.isFinalStatus(workflowExecution.getStatus());
             break;
-
+          case PHASE:
+            final StateExecutionData stateExecutionData =
+                stateExecutionService.phaseStateExecutionData(instance.getAppId(),
+                    ResourceConstraintService.workflowExecutionIdFromReleaseEntityId(instance.getReleaseEntityId()),
+                    ResourceConstraintService.phaseNameFromReleaseEntityId(instance.getReleaseEntityId()));
+            finished = stateExecutionData != null && ExecutionStatus.isFinalStatus(stateExecutionData.getStatus());
+            break;
           default:
             unhandled(holdingScope);
+        }
+
+        if (finished) {
+          Map<String, Object> constraintContext =
+              ImmutableMap.of(ResourceConstraintInstanceKeys.appId, instance.getAppId());
+
+          if (getRegistry().consumerFinished(new ConstraintId(instance.getResourceConstraintId()),
+                  new ConstraintUnit(instance.getResourceUnit()), new ConsumerId(instance.getUuid()),
+                  constraintContext)) {
+            constraintIds.add(instance.getResourceConstraintId());
+          }
         }
       }
     }
@@ -284,11 +296,20 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
 
         HoldingScope scope = HoldingScope.valueOf(instance.getReleaseEntityType());
         switch (scope) {
-          case WORKFLOW:
+          case WORKFLOW: {
             final WorkflowExecution workflowExecution =
                 workflowExecutionService.getWorkflowExecution(instance.getAppId(), instance.getReleaseEntityId());
             builder.releaseEntityName(workflowExecution.normalizedName());
             break;
+          }
+          case PHASE: {
+            final WorkflowExecution workflowExecution =
+                workflowExecutionService.getWorkflowExecution(instance.getAppId(),
+                    ResourceConstraintService.workflowExecutionIdFromReleaseEntityId(instance.getReleaseEntityId()));
+            builder.releaseEntityName(workflowExecution.normalizedName()
+                + ", Phase: " + ResourceConstraintService.phaseNameFromReleaseEntityId(instance.getReleaseEntityId()));
+            break;
+          }
           default:
             unhandled(scope);
         }
