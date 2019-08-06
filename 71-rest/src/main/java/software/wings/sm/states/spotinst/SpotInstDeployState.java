@@ -39,7 +39,6 @@ import software.wings.beans.SpotInstInfrastructureMapping;
 import software.wings.beans.TaskType;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
-import software.wings.service.impl.spotinst.SpotInstCommandRequest.SpotInstCommandRequestBuilder;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
@@ -147,18 +146,23 @@ public class SpotInstDeployState extends State {
         geDeployStateExecutionData(spotInstSetupContextElement, activity, upsizeUpdateCount, downsizeUpdateCount);
 
     // Generate CommandRequest to be sent to delegate
-    SpotInstCommandRequestBuilder requestBuilder =
-        SpotInstCommandRequest.builder()
-            .awsConfig(awsConfig)
-            .spotInstConfig(spotInstConfig)
-            .awsEncryptionDetails(awsEncryptedDataDetails)
-            .spotinstEncryptionDetails(spotinstEncryptedDataDetails)
-            .spotInstTaskParameters(getDeployTaskParameters(context, app, activity.getUuid(), upsizeUpdateCount,
-                downsizeUpdateCount, spotInstInfrastructureMapping, spotInstSetupContextElement));
 
-    DelegateTask task = spotInstStateHelper.getDelegateTask(app.getAccountId(), app.getUuid(),
-        TaskType.SPOTINST_COMMAND_TASK, activity.getUuid(), env.getUuid(), spotInstInfrastructureMapping.getUuid(),
-        new Object[] {requestBuilder.build()}, 5);
+    SpotInstTaskParameters spotInstTaskParameters = getDeployTaskParameters(context, app, activity.getUuid(),
+        upsizeUpdateCount, downsizeUpdateCount, spotInstInfrastructureMapping, spotInstSetupContextElement);
+
+    SpotInstCommandRequest request = SpotInstCommandRequest.builder()
+                                         .awsConfig(awsConfig)
+                                         .spotInstConfig(spotInstConfig)
+                                         .awsEncryptionDetails(awsEncryptedDataDetails)
+                                         .spotinstEncryptionDetails(spotinstEncryptedDataDetails)
+                                         .spotInstTaskParameters(spotInstTaskParameters)
+                                         .build();
+
+    stateExecutionData.setSpotinstCommandRequest(request);
+    DelegateTask task =
+        spotInstStateHelper.getDelegateTask(app.getAccountId(), app.getUuid(), TaskType.SPOTINST_COMMAND_TASK,
+            activity.getUuid(), env.getUuid(), spotInstInfrastructureMapping.getUuid(), new Object[] {request},
+            spotInstStateHelper.generateTimeOutForDelegateTask(spotInstTaskParameters.getTimeoutIntervalInMin()));
 
     delegateService.queueTask(task);
 

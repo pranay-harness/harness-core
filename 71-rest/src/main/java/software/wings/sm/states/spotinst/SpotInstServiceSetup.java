@@ -92,7 +92,7 @@ public class SpotInstServiceSetup extends State {
         spotInstTaskParameters.getAppId(), TaskType.SPOTINST_COMMAND_TASK, spotInstTaskParameters.getActivityId(),
         spotinstSetupStateExecutionData.getEnvId(), spotinstSetupStateExecutionData.getInfraMappingId(),
         new Object[] {spotinstSetupStateExecutionData.getSpotinstCommandRequest()},
-        spotInstTaskParameters.getTimeoutIntervalInMin() + 5);
+        spotinstStateHelper.generateTimeOutForDelegateTask(spotInstTaskParameters.getTimeoutIntervalInMin()));
 
     delegateService.queueTask(delegateTask);
 
