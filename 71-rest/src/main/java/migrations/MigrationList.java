@@ -101,6 +101,7 @@ import migrations.all.SetNamespaceInContainerInstanceInfo;
 import migrations.all.SetNamespaceToKubernetesInstanceInfo;
 import migrations.all.SetRollbackFlagToWorkflows;
 import migrations.all.SweepingPhaseMigration;
+import migrations.all.SweepingStateMigration;
 import migrations.all.SystemTemplateGalleryMigration;
 import migrations.all.TimeSeriesAnalysisRecordsMigration;
 import migrations.all.TimeSeriesMLAnalysisCompressionSaveMigration;
@@ -275,6 +276,7 @@ public class MigrationList {
         .add(Pair.of(274, PrometheusCVMigration.class))
         .add(Pair.of(275, ScheduleSegmentPublishJob.class))
         .add(Pair.of(276, BaseMigration.class))
+        .add(Pair.of(277, SweepingStateMigration.class))
         .build();
   }
 }
