@@ -239,123 +239,131 @@ public class ArtifactCollectionUtils {
   }
 
   private ImageDetails getDockerImageDetailsInternal(ArtifactStream artifactStream, String workflowExecutionId) {
-    ImageDetailsBuilder imageDetailsBuilder = ImageDetails.builder();
-    String settingId = artifactStream.getSettingId();
-    if (artifactStream.getArtifactStreamType().equals(DOCKER.name())) {
-      DockerArtifactStream dockerArtifactStream = (DockerArtifactStream) artifactStream;
-      DockerConfig dockerConfig = (DockerConfig) settingsService.get(settingId).getValue();
-      managerDecryptionService.decrypt(
-          dockerConfig, secretManager.getEncryptionDetails(dockerConfig, null, workflowExecutionId));
+    logger.info(format("Entering getDockerImageDetailsInternal: artifactStreamName %s, workflowExecutionId: %s",
+        artifactStream.getName(), workflowExecutionId));
 
-      String domainName = Http.getDomainWithPort(dockerConfig.getDockerRegistryUrl());
-      String imageName = dockerArtifactStream.getImageName();
+    try {
+      ImageDetailsBuilder imageDetailsBuilder = ImageDetails.builder();
+      String settingId = artifactStream.getSettingId();
+      if (artifactStream.getArtifactStreamType().equals(DOCKER.name())) {
+        DockerArtifactStream dockerArtifactStream = (DockerArtifactStream) artifactStream;
+        DockerConfig dockerConfig = (DockerConfig) settingsService.get(settingId).getValue();
+        managerDecryptionService.decrypt(
+            dockerConfig, secretManager.getEncryptionDetails(dockerConfig, null, workflowExecutionId));
 
-      if (dockerConfig.hasCredentials()) {
-        imageDetailsBuilder.name(imageName)
-            .sourceName(dockerArtifactStream.getSourceName())
-            .registryUrl(dockerConfig.getDockerRegistryUrl())
-            .username(dockerConfig.getUsername())
-            .password(new String(dockerConfig.getPassword()))
-            .domainName(domainName);
+        String domainName = Http.getDomainWithPort(dockerConfig.getDockerRegistryUrl());
+        String imageName = dockerArtifactStream.getImageName();
+
+        if (dockerConfig.hasCredentials()) {
+          imageDetailsBuilder.name(imageName)
+              .sourceName(dockerArtifactStream.getSourceName())
+              .registryUrl(dockerConfig.getDockerRegistryUrl())
+              .username(dockerConfig.getUsername())
+              .password(new String(dockerConfig.getPassword()))
+              .domainName(domainName);
+        } else {
+          imageDetailsBuilder.name(imageName)
+              .sourceName(dockerArtifactStream.getSourceName())
+              .registryUrl(dockerConfig.getDockerRegistryUrl())
+              .domainName(domainName);
+        }
+      } else if (artifactStream.getArtifactStreamType().equals(ECR.name())) {
+        EcrArtifactStream ecrArtifactStream = (EcrArtifactStream) artifactStream;
+        String imageUrl = getImageUrl(ecrArtifactStream, workflowExecutionId);
+        // name should be 830767422336.dkr.ecr.us-east-1.amazonaws.com/todolist
+        // sourceName should be todolist
+        // registryUrl should be https://830767422336.dkr.ecr.us-east-1.amazonaws.com/
+        imageDetailsBuilder.name(imageUrl)
+            .sourceName(ecrArtifactStream.getSourceName())
+            .registryUrl("https://" + imageUrl + (imageUrl.endsWith("/") ? "" : "/"))
+            .username("AWS");
+        SettingValue settingValue = settingsService.get(settingId).getValue();
+
+        // All the new ECR artifact streams use cloud provider AWS settings for accesskey and secret
+        if (SettingVariableTypes.AWS.name().equals(settingValue.getType())) {
+          AwsConfig awsConfig = (AwsConfig) settingsService.get(settingId).getValue();
+          imageDetailsBuilder.password(
+              getAmazonEcrAuthToken(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, workflowExecutionId),
+                  imageUrl.substring(0, imageUrl.indexOf('.')), ecrArtifactStream.getRegion()));
+        } else {
+          // There is a point when old ECR artifact streams would be using the old ECR Artifact Server
+          // definition until migration happens. The deployment code handles both the cases.
+          EcrConfig ecrConfig = (EcrConfig) settingsService.get(settingId).getValue();
+          imageDetailsBuilder.password(awsHelperService.getAmazonEcrAuthToken(
+              ecrConfig, secretManager.getEncryptionDetails(ecrConfig, null, workflowExecutionId)));
+        }
+      } else if (artifactStream.getArtifactStreamType().equals(GCR.name())) {
+        GcrArtifactStream gcrArtifactStream = (GcrArtifactStream) artifactStream;
+        String imageName = gcrArtifactStream.getRegistryHostName() + "/" + gcrArtifactStream.getDockerImageName();
+        imageDetailsBuilder.name(imageName).sourceName(imageName).registryUrl(imageName);
+      } else if (artifactStream.getArtifactStreamType().equals(ACR.name())) {
+        AcrArtifactStream acrArtifactStream = (AcrArtifactStream) artifactStream;
+        AzureConfig azureConfig = (AzureConfig) settingsService.get(settingId).getValue();
+        String loginServer = azureHelperService.getLoginServerForRegistry(azureConfig,
+            secretManager.getEncryptionDetails(azureConfig, null, workflowExecutionId),
+            acrArtifactStream.getSubscriptionId(), acrArtifactStream.getRegistryName());
+
+        imageDetailsBuilder.registryUrl(azureHelperService.getUrl(loginServer))
+            .sourceName(acrArtifactStream.getRepositoryName())
+            .name(loginServer + "/" + acrArtifactStream.getRepositoryName())
+            .username(azureConfig.getClientId())
+            .password(new String(azureConfig.getKey()));
+      } else if (artifactStream.getArtifactStreamType().equals(ARTIFACTORY.name())) {
+        ArtifactoryArtifactStream artifactoryArtifactStream = (ArtifactoryArtifactStream) artifactStream;
+        ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingsService.get(settingId).getValue();
+        managerDecryptionService.decrypt(
+            artifactoryConfig, secretManager.getEncryptionDetails(artifactoryConfig, null, workflowExecutionId));
+        String registryUrl = ArtifactUtilities.getArtifactoryRegistryUrl(artifactoryConfig.getArtifactoryUrl(),
+            artifactoryArtifactStream.getDockerRepositoryServer(), artifactoryArtifactStream.getJobname());
+        String repositoryName = ArtifactUtilities.getArtifactoryRepositoryName(artifactoryConfig.getArtifactoryUrl(),
+            artifactoryArtifactStream.getDockerRepositoryServer(), artifactoryArtifactStream.getJobname(),
+            artifactoryArtifactStream.getImageName());
+
+        if (artifactoryConfig.hasCredentials()) {
+          imageDetailsBuilder.name(repositoryName)
+              .sourceName(artifactoryArtifactStream.getSourceName())
+              .registryUrl(registryUrl)
+              .username(artifactoryConfig.getUsername())
+              .password(new String(artifactoryConfig.getPassword()));
+        } else {
+          imageDetailsBuilder.name(repositoryName)
+              .sourceName(artifactoryArtifactStream.getSourceName())
+              .registryUrl(registryUrl);
+        }
+      } else if (artifactStream.getArtifactStreamType().equals(NEXUS.name())) {
+        NexusArtifactStream nexusArtifactStream = (NexusArtifactStream) artifactStream;
+        NexusConfig nexusConfig = (NexusConfig) settingsService.get(settingId).getValue();
+        managerDecryptionService.decrypt(
+            nexusConfig, secretManager.getEncryptionDetails(nexusConfig, null, workflowExecutionId));
+
+        String registryUrl = ArtifactUtilities.getNexusRegistryUrl(
+            nexusConfig.getNexusUrl(), nexusArtifactStream.getDockerPort(), nexusArtifactStream.getDockerRegistryUrl());
+        String repositoryName =
+            ArtifactUtilities.getNexusRepositoryName(nexusConfig.getNexusUrl(), nexusArtifactStream.getDockerPort(),
+                nexusArtifactStream.getDockerRegistryUrl(), nexusArtifactStream.getImageName());
+        logger.info("Nexus Registry url: " + registryUrl);
+        if (nexusConfig.hasCredentials()) {
+          imageDetailsBuilder.name(repositoryName)
+              .sourceName(nexusArtifactStream.getSourceName())
+              .registryUrl(registryUrl)
+              .username(nexusConfig.getUsername())
+              .password(new String(nexusConfig.getPassword()));
+        } else {
+          imageDetailsBuilder.name(repositoryName)
+              .sourceName(nexusArtifactStream.getSourceName())
+              .registryUrl(registryUrl);
+        }
+      } else if (artifactStream.getArtifactStreamType().equals(CUSTOM.name())) {
+        imageDetailsBuilder.sourceName(artifactStream.getSourceName());
       } else {
-        imageDetailsBuilder.name(imageName)
-            .sourceName(dockerArtifactStream.getSourceName())
-            .registryUrl(dockerConfig.getDockerRegistryUrl())
-            .domainName(domainName);
+        throw new InvalidRequestException(
+            artifactStream.getArtifactStreamType() + " artifact source can't be used for containers");
       }
-    } else if (artifactStream.getArtifactStreamType().equals(ECR.name())) {
-      EcrArtifactStream ecrArtifactStream = (EcrArtifactStream) artifactStream;
-      String imageUrl = getImageUrl(ecrArtifactStream, workflowExecutionId);
-      // name should be 830767422336.dkr.ecr.us-east-1.amazonaws.com/todolist
-      // sourceName should be todolist
-      // registryUrl should be https://830767422336.dkr.ecr.us-east-1.amazonaws.com/
-      imageDetailsBuilder.name(imageUrl)
-          .sourceName(ecrArtifactStream.getSourceName())
-          .registryUrl("https://" + imageUrl + (imageUrl.endsWith("/") ? "" : "/"))
-          .username("AWS");
-      SettingValue settingValue = settingsService.get(settingId).getValue();
-
-      // All the new ECR artifact streams use cloud provider AWS settings for accesskey and secret
-      if (SettingVariableTypes.AWS.name().equals(settingValue.getType())) {
-        AwsConfig awsConfig = (AwsConfig) settingsService.get(settingId).getValue();
-        imageDetailsBuilder.password(
-            getAmazonEcrAuthToken(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, workflowExecutionId),
-                imageUrl.substring(0, imageUrl.indexOf('.')), ecrArtifactStream.getRegion()));
-      } else {
-        // There is a point when old ECR artifact streams would be using the old ECR Artifact Server
-        // definition until migration happens. The deployment code handles both the cases.
-        EcrConfig ecrConfig = (EcrConfig) settingsService.get(settingId).getValue();
-        imageDetailsBuilder.password(awsHelperService.getAmazonEcrAuthToken(
-            ecrConfig, secretManager.getEncryptionDetails(ecrConfig, null, workflowExecutionId)));
-      }
-    } else if (artifactStream.getArtifactStreamType().equals(GCR.name())) {
-      GcrArtifactStream gcrArtifactStream = (GcrArtifactStream) artifactStream;
-      String imageName = gcrArtifactStream.getRegistryHostName() + "/" + gcrArtifactStream.getDockerImageName();
-      imageDetailsBuilder.name(imageName).sourceName(imageName).registryUrl(imageName);
-    } else if (artifactStream.getArtifactStreamType().equals(ACR.name())) {
-      AcrArtifactStream acrArtifactStream = (AcrArtifactStream) artifactStream;
-      AzureConfig azureConfig = (AzureConfig) settingsService.get(settingId).getValue();
-      String loginServer = azureHelperService.getLoginServerForRegistry(azureConfig,
-          secretManager.getEncryptionDetails(azureConfig, null, workflowExecutionId),
-          acrArtifactStream.getSubscriptionId(), acrArtifactStream.getRegistryName());
-
-      imageDetailsBuilder.registryUrl(azureHelperService.getUrl(loginServer))
-          .sourceName(acrArtifactStream.getRepositoryName())
-          .name(loginServer + "/" + acrArtifactStream.getRepositoryName())
-          .username(azureConfig.getClientId())
-          .password(new String(azureConfig.getKey()));
-    } else if (artifactStream.getArtifactStreamType().equals(ARTIFACTORY.name())) {
-      ArtifactoryArtifactStream artifactoryArtifactStream = (ArtifactoryArtifactStream) artifactStream;
-      ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingsService.get(settingId).getValue();
-      managerDecryptionService.decrypt(
-          artifactoryConfig, secretManager.getEncryptionDetails(artifactoryConfig, null, workflowExecutionId));
-      String registryUrl = ArtifactUtilities.getArtifactoryRegistryUrl(artifactoryConfig.getArtifactoryUrl(),
-          artifactoryArtifactStream.getDockerRepositoryServer(), artifactoryArtifactStream.getJobname());
-      String repositoryName = ArtifactUtilities.getArtifactoryRepositoryName(artifactoryConfig.getArtifactoryUrl(),
-          artifactoryArtifactStream.getDockerRepositoryServer(), artifactoryArtifactStream.getJobname(),
-          artifactoryArtifactStream.getImageName());
-
-      if (artifactoryConfig.hasCredentials()) {
-        imageDetailsBuilder.name(repositoryName)
-            .sourceName(artifactoryArtifactStream.getSourceName())
-            .registryUrl(registryUrl)
-            .username(artifactoryConfig.getUsername())
-            .password(new String(artifactoryConfig.getPassword()));
-      } else {
-        imageDetailsBuilder.name(repositoryName)
-            .sourceName(artifactoryArtifactStream.getSourceName())
-            .registryUrl(registryUrl);
-      }
-    } else if (artifactStream.getArtifactStreamType().equals(NEXUS.name())) {
-      NexusArtifactStream nexusArtifactStream = (NexusArtifactStream) artifactStream;
-      NexusConfig nexusConfig = (NexusConfig) settingsService.get(settingId).getValue();
-      managerDecryptionService.decrypt(
-          nexusConfig, secretManager.getEncryptionDetails(nexusConfig, null, workflowExecutionId));
-
-      String registryUrl = ArtifactUtilities.getNexusRegistryUrl(
-          nexusConfig.getNexusUrl(), nexusArtifactStream.getDockerPort(), nexusArtifactStream.getDockerRegistryUrl());
-      String repositoryName =
-          ArtifactUtilities.getNexusRepositoryName(nexusConfig.getNexusUrl(), nexusArtifactStream.getDockerPort(),
-              nexusArtifactStream.getDockerRegistryUrl(), nexusArtifactStream.getImageName());
-      logger.info("Nexus Registry url: " + registryUrl);
-      if (nexusConfig.hasCredentials()) {
-        imageDetailsBuilder.name(repositoryName)
-            .sourceName(nexusArtifactStream.getSourceName())
-            .registryUrl(registryUrl)
-            .username(nexusConfig.getUsername())
-            .password(new String(nexusConfig.getPassword()));
-      } else {
-        imageDetailsBuilder.name(repositoryName)
-            .sourceName(nexusArtifactStream.getSourceName())
-            .registryUrl(registryUrl);
-      }
-    } else if (artifactStream.getArtifactStreamType().equals(CUSTOM.name())) {
-      imageDetailsBuilder.sourceName(artifactStream.getSourceName());
-    } else {
-      throw new InvalidRequestException(
-          artifactStream.getArtifactStreamType() + " artifact source can't be used for containers");
+      return imageDetailsBuilder.build();
+    } finally {
+      logger.info(format("Exiting getDockerImageDetailsInternal: artifactStreamName %s, workflowExecutionId: %s",
+          artifactStream.getName(), workflowExecutionId));
     }
-    return imageDetailsBuilder.build();
   }
 
   private String getImageUrl(EcrArtifactStream ecrArtifactStream, String workflowExecutionId) {

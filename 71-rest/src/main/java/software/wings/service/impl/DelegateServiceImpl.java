@@ -18,6 +18,7 @@ import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static java.lang.String.format;
 import static java.util.Collections.EMPTY_LIST;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
@@ -687,7 +688,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       Account account = accountService.get(accountId);
 
-      String hexkey = String.format("%040x", new BigInteger(1, accountId.substring(0, 6).getBytes(Charsets.UTF_8)))
+      String hexkey = format("%040x", new BigInteger(1, accountId.substring(0, 6).getBytes(Charsets.UTF_8)))
                           .replaceFirst("^0+(?!$)", "");
 
       if (mainConfiguration.getDeployMode().equals(DeployMode.KUBERNETES_ONPREM)) {
@@ -1078,8 +1079,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
           savedDelegate = saveDelegate(delegate);
         } else {
           throw new WingsException(ErrorCode.USAGE_LIMITS_EXCEEDED,
-              String.format(
-                  "Can not add delegate to the account. Maximum [%d] delegates are supported", maxUsageAllowed),
+              format("Can not add delegate to the account. Maximum [%d] delegates are supported", maxUsageAllowed),
               USER);
         }
       }
@@ -1557,25 +1557,30 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Override
   public DelegatePackage acquireDelegateTask(String accountId, String delegateId, String taskId) {
     logger.info("Acquiring delegate task {} for delegate {}", taskId, delegateId);
-    DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
-    if (delegateTask == null) {
-      return null;
-    }
 
-    if (!assignDelegateService.canAssign(delegateId, delegateTask)) {
-      logger.info("Delegate {} is not scoped for task {}", delegateId, taskId);
-      ensureDelegateAvailableToExecuteTask(delegateTask); // Raises an alert if there are no eligible delegates.
-      return null;
-    }
+    try {
+      DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
+      if (delegateTask == null) {
+        return null;
+      }
 
-    if (assignDelegateService.isWhitelisted(delegateTask, delegateId)) {
-      return assignTask(delegateId, taskId, delegateTask);
-    } else if (assignDelegateService.shouldValidate(delegateTask, delegateId)) {
-      setValidationStarted(delegateId, delegateTask);
-      return DelegatePackage.builder().delegateTask(delegateTask).build();
-    } else {
-      logger.info("Delegate {} is blacklisted for task {}", delegateId, taskId);
-      return null;
+      if (!assignDelegateService.canAssign(delegateId, delegateTask)) {
+        logger.info("Delegate {} is not scoped for task {}", delegateId, taskId);
+        ensureDelegateAvailableToExecuteTask(delegateTask); // Raises an alert if there are no eligible delegates.
+        return null;
+      }
+
+      if (assignDelegateService.isWhitelisted(delegateTask, delegateId)) {
+        return assignTask(delegateId, taskId, delegateTask);
+      } else if (assignDelegateService.shouldValidate(delegateTask, delegateId)) {
+        setValidationStarted(delegateId, delegateTask);
+        return DelegatePackage.builder().delegateTask(delegateTask).build();
+      } else {
+        logger.info("Delegate {} is blacklisted for task {}", delegateId, taskId);
+        return null;
+      }
+    } finally {
+      logger.info("Done acquiring delegate task {} for delegate {}", taskId, delegateId);
     }
   }
 
@@ -1748,6 +1753,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   private DelegatePackage resolvePreAssignmentExpressions(DelegateTask delegateTask, String delegateId) {
+    logger.info(format("Entering resolvePreAssignmentExpressions: DelegateTaskId %s, DelegateId %s",
+        delegateTask.getUuid(), delegateId));
+
     try {
       final ManagerPreExecutionExpressionEvaluator managerPreExecutionExpressionEvaluator =
           new ManagerPreExecutionExpressionEvaluator(serviceTemplateService, configService, delegateTask.getAppId(),
@@ -1771,6 +1779,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
             .build();
       }
 
+      return DelegatePackage.builder().delegateTask(delegateTask).build();
     } catch (CriticalExpressionEvaluationException exception) {
       logger.error("Exception in ManagerPreExecutionExpressionEvaluator ", exception);
       Query<DelegateTask> taskQuery = wingsPersistence.createQuery(DelegateTask.class)
@@ -1784,8 +1793,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
               .build();
       handleResponse(delegateTask.getUuid(), delegateId, delegateTask, taskQuery, response, ERROR);
       return null;
+    } finally {
+      logger.info(format("Exiting resolvePreAssignmentExpressions: DelegateTaskId %s, DelegateId %s",
+          delegateTask.getUuid(), delegateId));
     }
-    return DelegatePackage.builder().delegateTask(delegateTask).build();
   }
 
   private DelegatePackage getDelegataePackageWithEncryptionConfig(DelegateTask delegateTask, String delegateId) {
