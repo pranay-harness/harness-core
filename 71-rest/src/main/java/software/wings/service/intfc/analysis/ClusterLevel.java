@@ -1,21 +1,32 @@
 package software.wings.service.intfc.analysis;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Created by rsingh on 8/11/17.
  */
 public enum ClusterLevel {
-  L0(0),
-  L1(1),
-  L2(2),
-  H0(-1),
-  H1(-2),
-  H2(-3),
-  HF(-4);
+  L0(0, "preprocessing phase zero"),
+  L1(1, "preprocessing phase one"),
+  L2(2, "preprocessing phase two"),
+  H0(-1, "heartbeat phase zero"),
+  H1(-2, "heartbeat phase one"),
+  H2(-3, "heartbeat phase two"),
+  HF(-4, "final phase");
+  private static final Map<Integer, ClusterLevel> CLUSTER_LEVEL_MAP = new HashMap<>();
+
+  static {
+    for (ClusterLevel clusterLevel : ClusterLevel.values()) {
+      CLUSTER_LEVEL_MAP.put(clusterLevel.getLevel(), clusterLevel);
+    }
+  }
 
   private final int level;
-
-  ClusterLevel(int level) {
+  private final String clusteringPhaseString;
+  ClusterLevel(int level, String clusteringPhaseString) {
     this.level = level;
+    this.clusteringPhaseString = clusteringPhaseString;
   }
 
   public int getLevel() {
@@ -66,5 +77,16 @@ public enum ClusterLevel {
       default:
         throw new RuntimeException("Unknown cluster level " + level);
     }
+  }
+
+  public static ClusterLevel valueOf(int level) {
+    return CLUSTER_LEVEL_MAP.get(level);
+  }
+
+  /**
+   * This can be used to generate human readable strings.
+   */
+  public String getClusteringPhase() {
+    return clusteringPhaseString;
   }
 }

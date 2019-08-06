@@ -10,7 +10,6 @@ import io.harness.beans.DelegateTask;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
-import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -56,7 +55,7 @@ public class LogzAnalysisState extends ElkAnalysisState {
     }
 
     final LogzConfig logzConfig = (LogzConfig) settingAttribute.getValue();
-    final long logCollectionStartTimeStamp = Timestamp.currentMinuteBoundary();
+    final long logCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
 
     List<Set<String>> batchedHosts = batchHosts(hosts);
     String[] waitIds = new String[batchedHosts.size()];
@@ -102,8 +101,12 @@ public class LogzAnalysisState extends ElkAnalysisState {
                             .build());
       waitIds[i++] = waitId;
     }
-    waitNotifyEngine.waitForAll(
-        DataCollectionCallback.builder().appId(context.getAppId()).executionData(executionData).build(), waitIds);
+    waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
+                                    .appId(context.getAppId())
+                                    .stateExecutionId(context.getStateExecutionInstanceId())
+                                    .executionData(executionData)
+                                    .build(),
+        waitIds);
     List<String> delegateTaskIds = new ArrayList<>();
     for (DelegateTask task : delegateTasks) {
       delegateTaskIds.add(delegateService.queueTask(task));

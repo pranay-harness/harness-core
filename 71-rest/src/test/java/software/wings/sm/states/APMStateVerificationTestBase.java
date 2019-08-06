@@ -40,7 +40,9 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionBaselineService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
@@ -87,6 +89,8 @@ public class APMStateVerificationTestBase extends WingsBaseTest {
   @Mock protected StateExecutionInstance stateExecutionInstance;
   @Mock private UserPermissionInfo mockUserPermissionInfo;
   @Inject protected VersionInfoManager versionInfoManager;
+  @Mock protected CVActivityLogService cvActivityLogService;
+  @Inject protected AnalysisService analysisService;
 
   protected void setupCommon() {
     accountId = UUID.randomUUID().toString();
@@ -163,5 +167,22 @@ public class APMStateVerificationTestBase extends WingsBaseTest {
         .workflowPermissions(workflowPermissions)
         .pipelinePermissions(pipelinePermissions)
         .build();
+  }
+
+  protected void setupCommonFields(AbstractAnalysisState state) throws IllegalAccessException {
+    FieldUtils.writeField(state, "appService", this.appService, true);
+    FieldUtils.writeField(state, "configuration", configuration, true);
+    FieldUtils.writeField(state, "analysisService", analysisService, true);
+    FieldUtils.writeField(state, "settingsService", settingsService, true);
+    FieldUtils.writeField(state, "waitNotifyEngine", waitNotifyEngine, true);
+    FieldUtils.writeField(state, "delegateService", delegateService, true);
+    FieldUtils.writeField(state, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(state, "secretManager", secretManager, true);
+    FieldUtils.writeField(state, "workflowExecutionService", workflowExecutionService, true);
+    FieldUtils.writeField(state, "continuousVerificationService", continuousVerificationService, true);
+    FieldUtils.writeField(state, "workflowExecutionBaselineService", workflowExecutionBaselineService, true);
+    FieldUtils.writeField(state, "featureFlagService", featureFlagService, true);
+    FieldUtils.writeField(state, "versionInfoManager", versionInfoManager, true);
+    FieldUtils.writeField(state, "cvActivityLogService", cvActivityLogService, true);
   }
 }

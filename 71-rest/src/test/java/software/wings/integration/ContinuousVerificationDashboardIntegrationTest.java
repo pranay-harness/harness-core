@@ -32,6 +32,8 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.verification.CVActivityLogService;
+import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateType;
 import software.wings.utils.WingsIntegrationTestConstants;
@@ -52,6 +54,8 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   @Inject UserService userService;
   @Inject AuthService authService;
   @Inject AppService appService;
+  @Inject CVActivityLogService cvActivityLogService;
+  @Inject CVConfigurationService cvConfigurationService;
   @Mock FeatureFlagService featureFlagService;
 
   private String appId;

@@ -17,7 +17,6 @@ import io.harness.beans.DelegateTask;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
-import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import software.wings.api.AwsLambdaContextElement;
@@ -164,7 +163,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
     }
 
     final AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
-    final long dataCollectionStartTimeStamp = Timestamp.minuteBoundary(System.currentTimeMillis());
+    final long dataCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
     Map<AwsNameSpace, List<CloudWatchMetric>> cloudWatchMetrics = cloudWatchService.getCloudWatchMetrics();
 
     metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.CLOUD_WATCH,
@@ -246,8 +245,12 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
             .envId(envId)
             .infrastructureMappingId(infrastructureMappingId)
             .build();
-    waitNotifyEngine.waitForAll(
-        DataCollectionCallback.builder().appId(context.getAppId()).executionData(executionData).build(), waitId);
+    waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
+                                    .appId(context.getAppId())
+                                    .stateExecutionId(context.getStateExecutionInstanceId())
+                                    .executionData(executionData)
+                                    .build(),
+        waitId);
     return delegateService.queueTask(delegateTask);
   }
 

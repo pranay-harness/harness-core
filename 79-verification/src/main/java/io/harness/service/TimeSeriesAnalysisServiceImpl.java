@@ -74,6 +74,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord.NewRelicMet
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.ClusterLevel;
+import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.sm.StateType;
 
 import java.time.OffsetDateTime;
@@ -108,6 +109,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Inject private UsageMetricsHelper usageMetricsHelper;
   @Inject private ContinuousVerificationService continuousVerificationService;
   @Inject private DataCollectionExecutorService dataCollectionService;
+  @Inject private CVActivityLogService cvActivityLogService;
 
   @Override
   @SuppressWarnings("PMD")
@@ -136,7 +138,16 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     } catch (Throwable t) {
       logger.info("Error converting to TimeSeriesDataRecord", t);
     }
+    if (stateExecutionId != null) {
+      // TODO: get cvConfigId and dataCollectionMin and log when 24 * 7 config save happens
+      cvActivityLogService.getLoggerByStateExecutionId(stateExecutionId)
+          .info("Metrics data has been collected for minute " + getDataCollectionMinute(metricData));
+    }
     return true;
+  }
+
+  private int getDataCollectionMinute(List<NewRelicMetricDataRecord> newRelicMetricDataRecords) {
+    return newRelicMetricDataRecords.get(0).getDataCollectionMinute();
   }
 
   @Override

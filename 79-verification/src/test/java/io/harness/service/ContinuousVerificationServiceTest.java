@@ -96,6 +96,8 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.verification.CVActivityLogService;
+import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.verification.CVTaskService;
 import software.wings.sm.StateType;
@@ -145,6 +147,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Mock private SettingsService settingsService;
   @Mock private SecretManager secretManager;
   @Mock private AppService appService;
+  @Mock private CVActivityLogService cvActivityLogService;
   private SumoConfig sumoConfig;
   private DatadogConfig datadogConfig;
   private ElkConfig elkConfig;
@@ -213,6 +216,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     writeField(continuousVerificationService, "cvConfigurationService", cvConfigurationService, true);
     writeField(continuousVerificationService, "metricRegistry", metricRegistry, true);
     writeField(continuousVerificationService, "cvTaskService", cvTaskService, true);
+    writeField(continuousVerificationService, "cvActivityLogService", cvActivityLogService, true);
     when(delegateService.queueTask(anyObject()))
         .then(invocation -> wingsPersistence.save((DelegateTask) invocation.getArguments()[0]));
     when(settingsService.get(connectorId)).thenReturn(aSettingAttribute().withValue(sumoConfig).build());
@@ -231,12 +235,14 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     writeField(managerVerificationService, "mainConfiguration", mainConfiguration, true);
     writeField(managerVerificationService, "appService", appService, true);
     writeField(managerVerificationService, "cvConfigurationService", cvConfigurationService, true);
+    writeField(managerVerificationService, "cvActivityLogService", cvActivityLogService, true);
     AlertService alertService = new AlertServiceImpl();
     writeField(alertService, "wingsPersistence", wingsPersistence, true);
     writeField(alertService, "executorService", Executors.newSingleThreadScheduledExecutor(), true);
     writeField(alertService, "injector", injector, true);
     writeField(managerVerificationService, "alertService", alertService, true);
-
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(mock(Logger.class));
+    when(cvActivityLogService.getLoggerByCVConfigId(anyString(), anyLong())).thenReturn(mock(Logger.class));
     when(verificationManagerClient.triggerCVDataCollection(anyString(), anyObject(), anyLong(), anyLong()))
         .then(invocation -> {
           Object[] args = invocation.getArguments();

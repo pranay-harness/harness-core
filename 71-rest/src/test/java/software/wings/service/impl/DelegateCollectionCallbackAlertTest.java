@@ -31,6 +31,7 @@ import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
@@ -48,6 +49,7 @@ public class DelegateCollectionCallbackAlertTest extends WingsBaseTest {
   @Inject private AppService appService;
   @Inject private AlertService alertService;
   @Inject private CVConfigurationService cvConfigurationService;
+  @Inject private CVActivityLogService cvActivityLogService;
   @Mock private WaitNotifyEngine waitNotifyEngine;
 
   @Before
@@ -69,6 +71,7 @@ public class DelegateCollectionCallbackAlertTest extends WingsBaseTest {
     dataCollectionCallback.setAppService(appService);
     dataCollectionCallback.setWaitNotifyEngine(waitNotifyEngine);
     dataCollectionCallback.setCvConfigurationService(cvConfigurationService);
+    dataCollectionCallback.setCvActivityLogService(cvActivityLogService);
 
     dataCollectionCallback.setExecutionData(new VerificationStateAnalysisExecutionData());
 

@@ -127,6 +127,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CV24x7DashboardService;
+import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.settings.SettingValue;
 import software.wings.sm.PipelineSummary;
@@ -213,6 +214,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private MainConfiguration mainConfiguration;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ContinuousVerificationService continuousVerificationService;
+  @Inject private CVActivityLogService cvActivityLogService;
 
   private static final int PAGE_LIMIT = 999;
   private static final int START_OFFSET = 0;
@@ -1601,6 +1603,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                                     .build(),
         waitId);
     logger.info("Queuing 24x7 data collection task for {}, cvConfigurationId: {}", stateType, cvConfigId);
+    cvActivityLogService.getLoggerByCVConfigId(cvConfiguration.getUuid(), TimeUnit.MILLISECONDS.toMinutes(endTime))
+        .info("Enqueuing 24 * 7 data collection task");
     delegateService.queueTask(task);
     return true;
   }

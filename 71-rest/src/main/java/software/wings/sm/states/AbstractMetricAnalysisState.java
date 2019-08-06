@@ -5,11 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
-import static software.wings.common.VerificationConstants.GA_PER_MINUTE_CV_STATES;
 import static software.wings.common.VerificationConstants.LAMBDA_HOST_NAME;
-import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
-import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.service.impl.security.SecretManagementDelegateServiceImpl.NUM_OF_RETRIES;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -29,7 +26,6 @@ import io.harness.version.VersionInfoManager;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.PcfInstanceElement;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -42,6 +38,7 @@ import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
 import software.wings.service.intfc.MetricDataAnalysisService;
+import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
@@ -89,6 +86,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       return generateAnalysisResponse(context, ExecutionStatus.SUCCESS,
           "Your license type does not support running this verification. Skipping Analysis");
     }
+    Logger activityLogger = cvActivityLogService.getLoggerByStateExecutionId(context.getStateExecutionInstanceId());
     String corelationId = UUID.randomUUID().toString();
     String delegateTaskId = null;
     VerificationStateAnalysisExecutionData executionData;
@@ -218,13 +216,11 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       hostsToCollect.remove(null);
       createAndSaveMetricGroups(context, hostsToCollect);
 
-      if (getComparisonStrategy() == PREDICTIVE
-          || (featureFlagService.isEnabled(FeatureName.CV_DATA_COLLECTION_JOB, context.getAccountId())
-                 && (PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))))
-          || GA_PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))) {
+      if (isEligibleForPerMinuteTask(context.getAccountId())) {
         getLogger().info("Per Minute data collection will be done for triggering delegate task");
       } else {
         delegateTaskId = triggerAnalysisDataCollection(context, analysisContext, executionData, hostsToCollect);
+        logDataCollectionTriggeredMessage(activityLogger);
         getLogger().info("triggered data collection for {} state, id: {}, delgateTaskId: {}", getStateType(),
             context.getStateExecutionInstanceId(), delegateTaskId);
       }
@@ -243,6 +239,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           .build();
     } catch (Exception ex) {
       // set the CV Metadata status to ERROR as well.
+      activityLogger.error("Data collection failed: " + ex.getMessage());
       continuousVerificationService.setMetaDataExecutionStatus(
           context.getStateExecutionInstanceId(), ExecutionStatus.ERROR, true);
       if (ex instanceof WingsException) {
@@ -448,10 +445,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
             .managerVersion(versionInfoManager.getVersionInfo().getVersion())
             .build();
 
-    if (getComparisonStrategy() == PREDICTIVE
-        || (featureFlagService.isEnabled(FeatureName.CV_DATA_COLLECTION_JOB, accountId)
-               && (PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))))
-        || GA_PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))) {
+    if (isEligibleForPerMinuteTask(accountId)) {
       DataCollectionInfo dataCollectionInfo = createDataCollectionInfo(context);
       analysisContext.setDataCollectionInfo(dataCollectionInfo);
     }

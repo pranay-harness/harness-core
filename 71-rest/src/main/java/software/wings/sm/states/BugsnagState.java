@@ -13,7 +13,6 @@ import io.harness.beans.DelegateTask;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
-import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -191,7 +190,7 @@ public class BugsnagState extends AbstractLogAnalysisState {
     }
 
     final BugsnagConfig config = (BugsnagConfig) settingAttribute.getValue();
-    final long dataCollectionStartTimeStamp = Timestamp.minuteBoundary(System.currentTimeMillis());
+    final long dataCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
     String accountId = appService.get(context.getAppId()).getAccountId();
 
     // Form the dataCollectionInfo
@@ -239,8 +238,12 @@ public class BugsnagState extends AbstractLogAnalysisState {
             .envId(envId)
             .infrastructureMappingId(infrastructureMappingId)
             .build();
-    waitNotifyEngine.waitForAll(
-        DataCollectionCallback.builder().appId(context.getAppId()).executionData(executionData).build(), waitId);
+    waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
+                                    .appId(context.getAppId())
+                                    .stateExecutionId(context.getStateExecutionInstanceId())
+                                    .executionData(executionData)
+                                    .build(),
+        waitId);
     return delegateService.queueTask(delegateTask);
   }
 

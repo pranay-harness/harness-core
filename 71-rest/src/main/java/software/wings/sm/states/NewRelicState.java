@@ -12,7 +12,6 @@ import io.harness.beans.DelegateTask;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
-import io.harness.time.Timestamp;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -175,7 +174,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
     }
 
     final NewRelicConfig newRelicConfig = (NewRelicConfig) settingAttribute.getValue();
-    final long dataCollectionStartTimeStamp = Timestamp.currentMinuteBoundary();
+    final long dataCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
     final NewRelicDataCollectionInfo dataCollectionInfo =
         NewRelicDataCollectionInfo.builder()
             .newRelicConfig(newRelicConfig)
@@ -216,6 +215,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
             .build();
     waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
                                     .appId(context.getAppId())
+                                    .stateExecutionId(context.getStateExecutionInstanceId())
                                     .executionData(executionData)
                                     .isDataCollectionPerMinuteTask(false)
                                     .build(),

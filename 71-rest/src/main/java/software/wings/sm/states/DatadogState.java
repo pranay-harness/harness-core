@@ -20,7 +20,6 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import io.harness.serializer.YamlUtils;
-import io.harness.time.Timestamp;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -159,7 +158,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
     }
 
     final DatadogConfig datadogConfig = (DatadogConfig) settingAttribute.getValue();
-    final long dataCollectionStartTimeStamp = Timestamp.minuteBoundary(System.currentTimeMillis());
+    final long dataCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
     String accountId = appService.get(context.getAppId()).getAccountId();
     int timeDurationInInteger = Integer.parseInt(getTimeDuration());
     final APMDataCollectionInfo dataCollectionInfo =

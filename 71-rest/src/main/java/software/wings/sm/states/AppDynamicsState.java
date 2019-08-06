@@ -19,7 +19,6 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
@@ -249,7 +248,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
           "Error executing appdynamics state with id : " + context.getStateExecutionInstanceId(), e);
     }
 
-    final long dataCollectionStartTimeStamp = Timestamp.currentMinuteBoundary();
+    final long dataCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
     List<DelegateTask> delegateTasks = new ArrayList<>();
     String[] waitIds = new String[dependentTiers.size() + 1];
     logger.info("Creating AppDynamics Delegate Task for AppD applicationId : {} Tier Id : {}", applicationId, tierId);
@@ -267,8 +266,12 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
               .mlAnalysisType(PREDICTIVE)
               .build());
     }
-    waitNotifyEngine.waitForAll(
-        DataCollectionCallback.builder().appId(context.getAppId()).executionData(executionData).build(), waitIds);
+    waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
+                                    .appId(context.getAppId())
+                                    .stateExecutionId(context.getStateExecutionInstanceId())
+                                    .executionData(executionData)
+                                    .build(),
+        waitIds);
     InfrastructureMapping infrastructureMapping = getInfrastructureMapping(context);
     DeploymentType deploymentType =
         serviceResourceService.getDeploymentType(infrastructureMapping, null, infrastructureMapping.getServiceId());

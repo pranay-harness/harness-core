@@ -7,8 +7,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -51,6 +53,8 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.verification.CVActivityLogService;
+import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.sm.StateType;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
@@ -74,6 +78,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   @Mock private SecretManager mockSecretManager;
   @Mock private CloudWatchService cloudWatchService;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private CVActivityLogService cvActivityLogService;
   @InjectMocks ContinuousVerificationServiceImpl service;
   @Inject WingsPersistence wingsPersistence;
 
@@ -82,7 +87,10 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     MockitoAnnotations.initMocks(this);
     FieldUtils.writeField(service, "wingsPersistence", wingsPersistence, true);
     FieldUtils.writeField(service, "featureFlagService", featureFlagService, true);
+    FieldUtils.writeField(service, "cvActivityLogService", cvActivityLogService, true);
     when(featureFlagService.isEnabled(any(), anyString())).thenReturn(false);
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(mock(Logger.class));
+    when(cvActivityLogService.getLoggerByCVConfigId(anyString(), anyLong())).thenReturn(mock(Logger.class));
   }
 
   @Test

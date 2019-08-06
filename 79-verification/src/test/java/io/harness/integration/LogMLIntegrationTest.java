@@ -72,6 +72,7 @@ import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.LogRequest;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster.MessageFrequency;
 import software.wings.service.intfc.AppService;
@@ -227,7 +228,12 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
     stateExecutionInstance.setAppId(appId);
     stateExecutionInstance.setDisplayName("log");
-
+    LearningEngineAnalysisTask learningEngineAnalysisTask = LearningEngineAnalysisTask.builder()
+                                                                .state_execution_id(stateExecutionId)
+                                                                .workflow_execution_id(workflowExecutionId)
+                                                                .executionStatus(ExecutionStatus.QUEUED)
+                                                                .build();
+    learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
     Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
     stateExecutionMap.put("log", VerificationStateAnalysisExecutionData.builder().build());
     stateExecutionInstance.setStateExecutionMap(stateExecutionMap);
@@ -240,11 +246,11 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     wingsPersistence.save(context);
 
     WebTarget target = client.target(VERIFICATION_API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS
-        + LogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL + "?accountId=" + accountId
-        + "&applicationId=" + appId + "&stateExecutionId=" + stateExecutionId + "&logCollectionMinute=" + 0
-        + "&isBaselineCreated=" + true + "&taskId=" + generateUuid() + "&stateType=" + StateType.SPLUNKV2);
+        + LogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL + "?accountId=" + accountId + "&applicationId="
+        + appId + "&stateExecutionId=" + stateExecutionId + "&logCollectionMinute=" + 0 + "&isBaselineCreated=" + true
+        + "&taskId=" + learningEngineAnalysisTask.getUuid() + "&stateType=" + StateType.SPLUNKV2);
     Response restResponse = getRequestBuilderWithLearningAuthHeader(target).post(entity(record, APPLICATION_JSON));
-    assertEquals(restResponse.getStatus(), HttpStatus.SC_OK);
+    assertEquals(HttpStatus.SC_OK, restResponse.getStatus());
 
     target = client.target(API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS
         + LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_SUMMARY_URL + "?accountId=" + accountId

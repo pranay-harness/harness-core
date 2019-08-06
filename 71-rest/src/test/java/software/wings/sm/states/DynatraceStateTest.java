@@ -38,6 +38,7 @@ import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.MetricDataAnalysisService;
+import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.sm.ExecutionResponse;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
@@ -94,6 +95,8 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     FieldUtils.writeField(dynatraceState, "versionInfoManager", versionInfoManager, true);
     FieldUtils.writeField(dynatraceState, "appService", appService, true);
     FieldUtils.writeField(dynatraceState, "accountService", accountService, true);
+    FieldUtils.writeField(dynatraceState, "cvActivityLogService", cvActivityLogService, true);
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(mock(Logger.class));
   }
 
   @Test

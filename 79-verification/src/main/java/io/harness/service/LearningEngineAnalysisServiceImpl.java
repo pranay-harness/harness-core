@@ -40,6 +40,8 @@ import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTa
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask.LearningEngineExperimentalAnalysisTaskKeys;
 import software.wings.service.impl.newrelic.MLExperiments;
 import software.wings.service.intfc.analysis.ClusterLevel;
+import software.wings.service.intfc.verification.CVActivityLogService;
+import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
@@ -67,6 +69,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   @Inject private HarnessMetricRegistry metricRegistry;
   @Inject private VerificationManagerClientHelper managerClientHelper;
   @Inject private VerificationManagerClient managerClient;
+  @Inject private CVActivityLogService cvActivityLogService;
 
   private final ServiceApiVersion learningEngineApiVersion;
 
@@ -148,6 +151,14 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
           learningEngineAnalysisTask.getExecutionStatus(), analysisTask.getAnalysis_minute(),
           learningEngineAnalysisTask);
     }
+    if (isTaskCreated) {
+      cvActivityLogService
+          .getLogger(
+              analysisTask.getCvConfigId(), analysisTask.getAnalysis_minute(), analysisTask.getState_execution_id())
+          .info("Task is successfully enqueued for analysis for "
+                  + ClusterLevel.valueOf(analysisTask.getCluster_level()).getClusteringPhase() + ". Analysis minute %t",
+              TimeUnit.MINUTES.toMillis(analysisTask.getAnalysis_minute()));
+    }
     return isTaskCreated;
   }
 
@@ -210,6 +221,12 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
       }
       return null;
     }
+    if (task != null) {
+      cvActivityLogService.getLogger(task.getCvConfigId(), task.getAnalysis_minute(), task.getState_execution_id())
+          .info("Task picked up by learning engine for "
+                  + ClusterLevel.valueOf(task.getCluster_level()).getClusteringPhase() + ". Analysis minute %t",
+              TimeUnit.MINUTES.toMillis(task.getAnalysis_minute()));
+    }
     return task;
   }
 
@@ -266,8 +283,9 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     UpdateOperations<LearningEngineAnalysisTask> updateOperations =
         wingsPersistence.createUpdateOperations(LearningEngineAnalysisTask.class)
             .set(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.SUCCESS);
-
     wingsPersistence.update(query, updateOperations);
+    logAnalysisCompleteActivity(
+        cvActivityLogService.getLoggerByStateExecutionId(stateExecutionId), level, analysisMinute);
   }
 
   @Override
@@ -278,9 +296,17 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     }
     wingsPersistence.updateField(LearningEngineAnalysisTask.class, taskId,
         LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.SUCCESS);
+    LearningEngineAnalysisTask task = wingsPersistence.get(LearningEngineAnalysisTask.class, taskId);
+    logAnalysisCompleteActivity(
+        cvActivityLogService.getLogger(task.getCvConfigId(), task.getAnalysis_minute(), task.getState_execution_id()),
+        ClusterLevel.valueOf(task.getCluster_level()), task.getAnalysis_minute());
     logger.info("Job has been marked as SUCCESS for taskId : {}", taskId);
   }
 
+  private void logAnalysisCompleteActivity(Logger activityLogger, ClusterLevel level, long analysisMinute) {
+    activityLogger.info("Analysis completed for " + level.getClusteringPhase() + ". Analysis minute %t",
+        TimeUnit.MINUTES.toMillis(analysisMinute));
+  }
   @Override
   public void markExpTaskCompleted(String taskId) {
     if (taskId == null) {
@@ -413,7 +439,14 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     } else {
       Preconditions.checkState(isNotEmpty(analysisTask.getState_execution_id()));
     }
-
+    // TODO: Looks like this is not getting called from LE now. Test this once LE start calling this method.
+    cvActivityLogService
+        .getLogger(
+            analysisTask.getCvConfigId(), analysisTask.getAnalysis_minute(), analysisTask.getState_execution_id())
+        .warn("Error while processing analysis task for "
+                + ClusterLevel.valueOf(analysisTask.getCluster_level()).getClusteringPhase()
+                + ". Analysis minute %t Error: " + learningEngineError.getErrorMsg(),
+            TimeUnit.MINUTES.toMillis(analysisTask.getAnalysis_minute()));
     final AnalysisContext analysisContext =
         wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
             .filter(AnalysisContextKeys.stateExecutionId, analysisTask.getState_execution_id())

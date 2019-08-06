@@ -12,7 +12,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
-import io.harness.time.Timestamp;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
@@ -108,7 +107,7 @@ public class DynatraceState extends AbstractMetricAnalysisState {
 
     final DynaTraceConfig dynaTraceConfig = (DynaTraceConfig) settingAttribute.getValue();
 
-    final long dataCollectionStartTimeStamp = Timestamp.currentMinuteBoundary();
+    final long dataCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
     final DynaTraceDataCollectionInfo dataCollectionInfo =
         DynaTraceDataCollectionInfo.builder()
             .dynaTraceConfig(dynaTraceConfig)
@@ -144,8 +143,12 @@ public class DynatraceState extends AbstractMetricAnalysisState {
             .envId(envId)
             .infrastructureMappingId(infrastructureMappingId)
             .build();
-    waitNotifyEngine.waitForAll(
-        DataCollectionCallback.builder().appId(context.getAppId()).executionData(executionData).build(), waitId);
+    waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
+                                    .appId(context.getAppId())
+                                    .stateExecutionId(context.getStateExecutionInstanceId())
+                                    .executionData(executionData)
+                                    .build(),
+        waitId);
     return delegateService.queueTask(delegateTask);
   }
 

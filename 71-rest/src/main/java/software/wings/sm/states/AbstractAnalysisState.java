@@ -13,7 +13,11 @@ import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.AccountType.COMMUNITY;
 import static software.wings.beans.AccountType.ESSENTIALS;
 import static software.wings.beans.FeatureName.CV_SUCCEED_FOR_ANOMALY;
+import static software.wings.common.VerificationConstants.DELAY_MINUTES;
+import static software.wings.common.VerificationConstants.GA_PER_MINUTE_CV_STATES;
+import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
+import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
 import static software.wings.utils.Misc.replaceDotWithUnicode;
@@ -31,6 +35,7 @@ import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.K8sPod;
+import io.harness.time.Timestamp;
 import io.harness.waiter.WaitNotifyEngine;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -87,6 +92,7 @@ import software.wings.service.intfc.StateExecutionService.CurrentPhase;
 import software.wings.service.intfc.WorkflowExecutionBaselineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -101,6 +107,7 @@ import software.wings.sm.states.k8s.K8sStateHelper;
 import software.wings.stencils.DefaultValue;
 
 import java.io.UnsupportedEncodingException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -119,6 +126,7 @@ public abstract class AbstractAnalysisState extends State {
   public static final String START_TIME_PLACE_HOLDER = "$startTime";
   public static final String END_TIME_PLACE_HOLDER = "$endTime";
   public static final String HOST_NAME_PLACE_HOLDER = "$hostName";
+
   protected String timeDuration;
   protected String comparisonStrategy;
   protected String tolerance;
@@ -172,6 +180,8 @@ public abstract class AbstractAnalysisState extends State {
 
   @Inject private AccountService accountService;
 
+  @Transient @Inject @SchemaIgnore protected CVActivityLogService cvActivityLogService;
+
   protected String hostnameField;
 
   protected String hostnameTemplate;
@@ -185,6 +195,13 @@ public abstract class AbstractAnalysisState extends State {
       return String.valueOf(15);
     }
     return timeDuration;
+  }
+
+  protected boolean isEligibleForPerMinuteTask(String accountId) {
+    return getComparisonStrategy() == PREDICTIVE
+        || (featureFlagService.isEnabled(FeatureName.CV_DATA_COLLECTION_JOB, accountId)
+               && (PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()))))
+        || GA_PER_MINUTE_CV_STATES.contains(StateType.valueOf(getStateType()));
   }
 
   @Attributes(required = true, title = "Include nodes from previous phases")
@@ -222,7 +239,6 @@ public abstract class AbstractAnalysisState extends State {
   public AbstractAnalysisState(String name, String stateType) {
     super(name, stateType);
   }
-
   protected void saveMetaDataForDashboard(String accountId, ExecutionContext executionContext) {
     try {
       WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(
@@ -791,5 +807,23 @@ public abstract class AbstractAnalysisState extends State {
     }
 
     return true;
+  }
+
+  protected long dataCollectionStartTimestampMillis() {
+    return Timestamp.currentMinuteBoundary();
+  }
+
+  private long dataCollectionEndTimestampMillis(long dataCollectionStartTime) {
+    return Instant.ofEpochMilli(dataCollectionStartTime)
+        .plusMillis(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration())))
+        .toEpochMilli();
+  }
+
+  protected void logDataCollectionTriggeredMessage(CVActivityLogService.Logger activityLogger) {
+    long dataCollectionStartTime = dataCollectionStartTimestampMillis();
+    activityLogger.info("Triggered data collection for " + getTimeDuration()
+            + " minutes, Data will be collected for time range %t to %t waiting for " + DELAY_MINUTES
+            + " Minutes before starting data collection.",
+        dataCollectionStartTime, dataCollectionEndTimestampMillis(dataCollectionStartTime));
   }
 }

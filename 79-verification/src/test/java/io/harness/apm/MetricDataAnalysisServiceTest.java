@@ -20,10 +20,12 @@ import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
+import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.ContinuousVerificationService;
+import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -60,7 +62,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -74,13 +75,13 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   private String serviceId;
   private String cvConfigId;
   private String groupName;
-  private String delegateTaskId;
   @Mock private VerificationManagerClientHelper managerClientHelper;
   @Mock private UsageMetricsHelper usageMetricsHelper;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject @InjectMocks private TimeSeriesAnalysisService metricDataAnalysisService;
   @Inject @InjectMocks private ContinuousVerificationService continuousVerificationService;
+  @Inject @InjectMocks private LearningEngineService learningEngineService;
   private MetricDataAnalysisService managerAnalysisService;
 
   @Before
@@ -96,7 +97,6 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     serviceId = generateUuid();
     cvConfigId = wingsPersistence.save(new CVConfiguration());
     groupName = "groupName-";
-    delegateTaskId = UUID.randomUUID().toString();
     managerAnalysisService = new MetricDataAnalysisServiceImpl();
     FieldUtils.writeField(managerAnalysisService, "wingsPersistence", wingsPersistence, true);
     FieldUtils.writeField(
@@ -108,6 +108,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   public void testSaveAnalysisRecordsML() {
     int numOfGroups = 5;
     int numOfMinutes = 10;
+    LearningEngineAnalysisTask learningEngineAnalysisTask = getLearningEngineAnalysisTask();
     for (int i = 0; i < numOfGroups; i++) {
       for (int j = 1; j <= numOfMinutes; j++) {
         TimeSeriesMLAnalysisRecord mlAnalysisResponse = TimeSeriesMLAnalysisRecord.builder().build();
@@ -120,7 +121,8 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
           }
         });
         metricDataAnalysisService.saveAnalysisRecordsML(accountId, StateType.DYNA_TRACE, appId, stateExecutionId,
-            workflowExecutionId, groupName + i, j, delegateTaskId, "-1", cvConfigId, mlAnalysisResponse, null);
+            workflowExecutionId, groupName + i, j, learningEngineAnalysisTask.getUuid(), "-1", cvConfigId,
+            mlAnalysisResponse, null);
       }
     }
 
@@ -136,6 +138,16 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     assertNotNull(resultList);
     assertEquals(numOfGroups, resultList.size());
     resultList.forEach(record -> assertEquals(numOfMinutes, record.getAnalysisMinute()));
+  }
+
+  private LearningEngineAnalysisTask getLearningEngineAnalysisTask() {
+    LearningEngineAnalysisTask learningEngineAnalysisTask = LearningEngineAnalysisTask.builder()
+                                                                .state_execution_id(stateExecutionId)
+                                                                .workflow_execution_id(workflowExecutionId)
+                                                                .executionStatus(ExecutionStatus.QUEUED)
+                                                                .build();
+    learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
+    return learningEngineAnalysisTask;
   }
 
   @Test
@@ -231,6 +243,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     final CVConfiguration cvConfiguration = new CVConfiguration();
     cvConfiguration.setAppId(appId);
     String cvConfigId = wingsPersistence.save(cvConfiguration);
+    LearningEngineAnalysisTask learningEngineAnalysisTask = getLearningEngineAnalysisTask();
     final Gson gson = new Gson();
     File file = new File(getClass().getClassLoader().getResource("./ts_analysis_record.json").getFile());
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord;
@@ -250,8 +263,8 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     assertFalse(isEmpty(timeSeriesMLAnalysisRecord.getTransactions()));
     assertNull(timeSeriesMLAnalysisRecord.getTransactionsCompressedJson());
     metricDataAnalysisService.saveAnalysisRecordsML(accountId, StateType.APP_DYNAMICS, appId, stateExecutionId,
-        workflowExecutionId, generateUuid(), (int) analysisMinute, generateUuid(), generateUuid(), cvConfigId,
-        timeSeriesMLAnalysisRecord, null);
+        workflowExecutionId, generateUuid(), (int) analysisMinute, learningEngineAnalysisTask.getUuid(), generateUuid(),
+        cvConfigId, timeSeriesMLAnalysisRecord, null);
 
     final TimeSeriesMLAnalysisRecord savedRecord = wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
                                                        .filter("appId", appId)

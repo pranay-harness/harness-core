@@ -18,7 +18,6 @@ import io.harness.beans.DelegateTask;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
-import io.harness.time.Timestamp;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -249,7 +248,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     Map<String, List<APMMetricInfo>> apmMetricInfos = apmMetricInfos(context);
     metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.APM_VERIFICATION,
         context.getStateExecutionInstanceId(), null, metricDefinitions(apmMetricInfos));
-    final long dataCollectionStartTimeStamp = Timestamp.minuteBoundary(System.currentTimeMillis());
+    final long dataCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
     String accountId = appService.get(context.getAppId()).getAccountId();
     final APMDataCollectionInfo dataCollectionInfo =
         APMDataCollectionInfo.builder()
@@ -298,8 +297,12 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
             .envId(envId)
             .infrastructureMappingId(infrastructureMappingId)
             .build();
-    waitNotifyEngine.waitForAll(
-        DataCollectionCallback.builder().appId(context.getAppId()).executionData(executionData).build(), waitId);
+    waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
+                                    .appId(context.getAppId())
+                                    .stateExecutionId(context.getStateExecutionInstanceId())
+                                    .executionData(executionData)
+                                    .build(),
+        waitId);
     return delegateService.queueTask(delegateTask);
   }
 

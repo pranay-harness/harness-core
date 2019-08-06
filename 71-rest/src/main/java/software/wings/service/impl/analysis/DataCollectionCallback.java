@@ -24,6 +24,8 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.verification.CVActivityLogService;
+import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
@@ -34,6 +36,7 @@ import software.wings.verification.VerificationStateAnalysisExecutionData;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by rsingh on 5/18/17.
@@ -47,6 +50,7 @@ public class DataCollectionCallback implements NotifyCallback {
   @Inject private transient AlertService alertService;
   @Inject private transient AppService appService;
   @Inject private transient CVConfigurationService cvConfigurationService;
+  @Inject private transient CVActivityLogService cvActivityLogService;
 
   private String appId;
   private boolean isDataCollectionPerMinuteTask;
@@ -61,7 +65,11 @@ public class DataCollectionCallback implements NotifyCallback {
   public void notify(Map<String, ResponseData> response) {
     final DataCollectionTaskResult result = (DataCollectionTaskResult) response.values().iterator().next();
     logger.info("data collection result for app " + appId + " is: " + result);
+    Logger activityLogger = cvActivityLogService.getLogger(
+        cvConfigId, TimeUnit.MILLISECONDS.toMinutes(dataCollectionEndTime), stateExecutionId);
+    activityLogger.info("Data collection done with status: " + result.getStatus());
     if (result.getStatus() == DataCollectionTaskStatus.FAILURE) {
+      activityLogger.error("Data collection failed with error " + result.getErrorMessage());
       sendErrorNotification(result.getErrorMessage());
     }
 

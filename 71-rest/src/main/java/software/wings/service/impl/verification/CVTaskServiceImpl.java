@@ -12,7 +12,7 @@ import software.wings.verification.CVTask.CVTaskKeys;
 import java.util.Optional;
 
 public class CVTaskServiceImpl implements CVTaskService {
-  @Inject protected WingsPersistence wingsPersistence;
+  @Inject private WingsPersistence wingsPersistence;
 
   @Override
   public Optional<CVTask> getLastCVTask(String accountId, String cvConfigId) {

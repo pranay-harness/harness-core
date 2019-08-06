@@ -77,6 +77,7 @@ import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster.MessageFrequency;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.ClusterLevel;
+import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateType;
@@ -96,6 +97,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Praveen
@@ -116,6 +118,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   @Inject private UsageMetricsHelper usageMetricsHelper;
   @Inject private ContinuousVerificationService continuousVerificationService;
   @Inject private CVConfigurationService cvConfigurationService;
+  @Inject private CVActivityLogService cvActivityLogService;
 
   @Override
   public void bumpClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
@@ -262,6 +265,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       String query = logData.get(0).getQuery();
       switch (clusterLevel) {
         case L0:
+          cvActivityLogService.getLogger(cvConfigId, logCollectionMinute, stateExecutionId)
+              .info("Log data has been collected for minute %t", TimeUnit.MINUTES.toMillis(logCollectionMinute));
           break;
         case L1:
           String node = logData.get(0).getHost();
