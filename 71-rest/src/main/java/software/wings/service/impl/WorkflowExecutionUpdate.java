@@ -8,6 +8,7 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static java.util.Collections.emptySet;
+import static software.wings.sm.StateType.PHASE;
 
 import com.google.inject.Inject;
 
@@ -23,6 +24,7 @@ import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -43,6 +45,8 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionInterruptManager;
+import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateMachineExecutionCallback;
 import software.wings.sm.states.EnvState.EnvExecutionResponseData;
 
@@ -141,9 +145,20 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
                                             .project(WorkflowExecutionKeys.startTs, true)
                                             .get();
 
+    final StateExecutionInstance rollbackInstance =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .filter(StateExecutionInstanceKeys.executionUuid, workflowExecutionId)
+            .filter(StateExecutionInstanceKeys.stateType, PHASE.name())
+            .filter(StateExecutionInstanceKeys.rollback, true)
+            .order(Sort.ascending(StateExecutionInstanceKeys.createdAt))
+            .project(StateExecutionInstanceKeys.startTs, true)
+            .get();
+
     Long startTs = execution == null ? null : execution.getStartTs();
     Long endTs = startTs == null ? null : System.currentTimeMillis();
     Long duration = startTs == null ? null : endTs - startTs;
+    Long rollbackStartTs = rollbackInstance == null ? null : rollbackInstance.getStartTs();
+    Long rollbackDuration = rollbackStartTs == null ? null : endTs - rollbackStartTs;
 
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
                                          .filter(WorkflowExecutionKeys.appId, appId)
@@ -155,6 +170,8 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
         wingsPersistence.createUpdateOperations(WorkflowExecution.class).set(WorkflowExecutionKeys.status, status);
     setUnset(updateOps, WorkflowExecutionKeys.endTs, endTs);
     setUnset(updateOps, WorkflowExecutionKeys.duration, duration);
+    setUnset(updateOps, WorkflowExecutionKeys.rollbackStartTs, rollbackStartTs);
+    setUnset(updateOps, WorkflowExecutionKeys.rollbackDuration, rollbackDuration);
 
     wingsPersistence.findAndModify(query, updateOps, callbackFindAndModifyOptions);
 
