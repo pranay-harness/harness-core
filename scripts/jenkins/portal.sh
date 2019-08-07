@@ -66,6 +66,23 @@ fi
 
 cd ../..
 
+mkdir -p dist/event-server ;
+cd dist/event-server
+cp ../../72-event-server/target/event-server-capsule.jar .
+cp ../../72-event-server/key.pem .
+cp ../../72-event-server/cert.pem .
+cp ../../72-event-server/event-service-config.yml .
+cp ../../dockerization/event-server/Dockerfile-event-server-jenkins-k8 Dockerfile
+cp ../../dockerization/event-server/Dockerfile-event-server-jenkins-k8-gcr Dockerfile-gcr
+cp -r ../../dockerization/verification/scripts/ .
+cp -r ../../dockerization/common-resources/ .
+echo ${VERSION} > version.txt
+if [ ! -z ${PURPOSE} ]
+then
+    echo ${PURPOSE} > purpose.txt
+fi
+cd ../..
+
 echo "System-Properties: version=1.0.${VERSION} logdnakey=${LOGDNA_KEY}" >> app.mf
 echo "Application-Version: version=1.0.${VERSION}" >> app.mf
 

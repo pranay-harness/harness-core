@@ -12,30 +12,44 @@ import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.harness.event.EventPublisherGrpc;
 import io.harness.event.EventPublisherGrpc.EventPublisherBlockingStub;
+import io.harness.event.PublishMessage;
 import io.harness.grpc.auth.DelegateAuthCallCredentials;
 import io.harness.grpc.auth.EventServiceTokenGenerator;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.RollCycles;
 import net.openhft.chronicle.queue.impl.RollingChronicleQueue;
 
-import java.util.Objects;
-
+@Slf4j
 public class PublisherModule extends AbstractModule {
   private final String publishTarget;
   private final String accountId;
   private final String queueFilePath;
 
   public PublisherModule(String publishTarget, String accountId, String queueFilePath) {
-    this.publishTarget = Objects.requireNonNull(publishTarget);
-    this.accountId = Objects.requireNonNull(accountId);
-    this.queueFilePath = Objects.requireNonNull(queueFilePath);
+    this.publishTarget = publishTarget;
+    this.accountId = accountId;
+    this.queueFilePath = queueFilePath;
   }
 
   @Override
   protected void configure() {
-    bind(EventPublisher.class).to(EventPublisherChronicleImpl.class);
-    bind(FileDeletionManager.class);
+    if (publishTarget == null) {
+      // EventPublisher optional for delegate start-up
+      logger.info("EventPublisher configuration not present. Injecting Noop publisher");
+      bind(EventPublisher.class)
+          .toProvider(() -> new EventPublisher() {
+            @Override
+            public void publish(PublishMessage publishMessage) {}
+
+            @Override
+            public void shutdown() {}
+          })
+          .in(Singleton.class);
+    } else {
+      bind(EventPublisher.class).to(EventPublisherChronicleImpl.class);
+    }
   }
 
   @Provides
