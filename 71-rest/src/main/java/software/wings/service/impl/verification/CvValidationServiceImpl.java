@@ -23,7 +23,7 @@ public class CvValidationServiceImpl implements CvValidationService {
 
   @Override
   public Boolean validateStackdriverQuery(
-      String accountId, String appId, String connectorId, String query, String hostNameField) {
-    return stackDriverService.validateQuery(accountId, appId, connectorId, query, hostNameField);
+      String accountId, String appId, String connectorId, String query, String hostNameField, String logMessageField) {
+    return stackDriverService.validateQuery(accountId, appId, connectorId, query, hostNameField, logMessageField);
   }
 }

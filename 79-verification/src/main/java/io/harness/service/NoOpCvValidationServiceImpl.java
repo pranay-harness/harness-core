@@ -14,7 +14,7 @@ public class NoOpCvValidationServiceImpl implements CvValidationService {
 
   @Override
   public Boolean validateStackdriverQuery(
-      String accountId, String appId, String connectorId, String query, String hostNameField) {
+      String accountId, String appId, String connectorId, String query, String hostNameField, String logMessageField) {
     throw new UnsupportedOperationException();
   }
 }

@@ -169,7 +169,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
           if (stackdriverCVConfiguration.isEnabled24x7()
               && !cvValidationService.validateStackdriverQuery(accountId, appId,
                      stackdriverCVConfiguration.getConnectorId(), stackdriverCVConfiguration.getQuery(),
-                     stackdriverCVConfiguration.getHostnameField())) {
+                     stackdriverCVConfiguration.getHostnameField(), stackdriverCVConfiguration.getLogMessageField())) {
             throw new WingsException(
                 "Invalid Query, Please provide textPayload in query " + stackdriverCVConfiguration.getQuery());
           }
@@ -349,7 +349,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
           if (stackdriverCVConfiguration.isEnabled24x7()
               && !cvValidationService.validateStackdriverQuery(accountId, appId,
                      stackdriverCVConfiguration.getConnectorId(), stackdriverCVConfiguration.getQuery(),
-                     stackdriverCVConfiguration.getHostnameField())) {
+                     stackdriverCVConfiguration.getHostnameField(), stackdriverCVConfiguration.getLogMessageField())) {
             throw new WingsException(
                 "Invalid Query, Please provide textPayload in query " + stackdriverCVConfiguration.getQuery());
           }

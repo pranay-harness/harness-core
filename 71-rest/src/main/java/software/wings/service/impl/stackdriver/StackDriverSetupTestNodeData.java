@@ -23,17 +23,30 @@ import java.util.Set;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class StackDriverSetupTestNodeData extends SetupTestNodeData {
+  private boolean isLogConfiguration;
+
   private Map<String, List<StackDriverMetric>> loadBalancerMetrics = new HashMap<>();
 
   private Set<StackDriverMetric> podMetrics = new HashSet<>();
 
+  private String query;
+
+  private String hostNameField;
+
+  private String logMessageField;
+
   @Builder
   public StackDriverSetupTestNodeData(String appId, String settingId, String instanceName, boolean isServiceLevel,
       InstanceElement instanceElement, String hostExpression, String workflowId, long fromTime, long toTime,
-      Map<String, List<StackDriverMetric>> loadBalancerMetrics, Set<StackDriverMetric> podMetrics, String guid) {
+      Map<String, List<StackDriverMetric>> loadBalancerMetrics, Set<StackDriverMetric> podMetrics, String guid,
+      String query, String hostNameField, String logMessageField, boolean isLogConfiguration) {
     super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
         StateType.STACK_DRIVER, fromTime, toTime);
     this.loadBalancerMetrics = loadBalancerMetrics;
     this.podMetrics = podMetrics;
+    this.query = query;
+    this.hostNameField = hostNameField;
+    this.logMessageField = logMessageField;
+    this.isLogConfiguration = isLogConfiguration;
   }
 }

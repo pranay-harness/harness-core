@@ -515,12 +515,14 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .accountId(analysisContext.getAccountId())
             .build();
       case STACK_DRIVER_LOG:
+        StackDriverLogState stackDriverLogState = (StackDriverLogState) this;
         GcpConfig gcpConfig = (GcpConfig) settingsService.get(getAnalysisServerConfigId()).getValue();
         return StackDriverLogDataCollectionInfo.builder()
             .gcpConfig(gcpConfig)
             .hostnameField(analysisContext.getHostNameField())
             .stateType(StateType.STACK_DRIVER_LOG)
             .applicationId(analysisContext.getAppId())
+            .logMessageField(stackDriverLogState.getLogMessageField())
             .stateExecutionId(analysisContext.getStateExecutionId())
             .workflowId(analysisContext.getWorkflowId())
             .workflowExecutionId(analysisContext.getWorkflowExecutionId())

@@ -83,6 +83,7 @@ public class VerificationConstants {
   public static final String STACK_DRIVER_METRIC = "/configs/stackdriver_metrics.yml";
 
   public static final String STACK_DRIVER_QUERY_SEPARATER = " AND ";
+  public static final String STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD = "textPayload";
 
   // DEMO Workflow Constants
   public static final String DEMO_APPLICAITON_ID = "CV-Demo";

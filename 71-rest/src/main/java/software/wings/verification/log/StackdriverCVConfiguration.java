@@ -24,6 +24,10 @@ public class StackdriverCVConfiguration extends LogsCVConfiguration {
 
   @Attributes(required = true, title = "Host Name Field") @DefaultValue("pod_id") protected String hostnameField;
 
+  @Attributes(required = true, title = "Log Message Field")
+  @DefaultValue("textPayload")
+  protected String logMessageField;
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)

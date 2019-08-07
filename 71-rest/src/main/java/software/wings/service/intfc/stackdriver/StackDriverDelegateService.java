@@ -7,7 +7,6 @@ import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
-import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.stackdriver.StackDriverNameSpace;
 import software.wings.service.impl.stackdriver.StackDriverSetupTestNodeData;
@@ -47,7 +46,8 @@ public interface StackDriverDelegateService {
       boolean is24X7Task);
 
   @DelegateTaskType(TaskType.STACKDRIVER_LOG_DATA_FOR_NODE)
-  List<LogElement> getLogWithDataForNode(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String query,
-      long startTime, long endTime, ThirdPartyApiCallLog apiCallLog, Set<String> hosts, String hostnameField,
-      long logCollectionMinute, boolean is24X7Task);
+  VerificationNodeDataSetupResponse getLogWithDataForNode(GcpConfig gcpConfig,
+      List<EncryptedDataDetail> encryptionDetails, String query, long startTime, long endTime,
+      ThirdPartyApiCallLog apiCallLog, Set<String> hosts, String hostnameField, long logCollectionMinute,
+      boolean is24X7Task, String logMessageField);
 }

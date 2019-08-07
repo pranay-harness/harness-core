@@ -19,6 +19,7 @@ import static software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder.aP
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
+import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
 import com.google.common.collect.Lists;

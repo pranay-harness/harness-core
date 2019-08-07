@@ -64,7 +64,7 @@ public class StackDriverServiceImpl implements StackDriverService {
   }
 
   @Override
-  public VerificationNodeDataSetupResponse getMetricsWithDataForNode(StackDriverSetupTestNodeData setupTestNodeData) {
+  public VerificationNodeDataSetupResponse getDataForNode(StackDriverSetupTestNodeData setupTestNodeData) {
     String hostName = null;
     // check if it is for service level, serviceId is empty then get hostname
     if (!setupTestNodeData.isServiceLevel()) {
@@ -80,9 +80,22 @@ public class StackDriverServiceImpl implements StackDriverService {
                                             .appId(GLOBAL_APP_ID)
                                             .timeout(DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                             .build();
-      return delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
-          .getMetricsWithDataForNode((GcpConfig) settingAttribute.getValue(), encryptionDetails, setupTestNodeData,
-              hostName, createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid()));
+
+      if (setupTestNodeData.isLogConfiguration()) {
+        long startTime = setupTestNodeData.getFromTime() * TimeUnit.SECONDS.toMillis(1);
+        long endTime = setupTestNodeData.getToTime() * TimeUnit.SECONDS.toMillis(1);
+        return delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
+            .getLogWithDataForNode((GcpConfig) settingAttribute.getValue(), encryptionDetails,
+                setupTestNodeData.getQuery(), startTime, endTime,
+                createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid()),
+                hostName != null ? Collections.singleton(hostName) : Collections.emptySet(),
+                setupTestNodeData.getHostNameField(), TimeUnit.MILLISECONDS.toMinutes(setupTestNodeData.getFromTime()),
+                setupTestNodeData.isServiceLevel(), setupTestNodeData.getLogMessageField());
+      } else {
+        return delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
+            .getMetricsWithDataForNode((GcpConfig) settingAttribute.getValue(), encryptionDetails, setupTestNodeData,
+                hostName, createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid()));
+      }
     } catch (Exception e) {
       logger.info("error getting metric data for node", e);
       throw new WingsException(STACKDRIVER_ERROR)
@@ -132,7 +145,8 @@ public class StackDriverServiceImpl implements StackDriverService {
   }
 
   @Override
-  public Boolean validateQuery(String accountId, String appId, String connectorId, String query, String hostNameField) {
+  public Boolean validateQuery(
+      String accountId, String appId, String connectorId, String query, String hostNameField, String logMessageField) {
     SettingAttribute settingAttribute = settingsService.get(connectorId);
 
     if (settingAttribute == null || !(settingAttribute.getValue() instanceof GcpConfig)) {
@@ -145,13 +159,18 @@ public class StackDriverServiceImpl implements StackDriverService {
                                           .appId(GLOBAL_APP_ID)
                                           .timeout(DelegateTask.DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                           .build();
-    List<LogElement> response =
+    VerificationNodeDataSetupResponse nodeDataSetupResponse =
         delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
             .getLogWithDataForNode((GcpConfig) settingAttribute.getValue(), encryptionDetails, query,
                 TimeUnit.SECONDS.toMillis(
                     OffsetDateTime.now().minusMinutes(TIME_DURATION_FOR_LOGS_IN_MINUTES + 2).toEpochSecond()),
                 TimeUnit.SECONDS.toMillis(OffsetDateTime.now().minusMinutes(2).toEpochSecond()),
-                createApiCallLog(settingAttribute.getAccountId(), null), Collections.EMPTY_SET, hostNameField, 0, true);
+                createApiCallLog(settingAttribute.getAccountId(), null), Collections.EMPTY_SET, hostNameField, 0, true,
+                logMessageField);
+    List<LogElement> response = nodeDataSetupResponse.getDataForNode() != null
+        ? (List<LogElement>) nodeDataSetupResponse.getDataForNode()
+        : Collections.emptyList();
+
     if (response.size() / TIME_DURATION_FOR_LOGS_IN_MINUTES > VerificationConstants.TOTAL_HITS_PER_MIN_THRESHOLD) {
       throw new WingsException(ErrorCode.STACKDRIVER_ERROR, "Too many logs to process, please refine your query")
           .addParam("reason", "Too many logs returned using query: '" + query + "'. Please refine your query.");
