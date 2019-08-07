@@ -95,8 +95,6 @@
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-api</artifactId>
-            <version>1.21.0</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>io.prometheus</groupId>

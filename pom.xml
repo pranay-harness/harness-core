@@ -690,11 +690,6 @@
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>com.squareup.tape2</groupId>
-                <artifactId>tape</artifactId>
-                <version>2.0.0-beta1</version>
-            </dependency>
-            <dependency>
                 <groupId>com.sumologic.api.client</groupId>
                 <artifactId>sumo-java-client</artifactId>
                 <version>2.5</version>
@@ -800,21 +795,6 @@
                 <version>3.7.0</version>
             </dependency>
             <dependency>
-                <groupId>io.grpc</groupId>
-                <artifactId>grpc-netty-shaded</artifactId>
-                <version>${grpc.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.grpc</groupId>
-                <artifactId>grpc-protobuf</artifactId>
-                <version>${grpc.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.grpc</groupId>
-                <artifactId>grpc-stub</artifactId>
-                <version>${grpc.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>io.projectreactor</groupId>
                 <artifactId>reactor-core</artifactId>
                 <version>3.1.6.RELEASE</version>
@@ -873,6 +853,11 @@
                 <groupId>net.jodah</groupId>
                 <artifactId>expiringmap</artifactId>
                 <version>0.5.7</version>
+            </dependency>
+            <dependency>
+                <groupId>net.openhft</groupId>
+                <artifactId>chronicle-queue</artifactId>
+                <version>5.17.16</version>
             </dependency>
             <dependency>
                 <groupId>net.rcarz</groupId>
@@ -1188,6 +1173,13 @@
                 <groupId>io.dropwizard</groupId>
                 <artifactId>dropwizard-bom</artifactId>
                 <version>${dropwizard.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-bom</artifactId>
+                <version>${grpc.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -1607,6 +1599,9 @@
                         <analysisCache>true</analysisCache>
                         <analysisCacheLocation>${project.build.directory}/pmd/pmd.cache</analysisCacheLocation>
                         <excludes>**/generated/**/*</excludes>
+                        <excludeRoots>
+                            <excludeRoot>target/generated-sources</excludeRoot>
+                        </excludeRoots>
                     </configuration>
                     <dependencies>
                         <dependency>
@@ -1766,7 +1761,7 @@
                         <exclude>**/generated/*.java</exclude>
                     </excludes>
                     <excludeRoots>
-                        <excludeRoot>target/generated-sources/stubs</excludeRoot>
+                        <excludeRoot>target/generated-sources</excludeRoot>
                     </excludeRoots>
                 </configuration>
             </plugin>

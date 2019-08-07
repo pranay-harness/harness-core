@@ -1,37 +1,34 @@
 package io.harness.event.client;
 
-import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.event.EventPublisherGrpc.EventPublisherBlockingStub;
 import io.harness.event.PublishMessage;
-import io.harness.event.PublishRequest;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
-public class EventPublisherImpl implements EventPublisher {
-  private static final int MAX_PENDING_MESSAGES = 5000;
-  private final EventPublisherBlockingStub blockingStub;
+@Singleton
+class EventPublisherImpl extends AbstractPublisherImpl {
+  private static final int MAX_QUEUE_SIZE = 5000;
   private final BlockingQueue<PublishMessage> pendingPublishes;
 
-  private final AtomicBoolean shutDown = new AtomicBoolean(false);
+  private int readCount;
 
-  public EventPublisherImpl(EventPublisherBlockingStub blockingStub) {
-    this.blockingStub = Preconditions.checkNotNull(blockingStub, "blockingStub");
-    pendingPublishes = new LinkedBlockingQueue<>(MAX_PENDING_MESSAGES);
-    Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(this ::publishPending, 1, 1, TimeUnit.SECONDS);
+  @Inject
+  EventPublisherImpl(EventPublisherBlockingStub blockingStub) {
+    super(blockingStub);
+    pendingPublishes = new LinkedBlockingQueue<>(MAX_QUEUE_SIZE);
   }
 
   @Override
-  public void publish(PublishMessage publishMessage) {
-    Preconditions.checkState(!shutDown.get(), "Publisher shut-down. Cannot publish");
+  void enqueue(PublishMessage publishMessage) {
     try {
       pendingPublishes.put(publishMessage);
     } catch (InterruptedException e) {
@@ -40,27 +37,29 @@ public class EventPublisherImpl implements EventPublisher {
     }
   }
 
-  // Publishes the pending messages
-  private void publishPending() {
-    List<PublishMessage> toPublishNow = new ArrayList<>();
-    pendingPublishes.drainTo(toPublishNow);
-    if (toPublishNow.isEmpty()) {
-      // skip publish if there are no events
-      return;
+  @Override
+  List<PublishMessage> tryRead(int maxBatchSize) {
+    List<PublishMessage> batchToSend = new ArrayList<>();
+    Iterator<PublishMessage> iterator = pendingPublishes.iterator();
+    for (int i = 0; i < maxBatchSize && iterator.hasNext(); i++) {
+      batchToSend.add(iterator.next());
     }
-    try {
-      PublishRequest publishRequest = PublishRequest.newBuilder().addAllMessages(toPublishNow).build();
-      blockingStub.publish(publishRequest);
-      logger.info("Published {} events successfully", toPublishNow.size());
-    } catch (Exception e) {
-      logger.warn("Exception during publish", e);
-      logger.warn("Publish failed. Dropped {} events", toPublishNow.size());
-    }
+    readCount = batchToSend.size();
+    return batchToSend;
   }
 
   @Override
-  public void shutdown() {
-    Preconditions.checkState(!shutDown.getAndSet(true), "Already shut down");
-    publishPending();
+  void commitRead() {
+    pendingPublishes.drainTo(new ArrayList<>(), readCount);
+  }
+
+  @Override
+  void revertRead() {
+    // Nothing to do here.
+  }
+
+  @Override
+  void close() {
+    // Nothing to do here.
   }
 }

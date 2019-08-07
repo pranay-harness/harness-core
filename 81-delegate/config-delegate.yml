@@ -8,4 +8,4 @@ doUpgrade: false
 pollForTasks: false
 description: description here
 publishTarget: localhost:9890
-queueFilePath: queue.db
+queueFilePath: /tmp/eventQueue
