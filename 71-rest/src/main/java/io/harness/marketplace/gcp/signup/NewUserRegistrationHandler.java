@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.MarketPlace;
 import software.wings.beans.UserInvite;
 import software.wings.beans.marketplace.MarketPlaceConstants;
+import software.wings.beans.marketplace.MarketPlaceType;
 import software.wings.security.SecretManager;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.authentication.AuthenticationUtils;
@@ -38,7 +39,7 @@ public class NewUserRegistrationHandler implements GcpMarketplaceSignUpHandler {
       String redirectUrl = new SimpleUrlBuilder(baseUrl)
                                .addQueryParam("inviteId", userInvite.getUuid())
                                .addQueryParam("marketPlaceToken", harnessToken)
-                               .addQueryParam("marketPlaceType", "GCP")
+                               .addQueryParam("marketPlaceType", MarketPlaceType.GCP.toString())
                                .build();
 
       return new URI(redirectUrl);

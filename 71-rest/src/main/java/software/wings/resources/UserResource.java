@@ -72,7 +72,10 @@ import software.wings.service.intfc.UserService;
 import software.wings.utils.AccountPermissionUtils;
 import software.wings.utils.CacheManager;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -1003,6 +1006,15 @@ public class UserResource {
       @NotNull UserInvite userInvite) {
     // only AWS / GCP marketplaces are supported
     logger.info("Marketplace Signup. Email: {}, marketPlaceType= {}", userInvite.getEmail(), marketPlaceType);
+
+    try {
+      companyName = URLDecoder.decode(companyName, StandardCharsets.UTF_8.displayName());
+      accountName = URLDecoder.decode(accountName, StandardCharsets.UTF_8.displayName());
+    } catch (UnsupportedEncodingException e) {
+      logger.info("Account Name and Company Name must be UTF-8 compliant. accountName: {} companyName: {} Err: {}",
+          accountName, companyName, e.getMessage());
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "Account Name and Company Name must be UTF-8 compliant.");
+    }
 
     userInvite.setUuid(inviteId);
     User user = User.Builder.anUser()
