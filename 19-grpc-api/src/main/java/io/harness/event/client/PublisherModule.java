@@ -1,11 +1,9 @@
-package io.harness.publisher;
+package io.harness.event.client;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
-import com.squareup.tape2.ObjectQueue;
-import com.squareup.tape2.QueueFile;
 import io.grpc.CallCredentials;
 import io.grpc.Channel;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
@@ -14,15 +12,13 @@ import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.harness.event.EventPublisherGrpc;
 import io.harness.event.EventPublisherGrpc.EventPublisherBlockingStub;
-import io.harness.event.PublishMessage;
-import io.harness.event.client.EventPublisher;
-import io.harness.event.client.EventPublisherPersistentImpl;
-import io.harness.event.client.PublishMessageConverter;
 import io.harness.grpc.auth.DelegateAuthCallCredentials;
-import io.harness.security.ServiceTokenGenerator;
+import io.harness.grpc.auth.EventServiceTokenGenerator;
 import lombok.SneakyThrows;
+import net.openhft.chronicle.queue.ChronicleQueue;
+import net.openhft.chronicle.queue.RollCycles;
+import net.openhft.chronicle.queue.impl.RollingChronicleQueue;
 
-import java.io.File;
 import java.util.Objects;
 
 public class PublisherModule extends AbstractModule {
@@ -37,20 +33,23 @@ public class PublisherModule extends AbstractModule {
   }
 
   @Override
-  protected void configure() {}
-
-  @Provides
-  @Singleton
-  @SneakyThrows
-  ObjectQueue<PublishMessage> objectQueue() {
-    File file = new File(queueFilePath);
-    QueueFile queueFile = new QueueFile.Builder(file).build();
-    return ObjectQueue.create(queueFile, new PublishMessageConverter());
+  protected void configure() {
+    bind(EventPublisher.class).to(EventPublisherChronicleImpl.class);
+    bind(FileDeletionManager.class);
   }
 
   @Provides
-  CallCredentials callCredentials(ServiceTokenGenerator tokenGenerator) {
-    return new DelegateAuthCallCredentials(tokenGenerator, accountId, true);
+  @Singleton
+  RollingChronicleQueue chronicleQueue(FileDeletionManager fileDeletionManager) {
+    return ChronicleQueue.singleBuilder(queueFilePath)
+        .rollCycle(RollCycles.MINUTELY)
+        .storeFileListener(fileDeletionManager)
+        .build();
+  }
+
+  @Provides
+  CallCredentials callCredentials(EventServiceTokenGenerator eventServiceTokenGenerator) {
+    return new DelegateAuthCallCredentials(eventServiceTokenGenerator, accountId, true);
   }
 
   @Provides
@@ -65,13 +64,5 @@ public class PublisherModule extends AbstractModule {
   @Singleton
   EventPublisherBlockingStub eventPublisherBlockingStub(Channel channel, CallCredentials callCredentials) {
     return EventPublisherGrpc.newBlockingStub(channel).withCallCredentials(callCredentials);
-  }
-
-  @Provides
-  @Singleton
-  EventPublisher eventPublisher(EventPublisherBlockingStub blockingStub, ObjectQueue<PublishMessage> objectQueue) {
-    EventPublisherPersistentImpl eventPublisher = new EventPublisherPersistentImpl(blockingStub, objectQueue);
-    Runtime.getRuntime().addShutdownHook(new Thread(eventPublisher::shutdown));
-    return eventPublisher;
   }
 }

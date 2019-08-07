@@ -1,0 +1,171 @@
+package io.harness.event.client;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.util.Modules;
+import com.google.protobuf.Any;
+import com.google.protobuf.util.Timestamps;
+
+import io.grpc.Server;
+import io.grpc.inprocess.InProcessChannelBuilder;
+import io.grpc.inprocess.InProcessServerBuilder;
+import io.harness.category.element.FunctionalTests;
+import io.harness.event.EventPublisherGrpc;
+import io.harness.event.EventPublisherGrpc.EventPublisherBlockingStub;
+import io.harness.event.PublishMessage;
+import io.harness.event.payloads.Lifecycle;
+import io.harness.event.payloads.Lifecycle.EventType;
+import io.harness.grpc.auth.EventServiceTokenGenerator;
+import io.harness.threading.Concurrent;
+import net.openhft.chronicle.queue.impl.RollingChronicleQueue;
+import org.apache.commons.io.FileUtils;
+import org.awaitility.Awaitility;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+import java.io.File;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class EventPublisherTest {
+  private static final String QUEUE_FILE_PATH = "target/test-queue";
+  private final AtomicInteger messagesPublished = new AtomicInteger();
+
+  private Injector injector = Guice.createInjector(
+      Modules.override(new PublisherModule("NOT_USED", "NOT_USED", QUEUE_FILE_PATH)).with(new AbstractModule() {
+        @Override
+        protected void configure() {}
+
+        @Provides
+        @Singleton
+        EventPublisherBlockingStub eventPublisherBlockingStub() {
+          return EventPublisherGrpc.newBlockingStub(InProcessChannelBuilder.forName("inprocess").build());
+        }
+        @Provides
+        EventServiceTokenGenerator fakeTokenGenerator() {
+          return () -> "event-token";
+        }
+      }));
+  @Inject private EventPublisherBlockingStub blockingStub;
+  @Inject private RollingChronicleQueue chronicleQueue;
+  @Inject private FileDeletionManager fileDeletionManager;
+  private Server server;
+  private FakeService fakeService;
+  private EventPublisher eventPublisher;
+
+  @Before
+  public void setUp() throws Exception {
+    File directory = new File(QUEUE_FILE_PATH);
+    FileUtils.forceMkdir(directory);
+    FileUtils.cleanDirectory(directory);
+    injector.injectMembers(this);
+    messagesPublished.set(0);
+    fakeService = new FakeService();
+    eventPublisher = new EventPublisherChronicleImpl(blockingStub, chronicleQueue, fileDeletionManager);
+    server = InProcessServerBuilder.forName("inprocess").addService(fakeService).build();
+    server.start();
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    FileUtils.cleanDirectory(new File(QUEUE_FILE_PATH));
+    server.shutdown();
+    server.awaitTermination();
+  }
+
+  @Test
+  @Category(FunctionalTests.class)
+  public void testNoMessageLoss() throws Exception {
+    concurrentPublish(eventPublisher);
+  }
+
+  @Test
+  @Category(FunctionalTests.class)
+  public void testNoMessageLossWithErrorProneServer() throws Exception {
+    fakeService.setErrorProne(true);
+    concurrentPublish(eventPublisher);
+  }
+
+  private void concurrentPublish(EventPublisher eventPublisher) throws Exception {
+    int numThreads = 20;
+    CountDownLatch latch = new CountDownLatch(numThreads);
+    Concurrent.test(numThreads, x -> {
+      try {
+        int numMessages = 10000;
+        for (int i = 0; i < numMessages; i++) {
+          eventPublisher.publishMessage(Lifecycle.newBuilder()
+                                            .setInstanceId("instanceId-123")
+                                            .setType(EventType.START)
+                                            .setTimestamp(Timestamps.fromMillis(System.currentTimeMillis()))
+                                            .build());
+          messagesPublished.incrementAndGet();
+        }
+      } finally {
+        latch.countDown();
+      }
+    });
+    latch.await();
+    Awaitility.await()
+        .atMost(10, TimeUnit.SECONDS)
+        .pollInterval(1, TimeUnit.SECONDS)
+        .until(() -> assertEquals(messagesPublished.get(), fakeService.getMessageCount()));
+  }
+
+  @Test
+  @Category(FunctionalTests.class)
+  public void testMessageReceived() {
+    fakeService.setRecordMessages(true);
+    Instant instant = Instant.now().minus(3, ChronoUnit.MINUTES);
+    PublishMessage publishMessage =
+        PublishMessage.newBuilder()
+            .setPayload(Any.pack(ecsLifecycleEvent("instance-123", instant, EventType.STOP)))
+            .build();
+    eventPublisher.publish(publishMessage);
+
+    Awaitility.await()
+        .atMost(10, TimeUnit.SECONDS)
+        .pollInterval(100, TimeUnit.MILLISECONDS)
+        .until(() -> assertTrue(fakeService.getReceivedMessages().contains(publishMessage)));
+  }
+
+  @Test
+  @Category(FunctionalTests.class)
+  public void testMessageReceivedIfServerCallFails() {
+    fakeService.setRecordMessages(true);
+    fakeService.failNext();
+
+    Instant instant = Instant.now().minus(13, ChronoUnit.MINUTES);
+    PublishMessage publishMessage =
+        PublishMessage.newBuilder()
+            .setPayload(Any.pack(ecsLifecycleEvent("instance-456", instant, EventType.START)))
+            .build();
+
+    eventPublisher.publish(publishMessage);
+
+    Awaitility.await()
+        .atMost(10, TimeUnit.SECONDS)
+        .pollInterval(100, TimeUnit.MILLISECONDS)
+        .until(() -> assertTrue(fakeService.getReceivedMessages().contains(publishMessage)));
+  }
+
+  private Lifecycle ecsLifecycleEvent(String instanceId, Instant eventTime, EventType eventType) {
+    return Lifecycle.newBuilder()
+        .setInstanceId(instanceId)
+        .setTimestamp(Timestamps.fromMillis(eventTime.toEpochMilli()))
+        .setType(eventType)
+        .setCreatedTimestamp(Timestamps.fromMillis(System.currentTimeMillis()))
+        .build();
+  }
+}

@@ -21,6 +21,8 @@ import io.harness.delegate.service.K8sGlobalConfigServiceImpl;
 import io.harness.delegate.service.LogAnalysisStoreServiceImpl;
 import io.harness.delegate.service.MetricDataStoreServiceImpl;
 import io.harness.govern.DependencyModule;
+import io.harness.grpc.auth.EventServiceTokenGenerator;
+import io.harness.security.ServiceTokenGenerator;
 import io.harness.security.encryption.DelegateDecryptionService;
 import io.harness.shell.ShellExecutionService;
 import io.harness.shell.ShellExecutionServiceImpl;
@@ -413,6 +415,7 @@ public class DelegateModule extends DependencyModule {
     bind(ServiceNowDelegateService.class).to(ServiceNowDelegateServiceImpl.class);
     bind(ChartMuseumClient.class).to(ChartMuseumClientImpl.class);
     bind(SpotInstHelperServiceDelegate.class).to(SpotInstHelperServiceDelegateImpl.class);
+    bind(EventServiceTokenGenerator.class).to(ServiceTokenGenerator.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);

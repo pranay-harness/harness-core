@@ -31,12 +31,12 @@ public class EventServiceApplication {
   private final Set<Class> morphiaClasses = ImmutableSet.of(PublishedMessage.class);
   private final EventServiceConfig config;
 
-  public EventServiceApplication(EventServiceConfig config) {
+  private EventServiceApplication(EventServiceConfig config) {
     this.config = config;
   }
 
   public static void main(String[] args) throws IOException, InterruptedException {
-    File configFile = new File(args[0]);
+    File configFile = new File(args[1]);
     EventServiceConfig config =
         new YamlUtils().read(FileUtils.readFileToString(configFile, UTF_8), EventServiceConfig.class);
     new EventServiceApplication(config).run();

@@ -5,7 +5,6 @@ import io.grpc.Context;
 import io.grpc.Metadata;
 import io.grpc.SecurityLevel;
 import io.grpc.Status;
-import io.harness.security.ServiceTokenGenerator;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.Executor;
@@ -20,12 +19,13 @@ public class DelegateAuthCallCredentials extends CallCredentials {
       Metadata.Key.of("accountId", Metadata.ASCII_STRING_MARSHALLER);
   public static final Context.Key<String> ACCOUNT_ID_CTX_KEY = Context.key("accountId");
 
-  private final ServiceTokenGenerator tokenGenerator;
+  private final EventServiceTokenGenerator eventServiceTokenGenerator;
   private final String accountId;
   private final boolean requirePrivacy;
 
-  public DelegateAuthCallCredentials(ServiceTokenGenerator tokenGenerator, String accountId, boolean requirePrivacy) {
-    this.tokenGenerator = tokenGenerator;
+  public DelegateAuthCallCredentials(
+      EventServiceTokenGenerator eventServiceTokenGenerator, String accountId, boolean requirePrivacy) {
+    this.eventServiceTokenGenerator = eventServiceTokenGenerator;
     this.accountId = accountId;
     this.requirePrivacy = requirePrivacy;
   }
@@ -39,7 +39,7 @@ public class DelegateAuthCallCredentials extends CallCredentials {
           "Including delegate credentials require channel with PRIVACY_AND_INTEGRITY security level. Observed security level: "
           + security));
     }
-    String token = tokenGenerator.getEventServiceToken();
+    String token = eventServiceTokenGenerator.getEventServiceToken();
     Metadata headers = new Metadata();
     headers.put(ACCOUNT_ID_METADATA_KEY, accountId);
     headers.put(TOKEN_METADATA_KEY, token);

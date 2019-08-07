@@ -9,11 +9,6 @@
     <artifactId>72-event-server</artifactId>
     <dependencies>
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>ru.vyarus</groupId>
             <artifactId>guice-validator</artifactId>
         </dependency>
@@ -35,14 +30,53 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>71-rest</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>11-commons-test</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${project.parent.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
+    <build>
+        <finalName>event-server</finalName>
+        <plugins>
+            <plugin>
+                <groupId>com.github.chrisdchristo</groupId>
+                <artifactId>capsule-maven-plugin</artifactId>
+                <configuration>
+                    <appClass>io.harness.event.app.EventServiceApplication</appClass>
+                    <type>fat</type>
+                    <manifest>
+                        <entry>
+                            <key>Min-Java-Version</key>
+                            <value>1.8.0</value>
+                        </entry>
+                        <entry>
+                            <key>Min-Update-Version</key>
+                            <value>8=91</value>
+                        </entry>
+                        <entry>
+                            <key>Args</key>
+                            <value>server $*</value>
+                        </entry>
+                    </manifest>
+                    <execPluginConfig>root</execPluginConfig>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
