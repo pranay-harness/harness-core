@@ -46,7 +46,7 @@ public class ScalingThreadPoolExecutor extends ThreadPoolExecutor {
 
   @Override
   public Future<?> submit(Runnable task) {
-    logger.info("Task submitted: {}", task);
+    logger.debug("Task submitted: {}", task);
     return super.submit(task);
   }
 

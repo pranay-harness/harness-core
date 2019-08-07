@@ -72,6 +72,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.encoding.EncodingUtils;
+import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.model.EventType;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
@@ -1236,17 +1237,25 @@ public class UserServiceImpl implements UserService {
   @Override
   public User completeMarketPlaceSignup(User user, UserInvite userInvite, MarketPlaceType marketPlaceType) {
     userInvite = marketPlaceSignup(user, userInvite, marketPlaceType);
+    if (null == userInvite.getPassword()) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Password needs to be specified to login");
+    }
     return authenticationManager.defaultLogin(userInvite.getEmail(), String.valueOf(userInvite.getPassword()));
   }
 
-  private UserInvite marketPlaceSignup(User user, UserInvite userInvite, MarketPlaceType marketPlaceType) {
+  private UserInvite marketPlaceSignup(User user, final UserInvite userInvite, MarketPlaceType marketPlaceType) {
     validateUser(user);
 
     UserInvite existingInvite = wingsPersistence.get(UserInvite.class, userInvite.getUuid());
     if (existingInvite == null) {
       throw new WingsException(USER_INVITATION_DOES_NOT_EXIST, USER);
     } else if (existingInvite.isCompleted()) {
-      return existingInvite;
+      logger.error("Unexpected state: Existing invite is already completed. ID={}, userInvite: {} existingInvite: {}",
+          userInvite.getUuid(), userInvite, existingInvite);
+
+      // password is marked transient, so won't be saved in existingInvite
+      existingInvite.setPassword(userInvite.getPassword());
+      return userInvite;
     }
 
     String email = user.getEmail();
@@ -1285,6 +1294,7 @@ public class UserServiceImpl implements UserService {
                                   .expiryTime(marketPlace.getExpirationDate().getTime())
                                   .accountStatus(AccountStatus.ACTIVE)
                                   .build();
+
     Account account = Account.Builder.anAccount()
                           .withAccountName(user.getAccountName())
                           .withCompanyName(user.getCompanyName())
