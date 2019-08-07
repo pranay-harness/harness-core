@@ -400,9 +400,7 @@ public class AuthenticationManager {
       String jwtToken = userService.generateJWTToken(user.getEmail(), JWT_CATEGORY.SSO_REDIRECT);
       String encodedApiUrl = encodeBase64(configuration.getApiUrl());
 
-      Map<String, String> params = new HashMap<>();
-      params.put("token", jwtToken);
-      params.put("apiurl", encodedApiUrl);
+      Map<String, String> params = getRedirectParamsForSsoRedirection(jwtToken, encodedApiUrl);
       URI redirectUrl = authenticationUtils.buildAbsoluteUrl("/saml.html", params);
       return Response.seeOther(redirectUrl).build();
     } catch (WingsException e) {
@@ -415,6 +413,17 @@ public class AuthenticationManager {
     } catch (Exception e) {
       return generateInvalidSSOResponse(e);
     }
+  }
+
+  private Map<String, String> getRedirectParamsForSsoRedirection(String jwtToken, String encodedApiUrl) {
+    Boolean isOnprem =
+        mainConfiguration.getDeployMode() != null && DeployMode.isOnPrem(mainConfiguration.getDeployMode().name());
+
+    Map<String, String> params = new HashMap<>();
+    params.put("token", jwtToken);
+    params.put("apiurl", encodedApiUrl);
+    params.put("onprem", isOnprem.toString());
+    return params;
   }
 
   private Response generateInvalidSSOResponse(Exception e) throws URISyntaxException {
@@ -452,9 +461,7 @@ public class AuthenticationManager {
       String jwtToken = userService.generateJWTToken(user.getEmail(), JWT_CATEGORY.SSO_REDIRECT);
       String encodedApiUrl = encodeBase64(configuration.getApiUrl());
 
-      Map<String, String> params = new HashMap<>();
-      params.put("token", jwtToken);
-      params.put("apiurl", encodedApiUrl);
+      Map<String, String> params = getRedirectParamsForSsoRedirection(jwtToken, encodedApiUrl);
       URI redirectUrl = authenticationUtils.buildAbsoluteUrl("/saml.html", params);
 
       return Response.seeOther(redirectUrl).build();
