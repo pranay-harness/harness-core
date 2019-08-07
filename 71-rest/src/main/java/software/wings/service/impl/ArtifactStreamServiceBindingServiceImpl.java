@@ -22,10 +22,12 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.ServiceVariableKeys;
 import software.wings.beans.ServiceVariable.Type;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamBinding;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -46,6 +48,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ServiceVariableService serviceVariableService;
   @Inject private AppService appService;
+  @Inject private ArtifactService artifactService;
   @Inject private FeatureFlagService featureFlagService;
 
   @Override
@@ -155,7 +158,8 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
                 continue;
               }
 
-              artifactStreams.add(ArtifactStreamSummary.fromArtifactStream(artifactStream));
+              Artifact lastCollectedArtifact = artifactService.fetchLastCollectedArtifact(artifactStream);
+              artifactStreams.add(ArtifactStreamSummary.fromArtifactStream(artifactStream, lastCollectedArtifact));
             }
           }
 
@@ -189,7 +193,8 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
           continue;
         }
 
-        artifactStreams.add(ArtifactStreamSummary.fromArtifactStream(artifactStream));
+        Artifact lastCollectedArtifact = artifactService.fetchLastCollectedArtifact(artifactStream);
+        artifactStreams.add(ArtifactStreamSummary.fromArtifactStream(artifactStream, lastCollectedArtifact));
       }
     }
 

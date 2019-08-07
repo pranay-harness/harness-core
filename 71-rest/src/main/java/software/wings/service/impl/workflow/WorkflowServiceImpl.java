@@ -177,6 +177,7 @@ import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
 import software.wings.beans.WorkflowStepMeta;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.command.Command;
@@ -200,6 +201,7 @@ import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.ServiceClassLocator;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.EntityVersionService;
@@ -336,6 +338,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private ServiceVariableService serviceVariableService;
   @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private ArtifactService artifactService;
 
   @Inject private Queue<PruneEvent> pruneQueue;
 
@@ -2281,7 +2284,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             }
 
             artifactVariable.setArtifactStreamSummaries(
-                artifactStreams.stream().map(ArtifactStreamSummary::fromArtifactStream).collect(Collectors.toList()));
+                artifactStreams.stream()
+                    .map(artifactStream -> {
+                      Artifact lastCollectedArtifact = artifactService.fetchLastCollectedArtifact(artifactStream);
+                      return ArtifactStreamSummary.fromArtifactStream(artifactStream, lastCollectedArtifact);
+                    })
+                    .collect(Collectors.toList()));
           }
         }
       } else {

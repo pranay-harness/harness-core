@@ -71,16 +71,18 @@ public class DeploymentTriggerFunctionalTest extends AbstractFunctionalTest {
     };
 
     String name = "New Artifact Trigger" + System.currentTimeMillis();
-    DeploymentTrigger trigger =
-        DeploymentTrigger.builder()
-            .action(WorkflowAction.builder()
-                        .triggerArgs(TriggerArgs.builder().build())
-                        .workflowId(buildWorkflow.getUuid())
-                        .build())
-            .name(name)
-            .appId(application.getAppId())
-            .condition(ArtifactCondition.builder().artifactStreamId(artifactStream.getUuid()).build())
-            .build();
+    DeploymentTrigger trigger = DeploymentTrigger.builder()
+                                    .action(WorkflowAction.builder()
+                                                .triggerArgs(TriggerArgs.builder().build())
+                                                .workflowId(buildWorkflow.getUuid())
+                                                .build())
+                                    .name(name)
+                                    .appId(application.getAppId())
+                                    .condition(ArtifactCondition.builder()
+                                                   .artifactServerId("SETTING_ID")
+                                                   .artifactStreamId(artifactStream.getUuid())
+                                                   .build())
+                                    .build();
 
     RestResponse<DeploymentTrigger> savedTriggerResponse = Setup.portal()
                                                                .auth()
