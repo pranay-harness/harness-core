@@ -71,6 +71,7 @@ public class ArtifactTriggerProcessor implements TriggerProcessor {
     validateArtifactFilter(artifactCondition.getArtifactFilter());
     trigger.setCondition(ArtifactCondition.builder()
                              .artifactStreamId(artifactCondition.getArtifactStreamId())
+                             .artifactServerId(artifactStream.getSettingId())
                              .artifactFilter(artifactCondition.getArtifactFilter())
                              .build());
   }
@@ -94,6 +95,7 @@ public class ArtifactTriggerProcessor implements TriggerProcessor {
     }
     deploymentTrigger.setCondition(ArtifactCondition.builder()
                                        .artifactStreamId(artifactCondition.getArtifactStreamId())
+                                       .artifactServerId(artifactCondition.getArtifactServerId())
                                        .artifactStreamName(artifactStream.getName())
                                        .artifactServerName(settingAttribute.getName())
                                        .artifactStreamType(artifactStream.getArtifactStreamType())

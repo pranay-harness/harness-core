@@ -136,8 +136,11 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
                       .pipelineId(PIPELINE_ID)
                       .triggerArgs(TriggerArgs.builder().triggerArtifactVariables(triggerArtifactVariables).build())
                       .build())
-          .condition(
-              ArtifactCondition.builder().artifactStreamId(ARTIFACT_STREAM_ID).artifactFilter("^release").build())
+          .condition(ArtifactCondition.builder()
+                         .artifactServerId(SETTING_ID)
+                         .artifactStreamId(ARTIFACT_STREAM_ID)
+                         .artifactFilter("^release")
+                         .build())
           .build();
 
   List<ArtifactVariable> variables = singletonList(ArtifactVariable.builder()
@@ -204,7 +207,8 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
         DeploymentTrigger.builder()
             .name("New Artifact Pipeline")
             .action(PipelineAction.builder().pipelineId(PIPELINE_ID).triggerArgs(TriggerArgs.builder().build()).build())
-            .condition(ArtifactCondition.builder().artifactStreamId(ARTIFACT_STREAM_ID).build())
+            .condition(
+                ArtifactCondition.builder().artifactServerId(SETTING_ID).artifactStreamId(ARTIFACT_STREAM_ID).build())
             .build();
 
     DeploymentTrigger savedTrigger =
@@ -251,6 +255,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
                         .build())
             .condition(ArtifactCondition.builder()
                            .artifactStreamId(ARTIFACT_STREAM_ID)
+                           .artifactServerId(SETTING_ID)
                            .artifactFilter(ARTIFACT_FILTER)
                            .build())
             .build();
@@ -294,8 +299,11 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldTriggerExecutionPostArtifactCollectionWithFileRegexNotStartsWith() {
-    trigger.setCondition(
-        ArtifactCondition.builder().artifactStreamId(ARTIFACT_STREAM_ID).artifactFilter("^(?!release)").build());
+    trigger.setCondition(ArtifactCondition.builder()
+                             .artifactServerId(SETTING_ID)
+                             .artifactStreamId(ARTIFACT_STREAM_ID)
+                             .artifactFilter("^(?!release)")
+                             .build());
 
     Artifact artifact = anArtifact()
                             .withAppId(APP_ID)
@@ -354,8 +362,11 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldTriggerPostArtifactCollectionForAllArtifactsMatch() {
-    trigger.setCondition(
-        ArtifactCondition.builder().artifactStreamId(ARTIFACT_STREAM_ID).artifactFilter("^release").build());
+    trigger.setCondition(ArtifactCondition.builder()
+                             .artifactServerId(SETTING_ID)
+                             .artifactStreamId(ARTIFACT_STREAM_ID)
+                             .artifactFilter("^release")
+                             .build());
 
     deploymentTriggerService.save(trigger);
     when(pipelineService.fetchDeploymentMetadata(APP_ID, pipeline, null, null, Include.ARTIFACT_SERVICE))

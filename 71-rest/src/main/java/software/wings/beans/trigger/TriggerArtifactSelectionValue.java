@@ -9,7 +9,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonSubTypes({
   @JsonSubTypes.Type(value = TriggerArtifactSelectionLastDeployed.class, name = "LAST_DEPLOYED")
   , @JsonSubTypes.Type(value = TriggerArtifactSelectionLastCollected.class, name = "LAST_COLLECTED"),
-      @JsonSubTypes.Type(value = TriggerArtifactSelectionFromSource.class, name = "ARTIFACT_SOURCE")
+      @JsonSubTypes.Type(value = TriggerArtifactSelectionFromSource.class, name = "ARTIFACT_SOURCE"),
+      @JsonSubTypes.Type(value = TriggerArtifactSelectionFromPipelineSource.class, name = "PIPELINE_SOURCE")
 })
 public interface TriggerArtifactSelectionValue {
   enum ArtifactSelectionType { ARTIFACT_SOURCE, LAST_COLLECTED, LAST_DEPLOYED, PIPELINE_SOURCE, WEBHOOK_VARIABLE }

@@ -5,6 +5,7 @@ import static software.wings.beans.trigger.DeploymentTrigger.DeploymentTriggerBu
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
 import com.google.inject.Singleton;
@@ -57,6 +58,8 @@ public class DeploymentTriggerGenerator {
       } else {
         artifactConditionBuilder.artifactStreamId(artifactCondition.getArtifactStreamId());
       }
+
+      artifactConditionBuilder.artifactServerId(SETTING_ID);
       triggerBuilder.condition(artifactConditionBuilder.build());
     }
     return triggerBuilder.build();

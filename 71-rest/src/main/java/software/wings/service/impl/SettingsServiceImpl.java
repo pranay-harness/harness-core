@@ -77,6 +77,7 @@ import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.StringValue;
 import software.wings.beans.ValidationResult;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.artifact.ArtifactStreamSummary;
@@ -90,6 +91,7 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildService;
 import software.wings.service.intfc.EnvironmentService;
@@ -141,6 +143,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private YamlPushService yamlPushService;
   @Inject private GitConfigHelperService gitConfigHelperService;
   @Inject private AccountService accountService;
+  @Inject private ArtifactService artifactService;
 
   @Getter private Subject<SettingsServiceManipulationObserver> manipulationSubject = new Subject<>();
   @Inject private CacheManager cacheManager;
@@ -196,7 +199,9 @@ public class SettingsServiceImpl implements SettingsService {
         Map<String, List<ArtifactStreamSummary>> settingIdToArtifactStreamSummaries = new HashMap<>();
         artifactStreams.forEach(artifactStream -> {
           String settingId = artifactStream.getSettingId();
-          ArtifactStreamSummary artifactStreamSummary = ArtifactStreamSummary.fromArtifactStream(artifactStream);
+          Artifact lastCollectedArtifact = artifactService.fetchLastCollectedArtifact(artifactStream);
+          ArtifactStreamSummary artifactStreamSummary =
+              ArtifactStreamSummary.fromArtifactStream(artifactStream, lastCollectedArtifact);
           if (settingIdToArtifactStreamSummaries.containsKey(settingId)) {
             settingIdToArtifactStreamSummaries.get(settingId).add(artifactStreamSummary);
           } else {
