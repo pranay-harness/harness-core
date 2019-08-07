@@ -24,6 +24,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.service.DelegateService;
+import io.harness.event.client.EventPublisher;
+import io.harness.event.client.PublisherModule;
 import io.harness.managerclient.ManagerClientModule;
 import io.harness.serializer.YamlUtils;
 import io.harness.threading.ExecutorModule;
@@ -101,6 +103,8 @@ public class DelegateApplication {
 
     modules.add(new ManagerClientModule(configuration.getManagerUrl(), configuration.getVerificationServiceUrl(),
         configuration.getAccountId(), configuration.getAccountSecret()));
+    modules.add(new PublisherModule(
+        configuration.getPublishTarget(), configuration.getAccountId(), configuration.getQueueFilePath()));
     modules.addAll(new DelegateModule().cumulativeDependencies());
 
     Injector injector = Guice.createInjector(modules);
@@ -140,6 +144,7 @@ public class DelegateApplication {
       injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("verificationExecutor"))).shutdownNow();
       injector.getInstance(Key.get(ExecutorService.class, Names.named("verificationDataCollector"))).shutdownNow();
       injector.getInstance(ExecutorService.class).shutdown();
+      injector.getInstance(EventPublisher.class).shutdown();
       logger.info("Executor services have been shut down.");
 
       injector.getInstance(AsyncHttpClient.class).close();
