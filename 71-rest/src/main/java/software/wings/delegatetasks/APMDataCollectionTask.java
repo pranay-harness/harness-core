@@ -622,6 +622,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
                 .workflowId(dataCollectionInfo.getWorkflowId())
                 .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
                 .serviceId(dataCollectionInfo.getServiceId())
+                .cvConfigId(dataCollectionInfo.getCvConfigId())
                 .stateExecutionId(dataCollectionInfo.getStateExecutionId())
                 .appId(dataCollectionInfo.getApplicationId())
                 .dataCollectionMinute(resolveDataCollectionMinute(Timestamp.currentMinuteBoundary(), null, true))
