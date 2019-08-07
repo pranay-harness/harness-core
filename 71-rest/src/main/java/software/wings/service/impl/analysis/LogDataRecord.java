@@ -179,8 +179,6 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware {
             .clusterLabel(readString(entity, LogDataRecordKeys.clusterLabel))
             .host(readString(entity, LogDataRecordKeys.host))
             .timeStamp(readLong(entity, LogDataRecordKeys.timeStamp))
-
-            .count((int) readLong(entity, LogDataRecordKeys.count))
             .logMD5Hash(readString(entity, LogDataRecordKeys.logMD5Hash))
             .clusterLevel(ClusterLevel.valueOf(readString(entity, LogDataRecordKeys.clusterLevel)))
             .workflowId(readString(entity, LogDataRecordKeys.workflowId))
@@ -195,6 +193,15 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware {
       String timesLabeledValue = readString(entity, LogDataRecordKeys.timesLabeled);
       if (isNotEmpty(timesLabeledValue)) {
         dataRecord.setTimesLabeled(Integer.parseInt(timesLabeledValue));
+      }
+    }
+
+    try {
+      dataRecord.setCount((int) readLong(entity, LogDataRecordKeys.count));
+    } catch (ClassCastException ex) {
+      String countVal = readString(entity, LogDataRecordKeys.count);
+      if (isNotEmpty(countVal)) {
+        dataRecord.setCount(Integer.parseInt(countVal));
       }
     }
 
