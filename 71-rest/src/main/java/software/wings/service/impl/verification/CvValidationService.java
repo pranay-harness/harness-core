@@ -8,5 +8,5 @@ public interface CvValidationService {
       String hostnameField, String messageField, String timestampField);
 
   Boolean validateStackdriverQuery(
-      String accountId, String appId, String connectorId, String query, String hostNameField);
+      String accountId, String appId, String connectorId, String query, String hostNameField, String logMessageField);
 }

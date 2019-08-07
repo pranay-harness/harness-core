@@ -55,10 +55,9 @@ public class StackDriverResource {
   @Timed
   @DelegateAuth
   @ExceptionMetered
-  public RestResponse<VerificationNodeDataSetupResponse> getMetricsWithDataForNode(
-      @QueryParam("accountId") final String accountId, @Valid StackDriverSetupTestNodeData stackDriverSetupTestNodeData)
-      throws IOException {
-    return new RestResponse<>(stackDriverService.getMetricsWithDataForNode(stackDriverSetupTestNodeData));
+  public RestResponse<VerificationNodeDataSetupResponse> getDataForNode(@QueryParam("accountId") final String accountId,
+      @Valid StackDriverSetupTestNodeData stackDriverSetupTestNodeData) throws IOException {
+    return new RestResponse<>(stackDriverService.getDataForNode(stackDriverSetupTestNodeData));
   }
 
   @GET

@@ -1,12 +1,15 @@
 package software.wings.delegatetasks;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
+import static software.wings.common.VerificationConstants.STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 
 import com.google.api.services.logging.v2.model.LogEntry;
 import com.google.inject.Inject;
 
+import com.jayway.jsonpath.JsonPath;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.task.TaskParameters;
 import lombok.extern.slf4j.Slf4j;
@@ -128,18 +131,32 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
               logger.info("Total no. of log records found : {}", entries.size());
               for (LogEntry entry : entries) {
                 long timeStamp = new DateTime(entry.getTimestamp()).getMillis();
-                LogElement logElement =
-                    LogElement.builder()
-                        .query(dataCollectionInfo.getQuery())
-                        .logCollectionMinute(
-                            is24X7Task() ? (int) TimeUnit.MILLISECONDS.toMinutes(timeStamp) : logCollectionMinute)
-                        .clusterLabel(String.valueOf(clusterLabel++))
-                        .count(1)
-                        .logMessage(entry.getTextPayload())
-                        .timeStamp(timeStamp)
-                        .host(entry.getResource().getLabels().get(dataCollectionInfo.getHostnameField()))
-                        .build();
-                logElements.add(logElement);
+                LogElement logElement;
+                try {
+                  String logMessageField = isNotEmpty(dataCollectionInfo.getLogMessageField())
+                      ? dataCollectionInfo.getLogMessageField()
+                      : STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD;
+                  String logMessage = JsonPath.read(entry.toString(), logMessageField);
+                  if (isEmpty(logMessage)) {
+                    logger.error("Log Message is empty for Field ", logMessageField);
+                  } else {
+                    logElement =
+                        LogElement.builder()
+                            .query(dataCollectionInfo.getQuery())
+                            .logCollectionMinute(
+                                is24X7Task() ? (int) TimeUnit.MILLISECONDS.toMinutes(timeStamp) : logCollectionMinute)
+                            .clusterLabel(String.valueOf(clusterLabel++))
+                            .count(1)
+                            .logMessage(logMessage)
+                            .timeStamp(timeStamp)
+                            .host(entry.getResource().getLabels().get(dataCollectionInfo.getHostnameField()))
+                            .build();
+                    logElements.add(logElement);
+                  }
+                } catch (Exception e) {
+                  logger.warn("Unable to parse logEntry due to exception : ", e);
+                  continue;
+                }
               }
             }
           } catch (Exception e) {

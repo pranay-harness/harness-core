@@ -3,6 +3,7 @@ package software.wings.service.impl.stackdriver;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
+import static software.wings.common.VerificationConstants.STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD;
 import static software.wings.common.VerificationConstants.STACK_DRIVER_QUERY_SEPARATER;
 import static software.wings.service.impl.stackdriver.StackDriverNameSpace.LOADBALANCER;
 import static software.wings.service.impl.stackdriver.StackDriverNameSpace.POD_NAME;
@@ -18,6 +19,7 @@ import com.google.api.services.monitoring.v3.model.ListTimeSeriesResponse;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.jayway.jsonpath.JsonPath;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
@@ -223,31 +225,53 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
     return rfc3339.format(new Date(time));
   }
 
-  public List<LogElement> getLogWithDataForNode(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
-      String query, long startTime, long endTime, ThirdPartyApiCallLog apiCallLog, Set<String> hosts,
-      String hostnameField, long logCollectionMinute, boolean is24X7Task) {
-    List<LogEntry> entries = fetchLogs(
-        query, startTime, endTime, apiCallLog, hosts, hostnameField, gcpConfig, encryptionDetails, is24X7Task);
+  public VerificationNodeDataSetupResponse getLogWithDataForNode(GcpConfig gcpConfig,
+      List<EncryptedDataDetail> encryptionDetails, String query, long startTime, long endTime,
+      ThirdPartyApiCallLog apiCallLog, Set<String> hosts, String hostnameField, long logCollectionMinute,
+      boolean is24X7Task, String logMessageField) {
+    List<LogEntry> entries;
+    try {
+      entries = fetchLogs(
+          query, startTime, endTime, apiCallLog, hosts, hostnameField, gcpConfig, encryptionDetails, is24X7Task);
+    } catch (Exception e) {
+      return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
+    }
     List<LogElement> logElements = new ArrayList<>();
     int clusterLabel = 0;
     if (isNotEmpty(entries)) {
       logger.info("Total no. of log records found : {}", entries.size());
       for (LogEntry entry : entries) {
-        long timeStamp = new DateTime(entry.getTimestamp()).getMillis();
-        LogElement logElement = LogElement.builder()
-                                    .query(query)
-                                    .logCollectionMinute(is24X7Task ? (int) TimeUnit.MILLISECONDS.toMinutes(timeStamp)
-                                                                    : logCollectionMinute)
-                                    .clusterLabel(String.valueOf(clusterLabel++))
-                                    .count(1)
-                                    .logMessage(entry.getTextPayload())
-                                    .timeStamp(timeStamp)
-                                    .host(entry.getResource().getLabels().get(hostnameField))
-                                    .build();
-        logElements.add(logElement);
+        LogElement logElement;
+        try {
+          String logMessage = JsonPath.read(
+              entry.toString(), isNotEmpty(logMessageField) ? logMessageField : STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD);
+
+          long timeStamp = new DateTime(entry.getTimestamp()).getMillis();
+          if (isNotEmpty(logMessage)) {
+            logElement = LogElement.builder()
+                             .query(query)
+                             .logCollectionMinute(
+                                 is24X7Task ? (int) TimeUnit.MILLISECONDS.toMinutes(timeStamp) : logCollectionMinute)
+                             .clusterLabel(String.valueOf(clusterLabel++))
+                             .count(1)
+                             .logMessage(logMessage)
+                             .timeStamp(timeStamp)
+                             .host(entry.getResource().getLabels().get(hostnameField))
+                             .build();
+            logElements.add(logElement);
+          }
+        } catch (Exception e) {
+          logger.warn("Unable to parse logEntry due to exception : ", e);
+          continue;
+        }
       }
     }
-    return logElements;
+    return VerificationNodeDataSetupResponse.builder()
+        .providerReachable(true)
+        .loadResponse(
+            VerificationLoadResponse.builder().isLoadPresent(!logElements.isEmpty()).loadResponse(logElements).build())
+        .dataForNode(logElements)
+        .build();
   }
 
   public List<LogEntry> fetchLogs(String query, long startTime, long endTime, ThirdPartyApiCallLog apiCallLog,

@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.common.VerificationConstants.KUBERNETES_HOSTNAME;
+import static software.wings.common.VerificationConstants.STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD;
 import static software.wings.common.VerificationConstants.STACK_DRIVER_DEFAULT_HOSTNAME;
 
 import com.github.reinert.jjschema.Attributes;
@@ -26,6 +27,8 @@ public class StackDriverLogState extends AbstractLogAnalysisState {
 
   @Attributes(title = "Region") @DefaultValue("us-central1") private String region = "us-central1";
 
+  @Attributes(title = "LogMessageField") @DefaultValue("textPayload") private String logMessageField = "textPayload";
+
   public StackDriverLogState(String name) {
     super(name, StateType.STACK_DRIVER_LOG.name());
   }
@@ -36,6 +39,26 @@ public class StackDriverLogState extends AbstractLogAnalysisState {
 
   public void setRegion(String region) {
     this.region = region;
+  }
+
+  @Attributes(required = true, title = "Hostname Field")
+  public String getHostnameField() {
+    return hostnameField;
+  }
+
+  public void setHostnameField(String hostnameField) {
+    this.hostnameField = hostnameField;
+  }
+
+  public String getLogMessageField() {
+    if (isEmpty(logMessageField)) {
+      return STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD;
+    }
+    return logMessageField;
+  }
+
+  public void setLogMessageField(String logMessageField) {
+    this.logMessageField = logMessageField;
   }
 
   @Override

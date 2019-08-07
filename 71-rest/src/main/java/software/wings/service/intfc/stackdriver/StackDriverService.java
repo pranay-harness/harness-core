@@ -17,8 +17,7 @@ public interface StackDriverService {
    * @param setupTestNodeData
    * @return
    */
-  VerificationNodeDataSetupResponse getMetricsWithDataForNode(StackDriverSetupTestNodeData setupTestNodeData)
-      throws IOException;
+  VerificationNodeDataSetupResponse getDataForNode(StackDriverSetupTestNodeData setupTestNodeData) throws IOException;
 
   /**
    * Api to fetch all the metrics support by Harness for StackDriver
@@ -30,5 +29,6 @@ public interface StackDriverService {
 
   Map<String, String> listForwardingRules(String settingId, String region) throws IOException;
 
-  Boolean validateQuery(String accountId, String appId, String connectorId, String query, String hostNameField);
+  Boolean validateQuery(
+      String accountId, String appId, String connectorId, String query, String hostNameField, String logMessageField);
 }
