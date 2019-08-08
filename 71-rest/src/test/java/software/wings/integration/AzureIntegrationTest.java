@@ -190,6 +190,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = PUNEET, intermittent = true)
   @Category(IntegrationTests.class)
   public void getKubernetesClusters() {
     AzureConfig config = getAzureConfig();

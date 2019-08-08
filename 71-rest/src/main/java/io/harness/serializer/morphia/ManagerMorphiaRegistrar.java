@@ -1,5 +1,7 @@
 package io.harness.serializer.morphia;
 
+import io.harness.marketplace.gcp.events.AccountActiveEvent;
+import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MorphiaRegistrar;
 import io.harness.security.SimpleEncryption;
 import software.wings.api.AmiServiceDeployElement;
@@ -13,6 +15,8 @@ import software.wings.api.AwsAmiSwitchRoutesStateExecutionData;
 import software.wings.api.AwsAutoScalingGroupDeploymentInfo;
 import software.wings.api.AwsCodeDeployDeploymentInfo;
 import software.wings.api.AwsLambdaContextElement;
+import software.wings.api.AwsLambdaExecutionData;
+import software.wings.api.AwsLambdaFunctionElement;
 import software.wings.api.BarrierExecutionData;
 import software.wings.api.BarrierStepExecutionSummary;
 import software.wings.api.CanaryWorkflowStandardParams;
@@ -216,6 +220,7 @@ import software.wings.helpers.ext.k8s.response.K8sDeleteResponse;
 import software.wings.helpers.ext.k8s.response.K8sRollingDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sScaleResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
+import software.wings.helpers.ext.k8s.response.K8sTrafficSplitResponse;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.helpers.ext.pcf.request.PcfCommandRouteUpdateRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
@@ -233,6 +238,7 @@ import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.aws.model.AwsAmiServiceDeployResponse;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesResponse;
+import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionResponse;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteWfResponse;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
@@ -250,6 +256,8 @@ import software.wings.service.impl.yaml.GitCommandCallback;
 import software.wings.sm.AwsLambdaVerification;
 import software.wings.sm.BarrierStatusData;
 import software.wings.sm.ElementNotifyResponseData;
+import software.wings.sm.ExecutionResumeAllCallback;
+import software.wings.sm.ExecutionStatusData;
 import software.wings.sm.ExecutionWaitCallback;
 import software.wings.sm.ExecutionWaitRetryCallback;
 import software.wings.sm.ResourceConstraintStatusData;
@@ -372,6 +380,12 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
 
   @Override
   public void register(Map<String, Class> map) {
+    final HelperPut h = (name, clazz) -> {
+      map.put(pkgHarness + name, clazz);
+    };
+
+    h.put("marketplace.gcp.events.AccountActiveEvent", AccountActiveEvent.class);
+
     final HelperPut w = (name, clazz) -> {
       map.put(pkgWings + name, clazz);
     };
@@ -387,6 +401,8 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.AwsAutoScalingGroupDeploymentInfo", AwsAutoScalingGroupDeploymentInfo.class);
     w.put("api.AwsCodeDeployDeploymentInfo", AwsCodeDeployDeploymentInfo.class);
     w.put("api.AwsLambdaContextElement", AwsLambdaContextElement.class);
+    w.put("api.AwsLambdaExecutionData", AwsLambdaExecutionData.class);
+    w.put("api.AwsLambdaFunctionElement", AwsLambdaFunctionElement.class);
     w.put("api.BarrierExecutionData", BarrierExecutionData.class);
     w.put("api.BarrierStepExecutionSummary", BarrierStepExecutionSummary.class);
     w.put("api.CanaryWorkflowStandardParams", CanaryWorkflowStandardParams.class);
@@ -412,6 +428,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.InstanceElementListParam", InstanceElementListParam.class);
     w.put("api.JenkinsExecutionData", JenkinsExecutionData.class);
     w.put("api.jira.JiraExecutionData", JiraExecutionData.class);
+    w.put("api.JiraExecutionData", JiraExecutionData.class);
     w.put("api.k8s.K8sContextElement", K8sContextElement.class);
     w.put("api.k8s.K8sExecutionSummary", K8sExecutionSummary.class);
     w.put("api.k8s.K8sStateExecutionData", K8sStateExecutionData.class);
@@ -588,6 +605,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("helpers.ext.k8s.response.K8sRollingDeployResponse", K8sRollingDeployResponse.class);
     w.put("helpers.ext.k8s.response.K8sScaleResponse", K8sScaleResponse.class);
     w.put("helpers.ext.k8s.response.K8sTaskExecutionResponse", K8sTaskExecutionResponse.class);
+    w.put("helpers.ext.k8s.response.K8sTrafficSplitResponse", K8sTrafficSplitResponse.class);
     w.put("helpers.ext.mail.SmtpConfig", SmtpConfig.class);
     w.put("helpers.ext.pcf.request.PcfCommandRouteUpdateRequest", PcfCommandRouteUpdateRequest.class);
     w.put("helpers.ext.pcf.request.PcfCommandSetupRequest", PcfCommandSetupRequest.class);
@@ -604,6 +622,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("service.impl.aws.model.AwsAmiServiceDeployResponse", AwsAmiServiceDeployResponse.class);
     w.put("service.impl.aws.model.AwsAmiServiceSetupResponse", AwsAmiServiceSetupResponse.class);
     w.put("service.impl.aws.model.AwsAmiSwitchRoutesResponse", AwsAmiSwitchRoutesResponse.class);
+    w.put("service.impl.aws.model.AwsLambdaExecuteFunctionResponse", AwsLambdaExecuteFunctionResponse.class);
     w.put("service.impl.aws.model.AwsLambdaExecuteWfResponse", AwsLambdaExecuteWfResponse.class);
     w.put("service.impl.cloudwatch.CloudWatchMetric", CloudWatchMetric.class);
     w.put("service.impl.DelayEventNotifyData", DelayEventNotifyData.class);
@@ -613,6 +632,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("service.impl.event.AlertEvent", AlertEvent.class);
     w.put("service.impl.event.timeseries.TimeSeriesBatchEventInfo", TimeSeriesBatchEventInfo.class);
     w.put("service.impl.event.timeseries.TimeSeriesEventInfo", TimeSeriesEventInfo.class);
+    w.put("service.impl.newrelic.MetricAnalysisExecutionData", HObjectFactory.NotFoundClass.class);
     w.put("service.impl.newrelic.NewRelicMarkerExecutionData", NewRelicMarkerExecutionData.class);
     w.put("service.impl.splunk.SplunkAnalysisCluster", SplunkAnalysisCluster.class);
     w.put("service.impl.stackdriver.StackDriverLogDataCollectionInfo", StackDriverLogDataCollectionInfo.class);
@@ -623,6 +643,8 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("sm.AwsLambdaVerification", AwsLambdaVerification.class);
     w.put("sm.BarrierStatusData", BarrierStatusData.class);
     w.put("sm.ElementNotifyResponseData", ElementNotifyResponseData.class);
+    w.put("sm.ExecutionResumeAllCallback", ExecutionResumeAllCallback.class);
+    w.put("sm.ExecutionStatusData", ExecutionStatusData.class);
     w.put("sm.ExecutionWaitCallback", ExecutionWaitCallback.class);
     w.put("sm.ExecutionWaitRetryCallback", ExecutionWaitRetryCallback.class);
     w.put("sm.ResourceConstraintStatusData", ResourceConstraintStatusData.class);
