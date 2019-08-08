@@ -89,6 +89,7 @@ import javax.ws.rs.QueryParam;
 @Produces(APPLICATION_JSON)
 @Scope(ResourceType.SETTING)
 public class SettingResource {
+  private static final String LIMIT = "" + Integer.MAX_VALUE;
   @Inject private SettingsService settingsService;
   @Inject private BuildSourceService buildSourceService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
@@ -118,6 +119,7 @@ public class SettingResource {
       @QueryParam("gitSshConfigOnly") boolean gitSshConfigOnly,
       @QueryParam("withArtifactStreamCount") boolean withArtifactStreamCount,
       @QueryParam("artifactStreamSearchString") String artifactStreamSearchString,
+      @DefaultValue(LIMIT) @QueryParam("maxResults") int maxResults, @QueryParam("serviceId") String serviceId,
       @BeanParam PageRequest<SettingAttribute> pageRequest) {
     pageRequest.addFilter("appId", EQ, appId);
     if (isNotEmpty(settingVariableTypes)) {
@@ -130,7 +132,7 @@ public class SettingResource {
     }
 
     PageResponse<SettingAttribute> result = settingsService.list(pageRequest, currentAppId, currentEnvId, accountId,
-        gitSshConfigOnly, withArtifactStreamCount, artifactStreamSearchString);
+        gitSshConfigOnly, withArtifactStreamCount, artifactStreamSearchString, maxResults, serviceId);
     result.forEach(this ::maskEncryptedFields);
     return new RestResponse<>(result);
   }
