@@ -22,6 +22,7 @@ import java.sql.SQLException;
 
 /**
  * This will migrate the instance data to timescale db
+ * @author rktummala 
  */
 @Slf4j
 @Singleton
