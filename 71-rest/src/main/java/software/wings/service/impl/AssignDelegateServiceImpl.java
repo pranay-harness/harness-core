@@ -340,26 +340,29 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
       logger.info("{} delegates {} are active", activeDelegates.size(), activeDelegates);
 
-      List<String> eligibleDelegates = connectedWhitelistedDelegates(delegateTask);
+      List<String> whitelistedDelegates = connectedWhitelistedDelegates(delegateTask);
 
       if (activeDelegates.isEmpty()) {
         errorMessage = "There were no active delegates to complete the task.";
-      } else if (eligibleDelegates.isEmpty()) {
+      } else if (whitelistedDelegates.isEmpty()) {
         StringBuilder msg = new StringBuilder();
         for (String delegateId : activeDelegates) {
           Delegate delegate = delegateService.get(delegateTask.getAccountId(), delegateId, false);
           if (delegate != null) {
             msg.append(" ===> ").append(delegate.getHostName()).append(": ");
-            boolean cannotAssignScope = !canAssignScopes(delegate, delegateTask);
-            boolean cannotAssignTags = !canAssignTags(delegate, delegateTask.getTags());
-            if (cannotAssignScope) {
+            boolean canAssignScope = canAssignScopes(delegate, delegateTask);
+            boolean canAssignTags = canAssignTags(delegate, delegateTask.getTags());
+            if (!canAssignScope) {
               msg.append("Not in scope");
             }
-            if (cannotAssignScope && cannotAssignTags) {
+            if (!canAssignScope && !canAssignTags) {
               msg.append(" - ");
             }
-            if (cannotAssignTags) {
+            if (!canAssignTags) {
               msg.append("Tag mismatch: ").append(Optional.ofNullable(delegate.getTags()).orElse(emptyList()));
+            }
+            if (canAssignScope && canAssignTags) {
+              msg.append("In scope and no tag mismatch");
             }
             msg.append('\n');
           }

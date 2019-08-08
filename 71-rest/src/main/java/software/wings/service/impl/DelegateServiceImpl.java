@@ -1447,9 +1447,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     task.setVersion(getVersion());
     task.setBroadcastCount(1);
     task.setLastBroadcastAt(clock.millis());
+    generateCapabilitiesForTaskIfFeatureEnabled(task);
     wingsPersistence.save(task);
 
-    generateCapabilitiesForTaskIfFeatureEnabled(task);
     String preAssignedDelegateId = assignDelegateService.pickFirstAttemptDelegate(task);
 
     // Update fields for DelegateTask, preAssignedDelegateId and executionCapabilities if not empty
@@ -1659,9 +1659,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         return null;
       } else {
         logger.info("No whitelisted delegates found for task {}", taskId);
-        List<String> criteria =
-            TaskType.valueOf(delegateTask.getData().getTaskType()).getCriteria(delegateTask, injector);
-        String errorMessage = "No delegates could reach the resource. " + criteria;
+        String errorMessage = generateValidationError(delegateTask);
         logger.info("Task {}: {}", taskId, errorMessage);
         ResponseData response;
         if (delegateTask.isAsync()) {
@@ -1681,6 +1679,41 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     logger.info("Task {} is still being validated", taskId);
     return null;
+  }
+
+  private String generateValidationError(DelegateTask delegateTask) {
+    String capabilities;
+    List<ExecutionCapability> executionCapabilities = delegateTask.getExecutionCapabilities();
+    if (isNotEmpty(executionCapabilities)) {
+      capabilities = Joiner.on(", ").join(
+          (executionCapabilities.size() > 4 ? executionCapabilities.subList(0, 4) : executionCapabilities)
+              .stream()
+              .map(ExecutionCapability::fetchCapabilityBasis)
+              .collect(toList()));
+      if (executionCapabilities.size() > 4) {
+        capabilities += ", and " + (executionCapabilities.size() - 4) + " more...";
+      }
+    } else {
+      capabilities = Joiner.on(", ").join(
+          TaskType.valueOf(delegateTask.getData().getTaskType()).getCriteria(delegateTask, injector));
+    }
+
+    String delegates;
+    Set<String> validationCompleteDelegateIds = delegateTask.getValidationCompleteDelegateIds();
+    if (isNotEmpty(validationCompleteDelegateIds)) {
+      delegates = Joiner.on(", ").join(validationCompleteDelegateIds.stream()
+                                           .map(delegateId -> {
+                                             Delegate delegate = get(delegateTask.getAccountId(), delegateId, false);
+                                             return delegate == null ? delegateId : delegate.getHostName();
+                                           })
+                                           .collect(toList()));
+    } else {
+      delegates = "no delegates";
+    }
+    return String.format("No eligible delegates could perform the required capabilities for this %s task: [ %s ]\n"
+            + "  -  The capabilities were tested by the following delegates: [ %s ]\n"
+            + "  -  Other delegates (if any) may have been offline or were not eligible due to tag or scope restrictions.",
+        delegateTask.getData().getTaskType(), capabilities, delegates);
   }
 
   private void setValidationStarted(String delegateId, DelegateTask delegateTask) {
@@ -1979,7 +2012,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     DelegateTask delegateTask = delegateTaskQuery.get();
 
     if (delegateTask != null) {
-      String errorMessage = assignDelegateService.getActiveDelegateAssignmentErrorMessage(delegateTask);
+      String errorMessage =
+          "Task expired. " + assignDelegateService.getActiveDelegateAssignmentErrorMessage(delegateTask);
       logger.info("Marking task as expired - {}: {}", delegateTask.getUuid(), errorMessage);
 
       if (isNotBlank(delegateTask.getWaitId())) {
