@@ -9,7 +9,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonSubTypes({
   @JsonSubTypes.Type(value = ArtifactCondition.class, name = "NEW_ARTIFACT")
   , @JsonSubTypes.Type(value = ScheduledCondition.class, name = "SCHEDULED"),
-      @JsonSubTypes.Type(value = PipelineCondition.class, name = "PIPELINE_COMPLETION")
+      @JsonSubTypes.Type(value = PipelineCondition.class, name = "PIPELINE_COMPLETION"),
+      @JsonSubTypes.Type(value = WebhookCondition.class, name = "WEBHOOK")
 })
 public interface Condition {
   enum Type { NEW_ARTIFACT, PIPELINE_COMPLETION, SCHEDULED, WEBHOOK, NEW_INSTANCE }
