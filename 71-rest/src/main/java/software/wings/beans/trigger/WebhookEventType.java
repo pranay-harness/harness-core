@@ -12,7 +12,9 @@ public enum WebhookEventType {
   REPO("Repo", "repo"),
   ISSUE("Issue", "issue"),
   PING("Ping", "ping"),
-  DELETE("Delete", "delete");
+  DELETE("Delete", "delete"),
+  ANY("Any", "any"),
+  OTHER("Other", "other");
 
   @Getter private String displayName;
   @Getter private String value;

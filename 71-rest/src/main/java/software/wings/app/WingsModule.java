@@ -302,6 +302,7 @@ import software.wings.service.impl.trigger.ScheduleTriggerProcessor;
 import software.wings.service.impl.trigger.TriggerExecutionServiceImpl;
 import software.wings.service.impl.trigger.TriggerProcessor;
 import software.wings.service.impl.trigger.TriggerServiceImpl;
+import software.wings.service.impl.trigger.WebhookConditionTriggerProcessor;
 import software.wings.service.impl.verification.CV24x7DashboardServiceImpl;
 import software.wings.service.impl.verification.CVActivityLogServiceImpl;
 import software.wings.service.impl.verification.CVConfigurationServiceImpl;
@@ -799,6 +800,7 @@ public class WingsModule extends DependencyModule {
     triggerProcessorMapBinder.addBinding(Type.NEW_ARTIFACT.name()).to(ArtifactTriggerProcessor.class);
     triggerProcessorMapBinder.addBinding(Type.SCHEDULED.name()).to(ScheduleTriggerProcessor.class);
     triggerProcessorMapBinder.addBinding(Type.PIPELINE_COMPLETION.name()).to(PipelineTriggerProcessor.class);
+    triggerProcessorMapBinder.addBinding(Type.WEBHOOK.name()).to(WebhookConditionTriggerProcessor.class);
 
     // To support storing 'Files' in google cloud storage besides default Mongo GridFs.
     if (configuration.getFileStorageMode() == null) {

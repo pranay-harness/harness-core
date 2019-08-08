@@ -24,6 +24,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.deployment.DeploymentMetadata.Include;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.PipelineAction;
+import software.wings.beans.trigger.TriggerArtifactSelectionFromPipelineSource;
 import software.wings.beans.trigger.TriggerArtifactSelectionFromSource;
 import software.wings.beans.trigger.TriggerArtifactSelectionLastCollected;
 import software.wings.beans.trigger.TriggerArtifactSelectionLastDeployed;
@@ -169,6 +170,8 @@ public class TriggerArtifactVariableHandler {
             .build();
       case ARTIFACT_SOURCE:
         return TriggerArtifactSelectionFromSource.builder().build();
+      case PIPELINE_SOURCE:
+        return TriggerArtifactSelectionFromPipelineSource.builder().build();
       default:
         unhandled(inputValue.getArtifactSelectionType());
     }
@@ -207,6 +210,8 @@ public class TriggerArtifactVariableHandler {
         }
         break;
       case ARTIFACT_SOURCE:
+        break;
+      case PIPELINE_SOURCE:
         break;
       case LAST_COLLECTED:
         TriggerArtifactSelectionLastCollected artifactVar = (TriggerArtifactSelectionLastCollected) variableValue;

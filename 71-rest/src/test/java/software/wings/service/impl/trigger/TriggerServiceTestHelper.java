@@ -46,7 +46,9 @@ import software.wings.beans.Workflow;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.trigger.ArtifactTriggerCondition;
+import software.wings.beans.trigger.CustomPayloadExpression;
 import software.wings.beans.trigger.DeploymentTrigger;
+import software.wings.beans.trigger.GitHubPayloadSource;
 import software.wings.beans.trigger.NewInstanceTriggerCondition;
 import software.wings.beans.trigger.PipelineAction;
 import software.wings.beans.trigger.PipelineTriggerCondition;
@@ -58,6 +60,8 @@ import software.wings.beans.trigger.TriggerArgs;
 import software.wings.beans.trigger.TriggerArtifactSelectionLastCollected;
 import software.wings.beans.trigger.TriggerArtifactVariable;
 import software.wings.beans.trigger.WebHookTriggerCondition;
+import software.wings.beans.trigger.WebhookCondition;
+import software.wings.beans.trigger.WebhookSource.GitHubEventType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -125,6 +129,36 @@ public class TriggerServiceTestHelper {
         .appId(APP_ID)
         .name(TRIGGER_NAME)
         .condition(ScheduledCondition.builder().cronDescription("as").cronExpression("* * * * ?").build())
+        .action(PipelineAction.builder()
+                    .pipelineId(PIPELINE_ID)
+                    .triggerArgs(TriggerArgs.builder()
+                                     .triggerArtifactVariables(
+                                         asList(TriggerArtifactVariable.builder()
+                                                    .variableName(VARIABLE_NAME)
+                                                    .variableValue(TriggerArtifactSelectionLastCollected.builder()
+                                                                       .artifactStreamId(ARTIFACT_STREAM_ID)
+                                                                       .build())
+                                                    .entityId(ENTITY_ID)
+                                                    .entityType(EntityType.SERVICE)
+                                                    .build()))
+                                     .build())
+                    .build())
+        .build();
+  }
+
+  public static DeploymentTrigger buildWebhookConditionTrigger() {
+    return DeploymentTrigger.builder()
+        .uuid(TRIGGER_ID)
+        .appId(APP_ID)
+        .name(TRIGGER_NAME)
+        .condition(WebhookCondition.builder()
+                       .payloadSource(GitHubPayloadSource.builder()
+                                          .gitHubEventTypes(asList(GitHubEventType.PUSH))
+                                          .customPayloadExpressions(asList(
+                                              CustomPayloadExpression.builder().expression("abc").value("def").build()))
+                                          .build())
+                       .webHookToken(WebHookToken.builder().build())
+                       .build())
         .action(PipelineAction.builder()
                     .pipelineId(PIPELINE_ID)
                     .triggerArgs(TriggerArgs.builder()
