@@ -12,6 +12,7 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentEvent;
 import software.wings.api.DeploymentSummary;
 import software.wings.api.InstanceChangeEvent;
+import software.wings.api.InstanceEvent;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.audit.AuditHeader;
 import software.wings.beans.alert.Alert;
@@ -210,7 +211,7 @@ public class ManagerMorphiaClasses {
       InfrastructureDefinition.class, GcpMarketplaceEvent.class, SupervisedTSThreshold.class, TimeSeriesRawData.class,
       AzureVaultConfig.class, ECSPollingJobEntity.class, ApplicationAccess.class, CloudFormationRollbackConfig.class,
       SplunkCVConfiguration.class, SegmentGroupEventJobContext.class, SpotInstInfrastructureMapping.class,
-      TimeSeriesDataRecord.class, CVActivityLog.class);
+      TimeSeriesDataRecord.class, CVActivityLog.class, InstanceEvent.class);
 
   public static final Set<Class> dependentClasses =
       ImmutableSet.<Class>of(EncryptionConfig.class, EncryptedRecord.class, ExecutionCapabilityDemander.class);

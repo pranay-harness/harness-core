@@ -3,6 +3,7 @@ package migrations;
 import com.google.common.collect.ImmutableList;
 
 import migrations.timescaledb.ChangeToTimeStampTZ;
+import migrations.timescaledb.CreateNewInstanceV2Migration;
 import migrations.timescaledb.DeploymentAdditionalColumns;
 import migrations.timescaledb.InitSchemaMigration;
 import migrations.timescaledb.InitVerificationSchemaMigration;
@@ -19,6 +20,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(3, RenameInstanceMigration.class))
         .add(Pair.of(4, DeploymentAdditionalColumns.class))
         .add(Pair.of(5, ChangeToTimeStampTZ.class))
+        .add(Pair.of(6, CreateNewInstanceV2Migration.class))
         .build();
   }
 }

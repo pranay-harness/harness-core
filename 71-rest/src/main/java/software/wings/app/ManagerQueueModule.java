@@ -8,6 +8,7 @@ import io.harness.mongo.MongoQueue;
 import io.harness.queue.Queue;
 import io.harness.queue.QueueListener;
 import software.wings.api.DeploymentEvent;
+import software.wings.api.InstanceEvent;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.collect.ArtifactCollectEventListener;
 import software.wings.collect.CollectEvent;
@@ -21,6 +22,7 @@ import software.wings.service.impl.ExecutionEvent;
 import software.wings.service.impl.ExecutionEventListener;
 import software.wings.service.impl.event.GenericEventListener;
 import software.wings.service.impl.instance.DeploymentEventListener;
+import software.wings.service.impl.instance.InstanceEventListener;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 
 public class ManagerQueueModule extends AbstractModule {
@@ -36,6 +38,7 @@ public class ManagerQueueModule extends AbstractModule {
     bind(new TypeLiteral<Queue<ExecutionEvent>>() {}).toInstance(new MongoQueue<>(ExecutionEvent.class, 30, true));
     bind(new TypeLiteral<Queue<DelayEvent>>() {}).toInstance(new MongoQueue<>(DelayEvent.class, 5, true));
     bind(new TypeLiteral<Queue<QueableEvent>>() {}).toInstance(new MongoQueue<>(QueableEvent.class, 60, true));
+    bind(new TypeLiteral<Queue<InstanceEvent>>() {}).toInstance(new MongoQueue<>(InstanceEvent.class, 60, true));
 
     bind(new TypeLiteral<QueueListener<PruneEvent>>() {}).to(PruneEntityListener.class);
     bind(new TypeLiteral<QueueListener<EmailData>>() {}).to(EmailNotificationListener.class);
@@ -45,5 +48,6 @@ public class ManagerQueueModule extends AbstractModule {
     bind(new TypeLiteral<QueueListener<ExecutionEvent>>() {}).to(ExecutionEventListener.class);
     bind(new TypeLiteral<QueueListener<DelayEvent>>() {}).to(DelayEventListener.class);
     bind(new TypeLiteral<QueueListener<QueableEvent>>() {}).to(GenericEventListener.class);
+    bind(new TypeLiteral<QueueListener<InstanceEvent>>() {}).to(InstanceEventListener.class);
   }
 }
