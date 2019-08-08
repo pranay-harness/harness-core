@@ -2,9 +2,13 @@ package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.beans.SearchFilter.Operator.AND;
 import static io.harness.beans.SearchFilter.Operator.CONTAINS;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
+import static io.harness.beans.SearchFilter.Operator.NOT_EQ;
+import static io.harness.beans.SearchFilter.Operator.NOT_IN;
+import static io.harness.beans.SearchFilter.Operator.OR;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.USAGE_LIMITS_EXCEEDED;
@@ -25,6 +29,10 @@ import static software.wings.beans.SettingAttribute.ENV_ID_KEY;
 import static software.wings.beans.SettingAttribute.NAME_KEY;
 import static software.wings.beans.SettingAttribute.VALUE_TYPE_KEY;
 import static software.wings.beans.StringValue.Builder.aStringValue;
+import static software.wings.beans.artifact.ArtifactStreamType.ACR;
+import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
+import static software.wings.beans.artifact.ArtifactStreamType.ECR;
+import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.common.Constants.BACKUP_PATH;
 import static software.wings.common.Constants.DEFAULT_BACKUP_PATH;
 import static software.wings.common.Constants.DEFAULT_RUNTIME_PATH;
@@ -72,6 +80,7 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
@@ -96,6 +105,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserService;
@@ -107,8 +117,11 @@ import software.wings.settings.RestrictionsAndAppEnvMap;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
+import software.wings.utils.ArtifactType;
 import software.wings.utils.CacheManager;
 import software.wings.utils.CryptoUtils;
+import software.wings.utils.RepositoryFormat;
+import software.wings.utils.RepositoryType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -128,6 +141,10 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class SettingsServiceImpl implements SettingsService {
+  // restrict to docker only artifact streams
+  private static final List<String> dockerOnlyArtifactStreams =
+      Collections.unmodifiableList(asList(DOCKER.name(), ECR.name(), GCR.name(), ACR.name()));
+
   @Inject private Map<Class<? extends SettingValue>, Class<? extends BuildService>> buildServiceMap;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private ServiceClassLocator serviceLocator;
@@ -144,6 +161,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private GitConfigHelperService gitConfigHelperService;
   @Inject private AccountService accountService;
   @Inject private ArtifactService artifactService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   @Getter private Subject<SettingsServiceManipulationObserver> manipulationSubject = new Subject<>();
   @Inject private CacheManager cacheManager;
@@ -154,20 +172,20 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   public PageResponse<SettingAttribute> list(
       PageRequest<SettingAttribute> req, String appIdFromRequest, String envIdFromRequest) {
-    return list(req, appIdFromRequest, envIdFromRequest, null, false, false, null);
+    return list(req, appIdFromRequest, envIdFromRequest, null, false, false, null, Integer.MAX_VALUE, null);
   }
 
   @Override
   public PageResponse<SettingAttribute> list(PageRequest<SettingAttribute> req, String appIdFromRequest,
       String envIdFromRequest, String accountId, boolean gitSshConfigOnly, boolean withArtifactStreamCount,
-      String artifactStreamSearchString) {
+      String artifactStreamSearchString, int maxResults, String serviceId) {
     try {
       PageRequest<SettingAttribute> pageRequest = req.copy();
       int offset = pageRequest.getStart();
       int limit = pageRequest.getPageSize();
 
       pageRequest.setOffset("0");
-      pageRequest.setLimit(String.valueOf(Integer.MAX_VALUE));
+      pageRequest.setLimit(String.valueOf(maxResults));
       PageResponse<SettingAttribute> pageResponse = wingsPersistence.query(SettingAttribute.class, pageRequest);
 
       List<SettingAttribute> filteredSettingAttributes =
@@ -190,6 +208,25 @@ public class SettingsServiceImpl implements SettingsService {
         if (isNotEmpty(artifactStreamSearchString)) {
           artifactStreamPageRequest.addFilter(ArtifactStreamKeys.name, CONTAINS, artifactStreamSearchString);
         }
+
+        if (serviceId != null) {
+          Service service = serviceResourceService.get(serviceId);
+          if (service == null) {
+            throw new WingsException(format("Service with id [%s] does not exist", serviceId), USER);
+          }
+          ArtifactType artifactType = service.getArtifactType();
+
+          if (ArtifactType.DOCKER.equals(artifactType)) {
+            artifactStreamPageRequest.addFilter(ArtifactStreamKeys.artifactStreamType, IN, dockerOnlyArtifactStreams,
+                OR, "repositoryFormat", EQ, RepositoryFormat.docker.name(), OR, "repositoryType", EQ,
+                RepositoryType.docker.name());
+          } else {
+            artifactStreamPageRequest.addFilter(ArtifactStreamKeys.artifactStreamType, NOT_IN,
+                dockerOnlyArtifactStreams, AND, "repositoryFormat", NOT_EQ, RepositoryFormat.docker.name(), AND,
+                "repositoryType", NOT_EQ, RepositoryType.docker.name());
+          }
+        }
+
         PageResponse<ArtifactStream> artifactStreamPageResponse = artifactStreamService.list(artifactStreamPageRequest);
         List<ArtifactStream> artifactStreams = artifactStreamPageResponse.getResponse();
         if (isEmpty(artifactStreams)) {

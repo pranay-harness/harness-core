@@ -33,7 +33,7 @@ public interface SettingsService extends OwnedByAccount {
 
   PageResponse<SettingAttribute> list(PageRequest<SettingAttribute> req, String appIdFromRequest,
       String envIdFromRequest, String accountId, boolean gitSshConfigOnly, boolean withArtifactStreamCount,
-      String artifactStreamSearchString);
+      String artifactStreamSearchString, int maxResults, String serviceId);
 
   List<SettingAttribute> getFilteredSettingAttributes(
       List<SettingAttribute> inputSettingAttributes, String appIdFromRequest, String envIdFromRequest);
