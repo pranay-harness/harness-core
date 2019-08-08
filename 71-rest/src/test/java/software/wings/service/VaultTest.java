@@ -695,6 +695,8 @@ public class VaultTest extends WingsBaseTest {
     assertEquals(user.getName(), secretChangeLog.getUser().getName());
     assertEquals("Created", secretChangeLog.getDescription());
 
+    ((AppDynamicsConfig) savedAttribute.getValue()).setUsername(UUID.randomUUID().toString());
+    ((AppDynamicsConfig) savedAttribute.getValue()).setPassword(UUID.randomUUID().toString().toCharArray());
     User user2 = User.Builder.anUser().withEmail(UUID.randomUUID().toString()).withName("user2").build();
     wingsPersistence.save(user2);
     UserThreadLocal.set(user2);
@@ -1018,14 +1020,13 @@ public class VaultTest extends WingsBaseTest {
 
     wingsPersistence.save(settingAttributes);
     assertEquals(numOfSettingAttributes, wingsPersistence.createQuery(SettingAttribute.class).count());
-    assertEquals(numOfEncRecords + numOfSettingAttributes, wingsPersistence.createQuery(EncryptedData.class).count());
+    assertEquals(numOfEncRecords, wingsPersistence.createQuery(EncryptedData.class).count());
 
     for (int i = 0; i < numOfSettingAttributes; i++) {
       wingsPersistence.delete(
           SettingAttribute.class, settingAttributes.get(i).getAppId(), settingAttributes.get(i).getUuid());
       assertEquals(numOfSettingAttributes - (i + 1), wingsPersistence.createQuery(SettingAttribute.class).count());
-      assertEquals(numOfEncRecords + numOfSettingAttributes - (i + 1),
-          wingsPersistence.createQuery(EncryptedData.class).count());
+      assertEquals(numOfEncRecords, wingsPersistence.createQuery(EncryptedData.class).count());
     }
   }
 

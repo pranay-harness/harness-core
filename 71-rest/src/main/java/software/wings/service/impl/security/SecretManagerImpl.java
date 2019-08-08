@@ -302,20 +302,25 @@ public class SecretManagerImpl implements SecretManager {
         f.setAccessible(true);
         Field encryptedRefField = getEncryptedRefField(f, object);
         encryptedRefField.setAccessible(true);
-        if (f.get(object) != null && !WingsReflectionUtils.isSetByYaml(object, encryptedRefField)) {
+
+        Object fieldValue = f.get(object);
+        String encryptedRefFieldValue = (String) encryptedRefField.get(object);
+        boolean isSetByYaml = WingsReflectionUtils.isSetByYaml(object, encryptedRefField);
+        if (fieldValue != null && !isSetByYaml) {
           Preconditions.checkState(
-              encryptedRefField.get(object) == null, "both encrypted and non encrypted field set for " + object);
+              encryptedRefFieldValue == null, "both encrypted and non encrypted field set for " + object);
           encryptedDataDetails.add(EncryptedDataDetail.builder()
                                        .encryptionType(LOCAL)
                                        .encryptedData(EncryptedData.builder()
                                                           .encryptionKey(object.getAccountId())
-                                                          .encryptedValue((char[]) f.get(object))
+                                                          .encryptedValue((char[]) fieldValue)
                                                           .build())
                                        .fieldName(f.getName())
                                        .build());
-        } else {
-          String id = (String) encryptedRefField.get(object);
-          if (WingsReflectionUtils.isSetByYaml(object, encryptedRefField)) {
+        } else if (encryptedRefFieldValue != null) {
+          // PL-2902: Avoid decryption of null value encrypted fields.
+          String id = encryptedRefFieldValue;
+          if (isSetByYaml) {
             id = id.substring(id.indexOf(':') + 1);
           }
 
