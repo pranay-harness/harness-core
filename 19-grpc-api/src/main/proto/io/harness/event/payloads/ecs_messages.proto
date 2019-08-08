@@ -2,14 +2,15 @@ syntax = "proto3";
 
 package io.harness.event.payloads;
 import "io/harness/event/payloads/common_messages.proto";
+import "google/protobuf/timestamp.proto";
 option java_multiple_files = true;
 
-message EcsTaskDescription {
-  EcsTaskInfo ecs_task_info = 1;
+message EcsTaskInfo {
+  EcsTaskDescription ecs_task_description = 1;
   ReservedResource ecs_task_resource = 2;
 }
 
-message EcsTaskInfo {
+message EcsTaskDescription {
   string task_arn = 1;
   string cluster_arn = 2;
   string service_name = 3;
@@ -27,17 +28,25 @@ message ReservedResource {
   int32 memory = 2;
 }
 
-message EcsContainerInstanceInfo {
+message EcsContainerInstanceDescription {
   string container_instance_arn = 1;
   string cluster_arn = 2;
   string ec2_instance_id = 3;
 }
 
-message EcsContainerInstanceDescription {
-  EcsContainerInstanceInfo ecs_container_instance_info = 1;
+message EcsContainerInstanceInfo {
+  EcsContainerInstanceDescription ecs_container_instance_description = 1;
   ReservedResource ecs_container_instance_resource = 2;
 }
 
 message EcsContainerInstanceLifecycle {
   Lifecycle lifecycle = 1;
+}
+
+message EcsSyncEvent {
+  string cluster_arn = 1;
+  repeated string active_ec2_instance_arns = 2;
+  repeated string active_container_instance_arns = 3;
+  repeated string active_task_arns = 4;
+  google.protobuf.Timestamp last_processed_timestamp = 5;
 }
