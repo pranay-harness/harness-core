@@ -197,4 +197,11 @@ public abstract class Queuable implements PersistentEntity {
       GlobalContextManager.upsertGlobalContextRecord(globalContextData);
     }
   }
+
+  public static final class Keys {
+    public static final String version = "version";
+    public static final String earliestGet = "earliestGet";
+    public static final String resetTimestamp = "resetTimestamp";
+    public static final String running = "running";
+  }
 }
