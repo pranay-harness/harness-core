@@ -50,7 +50,7 @@ public class HObjectFactory extends DefaultCreator {
     return className.startsWith("software.wings") || className.startsWith("io.harness");
   }
 
-  interface NotFoundClass {}
+  public interface NotFoundClass {}
 
   @SuppressWarnings("unchecked")
   private Class getClass(final DBObject dbObj) {
