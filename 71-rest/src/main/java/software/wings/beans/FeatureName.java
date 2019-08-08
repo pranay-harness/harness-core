@@ -51,7 +51,8 @@ public enum FeatureName {
   SUPERVISED_TS_THRESHOLD,
   REJECT_TRIGGER_IF_ARTIFACTS_NOT_MATCH,
   TAGS_YAML,
-  TF_ALL; // TODO: Yogesh, Remove this once UI is done
+  TF_ALL,
+  NEW_INSTANCE_TIMESERIES;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;

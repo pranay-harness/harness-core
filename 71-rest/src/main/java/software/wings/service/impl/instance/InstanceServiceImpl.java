@@ -2,6 +2,7 @@ package software.wings.service.impl.instance;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.mongo.MongoUtils.setUnset;
 
 import com.google.common.collect.Lists;
@@ -19,10 +20,12 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.queue.Queue;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.api.InstanceEvent;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
@@ -56,6 +59,7 @@ public class InstanceServiceImpl implements InstanceService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AppService appService;
   @Inject private PersistentLocker persistentLocker;
+  @Inject private Queue<InstanceEvent> eventQueue;
 
   @Override
   public Instance save(Instance instance) {
@@ -78,6 +82,9 @@ public class InstanceServiceImpl implements InstanceService {
           + " and infraMappingId:" + instance.getInfraMappingId());
     }
 
+    InstanceEvent instanceEvent =
+        InstanceEvent.builder().accountId(instance.getAccountId()).insertions(Sets.newHashSet(instance)).build();
+    eventQueue.send(instanceEvent);
     return updatedInstance;
   }
 
@@ -170,14 +177,13 @@ public class InstanceServiceImpl implements InstanceService {
   }
 
   private void pruneByEntity(String fieldName, String value) {
-    Query<Instance> query = wingsPersistence.createQuery(Instance.class);
-    query.filter(fieldName, value);
+    Query<Instance> deleteQuery = wingsPersistence.createQuery(Instance.class);
+    deleteQuery.filter(fieldName, value);
 
-    UpdateOperations<Instance> updateOperations = wingsPersistence.createUpdateOperations(Instance.class);
-    setUnset(updateOperations, "deletedAt", System.currentTimeMillis());
-    setUnset(updateOperations, "isDeleted", true);
+    Query<Instance> getQuery = wingsPersistence.createQuery(Instance.class);
+    getQuery.filter(fieldName, value);
 
-    wingsPersistence.update(query, updateOperations);
+    findInstanceIdsAndPublishEvent(deleteQuery, getQuery);
 
     if ("appId".equals(fieldName)) {
       Query<SyncStatus> syncStatusQuery = wingsPersistence.createQuery(SyncStatus.class);
@@ -187,16 +193,14 @@ public class InstanceServiceImpl implements InstanceService {
   }
 
   private void pruneByEntity(Map<String, String> inputs) {
-    Query<Instance> query = wingsPersistence.createQuery(Instance.class);
-    long timeMillis = System.currentTimeMillis();
-    inputs.forEach((key, value) -> query.filter(key, value));
+    Query<Instance> deleteQuery = wingsPersistence.createQuery(Instance.class);
+    Query<Instance> getQuery = wingsPersistence.createQuery(Instance.class);
+    inputs.forEach((key, value) -> {
+      deleteQuery.filter(key, value);
+      getQuery.filter(key, value);
+    });
 
-    UpdateOperations<Instance> updateOperations = wingsPersistence.createUpdateOperations(Instance.class);
-    setUnset(updateOperations, "deletedAt", timeMillis);
-    setUnset(updateOperations, "isDeleted", true);
-
-    wingsPersistence.update(query, updateOperations);
-
+    findInstanceIdsAndPublishEvent(deleteQuery, getQuery);
     Query<SyncStatus> syncStatusQuery = wingsPersistence.createQuery(SyncStatus.class);
     inputs.forEach((key, value) -> syncStatusQuery.filter(key, value));
     wingsPersistence.delete(syncStatusQuery);
@@ -241,13 +245,31 @@ public class InstanceServiceImpl implements InstanceService {
     Query<Instance> query = wingsPersistence.createQuery(Instance.class);
     query.field("_id").in(instanceIdSet);
 
-    long timeMillis = System.currentTimeMillis();
+    deleteAndPublishEvent(instanceIdSet, query);
+    return true;
+  }
+
+  private void findInstanceIdsAndPublishEvent(Query<Instance> deleteQuery, Query<Instance> getQuery) {
+    getQuery.project("_id", true);
+    List<Instance> instances = getQuery.asList();
+    if (isEmpty(instances)) {
+      return;
+    }
+    Set<String> instanceIdSet = instances.stream().map(Instance::getUuid).collect(Collectors.toSet());
+
+    deleteAndPublishEvent(instanceIdSet, deleteQuery);
+  }
+
+  private void deleteAndPublishEvent(Set<String> instanceIdSet, Query<Instance> query) {
+    long currentTimeMillis = System.currentTimeMillis();
     UpdateOperations<Instance> updateOperations = wingsPersistence.createUpdateOperations(Instance.class);
-    setUnset(updateOperations, "deletedAt", timeMillis);
+    setUnset(updateOperations, "deletedAt", currentTimeMillis);
     setUnset(updateOperations, "isDeleted", true);
 
     wingsPersistence.update(query, updateOperations);
-    return true;
+    InstanceEvent instanceEvent =
+        InstanceEvent.builder().deletions(instanceIdSet).deletionTimestamp(currentTimeMillis).build();
+    eventQueue.send(instanceEvent);
   }
 
   @Override
