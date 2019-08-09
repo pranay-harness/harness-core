@@ -2,19 +2,16 @@ package io.harness.migrator.app;
 
 import static com.google.common.base.Charsets.UTF_8;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
-import io.harness.mongo.PersistenceMorphiaClasses;
 import io.harness.serializer.YamlUtils;
 import io.harness.threading.ExecutorModule;
 import lombok.extern.slf4j.Slf4j;
@@ -33,9 +30,6 @@ import java.util.logging.Level;
 
 @Slf4j
 public class MigratorApplication {
-  public static final Set<Class> morphiaClasses =
-      ImmutableSet.<Class>builder().addAll(PersistenceMorphiaClasses.classes).build();
-
   public static void main(String... args) throws Exception {
     // Optionally remove existing handlers attached to j.u.l root logger
     SLF4JBridgeHandler.removeHandlersForRootLogger(); // (since SLF4J 1.6.5)
@@ -72,12 +66,6 @@ public class MigratorApplication {
     Set<Module> modules = new HashSet<>();
 
     modules.add(new ProviderModule() {
-      @Provides
-      @Named("morphiaClasses")
-      Set<Class> classes() {
-        return morphiaClasses;
-      }
-
       @Provides
       @Singleton
       MongoConfig mongoConfig() {

@@ -27,7 +27,6 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
-import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
 import com.codahale.metrics.MetricRegistry;
@@ -48,17 +47,14 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
-import io.harness.OrchestrationMorphiaClasses;
 import io.harness.event.EventsModule;
 import io.harness.event.listener.EventListener;
-import io.harness.event.model.EventsMorphiaClasses;
 import io.harness.event.usagemetrics.EventsModuleHelper;
 import io.harness.exception.WingsException;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
-import io.harness.limits.LimitsMorphiaClasses;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.ManageDistributedLockSvc;
 import io.harness.lock.PersistentLocker;
@@ -70,7 +66,7 @@ import io.harness.metrics.MetricRegistryModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistenceIterator;
-import io.harness.mongo.PersistenceMorphiaClasses;
+import io.harness.mongo.MorphiaModule;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
@@ -94,7 +90,6 @@ import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProv
 import org.reflections.Reflections;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
-import software.wings.beans.ManagerMorphiaClasses;
 import software.wings.beans.User;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
@@ -186,15 +181,6 @@ import javax.ws.rs.Path;
  */
 @Slf4j
 public class WingsApplication extends Application<MainConfiguration> {
-  public static final Set<Class> morphiaClasses = ImmutableSet.<Class>builder()
-                                                      .addAll(ManagerMorphiaClasses.classes)
-                                                      .addAll(ManagerMorphiaClasses.dependentClasses)
-                                                      .addAll(EventsMorphiaClasses.classes)
-                                                      .addAll(LimitsMorphiaClasses.classes)
-                                                      .addAll(OrchestrationMorphiaClasses.classes)
-                                                      .addAll(PersistenceMorphiaClasses.classes)
-                                                      .build();
-
   private final MetricRegistry metricRegistry = new MetricRegistry();
   private HarnessMetricRegistry harnessMetricRegistry;
 
@@ -258,17 +244,13 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     modules.add(new ProviderModule() {
       @Provides
-      @Named("morphiaClasses")
-      Set<Class> classes() {
-        return morphiaClasses;
-      }
-
-      @Provides
       @Singleton
       MongoConfig mongoConfig() {
         return configuration.getMongoConnectionFactory();
       }
     });
+
+    modules.add(new MorphiaModule());
 
     MongoModule databaseModule = new MongoModule();
     modules.add(databaseModule);

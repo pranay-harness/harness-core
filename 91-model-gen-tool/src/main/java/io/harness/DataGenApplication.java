@@ -3,28 +3,24 @@ package io.harness;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.utils.CacheManager.USER_CACHE;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import com.hazelcast.core.HazelcastInstance;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Environment;
 import io.harness.event.EventsModule;
-import io.harness.event.model.EventsMorphiaClasses;
 import io.harness.exception.WingsException;
 import io.harness.govern.ProviderModule;
-import io.harness.limits.LimitsMorphiaClasses;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
-import io.harness.mongo.PersistenceMorphiaClasses;
+import io.harness.mongo.MorphiaModule;
 import io.harness.persistence.HPersistence;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
@@ -46,7 +42,6 @@ import software.wings.app.StreamModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
-import software.wings.beans.ManagerMorphiaClasses;
 import software.wings.beans.User;
 import software.wings.licensing.LicenseService;
 import software.wings.security.ThreadLocalUserProvider;
@@ -55,7 +50,6 @@ import software.wings.utils.CacheManager;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import javax.cache.Caching;
 import javax.cache.configuration.Configuration;
@@ -64,14 +58,6 @@ import javax.validation.ValidatorFactory;
 
 @Slf4j
 public class DataGenApplication extends Application<MainConfiguration> {
-  public static final Set<Class> morphiaClasses = ImmutableSet.<Class>builder()
-                                                      .addAll(ManagerMorphiaClasses.classes)
-                                                      .addAll(ManagerMorphiaClasses.dependentClasses)
-                                                      .addAll(EventsMorphiaClasses.classes)
-                                                      .addAll(PersistenceMorphiaClasses.classes)
-                                                      .addAll(LimitsMorphiaClasses.classes)
-                                                      .build();
-
   public static void main(String... args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       logger.info("Shutdown hook, entering maintenance...");
@@ -96,17 +82,12 @@ public class DataGenApplication extends Application<MainConfiguration> {
     List<Module> modules = new ArrayList<>();
     modules.add(new ProviderModule() {
       @Provides
-      @Named("morphiaClasses")
-      Set<Class> classes() {
-        return morphiaClasses;
-      }
-
-      @Provides
       @Singleton
       MongoConfig mongoConfig() {
         return configuration.getMongoConnectionFactory();
       }
     });
+    modules.add(new MorphiaModule());
     modules.add(new MongoModule());
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()

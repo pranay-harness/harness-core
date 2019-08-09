@@ -6,8 +6,12 @@ import io.harness.mongo.MorphiaRegistrar;
 import io.harness.persistence.MorphiaClass;
 
 import java.util.Map;
+import java.util.Set;
 
 public class TestPersistenceMorphiaRegistrar implements MorphiaRegistrar {
+  @Override
+  public void register(Set<Class> set) {}
+
   @Override
   public void register(Map<String, Class> map) {
     final HelperPut h = (name, clazz) -> {
