@@ -21,5 +21,11 @@ public class CommonMorphiaRegistrar implements MorphiaRegistrar {
     h.put("limits.impl.model.StaticLimit", StaticLimit.class);
     h.put("limits.impl.model.RateLimit", RateLimit.class);
     h.put("security.SimpleEncryption", SimpleEncryption.class);
+
+    final HelperPut w = (name, clazz) -> {
+      map.put(pkgWings + name, clazz);
+    };
+
+    w.put("security.encryption.SimpleEncryption", SimpleEncryption.class);
   }
 }
