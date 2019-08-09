@@ -44,7 +44,6 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.utils.Misc;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -209,13 +208,11 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
       ((ChannelExec) channel).setPty(true);
 
       String directoryPath = this.config.getWorkingDirectory() + "/";
-      File pwd = new File(directoryPath);
       String envVariablesFilename = null;
-      File envVariablesOutputFile;
+      command = "cd " + directoryPath + "\n" + command;
       if (!envVariablesToCollect.isEmpty()) {
         envVariablesFilename = "harness-" + this.config.getExecutionId() + ".out";
-        envVariablesOutputFile = new File(pwd, envVariablesFilename);
-        command = addEnvVariablesCollector(command, envVariablesToCollect, envVariablesOutputFile.getAbsolutePath());
+        command = addEnvVariablesCollector(command, envVariablesToCollect, directoryPath + envVariablesFilename);
       }
 
       try (OutputStream outputStream = channel.getOutputStream(); InputStream inputStream = channel.getInputStream()) {
@@ -264,15 +261,15 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
                 br = new BufferedReader(new InputStreamReader(stream, Charsets.UTF_8));
                 processScriptOutputFile(envVariablesMap, br);
               } catch (JSchException | SftpException | IOException e) {
-                logger.error("Exception occurred during reading file from SFTP server due to " + e.getMessage());
+                logger.error("Exception occurred during reading file from SFTP server due to " + e.getMessage(), e);
               } finally {
                 if (br != null) {
                   br.close();
                 }
                 try {
-                  ((ChannelSftp) channel).rm(envVariablesFilename);
+                  ((ChannelSftp) channel).rm(directoryPath + envVariablesFilename);
                 } catch (SftpException e) {
-                  logger.error("Failed to delete file " + envVariablesFilename);
+                  logger.error("Failed to delete file " + envVariablesFilename, e);
                 }
               }
             }
