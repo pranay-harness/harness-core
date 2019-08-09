@@ -38,6 +38,7 @@ import software.wings.beans.DatadogConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.ElkConfig;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
@@ -54,6 +55,7 @@ import software.wings.beans.SftpConfig;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SmbConfig;
 import software.wings.beans.SplunkConfig;
+import software.wings.beans.SpotInstConfig;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.TaskType;
@@ -274,6 +276,12 @@ public class SettingValidationService {
       servicenowServiceImpl.validateCredential(settingAttribute);
     } else if (settingValue instanceof HelmRepoConfig) {
       validateHelmRepoConfig(settingAttribute, encryptedDataDetails);
+    } else if (settingValue instanceof SpotInstConfig) {
+      if (!featureFlagService.isEnabled(FeatureName.SPOTINST, settingAttribute.getAccountId())) {
+        throw new WingsException(
+            ErrorCode.FEATURE_UNAVAILABLE, "Enable Feature Spotinst to create Spotinst Cloud Provider", USER);
+      }
+      validateSpotInstConfig(settingAttribute, encryptedDataDetails);
     }
 
     if (EncryptableSetting.class.isInstance(settingValue)) {
@@ -293,6 +301,11 @@ public class SettingValidationService {
     }
 
     return true;
+  }
+
+  private void validateSpotInstConfig(
+      SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails) {
+    logger.info("This is a placeholder to unblock ui. Not being used anywhere");
   }
 
   private void validatePcfConfig(SettingAttribute settingAttribute, PcfConfig pcfConfig) {
