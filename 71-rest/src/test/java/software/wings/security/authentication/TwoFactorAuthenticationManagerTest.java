@@ -62,7 +62,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Test
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
-  public void shouldTwoFactorAuthenticationUsingTOTP() throws InterruptedException {
+  public void shouldTwoFactorAuthenticationUsingTOTP() {
     try {
       TwoFactorAuthHandler handler = twoFactorAuthenticationManager.getTwoFactorAuthHandler(TOTP);
       User user = spy(new User());
@@ -205,7 +205,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldDisableTwoFactorAuthenticationForNoAdminEnforce() {
-    Account account = getAccount(AccountType.PAID, false);
+    Account account = accountService.save(getAccount(AccountType.PAID, false));
 
     // Original user object
     User user = getUser(true);
@@ -223,7 +223,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldDisableTwoFactorAuthenticationForAdminEnforce() {
-    Account account = getAccount(AccountType.PAID, true);
+    Account account = accountService.save(getAccount(AccountType.PAID, true));
 
     User user = getUser(true);
     user.setAccounts(Arrays.asList(account));
@@ -236,8 +236,8 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldDisableTwoFactorAuthenticationForMultiAccounts() {
-    Account account1 = getAccount(AccountType.PAID, false);
-    Account account2 = getAccount(AccountType.PAID, false);
+    Account account1 = accountService.save(getAccount(AccountType.PAID, false));
+    Account account2 = accountService.save(getAccount(AccountType.PAID, false));
 
     User user = getUser(true);
     user.setAccounts(Arrays.asList(account1, account2));

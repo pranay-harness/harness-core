@@ -863,6 +863,11 @@ public class UserServiceImpl implements UserService {
         sendNewInvitationMail(userInvite, account);
         sendNotification = false;
       }
+
+      // TODO: PL-2771: Enable the invited User's 2FA if the account is 2FA enabled.
+      //      if (account.isTwoFactorAdminEnforced()) {
+      //        enableTwoFactorAuthenticationForUser(user);
+      //      }
     } else {
       boolean userAlreadyAddedToAccount = user.getAccounts().stream().anyMatch(acc -> acc.getUuid().equals(accountId));
       if (userAlreadyAddedToAccount) {
@@ -1633,10 +1638,7 @@ public class UserServiceImpl implements UserService {
           // Look for user who has only 1 account
           if (u.getAccounts().size() == 1) {
             if (!u.isTwoFactorAuthenticationEnabled()) {
-              u.setTwoFactorAuthenticationEnabled(true);
-              u.setTwoFactorAuthenticationMechanism(TwoFactorAuthenticationMechanism.TOTP);
-              update(u);
-              twoFactorAuthenticationManager.sendTwoFactorAuthenticationResetEmail(u.getUuid());
+              enableTwoFactorAuthenticationForUser(u);
             }
           }
         }
@@ -1647,6 +1649,13 @@ public class UserServiceImpl implements UserService {
     }
 
     return true;
+  }
+
+  private void enableTwoFactorAuthenticationForUser(User user) {
+    user.setTwoFactorAuthenticationEnabled(true);
+    user.setTwoFactorAuthenticationMechanism(TwoFactorAuthenticationMechanism.TOTP);
+    update(user);
+    twoFactorAuthenticationManager.sendTwoFactorAuthenticationResetEmail(user.getUuid());
   }
 
   private void sendResetPasswordEmail(User user, String token) {

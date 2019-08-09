@@ -1,6 +1,7 @@
 package software.wings.security.authentication;
 
 import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 
@@ -69,7 +70,7 @@ public class TwoFactorAuthenticationManager {
     if (settings.getMechanism() == null) {
       throw new WingsException(ErrorCode.INVALID_TWO_FACTOR_AUTHENTICATION_CONFIGURATION, USER);
     }
-    getPrimaryAccount(user).ifPresent(account -> checkIfOperationIsAllowed(account.getUuid()));
+    getDefaultAccount(user).ifPresent(account -> checkIfOperationIsAllowed(account.getUuid()));
 
     settings.setTwoFactorAuthenticationEnabled(true);
     return applyTwoFactorAuthenticationSettings(user, settings);
@@ -95,15 +96,23 @@ public class TwoFactorAuthenticationManager {
   }
 
   private boolean isAllowed2FADisable(User user) {
-    if (user.getAccounts() != null) {
-      return !(user.getAccounts().size() == 1 && user.getAccounts().get(0).isTwoFactorAdminEnforced());
-    } else {
+    if (isEmpty(user.getAccounts())) {
       return false;
+    } else {
+      Optional<Account> defaultAccount = getDefaultAccount(user);
+      return defaultAccount.isPresent() && !defaultAccount.get().isTwoFactorAdminEnforced();
     }
   }
 
-  private Optional<Account> getPrimaryAccount(User user) {
-    return user.getAccounts().stream().findFirst();
+  private Optional<Account> getDefaultAccount(User user) {
+    String defaultAccountId = user.getDefaultAccountId();
+    if (isEmpty(defaultAccountId)) {
+      defaultAccountId = user.getAccounts().get(0).getUuid();
+    }
+
+    // PL-2771: Need to look up from DB to get up-to-date account settings including whether account-level 2FA is
+    // enabled.
+    return Optional.of(accountService.get(defaultAccountId));
   }
 
   public boolean getTwoFactorAuthAdminEnforceInfo(String accountId) {
