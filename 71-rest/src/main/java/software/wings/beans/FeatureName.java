@@ -52,7 +52,8 @@ public enum FeatureName {
   REJECT_TRIGGER_IF_ARTIFACTS_NOT_MATCH,
   TAGS_YAML,
   TF_ALL,
-  NEW_INSTANCE_TIMESERIES;
+  NEW_INSTANCE_TIMESERIES,
+  SPOTINST;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;
