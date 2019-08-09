@@ -2,6 +2,7 @@ package io.harness.mongo;
 
 import com.mongodb.DBObject;
 import io.harness.mongo.MorphiaMove.MorphiaMoveKeys;
+import io.harness.morphia.MorphiaRegistrar;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +37,7 @@ public class HObjectFactory extends DefaultCreator {
         Constructor<?> constructor = clazz.getConstructor();
         final MorphiaRegistrar morphiaRegistrar = (MorphiaRegistrar) constructor.newInstance();
 
-        morphiaRegistrar.register(morphiaInterfaceImplementers);
+        morphiaRegistrar.registerImplementationClasses(morphiaInterfaceImplementers);
       }
     } catch (Exception e) {
       logger.error("Failed to initialize morphia object factory", e);

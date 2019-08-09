@@ -14,7 +14,7 @@ public class PersistenceMorphiaClassesTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testPackage() {
     final HashSet<Class> classes = new HashSet<>();
-    new PersistenceMorphiaRegistrar().registerMyClasses(classes);
+    new PersistenceMorphiaRegistrar().registerClasses(classes);
     CodeUtils.checkHarnessClassBelongToModule(CodeUtils.location(PersistenceMorphiaRegistrar.class), classes);
   }
 }

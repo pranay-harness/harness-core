@@ -5,7 +5,7 @@ import static io.harness.mongo.IndexManager.ensureIndex;
 import static io.harness.mongo.IndexManager.updateMovedClasses;
 import static org.mongodb.morphia.logging.MorphiaLoggerFactory.registerLogger;
 
-import com.google.inject.AbstractModule;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -16,7 +16,9 @@ import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
+import io.harness.govern.DependencyModule;
 import io.harness.logging.MorphiaLoggerFactory;
+import io.harness.morphia.MorphiaModule;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -25,7 +27,7 @@ import org.mongodb.morphia.Morphia;
 import java.util.Set;
 
 @Slf4j
-public class MongoModule extends AbstractModule {
+public class MongoModule extends DependencyModule {
   public static final MongoClientOptions mongoClientOptions =
       MongoClientOptions.builder()
           .retryWrites(true)
@@ -105,5 +107,10 @@ public class MongoModule extends AbstractModule {
   protected void configure() {
     // Dummy kryo initialization trigger to make sure it is in good condition
     KryoUtils.asBytes(1);
+  }
+
+  @Override
+  public Set<DependencyModule> dependencies() {
+    return ImmutableSet.<DependencyModule>of(MorphiaModule.getInstance());
   }
 }

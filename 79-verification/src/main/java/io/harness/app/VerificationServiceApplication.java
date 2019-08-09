@@ -20,6 +20,7 @@ import static software.wings.common.VerificationConstants.getIgnoredErrorsMetric
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
+import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
@@ -55,7 +56,6 @@ import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
-import io.harness.mongo.MorphiaModule;
 import io.harness.persistence.HPersistence;
 import io.harness.resources.LogVerificationResource;
 import io.harness.scheduler.PersistentScheduler;
@@ -80,6 +80,8 @@ import software.wings.exception.WingsExceptionMapper;
 import software.wings.jersey.JsonViews;
 import software.wings.security.ThreadLocalUserProvider;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
@@ -152,26 +154,31 @@ public class VerificationServiceApplication extends Application<VerificationServ
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
                                             .buildValidatorFactory();
 
-    Injector injector = Guice.createInjector(MetricsInstrumentationModule.builder()
-                                                 .withMetricRegistry(metricRegistry)
-                                                 .withMatcher(not(new AbstractMatcher<TypeLiteral<?>>() {
-                                                   @Override
-                                                   public boolean matches(TypeLiteral<?> typeLiteral) {
-                                                     return typeLiteral.getRawType().isAnnotationPresent(Path.class);
-                                                   }
-                                                 }))
-                                                 .build(),
-        new ValidationModule(validatorFactory),
-        new ProviderModule() {
-          @Provides
-          @Singleton
-          MongoConfig mongoConfig() {
-            return configuration.getMongoConnectionFactory();
-          }
-        },
-        new MorphiaModule(), new MongoModule(), new VerificationServiceModule(configuration),
-        new VerificationServiceSchedulerModule(configuration),
-        new VerificationManagerClientModule(configuration.getManagerUrl()), new MetricRegistryModule(metricRegistry));
+    List<Module> modules = new ArrayList<>();
+    modules.add(MetricsInstrumentationModule.builder()
+                    .withMetricRegistry(metricRegistry)
+                    .withMatcher(not(new AbstractMatcher<TypeLiteral<?>>() {
+                      @Override
+                      public boolean matches(TypeLiteral<?> typeLiteral) {
+                        return typeLiteral.getRawType().isAnnotationPresent(Path.class);
+                      }
+                    }))
+                    .build());
+    modules.add(new ValidationModule(validatorFactory));
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      MongoConfig mongoConfig() {
+        return configuration.getMongoConnectionFactory();
+      }
+    });
+    modules.addAll(new MongoModule().cumulativeDependencies());
+    modules.add(new VerificationServiceModule(configuration));
+    modules.add(new VerificationServiceSchedulerModule(configuration));
+    modules.add(new VerificationManagerClientModule(configuration.getManagerUrl()));
+    modules.add(new MetricRegistryModule(metricRegistry));
+
+    Injector injector = Guice.createInjector(modules);
 
     wingsPersistence = injector.getInstance(WingsPersistence.class);
 

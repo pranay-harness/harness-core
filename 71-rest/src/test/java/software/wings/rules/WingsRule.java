@@ -28,7 +28,6 @@ import io.harness.govern.ServersModule;
 import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoConfig;
-import io.harness.mongo.MorphiaModule;
 import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListener;
@@ -291,8 +290,7 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
 
     modules.add(new LicenseModule());
     modules.add(new ValidationModule(validatorFactory));
-    modules.add(new MorphiaModule());
-    modules.add(new TestMongoModule(datastore, distributedLockSvc));
+    modules.addAll(new TestMongoModule(datastore, distributedLockSvc).cumulativeDependencies());
     modules.addAll(new WingsModule((MainConfiguration) configuration).cumulativeDependencies());
     modules.add(new YamlModule());
     modules.add(new ManagerExecutorModule());

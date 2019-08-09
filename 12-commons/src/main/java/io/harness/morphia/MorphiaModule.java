@@ -1,9 +1,10 @@
-package io.harness.mongo;
+package io.harness.morphia;
 
 import com.google.inject.Provides;
 import com.google.inject.name.Named;
 
-import io.harness.govern.ProviderModule;
+import io.harness.govern.DependencyModule;
+import io.harness.govern.DependencyProviderModule;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.reflections.Reflections;
@@ -12,7 +13,16 @@ import java.lang.reflect.Constructor;
 import java.util.Set;
 
 @Slf4j
-public class MorphiaModule extends ProviderModule {
+public class MorphiaModule extends DependencyProviderModule {
+  private static volatile MorphiaModule instance;
+
+  public static MorphiaModule getInstance() {
+    if (instance == null) {
+      instance = new MorphiaModule();
+    }
+    return instance;
+  }
+
   private static synchronized Set<Class> collectMorphiaClasses() {
     Set<Class> morphiaClasses = new ConcurrentHashSet<>();
 
@@ -22,7 +32,7 @@ public class MorphiaModule extends ProviderModule {
         Constructor<?> constructor = clazz.getConstructor();
         final MorphiaRegistrar morphiaRegistrar = (MorphiaRegistrar) constructor.newInstance();
 
-        morphiaRegistrar.register(morphiaClasses);
+        morphiaRegistrar.registerClasses(morphiaClasses);
       }
     } catch (Exception e) {
       logger.error("Failed to initialize morphia object factory", e);
@@ -38,5 +48,10 @@ public class MorphiaModule extends ProviderModule {
   @Named("morphiaClasses")
   Set<Class> classes() {
     return morphiaClasses;
+  }
+
+  @Override
+  public Set<DependencyModule> dependencies() {
+    return null;
   }
 }

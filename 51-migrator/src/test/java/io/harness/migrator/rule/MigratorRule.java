@@ -10,7 +10,6 @@ import io.harness.govern.ServersModule;
 import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoPersistence;
-import io.harness.mongo.MorphiaModule;
 import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
@@ -83,8 +82,7 @@ public class MigratorRule implements MethodRule, InjectorRuleMixin, MongoRuleMix
 
     modules.add(new VersionModule());
     modules.add(new TimeModule());
-    modules.add(new MorphiaModule());
-    modules.add(new TestMongoModule(datastore, distributedLockSvc));
+    modules.addAll(new TestMongoModule(datastore, distributedLockSvc).cumulativeDependencies());
     return modules;
   }
 

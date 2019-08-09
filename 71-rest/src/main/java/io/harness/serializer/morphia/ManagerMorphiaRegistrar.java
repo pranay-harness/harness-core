@@ -4,7 +4,7 @@ import io.harness.dashboard.DashboardSettings;
 import io.harness.marketplace.gcp.events.AccountActiveEvent;
 import io.harness.marketplace.gcp.events.GcpMarketplaceEvent;
 import io.harness.mongo.HObjectFactory;
-import io.harness.mongo.MorphiaRegistrar;
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.security.SimpleEncryption;
 import software.wings.annotation.EncryptableSetting;
@@ -638,7 +638,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
   private String k8s = "helpers.ext.k8s.";
 
   @Override
-  public void register(Set<Class> set) {
+  public void registerClasses(Set<Class> set) {
     set.add(Account.class);
     set.add(AcrArtifactStream.class);
     set.add(ActionableNotification.class);
@@ -876,7 +876,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
   }
 
   @Override
-  public void register(Map<String, Class> map) {
+  public void registerImplementationClasses(Map<String, Class> map) {
     final HelperPut h = (name, clazz) -> {
       map.put(pkgHarness + name, clazz);
     };

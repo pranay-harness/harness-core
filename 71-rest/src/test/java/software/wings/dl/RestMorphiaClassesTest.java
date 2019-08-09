@@ -54,7 +54,7 @@ public class RestMorphiaClassesTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testLimitsModule() {
     final HashSet<Class> classes = new HashSet<>();
-    new LimitsMorphiaRegistrar().register(classes);
+    new LimitsMorphiaRegistrar().registerClasses(classes);
     CodeUtils.checkHarnessClassBelongToModule(CodeUtils.location(LimitsMorphiaRegistrar.class), classes);
   }
 
@@ -62,7 +62,7 @@ public class RestMorphiaClassesTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testManagerModule() {
     final HashSet<Class> classes = new HashSet<>();
-    new ManagerMorphiaRegistrar().register(classes);
+    new ManagerMorphiaRegistrar().registerClasses(classes);
     CodeUtils.checkHarnessClassBelongToModule(CodeUtils.location(ManagerMorphiaRegistrar.class), classes);
   }
 }

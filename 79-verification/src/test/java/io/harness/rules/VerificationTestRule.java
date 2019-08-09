@@ -1,6 +1,5 @@
 package io.harness.rules;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 
@@ -14,11 +13,11 @@ import io.harness.app.VerificationServiceModule;
 import io.harness.app.VerificationServiceSchedulerModule;
 import io.harness.module.TestMongoModule;
 import io.harness.mongo.MongoConfig;
-import io.harness.mongo.MorphiaModule;
 import software.wings.rules.SetupScheduler;
 import software.wings.rules.WingsRule;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -45,9 +44,12 @@ public class VerificationTestRule extends WingsRule {
 
   @Override
   protected List<Module> getRequiredModules(Configuration configuration, DistributedLockSvc distributedLockSvc) {
-    return Lists.newArrayList(new MorphiaModule(), new TestMongoModule(datastore, distributedLockSvc),
-        new VerificationServiceModule((VerificationServiceConfiguration) configuration), new VerificationTestModule(),
-        new VerificationServiceSchedulerModule((VerificationServiceConfiguration) configuration));
+    List<Module> modules = new ArrayList<>();
+    modules.addAll(new TestMongoModule(datastore, distributedLockSvc).cumulativeDependencies());
+    modules.add(new VerificationServiceModule((VerificationServiceConfiguration) configuration));
+    modules.add(new VerificationTestModule());
+    modules.add(new VerificationServiceSchedulerModule((VerificationServiceConfiguration) configuration));
+    return modules;
   }
 
   @Override

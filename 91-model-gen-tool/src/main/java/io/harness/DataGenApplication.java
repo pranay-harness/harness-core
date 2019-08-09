@@ -20,7 +20,6 @@ import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
-import io.harness.mongo.MorphiaModule;
 import io.harness.persistence.HPersistence;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
@@ -87,8 +86,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
         return configuration.getMongoConnectionFactory();
       }
     });
-    modules.add(new MorphiaModule());
-    modules.add(new MongoModule());
+    modules.addAll(new MongoModule().cumulativeDependencies());
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
                                             .configure()
