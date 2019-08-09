@@ -1,8 +1,10 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -11,6 +13,7 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.security.EncryptionUtils;
 import io.harness.time.Timestamp;
@@ -20,13 +23,21 @@ import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
+import software.wings.beans.FeatureFlag;
+import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
 import software.wings.service.impl.analysis.AnalysisTolerance;
+import software.wings.service.impl.analysis.CVFeedbackRecord;
+import software.wings.service.impl.analysis.FeedbackAction;
+import software.wings.service.impl.analysis.FeedbackPriority;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisStatus;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
+import software.wings.service.impl.analysis.LogMLClusterSummary;
+import software.wings.service.impl.analysis.LogMLFeedbackSummary;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster.MessageFrequency;
 import software.wings.service.intfc.verification.CV24x7DashboardService;
@@ -150,6 +161,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
     Set<String> hosts = new HashSet<>();
     for (int i = 0; i < 10; i++) {
       SplunkAnalysisCluster cluster = getRandomClusterEvent();
+      cluster.setCluster_label(i);
       clusterEvents.add(cluster);
       Map<String, SplunkAnalysisCluster> hostMap = new HashMap<>();
       String host = UUID.randomUUID().toString() + ".harness.com";
@@ -161,6 +173,11 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
     firstRec.setUnknown_clusters(unknownClusters);
     firstRec.compressLogAnalysisRecord();
     return firstRec;
+  }
+
+  private void enableFeatureFlag(FeatureName featureName) {
+    FeatureFlag flag = FeatureFlag.builder().enabled(true).name(featureName.name()).build();
+    wingsPersistence.save(flag);
   }
 
   private SplunkAnalysisCluster getRandomClusterEvent() {
@@ -210,6 +227,62 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
     LogMLAnalysisSummary summary = cv24x7DashboardService.getAnalysisSummary(cvConfigId, startTime, endTime, appId);
 
     assertEquals(10, summary.getUnknownClusters().size());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetAnalysisSummaryFeedbackData() throws Exception {
+    String cvConfigId = generateUuid();
+    LogsCVConfiguration sumoCOnfig = new LogsCVConfiguration();
+    sumoCOnfig.setAppId(appId);
+    sumoCOnfig.setQuery("exception");
+    sumoCOnfig.setStateType(StateType.SUMO);
+    sumoCOnfig.setUuid(cvConfigId);
+
+    wingsPersistence.save(sumoCOnfig);
+    enableFeatureFlag(FeatureName.CV_FEEDBACKS);
+
+    long endTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(10);
+    long startTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(25);
+    int firstRecMinute = (int) TimeUnit.MILLISECONDS.toMinutes(startTime) - 15;
+    int secondRecMinute = (int) TimeUnit.MILLISECONDS.toMinutes(endTime);
+
+    // create feedbacks
+    CVFeedbackRecord feedbackRecord =
+        CVFeedbackRecord.builder()
+            .accountId(accountId)
+            .cvConfigId(cvConfigId)
+            .analysisMinute(secondRecMinute)
+            .clusterType(CLUSTER_TYPE.UNKNOWN)
+            .actionTaken(FeedbackAction.UPDATE_PRIORITY)
+            .priority(FeedbackPriority.P4)
+            .lastUpdatedBy(EmbeddedUser.builder().name("HarnessTestUser").uuid(generateUuid()).build())
+            .lastUpdatedAt(System.currentTimeMillis())
+            .build();
+
+    wingsPersistence.save(feedbackRecord);
+
+    wingsPersistence.save(buildAnalysisRecord(firstRecMinute, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE, cvConfigId));
+    wingsPersistence.save(buildAnalysisRecord(secondRecMinute, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE, cvConfigId));
+    wingsPersistence.save(
+        buildAnalysisRecord(secondRecMinute, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE, cvConfigId));
+
+    LogMLAnalysisSummary summary = cv24x7DashboardService.getAnalysisSummary(cvConfigId, startTime, endTime, appId);
+
+    assertEquals(10, summary.getUnknownClusters().size());
+    LogMLClusterSummary feedbackCluster = null;
+    for (LogMLClusterSummary clusterSummary : summary.getUnknownClusters()) {
+      if (isNotEmpty(clusterSummary.getLogMLFeedbackId())) {
+        feedbackCluster = clusterSummary;
+        break;
+      }
+    }
+
+    assertNotNull(feedbackCluster);
+    LogMLFeedbackSummary feedbackSummary = feedbackCluster.getFeedbackSummary();
+    assertNotNull(feedbackSummary);
+    assertEquals(feedbackRecord.getPriority().name(), feedbackSummary.getPriority().name());
+    assertEquals(feedbackRecord.getLastUpdatedBy(), feedbackSummary.getLastUpdatedBy());
   }
 
   @Test
