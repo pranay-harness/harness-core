@@ -28,4 +28,6 @@ public interface SampleDataProviderConstants {
   String K8S_CANARY_WORKFLOW_NAME = "To-Do List K8s Canary";
 
   String K8S_PIPELINE_NAME = "K8s Prod Pipeline";
+
+  String ARTIFACT_VARIABLE_NAME = "artifact";
 }

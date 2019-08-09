@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.seeddata.SampleDataProviderConstants.ARTIFACT_VARIABLE_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.DOCKER_TODO_LIST_ARTIFACT_SOURCE_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.HARNESS_DOCKER_HUB_CONNECTOR;
 import static io.harness.seeddata.SampleDataProviderConstants.HARNESS_SAMPLE_APP;
@@ -19,8 +21,11 @@ import static software.wings.beans.Account.Builder.anAccount;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.seeddata.SampleDataProviderConstants;
 import io.harness.seeddata.SampleDataProviderService;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
@@ -30,6 +35,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.SampleAppEntityStatus;
@@ -42,6 +48,7 @@ import software.wings.beans.Workflow;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessSampleAppService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
@@ -63,6 +70,7 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
   @Inject private PipelineService pipelineService;
   @Inject private AppService appService;
   @Inject private HarnessSampleAppService harnessSampleAppService;
+  @Mock private FeatureFlagService featureFlagService;
   @Mock private SettingsService mockSettingsService;
   @Mock private InfrastructureMappingService mockInfrastructureMappingService;
 
@@ -222,6 +230,9 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
       if (type.equals(EntityType.PIPELINE.name())) {
         assertThat(name).isEqualTo(K8S_PIPELINE_NAME);
       }
+      if (type.equals(EntityType.SERVICE_VARIABLE.name())) {
+        assertThat(name).isEqualTo(ARTIFACT_VARIABLE_NAME);
+      }
     }
   }
 
@@ -235,6 +246,18 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
 
     Application sampleAppV2 = createHarnessSampleAppV2();
     assertThat(sampleAppV2).isNotNull();
+    assertSampleAppIsGood(sampleAppV2);
+  }
+
+  @Test
+  @Owner(emails = AADITI)
+  @Category(UnitTests.class)
+  @Ignore("TODO: Enable when mutli-artifact feature is rolled out")
+  public void ensureSampleAppHealthIsGoodForMultiArtifact() throws IllegalAccessException {
+    // Create a sample app v2
+    Application sampleAppV2 = createHarnessSampleAppV2WithMultiArtifactSupport();
+    assertThat(sampleAppV2).isNotNull();
+    FieldUtils.writeField(harnessSampleAppService, "featureFlagService", featureFlagService, true);
     assertSampleAppIsGood(sampleAppV2);
   }
 
@@ -277,6 +300,19 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
     assertThat(savedAccount).isNotNull();
 
     sampleDataProviderService.createHarnessSampleApp(savedAccount);
+    Application app = appService.getAppByName(savedAccount.getUuid(), SampleDataProviderConstants.HARNESS_SAMPLE_APP);
+    assertThat(app).isNotNull();
+    return app;
+  }
+
+  private Application createHarnessSampleAppV2WithMultiArtifactSupport() throws IllegalAccessException {
+    FieldUtils.writeField(sampleDataProviderService, "featureFlagService", featureFlagService, true);
+    Account savedAccount = wingsPersistence.saveAndGet(Account.class,
+        anAccount().withAccountName(WingsTestConstants.ACCOUNT_NAME).withUuid(WingsTestConstants.ACCOUNT_ID).build());
+    assertThat(savedAccount).isNotNull();
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, savedAccount.getUuid())).thenReturn(true);
+
+    sampleDataProviderService.createK8sV2SampleApp(savedAccount);
     Application app = appService.getAppByName(savedAccount.getUuid(), SampleDataProviderConstants.HARNESS_SAMPLE_APP);
     assertThat(app).isNotNull();
     return app;

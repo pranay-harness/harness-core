@@ -16,6 +16,8 @@ import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.utils.KubernetesConvention;
 import software.wings.utils.Validator;
 
@@ -31,6 +33,8 @@ public class SampleDataProviderService {
   @Inject private InfraMappingSampleDataProvider infraMappingSampleDataProvider;
   @Inject private WorkflowSampleDataProvider workflowSampleDataProvider;
   @Inject private PipelineSampleDataProvider pipelineSampleDataProvider;
+  @Inject private FeatureFlagService featureFlagService;
+  @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   public void createHarnessSampleApp(Account account) {
     try {
@@ -60,8 +64,23 @@ public class SampleDataProviderService {
     Service kubeService = serviceSampleDataProvider.createKubeService(kubernetesApp.getUuid());
 
     // Create Artifact Stream
+    // TODO: uncomment when multi-artifact feature is rolled out
+    //    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, account.getUuid())) {
+    //      // create artifact stream at connector level and bind it to service
+    //      ArtifactStream artifactStream =
+    //      artifactStreamSampleDataProvider.createDockerArtifactStream(dockerConnector); ArtifactStreamBinding
+    //      artifactStreamBinding =
+    //          ArtifactStreamBinding.builder()
+    //              .name(ARTIFACT_VARIABLE_NAME)
+    //              .artifactStreams(Collections.singletonList(
+    //                  ArtifactStreamSummary.builder().artifactStreamId(artifactStream.getUuid()).build()))
+    //              .build();
+    //      artifactStreamServiceBindingService.create(kubernetesApp.getUuid(), kubeService.getUuid(),
+    //      artifactStreamBinding);
+    //    } else {
     artifactStreamSampleDataProvider.createDockerArtifactStream(
         kubernetesApp.getAppId(), kubeService.getUuid(), dockerConnector);
+    //    }
     // Create QA Environment
     Environment qaEnv = environmentSampleDataProvider.createQAEnvironment(kubernetesApp.getUuid());
 
@@ -117,8 +136,23 @@ public class SampleDataProviderService {
 
     Service kubeService = serviceSampleDataProvider.createK8sV2Service(kubernetesApp.getUuid());
 
+    // TODO: uncomment when multi-artifact feature is rolled out
+    //    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, account.getUuid())) {
+    //      // create artifact stream at connector level and bind it to service
+    //      ArtifactStream artifactStream =
+    //      artifactStreamSampleDataProvider.createDockerArtifactStream(dockerConnector); ArtifactStreamBinding
+    //      artifactStreamBinding =
+    //          ArtifactStreamBinding.builder()
+    //              .name(ARTIFACT_VARIABLE_NAME)
+    //              .artifactStreams(Collections.singletonList(
+    //                  ArtifactStreamSummary.builder().artifactStreamId(artifactStream.getUuid()).build()))
+    //              .build();
+    //      artifactStreamServiceBindingService.create(kubernetesApp.getUuid(), kubeService.getUuid(),
+    //      artifactStreamBinding);
+    //    } else {
     artifactStreamSampleDataProvider.createDockerArtifactStream(
         kubernetesApp.getAppId(), kubeService.getUuid(), dockerConnector);
+    //    }
 
     Environment qaEnv = environmentSampleDataProvider.createQAEnvironment(kubernetesApp.getUuid());
 
