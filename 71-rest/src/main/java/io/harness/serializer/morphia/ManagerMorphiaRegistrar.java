@@ -6,7 +6,6 @@ import io.harness.marketplace.gcp.events.GcpMarketplaceEvent;
 import io.harness.mongo.HObjectFactory;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.notifications.NotificationReceiverInfo;
-import io.harness.security.SimpleEncryption;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.AmiServiceDeployElement;
 import software.wings.api.AmiServiceSetupElement;
@@ -1131,7 +1130,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("helpers.ext.pcf.response.PcfDeployCommandResponse", PcfDeployCommandResponse.class);
     w.put("helpers.ext.pcf.response.PcfSetupCommandResponse", PcfSetupCommandResponse.class);
     w.put("resources.DelegateFileResource$FileIdempotentResult", FileIdempotentResult.class);
-    w.put("security.encryption.SimpleEncryption", SimpleEncryption.class);
     w.put("security.EnvFilter", EnvFilter.class);
     w.put("security.GenericEntityFilter", GenericEntityFilter.class);
     w.put("security.WorkflowFilter", WorkflowFilter.class);
