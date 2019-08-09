@@ -858,6 +858,14 @@ public class AnalysisServiceImpl implements AnalysisService {
           cluster.setJiraLink(record.getJiraLink());
           cluster.setPriority(record.getPriority());
           cluster.setLogMLFeedbackId(record.getUuid());
+          LogMLFeedbackSummary feedbackSummary = LogMLFeedbackSummary.builder()
+                                                     .logMLFeedbackId(record.getUuid())
+                                                     .jiraLink(record.getJiraLink())
+                                                     .priority(record.getPriority())
+                                                     .lastUpdatedAt(record.getLastUpdatedAt())
+                                                     .lastUpdatedBy(record.getLastUpdatedBy())
+                                                     .build();
+          cluster.setFeedbackSummary(feedbackSummary);
         }
       });
     }
