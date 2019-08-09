@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.seeddata.SampleDataProviderConstants.ARTIFACT_VARIABLE_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.DOCKER_TODO_LIST_ARTIFACT_SOURCE_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.HARNESS_DOCKER_HUB_CONNECTOR;
 import static io.harness.seeddata.SampleDataProviderConstants.HARNESS_SAMPLE_APP;
@@ -25,6 +26,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.SampleAppEntityStatus;
@@ -36,11 +38,14 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamBinding;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessSampleAppService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
@@ -58,7 +63,8 @@ public class HarnessSampleAppServiceImpl implements HarnessSampleAppService {
   @Inject private AppService appService;
   @Inject private SettingsService settingsService;
   @Inject private ServiceResourceService serviceResourceService;
-  @Inject public ArtifactStreamService artifactStreamService;
+  @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private EnvironmentService environmentService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private ServiceTemplateService serviceTemplateService;
@@ -67,6 +73,7 @@ public class HarnessSampleAppServiceImpl implements HarnessSampleAppService {
   @Inject private SampleDataProviderService sampleDataProviderService;
   @Inject private AccountService accountService;
   @Inject private AuthService authService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public SampleAppStatus getSampleAppHealth(String accountId, String deploymentType) {
@@ -150,8 +157,10 @@ public class HarnessSampleAppServiceImpl implements HarnessSampleAppService {
 
     // Verify service
     boolean isV2 = false;
+    String serviceId = null;
     Service existingService = serviceResourceService.getServiceByName(appId, K8S_SERVICE_NAME);
     if (existingService != null) {
+      serviceId = existingService.getUuid();
       isV2 = existingService.isK8sV2();
       if (!isV2) {
         // App is v1, set health as BAD
@@ -214,19 +223,46 @@ public class HarnessSampleAppServiceImpl implements HarnessSampleAppService {
     }
 
     // Verify artifact stream
-    if (existingService != null) {
-      ArtifactStream existingArtifactStream = artifactStreamService.getArtifactStreamByName(
-          appId, existingService.getUuid(), DOCKER_TODO_LIST_ARTIFACT_SOURCE_NAME);
-      if (existingArtifactStream != null) {
+    ArtifactStream existingArtifactStream = null;
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)
+        && existingDockerConnector != null) {
+      existingArtifactStream = artifactStreamService.getArtifactStreamByName(
+          existingDockerConnector.getUuid(), DOCKER_TODO_LIST_ARTIFACT_SOURCE_NAME);
+    } else {
+      if (existingService != null) {
+        existingArtifactStream = artifactStreamService.getArtifactStreamByName(
+            appId, existingService.getUuid(), DOCKER_TODO_LIST_ARTIFACT_SOURCE_NAME);
+      }
+    }
+    if (existingArtifactStream != null) {
+      entityStatusList.add(SampleAppEntityStatus.builder()
+                               .entityName(DOCKER_TODO_LIST_ARTIFACT_SOURCE_NAME)
+                               .entityType(EntityType.ARTIFACT_STREAM.name())
+                               .health(Health.GOOD)
+                               .build());
+    } else {
+      entityStatusList.add(SampleAppEntityStatus.builder()
+                               .entityName(DOCKER_TODO_LIST_ARTIFACT_SOURCE_NAME)
+                               .entityType(EntityType.ARTIFACT_STREAM.name())
+                               .health(Health.BAD)
+                               .build());
+      health = Health.BAD;
+    }
+
+    // Verify Artifact Stream Binding for multi-artifact
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+      ArtifactStreamBinding existingArtifactStreamBinding =
+          artifactStreamServiceBindingService.get(appId, serviceId, ARTIFACT_VARIABLE_NAME);
+      if (existingArtifactStreamBinding != null) {
         entityStatusList.add(SampleAppEntityStatus.builder()
-                                 .entityName(DOCKER_TODO_LIST_ARTIFACT_SOURCE_NAME)
-                                 .entityType(EntityType.ARTIFACT_STREAM.name())
+                                 .entityName(ARTIFACT_VARIABLE_NAME)
+                                 .entityType(EntityType.SERVICE_VARIABLE.name())
                                  .health(Health.GOOD)
                                  .build());
       } else {
         entityStatusList.add(SampleAppEntityStatus.builder()
-                                 .entityName(DOCKER_TODO_LIST_ARTIFACT_SOURCE_NAME)
-                                 .entityType(EntityType.ARTIFACT_STREAM.name())
+                                 .entityName(ARTIFACT_VARIABLE_NAME)
+                                 .entityType(EntityType.SERVICE_VARIABLE.name())
                                  .health(Health.BAD)
                                  .build());
         health = Health.BAD;
