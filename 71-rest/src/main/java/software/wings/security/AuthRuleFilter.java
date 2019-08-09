@@ -1,6 +1,10 @@
 package software.wings.security;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.ACCOUNT_DOES_NOT_EXIT;
+import static io.harness.eraro.ErrorCode.ACCOUNT_MIGRATED;
+import static io.harness.eraro.ErrorCode.INACTIVE_ACCOUNT;
 import static io.harness.eraro.ErrorCode.NOT_WHITELISTED_IP;
 import static io.harness.exception.WingsException.USER;
 import static java.util.Arrays.asList;
@@ -19,6 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import software.wings.beans.Account;
+import software.wings.beans.AccountStatus;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.User;
 import software.wings.security.PermissionAttribute.Action;
@@ -35,7 +41,7 @@ import software.wings.security.annotations.ListAPI;
 import software.wings.security.annotations.PublicApi;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.security.auth.AuthHandler;
-import software.wings.service.intfc.ApiKeyService;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -79,8 +85,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
   private AuthService authService;
   private AuthHandler authHandler;
+  private AccountService accountService;
   private UserService userService;
-  private ApiKeyService apiKeyService;
   private AppService appService;
   private WhitelistService whitelistService;
   private HarnessUserGroupService harnessUserGroupService;
@@ -95,13 +101,13 @@ public class AuthRuleFilter implements ContainerRequestFilter {
    */
   @Inject
   public AuthRuleFilter(AuthService authService, AuthHandler authHandler, AppService appService,
-      UserService userService, ApiKeyService apiKeyService, WhitelistService whitelistService,
+      UserService userService, AccountService accountService, WhitelistService whitelistService,
       HarnessUserGroupService harnessUserGroupService) {
     this.authService = authService;
     this.authHandler = authHandler;
     this.appService = appService;
     this.userService = userService;
-    this.apiKeyService = apiKeyService;
+    this.accountService = accountService;
     this.whitelistService = whitelistService;
     this.harnessUserGroupService = harnessUserGroupService;
   }
@@ -164,12 +170,14 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
 
     String uriPath = requestContext.getUriInfo().getPath();
-    if (accountId == null && isAuthFilteringExempted(uriPath)) {
+    boolean isHarnessUserExemptedRequest = isHarnessUserExemptedRequest(uriPath);
+    if (isNotEmpty(accountId)) {
+      validateAccountStatus(accountId, isHarnessUserExemptedRequest);
+    } else if (accountId == null && isAuthFilteringExempted(uriPath)) {
       return;
     }
 
     User user = UserThreadLocal.get();
-
     if (user == null) {
       if (isExternalApi) {
         return;
@@ -182,7 +190,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     String httpMethod = requestContext.getMethod();
     List<PermissionAttribute> requiredPermissionAttributes;
     if (!userService.isUserAssignedToAccount(user, accountId)) {
-      if (!httpMethod.equals(HttpMethod.GET.name()) && !isHarnessUserExemptedRequest(uriPath)) {
+      if (!httpMethod.equals(HttpMethod.GET.name()) && !isHarnessUserExemptedRequest) {
         throw new InvalidRequestException("User not authorized", USER);
       }
 
@@ -241,6 +249,21 @@ public class AuthRuleFilter implements ContainerRequestFilter {
             authService.authorize(accountId, appIdsFromRequest, entityId, user, requiredPermissionAttributes);
           }
         }
+      }
+    }
+  }
+
+  private void validateAccountStatus(String accountId, boolean isHarnessUserExemptedRequest) {
+    String accountStatus = accountService.getAccountStatus(accountId);
+    if (AccountStatus.DELETED.equals(accountStatus)) {
+      throw new WingsException(ACCOUNT_DOES_NOT_EXIT, USER);
+    } else if (AccountStatus.INACTIVE.equals(accountStatus) && !isHarnessUserExemptedRequest) {
+      Account account = accountService.getFromCache(accountId);
+      String migratedToClusterUrl = account == null ? null : account.getMigratedToClusterUrl();
+      if (migratedToClusterUrl == null) {
+        throw new WingsException(INACTIVE_ACCOUNT, USER);
+      } else {
+        throw new WingsException(ACCOUNT_MIGRATED, USER);
       }
     }
   }

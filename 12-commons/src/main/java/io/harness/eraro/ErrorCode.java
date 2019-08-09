@@ -6,6 +6,7 @@ import static javax.ws.rs.core.Response.Status.CONFLICT;
 import static javax.ws.rs.core.Response.Status.EXPECTATION_FAILED;
 import static javax.ws.rs.core.Response.Status.FORBIDDEN;
 import static javax.ws.rs.core.Response.Status.GATEWAY_TIMEOUT;
+import static javax.ws.rs.core.Response.Status.MOVED_PERMANENTLY;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.SERVICE_UNAVAILABLE;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
@@ -35,6 +36,10 @@ public enum ErrorCode {
   USER_DISABLED(UNAUTHORIZED),
 
   ACCOUNT_DOES_NOT_EXIT(UNAUTHORIZED),
+
+  INACTIVE_ACCOUNT(UNAUTHORIZED),
+
+  ACCOUNT_MIGRATED(MOVED_PERMANENTLY),
 
   USER_DOMAIN_NOT_ALLOWED(UNAUTHORIZED),
 
