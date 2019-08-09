@@ -16,8 +16,12 @@ import org.mongodb.morphia.mapping.MappingException;
 import org.reflections.Reflections;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class HObjectFactory extends DefaultCreator {
@@ -171,5 +175,26 @@ public class HObjectFactory extends DefaultCreator {
     } catch (NoSuchMethodException e) {
       return null;
     }
+  }
+
+  public static Set<Class> checkRegisteredClasses(Set<Class> baseClasses, Map<String, Class> classes) {
+    classes.values()
+        .stream()
+        .filter(clazz -> !baseClasses.stream().anyMatch(base -> base.isAssignableFrom(clazz)))
+        .forEach(clazz -> logger.info("The class {} has no base registered", clazz.getName()));
+
+    Reflections reflections = new Reflections("software.wings", "io.harness");
+
+    Set<Class> result = new HashSet<>();
+
+    for (Class base : baseClasses) {
+      final Set<Class> types = reflections.<Class>getSubTypesOf(base);
+      types.stream()
+          .filter(clazz -> !classes.containsKey(clazz.getName()))
+          .filter(clazz -> !Modifier.isAbstract(clazz.getModifiers()))
+          .collect(Collectors.toCollection(() -> result));
+    }
+
+    return result;
   }
 }
