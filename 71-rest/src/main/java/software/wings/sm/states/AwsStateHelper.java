@@ -5,21 +5,15 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
-import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
-import static software.wings.service.impl.aws.model.AwsConstants.PHASE_PARAM;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.ec2.model.Instance;
-import io.harness.context.ContextElementType;
-import org.mongodb.morphia.Key;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
-import software.wings.api.PhaseElement;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.ServiceTemplate;
 import software.wings.beans.infrastructure.Host;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsUtils;
@@ -42,12 +36,6 @@ public class AwsStateHelper {
       List<Instance> ec2InstancesAded, InfrastructureMapping infraMapping, ExecutionContext context) {
     List<InstanceElement> instanceElementList = emptyList();
     if (isNotEmpty(ec2InstancesAded)) {
-      Key<ServiceTemplate> serviceTemplateKey = templateService
-                                                    .getTemplateRefKeysByService(infraMapping.getAppId(),
-                                                        infraMapping.getServiceId(), infraMapping.getEnvId())
-                                                    .get(0);
-      PhaseElement phaseEle = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
-
       instanceElementList =
           ec2InstancesAded.stream()
               .map(instance -> {
@@ -79,10 +67,6 @@ public class AwsStateHelper {
                     .withHostName(hostName)
                     .withDisplayName(instance.getPublicDnsName())
                     .withHost(hostElement)
-                    .withServiceTemplateElement(aServiceTemplateElement()
-                                                    .withUuid(serviceTemplateKey.getId().toString())
-                                                    .withServiceElement(phaseEle.getServiceElement())
-                                                    .build())
                     .build();
               })
               .collect(toList());

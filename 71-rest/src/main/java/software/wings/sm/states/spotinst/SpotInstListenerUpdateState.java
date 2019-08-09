@@ -24,6 +24,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.SpotInstInfrastructureMapping;
 import software.wings.beans.TaskType;
+import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest.SpotInstCommandRequestBuilder;
 import software.wings.service.intfc.ActivityService;
@@ -97,8 +98,8 @@ public class SpotInstListenerUpdateState extends State {
             .orElse(SpotInstSetupContextElement.builder().build());
 
     // create activity with details
-    Activity activity =
-        spotInstStateHelper.createActivity(context, null, getStateType(), SPOTINST_LISTENER_UPDATE_COMMAND);
+    Activity activity = spotInstStateHelper.createActivity(
+        context, null, getStateType(), SPOTINST_LISTENER_UPDATE_COMMAND, CommandUnitType.SPOTINST_UPDATE_LISTENER);
 
     // Generate SpotInstListenerUpdateStateExecutionData
     SpotInstListenerUpdateStateExecutionData stateExecutionData =

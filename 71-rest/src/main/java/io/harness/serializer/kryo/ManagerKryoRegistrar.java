@@ -631,6 +631,7 @@ import software.wings.sm.states.KubernetesSwapServiceSelectorsResponse;
 import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 import software.wings.sm.states.ShellScriptState;
 import software.wings.sm.states.spotinst.SpotInstDeployStateExecutionData;
+import software.wings.sm.states.spotinst.SpotInstListenerUpdateStateExecutionData;
 import software.wings.sm.states.spotinst.SpotInstSetupContextElement;
 import software.wings.sm.states.spotinst.SpotInstSetupExecutionSummary;
 import software.wings.utils.ArtifactType;
@@ -1329,5 +1330,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SpotInstSetupContextElement.class, 7223);
     kryo.register(SpotInstSetupExecutionSummary.class, 7224);
     kryo.register(SpotInstDeployStateExecutionData.class, 7225);
+    kryo.register(SpotInstListenerUpdateStateExecutionData.class, 7226);
   }
 }
