@@ -37,6 +37,7 @@ import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.exception.WingsException;
 import io.harness.spotinst.model.ElastiGroup;
+import io.harness.spotinst.model.ElastiGroupCapacity;
 import io.harness.spotinst.model.ElastiGroupLoadBalancer;
 import io.harness.spotinst.model.ElastiGroupLoadBalancerConfig;
 import software.wings.annotation.EncryptableSetting;
@@ -131,8 +132,10 @@ public class SpotInstStateHelper {
         : Misc.normalizeExpression(context.renderExpression(elastiGroupNamePrefix));
 
     boolean blueGreen = serviceSetup.isBlueGreen();
+    String elastiGroupOriginalJson = context.renderExpression(spotInstInfrastructureMapping.getElasticGroupJson());
+    // Updated json with placeholder and 0 capacity
     String elastiGroupJson = generateElastiGroupJsonForDelegateRequest(
-        context, serviceSetup, spotInstInfrastructureMapping, artifact.getRevision());
+        elastiGroupOriginalJson, serviceSetup, spotInstInfrastructureMapping, artifact.getRevision());
 
     SpotInstTaskParameters spotInstTaskParameters =
         SpotInstSetupTaskParameters.builder()
@@ -233,9 +236,8 @@ public class SpotInstStateHelper {
         .build();
   }
 
-  private String generateElastiGroupJsonForDelegateRequest(ExecutionContext context, SpotInstServiceSetup serviceSetup,
+  private String generateElastiGroupJsonForDelegateRequest(String elastiGroupJson, SpotInstServiceSetup serviceSetup,
       SpotInstInfrastructureMapping spotInstInfrastructureMapping, String image) {
-    String elastiGroupJson = context.renderExpression(spotInstInfrastructureMapping.getElasticGroupJson());
     elastiGroupJson =
         updateElastiGroupJsonWithPlaceholders(elastiGroupJson, serviceSetup, spotInstInfrastructureMapping, image);
     return elastiGroupJson;
@@ -356,5 +358,21 @@ public class SpotInstStateHelper {
         .awsEncryptionDetails(awsEncryptedDataDetails)
         .spotInstConfig(spotInstConfig)
         .spotinstEncryptionDetails(spotinstEncryptedDataDetails);
+  }
+
+  public ElastiGroup prepareNewElastiGroupConfigForRollback(SpotInstSetupContextElement setupContextElement) {
+    ElastiGroup elastiGroup = setupContextElement.getNewElastiGroupOriginalConfig() != null
+        ? setupContextElement.getNewElastiGroupOriginalConfig().clone()
+        : null;
+    if (elastiGroup != null) {
+      elastiGroup.setCapacity(ElastiGroupCapacity.builder().maximum(0).minimum(0).target(0).build());
+    }
+    return elastiGroup;
+  }
+
+  public ElastiGroup prepareOldElastiGroupConfigForRollback(SpotInstSetupContextElement setupContextElement) {
+    return setupContextElement.getOldElastiGroupOriginalConfig() != null
+        ? setupContextElement.getOldElastiGroupOriginalConfig()
+        : null;
   }
 }

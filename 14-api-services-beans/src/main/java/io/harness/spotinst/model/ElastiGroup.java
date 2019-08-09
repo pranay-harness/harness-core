@@ -13,6 +13,14 @@ public class ElastiGroup {
   private ElastiGroupCapacity capacity;
 
   public ElastiGroup clone() {
-    return ElastiGroup.builder().id(id).name(name).capacity(capacity).build();
+    return ElastiGroup.builder()
+        .id(id)
+        .name(name)
+        .capacity(ElastiGroupCapacity.builder()
+                      .target(capacity.getTarget())
+                      .minimum(capacity.getMinimum())
+                      .maximum(capacity.getMaximum())
+                      .build())
+        .build();
   }
 }

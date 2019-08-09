@@ -114,6 +114,30 @@ public class SpotInstDeployState extends State {
     // create activity
     Activity activity = spotInstStateHelper.createActivity(context, null, getStateType(), SPOTINST_DEPLOY_COMMAND);
 
+    // Generate DeployStateExeuctionData, contains commandRequest object.
+    SpotInstDeployStateExecutionData stateExecutionData =
+        generateStateExecutionData(spotInstSetupContextElement, activity, spotInstInfrastructureMapping, context, app);
+
+    SpotInstCommandRequest spotInstCommandRequest = stateExecutionData.getSpotinstCommandRequest();
+
+    DelegateTask task = spotInstStateHelper.getDelegateTask(app.getAccountId(), app.getUuid(),
+        TaskType.SPOTINST_COMMAND_TASK, activity.getUuid(), env.getUuid(), spotInstInfrastructureMapping.getUuid(),
+        new Object[] {spotInstCommandRequest},
+        spotInstStateHelper.generateTimeOutForDelegateTask(
+            spotInstCommandRequest.getSpotInstTaskParameters().getTimeoutIntervalInMin()));
+
+    delegateService.queueTask(task);
+
+    return ExecutionResponse.Builder.anExecutionResponse()
+        .withCorrelationIds(Arrays.asList(activity.getUuid()))
+        .withStateExecutionData(stateExecutionData)
+        .withAsync(true)
+        .build();
+  }
+
+  protected SpotInstDeployStateExecutionData generateStateExecutionData(
+      SpotInstSetupContextElement spotInstSetupContextElement, Activity activity,
+      SpotInstInfrastructureMapping spotInstInfrastructureMapping, ExecutionContext context, Application app) {
     // Calculate upsize and downsize counts
     Integer upsizeUpdateCount = getUpsizeUpdateCount(spotInstSetupContextElement);
     Integer downsizeUpdateCount = getDownsizeUpdateCount(upsizeUpdateCount, spotInstSetupContextElement);
@@ -130,18 +154,7 @@ public class SpotInstDeployState extends State {
 
     SpotInstCommandRequest request = requestBuilder.spotInstTaskParameters(spotInstTaskParameters).build();
     stateExecutionData.setSpotinstCommandRequest(request);
-    DelegateTask task =
-        spotInstStateHelper.getDelegateTask(app.getAccountId(), app.getUuid(), TaskType.SPOTINST_COMMAND_TASK,
-            activity.getUuid(), env.getUuid(), spotInstInfrastructureMapping.getUuid(), new Object[] {request},
-            spotInstStateHelper.generateTimeOutForDelegateTask(spotInstTaskParameters.getTimeoutIntervalInMin()));
-
-    delegateService.queueTask(task);
-
-    return ExecutionResponse.Builder.anExecutionResponse()
-        .withCorrelationIds(Arrays.asList(activity.getUuid()))
-        .withStateExecutionData(stateExecutionData)
-        .withAsync(true)
-        .build();
+    return stateExecutionData;
   }
 
   protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
@@ -194,6 +207,11 @@ public class SpotInstDeployState extends State {
     if (!isFinalDeployState) {
       newElastiGroupCapacity.setMinimum(upsizeUpdateCount);
       newElastiGroupCapacity.setMaximum(upsizeUpdateCount);
+    } else {
+      newElastiGroupCapacity.setMinimum(
+          spotInstSetupContextElement.getNewElastiGroupOriginalConfig().getCapacity().getMinimum());
+      newElastiGroupCapacity.setMaximum(
+          spotInstSetupContextElement.getNewElastiGroupOriginalConfig().getCapacity().getMaximum());
     }
 
     ElastiGroup oldElastiGroup = spotInstSetupContextElement.getOldElastiGroupOriginalConfig() != null
@@ -201,23 +219,34 @@ public class SpotInstDeployState extends State {
         : null;
     if (oldElastiGroup != null) {
       ElastiGroupCapacity oldElastiGroupCapacity = oldElastiGroup.getCapacity();
-      oldElastiGroupCapacity.setTarget(upsizeUpdateCount);
-      oldElastiGroupCapacity.setMaximum(upsizeUpdateCount);
-      oldElastiGroupCapacity.setMinimum(upsizeUpdateCount);
+      oldElastiGroupCapacity.setTarget(downsizeUpdateCount);
+      oldElastiGroupCapacity.setMaximum(downsizeUpdateCount);
+      oldElastiGroupCapacity.setMinimum(downsizeUpdateCount);
     }
 
+    return generateSpotInstDeployTaskParameters(app, activityId, spotInstInfrastructureMapping, context,
+        spotInstSetupContextElement, oldElastiGroup, newElastiGroup);
+  }
+
+  protected SpotInstDeployTaskParameters generateSpotInstDeployTaskParameters(Application app, String activityId,
+      SpotInstInfrastructureMapping infrastructureMapping, ExecutionContext context,
+      SpotInstSetupContextElement spotInstSetupContextElement, ElastiGroup oldElastiGroup, ElastiGroup newElastiGroup) {
     SpotInstCommandRequest commandRequest = spotInstSetupContextElement.getCommandRequest();
+
+    boolean isBlueGreen = spotInstSetupContextElement.isBlueGreen();
     return SpotInstDeployTaskParameters.builder()
         .accountId(app.getAccountId())
         .appId(app.getAppId())
         .activityId(activityId)
-        .awsRegion(spotInstInfrastructureMapping.getAwsRegion())
+        .awsRegion(infrastructureMapping.getAwsRegion())
         .commandName(SPOTINST_DEPLOY_COMMAND)
         .workflowExecutionId(context.getWorkflowExecutionId())
-        .newElastiGroupWithUpdatedCapacity(newElastiGroup)
-        .oldElastiGroupWithUpdatedCapacity(oldElastiGroup)
+        .rollback(isRollback())
         .resizeNewFirst(ResizeStrategy.RESIZE_NEW_FIRST.equals(spotInstSetupContextElement.getResizeStrategy()))
+        .blueGreen(isBlueGreen)
         .timeoutIntervalInMin(commandRequest.getSpotInstTaskParameters().getTimeoutIntervalInMin())
+        .oldElastiGroupWithUpdatedCapacity((!isRollback() && isBlueGreen) ? null : oldElastiGroup)
+        .newElastiGroupWithUpdatedCapacity(newElastiGroup)
         .build();
   }
 
@@ -233,21 +262,24 @@ public class SpotInstDeployState extends State {
     return false;
   }
 
-  private SpotInstDeployStateExecutionData geDeployStateExecutionData(SpotInstSetupContextElement setupContextElement,
-      Activity activity, Integer upsizeUpdateCount, Integer downsizeUpdateCount) {
-    ElastiGroup elastiGroup = setupContextElement.getSpotInstSetupTaskResponse().getNewElastiGroup();
+  protected SpotInstDeployStateExecutionData geDeployStateExecutionData(SpotInstSetupContextElement setupContextElement,
+      Activity activity, Integer newGroupUpdateCount, Integer oldGroupUpdateCount) {
+    ElastiGroup newElastiGroup = setupContextElement.getSpotInstSetupTaskResponse().getNewElastiGroup();
+    ElastiGroup oldElastiGroup = setupContextElement.getOldElastiGroupOriginalConfig();
 
     return SpotInstDeployStateExecutionData.builder()
         .activityId(activity.getUuid())
         .commandName(SPOTINST_DEPLOY_COMMAND)
-        .elastiGroupName(elastiGroup.getName())
-        .elastiGroupId(elastiGroup.getId())
-        .desiredCount(upsizeUpdateCount)
+        .newElastiGroupName(newElastiGroup.getName())
+        .newElastiGroupId(newElastiGroup.getId())
+        .newDesiredCount(newGroupUpdateCount)
+        .oldElastiGroupName(oldElastiGroup.getName())
+        .oldElastiGroupId(oldElastiGroup.getId())
+        .oldDesiredCount(oldGroupUpdateCount)
         .appId(setupContextElement.getAppId())
         .envId(setupContextElement.getEnvId())
         .infraId(setupContextElement.getInfraMappingId())
         .serviceId(setupContextElement.getServiceId())
-        .downsizeCount(downsizeUpdateCount)
         .newElastiGroupOriginalConfig(setupContextElement.getNewElastiGroupOriginalConfig())
         .oldElastiGroupOriginalConfig(setupContextElement.getOldElastiGroupOriginalConfig())
         .build();

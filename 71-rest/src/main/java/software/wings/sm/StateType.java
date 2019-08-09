@@ -182,7 +182,9 @@ import software.wings.sm.states.provision.DestroyTerraformProvisionState;
 import software.wings.sm.states.provision.ShellScriptProvisionState;
 import software.wings.sm.states.provision.TerraformRollbackState;
 import software.wings.sm.states.spotinst.SpotInstDeployState;
+import software.wings.sm.states.spotinst.SpotInstListenerUpdateRollbackState;
 import software.wings.sm.states.spotinst.SpotInstListenerUpdateState;
+import software.wings.sm.states.spotinst.SpotInstRollbackState;
 import software.wings.sm.states.spotinst.SpotInstServiceSetup;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
@@ -456,6 +458,13 @@ public enum StateType implements StateTypeDescriptor {
 
   SPOTINST_DEPLOY(SpotInstDeployState.class, SPOTINST, WorkflowServiceHelper.SPOTINST_DEPLOY,
       asList(InfrastructureMappingType.SPOTINST), asList(PhaseStepType.SPOTINST_DEPLOY), ORCHESTRATION_STENCILS),
+
+  SPOTINST_ROLLBACK(SpotInstRollbackState.class, SPOTINST, WorkflowServiceHelper.SPOTINST_ROLLBACK,
+      asList(InfrastructureMappingType.SPOTINST), asList(PhaseStepType.SPOTINST_DEPLOY), ORCHESTRATION_STENCILS),
+
+  SPOTINST_LISTENER_UPDATE_ROLLBACK(SpotInstListenerUpdateRollbackState.class, SPOTINST,
+      WorkflowServiceHelper.SPOTINST_LISTENER_UPDATE_ROLLBACK, asList(InfrastructureMappingType.SPOTINST),
+      asList(PhaseStepType.SPOTINST_LISTENER_UPDATE), ORCHESTRATION_STENCILS),
 
   SPOTINST_LISTENER_UPDATE(SpotInstListenerUpdateState.class, SPOTINST, WorkflowServiceHelper.SPOTINST_LISTENER_UPDATE,
       asList(InfrastructureMappingType.SPOTINST), asList(PhaseStepType.SPOTINST_LISTENER_UPDATE),

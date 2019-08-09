@@ -80,6 +80,11 @@ public class SpotInstServiceSetup extends State {
   }
 
   private ExecutionResponse executeInternal(ExecutionContext context) {
+    // Override if not so.
+    if (blueGreen) {
+      resizeStrategy = ResizeStrategy.RESIZE_NEW_FIRST;
+    }
+
     // Contains SpotInstCommandRequest + env/infra/activity/workflowExecution ids
     SpotInstSetupStateExecutionData spotinstSetupStateExecutionData =
         spotinstStateHelper.prepareStateExecutionData(context, this);
