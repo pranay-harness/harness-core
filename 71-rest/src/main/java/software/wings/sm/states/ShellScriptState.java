@@ -9,6 +9,7 @@ import static io.harness.delegate.command.CommandExecutionResult.CommandExecutio
 import static io.harness.exception.WingsException.USER;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static software.wings.beans.delegation.ShellScriptParameters.CommandUnit;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
@@ -61,8 +62,6 @@ import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.SSHKeyDataProvider;
 import software.wings.service.impl.WinRmConnectionAttributesDataProvider;
-import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SweepingOutputService;
@@ -79,7 +78,6 @@ import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -87,7 +85,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ShellScriptState extends State implements SweepingOutputStateMixin {
   @Inject @Transient private transient ActivityHelperService activityHelperService;
-  @Inject @Transient private transient DelegateService delegateService;
   @Inject @Transient private transient SettingsService settingsService;
   @Inject @Transient private transient SecretManager secretManager;
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
@@ -133,8 +130,6 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   @Getter @Setter private String outputVars;
   @Getter @Setter private SweepingOutput.Scope sweepingOutputScope;
   @Getter @Setter private String sweepingOutputName;
-
-  @Inject private FeatureFlagService featureFlagService;
 
   /**
    * Create a new Script State with given name.
@@ -340,30 +335,31 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
       renderedTags = trimStrings(renderedTags);
     }
 
-    final ShellScriptParametersBuilder shellScriptParameters = ShellScriptParameters.builder()
-                                                                   .accountId(executionContext.getApp().getAccountId())
-                                                                   .appId(executionContext.getAppId())
-                                                                   .activityId(activityId)
-                                                                   .host(host)
-                                                                   .connectionType(connectionType)
-                                                                   .winrmConnectionAttributes(winRmConnectionAttributes)
-                                                                   .winrmConnectionEncryptedDataDetails(winrmEdd)
-                                                                   .userName(username)
-                                                                   .keyEncryptedDataDetails(keyEncryptionDetails)
-                                                                   .containerServiceParams(containerServiceParams)
-                                                                   .workingDirectory(commandPath)
-                                                                   .scriptType(scriptType)
-                                                                   .script(scriptString)
-                                                                   .executeOnDelegate(executeOnDelegate)
-                                                                   .outputVars(outputVars)
-                                                                   .hostConnectionAttributes(hostConnectionAttributes)
-                                                                   .keyless(keyless)
-                                                                   .keyPath(keyPath)
-                                                                   .port(port)
-                                                                   .accessType(accessType)
-                                                                   .authenticationScheme(authenticationScheme)
-                                                                   .kerberosConfig(kerberosConfig)
-                                                                   .keyName(keyName);
+    final ShellScriptParametersBuilder shellScriptParameters =
+        ShellScriptParameters.builder()
+            .accountId(executionContext.getApp().getAccountId())
+            .appId(executionContext.getAppId())
+            .activityId(activityId)
+            .host(context.renderExpression(host))
+            .connectionType(connectionType)
+            .winrmConnectionAttributes(winRmConnectionAttributes)
+            .winrmConnectionEncryptedDataDetails(winrmEdd)
+            .userName(username)
+            .keyEncryptedDataDetails(keyEncryptionDetails)
+            .containerServiceParams(containerServiceParams)
+            .workingDirectory(context.renderExpression(commandPath))
+            .scriptType(scriptType)
+            .script(scriptString)
+            .executeOnDelegate(executeOnDelegate)
+            .outputVars(outputVars)
+            .hostConnectionAttributes(hostConnectionAttributes)
+            .keyless(keyless)
+            .keyPath(keyPath)
+            .port(port)
+            .accessType(accessType)
+            .authenticationScheme(authenticationScheme)
+            .kerberosConfig(kerberosConfig)
+            .keyName(keyName);
     // TODO: This has to be enabled once CS team gives go ahead
     //    if (featureFlagService.isEnabled(FeatureName.SHELL_SCRIPT_ENV,
     //    workflowStandardParams.getApp().getAccountId())) {
@@ -385,7 +381,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
                                     .accountId(executionContext.getApp().getAccountId())
                                     .waitId(activityId)
                                     .tags(renderedTags)
-                                    .appId(((ExecutionContextImpl) context).getApp().getAppId())
+                                    .appId(context.getApp().getAppId())
                                     .data(TaskData.builder()
                                               .taskType(TaskType.SCRIPT.name())
                                               .parameters(new Object[] {shellScriptParameters.build()})
@@ -402,7 +398,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
     return anExecutionResponse()
         .withAsync(true)
         .withStateExecutionData(scriptStateExecutionData)
-        .withCorrelationIds(Collections.singletonList(activityId))
+        .withCorrelationIds(singletonList(activityId))
         .withDelegateTaskId(delegateTaskId)
         .build();
   }
@@ -420,7 +416,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
 
   private String createActivity(ExecutionContext executionContext) {
     List<CommandUnit> commandUnits =
-        asList(Builder.aCommand().withName(CommandUnit).withCommandType(CommandType.OTHER).build());
+        singletonList(Builder.aCommand().withName(CommandUnit).withCommandType(CommandType.OTHER).build());
     return activityHelperService
         .createAndSaveActivity(executionContext, Type.Verification, getName(), getStateType(), commandUnits)
         .getUuid();
