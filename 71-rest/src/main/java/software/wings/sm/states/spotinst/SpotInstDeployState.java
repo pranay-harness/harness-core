@@ -33,6 +33,7 @@ import software.wings.beans.InstanceUnitType;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.SpotInstInfrastructureMapping;
 import software.wings.beans.TaskType;
+import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest.SpotInstCommandRequestBuilder;
 import software.wings.service.intfc.ActivityService;
@@ -112,7 +113,8 @@ public class SpotInstDeployState extends State {
             .orElse(SpotInstSetupContextElement.builder().build());
 
     // create activity
-    Activity activity = spotInstStateHelper.createActivity(context, null, getStateType(), SPOTINST_DEPLOY_COMMAND);
+    Activity activity = spotInstStateHelper.createActivity(
+        context, null, getStateType(), SPOTINST_DEPLOY_COMMAND, CommandUnitType.SPOTINST_DEPLOY);
 
     // Generate DeployStateExeuctionData, contains commandRequest object.
     SpotInstDeployStateExecutionData stateExecutionData =
@@ -265,7 +267,10 @@ public class SpotInstDeployState extends State {
   protected SpotInstDeployStateExecutionData geDeployStateExecutionData(SpotInstSetupContextElement setupContextElement,
       Activity activity, Integer newGroupUpdateCount, Integer oldGroupUpdateCount) {
     ElastiGroup newElastiGroup = setupContextElement.getSpotInstSetupTaskResponse().getNewElastiGroup();
+    ElastiGroup emptyElastiGroup = ElastiGroup.builder().build();
+    newElastiGroup = newElastiGroup == null ? emptyElastiGroup : newElastiGroup;
     ElastiGroup oldElastiGroup = setupContextElement.getOldElastiGroupOriginalConfig();
+    oldElastiGroup = oldElastiGroup == null ? emptyElastiGroup : oldElastiGroup;
 
     return SpotInstDeployStateExecutionData.builder()
         .activityId(activity.getUuid())
@@ -276,10 +281,10 @@ public class SpotInstDeployState extends State {
         .oldElastiGroupName(oldElastiGroup.getName())
         .oldElastiGroupId(oldElastiGroup.getId())
         .oldDesiredCount(oldGroupUpdateCount)
-        .appId(setupContextElement.getAppId())
-        .envId(setupContextElement.getEnvId())
         .infraId(setupContextElement.getInfraMappingId())
         .serviceId(setupContextElement.getServiceId())
+        .appId(setupContextElement.getAppId())
+        .envId(setupContextElement.getEnvId())
         .newElastiGroupOriginalConfig(setupContextElement.getNewElastiGroupOriginalConfig())
         .oldElastiGroupOriginalConfig(setupContextElement.getOldElastiGroupOriginalConfig())
         .build();

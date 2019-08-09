@@ -162,6 +162,8 @@ public class SpotInstServiceSetup extends State {
             .isBlueGreen(blueGreen)
             .serviceId(stateExecutionData.getServiceId())
             .infraMappingId(stateExecutionData.getInfraMappingId())
+            .appId(stateExecutionData.getAppId())
+            .envId(stateExecutionData.getEnvId())
             .newElastiGroupOriginalConfig(stateExecutionData.getElastiGroupOriginalConfig())
             .elstiGroupNamePrefix(elastiGroupNamePrefix)
             .build();

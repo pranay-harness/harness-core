@@ -110,7 +110,8 @@ public class SpotInstStateHelper {
         (SpotInstInfrastructureMapping) infrastructureMappingService.get(
             app.getUuid(), phaseElement.getInfraMappingId());
 
-    Activity activity = createActivity(context, artifact, serviceSetup.getStateType(), SPOTINST_SERVICE_SETUP_COMMAND);
+    Activity activity = createActivity(
+        context, artifact, serviceSetup.getStateType(), SPOTINST_SERVICE_SETUP_COMMAND, CommandUnitType.SPOTINST_SETUP);
 
     SettingAttribute settingAttribute =
         settingsService.get(spotInstInfrastructureMapping.getComputeProviderSettingId());
@@ -167,6 +168,7 @@ public class SpotInstStateHelper {
 
     return SpotInstSetupStateExecutionData.builder()
         .envId(env.getUuid())
+        .appId(app.getUuid())
         .infraMappingId(spotInstInfrastructureMapping.getUuid())
         .commandName(SPOTINST_SERVICE_SETUP_COMMAND)
         .maxInstanceCount(serviceSetup.getMaxInstances())
@@ -174,7 +176,7 @@ public class SpotInstStateHelper {
         .currentRunningInstanceCount(fetchCurrentRunningCountForSetupRequest(serviceSetup))
         .serviceId(serviceElement.getUuid())
         .spotinstCommandRequest(commandRequest)
-        .elastiGroupOriginalConfig(generateConfigFromJson(elastiGroupJson))
+        .elastiGroupOriginalConfig(generateConfigFromJson(elastiGroupOriginalJson))
         .build();
   }
 
@@ -301,12 +303,12 @@ public class SpotInstStateHelper {
     elastiGroupConfigMap.put(NAME_CONFIG_ELEMENT, ELASTI_GROUP_NAME_PLACEHOLDER);
   }
 
-  public Activity createActivity(
-      ExecutionContext executionContext, Artifact artifact, String stateType, String command) {
+  public Activity createActivity(ExecutionContext executionContext, Artifact artifact, String stateType, String command,
+      CommandUnitType commandUnitType) {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
-    ActivityBuilder activityBuilder = generateActivityBuilder(app.getName(), app.getUuid(), command, Type.Command,
-        executionContext, stateType, CommandUnitType.SPOTINST_SETUP, env);
+    ActivityBuilder activityBuilder = generateActivityBuilder(
+        app.getName(), app.getUuid(), command, Type.Command, executionContext, stateType, commandUnitType, env);
 
     if (artifact != null) {
       activityBuilder.artifactName(artifact.getDisplayName()).artifactId(artifact.getUuid());

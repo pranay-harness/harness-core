@@ -50,7 +50,7 @@ public class SpotInstConfig extends SettingValue implements EncryptableSetting, 
 
   @Override
   public String fetchResourceCategory() {
-    return ResourceType.COLLABORATION_PROVIDER.name();
+    return ResourceType.CLOUD_PROVIDER.name();
   }
 
   // It is expected to fail with 401, unauthorized access

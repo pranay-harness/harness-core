@@ -144,6 +144,7 @@ public class ActivityServiceImpl implements ActivityService {
         case AWS_ECS_SERVICE_DEPLOY:
         case SPOTINST_SETUP:
         case SPOTINST_DEPLOY:
+        case SPOTINST_UPDATE_LISTENER:
           rv.add(CommandUnitDetails.builder()
                      .commandExecutionStatus(ExecutionStatus.translateExecutionStatus(activity.getStatus()))
                      .name(activity.getCommandUnitType().getName())
