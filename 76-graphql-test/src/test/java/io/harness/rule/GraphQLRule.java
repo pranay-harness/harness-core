@@ -19,6 +19,7 @@ import io.harness.govern.ServersModule;
 import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoConfig;
+import io.harness.mongo.MorphiaModule;
 import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
 import io.harness.threading.CurrentThreadExecutor;
@@ -118,6 +119,7 @@ public class GraphQLRule
     List<Module> modules = new ArrayList();
     modules.add(VersionModule.getInstance());
     modules.addAll(TimeModule.getInstance().cumulativeDependencies());
+    modules.add(new MorphiaModule());
     modules.add(new TestMongoModule(datastore, distributedLockSvc));
 
     MainConfiguration configuration = getConfiguration("graphQL");

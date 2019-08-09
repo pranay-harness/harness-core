@@ -14,6 +14,7 @@ import io.harness.event.grpc.PublishedMessage;
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
+import io.harness.mongo.MorphiaModule;
 import io.harness.serializer.YamlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -60,7 +61,7 @@ public class EventServiceApplication {
       MongoConfig mongoConfig() {
         return config.getMongoConnectionFactory();
       }
-    }, new MongoModule(), new EventServiceModule(config));
+    }, new MorphiaModule(), new MongoModule(), new EventServiceModule(config));
     GrpcEventServer server = injector.getInstance(GrpcEventServer.class);
     Runtime.getRuntime().addShutdownHook(new Thread(xxxxxxxx:shutdown));
     server.awaitTermination();

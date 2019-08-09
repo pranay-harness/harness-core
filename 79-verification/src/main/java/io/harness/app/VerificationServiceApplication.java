@@ -17,7 +17,6 @@ import static software.wings.common.VerificationConstants.getDataAnalysisMetricH
 import static software.wings.common.VerificationConstants.getDataCollectionMetricHelpDocument;
 import static software.wings.common.VerificationConstants.getIgnoredErrorsMetricHelpDocument;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -25,7 +24,6 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
-import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
 import com.codahale.metrics.MetricRegistry;
@@ -42,15 +40,12 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
-import io.harness.entities.VerificationMorphiaClasses;
-import io.harness.event.model.EventsMorphiaClasses;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.jobs.VerificationJob;
 import io.harness.jobs.VerificationMetricJob;
 import io.harness.jobs.housekeeping.UsageMetricsJob;
 import io.harness.jobs.sg247.ServiceGuardMainJob;
-import io.harness.limits.LimitsMorphiaClasses;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.ManageDistributedLockSvc;
 import io.harness.lock.PersistentLocker;
@@ -60,7 +55,7 @@ import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
-import io.harness.mongo.PersistenceMorphiaClasses;
+import io.harness.mongo.MorphiaModule;
 import io.harness.persistence.HPersistence;
 import io.harness.resources.LogVerificationResource;
 import io.harness.scheduler.PersistentScheduler;
@@ -77,7 +72,6 @@ import org.reflections.Reflections;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.CharsetResponseFilter;
 import software.wings.app.WingsApplication;
-import software.wings.beans.ManagerMorphiaClasses;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.ConstraintViolationExceptionMapper;
 import software.wings.exception.GenericExceptionMapper;
@@ -98,14 +92,6 @@ import javax.ws.rs.Path;
  */
 @Slf4j
 public class VerificationServiceApplication extends Application<VerificationServiceConfiguration> {
-  public static final Set<Class> morphiaClasses = ImmutableSet.<Class>builder()
-                                                      .addAll(ManagerMorphiaClasses.classes)
-                                                      .addAll(ManagerMorphiaClasses.dependentClasses)
-                                                      .addAll(EventsMorphiaClasses.classes)
-                                                      .addAll(PersistenceMorphiaClasses.classes)
-                                                      .addAll(LimitsMorphiaClasses.classes)
-                                                      .addAll(VerificationMorphiaClasses.classes)
-                                                      .build();
   // pool interval at which the job will schedule. But here in verificationJob it will schedule at POLL_INTERVAL / 2
 
   private static String APPLICATION_NAME = "Verification Service Application";
@@ -178,18 +164,12 @@ public class VerificationServiceApplication extends Application<VerificationServ
         new ValidationModule(validatorFactory),
         new ProviderModule() {
           @Provides
-          @Named("morphiaClasses")
-          Set<Class> classes() {
-            return morphiaClasses;
-          }
-
-          @Provides
           @Singleton
           MongoConfig mongoConfig() {
             return configuration.getMongoConnectionFactory();
           }
         },
-        new MongoModule(), new VerificationServiceModule(configuration),
+        new MorphiaModule(), new MongoModule(), new VerificationServiceModule(configuration),
         new VerificationServiceSchedulerModule(configuration),
         new VerificationManagerClientModule(configuration.getManagerUrl()), new MetricRegistryModule(metricRegistry));
 

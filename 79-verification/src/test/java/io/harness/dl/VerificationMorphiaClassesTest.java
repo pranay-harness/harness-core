@@ -2,18 +2,19 @@ package io.harness.dl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.CategoryTest;
-import io.harness.OrchestrationMorphiaClasses;
-import io.harness.app.VerificationServiceApplication;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+
 import io.harness.category.element.UnitTests;
-import io.harness.entities.VerificationMorphiaClasses;
 import io.harness.mongo.HObjectFactory;
 import io.harness.reflection.CodeUtils;
+import io.harness.serializer.morphia.VerificationMorphiaRegistrar;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.mapping.MappedClass;
+import software.wings.WingsBaseTest;
 import software.wings.integration.common.MongoDBTest.MongoEntity;
 import software.wings.integration.dl.PageRequestTest.Dummy;
 
@@ -21,7 +22,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Slf4j
-public class VerificationMorphiaClassesTest extends CategoryTest {
+public class VerificationMorphiaClassesTest extends WingsBaseTest {
+  @Inject @Named("morphiaClasses") Set<Class> morphiaClasses;
+
   @Test
   @Category(UnitTests.class)
   public void testSearchAndList() {
@@ -31,12 +34,9 @@ public class VerificationMorphiaClassesTest extends CategoryTest {
     morphia.mapPackage("software.wings");
     morphia.mapPackage("io.harness");
 
-    Set<Class> classes = new HashSet();
-    classes.addAll(VerificationServiceApplication.morphiaClasses);
+    Set<Class> classes = new HashSet(morphiaClasses);
     classes.add(Dummy.class);
     classes.add(MongoEntity.class);
-
-    classes.addAll(OrchestrationMorphiaClasses.classes);
 
     boolean success = true;
     for (MappedClass cls : morphia.getMapper().getMappedClasses()) {
@@ -52,7 +52,8 @@ public class VerificationMorphiaClassesTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testModule() {
-    CodeUtils.checkHarnessClassBelongToModule(
-        CodeUtils.location(VerificationMorphiaClasses.class), VerificationMorphiaClasses.classes);
+    final HashSet<Class> classes = new HashSet<>();
+    new VerificationMorphiaRegistrar().register(classes);
+    CodeUtils.checkHarnessClassBelongToModule(CodeUtils.location(VerificationMorphiaRegistrar.class), classes);
   }
 }
