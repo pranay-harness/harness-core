@@ -163,6 +163,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
             EncryptableSetting object = (EncryptableSetting) savedObject;
 
             if (shouldEncryptWhileUpdating(f, object, keyValuePairs, entityId)) {
+              String accountId = object.getAccountId();
               Field encryptedField = getEncryptedRefField(f, object);
               String encryptedId = encrypt(object, (char[]) value, encryptedField, null);
               updateParentIfNecessary(object, entityId);
@@ -416,25 +417,8 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
         char[] secret = (char[]) f.get(object);
         Field encryptedField = getEncryptedRefField(f, object);
         encryptedField.setAccessible(true);
-        // PL-2902: Avoid encrypt/decrypt null fields.
-        if (secret == null) {
-          String secretId = (String) encryptedField.get(object);
-          if (isSetByYaml(object, encryptedField)) {
-            // In YAML update/import case, the encrypted field is having secret manager prefix.
-            // Those prefix need to be stripped and only the UUID part be preserved.
-            EncryptedData encryptedData = secretManager.getEncryptedDataFromYamlRef(secretId, object.getAccountId());
-            if (encryptedData == null) {
-              throw new WingsException("Invalid YAML secret reference: " + secretId);
-            } else {
-              // Update the YAML secret reference to the real secret UUID.
-              secretId = encryptedData.getUuid();
-            }
-          }
-          encryptedField.set(object, secretId);
-        } else {
-          encrypt(object, secret, encryptedField, savedObject);
-          f.set(object, null);
-        }
+        encrypt(object, secret, encryptedField, savedObject);
+        f.set(object, null);
       }
     } catch (SecurityException e) {
       throw new WingsException("Security exception in encrypt", e);
@@ -448,6 +432,14 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
     encryptedField.setAccessible(true);
     Field decryptedField = getDecryptedField(encryptedField, object);
     decryptedField.setAccessible(true);
+
+    // yaml ref case
+    if (isSetByYaml(object, encryptedField)) {
+      EncryptedData encryptedData =
+          secretManager.getEncryptedDataFromYamlRef((String) encryptedField.get(object), object.getAccountId());
+      encryptedField.set(object, encryptedData.getUuid());
+      return encryptedData.getUuid();
+    }
 
     if (isReferencedSecretText(object, encryptedField)) {
       encryptedField.set(object, String.valueOf(secret));
