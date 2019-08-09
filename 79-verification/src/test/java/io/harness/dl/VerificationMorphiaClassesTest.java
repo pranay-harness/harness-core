@@ -53,7 +53,7 @@ public class VerificationMorphiaClassesTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testModule() {
     final HashSet<Class> classes = new HashSet<>();
-    new VerificationMorphiaRegistrar().register(classes);
+    new VerificationMorphiaRegistrar().registerClasses(classes);
     CodeUtils.checkHarnessClassBelongToModule(CodeUtils.location(VerificationMorphiaRegistrar.class), classes);
   }
 }

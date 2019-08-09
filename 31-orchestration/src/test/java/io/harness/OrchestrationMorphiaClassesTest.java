@@ -13,7 +13,7 @@ public class OrchestrationMorphiaClassesTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testPackage() {
     final HashSet<Class> classes = new HashSet<>();
-    new OrchestrationMorphiaRegistrar().register(classes);
+    new OrchestrationMorphiaRegistrar().registerClasses(classes);
     CodeUtils.checkHarnessClassBelongToModule(CodeUtils.location(OrchestrationMorphiaRegistrar.class), classes);
   }
 }

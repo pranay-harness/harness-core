@@ -1,4 +1,4 @@
-package io.harness.mongo;
+package io.harness.morphia;
 
 import java.util.Map;
 import java.util.Set;
@@ -11,7 +11,7 @@ public interface MorphiaRegistrar {
     void put(String path, Class clazz);
   }
 
-  void register(Set<Class> set);
+  void registerClasses(Set<Class> set);
 
-  void register(Map<String, Class> map);
+  void registerImplementationClasses(Map<String, Class> map);
 }

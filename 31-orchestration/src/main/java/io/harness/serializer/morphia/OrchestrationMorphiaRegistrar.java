@@ -2,7 +2,7 @@ package io.harness.serializer.morphia;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.SweepingOutput;
-import io.harness.mongo.MorphiaRegistrar;
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.state.inspection.ExpressionVariableUsage;
 import io.harness.state.inspection.StateInspection;
 import io.harness.waiter.ErrorNotifyResponseData;
@@ -18,7 +18,7 @@ import java.util.Set;
 
 public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
   @Override
-  public void register(Set<Class> set) {
+  public void registerClasses(Set<Class> set) {
     set.add(DelegateTask.class);
     set.add(NotifyEvent.class);
     set.add(NotifyResponse.class);
@@ -30,7 +30,7 @@ public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
   }
 
   @Override
-  public void register(Map<String, Class> map) {
+  public void registerImplementationClasses(Map<String, Class> map) {
     final HelperPut h = (name, clazz) -> {
       map.put(pkgHarness + name, clazz);
     };

@@ -14,7 +14,6 @@ import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoPersistence;
 import io.harness.mongo.MongoQueue;
-import io.harness.mongo.MorphiaModule;
 import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.Queue;
@@ -114,8 +113,7 @@ public class PersistenceRule
 
     modules.add(VersionModule.getInstance());
     modules.addAll(TimeModule.getInstance().cumulativeDependencies());
-    modules.add(new MorphiaModule());
-    modules.add(new TestMongoModule(datastore, distributedLockSvc));
+    modules.addAll(new TestMongoModule(datastore, distributedLockSvc).cumulativeDependencies());
 
     return modules;
   }

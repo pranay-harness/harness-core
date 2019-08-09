@@ -66,7 +66,6 @@ import io.harness.metrics.MetricRegistryModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistenceIterator;
-import io.harness.mongo.MorphiaModule;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
@@ -250,10 +249,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       }
     });
 
-    modules.add(new MorphiaModule());
-
-    MongoModule databaseModule = new MongoModule();
-    modules.add(databaseModule);
+    modules.addAll(new MongoModule().cumulativeDependencies());
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
                                             .configure()
