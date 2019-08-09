@@ -46,7 +46,7 @@ public class SpotInstDeployTaskHandler extends SpotInstTaskHandler {
     boolean resizeNewFirst = deployTaskParameters.isResizeNewFirst();
     int steadyStateTimeOut = getTimeOut(deployTaskParameters.getSteadyStateTimeOut());
 
-    if (resizeNewFirst) {
+    if (resizeNewFirst && !deployTaskParameters.isRollback()) {
       if (newElastiGroup != null) {
         updateElastiGroupAndWait(spotInstToken, spotInstAccountId, newElastiGroup, logCallback,
             deployTaskParameters.getWorkflowExecutionId(), steadyStateTimeOut);

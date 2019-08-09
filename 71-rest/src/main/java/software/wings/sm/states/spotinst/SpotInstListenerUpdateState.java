@@ -149,8 +149,9 @@ public class SpotInstListenerUpdateState extends State {
         .build();
   }
 
-  protected SpotInstTaskParameters getTaskParameters(ExecutionContext context, Application app, String activityId,
-      SpotInstInfrastructureMapping spotInstInfrastructureMapping, SpotInstSetupContextElement setupContextElement) {
+  protected SpotInstSwapRoutesTaskParameters getTaskParameters(ExecutionContext context, Application app,
+      String activityId, SpotInstInfrastructureMapping spotInstInfrastructureMapping,
+      SpotInstSetupContextElement setupContextElement) {
     SpotInstCommandRequest commandRequest = setupContextElement.getCommandRequest();
     return SpotInstSwapRoutesTaskParameters.builder()
         .accountId(app.getAccountId())

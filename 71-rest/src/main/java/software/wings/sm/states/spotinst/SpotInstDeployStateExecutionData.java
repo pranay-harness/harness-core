@@ -24,10 +24,13 @@ public class SpotInstDeployStateExecutionData extends StateExecutionData impleme
   private String envId;
   private String serviceId;
   private String activityId;
-  private String elastiGroupId;
-  private String elastiGroupName;
-  private Integer desiredCount;
-  private Integer downsizeCount;
+  private String newElastiGroupId;
+  private String newElastiGroupName;
+  private Integer newDesiredCount;
+
+  private String oldElastiGroupId;
+  private String oldElastiGroupName;
+  private Integer oldDesiredCount;
   private String commandName;
   private ElastiGroup newElastiGroupOriginalConfig;
   private ElastiGroup oldElastiGroupOriginalConfig;
@@ -48,12 +51,20 @@ public class SpotInstDeployStateExecutionData extends StateExecutionData impleme
             .value(spotinstCommandRequest.getSpotInstTaskParameters().getActivityId())
             .displayName("Activity Id")
             .build());
-    putNotNull(executionDetails, "elastiGroupId",
-        ExecutionDataValue.builder().value(elastiGroupId).displayName("New Elasti Group ID").build());
-    putNotNull(executionDetails, "elastiGroupName",
-        ExecutionDataValue.builder().value(elastiGroupName).displayName("New Elasti Group Name").build());
-    putNotNull(executionDetails, "desiredCount",
-        ExecutionDataValue.builder().value(desiredCount).displayName("Desired Instance Count").build());
+    putNotNull(executionDetails, "newElastiGroupId",
+        ExecutionDataValue.builder().value(newElastiGroupId).displayName("New ElastiGroup ID").build());
+    putNotNull(executionDetails, "newElastiGroupName",
+        ExecutionDataValue.builder().value(newElastiGroupName).displayName("New ElastiGroup Name").build());
+    putNotNull(executionDetails, "newDesiredCount",
+        ExecutionDataValue.builder().value(newDesiredCount).displayName("New Group Desired Count: ").build());
+
+    putNotNull(executionDetails, "oldElastiGroupId",
+        ExecutionDataValue.builder().value(oldElastiGroupId).displayName("Old ElastiGroup ID").build());
+    putNotNull(executionDetails, "newElastiGroupName",
+        ExecutionDataValue.builder().value(oldElastiGroupName).displayName("Old ElastiGroup Name").build());
+    putNotNull(executionDetails, "newDesiredCount",
+        ExecutionDataValue.builder().value(oldDesiredCount).displayName("Old Group Desired Count: ").build());
+
     return executionDetails;
   }
 

@@ -321,7 +321,9 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       case ECS_UPDATE_LISTENER_BG:
       case ECS_UPDATE_ROUTE_53_DNS_WEIGHT:
       case AMI_SWITCH_AUTOSCALING_GROUP_ROUTES:
-      case SPOTINST_LISTENER_UPDATE: {
+      case SPOTINST_LISTENER_UPDATE:
+      case SPOTINST_LISTENER_UPDATE_ROLLBACK:
+      case SPOTINST_ROLLBACK: {
         // All the data required is already there on the service setup element.
         // We don't need to pass something unnecessarily.
         return emptyList();
