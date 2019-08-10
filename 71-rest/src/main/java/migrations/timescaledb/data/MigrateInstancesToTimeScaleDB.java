@@ -17,9 +17,6 @@ import software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.instance.InstanceTimeScaleProcessor;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-
 /**
  * This will migrate the instance data to timescale db
  * @author rktummala
@@ -40,7 +37,7 @@ public class MigrateInstancesToTimeScaleDB implements TimeScaleDBDataMigration {
     }
 
     logger.info("Starting instance data migration to timescale db");
-
+    int count = 0;
     FindOptions findOptions = new FindOptions();
     findOptions.readPreference(ReadPreference.secondaryPreferred());
 
@@ -49,18 +46,18 @@ public class MigrateInstancesToTimeScaleDB implements TimeScaleDBDataMigration {
                                                             .fetch(findOptions))) {
       while (iterator.hasNext()) {
         Instance instance = iterator.next();
-        try (Connection connection = timeScaleDBService.getDBConnection()) {
-          boolean exists = instanceTimeScaleProcessor.checkIfInstanceExists(connection, instance.getUuid());
-          if (exists) {
-            instanceTimeScaleProcessor.updateInstance(connection, instance);
-          } else {
-            instanceTimeScaleProcessor.createInstance(connection, instance);
-          }
+        count++;
+        boolean exists = instanceTimeScaleProcessor.checkIfInstanceExists(instance.getUuid());
+        if (exists) {
+          instanceTimeScaleProcessor.updateInstance(instance);
+        } else {
+          instanceTimeScaleProcessor.createInstance(instance);
         }
+        logger.info("Migrated instances {}, current instance processed {}", count, instance.getUuid());
       }
       logger.info("Completed migrating instance data to timescale db");
       return true;
-    } catch (SQLException e) {
+    } catch (Exception e) {
       logger.warn("Failed to complete instance data migration", e);
       return false;
     }

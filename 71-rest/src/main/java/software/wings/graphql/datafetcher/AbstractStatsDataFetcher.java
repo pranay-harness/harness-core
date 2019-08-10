@@ -44,7 +44,7 @@ public abstract class AbstractStatsDataFetcher<A, F, G, T, S> implements DataFet
   private static final String GENERIC_EXCEPTION_MSG = "An error has occurred. Please contact the Harness support team.";
 
   @Inject protected DataFetcherUtils utils;
-  public static final int MAX_RETRY = 5;
+  public static final int MAX_RETRY = 3;
 
   protected abstract QLData fetch(
       String accountId, A aggregateFunction, List<F> filters, List<G> groupBy, T groupByTime, List<S> sort);

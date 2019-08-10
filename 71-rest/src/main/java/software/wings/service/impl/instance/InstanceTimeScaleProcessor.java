@@ -1,8 +1,6 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.sql.Statement.EXECUTE_FAILED;
 import static software.wings.graphql.datafetcher.AbstractStatsDataFetcher.MAX_RETRY;
 
 import com.google.inject.Inject;
@@ -38,7 +36,7 @@ public class InstanceTimeScaleProcessor {
   private String updateQuery =
       "UPDATE INSTANCE SET CREATEDAT = ?, DELETEDAT = ?, ISDELETED = ?, APPID = ?, SERVICEID = ?, ENVID = ?, CLOUDPROVIDERID = ?, INSTANCETYPE = ?, ARTIFACTID = ? WHERE ACCOUNTID = ? AND INSTANCEID = ?";
   private String deleteQuery = "UPDATE INSTANCE SET DELETEDAT = ?, ISDELETED = ? WHERE INSTANCEID = ?";
-  private String getQuery = "SELECT INSTANCEID FROM INSTANCE WHERE INSTANCEID = ?";
+  private String getQuery = "SELECT COUNT(INSTANCEID) FROM INSTANCE WHERE INSTANCEID = ?";
 
   //  CREATE TABLE IF NOT EXISTS INSTANCE (
   //      CREATEDAT TIMESTAMPTZ NOT NULL,
@@ -55,6 +53,11 @@ public class InstanceTimeScaleProcessor {
   //  );
 
   public void handleInstanceChanges(InstanceEvent instanceEvent) {
+    if (!timeScaleDBService.isValid()) {
+      logger.info("TimeScaleDB not found, not processing events");
+      return;
+    }
+
     String accountId = instanceEvent.getAccountId();
     try {
       handleInstanceDeletions(instanceEvent.getDeletions(), instanceEvent.getDeletionTimestamp());
@@ -69,40 +72,35 @@ public class InstanceTimeScaleProcessor {
       return;
     }
 
-    int retryCount = 0;
-    while (retryCount < MAX_RETRY) {
-      try (Connection connection = timeScaleDBService.getDBConnection();
-           PreparedStatement preparedStmt = connection.prepareStatement(insertQuery)) {
-        instanceSet.forEach(instance -> {
-          try {
-            setValuesToPreparedStmt(preparedStmt, instance);
-            preparedStmt.addBatch();
-          } catch (SQLException e) {
-            logger.error("Error while setting values for instance creation for account {}", e, accountId);
+    instanceSet.forEach(instance -> {
+      int retryCount = 0;
+      while (retryCount <= MAX_RETRY) {
+        try (Connection connection = timeScaleDBService.getDBConnection();
+             PreparedStatement preparedStmt = connection.prepareStatement(insertQuery)) {
+          setValuesToPreparedStmt(preparedStmt, instance);
+          preparedStmt.executeUpdate();
+          break;
+        } catch (SQLException e) {
+          if (retryCount >= MAX_RETRY) {
+            logger.error("Create instance query failed for accountId {}", accountId, e);
+          } else {
+            logger.error("Create instance query failed for accountId {}, retry {}", accountId, retryCount, e);
           }
-        });
-        int[] batch = preparedStmt.executeBatch();
-        printErrorsIfAny(batch, accountId);
-        break;
-      } catch (SQLException e) {
-        if (retryCount >= MAX_RETRY) {
-          logger.error("Create instance query failed for accountId {}", accountId, e);
-        } else {
-          logger.error("Create instance query failed for accountId {}, retry {}", accountId, retryCount, e);
+          retryCount++;
         }
-        retryCount++;
       }
-    }
+    });
   }
 
-  public void createInstance(Connection connection, Instance instance) {
-    if (instance == null || connection == null) {
+  public void createInstance(Instance instance) {
+    if (instance == null) {
       return;
     }
 
     int retryCount = 0;
-    while (retryCount < MAX_RETRY) {
-      try (PreparedStatement preparedStmt = connection.prepareStatement(insertQuery)) {
+    while (retryCount <= MAX_RETRY) {
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           PreparedStatement preparedStmt = connection.prepareStatement(insertQuery)) {
         setValuesToPreparedStmt(preparedStmt, instance);
         preparedStmt.executeUpdate();
         break;
@@ -118,14 +116,15 @@ public class InstanceTimeScaleProcessor {
     }
   }
 
-  public void updateInstance(Connection connection, Instance instance) {
-    if (instance == null || connection == null) {
+  public void updateInstance(Instance instance) {
+    if (instance == null) {
       return;
     }
 
     int retryCount = 0;
-    while (retryCount < MAX_RETRY) {
-      try (PreparedStatement preparedStmt = connection.prepareStatement(updateQuery)) {
+    while (retryCount <= MAX_RETRY) {
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           PreparedStatement preparedStmt = connection.prepareStatement(updateQuery)) {
         preparedStmt.setTimestamp(1, new Timestamp(instance.getCreatedAt()), utils.getDefaultCalendar());
         preparedStmt.setTimestamp(
             2, instance.isDeleted() ? new Timestamp(instance.getDeletedAt()) : null, utils.getDefaultCalendar());
@@ -142,10 +141,10 @@ public class InstanceTimeScaleProcessor {
         break;
       } catch (SQLException e) {
         if (retryCount >= MAX_RETRY) {
-          logger.error("Create instance query failed for accountId {}", instance.getAccountId(), e);
+          logger.error("Update instance query failed for accountId {}", instance.getAccountId(), e);
         } else {
           logger.error(
-              "Create instance query failed for accountId {}, retry {}", instance.getAccountId(), retryCount, e);
+              "Update instance query failed for accountId {}, retry {}", instance.getAccountId(), retryCount, e);
         }
         retryCount++;
       }
@@ -172,63 +171,47 @@ public class InstanceTimeScaleProcessor {
       return;
     }
 
-    int retryCount = 0;
-    while (retryCount < MAX_RETRY) {
-      try (Connection connection = timeScaleDBService.getDBConnection();
-           PreparedStatement preparedStmt = connection.prepareStatement(deleteQuery)) {
-        instanceIdSet.forEach(instanceId -> {
-          try {
-            preparedStmt.setTimestamp(1, new Timestamp(deleteTimestamp), utils.getDefaultCalendar());
-            preparedStmt.setBoolean(2, true);
-            preparedStmt.setString(3, instanceId);
-            preparedStmt.addBatch();
-          } catch (SQLException e) {
-            logger.error("Error while setting values to the instance delete query", e);
+    instanceIdSet.forEach(instanceId -> {
+      int retryCount = 0;
+      while (retryCount <= MAX_RETRY) {
+        try (Connection connection = timeScaleDBService.getDBConnection();
+             PreparedStatement preparedStmt = connection.prepareStatement(deleteQuery)) {
+          preparedStmt.setTimestamp(1, new Timestamp(deleteTimestamp), utils.getDefaultCalendar());
+          preparedStmt.setBoolean(2, true);
+          preparedStmt.setString(3, instanceId);
+          preparedStmt.executeUpdate();
+          break;
+        } catch (SQLException e) {
+          if (retryCount >= MAX_RETRY) {
+            logger.error("Delete instance query failed", e);
+          } else {
+            logger.error("Delete instance query failed, retry {}", retryCount, e);
           }
-        });
-        int[] batch = preparedStmt.executeBatch();
-        printErrorsIfAny(batch, null);
-        break;
-      } catch (SQLException e) {
-        if (retryCount >= MAX_RETRY) {
-          logger.error("Delete instance query failed", e);
-        } else {
-          logger.error("Delete instance query failed, retry {}", retryCount, e);
-        }
-        retryCount++;
-      }
-    }
-  }
-
-  private void printErrorsIfAny(int[] batch, String accountId) {
-    for (int result : batch) {
-      if (result == EXECUTE_FAILED) {
-        if (accountId == null) {
-          logger.error("Error observed while executing delete batch query");
-        } else {
-          logger.error("Error observed while executing delete batch query for account {}", accountId);
+          retryCount++;
         }
       }
-    }
+    });
   }
 
-  public boolean checkIfInstanceExists(Connection connection, String instanceId) {
+  public boolean checkIfInstanceExists(String instanceId) {
     int retryCount = 0;
-    while (retryCount < MAX_RETRY) {
-      try (PreparedStatement preparedStmt = connection.prepareStatement(getQuery)) {
+    while (retryCount <= MAX_RETRY) {
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           PreparedStatement preparedStmt = connection.prepareStatement(getQuery);) {
         preparedStmt.setString(1, instanceId);
         ResultSet resultSet = preparedStmt.executeQuery();
         if (resultSet.wasNull()) {
           return false;
         }
-
         resultSet.next();
-        return isNotEmpty(resultSet.getString("INSTANCEID"));
+        int count = resultSet.getInt("count");
+        return count == 1;
       } catch (SQLException e) {
         if (retryCount >= MAX_RETRY) {
           logger.error("Failed to execute query=[{}],instanceId=[{}]", getQuery, instanceId, e);
         } else {
-          logger.warn("Failed to execute query=[{}],instanceId=[{}],retryCount=[{}]", getQuery, instanceId, retryCount);
+          logger.warn(
+              "Failed to execute query=[{}],instanceId=[{}],retryCount=[{}]", getQuery, instanceId, retryCount, e);
         }
         retryCount++;
       }
