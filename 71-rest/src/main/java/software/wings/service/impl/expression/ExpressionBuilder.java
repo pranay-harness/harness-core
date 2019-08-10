@@ -34,10 +34,13 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import software.wings.beans.EntityType;
+import software.wings.beans.FeatureName;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SubEntityType;
 import software.wings.beans.artifact.Artifact.ArtifactKeys;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.sm.StateType;
@@ -52,6 +55,9 @@ import java.util.stream.Collectors;
  * Created by sgurubelli on 8/7/17.
  */
 public abstract class ExpressionBuilder {
+  @Inject private FeatureFlagService featureFlagService;
+  @Inject private AppService appService;
+
   protected static final String APP_NAME = "app.name";
   protected static final String APP_DESCRIPTION = "app.description";
 
@@ -148,13 +154,15 @@ public abstract class ExpressionBuilder {
     return new HashSet<>();
   }
 
-  public static Set<String> getStaticExpressions() {
+  public static Set<String> getStaticExpressions(boolean multiArtifact) {
     Set<String> expressions = new TreeSet<>();
     expressions.addAll(asList(APP_NAME, APP_DESCRIPTION));
-    expressions.addAll(asList(ARTIFACT_DISPLAY_NAME, ARTIFACT_BUILDNO, ARTIFACT_REVISION, ARTIFACT_DESCRIPTION,
-        ARTIFACT_FILE_NAME, ARTIFACT_ARTIFACT_FILE_NAME, ARTIFACT_BUILD_FULL_DISPLAYNAME, ARTIFACT_BUCKET_NAME,
-        ARTIFACT_BUCKET_KEY, ARTIFACT_PATH, ARTIFACT_URL, ARTIFACT_SOURCE_USER_NAME, ARTIFACT_SOURCE_REGISTRY_URL,
-        ARTIFACT_SOURCE_REPOSITORY_NAME, ARTIFACT_METADATA_IMAGE, ARTIFACT_METADATA_TAG));
+    if (!multiArtifact) {
+      expressions.addAll(asList(ARTIFACT_DISPLAY_NAME, ARTIFACT_BUILDNO, ARTIFACT_REVISION, ARTIFACT_DESCRIPTION,
+          ARTIFACT_FILE_NAME, ARTIFACT_ARTIFACT_FILE_NAME, ARTIFACT_BUILD_FULL_DISPLAYNAME, ARTIFACT_BUCKET_NAME,
+          ARTIFACT_BUCKET_KEY, ARTIFACT_PATH, ARTIFACT_URL, ARTIFACT_SOURCE_USER_NAME, ARTIFACT_SOURCE_REGISTRY_URL,
+          ARTIFACT_SOURCE_REPOSITORY_NAME, ARTIFACT_METADATA_IMAGE, ARTIFACT_METADATA_TAG));
+    }
     expressions.addAll(asList(ENV_NAME, ENV_DESCRIPTION));
     expressions.addAll(asList(SERVICE_NAME, SERVICE_DESCRIPTION));
     expressions.addAll(asList(INFRA_NAME));
@@ -252,6 +260,19 @@ public abstract class ExpressionBuilder {
     }
     List<ServiceVariable> serviceVariables = serviceVariablesService.list(serviceVariablePageRequest, MASKED);
 
+    String accountId = appService.getAccountIdByAppId(appId);
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+      Set<String> serviceVariableMentions = new HashSet<>();
+      serviceVariables.forEach(serviceVariable -> {
+        if (ServiceVariable.Type.ARTIFACT.equals(serviceVariable.getType())) {
+          serviceVariableMentions.add("artifacts." + serviceVariable.getName());
+        } else {
+          serviceVariableMentions.add("serviceVariable." + serviceVariable.getName());
+        }
+      });
+      return serviceVariableMentions;
+    }
+
     return serviceVariables.stream()
         .map(serviceVariable -> "serviceVariable." + serviceVariable.getName())
         .collect(Collectors.toSet());
@@ -271,17 +292,5 @@ public abstract class ExpressionBuilder {
     serviceVariables.addAll(getServiceVariables(
         appId, serviceTemplates.stream().map(ServiceTemplate::getUuid).collect(toList()), SERVICE_TEMPLATE));
     return serviceVariables;
-  }
-
-  /**
-   * All expression suggestions without context specific
-   * @return
-   */
-  public static Set<String> getExpressionSuggestions(StateType stateType) {
-    Set<String> allContextExpressions = getStaticExpressions();
-    if (stateType != null) {
-      allContextExpressions.addAll(getStateTypeExpressions(stateType));
-    }
-    return allContextExpressions;
   }
 }

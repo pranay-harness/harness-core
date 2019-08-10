@@ -8,11 +8,16 @@ import static software.wings.beans.SubEntityType.NOTIFICATION_GROUP;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import software.wings.beans.FeatureName;
 import software.wings.beans.SubEntityType;
+import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -26,6 +31,8 @@ public class WorkflowExpressionBuilder extends ExpressionBuilder {
   @Inject private ServiceExpressionBuilder serviceExpressionBuilder;
   @Inject private EnvironmentExpressionBuilder environmentExpressionBuilder;
   @Inject private WorkflowService workflowService;
+  @Inject private FeatureFlagService featureFlagService;
+  @Inject private AppService appService;
 
   @Override
   public Set<String> getExpressions(String appId, String entityId, String serviceId, StateType stateType) {
@@ -74,7 +81,9 @@ public class WorkflowExpressionBuilder extends ExpressionBuilder {
   @Override
   public Set<String> getExpressions(String appId, String entityId) {
     SortedSet<String> expressions = new TreeSet<>();
-    expressions.addAll(getStaticExpressions());
+    String accountId = appService.getAccountIdByAppId(appId);
+    boolean isMultiArtifact = featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId);
+    expressions.addAll(getStaticExpressions(isMultiArtifact));
     expressions.addAll(getDynamicExpressions(appId, entityId));
     return expressions;
   }
@@ -102,6 +111,22 @@ public class WorkflowExpressionBuilder extends ExpressionBuilder {
         || workflow.getOrchestrationWorkflow().getUserVariables() == null) {
       return new TreeSet<>();
     }
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, workflow.getAccountId())) {
+      Set<String> workflowVariableMentions = new HashSet<>();
+      workflow.getOrchestrationWorkflow()
+          .getUserVariables()
+          .stream()
+          .filter(variable -> variable.getName() != null && (includeEntityType || variable.obtainEntityType() == null))
+          .forEach(variable -> {
+            if (VariableType.ARTIFACT.equals(variable.getType())) {
+              workflowVariableMentions.add("artifacts." + variable.getName());
+            } else {
+              workflowVariableMentions.add("workflow.variables." + variable.getName());
+            }
+          });
+      return workflowVariableMentions;
+    }
+
     return workflow.getOrchestrationWorkflow()
         .getUserVariables()
         .stream()

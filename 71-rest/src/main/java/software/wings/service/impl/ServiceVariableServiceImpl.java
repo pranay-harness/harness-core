@@ -211,7 +211,11 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     notNullCheck("Service variable", savedServiceVariable);
     if (serviceVariable.getName() != null) {
       if (savedServiceVariable.getName() != null && !savedServiceVariable.getName().equals(serviceVariable.getName())) {
-        throw new InvalidRequestException(format("Service variable name can not be changed."));
+        if (savedServiceVariable.getType().equals(Type.ARTIFACT)) {
+          throw new InvalidRequestException(format("Artifact variable name can not be changed."));
+        } else {
+          throw new InvalidRequestException(format("Service variable name can not be changed."));
+        }
       }
     }
 

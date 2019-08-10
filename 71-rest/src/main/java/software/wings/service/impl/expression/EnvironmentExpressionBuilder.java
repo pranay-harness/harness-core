@@ -12,6 +12,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
+import software.wings.beans.FeatureName;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.FeatureFlagService;
 
 import java.util.Collections;
 import java.util.List;
@@ -24,10 +27,14 @@ import java.util.TreeSet;
 @Singleton
 public class EnvironmentExpressionBuilder extends ExpressionBuilder {
   @Inject private ServiceExpressionBuilder serviceExpressionBuilder;
+  @Inject private FeatureFlagService featureFlagService;
+  @Inject private AppService appService;
 
   @Override
   public Set<String> getExpressions(String appId, String entityId, String serviceId) {
-    Set<String> expressions = new TreeSet<>(getStaticExpressions());
+    String accountId = appService.getAccountIdByAppId(appId);
+    boolean isMultiArtifact = featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId);
+    Set<String> expressions = new TreeSet<>(getStaticExpressions(isMultiArtifact));
     if (isNotBlank(serviceId)) {
       expressions.addAll(serviceExpressionBuilder.getDynamicExpressions(appId, serviceId));
       expressions.addAll(getServiceTemplateVariableExpressions(appId, entityId, serviceId));
@@ -40,7 +47,9 @@ public class EnvironmentExpressionBuilder extends ExpressionBuilder {
 
   @Override
   public Set<String> getExpressions(String appId, String entityId) {
-    return getStaticExpressions();
+    String accountId = appService.getAccountIdByAppId(appId);
+    boolean isMultiArtifact = featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId);
+    return getStaticExpressions(isMultiArtifact);
   }
   @Override
   public Set<String> getDynamicExpressions(String appId, String entityId) {
