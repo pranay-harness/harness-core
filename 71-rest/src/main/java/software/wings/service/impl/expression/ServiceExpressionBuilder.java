@@ -14,8 +14,11 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import software.wings.beans.EntityType;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.StateType;
 import software.wings.utils.Misc;
@@ -31,11 +34,15 @@ import java.util.TreeSet;
 @Singleton
 public class ServiceExpressionBuilder extends ExpressionBuilder {
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private AppService appService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public Set<String> getExpressions(String appId, String entityId) {
     SortedSet<String> expressions = new TreeSet<>();
-    expressions.addAll(getStaticExpressions());
+    String accountId = appService.getAccountIdByAppId(appId);
+    boolean isMultiArtifact = featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId);
+    expressions.addAll(getStaticExpressions(isMultiArtifact));
     expressions.addAll(getDynamicExpressions(appId, entityId));
     expressions.addAll(getServiceTemplateVariableExpressions(appId, entityId, ENVIRONMENT));
     return expressions;
