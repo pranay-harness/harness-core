@@ -33,6 +33,7 @@ public class GoogleKubernetesEngineYamlHandler
         .releaseName(bean.getReleaseName())
         .cloudProviderName(cloudProvider.getName())
         .type(InfrastructureType.GCP_KUBERNETES_ENGINE)
+        .expressions(bean.getExpressions())
         .build();
   }
 
@@ -53,6 +54,7 @@ public class GoogleKubernetesEngineYamlHandler
     bean.setClusterName(yaml.getClusterName());
     bean.setReleaseName(yaml.getReleaseName());
     bean.setNamespace(yaml.getNamespace());
+    bean.setExpressions(yaml.getExpressions());
   }
 
   @Override

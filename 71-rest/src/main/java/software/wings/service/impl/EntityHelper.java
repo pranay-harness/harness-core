@@ -67,6 +67,7 @@ import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -147,6 +148,16 @@ public class EntityHelper {
       appId = mapping.getAppId();
       affectedResourceId = mapping.getEnvId();
       affectedResourceName = getEnvironmentName(mapping.getEnvId(), appId);
+      affectedResourceType = EntityType.ENVIRONMENT.name();
+      affectedResourceOperation =
+          getAffectedResourceOperation(EntityType.ENVIRONMENT, affectedResourceId, affectedResourceName);
+    } else if (entity instanceof InfrastructureDefinition) {
+      final InfrastructureDefinition infrastructureDefinition = (InfrastructureDefinition) entity;
+      entityType = EntityType.INFRASTRUCTURE_DEFINITION.name();
+      entityName = infrastructureDefinition.getName();
+      appId = infrastructureDefinition.getAppId();
+      affectedResourceId = infrastructureDefinition.getEnvId();
+      affectedResourceName = getEnvironmentName(infrastructureDefinition.getEnvId(), appId);
       affectedResourceType = EntityType.ENVIRONMENT.name();
       affectedResourceOperation =
           getAffectedResourceOperation(EntityType.ENVIRONMENT, affectedResourceId, affectedResourceName);

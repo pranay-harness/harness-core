@@ -11,4 +11,5 @@ import java.util.List;
 public class InfraDefinitionDetail {
   private InfrastructureDefinition infrastructureDefinition;
   private List<InfrastructureMapping> derivedInfraMappings;
+  private int countDerivedInfraMappings;
 }

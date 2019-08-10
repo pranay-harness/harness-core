@@ -1628,6 +1628,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
+  public void updateWorkflowElementWithLastGoodReleaseInfo(
+      String appId, WorkflowElement workflowElement, String workflowExecutionId) {
+    WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
+    lastGoodReleaseInfo(workflowElement, workflowExecution);
+  }
+  @Override
   public void updateStartStatus(String appId, String workflowExecutionId, ExecutionStatus status) {
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
                                          .filter(WorkflowExecutionKeys.appId, appId)
@@ -2881,16 +2887,19 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         .get();
   }
 
+  // TODO => Check with @Vaibhav for releaseName as variable and
+  // From a combination of infraDefinitionId and serviceId will there be always a unique InfraDefinition ID
+  //
   private WorkflowExecution fetchLastSuccessDeployment(WorkflowExecution workflowExecution) {
     Query<WorkflowExecution> workflowExecutionQuery =
         wingsPersistence.createQuery(WorkflowExecution.class)
             .filter(WorkflowExecutionKeys.status, SUCCESS)
             .filter(WorkflowExecutionKeys.appId, workflowExecution.getAppId())
             .filter(WorkflowExecutionKeys.workflowId, workflowExecution.getWorkflowId());
-
     if (isNotEmpty(workflowExecution.getInfraMappingIds())) {
       workflowExecutionQuery.filter(WorkflowExecutionKeys.infraMappingIds, workflowExecution.getInfraMappingIds());
     }
+
     return workflowExecutionQuery.order("-createdAt").get();
   }
 
@@ -3133,5 +3142,32 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       return workflowExecutions.getResponse();
     }
     return null;
+  }
+
+  @Override
+  public boolean appendInfraMappingId(String appId, String workflowExecutionId, String infraMappingId) {
+    WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
+    List<String> infraMappingIds = workflowExecution.getInfraMappingIds();
+    if (infraMappingIds != null && !infraMappingIds.contains(infraMappingId)) {
+      infraMappingIds.add(infraMappingId);
+    } else {
+      infraMappingIds = new ArrayList<>();
+      infraMappingIds.add(infraMappingId);
+    }
+    notNullCheck("workflowExecution", workflowExecution, USER);
+    try {
+      Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
+                                           .filter(WorkflowExecutionKeys.appId, workflowExecution.getAppId())
+                                           .filter(ID_KEY, workflowExecution.getUuid());
+
+      UpdateOperations<WorkflowExecution> updateOps =
+          wingsPersistence.createUpdateOperations(WorkflowExecution.class).set("infraMappingIds", infraMappingIds);
+      UpdateResults updateResults = wingsPersistence.update(query, updateOps);
+      return updateResults != null && updateResults.getWriteResult() != null
+          && updateResults.getWriteResult().getN() > 0;
+
+    } catch (Exception ex) {
+      return false;
+    }
   }
 }

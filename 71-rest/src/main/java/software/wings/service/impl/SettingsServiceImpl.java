@@ -77,6 +77,7 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.Event.Type;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
@@ -104,6 +105,8 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -168,6 +171,8 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private EnvironmentService envService;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject @Named(GitOpsFeature.FEATURE_NAME) private UsageLimitedFeature gitOpsFeature;
+  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public PageResponse<SettingAttribute> list(
@@ -767,6 +772,21 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   private void ensureSettingSafeToDelete(SettingAttribute settingAttribute) {
+    String accountId = settingAttribute.getAccountId();
+    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)) {
+      List<String> infraDefinitionNames = infrastructureDefinitionService.listNamesByConnectionAttr(
+          settingAttribute.getAccountId(), settingAttribute.getUuid());
+      if (isNotEmpty(infraDefinitionNames)) {
+        throw new InvalidRequestException(format("Attribute [%s] is referenced by %d "
+                + " %s "
+                + "[%s].",
+            settingAttribute.getName(), infraDefinitionNames.size(),
+            plural("Infrastructure "
+                    + "Definition",
+                infraDefinitionNames.size()),
+            Joiner.on(", ").join(infraDefinitionNames)));
+      }
+    }
     // TODO:: workflow scan for finding out usage in Steps/expression ???
   }
 
@@ -835,6 +855,19 @@ public class SettingsServiceImpl implements SettingsService {
               artifactStreamNames.size(), plural("Source", artifactStreamNames.size()),
               Joiner.on(", ").join(artifactStreamNames)),
           USER);
+    }
+
+    String accountId = cloudProviderSetting.getAccountId();
+    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)) {
+      List<String> infraDefinitionNames =
+          infrastructureDefinitionService.listNamesByComputeProviderId(accountId, cloudProviderSetting.getUuid());
+      if (isNotEmpty(infraDefinitionNames)) {
+        throw new InvalidRequestException(
+            format("Cloud provider [%s] is referenced by %d Infrastructure Definition %s [%s].",
+                cloudProviderSetting.getName(), infraDefinitionNames.size(),
+                plural("Source", infraDefinitionNames.size()), Joiner.on(", ").join(infraDefinitionNames)),
+            USER);
+      }
     }
 
     // TODO:: workflow scan for finding out usage in Steps ???

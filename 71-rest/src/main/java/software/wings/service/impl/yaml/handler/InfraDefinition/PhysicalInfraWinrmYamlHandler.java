@@ -24,10 +24,11 @@ public class PhysicalInfraWinrmYamlHandler extends CloudProviderInfrastructureYa
   @Override
   public Yaml toYaml(PhysicalInfraWinrm bean, String appId) {
     SettingAttribute cloudProvider = settingsService.get(bean.getCloudProviderId());
+    SettingAttribute winRmConnectionAttr = settingsService.get(bean.getWinRmConnectionAttributes());
     return Yaml.builder()
         .hosts(bean.getHosts())
         .hostNames(bean.getHostNames())
-        .hostConnectionAttrs(bean.getWinRmConnectionAttributes())
+        .winRmConnectionAttributesName(winRmConnectionAttr.getName())
         .loadBalancerName(bean.getLoadBalancerId())
         .cloudProviderName(cloudProvider.getName())
         .type(InfrastructureType.PHYSICAL_INFRA_WINRM)
@@ -45,11 +46,15 @@ public class PhysicalInfraWinrmYamlHandler extends CloudProviderInfrastructureYa
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
     SettingAttribute cloudProvider = settingsService.getSettingAttributeByName(accountId, yaml.getCloudProviderName());
+    SettingAttribute winRmConnectionAttr =
+        settingsService.getSettingAttributeByName(accountId, yaml.getWinRmConnectionAttributesName());
     notNullCheck(format("Cloud Provider with name %s does not exist", yaml.getCloudProviderName()), cloudProvider);
+    notNullCheck(format("winRmConnectionAttr with name %s does not exist", yaml.getWinRmConnectionAttributesName()),
+        winRmConnectionAttr);
     bean.setCloudProviderId(cloudProvider.getUuid());
     bean.setHosts(yaml.getHosts());
     bean.setHostNames(yaml.getHostNames());
-    bean.setWinRmConnectionAttributes(yaml.getHostConnectionAttrs());
+    bean.setWinRmConnectionAttributes(winRmConnectionAttr.getUuid());
     bean.setLoadBalancerName(yaml.getLoadBalancerName());
     bean.setLoadBalancerId(yaml.getLoadBalancerName());
   }

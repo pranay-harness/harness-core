@@ -315,7 +315,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
    * Invoked after loading document from mongo by morphia.
    */
   @Override
-  public void onLoad() {
+  public void onLoad(boolean infraRefactor) {
     populatePhaseSteps(preDeploymentSteps, getGraph());
     if (rollbackProvisioners != null) {
       populatePhaseSteps(rollbackProvisioners, getGraph());
@@ -326,12 +326,25 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       WorkflowPhase workflowPhase = workflowPhaseIdMap.get(workflowPhaseId);
       workflowPhases.add(workflowPhase);
       workflowPhase.getPhaseSteps().forEach(phaseStep -> populatePhaseSteps(phaseStep, getGraph()));
-      if (workflowPhase.checkInfraTemplatized()) {
-        String infraVarName = workflowPhase.fetchInfraMappingTemplatizedName();
-        if (!workflowPhase.checkServiceTemplatized()) {
-          Variable variable = contains(userVariables, infraVarName);
-          if (variable != null) {
-            variable.getMetadata().put("serviceId", workflowPhase.getServiceId());
+
+      if (infraRefactor) {
+        if (workflowPhase.checkInfraDefinitionTemplatized()) {
+          String infraVarName = workflowPhase.fetchInfraDefinitionTemplatizedName();
+          if (!workflowPhase.checkServiceTemplatized()) {
+            Variable variable = contains(userVariables, infraVarName);
+            if (variable != null) {
+              variable.getMetadata().put("serviceId", workflowPhase.getServiceId());
+            }
+          }
+        }
+      } else {
+        if (workflowPhase.checkInfraTemplatized()) {
+          String infraVarName = workflowPhase.fetchInfraMappingTemplatizedName();
+          if (!workflowPhase.checkServiceTemplatized()) {
+            Variable variable = contains(userVariables, infraVarName);
+            if (variable != null) {
+              variable.getMetadata().put("serviceId", workflowPhase.getServiceId());
+            }
           }
         }
       }

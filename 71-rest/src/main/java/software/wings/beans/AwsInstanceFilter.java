@@ -3,11 +3,13 @@ package software.wings.beans;
 import com.github.reinert.jjschema.Attributes;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldNameConstants;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Builder
+@FieldNameConstants(innerTypeName = "AwsInstanceFilterKeys")
 public class AwsInstanceFilter {
   @Attributes(title = "VPC") private List<String> vpcIds = new ArrayList<>();
   @Attributes(title = "Tags") private List<Tag> tags = new ArrayList<>();

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.ExcludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.InfrastructureMapping;
@@ -20,13 +21,13 @@ import java.util.List;
 @JsonTypeName("PHYSICAL_DATA_CENTER_WINRM")
 @Data
 @Builder
-public class PhysicalInfraWinrm
-    implements PhysicalDataCenterInfra, InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
+public class PhysicalInfraWinrm implements PhysicalDataCenterInfra, InfraMappingInfrastructureProvider,
+                                           FieldKeyValMapProvider, WinRmBasedInfrastructure {
   @ExcludeFieldMap private String cloudProviderId;
   private List<String> hostNames;
   private List<Host> hosts;
   private String loadBalancerId;
-  private String loadBalancerName;
+  @Transient @ExcludeFieldMap private String loadBalancerName;
   private String winRmConnectionAttributes;
 
   @Override
@@ -46,7 +47,7 @@ public class PhysicalInfraWinrm
     return PhysicalInfrastructureMappingWinRm.class;
   }
 
-  public String getCloudProviderInfrastructureType() {
+  public String getInfrastructureType() {
     return PHYSICAL_INFRA_WINRM;
   }
 
@@ -63,17 +64,17 @@ public class PhysicalInfraWinrm
     private List<String> hostNames;
     private List<Host> hosts;
     private String loadBalancerName;
-    private String hostConnectionAttrs;
+    private String winRmConnectionAttributesName;
 
     @Builder
     public Yaml(String type, String cloudProviderName, List<String> hostNames, List<Host> hosts,
-        String loadBalancerName, String hostConnectionAttrs) {
+        String loadBalancerName, String winRmConnectionAttributesName) {
       super(type);
       setCloudProviderName(cloudProviderName);
       setHostNames(hostNames);
       setHosts(hosts);
       setLoadBalancerName(loadBalancerName);
-      setHostConnectionAttrs(hostConnectionAttrs);
+      setWinRmConnectionAttributesName(winRmConnectionAttributesName);
     }
 
     public Yaml() {

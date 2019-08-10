@@ -31,6 +31,7 @@ public class AwsEcsInfrastructureYamlHandler
         .vpcId(bean.getVpcId())
         .type(InfrastructureType.AWS_ECS)
         .cloudProviderName(cloudProvider.getName())
+        .expressions(bean.getExpressions())
         .build();
   }
 
@@ -54,6 +55,7 @@ public class AwsEcsInfrastructureYamlHandler
     bean.setSecurityGroupIds(yaml.getSecurityGroupIds());
     bean.setSubnetIds(yaml.getSubnetIds());
     bean.setVpcId(yaml.getVpcId());
+    bean.setExpressions(yaml.getExpressions());
   }
 
   @Override

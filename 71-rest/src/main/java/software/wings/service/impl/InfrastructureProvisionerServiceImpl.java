@@ -8,8 +8,10 @@ import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static org.atteo.evo.inflector.English.plural;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -291,7 +293,9 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         .get();
   }
 
-  private void ensureSafeToDelete(String appId, String infrastructureProvisionerId) {
+  private void ensureSafeToDelete(String appId, InfrastructureProvisioner infrastructureProvisioner) {
+    final String accountId = appService.getAccountIdByAppId(appId);
+    final String infrastructureProvisionerId = infrastructureProvisioner.getUuid();
     List<Key<InfrastructureMapping>> keys =
         wingsPersistence.createQuery(InfrastructureMapping.class)
             .filter(InfrastructureMapping.APP_ID_KEY, appId)
@@ -305,6 +309,22 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       throw new InvalidRequestException(
           format("Infrastructure provisioner %s is not safe to delete", infrastructureProvisionerId), exception, USER);
     }
+    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)) {
+      List<String> infraDefinitionNames =
+          infrastructureDefinitionService.listNamesByProvisionerId(appId, infrastructureProvisionerId);
+      if (isNotEmpty(infraDefinitionNames)) {
+        throw new InvalidRequestException(format("Infrastructure provisioner [%s] is not safe to "
+                + "delete."
+                + "referenced "
+                + "by "
+                + "%d %s [%s].",
+            infrastructureProvisioner.getName(), infraDefinitionNames.size(),
+            plural("Infrastructure "
+                    + "Definition",
+                infraDefinitionNames.size()),
+            Joiner.on(", ").join(infraDefinitionNames)));
+      }
+    }
   }
 
   @Override
@@ -316,14 +336,14 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   public void delete(String appId, String infrastructureProvisionerId, boolean syncFromGit) {
     InfrastructureProvisioner infrastructureProvisioner = get(appId, infrastructureProvisionerId);
 
-    ensureSafeToDelete(appId, infrastructureProvisionerId);
+    ensureSafeToDelete(appId, infrastructureProvisioner);
 
     String accountId = appService.getAccountIdByAppId(infrastructureProvisioner.getAppId());
     StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
         new Action(accountId, ActionType.CREATE_INFRA_PROVISIONER));
 
     LimitEnforcementUtils.withCounterDecrement(checker, () -> {
-      ensureSafeToDelete(appId, infrastructureProvisionerId);
+      ensureSafeToDelete(appId, infrastructureProvisioner);
 
       yamlPushService.pushYamlChangeSet(accountId, infrastructureProvisioner, null, Type.DELETE, syncFromGit, false);
 

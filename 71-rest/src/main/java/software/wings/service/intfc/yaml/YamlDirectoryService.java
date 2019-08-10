@@ -21,6 +21,7 @@ import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.GitFileChange;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.UserPermissionInfo;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -93,6 +94,9 @@ public interface YamlDirectoryService {
   String getRootPathByEnvironment(Environment environment, String appName);
 
   String getRootPathByInfraMapping(InfrastructureMapping infraMapping);
+
+  String getRootPathByInfraDefinition(InfrastructureDefinition infrastructureDefinition);
+
   String getRootPathByCVConfiguration(CVConfiguration cvConfiguration);
 
   String getRootPathByPipeline(Pipeline pipeline);

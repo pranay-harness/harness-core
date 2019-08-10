@@ -47,7 +47,7 @@ public class PcfInfraStructure implements InfraMappingInfrastructureProvider, Fi
     return CloudProviderType.PCF;
   }
 
-  public String getCloudProviderInfrastructureType() {
+  public String getInfrastructureType() {
     return PCF_INFRASTRUCTURE;
   }
 

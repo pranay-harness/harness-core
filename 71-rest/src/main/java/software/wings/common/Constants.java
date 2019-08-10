@@ -270,10 +270,7 @@ public interface Constants {
    */
   String HARNESS_NAME = "Harness";
 
-  /**
-   * The constant DEFAULT_AWS_HOST_NAME_CONVENTION.
-   */
-  String DEFAULT_AWS_HOST_NAME_CONVENTION = "${host.ec2Instance.privateDnsName.split('\\.')[0]}";
+  String ALWAYS_TRUE_CRITERIA = "ALWAYS_TRUE_CRITERIA";
 
   /**
    * The cloudwatch metric url.

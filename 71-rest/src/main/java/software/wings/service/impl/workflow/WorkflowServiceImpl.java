@@ -395,6 +395,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private Map<StateTypeScope, List<Stencil>> getStateTypeScopeListMap(String appId, String workflowId, String phaseId,
       StateTypeScope[] stateTypeScopes, Map<StateTypeScope, List<StateTypeDescriptor>> stencilsMap) {
+    boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(appId));
     boolean filterForWorkflow = isNotBlank(workflowId);
     boolean filterForPhase = filterForWorkflow && isNotBlank(phaseId);
     Workflow workflow = null;
@@ -452,18 +453,36 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (filterForWorkflow) {
       if (filterForPhase) {
         if (workflowPhase != null) {
-          String infraMappingId = workflowPhase.getInfraMappingId();
-          if (workflowPhase.checkInfraTemplatized()) {
-            DeploymentType workflowPhaseDeploymentType = workflowPhase.getDeploymentType();
-            if (workflowPhaseDeploymentType != null) {
-              predicate = stencil -> stencil.matches(workflowPhaseDeploymentType);
+          if (infraRefactor) {
+            String infraDefinitionId = workflowPhase.getInfraDefinitionId();
+            if (workflowPhase.checkInfraDefinitionTemplatized()) {
+              DeploymentType workflowPhaseDeploymentType = workflowPhase.getDeploymentType();
+              if (workflowPhaseDeploymentType != null) {
+                predicate = stencil -> stencil.matches(workflowPhaseDeploymentType);
+              }
+            } else if (infraDefinitionId != null) {
+              // TODO: This check can be removed once refactor the code to have single class for AWS_NODE_SELECT,
+              // DC_NODE_SELECT and ROLLING_SELECT_NODE
+              InfrastructureDefinition infrastructureDefinition =
+                  infrastructureDefinitionService.get(appId, infraDefinitionId);
+              if (infrastructureDefinition != null) {
+                predicate = stencil -> stencil.matches(infrastructureDefinition);
+              }
             }
-          } else if (infraMappingId != null) {
-            // TODO: This check can be removed once refactor the code to have single class for AWS_NODE_SELECT,
-            // DC_NODE_SELECT and ROLLING_SELECT_NODE
-            InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
-            if (infrastructureMapping != null) {
-              predicate = stencil -> stencil.matches(infrastructureMapping);
+          } else {
+            String infraMappingId = workflowPhase.getInfraMappingId();
+            if (workflowPhase.checkInfraTemplatized()) {
+              DeploymentType workflowPhaseDeploymentType = workflowPhase.getDeploymentType();
+              if (workflowPhaseDeploymentType != null) {
+                predicate = stencil -> stencil.matches(workflowPhaseDeploymentType);
+              }
+            } else if (infraMappingId != null) {
+              // TODO: This check can be removed once refactor the code to have single class for AWS_NODE_SELECT,
+              // DC_NODE_SELECT and ROLLING_SELECT_NODE
+              InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
+              if (infrastructureMapping != null) {
+                predicate = stencil -> stencil.matches(infrastructureMapping);
+              }
             }
           }
         }
@@ -638,6 +657,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private void loadOrchestrationWorkflow(Workflow workflow, Integer version, boolean withServices) {
+    boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, workflow.getAccountId());
     StateMachine stateMachine = readStateMachine(
         workflow.getAppId(), workflow.getUuid(), version == null ? workflow.getDefaultVersion() : version);
     if (stateMachine != null) {
@@ -653,7 +673,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       workflow.setOrchestrationWorkflow(stateMachine.getOrchestrationWorkflow());
       OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
       if (orchestrationWorkflow != null) {
-        orchestrationWorkflow.onLoad();
+        orchestrationWorkflow.onLoad(infraRefactor);
         workflow.setDeploymentTypes(workflowServiceHelper.obtainDeploymentTypes(orchestrationWorkflow));
         workflow.setTemplatized(orchestrationWorkflow.checkTemplatized());
         if (withServices) {
@@ -1966,7 +1986,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)
           || orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)
           || orchestrationWorkflow.getOrchestrationWorkflowType().equals(BLUE_GREEN)) {
-        WorkflowServiceTemplateHelper.setTemplateExpresssionsFromPhase(workflow, workflowPhase);
+        WorkflowServiceTemplateHelper.setTemplateExpresssionsFromPhase(workflow, workflowPhase, infraRefactor);
       } else {
         if (infraRefactor) {
           WorkflowServiceTemplateHelper.validateTemplateExpressionsInfraRefactor(
@@ -2507,6 +2527,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private void updateRequiredEntityTypes(String appId, String serviceId, PhaseStep phaseStep,
       Set<EntityType> requiredEntityTypes, WorkflowPhase workflowPhase, Map<String, String> workflowVariables) {
     boolean artifactNeeded = false;
+    boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(appId));
 
     for (GraphNode step : phaseStep.getSteps()) {
       if (step.getTemplateUuid() != null) {
@@ -2576,14 +2597,31 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         break;
       } else if (workflowPhase != null && HELM.equals(workflowPhase.getDeploymentType())
           && StateType.HELM_DEPLOY.name().equals(step.getType())) {
-        String infraMappingId = getInfraMappingId(workflowPhase, workflowVariables);
-        if (isNotEmpty(infraMappingId) && !matchesVariablePattern(infraMappingId)) {
-          InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
-          if (infrastructureMapping != null) {
-            if (serviceResourceService.checkArtifactNeededForHelm(
-                    appId, infrastructureMapping.getServiceTemplateId())) {
-              artifactNeeded = true;
-              break;
+        if (infraRefactor) {
+          String infraDefinitionId = getInfraDefinitionId(workflowPhase, workflowVariables);
+          if (isNotEmpty(infraDefinitionId) && !matchesVariablePattern(infraDefinitionId)) {
+            InfrastructureDefinition infrastructureDefinition =
+                infrastructureDefinitionService.get(appId, infraDefinitionId);
+            if (infrastructureDefinition != null) {
+              ServiceTemplate serviceTemplate =
+                  serviceTemplateService.get(appId, serviceId, infrastructureDefinition.getEnvId());
+              if (serviceTemplate != null
+                  && serviceResourceService.checkArtifactNeededForHelm(appId, serviceTemplate.getUuid())) {
+                artifactNeeded = true;
+                break;
+              }
+            }
+          }
+        } else {
+          String infraMappingId = getInfraMappingId(workflowPhase, workflowVariables);
+          if (isNotEmpty(infraMappingId) && !matchesVariablePattern(infraMappingId)) {
+            InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
+            if (infrastructureMapping != null) {
+              if (serviceResourceService.checkArtifactNeededForHelm(
+                      appId, infrastructureMapping.getServiceTemplateId())) {
+                artifactNeeded = true;
+                break;
+              }
             }
           }
         }
@@ -2593,11 +2631,20 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           break;
         }
 
-        String infraMappingId = getInfraMappingId(workflowPhase, workflowVariables);
-        if (isNotEmpty(infraMappingId) && !matchesVariablePattern(infraMappingId)
-            && k8sStateHelper.doManifestsUseArtifact(appId, infraMappingId)) {
-          artifactNeeded = true;
-          break;
+        if (infraRefactor) {
+          String infraDefinitionId = getInfraDefinitionId(workflowPhase, workflowVariables);
+          if (isNotEmpty(infraDefinitionId) && !matchesVariablePattern(infraDefinitionId)
+              && k8sStateHelper.doManifestsUseArtifact(appId, serviceId, infraDefinitionId)) {
+            artifactNeeded = true;
+            break;
+          }
+        } else {
+          String infraMappingId = getInfraMappingId(workflowPhase, workflowVariables);
+          if (isNotEmpty(infraMappingId) && !matchesVariablePattern(infraMappingId)
+              && k8sStateHelper.doManifestsUseArtifact(appId, infraMappingId)) {
+            artifactNeeded = true;
+            break;
+          }
         }
       }
     }
@@ -2883,6 +2930,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       WorkflowPhase workflowPhase, Map<String, String> workflowVariables,
       Map<String, Set<String>> serviceArtifactVariableNamesMap, Set<String> workflowVariableNames) {
     // NOTE: if serviceId is "", we assume those artifact variables to be workflow variables
+    boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(appId));
     Set<String> serviceArtifactVariableNames;
     if (serviceArtifactVariableNamesMap.containsKey(serviceId)) {
       serviceArtifactVariableNames = serviceArtifactVariableNamesMap.get(serviceId);
@@ -2949,19 +2997,40 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         updateDefaultArtifactVariablesNeeded(serviceArtifactVariableNames);
       } else if (workflowPhase != null && HELM.equals(workflowPhase.getDeploymentType())
           && StateType.HELM_DEPLOY.name().equals(step.getType())) {
-        String infraMappingId = getInfraMappingId(workflowPhase, workflowVariables);
-        if (isNotEmpty(infraMappingId) && !matchesVariablePattern(infraMappingId)) {
-          InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
-          if (infrastructureMapping != null) {
-            serviceResourceService.updateArtifactVariableNamesForHelm(appId,
-                infrastructureMapping.getServiceTemplateId(), serviceArtifactVariableNames, workflowVariableNames);
+        if (infraRefactor) {
+          String infraDefinitionId = getInfraDefinitionId(workflowPhase, workflowVariables);
+          if (isNotEmpty(infraDefinitionId) && !matchesVariablePattern(infraDefinitionId)) {
+            InfrastructureDefinition infraDefiniton = infrastructureDefinitionService.get(appId, infraDefinitionId);
+            ServiceTemplate serviceTemplate = serviceTemplateService.get(appId, serviceId, infraDefiniton.getEnvId());
+            if (serviceTemplate != null) {
+              serviceResourceService.updateArtifactVariableNamesForHelm(
+                  appId, serviceTemplate.getUuid(), serviceArtifactVariableNames, workflowVariableNames);
+            }
+          }
+        } else {
+          String infraMappingId = getInfraMappingId(workflowPhase, workflowVariables);
+          if (isNotEmpty(infraMappingId) && !matchesVariablePattern(infraMappingId)) {
+            InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
+            if (infrastructureMapping != null) {
+              serviceResourceService.updateArtifactVariableNamesForHelm(appId,
+                  infrastructureMapping.getServiceTemplateId(), serviceArtifactVariableNames, workflowVariableNames);
+            }
           }
         }
+
       } else if (workflowPhase != null && k8sV2ArtifactNeededStateTypes.contains(step.getType())) {
-        String infraMappingId = getInfraMappingId(workflowPhase, workflowVariables);
-        if (isNotEmpty(infraMappingId) && !matchesVariablePattern(infraMappingId)) {
-          k8sStateHelper.updateManifestsArtifactVariableNames(
-              appId, infraMappingId, serviceArtifactVariableNames, workflowVariableNames);
+        if (infraRefactor) {
+          String infraDefinitionId = getInfraDefinitionId(workflowPhase, workflowVariables);
+          if (isNotEmpty(infraDefinitionId) && !matchesVariablePattern(infraDefinitionId)) {
+            k8sStateHelper.updateManifestsArtifactVariableNamesInfraDefinition(
+                appId, infraDefinitionId, serviceArtifactVariableNames, workflowVariableNames, serviceId);
+          }
+        } else {
+          String infraMappingId = getInfraMappingId(workflowPhase, workflowVariables);
+          if (isNotEmpty(infraMappingId) && !matchesVariablePattern(infraMappingId)) {
+            k8sStateHelper.updateManifestsArtifactVariableNames(
+                appId, infraMappingId, serviceArtifactVariableNames, workflowVariableNames);
+          }
         }
       }
     }
@@ -2978,6 +3047,19 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       infraMappingId = workflowPhase.getInfraMappingId();
     }
     return infraMappingId;
+  }
+
+  private String getInfraDefinitionId(WorkflowPhase workflowPhase, Map<String, String> workflowVariables) {
+    String infraDefinitionId = null;
+    if (workflowPhase.checkInfraDefinitionTemplatized()) {
+      String infraDefinitionTemplatizedName = workflowPhase.fetchInfraDefinitionTemplatizedName();
+      if (infraDefinitionTemplatizedName != null) {
+        infraDefinitionId = isEmpty(workflowVariables) ? null : workflowVariables.get(infraDefinitionTemplatizedName);
+      }
+    } else {
+      infraDefinitionId = workflowPhase.getInfraDefinitionId();
+    }
+    return infraDefinitionId;
   }
 
   private boolean isArtifactNeeded(Object... args) {
@@ -3226,37 +3308,47 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (orchestrationWorkflow.isInfraMappingTemplatized()) {
         return;
       }
-
+      InfrastructureMapping infrastructureMapping;
       if (!featureFlagService.isEnabled(
               FeatureName.INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(workflow.getAppId()))) {
         notNullCheck("Invalid inframappingId", workflow.getInfraMappingId(), USER);
 
         String infraMappingId = workflow.getInfraMappingId();
-        InfrastructureMapping infrastructureMapping =
-            infrastructureMappingService.get(workflow.getAppId(), infraMappingId);
+        infrastructureMapping = infrastructureMappingService.get(workflow.getAppId(), infraMappingId);
 
         notNullCheck("Invalid inframapping", infrastructureMapping, USER);
 
-        if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)) {
-          if (!(InfrastructureMappingType.AWS_SSH.name().equals(infrastructureMapping.getInfraMappingType())
-                  || InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name().equals(
-                         infrastructureMapping.getInfraMappingType())
-                  || workflowServiceHelper.isK8sV2Service(infrastructureMapping.getAppId(), workflow.getServiceId()))) {
-            throw new InvalidRequestException(
-                "Requested Service/InfrastructureType is not supported using Rolling Deployment", USER);
-          }
-        } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BLUE_GREEN)) {
-          if (!(InfrastructureMappingType.DIRECT_KUBERNETES.name().equals(infrastructureMapping.getInfraMappingType())
-                  || InfrastructureMappingType.GCP_KUBERNETES.name().equals(infrastructureMapping.getInfraMappingType())
-                  || InfrastructureMappingType.AZURE_KUBERNETES.name().equals(
-                         infrastructureMapping.getInfraMappingType())
-                  || InfrastructureMappingType.PCF_PCF.name().equals(infrastructureMapping.getInfraMappingType())
-                  || InfrastructureMappingType.AWS_AMI.name().equals(infrastructureMapping.getInfraMappingType())
-                  || InfrastructureMappingType.AWS_ECS.name().equals(infrastructureMapping.getInfraMappingType()))) {
-            throw new InvalidRequestException(
-                "Requested Infrastructure Type is not supported using Blue/Green Deployment", USER);
-          }
-        }
+        validateInfraMappingWithService(workflow, orchestrationWorkflow, infrastructureMapping);
+      } else {
+        notNullCheck("Invalid InfraDefinition Id", workflow.getInfraDefinitionId(), USER);
+        InfrastructureDefinition infrastructureDefinition =
+            infrastructureDefinitionService.get(workflow.getAppId(), workflow.getInfraDefinitionId());
+        notNullCheck("Invalid Infrastructure Definition", infrastructureDefinition, USER);
+        infrastructureMapping = infrastructureDefinition.getInfraMapping();
+        validateInfraMappingWithService(workflow, orchestrationWorkflow, infrastructureMapping);
+      }
+    }
+  }
+
+  private void validateInfraMappingWithService(
+      Workflow workflow, OrchestrationWorkflow orchestrationWorkflow, InfrastructureMapping infrastructureMapping) {
+    if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)) {
+      if (!(InfrastructureMappingType.AWS_SSH.name().equals(infrastructureMapping.getInfraMappingType())
+              || InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name().equals(
+                     infrastructureMapping.getInfraMappingType())
+              || workflowServiceHelper.isK8sV2Service(infrastructureMapping.getAppId(), workflow.getServiceId()))) {
+        throw new InvalidRequestException(
+            "Requested Service/InfrastructureType is not supported using Rolling Deployment", USER);
+      }
+    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BLUE_GREEN)) {
+      if (!(InfrastructureMappingType.DIRECT_KUBERNETES.name().equals(infrastructureMapping.getInfraMappingType())
+              || InfrastructureMappingType.GCP_KUBERNETES.name().equals(infrastructureMapping.getInfraMappingType())
+              || InfrastructureMappingType.AZURE_KUBERNETES.name().equals(infrastructureMapping.getInfraMappingType())
+              || InfrastructureMappingType.PCF_PCF.name().equals(infrastructureMapping.getInfraMappingType())
+              || InfrastructureMappingType.AWS_AMI.name().equals(infrastructureMapping.getInfraMappingType())
+              || InfrastructureMappingType.AWS_ECS.name().equals(infrastructureMapping.getInfraMappingType()))) {
+        throw new InvalidRequestException(
+            "Requested Infrastructure Type is not supported using Blue/Green Deployment", USER);
       }
     }
   }
@@ -3558,8 +3650,32 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
+  public List<String> obtainWorkflowNamesReferencedByInfrastructureDefinition(String appId, String infraDefinitionId) {
+    List<Workflow> workflows =
+        listWorkflows(aPageRequest().withLimit(UNLIMITED).addFilter("appId", Operator.EQ, appId).build()).getResponse();
+
+    return workflows.stream()
+        .filter(wfl -> {
+          if (wfl.getOrchestrationWorkflow() != null
+              && wfl.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow) {
+            return ((CanaryOrchestrationWorkflow) wfl.getOrchestrationWorkflow())
+                .getWorkflowPhaseIdMap()
+                .values()
+                .stream()
+                .anyMatch(workflowPhase
+                    -> !workflowPhase.checkInfraDefinitionTemplatized()
+                        && infraDefinitionId.equals(workflowPhase.getInfraDefinitionId()));
+          }
+          return false;
+        })
+        .map(Workflow::getName)
+        .collect(toList());
+  }
+
+  @Override
   public WorkflowCategorySteps calculateCategorySteps(
       Workflow workflow, String userId, String phaseId, String sectionId, int position) {
+    boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, workflow.getAccountId());
     Set<String> favorites = null;
     LinkedList<String> recent = null;
 
@@ -3572,8 +3688,31 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         recent = personalization.getSteps().getRecent();
       }
     }
-    return calculateCategorySteps(favorites, recent, StateType.values(), StencilCategory.values(), workflow, phaseId,
-        sectionId, position, infrastructureMappingService);
+    if (infraRefactor) {
+      return calculateCategorySteps(favorites, recent, StateType.values(), StencilCategory.values(), workflow, phaseId,
+          sectionId, position, infrastructureDefinitionService);
+    } else {
+      return calculateCategorySteps(favorites, recent, StateType.values(), StencilCategory.values(), workflow, phaseId,
+          sectionId, position, infrastructureMappingService);
+    }
+  }
+
+  public static WorkflowCategorySteps calculateCategorySteps(Set<String> favorites, LinkedList<String> recent,
+      StateType[] stateTypes, StencilCategory[] stencilCategories, Workflow workflow, String phaseId, String sectionId,
+      int position, InfrastructureDefinitionService infrastructureDefinitionService) {
+    Map<String, WorkflowStepMeta> steps = new HashMap<>();
+    for (StateType step : stateTypes) {
+      Boolean available =
+          checkIfStepAvailable(workflow, phaseId, step, workflow.getAppId(), infrastructureDefinitionService);
+      final WorkflowStepMeta stepMeta = WorkflowStepMeta.builder()
+                                            .name(step.getName())
+                                            .favorite(isNotEmpty(favorites) && favorites.contains(step.getType()))
+                                            .available(available)
+                                            .build();
+      steps.put(step.getType(), stepMeta);
+    }
+
+    return getWorkflowCategorySteps(favorites, recent, stateTypes, stencilCategories, steps);
   }
 
   public static WorkflowCategorySteps calculateCategorySteps(Set<String> favorites, LinkedList<String> recent,
@@ -3591,6 +3730,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       steps.put(step.getType(), stepMeta);
     }
 
+    return getWorkflowCategorySteps(favorites, recent, stateTypes, stencilCategories, steps);
+  }
+
+  public static WorkflowCategorySteps getWorkflowCategorySteps(Set<String> favorites, LinkedList<String> recent,
+      StateType[] stateTypes, StencilCategory[] stencilCategories, Map<String, WorkflowStepMeta> steps) {
     List<WorkflowCategoryStepsMeta> categories = new ArrayList<>();
 
     // We do not want the recent category if it is empty
@@ -3667,6 +3811,53 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
           if (infrastructureMapping != null) {
             return stateType.matches(infrastructureMapping);
+          }
+        }
+      }
+      if (stateType.getStencilCategory().equals(StencilCategory.COMMANDS)
+          || stateType.getStencilCategory().equals(StencilCategory.CLOUD)) {
+        return false;
+      }
+    }
+    if (!buildWorkflow) {
+      return !stateType.getStencilCategory().equals(StencilCategory.COLLECTIONS);
+    }
+    return true;
+  }
+
+  private static Boolean checkIfStepAvailable(Workflow workflow, String phaseId, StateType stateType, String appId,
+      InfrastructureDefinitionService infrastructureDefinitionService) {
+    boolean buildWorkflow = false;
+    if (workflow != null) {
+      OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+      WorkflowPhase workflowPhase = null;
+      if (orchestrationWorkflow != null) {
+        buildWorkflow = BUILD.equals(orchestrationWorkflow.getOrchestrationWorkflowType());
+      }
+      if (isNotBlank(phaseId)) {
+        if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
+          workflowPhase = ((CanaryOrchestrationWorkflow) orchestrationWorkflow)
+                              .getWorkflowPhases()
+                              .stream()
+                              .findFirst()
+                              .filter(phase -> phase.getUuid().equals(phaseId))
+                              .orElseGet(null);
+        }
+        if (workflowPhase == null) {
+          throw new InvalidRequestException(
+              "Workflow Phase not associated with Workflow [" + workflow.getName() + "]", USER);
+        }
+        String infraDefinitionId = workflowPhase.getInfraDefinitionId();
+        if (workflowPhase.checkInfraDefinitionTemplatized()) {
+          DeploymentType workflowPhaseDeploymentType = workflowPhase.getDeploymentType();
+          if (workflowPhaseDeploymentType != null) {
+            return stateType.matches(workflowPhaseDeploymentType);
+          }
+        } else if (infraDefinitionId != null) {
+          InfrastructureDefinition infrastructureDefinition =
+              infrastructureDefinitionService.get(appId, infraDefinitionId);
+          if (infrastructureDefinition != null) {
+            return stateType.matches(infrastructureDefinition);
           }
         }
       }

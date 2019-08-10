@@ -8,6 +8,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.CLUSTER_NOT_FOUND;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.INVALID_AZURE_VAULT_CONFIGURATION;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
@@ -61,6 +62,8 @@ import software.wings.beans.AzureVirtualMachineScaleSet;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
+import software.wings.infra.AzureInstanceInfrastructure;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 
@@ -140,6 +143,32 @@ public class AzureHelperService {
       return listVmsByTagsAndResourceGroup(
           azureConfig, encryptedDataDetails, subscriptionId, resourceGroup, tagsMap, OSType.WINDOWS);
     } else if (DeploymentType.SSH.name().equals(azureInfrastructureMapping.getDeploymentType())) {
+      return listVmsByTagsAndResourceGroup(
+          azureConfig, encryptedDataDetails, subscriptionId, resourceGroup, tagsMap, OSType.LINUX);
+    }
+    return Collections.EMPTY_LIST;
+  }
+
+  public List<VirtualMachine> listVms(AzureInstanceInfrastructure azureInstanceInfrastructure,
+      SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails,
+      DeploymentType deploymentType) {
+    notNullCheck("Azure InfraStructure Definition", azureInstanceInfrastructure, USER);
+
+    String subscriptionId = azureInstanceInfrastructure.getSubscriptionId();
+    String resourceGroup = azureInstanceInfrastructure.getResourceGroup();
+    List<AzureTag> tags = azureInstanceInfrastructure.getTags();
+
+    Map<String, String> tagsMap = new HashMap<>();
+
+    if (tags != null) {
+      tags.stream().map(tag -> tagsMap.put(tag.getKey(), tag.getValue()));
+    }
+
+    AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderSetting);
+    if (DeploymentType.WINRM.name().equals(deploymentType)) {
+      return listVmsByTagsAndResourceGroup(
+          azureConfig, encryptedDataDetails, subscriptionId, resourceGroup, tagsMap, OSType.WINDOWS);
+    } else if (DeploymentType.SSH.name().equals(deploymentType)) {
       return listVmsByTagsAndResourceGroup(
           azureConfig, encryptedDataDetails, subscriptionId, resourceGroup, tagsMap, OSType.LINUX);
     }
@@ -232,6 +261,39 @@ public class AzureHelperService {
                         : null)
                 .withInfraMappingId(azureInfrastructureMapping.getUuid())
                 .withServiceTemplateId(azureInfrastructureMapping.getServiceTemplateId())
+                .build();
+        azureHosts.add(host);
+      }
+      return aPageResponse().withResponse(azureHosts).build();
+    }
+
+    return aPageResponse().withResponse(Collections.emptyList()).build();
+  }
+
+  public PageResponse<Host> listHosts(InfrastructureDefinition infrastructureDefinition,
+      SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails,
+      DeploymentType deploymentType) {
+    AzureInstanceInfrastructure azureInstanceInfrastructure =
+        (AzureInstanceInfrastructure) infrastructureDefinition.getInfrastructure();
+    List<VirtualMachine> vms =
+        listVms(azureInstanceInfrastructure, computeProviderSetting, encryptedDataDetails, deploymentType);
+
+    if (isNotEmpty(vms)) {
+      List<Host> azureHosts = new ArrayList<>();
+      for (VirtualMachine vm : vms) {
+        Host host =
+            aHost()
+                .withHostName(vm.name())
+                .withPublicDns(azureInstanceInfrastructure.isUsePublicDns()
+                        ? (vm.getPrimaryPublicIPAddress() != null ? vm.getPrimaryPublicIPAddress().fqdn() : null)
+                        : null)
+                .withAppId(infrastructureDefinition.getAppId())
+                .withEnvId(infrastructureDefinition.getEnvId())
+                .withHostConnAttr(azureInstanceInfrastructure.getHostConnectionAttrs())
+                .withWinrmConnAttr(DeploymentType.WINRM.equals(deploymentType)
+                        ? azureInstanceInfrastructure.getWinRmConnectionAttributes()
+                        : null)
+                .withInfraMappingId(infrastructureDefinition.getUuid())
                 .build();
         azureHosts.add(host);
       }

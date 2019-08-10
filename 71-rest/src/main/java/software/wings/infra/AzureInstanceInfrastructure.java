@@ -21,7 +21,8 @@ import java.util.List;
 @JsonTypeName("AZURE_SSH")
 @Data
 @Builder
-public class AzureInstanceInfrastructure implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
+public class AzureInstanceInfrastructure implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider,
+                                                    SshBasedInfrastructure, WinRmBasedInfrastructure {
   @ExcludeFieldMap private String cloudProviderId;
 
   private String subscriptionId;
@@ -56,7 +57,7 @@ public class AzureInstanceInfrastructure implements InfraMappingInfrastructurePr
     return CloudProviderType.AZURE;
   }
 
-  public String getCloudProviderInfrastructureType() {
+  public String getInfrastructureType() {
     return AZURE_SSH;
   }
 
@@ -68,15 +69,19 @@ public class AzureInstanceInfrastructure implements InfraMappingInfrastructurePr
     private String resourceGroup;
     private String subscriptionId;
     private List<AzureTag> tags;
+    private String hostConnectionAttrsName;
+    private String winRmConnectionAttributesName;
 
     @Builder
-    public Yaml(
-        String type, String cloudProviderName, String resourceGroup, String subscriptionId, List<AzureTag> tags) {
+    public Yaml(String type, String cloudProviderName, String resourceGroup, String subscriptionId, List<AzureTag> tags,
+        String hostConnectionAttrsName, String winRmConnectionAttributesName) {
       super(type);
       setCloudProviderName(cloudProviderName);
       setResourceGroup(resourceGroup);
       setSubscriptionId(subscriptionId);
       setTags(tags);
+      setHostConnectionAttrsName(hostConnectionAttrsName);
+      setWinRmConnectionAttributesName(winRmConnectionAttributesName);
     }
 
     public Yaml() {

@@ -417,7 +417,6 @@ import software.wings.helpers.ext.trigger.request.TriggerDeploymentNeededRequest
 import software.wings.helpers.ext.trigger.request.TriggerRequest;
 import software.wings.helpers.ext.trigger.response.TriggerDeploymentNeededResponse;
 import software.wings.helpers.ext.trigger.response.TriggerResponse;
-import software.wings.infra.InfrastructureDefinition;
 import software.wings.metrics.MetricType;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
@@ -606,7 +605,6 @@ import software.wings.sm.ExecutionInterruptEffect;
 import software.wings.sm.ExecutionInterruptType;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatusData;
-import software.wings.sm.InfraDefinitionSummary;
 import software.wings.sm.InfraMappingSummary;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.PhaseExecutionSummary;
@@ -1321,8 +1319,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sAddWatchResponse.class, 7214);
     kryo.register(StandardUnit.class, 7215);
     kryo.register(CloudFormationRollbackInfo.class, 7216);
-    kryo.register(InfraDefinitionSummary.class, 7217);
-    kryo.register(InfrastructureDefinition.Yaml.class, 7218);
     kryo.register(ApprovalState.class, 7219);
     kryo.register(SpotInstCommandRequest.class, 7220);
     kryo.register(SpotInstConfig.class, 7221);

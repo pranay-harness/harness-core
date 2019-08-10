@@ -7,7 +7,6 @@ import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.AwsConfig;
-
 import software.wings.beans.SpotInstConfig;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.security.encryption.EncryptedDataDetail;

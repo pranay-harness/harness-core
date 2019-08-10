@@ -37,6 +37,7 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.InfrastructureDefinition.Yaml;
+import software.wings.service.impl.yaml.handler.InfraDefinition.AwsEcsInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.AwsInstanceInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.AwsLambdaInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.AzureInstanceInfrastructureYamlHandler;
@@ -45,6 +46,7 @@ import software.wings.service.impl.yaml.handler.InfraDefinition.CodeDeployInfras
 import software.wings.service.impl.yaml.handler.InfraDefinition.DirectKubernetesInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.GoogleKubernetesEngineYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.InfrastructureDefinitionYamlHandler;
+import software.wings.service.impl.yaml.handler.InfraDefinition.PcfInfraStructureYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
@@ -77,6 +79,8 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
   @InjectMocks @Inject private DirectKubernetesInfrastructureYamlHandler directKubernetesInfrastructureYamlHandler;
   @InjectMocks @Inject private AwsInstanceInfrastructureYamlHandler awsInstanceInfrastructureYamlHandler;
   @InjectMocks @Inject private CodeDeployInfrastructureYamlHandler codeDeployInfrastructureYamlHandler;
+  @InjectMocks @Inject private AwsEcsInfrastructureYamlHandler awsEcsInfrastructureYamlHandler;
+  @InjectMocks @Inject private PcfInfraStructureYamlHandler pcfInfraStructureYamlHandler;
 
   private final String yamlFilePath = "Setup/Applications/APP_NAME/Environments/"
       + "ENV_NAME/Infrastructure Definitions/infra-def.yaml";
@@ -86,13 +90,19 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
   private static class validYamlInfraStructureFiles {
     // Make sure that CloudProviderName is TEST_CLOUD_PROVIDER and InfraDefinition name is
     // infra-def in yaml files
+    private static final String AWS_ECS = "aws_ecs.yaml";
+    private static final String AWS_ECS_PROVISIONER = "aws_ecs_provisioner.yaml";
     private static final String AWS_LAMBDA = "aws_lambda.yaml";
+    private static final String AWS_LAMBDA_PROVISIONER = "aws_lambda_provisioner.yaml";
     private static final String GCP_KUBERNETES = "gcp_kubernetes.yaml";
     private static final String AZURE_KUBERNETES = "azure_kubernetes.yaml";
     private static final String AZURE_INSTANCE = "azure_instance.yaml";
     private static final String DIRECT_KUBERNETES = "direct_kubernetes.yaml";
     private static final String AWS_INSTANCE = "aws_instance.yaml";
+    private static final String AWS_INSTANCE_PROVISIONER = "aws_instance_provisioner.yaml";
     private static final String AWS_CODEDEPLOY = "aws_codedeploy.yaml";
+    private static final String GCP_KUBERNETES_PROVISIONER = "gcp_kubernetes_provisioner.yaml";
+    private static final String PCF = "pcf.yaml";
   }
   private ArgumentCaptor<InfrastructureDefinition> captor = ArgumentCaptor.forClass(InfrastructureDefinition.class);
 
@@ -122,6 +132,16 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
   public void testCRUDAndGet_AWS_LAMBDA() throws IOException {
     doReturn(awsLambdaInfrastructureYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), any());
     testCRUD(validYamlInfraStructureFiles.AWS_LAMBDA, InfrastructureType.AWS_LAMBDA, DeploymentType.AWS_LAMBDA,
+        CloudProviderType.AWS);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCRUDAndGet_AWS_ECS() throws IOException {
+    doReturn(awsEcsInfrastructureYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), any());
+    testCRUD(
+        validYamlInfraStructureFiles.AWS_ECS, InfrastructureType.AWS_ECS, DeploymentType.ECS, CloudProviderType.AWS);
+    testCRUD(validYamlInfraStructureFiles.AWS_ECS_PROVISIONER, InfrastructureType.AWS_ECS, DeploymentType.ECS,
         CloudProviderType.AWS);
   }
 
@@ -158,9 +178,11 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
 
   @Test
   @Category(UnitTests.class)
-  public void TestCRUDAndGet_AWS_WINRM() throws IOException {
+  public void TestCRUDAndGet_AWS_INSTANCE() throws IOException {
     doReturn(awsInstanceInfrastructureYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), anyString());
     testCRUD(validYamlInfraStructureFiles.AWS_INSTANCE, InfrastructureType.AWS_INSTANCE, DeploymentType.WINRM,
+        CloudProviderType.AWS);
+    testCRUD(validYamlInfraStructureFiles.AWS_INSTANCE_PROVISIONER, InfrastructureType.AWS_INSTANCE, DeploymentType.SSH,
         CloudProviderType.AWS);
   }
 
@@ -170,6 +192,14 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
     doReturn(codeDeployInfrastructureYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), anyString());
     testCRUD(validYamlInfraStructureFiles.AWS_CODEDEPLOY, InfrastructureType.CODE_DEPLOY, DeploymentType.AWS_CODEDEPLOY,
         CloudProviderType.AWS);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void TestCRUDAndGet_PCF() throws IOException {
+    doReturn(pcfInfraStructureYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), any());
+    testCRUD(validYamlInfraStructureFiles.PCF, InfrastructureType.PCF_INFRASTRUCTURE, DeploymentType.PCF,
+        CloudProviderType.PCF);
   }
 
   private void testCRUD(String yamlFileName, String cloudProviderInfrastructureType, DeploymentType deploymentType,
@@ -193,8 +223,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
     assertNotNull(savedDefinition);
     assertEquals(savedDefinition.getCloudProviderType(), cloudProviderType);
     assertEquals(savedDefinition.getDeploymentType(), deploymentType);
-    assertEquals(
-        savedDefinition.getInfrastructure().getCloudProviderInfrastructureType(), cloudProviderInfrastructureType);
+    assertEquals(savedDefinition.getInfrastructure().getInfrastructureType(), cloudProviderInfrastructureType);
 
     yaml = handler.toYaml(savedDefinition, APP_ID);
 

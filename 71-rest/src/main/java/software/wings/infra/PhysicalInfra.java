@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.ExcludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.InfrastructureMapping;
@@ -16,18 +17,24 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @JsonTypeName("PHYSICAL_DATA_CENTER_SSH")
 @Data
 @Builder
-public class PhysicalInfra
-    implements PhysicalDataCenterInfra, InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
+public class PhysicalInfra implements PhysicalDataCenterInfra, InfraMappingInfrastructureProvider,
+                                      FieldKeyValMapProvider, SshBasedInfrastructure, ProvisionerAware {
+  public static final String hostArrayPath = "hostArrayPath";
+  public static final String hostname = "hostname";
+
   @ExcludeFieldMap private String cloudProviderId;
   private List<String> hostNames;
   private List<Host> hosts;
   private String loadBalancerId;
-  private String loadBalancerName;
+  @Transient @ExcludeFieldMap private String loadBalancerName;
   private String hostConnectionAttrs;
+  @ExcludeFieldMap private Map<String, String> expressions;
 
   @Override
   public InfrastructureMapping getInfraMapping() {
@@ -46,7 +53,7 @@ public class PhysicalInfra
     return PhysicalInfrastructureMapping.class;
   }
 
-  public String getCloudProviderInfrastructureType() {
+  public String getInfrastructureType() {
     return PHYSICAL_INFRA;
   }
 
@@ -54,6 +61,16 @@ public class PhysicalInfra
   public CloudProviderType getCloudProviderType() {
     return CloudProviderType.PHYSICAL_DATA_CENTER;
   }
+
+  @Override
+  public Set<String> getSupportedExpressions() {
+    // Can contain custom fields
+    return null;
+  }
+
+  @Override
+  public void applyExpressions(Map<String, Object> resolvedExpressions) {}
+
   @Data
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName(PHYSICAL_INFRA)
@@ -62,17 +79,19 @@ public class PhysicalInfra
     private List<String> hostNames;
     private List<Host> hosts;
     private String loadBalancerName;
-    private String hostConnectionAttrs;
+    private String hostConnectionAttrsName;
+    private Map<String, String> expressions;
 
     @Builder
     public Yaml(String type, String cloudProviderName, List<String> hostNames, List<Host> hosts,
-        String loadBalancerName, String hostConnectionAttrs) {
+        String loadBalancerName, String hostConnectionAttrsName, Map<String, String> expressions) {
       super(type);
       setCloudProviderName(cloudProviderName);
       setHostNames(hostNames);
       setHosts(hosts);
       setLoadBalancerName(loadBalancerName);
-      setHostConnectionAttrs(hostConnectionAttrs);
+      setHostConnectionAttrsName(hostConnectionAttrsName);
+      setExpressions(expressions);
     }
 
     public Yaml() {

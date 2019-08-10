@@ -18,7 +18,8 @@ import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInf
 @JsonTypeName("DIRECT_KUBERNETES")
 @Data
 @Builder
-public class DirectKubernetesInfrastructure implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
+public class DirectKubernetesInfrastructure
+    implements InfraMappingInfrastructureProvider, ContainerInfrastructure, FieldKeyValMapProvider {
   @ExcludeFieldMap private String cloudProviderId;
 
   private String clusterName;
@@ -48,7 +49,7 @@ public class DirectKubernetesInfrastructure implements InfraMappingInfrastructur
     return CloudProviderType.KUBERNETES_CLUSTER;
   }
 
-  public String getCloudProviderInfrastructureType() {
+  public String getInfrastructureType() {
     return DIRECT_KUBERNETES;
   }
 

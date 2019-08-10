@@ -10,8 +10,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -50,8 +48,6 @@ import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
-import static software.wings.utils.WingsTestConstants.NAMESPACE;
-import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_INSTANCE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
@@ -68,7 +64,6 @@ import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
-import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery;
@@ -111,7 +106,6 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
-import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.infrastructure.Host;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -1105,72 +1099,6 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     infrastructureMapping.setProvisionerId("p123");
     Assertions.assertThatThrownBy(() -> infrastructureMappingService.validateProvisionerConfig(infrastructureMapping));
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  public void testValidateAwsInfraMapping() {
-    doReturn(true).when(featureFlagService).isEnabled(any(), any());
-
-    AwsInfrastructureMapping infrastructureMapping = new AwsInfrastructureMapping();
-    infrastructureMapping.setProvisionerId("p123");
-    InfrastructureMappingServiceImpl infrastructureMappingService =
-        (InfrastructureMappingServiceImpl) this.infrastructureMappingService;
-
-    try {
-      infrastructureMappingService.validateAwsInfraMapping(infrastructureMapping);
-      fail("Should have thrown exception");
-    } catch (WingsException ex) {
-      assertTrue(ExceptionUtils.getMessage(ex).contains("Instance filter"));
-    }
-
-    infrastructureMapping.setProvisionInstances(true);
-    try {
-      infrastructureMappingService.validateAwsInfraMapping(infrastructureMapping);
-      fail("Should have thrown exception");
-    } catch (WingsException ex) {
-      assertTrue(ExceptionUtils.getMessage(ex).contains("Auto Scaling group"));
-    }
-
-    infrastructureMapping.setAutoScalingGroupName("asg");
-    infrastructureMapping.setSetDesiredCapacity(true);
-    infrastructureMapping.setDesiredCapacity(0);
-    try {
-      infrastructureMappingService.validateAwsInfraMapping(infrastructureMapping);
-      fail("Should have thrown exception");
-    } catch (WingsException ex) {
-      assertTrue(ExceptionUtils.getMessage(ex).contains("Desired count"));
-    }
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  public void testValidateGcpInfraMapping() {
-    GcpKubernetesInfrastructureMapping infrastructureMapping = new GcpKubernetesInfrastructureMapping();
-    InfrastructureMappingServiceImpl infrastructureMappingService =
-        (InfrastructureMappingServiceImpl) this.infrastructureMappingService;
-    doReturn(true).when(featureFlagService).isEnabled(any(), any());
-    doReturn(aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(GcpConfig.builder().build()).build())
-        .when(settingsService)
-        .get(any());
-
-    doReturn(TerraformInfrastructureProvisioner.builder().build())
-        .when(infrastructureProvisionerService)
-        .get(any(), any());
-
-    infrastructureMapping.setProvisionerId(PROVISIONER_ID);
-    infrastructureMapping.setClusterName(CLUSTER_NAME);
-    infrastructureMapping.setNamespace(NAMESPACE);
-    infrastructureMappingService.validateGcpInfraMapping(infrastructureMapping);
-
-    infrastructureMapping.setClusterName(null);
-    Assertions.assertThatThrownBy(() -> infrastructureMappingService.validateGcpInfraMapping(infrastructureMapping))
-        .isInstanceOf(InvalidRequestException.class);
-
-    infrastructureMapping.setClusterName(CLUSTER_NAME);
-    infrastructureMapping.setNamespace(null);
-    Assertions.assertThatThrownBy(() -> infrastructureMappingService.validateGcpInfraMapping(infrastructureMapping))
-        .isInstanceOf(InvalidRequestException.class);
   }
 
   @Test

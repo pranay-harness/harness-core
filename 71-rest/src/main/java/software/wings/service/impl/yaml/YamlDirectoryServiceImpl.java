@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Collections.emptySet;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
@@ -249,6 +248,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           case "InfrastructureMapping":
             appId = ((AppLevelYamlNode) dn).getAppId();
             yaml = yamlResourceService.getInfraMapping(accountId, appId, entityId).getResource().getYaml();
+            break;
+          case "InfrastructureDefinition":
+            appId = ((AppLevelYamlNode) dn).getAppId();
+            yaml = yamlResourceService.getInfraDefinition(appId, entityId).getResource().getYaml();
             break;
           case "CVConfiguration":
             appId = ((EnvLevelYamlNode) dn).getAppId();
@@ -1208,24 +1211,26 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
         // ------------------- INFRA MAPPING SECTION -----------------------
 
-        DirectoryPath infraMappingPath = envPath.clone().add(INFRA_MAPPING_FOLDER);
-        FolderNode infraMappingsFolder = new FolderNode(accountId, INFRA_MAPPING_FOLDER, InfrastructureMapping.class,
-            infraMappingPath, environment.getAppId(), yamlGitSyncService);
-        envFolder.addChild(infraMappingsFolder);
+        if (!featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)) {
+          DirectoryPath infraMappingPath = envPath.clone().add(INFRA_MAPPING_FOLDER);
+          FolderNode infraMappingsFolder = new FolderNode(accountId, INFRA_MAPPING_FOLDER, InfrastructureMapping.class,
+              infraMappingPath, environment.getAppId(), yamlGitSyncService);
+          envFolder.addChild(infraMappingsFolder);
 
-        PageRequest<InfrastructureMapping> pageRequest = aPageRequest()
-                                                             .addFilter("appId", Operator.EQ, environment.getAppId())
-                                                             .addFilter("envId", Operator.EQ, environment.getUuid())
-                                                             .build();
-        PageResponse<InfrastructureMapping> infraMappingList = infraMappingService.list(pageRequest);
+          PageRequest<InfrastructureMapping> pageRequest = aPageRequest()
+                                                               .addFilter("appId", Operator.EQ, environment.getAppId())
+                                                               .addFilter("envId", Operator.EQ, environment.getUuid())
+                                                               .build();
+          PageResponse<InfrastructureMapping> infraMappingList = infraMappingService.list(pageRequest);
 
-        // iterate over service commands
-        infraMappingList.forEach(infraMapping -> {
-          String infraMappingYamlFileName = infraMapping.getName() + YAML_EXTENSION;
-          infraMappingsFolder.addChild(new EnvLevelYamlNode(accountId, infraMapping.getUuid(), infraMapping.getAppId(),
-              infraMapping.getEnvId(), infraMappingYamlFileName, InfrastructureMapping.class,
-              infraMappingPath.clone().add(infraMappingYamlFileName), yamlGitSyncService, Type.INFRA_MAPPING));
-        });
+          // iterate over service commands
+          infraMappingList.forEach(infraMapping -> {
+            String infraMappingYamlFileName = infraMapping.getName() + YAML_EXTENSION;
+            infraMappingsFolder.addChild(new EnvLevelYamlNode(accountId, infraMapping.getUuid(),
+                infraMapping.getAppId(), infraMapping.getEnvId(), infraMappingYamlFileName, InfrastructureMapping.class,
+                infraMappingPath.clone().add(infraMappingYamlFileName), yamlGitSyncService, Type.INFRA_MAPPING));
+          });
+        }
 
         // ------------------- END INFRA MAPPING SECTION -----------------------
 
@@ -1242,7 +1247,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
                   .addFilter("envId", Operator.EQ, environment.getUuid())
                   .build();
           PageResponse<InfrastructureDefinition> infrastructureDefinitionsList =
-              infrastructureDefinitionService.list(infrastructureDefinitionPageRequest, EMPTY, environment.getAppId());
+              infrastructureDefinitionService.list(infrastructureDefinitionPageRequest);
 
           infrastructureDefinitionsList.forEach(infraDefinition -> {
             String infraDefinitionYamlFileName = infraDefinition.getName() + YAML_EXTENSION;
@@ -1939,6 +1944,14 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   @Override
+  public String getRootPathByInfraDefinition(InfrastructureDefinition infrastructureDefinition) {
+    Environment environment =
+        environmentService.get(infrastructureDefinition.getAppId(), infrastructureDefinition.getEnvId(), false);
+    Validator.notNullCheck("Environment is null", environment);
+    return getRootPathByEnvironment(environment) + PATH_DELIMITER + INFRA_DEFINITION_FOLDER;
+  }
+
+  @Override
   public String getRootPathByCVConfiguration(CVConfiguration cvConfiguration) {
     Environment environment = environmentService.get(cvConfiguration.getAppId(), cvConfiguration.getEnvId(), false);
     Validator.notNullCheck("Environment is null", environment);
@@ -2126,6 +2139,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       return getRootPathByApp((Application) entity);
     } else if (entity instanceof InfrastructureMapping) {
       return getRootPathByInfraMapping((InfrastructureMapping) entity);
+    } else if (entity instanceof InfrastructureDefinition) {
+      return getRootPathByInfraDefinition((InfrastructureDefinition) entity);
     } else if (entity instanceof Workflow) {
       return getRootPathByWorkflow((Workflow) entity);
     } else if (entity instanceof ArtifactStream) {

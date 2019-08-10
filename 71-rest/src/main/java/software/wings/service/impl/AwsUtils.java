@@ -10,11 +10,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.ec2.model.Filter;
+import org.jetbrains.annotations.NotNull;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter;
-import software.wings.common.Constants;
+import software.wings.common.InfrastructureConstants;
 import software.wings.expression.ManagerExpressionEvaluator;
+import software.wings.infra.AwsInstanceInfrastructure;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,13 +32,24 @@ public class AwsUtils {
 
   public String getHostnameFromConvention(Map<String, Object> context, String hostNameConvention) {
     if (isEmpty(hostNameConvention)) {
-      hostNameConvention = Constants.DEFAULT_AWS_HOST_NAME_CONVENTION;
+      hostNameConvention = InfrastructureConstants.DEFAULT_AWS_HOST_NAME_CONVENTION;
     }
     return expressionEvaluator.substitute(hostNameConvention, context);
   }
 
   public List<Filter> getAwsFilters(AwsInfrastructureMapping awsInfrastructureMapping, DeploymentType deploymentType) {
     AwsInstanceFilter instanceFilter = awsInfrastructureMapping.getAwsInstanceFilter();
+    return getFilters(deploymentType, instanceFilter);
+  }
+
+  public List<Filter> getAwsFilters(
+      AwsInstanceInfrastructure awsInstanceInfrastructure, DeploymentType deploymentType) {
+    AwsInstanceFilter instanceFilter = awsInstanceInfrastructure.getAwsInstanceFilter();
+    return getFilters(deploymentType, instanceFilter);
+  }
+
+  @NotNull
+  public List<Filter> getFilters(DeploymentType deploymentType, AwsInstanceFilter instanceFilter) {
     List<Filter> filters = new ArrayList<>();
     filters.add(new Filter("instance-state-name").withValues("running"));
     if (instanceFilter != null) {

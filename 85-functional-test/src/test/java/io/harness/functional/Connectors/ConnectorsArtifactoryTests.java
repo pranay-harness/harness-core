@@ -20,7 +20,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
-
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;

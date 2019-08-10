@@ -14,6 +14,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.infrastructure.Host;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.HostService;
@@ -31,6 +32,12 @@ public class GcpInfrastructureProvider implements InfrastructureProvider {
 
   @Override
   public PageResponse<Host> listHosts(AwsInfrastructureMapping awsInfrastructureMapping,
+      SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails, PageRequest<Host> req) {
+    return aPageResponse().withResponse(null).build();
+  }
+
+  @Override
+  public PageResponse<Host> listHosts(InfrastructureDefinition infrastructureDefinition,
       SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails, PageRequest<Host> req) {
     return aPageResponse().withResponse(null).build();
   }

@@ -1,7 +1,6 @@
 package software.wings.infra;
 
-public interface KubernetesInfrastructure {
-  String getClusterName();
+public interface KubernetesInfrastructure extends ContainerInfrastructure {
   String getNamespace();
   String getReleaseName();
 }

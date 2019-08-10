@@ -31,6 +31,7 @@ public class AwsLambdaInfrastructureYamlHandler
         .vpcId(bean.getVpcId())
         .cloudProviderName(cloudProvider.getName())
         .type(InfrastructureType.AWS_LAMBDA)
+        .expressions(bean.getExpressions())
         .build();
   }
 
@@ -53,6 +54,7 @@ public class AwsLambdaInfrastructureYamlHandler
     bean.setSecurityGroupIds(yaml.getSecurityGroupIds());
     bean.setSubnetIds(yaml.getSubnetIds());
     bean.setVpcId(yaml.getVpcId());
+    bean.setExpressions(yaml.getExpressions());
   }
 
   @Override
