@@ -6,6 +6,7 @@ import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
@@ -15,6 +16,9 @@ import java.util.List;
  */
 public interface InfrastructureProvider {
   PageResponse<Host> listHosts(AwsInfrastructureMapping awsInfrastructureMapping,
+      SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails, PageRequest<Host> req);
+
+  PageResponse<Host> listHosts(InfrastructureDefinition infrastructureDefinition,
       SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails, PageRequest<Host> req);
 
   /**

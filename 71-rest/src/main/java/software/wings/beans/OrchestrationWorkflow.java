@@ -78,7 +78,7 @@ public abstract class OrchestrationWorkflow {
 
   public abstract void onSave();
 
-  public abstract void onLoad();
+  public abstract void onLoad(boolean infraRefactor);
 
   public abstract Set<EntityType> getRequiredEntityTypes();
 

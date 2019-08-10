@@ -173,7 +173,7 @@ import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.LogCallback;
-import software.wings.common.Constants;
+import software.wings.common.InfrastructureConstants;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
@@ -368,7 +368,7 @@ public class AwsHelperService {
 
   public String getHostnameFromConvention(Map<String, Object> context, String hostNameConvention) {
     if (isEmpty(hostNameConvention)) {
-      hostNameConvention = Constants.DEFAULT_AWS_HOST_NAME_CONVENTION;
+      hostNameConvention = InfrastructureConstants.DEFAULT_AWS_HOST_NAME_CONVENTION;
     }
     return expressionEvaluator.substitute(hostNameConvention, context);
   }

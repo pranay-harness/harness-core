@@ -31,6 +31,7 @@ public class AwsAmiInfrastructureYamlHandler
         .targetGroupArns(bean.getTargetGroupArns())
         .cloudProviderName(cloudProvider.getName())
         .type(InfrastructureType.AWS_AMI)
+        .expressions(bean.getExpressions())
         .build();
   }
 
@@ -50,6 +51,7 @@ public class AwsAmiInfrastructureYamlHandler
     bean.setAutoScalingGroupName(yaml.getAutoScalingGroupName());
     bean.setClassicLoadBalancers(yaml.getClassicLoadBalancers());
     bean.setHostNameConvention(yaml.getHostNameConvention());
+    bean.setExpressions(yaml.getExpressions());
   }
 
   @Override

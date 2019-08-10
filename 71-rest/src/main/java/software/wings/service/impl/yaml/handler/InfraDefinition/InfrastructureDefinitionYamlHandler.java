@@ -39,7 +39,7 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
   @Override
   public Yaml toYaml(InfrastructureDefinition bean, String appId) {
     CloudProviderInfrastructureYamlHandler cloudProviderInfrastructureYamlHandler = yamlHandlerFactory.getYamlHandler(
-        YamlType.CLOUD_PROVIDER_INFRASTRUCTURE, bean.getInfrastructure().getCloudProviderInfrastructureType());
+        YamlType.CLOUD_PROVIDER_INFRASTRUCTURE, bean.getInfrastructure().getInfrastructureType());
     List<String> scopedToServiceNames = new ArrayList<>();
     for (String serviceId : CollectionUtils.emptyIfNull(bean.getScopedToServices())) {
       scopedToServiceNames.add(getServiceName(appId, serviceId));

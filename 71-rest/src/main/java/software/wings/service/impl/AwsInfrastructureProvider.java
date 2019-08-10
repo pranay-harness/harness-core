@@ -36,8 +36,10 @@ import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
-import software.wings.common.Constants;
+import software.wings.common.InfrastructureConstants;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.infra.AwsInstanceInfrastructure;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
@@ -114,7 +116,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
               })
               .collect(toList());
       if (awsInfrastructureMapping.getHostNameConvention() != null
-          && !awsInfrastructureMapping.getHostNameConvention().equals(Constants.DEFAULT_AWS_HOST_NAME_CONVENTION)) {
+          && !awsInfrastructureMapping.getHostNameConvention().equals(
+                 InfrastructureConstants.DEFAULT_AWS_HOST_NAME_CONVENTION)) {
         awsHosts.forEach(h -> {
           HostElement hostElement = aHostElement().withEc2Instance(h.getEc2Instance()).build();
 
@@ -122,6 +125,58 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
           contextMap.put("host", hostElement);
           h.setHostName(
               awsUtils.getHostnameFromConvention(contextMap, awsInfrastructureMapping.getHostNameConvention()));
+        });
+      }
+      return aPageResponse().withResponse(awsHosts).build();
+    }
+    return aPageResponse().withResponse(emptyList()).build();
+  }
+
+  @Override
+  public PageResponse<Host> listHosts(InfrastructureDefinition infrastructureDefinition,
+      SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails, PageRequest<Host> req) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    AwsInstanceInfrastructure awsInstanceInfrastructure =
+        (AwsInstanceInfrastructure) infrastructureDefinition.getInfrastructure();
+    DescribeInstancesResult describeInstancesResult;
+    List<Instance> instances;
+    if (awsInstanceInfrastructure.isProvisionInstances()) {
+      instances = listAutoScaleHosts(
+          awsInstanceInfrastructure, awsConfig, encryptedDataDetails, infrastructureDefinition.getAppId());
+    } else {
+      instances = listFilteredHosts(awsInstanceInfrastructure, awsConfig, encryptedDataDetails,
+          infrastructureDefinition.getDeploymentType(), infrastructureDefinition.getAppId());
+    }
+    if (isNotEmpty(instances)) {
+      List<Host> awsHosts =
+          instances.stream()
+              .map(instance
+                  -> aHost()
+                         .withHostName(awsUtils.getHostnameFromPrivateDnsName(instance.getPrivateDnsName()))
+                         .withPublicDns(awsInstanceInfrastructure.isUsePublicDns() ? instance.getPublicDnsName()
+                                                                                   : instance.getPrivateDnsName())
+                         .withEc2Instance(instance)
+                         .withAppId(infrastructureDefinition.getAppId())
+                         .withEnvId(infrastructureDefinition.getEnvId())
+                         .withHostConnAttr(DeploymentType.SSH.equals(infrastructureDefinition.getDeploymentType())
+                                 ? awsInstanceInfrastructure.getHostConnectionAttrs()
+                                 : null)
+                         .withWinrmConnAttr(DeploymentType.WINRM.equals(infrastructureDefinition.getDeploymentType())
+                                 ? awsInstanceInfrastructure.getHostConnectionAttrs()
+                                 : null)
+                         .withInfraDefinitionId(infrastructureDefinition.getUuid())
+                         .build())
+              .collect(toList());
+      if (awsInstanceInfrastructure.getHostNameConvention() != null
+          && !awsInstanceInfrastructure.getHostNameConvention().equals(
+                 InfrastructureConstants.DEFAULT_AWS_HOST_NAME_CONVENTION)) {
+        awsHosts.forEach(h -> {
+          HostElement hostElement = aHostElement().withEc2Instance(h.getEc2Instance()).build();
+
+          final Map<String, Object> contextMap = new HashMap();
+          contextMap.put("host", hostElement);
+          h.setHostName(
+              awsUtils.getHostnameFromConvention(contextMap, awsInstanceInfrastructure.getHostNameConvention()));
         });
       }
       return aPageResponse().withResponse(awsHosts).build();
@@ -147,6 +202,23 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     }
   }
 
+  private List<Instance> listAutoScaleHosts(AwsInstanceInfrastructure awsInstanceInfrastructure, AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String appId) {
+    if (awsInstanceInfrastructure.isSetDesiredCapacity()) {
+      List<Instance> instances = new ArrayList<>();
+      for (int i = 0; i < awsInstanceInfrastructure.getDesiredCapacity(); i++) {
+        int instanceNum = i + 1;
+        instances.add(new Instance()
+                          .withPrivateDnsName("private-dns-" + instanceNum)
+                          .withPublicDnsName("public-dns-" + instanceNum));
+      }
+      return instances;
+    } else {
+      return awsAsgHelperServiceManager.listAutoScalingGroupInstances(awsConfig, encryptedDataDetails,
+          awsInstanceInfrastructure.getRegion(), awsInstanceInfrastructure.getAutoScalingGroupName(), appId);
+    }
+  }
+
   public List<Instance> listFilteredInstances(AwsInfrastructureMapping awsInfrastructureMapping, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails) {
     return listFilteredHosts(awsInfrastructureMapping, awsConfig, encryptedDataDetails);
@@ -160,6 +232,18 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     try {
       return awsEc2HelperServiceManager.listEc2Instances(awsConfig, encryptedDataDetails,
           awsInfrastructureMapping.getRegion(), filters, awsInfrastructureMapping.getAppId());
+    } catch (Exception e) {
+      logger.warn(ExceptionUtils.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+    }
+  }
+
+  private List<Instance> listFilteredHosts(AwsInstanceInfrastructure awsInstanceInfrastructure, AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, DeploymentType deploymentType, String appId) {
+    List<Filter> filters = awsUtils.getAwsFilters(awsInstanceInfrastructure, deploymentType);
+    try {
+      return awsEc2HelperServiceManager.listEc2Instances(
+          awsConfig, encryptedDataDetails, awsInstanceInfrastructure.getRegion(), filters, appId);
     } catch (Exception e) {
       logger.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
@@ -216,6 +300,36 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
                    .withHostConnAttr(infrastructureMapping.getHostConnectionAttrs())
                    .withInfraMappingId(infrastructureMapping.getUuid())
                    .withServiceTemplateId(infrastructureMapping.getServiceTemplateId())
+                   .build())
+        .collect(toList());
+  }
+
+  public List<Host> maybeSetAutoScaleCapacityAndGetHosts(String appId, String workflowExecutionId,
+      AwsInstanceInfrastructure awsInstanceInfrastructure, SettingAttribute computeProviderSetting, String envId,
+      String infraDefinitionId) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    List<EncryptedDataDetail> encryptionDetails =
+        secretManager.getEncryptionDetails(awsConfig, appId, workflowExecutionId);
+
+    if (awsInstanceInfrastructure.isSetDesiredCapacity()) {
+      awsHelperService.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails,
+          awsInstanceInfrastructure.getRegion(), awsInstanceInfrastructure.getAutoScalingGroupName(),
+          awsInstanceInfrastructure.getDesiredCapacity(), new ManagerExecutionLogCallback());
+    }
+
+    List<Instance> instances = awsAsgHelperServiceManager.listAutoScalingGroupInstances(awsConfig, encryptionDetails,
+        awsInstanceInfrastructure.getRegion(), awsInstanceInfrastructure.getAutoScalingGroupName(), appId);
+    return instances.stream()
+        .map(instance
+            -> aHost()
+                   .withHostName(awsUtils.getHostnameFromPrivateDnsName(instance.getPrivateDnsName()))
+                   .withPublicDns(awsInstanceInfrastructure.isUsePublicDns() ? instance.getPublicDnsName()
+                                                                             : instance.getPrivateDnsName())
+                   .withEc2Instance(instance)
+                   .withAppId(appId)
+                   .withEnvId(envId)
+                   .withHostConnAttr(awsInstanceInfrastructure.getHostConnectionAttrs())
+                   .withInfraMappingId(infraDefinitionId)
                    .build())
         .collect(toList());
   }

@@ -12,6 +12,7 @@ public class SyncTaskContext {
   private String appId;
   private String envId;
   private String infrastructureMappingId;
+  private String infraStructureDefinitionId;
   private long timeout;
   private List<String> tags;
   private String correlationId;

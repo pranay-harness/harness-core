@@ -64,10 +64,16 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
 
   InfrastructureMapping getInfraMappingByName(String appId, String envId, String name);
 
+  // TODO => Remove this comment once fully migrated
+  // Remove all NeedsMigration Conmmecnt after migration
+
+  // NeedsMigration
+  // Migrated
   List<Host> getAutoScaleGroupNodes(String appId, String infraMappingId, String workflowExecutionId);
 
   Map<DeploymentType, List<SettingVariableTypes>> listInfraTypes(String appId, String envId, String serviceId);
 
+  // TODO check What the Function id Doing. DOes it require to be migrated
   List<ServiceInstance> selectServiceInstances(
       String appId, String infraMappingId, String workflowExecutionId, ServiceInstanceSelectionParams selectionParams);
 
@@ -101,6 +107,8 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
   List<String> listElasticLoadBalancer(
       @NotNull String accessKey, @NotNull char[] secretKey, @NotNull String region, @NotEmpty String accountId);
 
+  // NeedsMigration
+  // Migrated
   Map<String, String> listNetworkLoadBalancers(String appId, String infraMappingId);
 
   List<String> listCodeDeployApplicationNames(String computeProviderId, String region, String appId);
@@ -110,16 +118,28 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
 
   List<String> listCodeDeployDeploymentConfigs(String computeProviderId, String region, String appId);
 
+  // NeedsMigration
+  // Migrated
   Map<String, String> listLoadBalancers(String appId, String infraMappingId);
 
+  // NeedsMigration
+  // Migrated
   Map<String, String> listElasticLoadBalancers(String appId, String infraMappingId);
 
+  // NeedsMigration
+  // Migrated
   Map<String, String> listTargetGroups(String appId, String infraMappingId, String loadbalancerName);
 
+  // NeedsMigration
+  // Migrated
   List<String> listHostDisplayNames(String appId, String infraMappingId, String workflowExecutionId);
 
+  // Needs Migration
+  // Migrated
   String getContainerRunningInstances(String appId, String infraMappingId, String serviceNameExpression);
 
+  // NeedsMigration
+  // Migrated
   Map<String, String> listAwsIamRoles(String appId, String infraMappingId);
 
   Set<String> listTags(String appId, String computeProviderId, String region);
@@ -130,9 +150,11 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
 
   Map<String, String> listAlbTargetGroups(String appId, String computeProviderId, String region);
 
+  // NeedsMigration
   List<Host> listHosts(String appId, String infrastructureMappingId);
 
   List<InfrastructureMapping> getInfraStructureMappingsByUuids(String appId, List<String> infraMappingIds);
+
   List<String> listOrganizationsForPcf(String appId, String computeProviderId) throws WingsException;
 
   List<String> listSpacesForPcf(String appId, String computeProviderId, String organization) throws WingsException;
@@ -144,11 +166,15 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
 
   List<InfrastructureMapping> listByComputeProviderId(String accountId, String computeProviderId);
 
+  // NeedsMigration
+  // Migrated
   List<AwsElbListener> listListeners(String appId, String infraMappingId, String loadbalancerName);
 
   String createRoute(String appId, String computeProviderId, String organization, String spaces, String host,
       String domain, String path, boolean tcpRoute, boolean useRandomPort, String port);
 
+  // NeedsMigration
+  // Migrated
   List<AwsRoute53HostedZoneData> listHostedZones(String appId, String infraMappingId);
 
   Integer getPcfRunningInstances(String appId, String infraMappingId, String appNameExpression);
@@ -156,4 +182,6 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
   AwsAsgGetRunningCountData getAmiCurrentlyRunningInstanceCount(String infraMappingId, String appId);
 
   List<String> fetchCloudProviderIds(String appId, List<String> infraMappingIds);
+
+  List<InfrastructureMapping> listInfraMappings(@NotEmpty String appId, @NotEmpty String envId);
 }

@@ -21,10 +21,8 @@ import io.harness.spotinst.model.ElastiGroup;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.TaskType;
-
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;

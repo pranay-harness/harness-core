@@ -7,6 +7,7 @@ import io.harness.beans.WorkflowType;
 import io.harness.persistence.HIterator;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.ApprovalStateExecutionData;
+import software.wings.api.WorkflowElement;
 import software.wings.beans.ApprovalAuthorization;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ArtifactVariable;
@@ -119,6 +120,9 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
 
   void updateStartStatus(String appId, String workflowExecutionId, ExecutionStatus status);
 
+  void updateWorkflowElementWithLastGoodReleaseInfo(
+      String appId, WorkflowElement workflowElement, String workflowExecutionId);
+
   boolean updateNotes(String appId, String workflowExecutionId, ExecutionArgs executionArgs);
 
   boolean approveOrRejectExecution(String appId, List<String> userGroupIds, ApprovalDetails approvalDetails);
@@ -172,4 +176,6 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   String getApplicationIdByExecutionId(@NotNull String executionId);
 
   List<WorkflowExecution> getLastSuccessfulWorkflowExecutions(String appId, String workflowId, String serviceId);
+
+  boolean appendInfraMappingId(String appId, String workflowExecutionId, String infraMappingId);
 }

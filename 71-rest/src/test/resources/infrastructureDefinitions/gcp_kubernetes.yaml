@@ -3,7 +3,7 @@ type: INFRA_DEFINITION
 cloudProviderType: GCP
 deploymentType: KUBERNETES
 infrastructure:
-- type: GCP_KUBERNETES_ENGINE
+- type: GCP_KUBERNETES
   cloudProviderName: TEST_CLOUD_PROVIDER
   clusterName: us-central1-a/harness-test
   namespace: default

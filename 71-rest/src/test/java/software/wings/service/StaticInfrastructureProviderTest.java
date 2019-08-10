@@ -28,6 +28,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
+import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
@@ -53,7 +54,7 @@ public class StaticInfrastructureProviderTest extends WingsBaseTest {
     SettingAttribute computeProviderSettingAttribute =
         aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(aPhysicalDataCenterConfig().build()).build();
     PageResponse<Host> hosts = infrastructureProvider.listHosts(
-        null, computeProviderSettingAttribute, Collections.emptyList(), new PageRequest<>());
+        (AwsInfrastructureMapping) null, computeProviderSettingAttribute, Collections.emptyList(), new PageRequest<>());
     assertThat(hosts).hasSize(1).containsExactly(host);
     verify(hostService).list(any(PageRequest.class));
   }

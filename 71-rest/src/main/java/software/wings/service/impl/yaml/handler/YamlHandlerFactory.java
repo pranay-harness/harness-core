@@ -33,6 +33,7 @@ import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.yaml.handler.CloudProviderInfrastructure.CloudProviderInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.InfrastructureDefinitionYamlHandler;
 import software.wings.service.impl.yaml.handler.app.ApplicationYamlHandler;
@@ -336,6 +337,8 @@ public class YamlHandlerFactory {
       return YamlType.APPLICATION;
     } else if (entity instanceof InfrastructureMapping) {
       return YamlType.INFRA_MAPPING;
+    } else if (entity instanceof InfrastructureDefinition) {
+      return YamlType.INFRA_DEFINITION;
     } else if (entity instanceof Workflow) {
       return YamlType.WORKFLOW;
     } else if (entity instanceof InfrastructureProvisioner) {
@@ -377,6 +380,8 @@ public class YamlHandlerFactory {
       return ((Application) entity).getName();
     } else if (entity instanceof InfrastructureMapping) {
       return ((InfrastructureMapping) entity).getName();
+    } else if (entity instanceof InfrastructureDefinition) {
+      return ((InfrastructureDefinition) entity).getName();
     } else if (entity instanceof Workflow) {
       return ((Workflow) entity).getName();
     } else if (entity instanceof InfrastructureProvisioner) {
@@ -536,7 +541,7 @@ public class YamlHandlerFactory {
         "ManifestFile", "ApplicationManifest", "CustomArtifactStream", "AppDynamicsCVServiceConfiguration",
         "CloudWatchCVServiceConfiguration", "NewRelicCVServiceConfiguration", "DatadogCVServiceConfiguration",
         "PrometheusCVServiceConfiguration", "BugsnagCVConfiguration", "ElkCVConfiguration", "LogsCVConfiguration",
-        "AzureInfrastructureMapping");
+        "AzureInfrastructureMapping", "InfrastructureDefinition");
   }
 
   private static List<String> obtainLeafEntitiesWithFeatureFlag() {
@@ -554,6 +559,6 @@ public class YamlHandlerFactory {
         "ApplicationManifest", "CustomArtifactStream", "AppDynamicsCVServiceConfiguration",
         "CloudWatchCVServiceConfiguration", "NewRelicCVServiceConfiguration", "DatadogCVServiceConfiguration",
         "PrometheusCVServiceConfiguration", "BugsnagCVConfiguration", "ElkCVConfiguration", "LogsCVConfiguration",
-        "AzureInfrastructureMapping");
+        "AzureInfrastructureMapping", "InfrastructureDefinition");
   }
 }

@@ -225,7 +225,7 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
     return infraDefinitionId;
   }
 
-  public void setInfradefinitionId(String infraMappingId) {
+  public void setInfraDefinitionId(String infraDefinitionId) {
     this.infraDefinitionId = infraDefinitionId;
   }
 
@@ -466,6 +466,7 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
       workflow.setLastUpdatedAt(lastUpdatedAt);
       workflow.setServiceId(serviceId);
       workflow.setInfraMappingId(infraMappingId);
+      workflow.setInfraDefinitionId(infraDefinitionId);
       workflow.setTemplatized(templatized);
       workflow.setTemplateExpressions(templateExpressions);
       workflow.setNotes(notes);

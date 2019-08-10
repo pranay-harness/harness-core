@@ -1,11 +1,14 @@
 package software.wings.service.impl.yaml.handler.InfraDefinition;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static java.lang.String.format;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.WingsException;
 import software.wings.beans.InfrastructureType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
@@ -23,13 +26,22 @@ public class AzureInstanceInfrastructureYamlHandler
   @Override
   public Yaml toYaml(AzureInstanceInfrastructure bean, String appId) {
     SettingAttribute cloudProvider = settingsService.get(bean.getCloudProviderId());
-    return Yaml.builder()
-        .resourceGroup(bean.getResourceGroup())
-        .subscriptionId(bean.getSubscriptionId())
-        .tags(bean.getTags())
-        .cloudProviderName(cloudProvider.getName())
-        .type(InfrastructureType.AZURE_SSH)
-        .build();
+    SettingAttribute hostConnectionAttr = settingsService.get(bean.getHostConnectionAttrs());
+    SettingAttribute winRmConnectionAttr = settingsService.get(bean.getWinRmConnectionAttributes());
+    Yaml yaml = Yaml.builder()
+                    .resourceGroup(bean.getResourceGroup())
+                    .subscriptionId(bean.getSubscriptionId())
+                    .tags(bean.getTags())
+                    .cloudProviderName(cloudProvider.getName())
+                    .type(InfrastructureType.AZURE_SSH)
+                    .build();
+
+    if (hostConnectionAttr != null) {
+      yaml.setHostConnectionAttrsName(hostConnectionAttr.getName());
+    } else if (winRmConnectionAttr != null) {
+      yaml.setWinRmConnectionAttributesName(winRmConnectionAttr.getName());
+    }
+    return yaml;
   }
 
   @Override
@@ -44,11 +56,27 @@ public class AzureInstanceInfrastructureYamlHandler
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
     SettingAttribute cloudProvider = settingsService.getSettingAttributeByName(accountId, yaml.getCloudProviderName());
+    SettingAttribute hostConnectionAttr =
+        settingsService.getSettingAttributeByName(accountId, yaml.getHostConnectionAttrsName());
+    SettingAttribute winRmConnectionAttr =
+        settingsService.getSettingAttributeByName(accountId, yaml.getWinRmConnectionAttributesName());
     notNullCheck(format("Cloud Provider with name %s does not exist", yaml.getCloudProviderName()), cloudProvider);
     bean.setCloudProviderId(cloudProvider.getUuid());
     bean.setResourceGroup(yaml.getResourceGroup());
     bean.setSubscriptionId(yaml.getSubscriptionId());
     bean.setTags(yaml.getTags());
+    if (hostConnectionAttr != null) {
+      bean.setHostConnectionAttrs(hostConnectionAttr.getUuid());
+    } else if (winRmConnectionAttr != null) {
+      bean.setWinRmConnectionAttributes(winRmConnectionAttr.getUuid());
+    } else {
+      throw new WingsException(GENERAL_ERROR)
+          .addParam("message",
+              format("Connection "
+                      + "Attribute with name %s does not exist",
+                  isNotEmpty(yaml.getHostConnectionAttrsName()) ? yaml.getHostConnectionAttrsName()
+                                                                : yaml.getWinRmConnectionAttributesName()));
+    }
   }
 
   @Override

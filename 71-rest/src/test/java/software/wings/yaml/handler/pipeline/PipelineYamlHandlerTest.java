@@ -60,6 +60,7 @@ import software.wings.rules.SetupScheduler;
 import software.wings.service.impl.SSHKeyDataProvider;
 import software.wings.service.impl.WinRmConnectionAttributesDataProvider;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
+import software.wings.service.impl.yaml.WorkflowYAMLHelper;
 import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHelper;
 import software.wings.service.impl.yaml.handler.workflow.PipelineStageYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.PipelineYamlHandler;
@@ -96,6 +97,7 @@ public class PipelineYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock private HarnessTagYamlHelper harnessTagYamlHelper;
 
   @InjectMocks @Inject YamlHelper yamlHelper;
+  @InjectMocks @Inject WorkflowYAMLHelper workflowYAMLHelper;
   @InjectMocks @Inject YamlDirectoryService yamlDirectoryService;
   @InjectMocks @Inject PipelineService pipelineService;
   @InjectMocks @Inject WorkflowService workflowService;

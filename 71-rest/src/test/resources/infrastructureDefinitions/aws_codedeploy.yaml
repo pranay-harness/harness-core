@@ -3,7 +3,7 @@ type: INFRA_DEFINITION
 cloudProviderType: AWS
 deploymentType: AWS_CODEDEPLOY
 infrastructure:
-- type: CODE_DEPLOY
+- type: AWS_AWS_CODEDEPLOY
   applicationName: Test
   cloudProviderName: TEST_CLOUD_PROVIDER
   deploymentConfig: Test

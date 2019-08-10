@@ -81,6 +81,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
@@ -135,6 +136,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private ApplicationManifestService applicationManifestService;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
 
   @Inject private Queue<PruneEvent> pruneQueue;
 

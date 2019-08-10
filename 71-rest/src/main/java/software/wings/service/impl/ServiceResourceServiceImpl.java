@@ -147,6 +147,7 @@ import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.NotificationService;
@@ -254,6 +255,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
 
   @Inject private Queue<PruneEvent> pruneQueue;
   @Inject private ApplicationManifestUtils applicationManifestUtils;
@@ -847,6 +849,19 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   private void ensureServiceSafeToDelete(Service service) {
     // Ensure service and and sevice commands referenced by workflow
+
+    String accountId = service.getAccountId();
+    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)) {
+      List<String> referencingInfraDefinitionNames =
+          infrastructureDefinitionService.listNamesByScopedService(service.getAppId(), service.getUuid());
+      if (isNotEmpty(referencingInfraDefinitionNames)) {
+        throw new InvalidRequestException(
+            format("Service %s is referenced by %s %s [%s].", service.getName(), referencingInfraDefinitionNames.size(),
+                plural("Infrastructure Definition", referencingInfraDefinitionNames.size()),
+                Joiner.on(", ").join(referencingInfraDefinitionNames)),
+            USER);
+      }
+    }
 
     List<String> referencingWorkflowNames =
         workflowService.obtainWorkflowNamesReferencedByService(service.getAppId(), service.getUuid());

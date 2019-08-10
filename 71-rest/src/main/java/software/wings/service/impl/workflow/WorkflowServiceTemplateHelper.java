@@ -250,7 +250,8 @@ public class WorkflowServiceTemplateHelper {
    * @param workflow
    * @param workflowPhase
    */
-  public static void setTemplateExpresssionsFromPhase(Workflow workflow, WorkflowPhase workflowPhase) {
+  public static void setTemplateExpresssionsFromPhase(
+      Workflow workflow, WorkflowPhase workflowPhase, boolean infraRefactor) {
     List<TemplateExpression> templateExpressions = workflow.getTemplateExpressions();
     TemplateExpression envExpression = getTemplateExpression(templateExpressions, "envId");
     // Reset template expressions
@@ -265,7 +266,12 @@ public class WorkflowServiceTemplateHelper {
       }
       // It means, user templatizing it from phase level
       addTemplateExpressions(phaseTemplateExpressions, templateExpressions);
-      validateTemplateExpressions(templateExpressions);
+      if (infraRefactor) {
+        validateTemplateExpressionsInfraRefactor(templateExpressions);
+      } else {
+        validateTemplateExpressions(templateExpressions);
+      }
+
       workflow.setTemplateExpressions(templateExpressions);
     }
   }
@@ -275,19 +281,19 @@ public class WorkflowServiceTemplateHelper {
     TemplateExpression envExpression =
         WorkflowServiceTemplateHelper.getTemplateExpression(templateExpressions, "envId");
     TemplateExpression serviceExpression = getTemplateExpression(templateExpressions, "serviceId");
-    TemplateExpression infraExpression = getTemplateExpression(templateExpressions, "infraMappingId");
+    TemplateExpression infraMappingExpression = getTemplateExpression(templateExpressions, "infraMappingId");
 
     // It means nullifying both Service and InfraMappings .. throw an error if environment is templatized
     // Infra not present
     if (envExpression != null) {
-      if (infraExpression == null) {
+      if (infraMappingExpression == null) {
         throw new InvalidRequestException(
             "Service Infrastructure cannot be de-templatized because Environment is templatized", USER);
       }
     }
     // Infra not present
     if (serviceExpression != null) {
-      if (infraExpression == null) {
+      if (infraMappingExpression == null) {
         throw new InvalidRequestException(
             "Service Infrastructure cannot be de-templatized because Service is templatized", USER);
       }
@@ -305,7 +311,7 @@ public class WorkflowServiceTemplateHelper {
     if (envExpression != null) {
       if (infraExpression == null) {
         throw new InvalidRequestException(
-            "Service Infrastructure cannot be de-templatized because Environment is templatized", USER);
+            "Infra Definition cannot be de-templatized because Environment is templatized", USER);
       }
     }
   }

@@ -85,6 +85,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhaseStepType;
 import software.wings.common.Constants;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.sm.states.APMVerificationState;
 import software.wings.sm.states.AppDynamicsState;
@@ -803,17 +804,24 @@ public enum StateType implements StateTypeDescriptor {
           InfrastructureMappingType.valueOf(infrastructureMapping.getInfraMappingType());
       return (stencilCategory != COMMANDS && stencilCategory != CLOUD && stencilCategory != ECS)
           || supportedInfrastructureMappingTypes.contains(infrastructureMappingType);
-    }
-    DeploymentType deploymentType = (DeploymentType) context;
-    List<DeploymentType> supportedDeploymentTypes = new ArrayList<>();
-    // TODO: SSH deployment referenced by more than one SelectNode states
-    if (supportedInfrastructureMappingTypes != null) {
-      for (InfrastructureMappingType supportedInfrastructureMappingType : supportedInfrastructureMappingTypes) {
-        supportedDeploymentTypes.addAll(supportedInfrastructureMappingType.getDeploymentTypes());
+    } else if (context instanceof InfrastructureDefinition) {
+      InfrastructureDefinition infrastructureDefinition = (InfrastructureDefinition) context;
+      InfrastructureMappingType infrastructureMappingType =
+          InfrastructureMappingType.valueOf(infrastructureDefinition.getInfrastructure().getInfrastructureType());
+      return (stencilCategory != COMMANDS && stencilCategory != CLOUD && stencilCategory != ECS)
+          || supportedInfrastructureMappingTypes.contains(infrastructureMappingType);
+    } else {
+      DeploymentType deploymentType = (DeploymentType) context;
+      List<DeploymentType> supportedDeploymentTypes = new ArrayList<>();
+      // TODO: SSH deployment referenced by more than one SelectNode states
+      if (supportedInfrastructureMappingTypes != null) {
+        for (InfrastructureMappingType supportedInfrastructureMappingType : supportedInfrastructureMappingTypes) {
+          supportedDeploymentTypes.addAll(supportedInfrastructureMappingType.getDeploymentTypes());
+        }
       }
+      return (stencilCategory != COMMANDS && stencilCategory != CLOUD)
+          || supportedDeploymentTypes.contains(deploymentType);
     }
-    return (stencilCategory != COMMANDS && stencilCategory != CLOUD)
-        || supportedDeploymentTypes.contains(deploymentType);
   }
 
   @Override

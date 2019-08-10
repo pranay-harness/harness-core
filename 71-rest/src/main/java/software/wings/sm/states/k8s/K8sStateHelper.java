@@ -80,6 +80,7 @@ import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.k8s.response.K8sInstanceSyncResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.impl.HelmChartConfigHelperService;
@@ -88,6 +89,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SweepingOutputService;
@@ -121,6 +123,7 @@ public class K8sStateHelper {
   @Inject private transient DelegateService delegateService;
   @Inject private transient AppService appService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
+  @Inject private transient InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private SweepingOutputService sweepingOutputService;
   @Inject private transient AwsCommandHelper awsCommandHelper;
   @Inject private transient ActivityService activityService;
@@ -266,6 +269,30 @@ public class K8sStateHelper {
     return doesValuesFileContainArtifact(applicationManifest);
   }
 
+  public boolean doManifestsUseArtifact(String appId, String serviceId, String infraDefinitionId) {
+    InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefinitionId);
+    if (infrastructureDefinition == null) {
+      throw new InvalidRequestException(
+          format("Infra mapping not found for appId %s infraMappingId %s", appId, infraDefinitionId));
+    }
+
+    ApplicationManifest applicationManifest = applicationManifestService.getK8sManifestByServiceId(appId, serviceId);
+    if (doesValuesFileContainArtifact(applicationManifest)) {
+      return true;
+    }
+
+    applicationManifest =
+        applicationManifestService.getByEnvId(appId, infrastructureDefinition.getEnvId(), AppManifestKind.VALUES);
+    if (doesValuesFileContainArtifact(applicationManifest)) {
+      return true;
+    }
+
+    applicationManifest = applicationManifestService.getByEnvAndServiceId(
+        appId, infrastructureDefinition.getEnvId(), serviceId, AppManifestKind.VALUES);
+
+    return doesValuesFileContainArtifact(applicationManifest);
+  }
+
   private boolean doesValuesFileContainArtifact(ApplicationManifest applicationManifest) {
     if (applicationManifest != null && StoreType.Local.equals(applicationManifest.getStoreType())) {
       ManifestFile manifestFile =
@@ -285,15 +312,32 @@ public class K8sStateHelper {
           format("Infra mapping not found for appId %s infraMappingId %s", appId, infraMappingId));
     }
 
-    ApplicationManifest applicationManifest =
-        applicationManifestService.getK8sManifestByServiceId(appId, infraMapping.getServiceId());
+    updateManifestsArtifactVariableNames(appId, serviceArtifactVariableNames, workflowVariableNames,
+        infraMapping.getServiceId(), infraMapping.getEnvId());
+  }
+
+  public void updateManifestsArtifactVariableNamesInfraDefinition(String appId, String infraDefinitionId,
+      Set<String> serviceArtifactVariableNames, Set<String> workflowVariableNames, String serviceId) {
+    InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefinitionId);
+    if (infrastructureDefinition == null) {
+      throw new InvalidRequestException(
+          format("Infra Definition not found for appId %s infraDefinitionId %s", appId, infraDefinitionId));
+    }
+
+    updateManifestsArtifactVariableNames(
+        appId, serviceArtifactVariableNames, workflowVariableNames, serviceId, infrastructureDefinition.getEnvId());
+  }
+
+  public void updateManifestsArtifactVariableNames(String appId, Set<String> serviceArtifactVariableNames,
+      Set<String> workflowVariableNames, String serviceId, String envId) {
+    ApplicationManifest applicationManifest = applicationManifestService.getK8sManifestByServiceId(appId, serviceId);
     updateManifestFileVariableNames(applicationManifest, serviceArtifactVariableNames, workflowVariableNames);
 
-    applicationManifest = applicationManifestService.getByEnvId(appId, infraMapping.getEnvId(), AppManifestKind.VALUES);
+    applicationManifest = applicationManifestService.getByEnvId(appId, envId, AppManifestKind.VALUES);
     updateManifestFileVariableNames(applicationManifest, serviceArtifactVariableNames, workflowVariableNames);
 
-    applicationManifest = applicationManifestService.getByEnvAndServiceId(
-        appId, infraMapping.getEnvId(), infraMapping.getServiceId(), AppManifestKind.VALUES);
+    applicationManifest =
+        applicationManifestService.getByEnvAndServiceId(appId, envId, serviceId, AppManifestKind.VALUES);
     updateManifestFileVariableNames(applicationManifest, serviceArtifactVariableNames, workflowVariableNames);
   }
 

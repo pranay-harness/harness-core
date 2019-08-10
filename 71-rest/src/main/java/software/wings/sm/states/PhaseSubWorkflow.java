@@ -145,6 +145,13 @@ public class PhaseSubWorkflow extends SubWorkflowState {
             app.getAppId(), service.getUuid(), infrastructureDefinition.getUuid(), context);
       }
 
+      workflowExecutionService.appendInfraMappingId(
+          app.getAppId(), context.getWorkflowExecutionId(), infrastructureMapping.getUuid());
+      if (workflowStandardParams.getWorkflowElement() != null) {
+        workflowExecutionService.updateWorkflowElementWithLastGoodReleaseInfo(
+            context.getAppId(), workflowStandardParams.getWorkflowElement(), context.getWorkflowExecutionId());
+      }
+
     } else {
       if (serviceIdExpression != null) {
         if (infraMappingIdExpression == null) {

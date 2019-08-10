@@ -49,9 +49,9 @@ import com.google.inject.Singleton;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.model.Tag;
-import com.amazonaws.services.ecs.model.LaunchType;
 import com.microsoft.azure.management.compute.VirtualMachine;
 import io.harness.beans.PageRequest;
+import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.structure.EmptyPredicate;
@@ -94,7 +94,6 @@ import software.wings.beans.HostValidationResponse;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
 import software.wings.beans.InfrastructureMappingType;
-import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping;
@@ -252,6 +251,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       logger.info("Ignore validation for InfraMapping created from yaml");
       return;
     }
+    if (isNotEmpty(infraMapping.getProvisionerId())) {
+      return;
+    }
 
     if (infraMapping instanceof AwsInfrastructureMapping) {
       validateAwsInfraMapping((AwsInfrastructureMapping) infraMapping);
@@ -380,7 +382,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     String accountId = appService.getAccountIdByAppId(infraMapping.getAppId());
     yamlPushService.pushYamlChangeSet(
         accountId, null, savedInfraMapping, Type.CREATE, infraMapping.isSyncFromGit(), false);
-
     return savedInfraMapping;
   }
 
@@ -662,6 +663,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     InfrastructureMapping updatedInfraMapping = get(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
 
     boolean isRename = !updatedInfraMapping.getName().equals(savedInfraMapping.getName());
+
     yamlPushService.pushYamlChangeSet(savedInfraMapping.getAccountId(), savedInfraMapping, updatedInfraMapping,
         Type.UPDATE, infrastructureMapping.isSyncFromGit(), isRename);
 
@@ -715,31 +717,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @VisibleForTesting
   public void validateEcsInfraMapping(EcsInfrastructureMapping infraMapping) {
-    if (isNotEmpty(infraMapping.getProvisionerId())) {
-      if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infraMapping.getAccountId())) {
-        if (isEmpty(infraMapping.getRegion())) {
-          throw new InvalidRequestException("Region is required.");
-        }
-        if (isEmpty(infraMapping.getClusterName())) {
-          throw new InvalidRequestException("Cluster Name is required.");
-        }
-        if (infraMapping.getLaunchType() == LaunchType.FARGATE.toString()) {
-          if (isEmpty(infraMapping.getExecutionRole())) {
-            throw new InvalidRequestException("execution role is required with Fargate Launch Type.");
-          }
-          if (isEmpty(infraMapping.getVpcId())) {
-            throw new InvalidRequestException("vpc-id is required with Fargate Launch Type.");
-          }
-          if (isEmpty(infraMapping.getSecurityGroupIds())) {
-            throw new InvalidRequestException("security-groupIds are required with Fargate Launch Type.");
-          }
-          if (isEmpty(infraMapping.getSubnetIds())) {
-            throw new InvalidRequestException("subnet-ids are required with Fargate Launch Type.");
-          }
-        }
-      }
-      return;
-    }
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
     notNullCheck("SettingAttribute", settingAttribute, USER);
     String clusterName = infraMapping.getClusterName();
@@ -764,21 +741,18 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @VisibleForTesting
   public void validateAwsInfraMapping(AwsInfrastructureMapping infraMapping) {
-    if (infraMapping.getProvisionerId() == null
-        || featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infraMapping.getAccountId())) {
-      if (infraMapping.isProvisionInstances()) {
-        if (isEmpty(infraMapping.getAutoScalingGroupName())) {
-          throw new WingsException(INVALID_ARGUMENT)
-              .addParam("args", "Auto Scaling group must not be empty when provision instances is true.");
-        }
-        if (infraMapping.isSetDesiredCapacity() && infraMapping.getDesiredCapacity() <= 0) {
-          throw new WingsException(INVALID_ARGUMENT).addParam("args", "Desired count must be greater than zero.");
-        }
-      } else {
-        if (infraMapping.getAwsInstanceFilter() == null) {
-          throw new WingsException(INVALID_ARGUMENT)
-              .addParam("args", "Instance filter must not be null when provision instances is false.");
-        }
+    if (infraMapping.isProvisionInstances()) {
+      if (isEmpty(infraMapping.getAutoScalingGroupName())) {
+        throw new WingsException(INVALID_ARGUMENT)
+            .addParam("args", "Auto Scaling group must not be empty when provision instances is true.");
+      }
+      if (infraMapping.isSetDesiredCapacity() && infraMapping.getDesiredCapacity() <= 0) {
+        throw new WingsException(INVALID_ARGUMENT).addParam("args", "Desired count must be greater than zero.");
+      }
+    } else {
+      if (infraMapping.getAwsInstanceFilter() == null) {
+        throw new WingsException(INVALID_ARGUMENT)
+            .addParam("args", "Instance filter must not be null when provision instances is false.");
       }
     }
   }
@@ -795,14 +769,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
     if (isEmpty(namespace)) {
       throw new InvalidRequestException("Namespace can't be empty");
-    }
-    if (isNotEmpty(infraMapping.getProvisionerId())) {
-      InfrastructureProvisioner infrastructureProvisioner =
-          infrastructureProvisionerService.get(infraMapping.getAppId(), infraMapping.getProvisionerId());
-      notNullCheck(format("No provisioner found with given id : [%s]. Please check if the provisioner is not deleted.",
-                       infraMapping.getProvisionerId()),
-          infrastructureProvisioner, USER);
-      return;
     }
     KubernetesHelperService.validateNamespace(namespace);
 
@@ -888,6 +854,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         .appId(app.getUuid())
         .envId(infraMapping.getEnvId())
         .infrastructureMappingId(infraMapping.getUuid())
+        .infraStructureDefinitionId(infraMapping.getInfrastructureDefinitionId())
         .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
         .build();
   }
@@ -969,10 +936,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   private void validatePyInfraMapping(PhysicalInfrastructureMapping pyInfraMapping) {
-    if (isEmpty(pyInfraMapping.getProvisionerId())
-        || featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, pyInfraMapping.getAccountId())) {
-      pyInfraMapping.setHostNames(getUniqueHostNames(pyInfraMapping));
-    }
+    pyInfraMapping.setHostNames(getUniqueHostNames(pyInfraMapping));
   }
 
   private void validatePhysicalInfrastructureMappingWinRm(PhysicalInfrastructureMappingWinRm infraMapping) {
@@ -997,27 +961,21 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @VisibleForTesting
   public void validateAwsLambdaInfrastructureMapping(AwsLambdaInfraStructureMapping infraMapping) {
-    if (isEmpty(infraMapping.getProvisionerId())
-        || featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infraMapping.getAccountId())) {
-      if (StringUtils.isEmpty(infraMapping.getRegion())) {
-        throw new InvalidRequestException("Region is mandatory");
-      }
-      if (StringUtils.isEmpty(infraMapping.getRole())) {
-        throw new InvalidRequestException("IAM Role is mandatory");
-      }
+    if (StringUtils.isEmpty(infraMapping.getRegion())) {
+      throw new InvalidRequestException("Region is mandatory");
+    }
+    if (StringUtils.isEmpty(infraMapping.getRole())) {
+      throw new InvalidRequestException("IAM Role is mandatory");
     }
   }
 
   @VisibleForTesting
   public void validateAwsAmiInfrastructureMapping(AwsAmiInfrastructureMapping infrastructureMapping) {
-    if (isNotEmpty(infrastructureMapping.getProvisionerId())
-        && featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infrastructureMapping.getAccountId())) {
-      if (isEmpty(infrastructureMapping.getRegion())) {
-        throw new InvalidRequestException("Region is mandatory");
-      }
-      if (isEmpty(infrastructureMapping.getAutoScalingGroupName())) {
-        throw new InvalidRequestException("Auto Scaling Group is mandatory");
-      }
+    if (isEmpty(infrastructureMapping.getRegion())) {
+      throw new InvalidRequestException("Region is mandatory");
+    }
+    if (isEmpty(infrastructureMapping.getAutoScalingGroupName())) {
+      throw new InvalidRequestException("Auto Scaling Group is mandatory");
     }
   }
 
@@ -1042,6 +1000,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
 
     String accountId = appService.getAccountIdByAppId(infrastructureMapping.getAppId());
+
     yamlPushService.pushYamlChangeSet(accountId, infrastructureMapping, null, Type.DELETE, syncFromGit, false);
 
     prune(appId, infraMappingId);
@@ -1937,13 +1896,15 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     List<EncryptedDataDetail> encryptionDetails =
         secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
 
-    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                          .accountId(app.getAccountId())
-                                          .appId(app.getUuid())
-                                          .envId(infrastructureMapping.getEnvId())
-                                          .infrastructureMappingId(infraMappingId)
-                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                          .build();
+    SyncTaskContext syncTaskContext =
+        SyncTaskContext.builder()
+            .accountId(app.getAccountId())
+            .appId(app.getUuid())
+            .envId(infrastructureMapping.getEnvId())
+            .infrastructureMappingId(infraMappingId)
+            .infraStructureDefinitionId(infrastructureMapping.getInfrastructureDefinitionId())
+            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+            .build();
     ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
                                                         .settingAttribute(settingAttribute)
                                                         .containerServiceName(containerServiceName)
@@ -2169,5 +2130,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           .collect(toList());
     }
     return new ArrayList<>();
+  }
+
+  @Override
+  public List<InfrastructureMapping> listInfraMappings(String appId, String envId) {
+    PageRequest pageRequest = PageRequestBuilder.aPageRequest()
+                                  .addFilter(InfrastructureMappingKeys.appId, Operator.EQ, appId)
+                                  .addFilter(InfrastructureMappingKeys.envId, Operator.EQ, envId)
+                                  .build();
+    return list(pageRequest);
   }
 }

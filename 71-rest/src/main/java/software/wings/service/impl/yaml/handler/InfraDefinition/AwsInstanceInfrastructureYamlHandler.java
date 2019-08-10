@@ -23,16 +23,18 @@ public class AwsInstanceInfrastructureYamlHandler
   @Override
   public Yaml toYaml(AwsInstanceInfrastructure bean, String appId) {
     SettingAttribute cloudProvider = settingsService.get(bean.getCloudProviderId());
+    SettingAttribute hostNameConnectionAttr = settingsService.get(bean.getHostConnectionAttrs());
     return Yaml.builder()
         .autoScalingGroupName(bean.getAutoScalingGroupName())
         .awsInstanceFilter(bean.getAwsInstanceFilter())
         .desiredCapacity(bean.getDesiredCapacity())
-        .hostConnectionAttrs(bean.getHostConnectionAttrs())
         .hostNameConvention(bean.getHostNameConvention())
         .loadBalancerName(bean.getLoadBalancerId())
         .region(bean.getRegion())
         .cloudProviderName(cloudProvider.getName())
+        .hostConnectionAttrsName(hostNameConnectionAttr.getName())
         .type(InfrastructureType.AWS_INSTANCE)
+        .expressions(bean.getExpressions())
         .build();
   }
 
@@ -48,16 +50,21 @@ public class AwsInstanceInfrastructureYamlHandler
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
     SettingAttribute cloudProvider = settingsService.getSettingAttributeByName(accountId, yaml.getCloudProviderName());
+    SettingAttribute hostConnectionAttr =
+        settingsService.getSettingAttributeByName(accountId, yaml.getHostConnectionAttrsName());
     notNullCheck(format("Cloud Provider with name %s does not exist", yaml.getCloudProviderName()), cloudProvider);
+    notNullCheck(format("Connection Attribute with name %s does not exist", yaml.getHostConnectionAttrsName()),
+        hostConnectionAttr);
     bean.setCloudProviderId(cloudProvider.getUuid());
     bean.setAutoScalingGroupName(yaml.getAutoScalingGroupName());
     bean.setAwsInstanceFilter(yaml.getAwsInstanceFilter());
     bean.setDesiredCapacity(yaml.getDesiredCapacity());
-    bean.setHostConnectionAttrs(yaml.getHostConnectionAttrs());
+    bean.setHostConnectionAttrs(hostConnectionAttr.getUuid());
     bean.setHostNameConvention(yaml.getHostNameConvention());
     bean.setLoadBalancerName(yaml.getLoadBalancerName());
     bean.setLoadBalancerId(yaml.getLoadBalancerName());
     bean.setRegion(yaml.getRegion());
+    bean.setExpressions(yaml.getExpressions());
   }
 
   @Override

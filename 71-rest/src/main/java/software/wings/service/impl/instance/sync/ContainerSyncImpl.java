@@ -83,13 +83,15 @@ public class ContainerSyncImpl implements ContainerSync {
 
         Application app = appService.get(infrastructureMapping.getAppId());
 
-        SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                              .accountId(app.getAccountId())
-                                              .appId(app.getUuid())
-                                              .envId(infrastructureMapping.getEnvId())
-                                              .infrastructureMappingId(infrastructureMapping.getUuid())
-                                              .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 2)
-                                              .build();
+        SyncTaskContext syncTaskContext =
+            SyncTaskContext.builder()
+                .accountId(app.getAccountId())
+                .appId(app.getUuid())
+                .envId(infrastructureMapping.getEnvId())
+                .infrastructureMappingId(infrastructureMapping.getUuid())
+                .infraStructureDefinitionId(infrastructureMapping.getInfrastructureDefinitionId())
+                .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 2)
+                .build();
         ContainerServiceParams containerServiceParams =
             ContainerServiceParams.builder()
                 .settingAttribute(settingAttribute)
@@ -139,13 +141,15 @@ public class ContainerSyncImpl implements ContainerSync {
         ContainerServiceParams containerServiceParams = getContainerServiceParams(
             containerInfraMapping, containerMetadata.getContainerServiceName(), containerMetadata.getNamespace());
         Application app = appService.get(containerInfraMapping.getAppId());
-        SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                              .accountId(app.getAccountId())
-                                              .appId(app.getUuid())
-                                              .envId(containerInfraMapping.getEnvId())
-                                              .infrastructureMappingId(containerInfraMapping.getUuid())
-                                              .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 2)
-                                              .build();
+        SyncTaskContext syncTaskContext =
+            SyncTaskContext.builder()
+                .accountId(app.getAccountId())
+                .appId(app.getUuid())
+                .envId(containerInfraMapping.getEnvId())
+                .infrastructureMappingId(containerInfraMapping.getUuid())
+                .infraStructureDefinitionId(containerInfraMapping.getInfrastructureDefinitionId())
+                .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 2)
+                .build();
 
         result.addAll(delegateProxyFactory.get(ContainerService.class, syncTaskContext)
                           .getContainerInfos(containerServiceParams));
@@ -177,13 +181,15 @@ public class ContainerSyncImpl implements ContainerSync {
     ContainerServiceParams containerServiceParams = getContainerServiceParams(containerInfraMapping, null, namespace);
 
     Application app = appService.get(containerInfraMapping.getAppId());
-    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                          .accountId(app.getAccountId())
-                                          .appId(app.getUuid())
-                                          .envId(containerInfraMapping.getEnvId())
-                                          .infrastructureMappingId(containerInfraMapping.getUuid())
-                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 2)
-                                          .build();
+    SyncTaskContext syncTaskContext =
+        SyncTaskContext.builder()
+            .accountId(app.getAccountId())
+            .appId(app.getUuid())
+            .envId(containerInfraMapping.getEnvId())
+            .infrastructureMappingId(containerInfraMapping.getUuid())
+            .infraStructureDefinitionId(containerInfraMapping.getInfrastructureDefinitionId())
+            .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 2)
+            .build();
 
     return delegateProxyFactory.get(ContainerService.class, syncTaskContext)
         .getControllerNames(containerServiceParams, labels);

@@ -23,12 +23,14 @@ import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
@@ -56,6 +58,7 @@ public class PruneEntityListener extends QueueListener<PruneEvent> {
   @Inject private WorkflowService workflowService;
   @Inject private ExecutorService executorService;
   @Inject private HarnessTagService harnessTagService;
+  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
 
   public PruneEntityListener() {
     super(true);
@@ -107,6 +110,8 @@ public class PruneEntityListener extends QueueListener<PruneEvent> {
         hostService.pruneDescendingEntities(appId, entityId);
       } else if (clz.equals(InfrastructureMapping.class)) {
         infrastructureMappingService.pruneDescendingEntities(appId, entityId);
+      } else if (clz.equals(InfrastructureDefinition.class)) {
+        infrastructureDefinitionService.pruneDescendingEntities(appId, entityId);
       } else if (clz.equals(Pipeline.class)) {
         pruneTagLinks = true;
         pipelineService.pruneDescendingEntities(appId, entityId);

@@ -11,14 +11,17 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.DeploymentType;
 import software.wings.infra.InfraDefinitionDetail;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -47,10 +50,20 @@ public class InfrastructureDefinitionResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ENV, action = READ)
-  public RestResponse<PageResponse<InfrastructureDefinition>> list(
-      @BeanParam PageRequest<InfrastructureDefinition> pageRequest, @QueryParam("serviceId") String serviceId,
-      @QueryParam("appId") String appId) {
-    return new RestResponse<>(infrastructureDefinitionService.list(pageRequest, serviceId, appId));
+  public RestResponse<PageResponse<InfrastructureDefinition>> list(@NotEmpty @QueryParam("appId") String appId,
+      @NotEmpty @QueryParam("envId") String envId, @QueryParam("serviceId") String serviceId) {
+    return new RestResponse<>(infrastructureDefinitionService.list(appId, envId, serviceId));
+  }
+
+  @GET
+  @Path("details")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ)
+  public RestResponse<PageResponse<InfraDefinitionDetail>> listDetails(
+      @BeanParam PageRequest<InfrastructureDefinition> pageRequest, @NotEmpty @QueryParam("appId") String appId,
+      @NotEmpty @QueryParam("envId") String envId) {
+    return new RestResponse<>(infrastructureDefinitionService.listInfraDefinitionDetail(pageRequest, appId, envId));
   }
 
   @POST
@@ -116,5 +129,89 @@ public class InfrastructureDefinitionResource {
   @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<Map<DeploymentType, List<SettingVariableTypes>>> infrastructureTypes() {
     return new RestResponse<>(infrastructureDefinitionService.getDeploymentTypeCloudProviderOptions());
+  }
+
+  @GET
+  @Path("{infraDefinitionId}/hosts")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<List<String>> listHosts(
+      @QueryParam("appId") String appId, @PathParam("infraDefinitionId") String infraDefinitionId) {
+    return new RestResponse<>(infrastructureDefinitionService.listHostDisplayNames(appId, infraDefinitionId, null));
+  }
+
+  @GET
+  @Path("{infraDefinitionId}/iam-roles")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<Map<String, String>> getInstanceRoles(
+      @QueryParam("appId") String appId, @PathParam("infraDefinitionId") String infraDefinitionId) {
+    return new RestResponse<>(infrastructureDefinitionService.listAwsIamRoles(appId, infraDefinitionId));
+  }
+
+  @GET
+  @Path("{infraDefinitionId}/load-balancers")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<Map<String, String>> getLoadBalancers(
+      @QueryParam("appId") String appId, @PathParam("infraDefinitionId") String infraDefinitionId) {
+    return new RestResponse<>(infrastructureDefinitionService.listLoadBalancers(appId, infraDefinitionId));
+  }
+
+  @GET
+  @Path("{infraDefinitionId}/aws-elastic-balancers")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<Map<String, String>> getAwsLoadBalancers(
+      @QueryParam("appId") String appId, @PathParam("infraDefinitionId") String infraDefinitionId) {
+    return new RestResponse<>(infrastructureDefinitionService.listElasticLoadBalancers(appId, infraDefinitionId));
+  }
+
+  @GET
+  @Path("{infraDefinitionId}/aws-network-balancers")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<Map<String, String>> getAwsNetworkLoadBalancers(
+      @QueryParam("appId") String appId, @PathParam("infraDefinitionId") String infraDefinitionId) {
+    return new RestResponse<>(infrastructureDefinitionService.listNetworkLoadBalancers(appId, infraDefinitionId));
+  }
+
+  @GET
+  @Path("{infraDefinitionId}/load-balancers/{loadbalancerName}/target-groups")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<Map<String, String>> getTargetGroups(@QueryParam("appId") String appId,
+      @PathParam("infraDefinitionId") String infraDefinitionId,
+      @PathParam("loadbalancerName") String loadbalancerName) {
+    return new RestResponse<>(
+        infrastructureDefinitionService.listTargetGroups(appId, infraDefinitionId, loadbalancerName));
+  }
+
+  @GET
+  @Path("{infraDefinitionId}/load-balancers/{loadbalancerName}/listeners")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<List<AwsElbListener>> getListeners(@QueryParam("appId") String appId,
+      @PathParam("infraDefinitionId") String infraDefinitionId,
+      @PathParam("loadbalancerName") String loadbalancerName) {
+    return new RestResponse<>(
+        infrastructureDefinitionService.listListeners(appId, infraDefinitionId, loadbalancerName));
+  }
+
+  @GET
+  @Path("{infraDefinitionId}/hosted-zones")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<List<AwsRoute53HostedZoneData>> getHostedZones(
+      @QueryParam("appId") String appId, @PathParam("infraDefinitionId") String infraDefinitionId) {
+    return new RestResponse<>(infrastructureDefinitionService.listHostedZones(appId, infraDefinitionId));
   }
 }

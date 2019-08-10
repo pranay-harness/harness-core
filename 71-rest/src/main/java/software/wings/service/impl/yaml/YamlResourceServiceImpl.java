@@ -18,6 +18,7 @@ import com.google.inject.Singleton;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.persistence.UuidAccess;
 import io.harness.rest.RestResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -46,6 +47,7 @@ import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
+import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
@@ -661,17 +663,27 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       String entityId = ((Base) entity).getUuid();
       // Validator.notNullCheck("No account found for appId:" + appId, accountId);
 
-      entity = preProcessEntity(appId, entityId, entity);
-      YamlType yamlType = yamlHandlerFactory.obtainEntityYamlType(entity);
-      String entityName = yamlHandlerFactory.obtainEntityName(entity);
-      String yamlHandlerSubType = yamlHandlerFactory.obtainYamlHandlerSubtype(entity);
-      BaseYaml yaml = yamlHandlerFactory.getYamlHandler(yamlType, yamlHandlerSubType).toYaml(entity, appId);
+      return getYamlPayloadRestResponseForEntity(accountId, entity, appId, entityId);
+    } else if (entity instanceof ApplicationAccess && entity instanceof UuidAccess) {
+      String appId = ((ApplicationAccess) entity).getAppId();
+      String entityId = ((UuidAccess) entity).getUuid();
 
-      return YamlHelper.getYamlRestResponse(yamlGitSyncService, entityId, accountId, yaml, entityName + YAML_EXTENSION);
+      return getYamlPayloadRestResponseForEntity(accountId, entity, appId, entityId);
     }
 
     throw new InvalidRequestException(
         "Unhandled case while getting entity yaml version for entity type " + entity.getClass().getSimpleName());
+  }
+
+  private <T> RestResponse<YamlPayload> getYamlPayloadRestResponseForEntity(
+      String accountId, T entity, String appId, String entityId) {
+    entity = preProcessEntity(appId, entityId, entity);
+    YamlType yamlType = yamlHandlerFactory.obtainEntityYamlType(entity);
+    String entityName = yamlHandlerFactory.obtainEntityName(entity);
+    String yamlHandlerSubType = yamlHandlerFactory.obtainYamlHandlerSubtype(entity);
+    BaseYaml yaml = yamlHandlerFactory.getYamlHandler(yamlType, yamlHandlerSubType).toYaml(entity, appId);
+
+    return YamlHelper.getYamlRestResponse(yamlGitSyncService, entityId, accountId, yaml, entityName + YAML_EXTENSION);
   }
 
   private <T> T preProcessEntity(String appId, String entityId, T entity) {

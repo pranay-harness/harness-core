@@ -24,6 +24,7 @@ public class Host extends Base {
   @NotEmpty private String envId;
   @Indexed private String serviceTemplateId;
   private String infraMappingId;
+  private String infraDefinitionId;
   private String computeProviderId;
   @Indexed @NotEmpty private String hostName;
   // In the case of EC2, publicDns could be either the public or private DNS name, depending on the setting in AWS_SSH
@@ -69,6 +70,24 @@ public class Host extends Base {
    */
   public void setInfraMappingId(String infraMappingId) {
     this.infraMappingId = infraMappingId;
+  }
+
+  /**
+   * Gets infra mapping id.
+   *
+   * @return the infra mapping id
+   */
+  public String getInfraDefinitionId() {
+    return infraDefinitionId;
+  }
+
+  /**
+   * Sets infra mapping id.
+   *
+   * @param infraDefinitionId the infra mapping id
+   */
+  public void setInfraDefinitionId(String infraDefinitionId) {
+    this.infraDefinitionId = infraDefinitionId;
   }
 
   /**
@@ -255,6 +274,7 @@ public class Host extends Base {
     private String envId;
     private String serviceTemplateId;
     private String infraMappingId;
+    private String infraDefinitionId;
     private String computeProviderId;
     private String hostName;
     private String publicDns;
@@ -311,6 +331,17 @@ public class Host extends Base {
      */
     public Builder withInfraMappingId(String infraMappingId) {
       this.infraMappingId = infraMappingId;
+      return this;
+    }
+
+    /**
+     * With infra mapping id builder.
+     *
+     * @param infraDefinitionId the infra mapping id
+     * @return the builder
+     */
+    public Builder withInfraDefinitionId(String infraDefinitionId) {
+      this.infraDefinitionId = infraDefinitionId;
       return this;
     }
 
@@ -466,6 +497,7 @@ public class Host extends Base {
           .withEnvId(envId)
           .withServiceTemplateId(serviceTemplateId)
           .withInfraMappingId(infraMappingId)
+          .withInfraDefinitionId(infraDefinitionId)
           .withComputeProviderId(computeProviderId)
           .withHostName(hostName)
           .withHostConnAttr(hostConnAttr)

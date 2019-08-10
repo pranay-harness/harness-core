@@ -49,7 +49,7 @@ public class AzureKubernetesService
     return AzureKubernetesInfrastructureMapping.class;
   }
 
-  public String getCloudProviderInfrastructureType() {
+  public String getInfrastructureType() {
     return AZURE_KUBERNETES;
   }
 

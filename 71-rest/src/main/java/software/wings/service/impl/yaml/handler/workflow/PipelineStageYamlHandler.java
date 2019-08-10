@@ -4,11 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.beans.EntityType.CF_AWS_CONFIG_ID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
-import static software.wings.beans.EntityType.HELM_GIT_CONFIG_ID;
-import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
-import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.PipelineStage.Yaml;
 import static software.wings.expression.ManagerExpressionEvaluator.matchesVariablePattern;
 import static software.wings.utils.Validator.notNullCheck;
@@ -24,25 +20,19 @@ import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.PipelineStage.WorkflowVariable;
-import software.wings.beans.Service;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.service.impl.yaml.WorkflowYAMLHelper;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;
@@ -61,9 +51,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
   @Inject YamlHelper yamlHelper;
   @Inject WorkflowService workflowService;
   @Inject EnvironmentService environmentService;
-  @Inject ServiceResourceService serviceResourceService;
-  @Inject InfrastructureMappingService infrastructureMappingService;
-  @Inject SettingsService settingsService;
+  @Inject WorkflowYAMLHelper workflowYAMLHelper;
 
   private PipelineStage toBean(ChangeContext<Yaml> context) {
     Yaml yaml = context.getYaml();
@@ -101,66 +89,11 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
           String variableName = variable.getName();
           String variableValue = variable.getValue();
           if (entityType != null) {
-            if (ENVIRONMENT.name().equals(entityType)) {
-              // This is already taken care in resolveEnvironmentId method
-              return;
-            } else if (SERVICE.name().equals(entityType)) {
-              if (matchesVariablePattern(variableValue)) {
-                workflowVariables.put(variableName, variableValue);
-                return;
-              }
-              Service service = serviceResourceService.getServiceByName(appId, variableValue, false);
-              if (service != null) {
-                workflowVariables.put(variableName, service.getUuid());
-              } else {
-                notNullCheck("Service [" + variableValue + "] does not exist", service, USER);
-              }
-            } else if (INFRASTRUCTURE_MAPPING.name().equals(entityType)) {
-              if (matchesVariablePattern(variableValue)) {
-                workflowVariables.put(variableName, variableValue);
-                return;
-              }
-              InfrastructureMapping infrastructureMapping =
-                  infrastructureMappingService.getInfraMappingByName(appId, envId, variableValue);
-              if (infrastructureMapping != null) {
-                workflowVariables.put(variableName, infrastructureMapping.getUuid());
-              } else {
-                notNullCheck("Service Infrastructure [" + variableValue + "] does not exist for the environment",
-                    infrastructureMapping, USER);
-              }
-            } else if (CF_AWS_CONFIG_ID.name().equals(entityType)) {
-              if (matchesVariablePattern(variableValue)) {
-                workflowVariables.put(variableName, variableValue);
-                return;
-              }
-              SettingAttribute settingAttribute = settingsService.fetchSettingAttributeByName(
-                  change.getAccountId(), variableValue, SettingVariableTypes.AWS);
-              if (settingAttribute != null) {
-                workflowVariables.put(variableName, settingAttribute.getUuid());
-              } else {
-                notNullCheck(
-                    "Aws Cloud Provider [" + variableValue + "] associated to the Cloud Formation State does not exist",
-                    settingAttribute, USER);
-              }
-            } else if (HELM_GIT_CONFIG_ID.name().equals(entityType)) {
-              if (matchesVariablePattern(variableValue)) {
-                workflowVariables.put(variableName, variableValue);
-                return;
-              }
-              SettingAttribute settingAttribute = settingsService.fetchSettingAttributeByName(
-                  change.getAccountId(), variableValue, SettingVariableTypes.GIT);
-              if (settingAttribute != null) {
-                workflowVariables.put(variableName, settingAttribute.getUuid());
-              } else {
-                notNullCheck("Git Connector [" + variableValue + "] associated to the Helm State does not exist",
-                    settingAttribute, USER);
-              }
-            } else {
-              workflowVariables.put(variableName, variableValue);
+            String workflowVariableValueForBean = workflowYAMLHelper.getWorkflowVariableValueBean(
+                change.getAccountId(), envId, appId, entityType, variableValue);
+            if (workflowVariableValueForBean != null) {
+              workflowVariables.put(variableName, workflowVariableValueForBean);
             }
-          } else {
-            // Non entity variables
-            workflowVariables.put(variableName, variableValue);
           }
         });
       }
@@ -270,43 +203,9 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
                   .entityType(entityType != null ? entityType.name() : null)
                   .build();
           String entryValue = entry.getValue();
-          if (matchesVariablePattern(entryValue)) {
-            workflowVariable.setValue(entryValue);
-            pipelineStageVariables.add(workflowVariable);
-            continue;
-          }
-          if (ENVIRONMENT.equals(entityType)) {
-            Environment environment = environmentService.get(appId, entryValue, false);
-            if (environment != null) {
-              workflowVariable.setValue(environment.getName());
-              pipelineStageVariables.add(workflowVariable);
-            }
-          } else if (SERVICE.equals(entityType)) {
-            Service service = serviceResourceService.get(appId, entryValue, false);
-            if (service != null) {
-              workflowVariable.setValue(service.getName());
-              pipelineStageVariables.add(workflowVariable);
-            }
-          } else if (INFRASTRUCTURE_MAPPING.equals(entityType)) {
-            InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, entryValue);
-            if (infrastructureMapping != null) {
-              workflowVariable.setValue(infrastructureMapping.getName());
-              pipelineStageVariables.add(workflowVariable);
-            }
-          } else if (CF_AWS_CONFIG_ID.equals(entityType)) {
-            SettingAttribute settingAttribute = settingsService.get(entryValue);
-            if (settingAttribute != null) {
-              workflowVariable.setValue(settingAttribute.getName());
-              pipelineStageVariables.add(workflowVariable);
-            }
-          } else if (HELM_GIT_CONFIG_ID.equals(entityType)) {
-            SettingAttribute settingAttribute = settingsService.get(entryValue);
-            if (settingAttribute != null) {
-              workflowVariable.setValue(settingAttribute.getName());
-              pipelineStageVariables.add(workflowVariable);
-            }
-          } else {
-            workflowVariable.setValue(entryValue);
+          String variableValue = workflowYAMLHelper.getWorkflowVariableValueYaml(appId, entryValue, entityType);
+          if (variableValue != null) {
+            workflowVariable.setValue(variableValue);
             pipelineStageVariables.add(workflowVariable);
           }
         }
