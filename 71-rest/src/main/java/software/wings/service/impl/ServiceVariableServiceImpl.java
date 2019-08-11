@@ -52,6 +52,7 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -86,6 +87,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private AuthHandler authHandler;
+  @Inject private ArtifactStreamService artifactStreamService;
 
   @Override
   public PageResponse<ServiceVariable> list(PageRequest<ServiceVariable> request) {

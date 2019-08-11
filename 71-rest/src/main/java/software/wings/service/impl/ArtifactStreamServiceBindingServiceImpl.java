@@ -22,6 +22,8 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.ServiceVariableKeys;
 import software.wings.beans.ServiceVariable.Type;
+import software.wings.beans.Variable;
+import software.wings.beans.VariableType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamBinding;
@@ -63,7 +65,11 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
     ArtifactStreamBinding existingArtifactStreamBinding =
         getInternal(appId, serviceId, artifactStreamBinding.getName());
     if (existingArtifactStreamBinding != null) {
-      throw new InvalidRequestException("Artifact stream binding already exists", USER);
+      throw new InvalidRequestException(
+          format(
+              "Artifact variable [%s] already exists. Please specify a unique name for artifact variable and try again.",
+              artifactStreamBinding.getName()),
+          USER);
     }
 
     List<String> allowedList = new ArrayList<>();
@@ -159,7 +165,8 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
               }
 
               Artifact lastCollectedArtifact = artifactService.fetchLastCollectedArtifact(artifactStream);
-              artifactStreams.add(ArtifactStreamSummary.fromArtifactStream(artifactStream, lastCollectedArtifact));
+              artifactStreams.add(
+                  ArtifactStreamSummary.prepareSummaryFromArtifactStream(artifactStream, lastCollectedArtifact));
             }
           }
 
@@ -194,7 +201,8 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
         }
 
         Artifact lastCollectedArtifact = artifactService.fetchLastCollectedArtifact(artifactStream);
-        artifactStreams.add(ArtifactStreamSummary.fromArtifactStream(artifactStream, lastCollectedArtifact));
+        artifactStreams.add(
+            ArtifactStreamSummary.prepareSummaryFromArtifactStream(artifactStream, lastCollectedArtifact));
       }
     }
 
@@ -528,5 +536,51 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
       return false;
     }
     return featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId);
+  }
+
+  @Override
+  public void processServiceVariables(List<ServiceVariable> serviceVariables) {
+    if (isNotEmpty(serviceVariables)) {
+      for (ServiceVariable serviceVariable : serviceVariables) {
+        List<ArtifactStreamSummary> artifactStreams = new ArrayList<>();
+        if (Type.ARTIFACT.equals(serviceVariable.getType())) {
+          if (isNotEmpty(serviceVariable.getAllowedList())) {
+            for (String artifactStreamId : serviceVariable.getAllowedList()) {
+              ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+              if (artifactStream == null) {
+                continue;
+              }
+              Artifact lastCollectedArtifact = artifactService.fetchLastCollectedArtifact(artifactStream);
+              artifactStreams.add(
+                  ArtifactStreamSummary.prepareSummaryFromArtifactStream(artifactStream, lastCollectedArtifact));
+            }
+            serviceVariable.setArtifactStreamSummaries(artifactStreams);
+          }
+        }
+      }
+    }
+  }
+
+  @Override
+  public void processVariables(List<Variable> variables) {
+    if (isNotEmpty(variables)) {
+      for (Variable variable : variables) {
+        List<ArtifactStreamSummary> artifactStreams = new ArrayList<>();
+        if (VariableType.ARTIFACT.equals(variable.getType())) {
+          if (isNotEmpty(variable.getAllowedList())) {
+            for (String artifactStreamId : variable.getAllowedList()) {
+              ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+              if (artifactStream == null) {
+                continue;
+              }
+              Artifact lastCollectedArtifact = artifactService.fetchLastCollectedArtifact(artifactStream);
+              artifactStreams.add(
+                  ArtifactStreamSummary.prepareSummaryFromArtifactStream(artifactStream, lastCollectedArtifact));
+            }
+            variable.setArtifactStreamSummaries(artifactStreams);
+          }
+        }
+      }
+    }
   }
 }

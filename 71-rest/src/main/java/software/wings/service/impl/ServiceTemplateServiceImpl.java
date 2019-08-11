@@ -46,6 +46,7 @@ import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
@@ -86,6 +87,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Inject private HostService hostService;
   @Inject private AppService appService;
   @Inject private ApplicationManifestService applicationManifestService;
+  @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Transient @Inject private transient SecretManager secretManager;
 
   @Transient @Inject private transient ManagerDecryptionService managerDecryptionService;
@@ -353,6 +355,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       ServiceTemplate template, EncryptedFieldMode encryptedFieldMode) {
     List<ServiceVariable> serviceVariables = serviceVariableService.getServiceVariablesForEntity(
         template.getAppId(), template.getServiceId(), encryptedFieldMode);
+    artifactStreamServiceBindingService.processServiceVariables(serviceVariables);
     template.setServiceVariables(serviceVariables);
 
     List<ServiceVariable> overrideServiceVariables = serviceVariableService.getServiceVariablesByTemplate(
@@ -368,6 +371,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
             serviceVariablesMap.get(serviceVariable.getParentServiceVariableId()));
       }
     });
+    artifactStreamServiceBindingService.processServiceVariables(overrideServiceVariables);
     template.setServiceVariablesOverrides(overrideServiceVariables);
   }
 

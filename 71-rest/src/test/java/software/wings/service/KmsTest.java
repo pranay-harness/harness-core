@@ -1348,7 +1348,7 @@ public class KmsTest extends WingsBaseTest {
 
     serviceVariable.setValue(secretId.toCharArray());
     String savedAttributeId = serviceVariableResource.save(appId, serviceVariable).getResource().getUuid();
-    ServiceVariable savedAttribute = serviceVariableResource.get(appId, savedAttributeId).getResource();
+    ServiceVariable savedAttribute = serviceVariableResource.get(appId, savedAttributeId, false).getResource();
     assertNotNull(savedAttribute.getSecretTextName());
     serviceVariable.setSecretTextName(savedAttribute.getSecretTextName());
     assertEquals(serviceVariable, savedAttribute);

@@ -40,8 +40,8 @@ public class NameValuePair {
   public abstract static class AbstractYaml extends BaseYaml {
     private String name;
     private String value;
-    private String valueType;
-    private List<AllowedValueYaml> allowedList = new ArrayList<>();
+    @EqualsAndHashCode.Exclude private String valueType;
+    @EqualsAndHashCode.Exclude private List<AllowedValueYaml> allowedList = new ArrayList<>();
 
     public AbstractYaml(String name, String value, String valueType, List<AllowedValueYaml> allowedList) {
       this.name = name;

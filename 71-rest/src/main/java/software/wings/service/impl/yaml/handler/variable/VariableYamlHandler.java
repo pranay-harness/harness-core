@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.variable;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -58,6 +59,10 @@ public class VariableYamlHandler extends BaseYamlHandler<Variable.Yaml, Variable
             .value(yaml.getValue())
             .allowedValues(String.join(",", allowedList)) // convert to comma separated and set this
             .build();
+      } else {
+        throw new WingsException(
+            format("Variable type ARTIFACT not supported, skipping processing of variable [%s]", yaml.getName()),
+            WingsException.USER);
       }
     }
     return VariableBuilder.aVariable()
@@ -104,7 +109,9 @@ public class VariableYamlHandler extends BaseYamlHandler<Variable.Yaml, Variable
               .build();
         }
       } else {
-        logger.warn("Variable type ARTIFACT not supported, skipping processing of variable {}", bean.getName());
+        throw new WingsException(
+            format("Variable type ARTIFACT not supported, skipping processing of variable [%s]", bean.getName()),
+            WingsException.USER);
       }
     }
     return Yaml.builder()

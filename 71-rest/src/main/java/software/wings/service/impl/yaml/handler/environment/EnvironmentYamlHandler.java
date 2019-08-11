@@ -19,6 +19,7 @@ import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
+import software.wings.beans.AllowedValueYaml;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -26,6 +27,7 @@ import software.wings.beans.Environment.Builder;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Environment.VariableOverrideYaml;
 import software.wings.beans.Environment.Yaml;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -33,10 +35,13 @@ import software.wings.beans.ServiceVariable.OverrideType;
 import software.wings.beans.ServiceVariable.ServiceVariableBuilder;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.service.impl.yaml.handler.ArtifactVariableYamlHelper;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
+import software.wings.service.impl.yaml.handler.ServiceVariableYamlHelper;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
@@ -59,13 +64,16 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
   @Inject ServiceVariableService serviceVariableService;
   @Inject ServiceResourceService serviceResourceService;
   @Inject ServiceTemplateService serviceTemplateService;
+  @Inject FeatureFlagService featureFlagService;
+  @Inject ArtifactVariableYamlHelper artifactVariableYamlHelper;
   @Inject private AppService appService;
+  @Inject private ServiceVariableYamlHelper serviceVariableYamlHelper;
 
   @Override
   public Environment.Yaml toYaml(Environment environment, String appId) {
     List<ServiceVariable> serviceVariableList = getAllVariableOverridesForEnv(environment);
     List<VariableOverrideYaml> variableOverrideYamlList =
-        convertToVariableOverrideYaml(serviceVariableList, environment.getName());
+        convertToVariableOverrideYaml(serviceVariableList, environment.getName(), environment.getAccountId());
 
     Yaml yaml = Yaml.builder()
                     .description(environment.getDescription())
@@ -98,15 +106,16 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
   }
 
   private List<VariableOverrideYaml> convertToVariableOverrideYaml(
-      List<ServiceVariable> serviceVariables, String envName) {
+      List<ServiceVariable> serviceVariables, String envName, String accountId) {
     if (serviceVariables == null) {
       return Lists.newArrayList();
     }
 
     return serviceVariables.stream()
         .map(serviceVariable -> {
+          List<AllowedValueYaml> allowedValueYamlList = new ArrayList<>();
           Type variableType = serviceVariable.getType();
-          String value;
+          String value = null;
           if (Type.ENCRYPTED_TEXT == variableType) {
             try {
               value = secretManager.getEncryptedYamlRef(serviceVariable);
@@ -115,6 +124,8 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
             }
           } else if (Type.TEXT == variableType) {
             value = String.valueOf(serviceVariable.getValue());
+          } else if (Type.ARTIFACT == variableType) {
+            serviceVariableYamlHelper.convertArtifactVariableToYaml(accountId, serviceVariable, allowedValueYamlList);
           } else {
             String msg = "Invalid value type: " + variableType + ". for variable: " + serviceVariable.getName()
                 + " in env: " + envName;
@@ -129,6 +140,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
               .value(value)
               .name(serviceVariable.getName())
               .serviceName(parentServiceName)
+              .allowedValueYamls(allowedValueYamlList)
               .build();
         })
         .collect(toList());
@@ -289,6 +301,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
       }
     }
 
+    String accountId = appService.get(appId).getAccountId();
     for (VariableOverrideYaml configVar : configVarsToAdd) {
       // save the new variables
       serviceVariableService.save(createNewVariableOverride(appId, envId, configVar), syncFromGit);
@@ -307,6 +320,14 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
             serviceVar.setEncryptedValue(value);
           } else if (serviceVar.getType() == Type.TEXT) {
             serviceVar.setValue(value != null ? value.toCharArray() : null);
+          } else if (serviceVar.getType() == Type.ARTIFACT) {
+            if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+              List<String> allowedList =
+                  artifactVariableYamlHelper.computeAllowedList(accountId, configVar.getAllowedList());
+              serviceVar.setAllowedList(allowedList);
+            } else {
+              logger.warn("Yaml doesn't support {} type service variables", configVar.getValueType());
+            }
           } else {
             logger.warn("Yaml doesn't support LB type service variables");
             continue;
@@ -368,14 +389,23 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
 
     if ("TEXT".equals(overrideYaml.getValueType())) {
       variableBuilder.type(Type.TEXT);
-      variableBuilder.value(overrideYaml.getValue().toCharArray());
+      variableBuilder.value(overrideYaml.getValue() != null ? overrideYaml.getValue().toCharArray() : null);
     } else if ("ENCRYPTED_TEXT".equals(overrideYaml.getValueType())) {
       variableBuilder.type(Type.ENCRYPTED_TEXT);
       variableBuilder.encryptedValue(overrideYaml.getValue());
-      variableBuilder.value(overrideYaml.getValue().toCharArray());
+      variableBuilder.value(overrideYaml.getValue() != null ? overrideYaml.getValue().toCharArray() : null);
+    } else if ("ARTIFACT".equals(overrideYaml.getValueType())) {
+      if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+        variableBuilder.type(Type.ARTIFACT);
+        List<String> allowedList =
+            artifactVariableYamlHelper.computeAllowedList(accountId, overrideYaml.getAllowedList());
+        variableBuilder.allowedList(allowedList);
+      } else {
+        logger.warn("Yaml doesn't support {} type service variables", overrideYaml.getValueType());
+      }
     } else {
       logger.warn("Yaml doesn't support {} type service variables", overrideYaml.getValueType());
-      variableBuilder.value(overrideYaml.getValue().toCharArray());
+      variableBuilder.value(overrideYaml.getValue() != null ? overrideYaml.getValue().toCharArray() : null);
     }
 
     ServiceVariable serviceVariable = variableBuilder.build();

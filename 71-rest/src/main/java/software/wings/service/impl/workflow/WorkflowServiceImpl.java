@@ -2307,7 +2307,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                 artifactStreams.stream()
                     .map(artifactStream -> {
                       Artifact lastCollectedArtifact = artifactService.fetchLastCollectedArtifact(artifactStream);
-                      return ArtifactStreamSummary.fromArtifactStream(artifactStream, lastCollectedArtifact);
+                      return ArtifactStreamSummary.prepareSummaryFromArtifactStream(
+                          artifactStream, lastCollectedArtifact);
                     })
                     .collect(Collectors.toList()));
           }

@@ -25,6 +25,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.Collections;
@@ -105,6 +106,8 @@ public class ServiceVariable extends Base implements EncryptableSetting {
   @SchemaIgnore @Transient private transient EncryptionType encryptionType;
 
   @SchemaIgnore @Transient private transient String encryptedBy;
+
+  private transient List<ArtifactStreamSummary> artifactStreamSummaries;
 
   @Override
   @SchemaIgnore

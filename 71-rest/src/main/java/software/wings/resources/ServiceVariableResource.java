@@ -15,11 +15,14 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 
+import java.util.Collections;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -39,6 +42,7 @@ import javax.ws.rs.QueryParam;
 @Scope(ResourceType.APPLICATION)
 public class ServiceVariableResource {
   @Inject private ServiceVariableService serviceVariablesService;
+  @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private AppService appService;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private AuthHandler authHandler;
@@ -52,8 +56,13 @@ public class ServiceVariableResource {
   @GET
   @Timed
   @ExceptionMetered
-  public RestResponse<PageResponse<ServiceVariable>> list(@BeanParam PageRequest<ServiceVariable> pageRequest) {
-    return new RestResponse<>(serviceVariablesService.list(pageRequest, MASKED));
+  public RestResponse<PageResponse<ServiceVariable>> list(@BeanParam PageRequest<ServiceVariable> pageRequest,
+      @QueryParam("withArtifactStreamSummary") @DefaultValue("false") boolean withArtifactStreamSummary) {
+    PageResponse<ServiceVariable> pageResponse = serviceVariablesService.list(pageRequest, MASKED);
+    if (withArtifactStreamSummary) {
+      artifactStreamServiceBindingService.processServiceVariables(pageResponse.getResponse());
+    }
+    return new RestResponse<>(pageResponse);
   }
 
   /**
@@ -81,9 +90,13 @@ public class ServiceVariableResource {
   @Path("{serviceVariableId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<ServiceVariable> get(
-      @QueryParam("appId") String appId, @PathParam("serviceVariableId") String serviceVariableId) {
+  public RestResponse<ServiceVariable> get(@QueryParam("appId") String appId,
+      @PathParam("serviceVariableId") String serviceVariableId,
+      @QueryParam("withArtifactStreamSummary") @DefaultValue("false") boolean withArtifactStreamSummary) {
     ServiceVariable serviceVariable = serviceVariablesService.get(appId, serviceVariableId, MASKED);
+    if (withArtifactStreamSummary) {
+      artifactStreamServiceBindingService.processServiceVariables(Collections.singletonList(serviceVariable));
+    }
     return new RestResponse<>(serviceVariable);
   }
 
