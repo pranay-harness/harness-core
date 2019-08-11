@@ -105,6 +105,7 @@ public class SettingAttribute extends Base implements NameAccess {
   private UsageRestrictions usageRestrictions;
   @Transient private int artifactStreamCount;
   @Transient private List<ArtifactStreamSummary> artifactStreams;
+  private boolean sample;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore @Transient private transient EncryptionType encryptionType;
 
@@ -150,6 +151,7 @@ public class SettingAttribute extends Base implements NameAccess {
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
     private UsageRestrictions usageRestrictions;
+    private boolean sample;
 
     private Builder() {}
 
@@ -228,6 +230,11 @@ public class SettingAttribute extends Base implements NameAccess {
       return this;
     }
 
+    public Builder withSample(boolean sample) {
+      this.sample = sample;
+      return this;
+    }
+
     public Builder but() {
       return aSettingAttribute()
           .withEnvId(envId)
@@ -243,7 +250,8 @@ public class SettingAttribute extends Base implements NameAccess {
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
           .withUsageRestrictions(usageRestrictions)
-          .withConnectivityValidationAttributes(connectivityValidationAttributes);
+          .withConnectivityValidationAttributes(connectivityValidationAttributes)
+          .withSample(sample);
     }
 
     public SettingAttribute build() {
@@ -262,6 +270,7 @@ public class SettingAttribute extends Base implements NameAccess {
       settingAttribute.setLastUpdatedAt(lastUpdatedAt);
       settingAttribute.setUsageRestrictions(usageRestrictions);
       settingAttribute.setValidationAttributes(connectivityValidationAttributes);
+      settingAttribute.setSample(sample);
       return settingAttribute;
     }
   }

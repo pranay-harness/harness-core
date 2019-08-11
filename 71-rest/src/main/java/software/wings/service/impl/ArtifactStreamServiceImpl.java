@@ -40,6 +40,7 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.eraro.ErrorCode;
+import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -54,6 +55,8 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.AccountEvent;
+import software.wings.beans.AccountEventType;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
@@ -136,6 +139,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private TriggerService triggerService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
+  @Inject private EventPublishHelper eventPublishHelper;
 
   @Override
   public PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req) {
@@ -302,6 +306,11 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     String id = Validator.duplicateCheck(() -> wingsPersistence.save(artifactStream), "name", artifactStream.getName());
     yamlPushService.pushYamlChangeSet(
         accountId, null, artifactStream, Type.CREATE, artifactStream.isSyncFromGit(), false);
+
+    if (!artifactStream.isSample()) {
+      eventPublishHelper.publishAccountEvent(
+          accountId, AccountEvent.builder().accountEventType(AccountEventType.ARTIFACT_STREAM_ADDED).build());
+    }
 
     return get(id);
   }
@@ -918,6 +927,11 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     } catch (Exception e) {
       delete(appId, savedArtifactStream, false, false);
       throw e;
+    }
+
+    if (!artifactStream.isSample()) {
+      eventPublishHelper.publishAccountEvent(savedArtifactStream.getAccountId(),
+          AccountEvent.builder().accountEventType(AccountEventType.ARTIFACT_STREAM_ADDED).build());
     }
 
     return savedArtifactStream;

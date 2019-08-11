@@ -46,10 +46,10 @@ public class PcfInfrastructureMapping extends InfrastructureMapping {
       String computeProviderSettingId, String envId, String serviceTemplateId, String serviceId,
       String computeProviderType, String infraMappingType, String deploymentType, String computeProviderName,
       String name, String organization, String space, List<String> tempRouteMap, List<String> routeMaps,
-      String provisionerId) {
+      String provisionerId, boolean sample) {
     super(entityYamlPath, appId, accountId, type, uuid, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt,
         computeProviderSettingId, envId, serviceTemplateId, serviceId, computeProviderType, infraMappingType,
-        deploymentType, computeProviderName, name, true /*autoPopulateName*/, null, provisionerId);
+        deploymentType, computeProviderName, name, true /*autoPopulateName*/, null, provisionerId, sample);
     this.organization = organization;
     this.space = space;
     this.tempRouteMap = tempRouteMap;

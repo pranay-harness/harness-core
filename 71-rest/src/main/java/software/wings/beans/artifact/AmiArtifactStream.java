@@ -40,9 +40,9 @@ public class AmiArtifactStream extends ArtifactStream {
   public AmiArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
       String name, boolean autoPopulate, String serviceId, String region, String platform, List<Tag> tags,
-      List<FilterClass> filters, String accountId, Set<String> keywords) {
+      List<FilterClass> filters, String accountId, Set<String> keywords, boolean sample) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, AMI.name(), sourceName,
-        settingId, name, autoPopulate, serviceId, true, accountId, keywords);
+        settingId, name, autoPopulate, serviceId, true, accountId, keywords, sample);
     this.region = region;
     this.platform = platform;
     this.tags = tags;

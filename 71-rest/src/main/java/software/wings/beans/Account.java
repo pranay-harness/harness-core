@@ -53,6 +53,9 @@ public class Account extends Base {
   private List<String> salesContacts;
 
   private LicenseInfo licenseInfo;
+
+  private Set<AccountEvent> accountEvents;
+
   @JsonIgnore private byte[] encryptedLicenseInfo;
 
   @JsonIgnore private boolean emailSentToSales;
@@ -278,6 +281,14 @@ public class Account extends Base {
 
   public void setOauthEnabled(boolean oauthEnabled) {
     this.oauthEnabled = oauthEnabled;
+  }
+
+  public Set<AccountEvent> getAccountEvents() {
+    return accountEvents;
+  }
+
+  public void setEvents(Set<AccountEvent> events) {
+    this.accountEvents = events;
   }
 
   @Override

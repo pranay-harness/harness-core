@@ -31,6 +31,7 @@ public class ServiceSampleDataProvider {
                                                       .artifactType(ArtifactType.DOCKER)
                                                       .name(K8S_SERVICE_NAME)
                                                       .description(K8S_SERVICE_DESC)
+                                                      .sample(true)
                                                       .build());
 
     // Create container task
@@ -141,6 +142,7 @@ public class ServiceSampleDataProvider {
                                                       .isK8sV2(true)
                                                       .name(K8S_SERVICE_NAME)
                                                       .description(K8S_SERVICE_DESC)
+                                                      .sample(true)
                                                       .build());
 
     ApplicationManifest appManifest = applicationManifestService.getK8sManifestByServiceId(appId, service.getUuid());

@@ -9,6 +9,7 @@ import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotBlank;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Account;
+import software.wings.beans.AccountEvent;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.Service;
 import software.wings.beans.TechStack;
@@ -49,6 +50,8 @@ public interface AccountService {
   String suggestAccountName(@NotNull String accountName);
 
   boolean updateTechStacks(String accountId, Set<TechStack> techStacks);
+
+  void updateAccountEvents(String accountId, AccountEvent accountEvent);
 
   boolean exists(String accountName);
 
@@ -129,4 +132,6 @@ public interface AccountService {
   AccountSettingsResponse getAuthSettingsByAccountId(String accountId);
 
   Optional<Account> getOnPremAccount();
+
+  boolean postCustomEvent(String accountId, AccountEvent accountEvent);
 }

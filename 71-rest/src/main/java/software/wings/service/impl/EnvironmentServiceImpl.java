@@ -40,6 +40,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.globalcontex.EntityOperationIdentifier;
@@ -54,6 +55,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.AccountEvent;
+import software.wings.beans.AccountEventType;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
@@ -137,6 +140,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private ApplicationManifestService applicationManifestService;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
+  @Inject private EventPublishHelper eventPublishHelper;
 
   @Inject private Queue<PruneEvent> pruneQueue;
 
@@ -248,7 +252,10 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     sendNotifaction(savedEnvironment, NotificationMessageType.ENTITY_CREATE_NOTIFICATION);
     yamlPushService.pushYamlChangeSet(
         accountId, null, savedEnvironment, Type.CREATE, environment.isSyncFromGit(), false);
-
+    if (!savedEnvironment.isSample()) {
+      eventPublishHelper.publishAccountEvent(
+          accountId, AccountEvent.builder().accountEventType(AccountEventType.ENV_CREATED).build());
+    }
     return savedEnvironment;
   }
 

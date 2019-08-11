@@ -379,6 +379,12 @@ public class UserServiceImpl implements UserService {
     return emailSent;
   }
 
+  //  @Override
+  //  public boolean postCustomEvent(String accountId, String event, String additionalInfo) {
+  //    eventPublishHelper.publishCustomEvent(accountId, event, additionalInfo);
+  //    return true;
+  //  }
+
   @Override
   public boolean postCustomEvent(String accountId, String event) {
     eventPublishHelper.publishCustomEvent(accountId, event);

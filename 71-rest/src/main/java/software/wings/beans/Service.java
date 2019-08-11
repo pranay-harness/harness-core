@@ -78,6 +78,7 @@ public class Service extends Base implements KeywordsAware, NameAccess, TagAware
   @Indexed private String accountId;
   @Indexed private List<String> artifactStreamIds;
   @Transient private List<ArtifactStreamBinding> artifactStreamBindings;
+  private boolean sample;
 
   @Builder
   public Service(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
@@ -86,7 +87,7 @@ public class Service extends Base implements KeywordsAware, NameAccess, TagAware
       long version, AppContainer appContainer, List<ConfigFile> configFiles, List<ServiceVariable> serviceVariables,
       List<ArtifactStream> artifactStreams, List<ServiceCommand> serviceCommands, Activity lastDeploymentActivity,
       Activity lastProdDeploymentActivity, Setup setup, boolean isK8sV2, String accountId,
-      List<String> artifactStreamIds) {
+      List<String> artifactStreamIds, boolean sample) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
@@ -107,6 +108,7 @@ public class Service extends Base implements KeywordsAware, NameAccess, TagAware
     this.isK8sV2 = isK8sV2;
     this.accountId = accountId;
     this.artifactStreamIds = artifactStreamIds;
+    this.sample = sample;
   }
 
   // TODO: check what to do with artifactStreamIds and artifactStreamBindings

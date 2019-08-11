@@ -34,6 +34,7 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.validator.EntityNameValidator;
+import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.limits.ActionType;
@@ -46,6 +47,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.beans.AccountEvent;
+import software.wings.beans.AccountEventType;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.EntityType;
@@ -124,6 +127,7 @@ public class AppServiceImpl implements AppService {
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private TemplateService templateService;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
+  @Inject private EventPublishHelper eventPublishHelper;
 
   @Inject private Queue<PruneEvent> pruneQueue;
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
@@ -173,7 +177,10 @@ public class AppServiceImpl implements AppService {
       }
 
       yamlPushService.pushYamlChangeSet(app.getAccountId(), null, application, Type.CREATE, app.isSyncFromGit(), false);
-
+      if (!app.isSample()) {
+        eventPublishHelper.publishAccountEvent(
+            accountId, AccountEvent.builder().accountEventType(AccountEventType.APP_CREATED).build());
+      }
       return get(application.getUuid());
     });
   }

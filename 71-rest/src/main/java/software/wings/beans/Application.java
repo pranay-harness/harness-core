@@ -64,6 +64,15 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
   @Getter @Setter private transient YamlGitConfig yamlGitConfig;
 
   private transient Map<String, String> defaults = new HashMap<>();
+  private boolean sample;
+
+  public boolean isSample() {
+    return sample;
+  }
+
+  public void setSample(boolean sample) {
+    this.sample = sample;
+  }
 
   public Map<String, String> getDefaults() {
     return defaults;
@@ -307,6 +316,7 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
     private long lastUpdatedAt;
     private Map<String, String> defaults;
     private YamlGitConfig yamlGitConfig;
+    private boolean sample;
 
     private Builder() {}
 
@@ -399,6 +409,11 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
       return this;
     }
 
+    public Builder sample(boolean sample) {
+      this.sample = sample;
+      return this;
+    }
+
     public Builder but() {
       return anApplication()
           .name(name)
@@ -416,7 +431,8 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
           .createdAt(createdAt)
           .lastUpdatedBy(lastUpdatedBy)
           .lastUpdatedAt(lastUpdatedAt)
-          .yamlGitConfig(yamlGitConfig);
+          .yamlGitConfig(yamlGitConfig)
+          .sample(sample);
     }
 
     public Application build() {
@@ -438,6 +454,7 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
       application.setLastUpdatedAt(lastUpdatedAt);
       application.setDefaults(defaults);
       application.setYamlGitConfig(yamlGitConfig);
+      application.setSample(sample);
       return application;
     }
   }

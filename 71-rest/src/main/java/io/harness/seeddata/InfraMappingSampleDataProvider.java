@@ -40,6 +40,7 @@ public class InfraMappingSampleDataProvider {
             .withAutoPopulate(false)
             .withServiceTemplateId(serviceTemplate.getUuid())
             .withEnvId(envId)
+            .withSample(true)
             .build();
     return infrastructureMappingService.save(directKubeInfra, true);
   }

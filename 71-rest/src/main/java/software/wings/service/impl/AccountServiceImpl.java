@@ -70,6 +70,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Account.AccountKeys;
+import software.wings.beans.AccountEvent;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.AppContainer;
@@ -201,8 +202,8 @@ public class AccountServiceImpl implements AccountService {
   @Inject private GenericDbCache dbCache;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private CVConfigurationService cvConfigurationService;
-  @Inject private SampleDataProviderService sampleDataProviderService;
   @Inject private AlertNotificationRuleService notificationRuleService;
+  @Inject private SampleDataProviderService sampleDataProviderService;
   @Inject private GovernanceConfigService governanceConfigService;
   @Inject private SSOSettingServiceImpl ssoSettingService;
   @Inject private MainConfiguration mainConfiguration;
@@ -489,6 +490,26 @@ public class AccountServiceImpl implements AccountService {
     }
     eventPublishHelper.publishTechStackEvent(accountId, techStacks);
     return true;
+  }
+
+  @Override
+  public void updateAccountEvents(String accountId, AccountEvent accountEvent) {
+    Account accountInDB = get(accountId);
+    notNullCheck("Invalid Account for the given Id: " + accountId, accountInDB, USER);
+    Set<AccountEvent> accountEvents = Sets.newHashSet(accountEvent);
+    Set<AccountEvent> existingEvents = accountInDB.getAccountEvents();
+    if (isNotEmpty(existingEvents)) {
+      accountEvents.addAll(existingEvents);
+    }
+
+    UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class);
+    if (isEmpty(accountEvents)) {
+      updateOperations.unset("accountEvents");
+    } else {
+      updateOperations.set("accountEvents", accountEvents);
+    }
+    wingsPersistence.update(accountInDB, updateOperations);
+    dbCache.invalidate(Account.class, accountId);
   }
 
   private UrlInfo getDocLink(TechStack techStack) {
@@ -1290,5 +1311,11 @@ public class AccountServiceImpl implements AccountService {
         .allowedDomains(whitelistedDomains)
         .oauthProviderTypes(oauthProviderTypes)
         .build();
+  }
+
+  @Override
+  public boolean postCustomEvent(String accountId, AccountEvent accountEvent) {
+    eventPublishHelper.publishAccountEvent(accountId, accountEvent);
+    return true;
   }
 }

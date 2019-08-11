@@ -85,6 +85,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.category.element.UnitTests;
+import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.WingsException;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
@@ -109,6 +110,7 @@ import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
+import software.wings.beans.AccountEvent;
 import software.wings.beans.Application;
 import software.wings.beans.CommandCategory;
 import software.wings.beans.ConfigFile;
@@ -203,6 +205,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   @Mock private ActivityService activityService;
   @Mock private NotificationService notificationService;
+  @Mock private EventPublishHelper eventPublishHelper;
   @Mock private EntityVersionService entityVersionService;
   @Mock private CommandService commandService;
   @Mock private WorkflowService workflowService;
@@ -321,6 +324,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     assertThat(savedService.getUuid()).isEqualTo(SERVICE_ID);
     ArgumentCaptor<Service> calledService = ArgumentCaptor.forClass(Service.class);
     verify(mockWingsPersistence).saveAndGet(eq(Service.class), calledService.capture());
+    verify(eventPublishHelper).publishAccountEvent(anyString(), any(AccountEvent.class));
     Service calledServiceValue = calledService.getValue();
     assertThat(calledServiceValue)
         .isNotNull()

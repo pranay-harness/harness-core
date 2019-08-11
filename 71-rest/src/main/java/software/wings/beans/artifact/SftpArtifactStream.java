@@ -33,17 +33,17 @@ public class SftpArtifactStream extends ArtifactStream {
   public SftpArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
       String name, boolean autoPopulate, String serviceId, List<String> artifactPaths, String accountId,
-      Set<String> keywords) {
+      Set<String> keywords, boolean sample) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, SFTP.name(), sourceName,
-        settingId, name, autoPopulate, serviceId, true, accountId, keywords);
+        settingId, name, autoPopulate, serviceId, true, accountId, keywords, sample);
     this.artifactPaths = artifactPaths;
   }
 
   @Override
-  public String fetchArtifactDisplayName(String buildNo) {
+  public String fetchArtifactDisplayName(String buildNum) {
     return isBlank(getSourceName())
-        ? format("%s_%s_%s", getSourceName(), buildNo, new SimpleDateFormat(dateFormat).format(new Date()))
-        : format("%s_%s", buildNo, new SimpleDateFormat(dateFormat).format(new Date()));
+        ? format("%s_%s_%s", getSourceName(), buildNum, new SimpleDateFormat(dateFormat).format(new Date()))
+        : format("%s_%s", buildNum, new SimpleDateFormat(dateFormat).format(new Date()));
   }
 
   @Override

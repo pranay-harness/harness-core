@@ -4,7 +4,6 @@ import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -13,7 +12,7 @@ import java.util.Map;
 @Data
 @Builder
 public class EventData {
-  @Default private Map<String, String> properties = new HashMap<>();
+  @Default private Map<String, String> properties;
   // TODO : Remove this value once prometheus is deprecated
   private double value;
 

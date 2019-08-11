@@ -7,12 +7,15 @@ import com.google.inject.Singleton;
  */
 @Singleton
 public interface Constants {
-  String EMAIL_ID = "EMAIL_ID";
-  String ACCOUNT_ID = "ACCOUNT_ID";
-  String USER_ID = "USER_ID";
-  String CUSTOM_EVENT_NAME = "CUSTOM_EVENT_NAME";
-  String USER_NAME = "USER_NAME";
-  String USER_INVITE_ID = "USER_INVITE_ID";
-  String TECH_NAME = "TECH_NAME";
-  String TECH_CATEGORY_NAME = "TECH_CATEGORY_NAME";
+  String EMAIL_ID = "email_id";
+  String ACCOUNT_ID = "account_id";
+  String USER_ID = "user_id";
+  String CUSTOM_EVENT_NAME = "custom_event";
+  String CATEGORY = "category";
+  String USER_NAME = "user_name";
+  String USER_INVITE_ID = "user_invite_id";
+  String TECH_NAME = "tech_name";
+  String ACCOUNT_EVENT = "account_event";
+  String TECH_CATEGORY_NAME = "tech_category";
+  String ORIGINAL_TIMESTAMP_NAME = "originalTimestamp";
 }

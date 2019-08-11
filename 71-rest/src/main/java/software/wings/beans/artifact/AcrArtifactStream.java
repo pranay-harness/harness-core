@@ -32,9 +32,9 @@ public class AcrArtifactStream extends ArtifactStream {
   public AcrArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
       String name, boolean autoPopulate, String serviceId, String subscriptionId, String registryName,
-      String repositoryName, String accountId, Set<String> keywords) {
+      String repositoryName, String accountId, Set<String> keywords, boolean sample) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, ACR.name(), sourceName,
-        settingId, name, autoPopulate, serviceId, true, accountId, keywords);
+        settingId, name, autoPopulate, serviceId, true, accountId, keywords, sample);
     this.subscriptionId = subscriptionId;
     this.registryName = registryName;
     this.repositoryName = repositoryName;

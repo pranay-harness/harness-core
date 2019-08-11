@@ -54,6 +54,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.eraro.ErrorCode;
+import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.globalcontex.EntityOperationIdentifier;
@@ -76,6 +77,8 @@ import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
+import software.wings.beans.AccountEvent;
+import software.wings.beans.AccountEventType;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityKeys;
 import software.wings.beans.AppContainer;
@@ -256,6 +259,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private FeatureFlagService featureFlagService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
+  @Inject private EventPublishHelper eventPublishHelper;
 
   @Inject private Queue<PruneEvent> pruneQueue;
   @Inject private ApplicationManifestUtils applicationManifestUtils;
@@ -329,6 +333,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         yamlPushService.pushYamlChangeSet(accountId, null, savedService, Type.CREATE, service.isSyncFromGit(), false);
       }
 
+      if (!savedService.isSample()) {
+        eventPublishHelper.publishAccountEvent(
+            accountId, AccountEvent.builder().accountEventType(AccountEventType.SERVICE_CREATED).build());
+      }
       return savedService;
     });
   }

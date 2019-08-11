@@ -33,6 +33,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.limits.Action;
@@ -50,6 +51,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.UpdateOperations;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
+import software.wings.beans.AccountEvent;
+import software.wings.beans.AccountEventType;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
@@ -117,6 +120,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private LimitCheckerFactory limitCheckerFactory;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private CounterSyncer counterSyncer;
+  @Inject private EventPublishHelper eventPublishHelper;
 
   @Inject private Queue<PruneEvent> pruneQueue;
 
@@ -777,6 +781,11 @@ public class PipelineServiceImpl implements PipelineService {
       new StateMachine(pipeline, workflowService.stencilMap(pipeline.getAppId()));
 
       yamlPushService.pushYamlChangeSet(accountId, null, pipeline, Type.CREATE, pipeline.isSyncFromGit(), false);
+
+      if (!pipeline.isSample()) {
+        eventPublishHelper.publishAccountEvent(
+            accountId, AccountEvent.builder().accountEventType(AccountEventType.PIPELINE_CREATED).build());
+      }
 
       return pipeline;
     });

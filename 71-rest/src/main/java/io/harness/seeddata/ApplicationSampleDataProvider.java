@@ -18,14 +18,19 @@ public class ApplicationSampleDataProvider {
                                   .name(HARNESS_SAMPLE_APP)
                                   .description(HARNESS_SAMPLE_APP_DESC)
                                   .accountId(accountId)
+                                  .sample(true)
                                   .build();
 
     return appService.save(application);
   }
 
   public Application createApp(String accountId, String name, String description) {
-    Application application =
-        Application.Builder.anApplication().name(name).description(description).accountId(accountId).build();
+    Application application = Application.Builder.anApplication()
+                                  .name(name)
+                                  .description(description)
+                                  .accountId(accountId)
+                                  .sample(true)
+                                  .build();
 
     return appService.save(application);
   }

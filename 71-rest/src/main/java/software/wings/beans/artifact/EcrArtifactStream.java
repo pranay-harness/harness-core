@@ -31,9 +31,9 @@ public class EcrArtifactStream extends ArtifactStream {
   public EcrArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
       String name, boolean autoPopulate, String serviceId, boolean metadataOnly, String region, String imageName,
-      String accountId, Set<String> keywords) {
+      String accountId, Set<String> keywords, boolean sample) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, ECR.name(), sourceName,
-        settingId, name, autoPopulate, serviceId, metadataOnly, accountId, keywords);
+        settingId, name, autoPopulate, serviceId, metadataOnly, accountId, keywords, sample);
     this.region = region;
     this.imageName = imageName;
   }

@@ -82,6 +82,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
     private String deploymentType;
     private String computeProviderName;
     private String name;
+    private boolean sample;
     // auto populate name
     private boolean autoPopulate = true;
 
@@ -196,6 +197,11 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
       return this;
     }
 
+    public Builder withSample(boolean sample) {
+      this.sample = sample;
+      return this;
+    }
+
     public DirectKubernetesInfrastructureMapping build() {
       DirectKubernetesInfrastructureMapping directKubernetesInfrastructureMapping =
           new DirectKubernetesInfrastructureMapping();
@@ -220,6 +226,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
       directKubernetesInfrastructureMapping.setName(name);
       directKubernetesInfrastructureMapping.setAutoPopulate(autoPopulate);
       directKubernetesInfrastructureMapping.setAccountId(accountId);
+      directKubernetesInfrastructureMapping.setSample(sample);
       return directKubernetesInfrastructureMapping;
     }
   }

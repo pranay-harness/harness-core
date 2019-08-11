@@ -1,7 +1,6 @@
 package software.wings.beans;
 
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
-import static software.wings.beans.EcsBlueGreenOrchestrationWorkflow.EcsBlueGreenOrchestrationWorkflowBuilder.anEcsBlueGreenOrchestrationWorkflow;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.EqualsAndHashCode;
@@ -25,7 +24,7 @@ public class EcsBlueGreenOrchestrationWorkflow extends CanaryOrchestrationWorkfl
 
   @Override
   public OrchestrationWorkflow cloneInternal() {
-    return anEcsBlueGreenOrchestrationWorkflow()
+    return EcsBlueGreenOrchestrationWorkflowBuilder.anEcsBlueGreenOrchestrationWorkflow()
         .withGraph(getGraph())
         .withPreDeploymentSteps(getPreDeploymentSteps())
         .withWorkflowPhaseIds(getWorkflowPhaseIds())
