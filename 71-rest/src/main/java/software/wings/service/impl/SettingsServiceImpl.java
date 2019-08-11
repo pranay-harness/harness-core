@@ -243,7 +243,7 @@ public class SettingsServiceImpl implements SettingsService {
           String settingId = artifactStream.getSettingId();
           Artifact lastCollectedArtifact = artifactService.fetchLastCollectedArtifact(artifactStream);
           ArtifactStreamSummary artifactStreamSummary =
-              ArtifactStreamSummary.fromArtifactStream(artifactStream, lastCollectedArtifact);
+              ArtifactStreamSummary.prepareSummaryFromArtifactStream(artifactStream, lastCollectedArtifact);
           if (settingIdToArtifactStreamSummaries.containsKey(settingId)) {
             settingIdToArtifactStreamSummaries.get(settingId).add(artifactStreamSummary);
           } else {

@@ -12,7 +12,7 @@ public class ArtifactStreamSummary {
   private String name;
   private String lastCollectedArtifact;
 
-  public static ArtifactStreamSummary fromArtifactStream(
+  public static ArtifactStreamSummary prepareSummaryFromArtifactStream(
       ArtifactStream artifactStream, Artifact lastCollectedArtifact) {
     if (artifactStream == null) {
       return null;

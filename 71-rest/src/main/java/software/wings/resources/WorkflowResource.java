@@ -5,6 +5,7 @@
 package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.DUPLICATE_STATE_NAMES;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
@@ -31,6 +32,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.GraphNode;
 import software.wings.beans.NotificationRule;
+import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.User;
 import software.wings.beans.Variable;
@@ -47,6 +49,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
@@ -77,6 +80,8 @@ import javax.ws.rs.QueryParam;
 @Scope(ResourceType.APPLICATION)
 @AuthRule(permissionType = WORKFLOW)
 public class WorkflowResource {
+  @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+
   private WorkflowService workflowService;
   private AuthService authService;
 
@@ -109,7 +114,8 @@ public class WorkflowResource {
       @BeanParam PageRequest<Workflow> pageRequest,
       @QueryParam("previousExecutionsCount") Integer previousExecutionsCount,
       @QueryParam("workflowType") List<String> workflowTypes,
-      @QueryParam("details") @DefaultValue("true") boolean details) {
+      @QueryParam("details") @DefaultValue("true") boolean details,
+      @QueryParam("withArtifactStreamSummary") @DefaultValue("false") boolean withArtifactStreamSummary) {
     if ((isEmpty(workflowTypes))
         && (pageRequest.getFilters() == null
                || pageRequest.getFilters().stream().noneMatch(
@@ -119,7 +125,19 @@ public class WorkflowResource {
     if (!details) {
       return new RestResponse<>(workflowService.listWorkflowsWithoutOrchestration(pageRequest));
     }
-    return new RestResponse<>(workflowService.listWorkflows(pageRequest, previousExecutionsCount));
+    PageResponse<Workflow> pageResponse = workflowService.listWorkflows(pageRequest, previousExecutionsCount);
+    if (withArtifactStreamSummary) {
+      if (pageResponse != null && isNotEmpty(pageResponse.getResponse())) {
+        for (Workflow workflow : pageResponse.getResponse()) {
+          OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+          if (orchestrationWorkflow != null) {
+            // Add artifact stream summary to artifact variables
+            artifactStreamServiceBindingService.processVariables(orchestrationWorkflow.getUserVariables());
+          }
+        }
+      }
+    }
+    return new RestResponse<>(pageResponse);
   }
 
   /**
@@ -163,8 +181,17 @@ public class WorkflowResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Workflow> read(@QueryParam("appId") String appId, @PathParam("workflowId") String workflowId,
-      @QueryParam("version") Integer version) {
-    return new RestResponse<>(workflowService.readWorkflow(appId, workflowId, version));
+      @QueryParam("version") Integer version,
+      @QueryParam("withArtifactStreamSummary") @DefaultValue("false") boolean withArtifactStreamSummary) {
+    Workflow workflow = workflowService.readWorkflow(appId, workflowId, version);
+    if (withArtifactStreamSummary) {
+      OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+      if (orchestrationWorkflow != null) {
+        // Add artifact stream summary to artifact variables
+        artifactStreamServiceBindingService.processVariables(orchestrationWorkflow.getUserVariables());
+      }
+    }
+    return new RestResponse<>(workflow);
   }
 
   /**

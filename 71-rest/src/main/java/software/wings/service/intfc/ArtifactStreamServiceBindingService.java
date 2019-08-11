@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
+import software.wings.beans.Variable;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamBinding;
 import software.wings.service.intfc.ownership.OwnedByArtifactStream;
@@ -125,4 +126,8 @@ public interface ArtifactStreamServiceBindingService extends OwnedByArtifactStre
   String getServiceId(@NotEmpty String appId, @NotEmpty String artifactStreamId, boolean throwException);
 
   String getServiceId(@NotEmpty String artifactStreamId, boolean throwException);
+
+  void processServiceVariables(List<ServiceVariable> serviceVariables);
+
+  void processVariables(List<Variable> variables);
 }

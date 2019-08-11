@@ -1,6 +1,5 @@
 package software.wings.service.impl.yaml.handler.service;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -18,7 +17,6 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.AllowedValueYaml;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
-import software.wings.beans.ArtifactStreamAllowedValueYaml;
 import software.wings.beans.EntityType;
 import software.wings.beans.FeatureName;
 import software.wings.beans.NameValuePair;
@@ -28,20 +26,16 @@ import software.wings.beans.Service.Yaml.YamlBuilder;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.ServiceVariableBuilder;
 import software.wings.beans.ServiceVariable.Type;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.ArtifactVariableYamlHelper;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
+import software.wings.service.impl.yaml.handler.ServiceVariableYamlHelper;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;
-import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.Utils;
@@ -64,11 +58,9 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
   @Inject SecretManager secretManager;
   @Inject AppContainerService appContainerService;
   @Inject AppService appService;
-  @Inject ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject FeatureFlagService featureFlagService;
-  @Inject SettingsService settingsService;
-  @Inject ArtifactStreamService artifactStreamService;
   @Inject ArtifactVariableYamlHelper artifactVariableYamlHelper;
+  @Inject ServiceVariableYamlHelper serviceVariableYamlHelper;
 
   @Override
   public Yaml toYaml(Service service, String appId) {
@@ -86,23 +78,6 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
                                   .configMapYaml(service.getConfigMapYaml())
                                   .configVariables(nameValuePairList)
                                   .applicationStack(applicationStack);
-
-    //    List<ArtifactStreamBinding.Yaml> artifactStreamBindings = new ArrayList<>();
-    //    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, service.getAccountId())) {
-    //      List<ArtifactStream> artifactStreams =
-    //          artifactStreamServiceBindingService.listArtifactStreams(service.getAppId(), service.getUuid());
-    //      if (isNotEmpty(artifactStreams)) {
-    //        for (ArtifactStream artifactStream : artifactStreams) {
-    //          SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
-    //          artifactStreamBindings.add(ArtifactStreamBinding.Yaml.builder()
-    //                                         .artifactStreamType(artifactStream.getArtifactStreamType())
-    //                                         .artifactStreamName(artifactStream.getName())
-    //                                         .artifactServerName(settingAttribute.getName())
-    //                                         .build());
-    //        }
-    //      }
-    //      yamlBuilder.artifactStreamBindings(artifactStreamBindings);
-    //    }
 
     Yaml yaml = yamlBuilder.build();
     updateYamlWithAdditionalInfo(service, appId, yaml);
@@ -129,29 +104,9 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
           } else if (Type.TEXT == variableType) {
             value = String.valueOf(serviceVariable.getValue());
           } else if (Type.ARTIFACT == variableType) {
-            if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-              if (isNotEmpty(serviceVariable.getAllowedList())) {
-                for (String id : serviceVariable.getAllowedList()) {
-                  ArtifactStream as = artifactStreamService.get(id);
-                  if (as != null) {
-                    SettingAttribute settingAttribute = settingsService.get(as.getSettingId());
-                    allowedValueYamlList.add(ArtifactStreamAllowedValueYaml.builder()
-                                                 .artifactServerName(settingAttribute.getName())
-                                                 .artifactStreamName(as.getName())
-                                                 .artifactStreamType(as.getArtifactStreamType())
-                                                 .type("ARTIFACT")
-                                                 .build());
-                  } else {
-                    logger.warn("Artifact Stream with id {} not found, not converting it to yaml", id);
-                  }
-                }
-              }
-            } else {
-              logger.warn("Variable type ARTIFACT not supported, skipping processing of variable {}",
-                  serviceVariable.getName());
-            }
+            serviceVariableYamlHelper.convertArtifactVariableToYaml(accountId, serviceVariable, allowedValueYamlList);
           } else {
-            logger.warn("Step type {} not supported, skipping the processing of value", variableType);
+            logger.warn("Variable type {} not supported, skipping the processing of value", variableType);
           }
 
           return NameValuePair.Yaml.builder()
@@ -193,37 +148,6 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     boolean syncFromGit = changeContext.getChange().isSyncFromGit();
     currentService.setSyncFromGit(syncFromGit);
 
-    //    List<String> artifactStreamIds = new ArrayList<>();
-    //    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-    //      List<ArtifactStreamBinding.Yaml> artifactStreamBindings = yaml.getArtifactStreamBindings();
-    //      if (isNotEmpty(artifactStreamBindings)) {
-    //        for (ArtifactStreamBinding.Yaml artifactStreamBinding : artifactStreamBindings) {
-    //          // Fetch artifact source from artifact source name
-    //          SettingVariableTypes settingVariableTypes =
-    //              getSettingVariableTypeFromArtifactStreamType(artifactStreamBinding.getArtifactStreamType());
-    //          SettingAttribute settingAttribute = settingsService.fetchSettingAttributeByName(
-    //              accountId, artifactStreamBinding.getArtifactServerName(), settingVariableTypes);
-    //          if (settingAttribute == null) {
-    //            throw new WingsException(
-    //                format("Artifact Server with name: [%s] not found",
-    //                artifactStreamBinding.getArtifactServerName()), USER);
-    //          }
-    //          // Fetch artifact stream from artifact stream name
-    //          ArtifactStream artifactStream = artifactStreamService.getArtifactStreamByName(
-    //              settingAttribute.getUuid(), artifactStreamBinding.getArtifactStreamName());
-    //          if (artifactStream == null) {
-    //            throw new WingsException(
-    //                format("Artifact Stream with name: [%s] not found under artifact xxxxxxxx [%s]",
-    //                    artifactStreamBinding.getArtifactStreamName(), artifactStreamBinding.getArtifactServerName()),
-    //                USER);
-    //          }
-    //          if (!artifactStreamIds.contains(artifactStream.getUuid())) {
-    //            artifactStreamIds.add(artifactStream.getUuid());
-    //          }
-    //        }
-    //      }
-    //      currentService.setArtifactStreamIds(artifactStreamIds);
-    //    }
     if (previousService != null) {
       currentService.setUuid(previousService.getUuid());
       currentService = serviceResourceService.update(currentService, true);
@@ -299,8 +223,12 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
               break;
             }
           }
-          if (beforeCV != null && !cv.getValue().equals(beforeCV.getValue())) {
-            configVarsToUpdate.add(cv);
+          if (beforeCV != null) {
+            if (beforeCV.getValueType().equals("ARTIFACT")) {
+              configVarsToUpdate.add(cv);
+            } else if (!cv.getValue().equals(beforeCV.getValue())) {
+              configVarsToUpdate.add(cv);
+            }
           }
         }
       }
@@ -363,7 +291,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
 
     if ("TEXT".equals(cv.getValueType())) {
       serviceVariableBuilder.type(Type.TEXT);
-      serviceVariableBuilder.value(cv.getValue().toCharArray());
+      serviceVariableBuilder.value(cv.getValue() != null ? cv.getValue().toCharArray() : null);
     } else if ("ENCRYPTED_TEXT".equals(cv.getValueType())) {
       serviceVariableBuilder.type(Type.ENCRYPTED_TEXT);
       serviceVariableBuilder.encryptedValue(cv.getValue());
@@ -377,7 +305,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
       }
     } else {
       logger.warn("Yaml doesn't support {} type service variables", cv.getValueType());
-      serviceVariableBuilder.value(cv.getValue().toCharArray());
+      serviceVariableBuilder.value(cv.getValue() != null ? cv.getValue().toCharArray() : null);
     }
 
     ServiceVariable serviceVariable = serviceVariableBuilder.build();

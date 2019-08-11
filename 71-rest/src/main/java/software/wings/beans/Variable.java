@@ -11,6 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.yaml.BaseYamlWithType;
 
 import java.util.List;
@@ -26,6 +27,7 @@ public class Variable {
   private boolean fixed;
   private String allowedValues;
   private List<String> allowedList;
+  private transient List<ArtifactStreamSummary> artifactStreamSummaries;
 
   public static final String ENTITY_TYPE = "entityType";
   public static final String ARTIFACT_TYPE = "artifactType";

@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import software.wings.beans.AllowedValueYaml;
 import software.wings.beans.ArtifactStreamAllowedValueYaml;
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Singleton
+@Slf4j
 public class ArtifactVariableYamlHelper {
   @Inject SettingsService settingsService;
   @Inject ArtifactStreamService artifactStreamService;
@@ -77,29 +79,31 @@ public class ArtifactVariableYamlHelper {
     List<String> allowedList = new ArrayList<>();
     if (isNotEmpty(allowedValueYamlList)) {
       for (AllowedValueYaml allowedValueYaml : allowedValueYamlList) {
-        ArtifactStreamAllowedValueYaml artifactStreamAllowedValueYaml =
-            (ArtifactStreamAllowedValueYaml) allowedValueYaml;
-        SettingVariableTypes settingVariableTypes =
-            getSettingVariableTypeFromArtifactStreamType(artifactStreamAllowedValueYaml.getArtifactStreamType());
-        SettingAttribute settingAttribute = settingsService.fetchSettingAttributeByName(
-            accountId, artifactStreamAllowedValueYaml.getArtifactServerName(), settingVariableTypes);
-        if (settingAttribute == null) {
-          throw new WingsException(format("Artifact Server with name: [%s] not found",
-                                       artifactStreamAllowedValueYaml.getArtifactServerName()),
-              USER);
-        }
-        ArtifactStream artifactStream = artifactStreamService.getArtifactStreamByName(
-            settingAttribute.getUuid(), artifactStreamAllowedValueYaml.getArtifactStreamName());
-        if (artifactStream == null) {
-          throw new WingsException(format("Artifact Stream with name: [%s] not found under artifact xxxxxxxx [%s]",
-                                       artifactStreamAllowedValueYaml.getArtifactStreamName(),
-                                       artifactStreamAllowedValueYaml.getArtifactServerName()),
-              USER);
-        }
+        if (allowedValueYaml instanceof ArtifactStreamAllowedValueYaml) {
+          ArtifactStreamAllowedValueYaml artifactStreamAllowedValueYaml =
+              (ArtifactStreamAllowedValueYaml) allowedValueYaml;
+          SettingVariableTypes settingVariableTypes =
+              getSettingVariableTypeFromArtifactStreamType(artifactStreamAllowedValueYaml.getArtifactStreamType());
+          SettingAttribute settingAttribute = settingsService.fetchSettingAttributeByName(
+              accountId, artifactStreamAllowedValueYaml.getArtifactServerName(), settingVariableTypes);
+          if (settingAttribute == null) {
+            throw new WingsException(format("Artifact Server with name: [%s] not found",
+                                         artifactStreamAllowedValueYaml.getArtifactServerName()),
+                USER);
+          }
+          ArtifactStream artifactStream = artifactStreamService.getArtifactStreamByName(
+              settingAttribute.getUuid(), artifactStreamAllowedValueYaml.getArtifactStreamName());
+          if (artifactStream == null) {
+            throw new WingsException(format("Artifact Stream with name: [%s] not found under artifact xxxxxxxx [%s]",
+                                         artifactStreamAllowedValueYaml.getArtifactStreamName(),
+                                         artifactStreamAllowedValueYaml.getArtifactServerName()),
+                USER);
+          }
 
-        if (!allowedList.contains(artifactStream.getUuid())) {
-          allowedList.add(artifactStream.getUuid());
-        }
+          if (!allowedList.contains(artifactStream.getUuid())) {
+            allowedList.add(artifactStream.getUuid());
+          }
+        } // TODO: else throw Exception?
       }
     }
     return allowedList;
