@@ -4,8 +4,13 @@ public interface EventConstants {
   String ACCOUNT_ID = "ACCOUNT_ID";
   String ACCOUNT_NAME = "ACCOUNT_NAME";
   String COMPANY_NAME = "COMPANY_NAME";
+  String FIRST_NAME = "FIRST_NAME";
+  String LAST_NAME = "LAST_NAME";
   String ACCOUNT_TYPE = "ACCOUNT_TYPE";
-  String ACCOUNT_STATUS = "ACCOUNT_STATUS";
+  String ACCOUNT_STATUS = "accountStatus";
+  String DAYS_LEFT_IN_TRIAL = "daysLeftInTrial";
+  String USER_INVITE_URL = "userInviteUrl";
+  String OAUTH_PROVIDER = "oauthProvider";
   String ACCOUNT_CREATED_AT = "ACCOUNT_CREATED_AT";
 
   String WORKFLOW_EXECUTION_STATUS = "WORKFLOW_EXECUTION_STATUS"; // ABORTED,FAILED,SUCCEEDED etc

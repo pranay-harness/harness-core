@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.http.Body;
 import software.wings.beans.Account;
+import software.wings.beans.AccountEvent;
 import software.wings.beans.AccountMigration;
 import software.wings.beans.AccountSalesContactsInfo;
 import software.wings.beans.AccountType;
@@ -326,5 +327,15 @@ public class AccountResource {
   public Response gcpSignUp(@FormParam(value = "x-gcp-marketplace-token") String token,
       @Context HttpServletRequest request, @Context HttpServletResponse response) {
     return gcpMarketPlaceApiHandler.signUp(token);
+  }
+
+  @POST
+  @Path("custom-event")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
+  public RestResponse<Boolean> postCustomEvent(
+      @QueryParam("accountId") @NotEmpty String accountId, @NotNull AccountEvent accountEvent) {
+    return new RestResponse<>(accountService.postCustomEvent(accountId, accountEvent));
   }
 }

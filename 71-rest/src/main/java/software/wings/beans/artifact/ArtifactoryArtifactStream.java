@@ -45,9 +45,9 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
       String name, boolean autoPopulate, String serviceId, boolean metadataOnly, String repositoryType, String jobname,
       String groupId, String imageName, List<String> artifactPaths, String artifactPattern,
-      String dockerRepositoryServer, String accountId, Set<String> keywords) {
+      String dockerRepositoryServer, String accountId, Set<String> keywords, boolean sample) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, ARTIFACTORY.name(),
-        sourceName, settingId, name, autoPopulate, serviceId, metadataOnly, accountId, keywords);
+        sourceName, settingId, name, autoPopulate, serviceId, metadataOnly, accountId, keywords, sample);
     this.repositoryType = repositoryType;
     this.jobname = jobname;
     this.groupId = groupId;

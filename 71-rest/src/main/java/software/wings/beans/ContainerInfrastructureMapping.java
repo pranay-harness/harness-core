@@ -31,10 +31,11 @@ public abstract class ContainerInfrastructureMapping extends InfrastructureMappi
       EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt,
       String computeProviderSettingId, String envId, String serviceTemplateId, String serviceId,
       String computeProviderType, String infraMappingType, String deploymentType, String computeProviderName,
-      String name, boolean autoPopulateName, Map<String, Object> blueprints, String clusterName, String provisionerId) {
+      String name, boolean autoPopulateName, Map<String, Object> blueprints, String clusterName, String provisionerId,
+      boolean sample) {
     super(entityYamlPath, appId, accountId, type, uuid, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt,
         computeProviderSettingId, envId, serviceTemplateId, serviceId, computeProviderType, infraMappingType,
-        deploymentType, computeProviderName, name, autoPopulateName, blueprints, provisionerId);
+        deploymentType, computeProviderName, name, autoPopulateName, blueprints, provisionerId, sample);
     this.clusterName = clusterName;
   }
 

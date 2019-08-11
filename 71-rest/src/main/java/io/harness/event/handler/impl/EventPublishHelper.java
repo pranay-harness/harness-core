@@ -3,7 +3,9 @@ package io.harness.event.handler.impl;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.event.handler.impl.Constants.ACCOUNT_EVENT;
 import static io.harness.event.handler.impl.Constants.ACCOUNT_ID;
+import static io.harness.event.handler.impl.Constants.CATEGORY;
 import static io.harness.event.handler.impl.Constants.CUSTOM_EVENT_NAME;
 import static io.harness.event.handler.impl.Constants.EMAIL_ID;
 import static io.harness.event.handler.impl.Constants.TECH_CATEGORY_NAME;
@@ -33,10 +35,13 @@ import io.harness.event.model.EventType;
 import io.harness.event.publisher.EventPublisher;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
+import software.wings.beans.AccountEvent;
+import software.wings.beans.AccountEventType;
 import software.wings.beans.AccountType;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.EntityType;
+import software.wings.beans.Pipeline;
 import software.wings.beans.TechStack;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
@@ -53,6 +58,7 @@ import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.UserGroupService;
@@ -83,6 +89,7 @@ public class EventPublishHelper {
   @Inject private ExecutorService executorService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WorkflowService workflowService;
+  @Inject private PipelineService pipelineService;
   @Inject private AppService appService;
   @Inject private AccountService accountService;
   @Inject private UserService userService;
@@ -413,10 +420,17 @@ public class EventPublishHelper {
       Map<String, String> properties = new HashMap<>();
       properties.put(ACCOUNT_ID, accountId);
       publishEvent(EventType.FIRST_DELEGATE_REGISTERED, properties);
+      publishAccountEvent(
+          accountId, AccountEvent.builder().accountEventType(AccountEventType.DELEGATE_INSTALLED).build());
     });
   }
 
   private boolean isFirstDelegateInAccount(String delegateId, String accountId) {
+    Delegate delegate = delegateService.get(accountId, delegateId, false);
+    if (delegate != null && delegate.isSampleDelegate()) {
+      return false;
+    }
+
     PageRequest<Delegate> pageRequest = aPageRequest()
                                             .addFilter(DelegateKeys.accountId, Operator.EQ, accountId)
                                             .addOrder(DelegateKeys.createdAt, OrderType.ASC)
@@ -436,19 +450,21 @@ public class EventPublishHelper {
     return false;
   }
 
-  public void publishWorkflowCreatedEvent(String workflowId, String accountId) {
+  public void publishWorkflowCreatedEvent(Workflow workflow, String accountId) {
     String userEmail = checkIfMarketoOrSegmentIsEnabledAndGetUserEmail(EventType.FIRST_WORKFLOW_CREATED);
 
     if (isEmpty(userEmail)) {
       return;
     }
 
+    publishAccountEvent(accountId, AccountEvent.builder().accountEventType(AccountEventType.WORKFLOW_CREATED).build());
+
     executorService.submit(() -> {
       if (!shouldPublishEventForAccount(accountId)) {
         return;
       }
 
-      if (!isFirstWorkflowInAccount(workflowId, accountId, userEmail)) {
+      if (!isFirstWorkflowInAccount(workflow, accountId, userEmail)) {
         return;
       }
 
@@ -459,12 +475,17 @@ public class EventPublishHelper {
     });
   }
 
-  private boolean isFirstWorkflowInAccount(String workflowId, String accountId, String userEmail) {
+  private boolean isFirstWorkflowInAccount(Workflow workflow, String accountId, String userEmail) {
+    if (workflow.isSample()) {
+      return false;
+    }
+
     List<String> appIds = appService.getAppIdsByAccountId(accountId);
 
     PageRequest<Workflow> pageRequest = aPageRequest()
                                             .addFilter("appId", Operator.IN, appIds.toArray())
                                             .addFilter("createdBy.email", Operator.EQ, userEmail)
+                                            .addFilter("sample", Operator.EQ, false)
                                             .addOrder(Workflow.CREATED_AT_KEY, OrderType.ASC)
                                             .addFieldsIncluded("_id")
                                             .withLimit("1")
@@ -475,7 +496,7 @@ public class EventPublishHelper {
       return false;
     }
 
-    if (workflowId.equals(workflows.get(0).getUuid())) {
+    if (workflow.getUuid().equals(workflows.get(0).getUuid())) {
       return true;
     }
 
@@ -582,9 +603,9 @@ public class EventPublishHelper {
       return false;
     }
 
-    if (accounts.size() > 1) {
-      return false;
-    }
+    //    if (accounts.size() > 1) {
+    //      return false;
+    //    }
 
     return true;
   }
@@ -615,7 +636,10 @@ public class EventPublishHelper {
 
   private boolean shouldPublishEventForAccount(String accountId) {
     Account account = accountService.getFromCache(accountId);
+    return isTrialAccount(account);
+  }
 
+  private boolean isTrialAccount(Account account) {
     if (account == null) {
       return false;
     }
@@ -625,6 +649,18 @@ public class EventPublishHelper {
     }
 
     if (!AccountType.TRIAL.equals(account.getLicenseInfo().getAccountType())) {
+      return false;
+    }
+    return true;
+  }
+
+  private boolean shouldPublishAccountEventForAccount(String accountId, AccountEvent accountEvent) {
+    Account account = accountService.getFromCache(accountId);
+    if (!isTrialAccount(account)) {
+      return false;
+    }
+
+    if (isNotEmpty(account.getAccountEvents()) && account.getAccountEvents().contains(accountEvent)) {
       return false;
     }
 
@@ -728,6 +764,21 @@ public class EventPublishHelper {
         publishIfFirstDeployment(workflowExecutionId, appIds, accountId, userEmail);
       }
 
+      if (workflowExecution.getPipelineSummary() != null) {
+        Pipeline pipeline =
+            pipelineService.readPipeline(appId, workflowExecution.getPipelineSummary().getPipelineId(), false);
+        if (!pipeline.isSample()) {
+          publishAccountEvent(
+              accountId, AccountEvent.builder().accountEventType(AccountEventType.PIPELINE_DEPLOYED).build(), user);
+        }
+      } else {
+        Workflow workflow = workflowService.readWorkflowWithoutServices(appId, workflowExecution.getWorkflowId());
+        if (!workflow.isSample()) {
+          publishAccountEvent(
+              accountId, AccountEvent.builder().accountEventType(AccountEventType.WORKFLOW_DEPLOYED).build(), user);
+        }
+      }
+
       if (!isEventAlreadyReportedForUser(user, EventType.FIRST_ROLLED_BACK_DEPLOYMENT) && workflowRolledBack) {
         publishEvent(EventType.FIRST_ROLLED_BACK_DEPLOYMENT, getProperties(accountId, userEmail));
       }
@@ -752,7 +803,8 @@ public class EventPublishHelper {
     List<WorkflowExecution> workflowExecutions = executionPageResponse.getResponse();
 
     if (isNotEmpty(workflowExecutions)) {
-      if (workflowExecutionId.equals(workflowExecutions.get(0).getUuid())) {
+      WorkflowExecution workflowExecution = workflowExecutions.get(0);
+      if (workflowExecutionId.equals(workflowExecution.getUuid())) {
         publishEvent(EventType.FIRST_DEPLOYMENT_EXECUTED, getProperties(accountId, userEmail));
       }
     }
@@ -774,6 +826,7 @@ public class EventPublishHelper {
     return properties;
   }
 
+  //  public void publishCustomEvent(String accountId, String customEvent, String additionalInfo) {
   public void publishCustomEvent(String accountId, String customEvent) {
     String userEmail = checkIfMarketoOrSegmentIsEnabledAndGetUserEmail(customEvent);
 
@@ -790,6 +843,55 @@ public class EventPublishHelper {
       properties.put(ACCOUNT_ID, accountId);
       properties.put(EMAIL_ID, userEmail);
       properties.put(CUSTOM_EVENT_NAME, customEvent);
+      publishEvent(EventType.CUSTOM, properties);
+    });
+  }
+
+  /**
+   * Run sample pipeline
+   * Install Harness Delegate
+   * Connect to a cloud provider
+   * Connect to an artifact repo
+   * Create an app
+   * Create a service
+   * Create an env
+   * Create a workflow
+   * Deploy your workflow
+   * @param accountId
+   * @param accountEvent
+   */
+  public void publishAccountEvent(String accountId, AccountEvent accountEvent) {
+    User user = UserThreadLocal.get();
+    publishAccountEvent(accountId, accountEvent, user);
+  }
+
+  public void publishAccountEvent(String accountId, AccountEvent accountEvent, User user) {
+    if (!checkIfMarketoOrSegmentIsEnabled()) {
+      return;
+    }
+
+    if (!shouldPublishEventForUser(user)) {
+      return;
+    }
+
+    String userEmail = user.getEmail();
+
+    executorService.submit(() -> {
+      if (!shouldPublishAccountEventForAccount(accountId, accountEvent)) {
+        return;
+      }
+
+      accountService.updateAccountEvents(accountId, accountEvent);
+
+      Map<String, String> properties = new HashMap<>();
+      properties.put(ACCOUNT_ID, accountId);
+      properties.put(EMAIL_ID, userEmail);
+      properties.put(ACCOUNT_EVENT, String.valueOf(true));
+      properties.put(CUSTOM_EVENT_NAME, accountEvent.getCustomMsg());
+      if (isNotEmpty(accountEvent.getCategory())) {
+        properties.put(CATEGORY, accountEvent.getCategory());
+      }
+
       publishEvent(EventType.CUSTOM, properties);
     });
   }

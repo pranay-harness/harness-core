@@ -62,6 +62,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
+import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -74,6 +75,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.AccountEvent;
+import software.wings.beans.AccountEventType;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.Event.Type;
@@ -170,6 +173,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private CacheManager cacheManager;
   @Inject private EnvironmentService envService;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private EventPublishHelper eventPublishHelper;
   @Inject @Named(GitOpsFeature.FEATURE_NAME) private UsageLimitedFeature gitOpsFeature;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private FeatureFlagService featureFlagService;
@@ -449,9 +453,39 @@ public class SettingsServiceImpl implements SettingsService {
       }
     }
 
-    return duplicateCheck(()
-                              -> wingsPersistence.saveAndGet(SettingAttribute.class, settingAttribute),
-        "name", settingAttribute.getName());
+    SettingAttribute createdSettingAttribute =
+        duplicateCheck(()
+                           -> wingsPersistence.saveAndGet(SettingAttribute.class, settingAttribute),
+            "name", settingAttribute.getName());
+    if (createdSettingAttribute != null && !createdSettingAttribute.isSample()) {
+      if (SettingCategory.CLOUD_PROVIDER.equals(createdSettingAttribute.getCategory())) {
+        eventPublishHelper.publishAccountEvent(settingAttribute.getAccountId(),
+            AccountEvent.builder().accountEventType(AccountEventType.CLOUD_PROVIDER_CREATED).build());
+      } else if (SettingCategory.CONNECTOR.equals(createdSettingAttribute.getCategory())
+          && isArtifactServer(createdSettingAttribute.getValue().getSettingType())) {
+        eventPublishHelper.publishAccountEvent(settingAttribute.getAccountId(),
+            AccountEvent.builder().accountEventType(AccountEventType.ARTIFACT_REPO_CREATED).build());
+      }
+    }
+    return createdSettingAttribute;
+  }
+
+  private boolean isArtifactServer(SettingVariableTypes settingVariableTypes) {
+    switch (settingVariableTypes) {
+      case JENKINS:
+      case BAMBOO:
+      case DOCKER:
+      case NEXUS:
+      case ARTIFACTORY:
+      case SMB:
+      case SMTP:
+      case AMAZON_S3_HELM_REPO:
+      case GCS_HELM_REPO:
+      case HTTP_HELM_REPO:
+        return true;
+      default:
+        return false;
+    }
   }
 
   @Override

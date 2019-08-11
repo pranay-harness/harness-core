@@ -81,6 +81,7 @@ public abstract class InfrastructureMapping
 
   private Map<String, Object> blueprints;
   private String infrastructureDefinitionId;
+  private boolean sample;
 
   /**
    * Instantiates a new Infrastructure mapping.
@@ -99,7 +100,7 @@ public abstract class InfrastructureMapping
       EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt,
       String computeProviderSettingId, String envId, String serviceTemplateId, String serviceId,
       String computeProviderType, String infraMappingType, String deploymentType, String computeProviderName,
-      String name, boolean autoPopulateName, Map<String, Object> blueprints, String provisionerId) {
+      String name, boolean autoPopulateName, Map<String, Object> blueprints, String provisionerId, boolean sample) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.computeProviderSettingId = computeProviderSettingId;
     this.envId = envId;
@@ -114,6 +115,7 @@ public abstract class InfrastructureMapping
     this.accountId = accountId;
     this.blueprints = blueprints;
     this.provisionerId = provisionerId;
+    this.sample = sample;
   }
 
   public abstract void applyProvisionerVariables(
@@ -315,6 +317,14 @@ public abstract class InfrastructureMapping
 
   public void setBlueprints(Map<String, Object> blueprints) {
     this.blueprints = blueprints;
+  }
+
+  public boolean isSample() {
+    return sample;
+  }
+
+  public void setSample(boolean sample) {
+    this.sample = sample;
   }
 
   @Override

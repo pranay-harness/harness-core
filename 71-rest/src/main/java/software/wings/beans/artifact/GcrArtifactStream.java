@@ -37,9 +37,9 @@ public class GcrArtifactStream extends ArtifactStream {
   public GcrArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
       String name, boolean autoPopulate, String serviceId, String registryHostName, String dockerImageName,
-      String accountId, Set<String> keywords) {
+      String accountId, Set<String> keywords, boolean sample) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, GCR.name(), sourceName,
-        settingId, name, autoPopulate, serviceId, true, accountId, keywords);
+        settingId, name, autoPopulate, serviceId, true, accountId, keywords, sample);
     this.registryHostName = registryHostName;
     this.dockerImageName = dockerImageName;
   }

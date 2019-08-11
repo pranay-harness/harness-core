@@ -47,6 +47,7 @@ public class WorkflowSampleDataProvider {
                             .serviceId(serviceId)
                             .infraMappingId(infraMappingId)
                             .workflowType(WorkflowType.ORCHESTRATION)
+                            .sample(true)
                             .orchestrationWorkflow(aBasicOrchestrationWorkflow().build())
                             .build();
 
@@ -74,6 +75,7 @@ public class WorkflowSampleDataProvider {
                             .serviceId(serviceId)
                             .infraMappingId(infraMappingId)
                             .workflowType(WorkflowType.ORCHESTRATION)
+                            .sample(true)
                             .orchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
                             .build();
 
@@ -110,6 +112,7 @@ public class WorkflowSampleDataProvider {
                             .infraMappingId(infraMappingId)
                             .workflowType(WorkflowType.ORCHESTRATION)
                             .orchestrationWorkflow(aRollingOrchestrationWorkflow().build())
+                            .sample(true)
                             .build();
 
     workflow.getOrchestrationWorkflow().setOrchestrationWorkflowType(OrchestrationWorkflowType.ROLLING);
@@ -129,6 +132,7 @@ public class WorkflowSampleDataProvider {
                             .serviceId(serviceId)
                             .infraMappingId(infraMappingId)
                             .workflowType(WorkflowType.ORCHESTRATION)
+                            .sample(true)
                             .orchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
                             .build();
 

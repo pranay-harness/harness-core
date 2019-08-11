@@ -58,6 +58,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.eraro.ErrorCode;
+import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -73,6 +74,8 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.annotation.BlueprintProcessor;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentType;
+import software.wings.beans.AccountEvent;
+import software.wings.beans.AccountEventType;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
@@ -206,6 +209,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private PipelineService pipelineService;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
+  @Inject private EventPublishHelper eventPublishHelper;
 
   @Inject private Queue<PruneEvent> pruneQueue;
 
@@ -382,6 +386,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     String accountId = appService.getAccountIdByAppId(infraMapping.getAppId());
     yamlPushService.pushYamlChangeSet(
         accountId, null, savedInfraMapping, Type.CREATE, infraMapping.isSyncFromGit(), false);
+
+    if (!savedInfraMapping.isSample()) {
+      eventPublishHelper.publishAccountEvent(
+          accountId, AccountEvent.builder().accountEventType(AccountEventType.INFRA_MAPPING_ADDED).build());
+    }
     return savedInfraMapping;
   }
 

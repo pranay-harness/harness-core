@@ -469,6 +469,8 @@ public interface UserService extends OwnedByAccount {
    */
   boolean accountJoinRequest(AccountJoinRequest accountJoinRequest);
 
+  //  boolean postCustomEvent(String accountId, String event, String additionalInfo);
+
   boolean postCustomEvent(String accountId, String event);
 
   PasswordStrengthViolations checkPasswordViolations(

@@ -31,6 +31,7 @@ public class CloudProviderSampleDataProvider {
                                              .K8S_DELEGATE_NAME) // Cluster name should match with the delegate name
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+            .withSample(true)
             .build();
 
     SettingAttribute existing = settingsService.fetchSettingAttributeByName(

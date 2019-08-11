@@ -44,10 +44,10 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
       String computeProviderSettingId, String envId, String serviceTemplateId, String serviceId,
       String computeProviderType, String infraMappingType, String deploymentType, String computeProviderName,
       String name, boolean autoPopulateName, Map<String, Object> blueprints, String clusterName, String namespace,
-      String releaseName, String provisionerId) {
+      String releaseName, String provisionerId, boolean sample) {
     super(entityYamlPath, appId, accountId, type, uuid, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt,
         computeProviderSettingId, envId, serviceTemplateId, serviceId, computeProviderType, infraMappingType,
-        deploymentType, computeProviderName, name, autoPopulateName, blueprints, clusterName, provisionerId);
+        deploymentType, computeProviderName, name, autoPopulateName, blueprints, clusterName, provisionerId, sample);
     this.namespace = namespace;
     this.releaseName = releaseName;
   }

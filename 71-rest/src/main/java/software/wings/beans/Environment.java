@@ -65,6 +65,7 @@ public class Environment extends Base implements KeywordsAware, NameAccess, TagA
   @Transient private Setup setup;
   @SchemaIgnore private Set<String> keywords;
   @Indexed private String accountId;
+  private boolean sample;
 
   /**
    * Gets name.
@@ -206,6 +207,14 @@ public class Environment extends Base implements KeywordsAware, NameAccess, TagA
     this.setup = setup;
   }
 
+  public boolean isSample() {
+    return sample;
+  }
+
+  public void setSample(boolean sample) {
+    this.sample = sample;
+  }
+
   public Environment cloneInternal() {
     return anEnvironment()
         .name(getName())
@@ -264,6 +273,7 @@ public class Environment extends Base implements KeywordsAware, NameAccess, TagA
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private boolean sample;
 
     private Builder() {}
 
@@ -417,6 +427,11 @@ public class Environment extends Base implements KeywordsAware, NameAccess, TagA
       return this;
     }
 
+    public Builder sample(boolean sample) {
+      this.sample = sample;
+      return this;
+    }
+
     /**
      * But builder.
      *
@@ -438,7 +453,8 @@ public class Environment extends Base implements KeywordsAware, NameAccess, TagA
           .createdBy(createdBy)
           .createdAt(createdAt)
           .lastUpdatedBy(lastUpdatedBy)
-          .lastUpdatedAt(lastUpdatedAt);
+          .lastUpdatedAt(lastUpdatedAt)
+          .sample(sample);
     }
 
     /**
@@ -463,6 +479,7 @@ public class Environment extends Base implements KeywordsAware, NameAccess, TagA
       environment.setCreatedAt(createdAt);
       environment.setLastUpdatedBy(lastUpdatedBy);
       environment.setLastUpdatedAt(lastUpdatedAt);
+      environment.setSample(sample);
       return environment;
     }
   }

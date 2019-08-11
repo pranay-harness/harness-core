@@ -8,6 +8,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.CV_CONFIG_ID;
@@ -41,7 +42,6 @@ import software.wings.beans.Delegate;
 import software.wings.beans.EntityType;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
-import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.access.Whitelist;
@@ -103,22 +103,11 @@ public class EventPublishHelperTest extends WingsBaseTest {
   public void testSendFirstWorkflowEvent() {
     UserThreadLocal.set(user);
     try {
-      when(workflowService.listWorkflows(any(PageRequest.class)))
-          .thenReturn(PageResponseBuilder.aPageResponse().build());
-      eventPublishHelper.publishWorkflowCreatedEvent(WORKFLOW_ID, ACCOUNT_ID);
-      verify(eventPublisher, never()).publishEvent(any(Event.class));
-
-      Workflow workflow = WorkflowBuilder.aWorkflow().uuid("invalid").build();
+      Workflow workflow = aWorkflow().uuid(WORKFLOW_ID).sample(false).build();
       when(workflowService.listWorkflows(any(PageRequest.class)))
           .thenReturn(PageResponseBuilder.aPageResponse().withResponse(Arrays.asList(workflow)).withTotal(1).build());
-      eventPublishHelper.publishWorkflowCreatedEvent(WORKFLOW_ID, ACCOUNT_ID);
-      verify(eventPublisher, never()).publishEvent(any(Event.class));
-
-      workflow = WorkflowBuilder.aWorkflow().uuid(WORKFLOW_ID).build();
-      when(workflowService.listWorkflows(any(PageRequest.class)))
-          .thenReturn(PageResponseBuilder.aPageResponse().withResponse(Arrays.asList(workflow)).withTotal(1).build());
-      eventPublishHelper.publishWorkflowCreatedEvent(WORKFLOW_ID, ACCOUNT_ID);
-      verify(eventPublisher, times(1)).publishEvent(any(Event.class));
+      eventPublishHelper.publishWorkflowCreatedEvent(workflow, ACCOUNT_ID);
+      verify(eventPublisher, times(2)).publishEvent(any(Event.class));
     } finally {
       UserThreadLocal.unset();
     }
@@ -275,7 +264,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
       when(delegateService.list(any(PageRequest.class)))
           .thenReturn(PageResponseBuilder.aPageResponse().withResponse(Arrays.asList(delegate)).withTotal(1).build());
       eventPublishHelper.publishInstalledDelegateEvent(ACCOUNT_ID, DELEGATE_ID);
-      verify(eventPublisher, times(1)).publishEvent(any(Event.class));
+      verify(eventPublisher, times(2)).publishEvent(any(Event.class));
     } finally {
       UserThreadLocal.unset();
     }
@@ -355,7 +344,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
                           .withTotal(1)
                           .build());
       eventPublishHelper.handleDeploymentCompleted(workflowExecution);
-      verify(eventPublisher, times(2)).publishEvent(any(Event.class));
+      verify(eventPublisher, times(1)).publishEvent(any(Event.class));
     } finally {
       UserThreadLocal.unset();
     }
@@ -397,7 +386,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
                           .withTotal(1)
                           .build());
       eventPublishHelper.handleDeploymentCompleted(workflowExecution);
-      verify(eventPublisher, times(4)).publishEvent(any(Event.class));
+      verify(eventPublisher, times(2)).publishEvent(any(Event.class));
     } finally {
       UserThreadLocal.unset();
     }

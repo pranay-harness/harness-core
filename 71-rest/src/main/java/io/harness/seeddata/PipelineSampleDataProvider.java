@@ -58,6 +58,7 @@ public class PipelineSampleDataProvider {
     Pipeline pipeline = Pipeline.builder()
                             .name(SampleDataProviderConstants.K8S_PIPELINE_NAME)
                             .appId(appId)
+                            .sample(true)
                             .pipelineStages(asList(qaStage, approvalStage, prodStage))
                             .build();
 

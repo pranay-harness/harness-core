@@ -146,10 +146,10 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
       String computeProviderSettingId, String envId, String serviceTemplateId, String serviceId,
       String computeProviderType, String infraMappingType, String deploymentType, String computeProviderName,
       String name, boolean autoPopulateName, Map<String, Object> blueprints, String provisionerId, String region,
-      String vpcId, List<String> subnetIds, List<String> securityGroupIds, String role) {
+      String vpcId, List<String> subnetIds, List<String> securityGroupIds, String role, boolean sample) {
     super(entityYamlPath, appId, accountId, type, uuid, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt,
         computeProviderSettingId, envId, serviceTemplateId, serviceId, computeProviderType, infraMappingType,
-        deploymentType, computeProviderName, name, autoPopulateName, blueprints, provisionerId);
+        deploymentType, computeProviderName, name, autoPopulateName, blueprints, provisionerId, sample);
     this.region = region;
     this.vpcId = vpcId;
     this.subnetIds = subnetIds;

@@ -1099,7 +1099,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     String accountId = appService.getAccountIdByAppId(workflow.getAppId());
     yamlPushService.pushYamlChangeSet(accountId, null, newWorkflow, Type.CREATE, workflow.isSyncFromGit(), false);
 
-    eventPublishHelper.publishWorkflowCreatedEvent(newWorkflow.getUuid(), accountId);
+    if (!newWorkflow.isSample()) {
+      eventPublishHelper.publishWorkflowCreatedEvent(newWorkflow, accountId);
+    }
+
     return newWorkflow;
   }
 

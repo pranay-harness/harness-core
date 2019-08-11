@@ -30,6 +30,7 @@ public class ArtifactStreamSampleDataProvider {
             .imageName(DOCKER_TODO_LIST_IMAGE_NAME)
             .name(SampleDataProviderConstants.DOCKER_TODO_LIST_ARTIFACT_SOURCE_NAME)
             .serviceId(serviceId)
+            .sample(true)
             .build(),
         false);
 

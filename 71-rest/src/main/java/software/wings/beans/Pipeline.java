@@ -72,12 +72,13 @@ public class Pipeline extends Base implements KeywordsAware, NameAccess, TagAwar
   private transient List<String> infraMappingIds = new ArrayList<>();
   @SchemaIgnore private Set<String> keywords;
   @Indexed private String accountId;
+  private boolean sample;
 
   @Builder
   public Pipeline(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
       long lastUpdatedAt, String entityYamlPath, String name, String description, List<PipelineStage> pipelineStages,
       Map<String, Long> stateEtaMap, List<Service> services, List<WorkflowExecution> workflowExecutions,
-      List<FailureStrategy> failureStrategies, String accountId) {
+      List<FailureStrategy> failureStrategies, String accountId, boolean sample) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
@@ -87,6 +88,7 @@ public class Pipeline extends Base implements KeywordsAware, NameAccess, TagAwar
     this.workflowExecutions = workflowExecutions;
     this.failureStrategies = (failureStrategies == null) ? new ArrayList<>() : failureStrategies;
     this.accountId = accountId;
+    this.sample = sample;
   }
 
   public Pipeline cloneInternal() {

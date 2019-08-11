@@ -2,27 +2,33 @@ package io.harness.event.handler.impl.segment;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.event.handler.impl.Constants.EMAIL_ID;
+import static io.harness.event.model.EventConstants.ACCOUNT_STATUS;
+import static io.harness.event.model.EventConstants.COMPANY_NAME;
+import static io.harness.event.model.EventConstants.DAYS_LEFT_IN_TRIAL;
+import static io.harness.event.model.EventConstants.FIRST_NAME;
+import static io.harness.event.model.EventConstants.LAST_NAME;
+import static io.harness.event.model.EventConstants.OAUTH_PROVIDER;
+import static io.harness.event.model.EventConstants.USER_INVITE_URL;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.segment.analytics.Analytics;
+import com.segment.analytics.messages.IdentifyMessage;
+import com.segment.analytics.messages.IdentifyMessage.Builder;
+import com.segment.analytics.messages.TrackMessage;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.event.handler.impl.Utils;
-import io.harness.event.handler.segment.SegmentRestClient;
-import io.harness.event.model.segment.Identity;
-import io.harness.event.model.segment.Identity.IdentityBuilder;
-import io.harness.event.model.segment.Properties;
-import io.harness.event.model.segment.Response;
-import io.harness.event.model.segment.Trace;
-import io.harness.event.model.segment.Traits;
-import io.harness.event.model.segment.Traits.TraitsBuilder;
+import io.harness.event.model.EventConstants;
 import lombok.extern.slf4j.Slf4j;
-import retrofit2.Retrofit;
 import software.wings.beans.Account;
 import software.wings.beans.LicenseInfo;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author rktummala on 11/20/18
@@ -32,11 +38,12 @@ import java.util.List;
 public class SegmentHelper {
   @Inject private Utils utils;
 
-  public String createOrUpdateIdentity(String apiKey, Retrofit retrofit, String userId, String email, String userName,
-      Account account, String userInviteUrl, String oauthProvider) throws IOException {
+  public String createOrUpdateIdentity(String apiKey, String userId, String email, String userName, Account account,
+      String userInviteUrl, String oauthProvider) throws IOException {
     logger.info("Updating identity {} to segment", userId);
 
-    IdentityBuilder identityBuilder = Identity.builder();
+    Builder identityBuilder = IdentifyMessage.builder();
+
     String identity;
     if (isEmpty(userId)) {
       identity = UUIDGenerator.generateUuid();
@@ -46,61 +53,47 @@ public class SegmentHelper {
       identityBuilder.userId(identity);
     }
 
-    TraitsBuilder traitsBuilder = Traits.builder()
-                                      .email(email)
-                                      .firstName(utils.getFirstName(userName, email))
-                                      .lastName(utils.getLastName(userName, email));
+    Map<String, String> traits = new HashMap<>();
+    traits.put(EMAIL_ID, email);
+    traits.put(FIRST_NAME, utils.getFirstName(userName, email));
+    traits.put(LAST_NAME, utils.getLastName(userName, email));
 
     if (account != null) {
-      traitsBuilder.companyName(account.getCompanyName()).accountId(account.getUuid());
+      traits.put(COMPANY_NAME, account.getCompanyName());
+      traits.put(EventConstants.ACCOUNT_ID, account.getUuid());
 
       LicenseInfo licenseInfo = account.getLicenseInfo();
       if (licenseInfo != null) {
-        traitsBuilder.accountStatus(licenseInfo.getAccountStatus())
-            .daysLeftInTrial(utils.getDaysLeft(licenseInfo.getExpiryTime()));
+        traits.put(ACCOUNT_STATUS, licenseInfo.getAccountStatus());
+        traits.put(DAYS_LEFT_IN_TRIAL, utils.getDaysLeft(licenseInfo.getExpiryTime()));
       }
     }
 
     if (isNotEmpty(userInviteUrl)) {
-      traitsBuilder.userInviteUrl(userInviteUrl);
+      traits.put(USER_INVITE_URL, userInviteUrl);
     }
 
     if (isNotEmpty(oauthProvider)) {
-      traitsBuilder.oauthProvider(oauthProvider);
+      traits.put(OAUTH_PROVIDER, oauthProvider);
     }
 
-    identityBuilder.traits(traitsBuilder.build());
+    identityBuilder.traits(traits);
 
-    retrofit2.Response<Response> response =
-        retrofit.create(SegmentRestClient.class).identity(apiKey, identityBuilder.build()).execute();
-    if (response.body().isSuccess()) {
-      logger.info("Updated identity {} to segment", identity);
-    } else {
-      logger.error("Failed while updating identity {} to segment", identity);
-    }
+    Analytics analytics = Analytics.builder(apiKey).build();
+    analytics.enqueue(identityBuilder);
+    logger.info("Updated identity {} to segment", identity);
     return identity;
   }
 
-  public boolean reportTrackEvent(
-      String apiKey, Retrofit retrofit, String identity, String event, Properties properties) {
-    Trace trace = Trace.builder().event(event).userId(identity).properties(properties).build();
-    try {
-      retrofit2.Response<Response> response = retrofit.create(SegmentRestClient.class).track(apiKey, trace).execute();
-      if (response.body().isSuccess()) {
-        logger.info("Reported event {} to segment for user {}", event, identity);
-        return true;
-      } else {
-        logger.error("Failed to report event {} to segment for user {}", event, identity);
-        return false;
-      }
-    } catch (IOException e) {
-      logger.error("Error while sending event {} to segment for user {}", event, identity, e);
-      return false;
-    }
+  public boolean reportTrackEvent(String apiKey, String identity, String event, Map<String, String> properties) {
+    Analytics analytics = Analytics.builder(apiKey).build();
+
+    TrackMessage.Builder track = TrackMessage.builder(event).properties(properties).userId(identity);
+    analytics.enqueue(track);
+    return true;
   }
 
-  public void reportTrackEvent(
-      String apiKey, Retrofit retrofit, List<String> userIds, String event, Properties properties) {
-    userIds.forEach(userId -> reportTrackEvent(apiKey, retrofit, userId, event, properties));
+  public void reportTrackEvent(String apiKey, List<String> userIds, String event, Map<String, String> properties) {
+    userIds.forEach(userId -> reportTrackEvent(apiKey, userId, event, properties));
   }
 }

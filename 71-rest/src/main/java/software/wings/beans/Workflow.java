@@ -83,6 +83,7 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
 
   @Getter @Setter private transient List<DeploymentType> deploymentTypes = new ArrayList<>();
   @Indexed private String accountId;
+  private boolean sample;
 
   @Override
   public boolean equals(Object o) {
@@ -252,6 +253,14 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
     this.accountId = accountId;
   }
 
+  public boolean isSample() {
+    return sample;
+  }
+
+  public void setSample(boolean sample) {
+    this.sample = sample;
+  }
+
   public boolean checkEnvironmentTemplatized() {
     if (templateExpressions == null) {
       return false;
@@ -324,6 +333,7 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
     private List<String> linkedTemplateUuids;
     private boolean syncFromGit;
     private String ecsBGType;
+    private boolean sample;
 
     private WorkflowBuilder() {}
 
@@ -446,6 +456,11 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
       return this;
     }
 
+    public WorkflowBuilder sample(boolean sample) {
+      this.sample = sample;
+      return this;
+    }
+
     public Workflow build() {
       Workflow workflow = new Workflow();
       workflow.setName(name);
@@ -472,6 +487,7 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
       workflow.setNotes(notes);
       workflow.setLinkedTemplateUuids(linkedTemplateUuids);
       workflow.setSyncFromGit(syncFromGit);
+      workflow.setSample(sample);
       return workflow;
     }
   }

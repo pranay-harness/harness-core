@@ -85,6 +85,7 @@ public abstract class ArtifactStream
   @SchemaIgnore private Set<String> keywords;
   @Transient private int artifactCount;
   @Transient private List<ArtifactSummary> artifacts;
+  private boolean sample;
 
   public ArtifactStream(String artifactStreamType) {
     this.artifactStreamType = artifactStreamType;
@@ -93,8 +94,8 @@ public abstract class ArtifactStream
 
   public ArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
       long lastUpdatedAt, String entityYamlPath, String artifactStreamType, String sourceName, String settingId,
-      String name, boolean autoPopulate, String serviceId, boolean metadataOnly, String accountId,
-      Set<String> keywords) {
+      String name, boolean autoPopulate, String serviceId, boolean metadataOnly, String accountId, Set<String> keywords,
+      boolean sample) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.artifactStreamType = artifactStreamType;
     this.sourceName = sourceName;
@@ -105,6 +106,7 @@ public abstract class ArtifactStream
     this.metadataOnly = metadataOnly;
     this.accountId = accountId;
     this.keywords = keywords;
+    this.sample = sample;
   }
 
   public String fetchAppId() {

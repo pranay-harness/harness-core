@@ -5,8 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.event.handler.impl.Constants.ACCOUNT_ID;
 import static io.harness.event.handler.impl.Constants.CUSTOM_EVENT_NAME;
 import static io.harness.event.handler.impl.Constants.EMAIL_ID;
-import static io.harness.event.handler.impl.Constants.TECH_CATEGORY_NAME;
-import static io.harness.event.handler.impl.Constants.TECH_NAME;
+import static io.harness.event.handler.impl.Constants.ORIGINAL_TIMESTAMP_NAME;
 import static io.harness.event.handler.impl.Constants.USER_NAME;
 import static io.harness.event.model.EventType.COMMUNITY_TO_ESSENTIALS;
 import static io.harness.event.model.EventType.COMMUNITY_TO_PAID;
@@ -46,15 +45,11 @@ import io.harness.event.listener.EventListener;
 import io.harness.event.model.Event;
 import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
-import io.harness.event.model.segment.Properties;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
-import io.harness.network.Http;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.service.intfc.AccountService;
@@ -65,6 +60,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -74,7 +70,6 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class SegmentHandler implements EventHandler {
-  private Retrofit retrofit;
   private SegmentConfig segmentConfig;
   private String apiKey;
   @Inject private SegmentHelper segmentHelper;
@@ -90,11 +85,6 @@ public class SegmentHandler implements EventHandler {
     boolean validApiUrl = StringUtils.contains(segmentConfig.getUrl(), "https://api.segment.io");
     if (isSegmentEnabled() && validApiUrl) {
       registerEventHandlers(eventListener);
-      retrofit = new Retrofit.Builder()
-                     .baseUrl(segmentConfig.getUrl())
-                     .addConverterFactory(JacksonConverterFactory.create())
-                     .client(Http.getUnsafeOkHttpClient(segmentConfig.getUrl()))
-                     .build();
       this.apiKey = "Bearer "
           + new String(java.util.Base64.getEncoder().encode(segmentConfig.getApiKey().getBytes()), Charsets.UTF_8);
     }
@@ -202,15 +192,8 @@ public class SegmentHandler implements EventHandler {
           reportTrackEvent(account, properties.get(CUSTOM_EVENT_NAME), user);
           break;
         case TECH_STACK:
-          String techName = properties.get(TECH_NAME);
-          String techCategoryName = properties.get(TECH_CATEGORY_NAME);
-          io.harness.event.model.segment.Properties eventProperties =
-              Properties.builder()
-                  .tech_category(techCategoryName)
-                  .tech_name(techName)
-                  .original_timestamp(String.valueOf(System.currentTimeMillis()))
-                  .build();
-          reportTrackEvent(account, eventType.name(), user, eventProperties);
+          properties.put(ORIGINAL_TIMESTAMP_NAME, String.valueOf(System.currentTimeMillis()));
+          reportTrackEvent(account, eventType.name(), user, properties);
           break;
         default:
           reportTrackEvent(account, eventType.name(), user);
@@ -250,8 +233,8 @@ public class SegmentHandler implements EventHandler {
 
   public String reportIdentity(Account account, User user, boolean wait) throws IOException, URISyntaxException {
     String userInviteUrl = utils.getUserInviteUrl(user.getEmail(), account);
-    String identity = segmentHelper.createOrUpdateIdentity(apiKey, retrofit, user.getUuid(), user.getEmail(),
-        user.getName(), account, userInviteUrl, user.getOauthProvider());
+    String identity = segmentHelper.createOrUpdateIdentity(
+        apiKey, user.getUuid(), user.getEmail(), user.getName(), account, userInviteUrl, user.getOauthProvider());
     if (!identity.equals(user.getSegmentIdentity())) {
       updateUserIdentity(user, identity);
     }
@@ -268,7 +251,7 @@ public class SegmentHandler implements EventHandler {
   }
 
   public String reportIdentity(String userName, String email) throws IOException {
-    return segmentHelper.createOrUpdateIdentity(apiKey, retrofit, null, email, userName, null, null, null);
+    return segmentHelper.createOrUpdateIdentity(apiKey, null, email, userName, null, null, null);
   }
 
   private User updateUserEvents(User user, String event) {
@@ -308,9 +291,9 @@ public class SegmentHandler implements EventHandler {
       logger.error("No identities reported for event {}", eventType);
       return false;
     }
-
-    Properties properties = Properties.builder().original_timestamp(String.valueOf(System.currentTimeMillis())).build();
-    segmentHelper.reportTrackEvent(apiKey, retrofit, identityList, eventType.name(), properties);
+    Map<String, String> properties = new HashMap<>();
+    properties.put("original_timestamp", String.valueOf(System.currentTimeMillis()));
+    segmentHelper.reportTrackEvent(apiKey, identityList, eventType.name(), properties);
     logger.info("Reported track for event {} with leads {}", eventType, identityList);
     return true;
   }
@@ -319,7 +302,7 @@ public class SegmentHandler implements EventHandler {
     reportTrackEvent(account, event, user, null);
   }
 
-  private void reportTrackEvent(Account account, String event, User user, Properties properties)
+  private void reportTrackEvent(Account account, String event, User user, Map<String, String> properties)
       throws IOException, URISyntaxException {
     String userId = user.getUuid();
     String identity = user.getSegmentIdentity();
@@ -336,10 +319,11 @@ public class SegmentHandler implements EventHandler {
     }
 
     if (properties == null) {
-      properties = Properties.builder().original_timestamp(String.valueOf(System.currentTimeMillis())).build();
+      properties = new HashMap<>();
+      properties.put("original_timestamp", String.valueOf(System.currentTimeMillis()));
     }
 
-    boolean reported = segmentHelper.reportTrackEvent(apiKey, retrofit, identity, event, properties);
+    boolean reported = segmentHelper.reportTrackEvent(apiKey, identity, event, properties);
     if (reported) {
       updateUserEvents(user, event);
     }
