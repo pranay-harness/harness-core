@@ -8,14 +8,17 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
 import io.harness.category.element.UnitTests;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
+import io.harness.resources.DelegateDataCollectionResource;
 import io.harness.resources.TimeSeriesResource;
 import io.harness.rest.RestResponse;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -26,7 +29,6 @@ import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.TSRequest;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
-import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.sm.StateType;
 
@@ -38,7 +40,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * @author Vaibhav Tulsyan
@@ -52,7 +53,6 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   private String workflowId;
   private String workflowExecutionId;
   private String serviceId;
-  private String cvConfigIdId;
   private String groupName;
   private String baseLineExecutionId;
   private String cvConfigId;
@@ -63,15 +63,13 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   private TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord;
   private List<TimeSeriesMLScores> timeSeriesMLScores;
   private Map<String, Map<String, TimeSeriesMetricDefinition>> metricTemplate;
-  private String transactionName;
-  private String metricName;
-  private TimeSeriesMLTransactionThresholds timeSeriesMLTransactionThresholds;
 
   @Mock private TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Mock private VerificationManagerClient managerClient;
   @Mock private VerificationManagerClientHelper managerClientHelper;
 
   private TimeSeriesResource timeSeriesResource;
+  @Inject private DelegateDataCollectionResource delegateDataCollectionResource;
 
   @Before
   public void setup() {
@@ -84,14 +82,11 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
     workflowExecutionId = generateUuid();
     baseLineExecutionId = generateUuid();
     serviceId = generateUuid();
-    cvConfigIdId = generateUuid();
     cvConfigId = generateUuid();
     groupName = "groupName-";
     nodes = new HashSet<>();
     nodes.add("someNode");
     newRelicMetricDataRecords = Sets.newHashSet(new NewRelicMetricDataRecord());
-    transactionName = UUID.randomUUID().toString();
-    metricName = UUID.randomUUID().toString();
 
     timeSeriesResource = new TimeSeriesResource(timeSeriesAnalysisService, managerClientHelper, managerClient);
 
@@ -99,18 +94,17 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
     timeSeriesMLAnalysisRecord = TimeSeriesMLAnalysisRecord.builder().build();
     timeSeriesMLScores = Collections.singletonList(new TimeSeriesMLScores());
 
-    metricTemplate = Collections.singletonMap("key1", new HashMap<String, TimeSeriesMetricDefinition>());
-
-    timeSeriesMLTransactionThresholds = TimeSeriesMLTransactionThresholds.builder().build();
+    metricTemplate = Collections.singletonMap("key1", new HashMap<>());
   }
 
   @Test
   @Category(UnitTests.class)
-  public void testSaveMetricData() throws IOException {
+  public void testSaveMetricData() throws IllegalAccessException {
     when(timeSeriesAnalysisService.saveMetricData(
              accountId, applicationId, stateExecutionId, delegateTaskId, new ArrayList<>()))
         .thenReturn(true);
-    RestResponse<Boolean> resp = timeSeriesResource.saveMetricData(
+    FieldUtils.writeField(delegateDataCollectionResource, "timeSeriesAnalysisService", timeSeriesAnalysisService, true);
+    RestResponse<Boolean> resp = delegateDataCollectionResource.saveMetricData(
         accountId, applicationId, stateExecutionId, delegateTaskId, new ArrayList<>());
     assertTrue(resp.getResource());
   }

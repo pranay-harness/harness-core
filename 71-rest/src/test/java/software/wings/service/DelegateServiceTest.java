@@ -287,7 +287,6 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldRegister() {
     Delegate delegate = delegateService.register(BUILDER.build());
     Delegate delegateFromDb = delegateService.get(ACCOUNT_ID, delegate.getUuid(), true);
-    delegateFromDb.setVerificationServiceSecret(verificationServiceSecret);
     assertThat(delegateFromDb).isEqualTo(delegate);
   }
 

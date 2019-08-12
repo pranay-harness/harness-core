@@ -40,7 +40,6 @@ import static io.harness.network.Localhost.getLocalHostAddress;
 import static io.harness.network.Localhost.getLocalHostName;
 import static io.harness.network.SafeHttpCall.execute;
 import static io.harness.security.ServiceTokenGenerator.EVENT_SERVICE_SECRET;
-import static io.harness.security.ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
@@ -695,7 +694,6 @@ public class DelegateServiceImpl implements DelegateService {
         continue;
       }
       builder.uuid(delegateId).status(delegateResponse.getResource().getStatus());
-      VERIFICATION_SERVICE_SECRET.set(delegateResponse.getResource().getVerificationServiceSecret());
       EVENT_SERVICE_SECRET.set(delegateResponse.getResource().getEventServiceSecret());
       logger.info(
           "Delegate registered with id {} and status {}", delegateId, delegateResponse.getResource().getStatus());
