@@ -151,7 +151,44 @@ public abstract class AbstractStatsDataFetcher<A, F, G, T, S> implements DataFet
         logger.info("Unsupported timeAggregationType " + groupByTime.getTimeAggregationType());
     }
 
-    return "time_bucket('" + value + " " + unit + "'," + dbFieldName + ")";
+    return new StringBuilder("time_bucket('")
+        .append(value)
+        .append(' ')
+        .append(unit)
+        .append("',")
+        .append(dbFieldName)
+        .append(')')
+        .toString();
+  }
+
+  public String getGroupByTimeQueryWithGapFill(
+      QLTimeSeriesAggregation groupByTime, String dbFieldName, String from, String to) {
+    String unit = "days";
+    int value = groupByTime.getTimeAggregationValue();
+
+    switch (groupByTime.getTimeAggregationType()) {
+      case DAY:
+        unit = "days";
+        break;
+      case HOUR:
+        unit = "hours";
+        break;
+      default:
+        logger.info("Unsupported timeAggregationType " + groupByTime.getTimeAggregationType());
+    }
+
+    return new StringBuilder("time_bucket_gapfill('")
+        .append(value)
+        .append(' ')
+        .append(unit)
+        .append("',")
+        .append(dbFieldName)
+        .append(",'")
+        .append(from)
+        .append("','")
+        .append(to)
+        .append("')")
+        .toString();
   }
 
   public void generateSqlInQuery(StringBuilder queryBuilder, Object[] values) {
