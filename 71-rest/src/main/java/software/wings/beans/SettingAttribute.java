@@ -42,6 +42,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.SLACK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SMB;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SMTP;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SPLUNK;
+import static software.wings.settings.SettingValue.SettingVariableTypes.SPOT_INST;
 import static software.wings.settings.SettingValue.SettingVariableTypes.STRING;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SUMO;
 
@@ -112,7 +113,7 @@ public class SettingAttribute extends Base implements NameAccess {
   @JsonView(JsonViews.Internal.class) @SchemaIgnore @Transient private transient String encryptedBy;
 
   public enum SettingCategory {
-    CLOUD_PROVIDER(Lists.newArrayList(PHYSICAL_DATA_CENTER, AWS, AZURE, GCP, KUBERNETES_CLUSTER, PCF)),
+    CLOUD_PROVIDER(Lists.newArrayList(PHYSICAL_DATA_CENTER, AWS, AZURE, GCP, KUBERNETES_CLUSTER, PCF, SPOT_INST)),
 
     CONNECTOR(Lists.newArrayList(SMTP, JENKINS, BAMBOO, SPLUNK, ELK, LOGZ, SUMO, APP_DYNAMICS, NEW_RELIC, DYNA_TRACE,
         BUG_SNAG, DATA_DOG, APM_VERIFICATION, PROMETHEUS, ELB, SLACK, DOCKER, ECR, GCR, NEXUS, ARTIFACTORY, AMAZON_S3,
