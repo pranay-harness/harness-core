@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
 import static software.wings.beans.PluginCategory.Artifact;
@@ -51,6 +52,7 @@ import software.wings.beans.SftpConfig;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SmbConfig;
 import software.wings.beans.SplunkConfig;
+import software.wings.beans.SpotInstConfig;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
@@ -398,6 +400,17 @@ public class PluginServiceImpl implements PluginService {
                        .withUiSchema(readUiSchema("SERVICENOW"))
                        .build());
 
+    if (featureFlagService.isEnabled(FeatureName.SPOTINST, accountId)) {
+      pluginList.add(anAccountPlugin()
+                         .withSettingClass(SpotInstConfig.class)
+                         .withAccountId(accountId)
+                         .withIsEnabled(true)
+                         .withDisplayName(SettingVariableTypes.SPOT_INST.getDisplayName())
+                         .withType(SettingVariableTypes.SPOT_INST.toString())
+                         .withPluginCategories(singletonList(CloudProvider))
+                         .build());
+    }
+
     if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
       pluginList.add(anAccountPlugin()
                          .withSettingClass(CustomArtifactServerConfig.class)
@@ -420,7 +433,7 @@ public class PluginServiceImpl implements PluginService {
         .collect(toMap(AccountPlugin::getType,
             accountPlugin
             -> ImmutableMap.of("jsonSchema", JsonUtils.jsonSchema(accountPlugin.getSettingClass()), "uiSchema",
-                accountPlugin.getUiSchema())));
+                (accountPlugin.getUiSchema() != null) ? accountPlugin.getUiSchema() : new HashMap<String, Object>())));
   }
 
   private Object readUiSchema(String type) {
