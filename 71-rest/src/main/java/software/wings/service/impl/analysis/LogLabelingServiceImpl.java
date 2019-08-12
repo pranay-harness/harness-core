@@ -389,7 +389,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
         PageRequestBuilder.aPageRequest()
             .addFilter(LogDataRecordKeys.serviceId, Operator.EQ, serviceId)
             .addFilter(LogDataRecordKeys.timeStamp, Operator.GE,
-                Timestamp.currentMinuteBoundary() - TimeUnit.DAYS.toMillis(180))
+                Timestamp.currentMinuteBoundary() - TimeUnit.DAYS.toMillis(30))
             .build();
 
     List<LogDataRecord> logs = dataStoreService.list(LogDataRecord.class, logDataRecordPageRequest);

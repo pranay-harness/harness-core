@@ -163,7 +163,9 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware {
     }
     addFieldIfNotEmpty(dataStoreRecordBuilder, LogDataRecordKeys.host, host, true);
 
-    dataStoreRecordBuilder.set(LogDataRecordKeys.validUntil, validUntil.getTime());
+    if (validUntil != null) {
+      dataStoreRecordBuilder.set(LogDataRecordKeys.validUntil, validUntil.getTime());
+    }
 
     return dataStoreRecordBuilder.build();
   }
