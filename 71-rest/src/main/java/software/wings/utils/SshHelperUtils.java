@@ -123,11 +123,15 @@ public class SshHelperUtils {
                           .withAppId(context.getAppId())
                           .withExecutionId(context.getActivityId())
                           .withHost(hostName)
-                          .withCommandUnitName(commandName)
-                          .withUserName(sshExecutionCredential.getSshUser())
-                          .withPassword(sshExecutionCredential.getSshPassword())
-                          .withSudoAppName(sshExecutionCredential.getAppAccount())
-                          .withSudoAppPassword(sshExecutionCredential.getAppAccountPassword());
+                          .withCommandUnitName(commandName);
+
+    // TODO: The following can be removed as we do not support username and password from context anymore
+    if (sshExecutionCredential != null) {
+      builder.withUserName(sshExecutionCredential.getSshUser())
+          .withPassword(sshExecutionCredential.getSshPassword())
+          .withSudoAppName(sshExecutionCredential.getAppAccount())
+          .withSudoAppPassword(sshExecutionCredential.getAppAccountPassword());
+    }
 
     populateBuilderWithCredentials(
         builder, context.getHostConnectionAttributes(), context.getBastionConnectionAttributes());
