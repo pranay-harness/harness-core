@@ -24,7 +24,7 @@ public class HIterator<T> implements AutoCloseable, Iterable<T>, Iterator<T> {
 
   @Override
   public T next() {
-    return iterator.next();
+    return HPersistence.retry(() -> iterator.next());
   }
 
   @Override
