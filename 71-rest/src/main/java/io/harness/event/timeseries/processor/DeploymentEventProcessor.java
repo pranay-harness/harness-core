@@ -39,9 +39,10 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
    * 	ENVTYPES TEXT[]
    * 	PARENT_EXECUTION TEXT
    * 	STAGENAME TEXT
+   * 	ROLLBACK_DURATION BIGINT
    */
   String insert_prepared_statement_sql =
-      "INSERT INTO DEPLOYMENT (EXECUTIONID,STARTTIME,ENDTIME,ACCOUNTID,APPID,TRIGGERED_BY,TRIGGER_ID,STATUS,SERVICES,WORKFLOWS,CLOUDPROVIDERS,ENVIRONMENTS,PIPELINE,DURATION,ARTIFACTS,ENVTYPES,PARENT_EXECUTION,STAGENAME) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+      "INSERT INTO DEPLOYMENT (EXECUTIONID,STARTTIME,ENDTIME,ACCOUNTID,APPID,TRIGGERED_BY,TRIGGER_ID,STATUS,SERVICES,WORKFLOWS,CLOUDPROVIDERS,ENVIRONMENTS,PIPELINE,DURATION,ARTIFACTS,ENVTYPES,PARENT_EXECUTION,STAGENAME,ROLLBACK_DURATION) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject DataFetcherUtils utils;
@@ -75,6 +76,7 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
            * 	ENVTYPES TEXT[]
            * 	PARENT_EXECUTION TEXT
            * 	STAGENAME TEXT
+           * 	ROLLBACK_DURATION BIGINT
            **/
           insertPreparedStatement.setString(1, eventInfo.getStringData().get(EventProcessor.EXECUTIONID));
           insertPreparedStatement.setTimestamp(
@@ -114,6 +116,13 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
           insertPreparedStatement.setString(17, eventInfo.getStringData().get(EventProcessor.PARENT_EXECUTION));
 
           insertPreparedStatement.setString(18, eventInfo.getStringData().get(EventProcessor.STAGENAME));
+
+          Long rollbackDuration = eventInfo.getLongData().get(EventProcessor.ROLLBACK_DURATION);
+          if (rollbackDuration == null) {
+            rollbackDuration = 0L;
+          }
+
+          insertPreparedStatement.setLong(19, rollbackDuration);
 
           insertPreparedStatement.execute();
           successfulInsert = true;

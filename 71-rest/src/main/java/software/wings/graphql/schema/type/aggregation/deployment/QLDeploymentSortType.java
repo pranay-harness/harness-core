@@ -4,7 +4,8 @@ import software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData
 
 public enum QLDeploymentSortType {
   Duration(DeploymentMetaDataFields.DURATION),
-  Count(DeploymentMetaDataFields.COUNT);
+  Count(DeploymentMetaDataFields.COUNT),
+  RollbackDuration(DeploymentMetaDataFields.ROLLBACK_DURATION);
 
   private DeploymentMetaDataFields deploymentMetadata;
 

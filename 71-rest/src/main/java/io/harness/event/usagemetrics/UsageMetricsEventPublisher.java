@@ -146,6 +146,7 @@ public class UsageMetricsEventPublisher {
     }
     stringData.put(EventProcessor.ACCOUNTID, accountId);
     longData.put(EventProcessor.DURATION, workflowExecution.getDuration());
+    longData.put(EventProcessor.ROLLBACK_DURATION, workflowExecution.getRollbackDuration());
 
     TimeSeriesEventInfo eventInfo = TimeSeriesEventInfo.builder()
                                         .accountId(accountId)

@@ -137,6 +137,16 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
 
   private static final FindAndModifyOptions callbackFindAndModifyOptions = new FindAndModifyOptions().returnNew(false);
 
+  public StateExecutionInstance getRollbackInstance(String workflowExecutionId) {
+    return wingsPersistence.createQuery(StateExecutionInstance.class)
+        .filter(StateExecutionInstanceKeys.executionUuid, workflowExecutionId)
+        .filter(StateExecutionInstanceKeys.stateType, PHASE.name())
+        .filter(StateExecutionInstanceKeys.rollback, true)
+        .order(Sort.ascending(StateExecutionInstanceKeys.createdAt))
+        .project(StateExecutionInstanceKeys.startTs, true)
+        .get();
+  }
+
   @Override
   public void callback(ExecutionContext context, ExecutionStatus status, Exception ex) {
     final WorkflowExecution execution = wingsPersistence.createQuery(WorkflowExecution.class)
@@ -145,18 +155,11 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
                                             .project(WorkflowExecutionKeys.startTs, true)
                                             .get();
 
-    final StateExecutionInstance rollbackInstance =
-        wingsPersistence.createQuery(StateExecutionInstance.class)
-            .filter(StateExecutionInstanceKeys.executionUuid, workflowExecutionId)
-            .filter(StateExecutionInstanceKeys.stateType, PHASE.name())
-            .filter(StateExecutionInstanceKeys.rollback, true)
-            .order(Sort.ascending(StateExecutionInstanceKeys.createdAt))
-            .project(StateExecutionInstanceKeys.startTs, true)
-            .get();
-
     Long startTs = execution == null ? null : execution.getStartTs();
     Long endTs = startTs == null ? null : System.currentTimeMillis();
     Long duration = startTs == null ? null : endTs - startTs;
+
+    final StateExecutionInstance rollbackInstance = getRollbackInstance(workflowExecutionId);
     Long rollbackStartTs = rollbackInstance == null ? null : rollbackInstance.getStartTs();
     Long rollbackDuration = rollbackStartTs == null ? null : endTs - rollbackStartTs;
 

@@ -455,6 +455,26 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
           functionCall.addColumnParams(schema.getDuration()), DeploymentMetaDataFields.DURATION.getFieldName()));
       fieldNames.add(DeploymentMetaDataFields.DURATION);
     }
+
+    if (aggregateFunction != null && aggregateFunction.getRollbackDuration() != null) {
+      FunctionCall functionCall = getFunctionCall(aggregateFunction.getRollbackDuration());
+      selectQuery.addCustomColumns(
+          Converter.toColumnSqlObject(functionCall.addColumnParams(schema.getRollbackDuration()),
+              DeploymentMetaDataFields.ROLLBACK_DURATION.getFieldName()));
+      fieldNames.add(DeploymentMetaDataFields.ROLLBACK_DURATION);
+
+      if (filters == null) {
+        filters = new ArrayList<>();
+      }
+
+      // If the metric is 'rollback duration', add a filter to only include the entries that had rollback duration set.
+      filters.add(
+          QLDeploymentFilter.builder()
+              .rollbackDuration(
+                  QLNumberFilter.builder().operator(QLNumberOperator.GREATER_THAN).values(new Number[] {0}).build())
+              .build());
+    }
+
     selectQuery.addCustomFromTable(schema.getDeploymentTable());
 
     if (!Lists.isNullOrEmpty(filters)) {
@@ -857,6 +877,9 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
       case Count:
         selectQuery.addCustomOrdering(DeploymentMetaDataFields.COUNT.name(), dir);
         break;
+      case RollbackDuration:
+        selectQuery.addCustomOrdering(DeploymentMetaDataFields.ROLLBACK_DURATION.name(), dir);
+        break;
       default:
         throw new RuntimeException("Order type not supported " + sortType);
     }
@@ -878,7 +901,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
    * 	ENVIRONMENTS TEXT[],
    * 	PIPELINE TEXT,
    * 	DURATION BIGINT NOT NULL,
-   * 	ARTIFACTS TEXT[]
+   * 	ARTIFACTS TEXT[],
+   * 	ROLLBACK_DURATION BIGINT
    **
    * @param type
    * @return
@@ -911,6 +935,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
         return schema.getPipeline();
       case Duration:
         return schema.getDuration();
+      case RollbackDuration:
+        return schema.getRollbackDuration();
       default:
         throw new RuntimeException("Filter type not supported " + type);
     }

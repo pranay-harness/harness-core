@@ -30,6 +30,7 @@ public class DeploymentTableSchema {
    * 	ENVTYPE TEXT[]
    * 	PARENT_EXECUTION TEXT
    * 	STAGENAME TEXT
+   * 	ROLLBACK_DURATION BIGINT
    */
   DbSpec dbSpec;
   DbSchema dbSchema;
@@ -52,6 +53,7 @@ public class DeploymentTableSchema {
   DbColumn envTypes;
   DbColumn parentExecution;
   DbColumn stageName;
+  DbColumn rollbackDuration;
 
   public DeploymentTableSchema() {
     dbSpec = new DbSpec();
@@ -75,5 +77,6 @@ public class DeploymentTableSchema {
     envTypes = deploymentTable.addColumn("ENVTYPES", "text[]", null);
     parentExecution = deploymentTable.addColumn("PARENT_EXECUTION", "text", null);
     stageName = deploymentTable.addColumn("STAGENAME", "text", null);
+    rollbackDuration = deploymentTable.addColumn("ROLLBACK_DURATION", "bigint", null);
   }
 }

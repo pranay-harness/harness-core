@@ -13,6 +13,7 @@ public enum QLDeploymentFilterType {
   EndTime(DeploymentMetaDataFields.ENDTIME),
   StartTime(DeploymentMetaDataFields.STARTTIME),
   Duration(DeploymentMetaDataFields.DURATION),
+  RollbackDuration(DeploymentMetaDataFields.ROLLBACK_DURATION),
   TriggeredBy(DeploymentMetaDataFields.TRIGGERED_BY),
   Trigger(DeploymentMetaDataFields.TRIGGER_ID),
   Workflow(DeploymentMetaDataFields.WORKFLOWID),
