@@ -45,12 +45,13 @@ public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOpAgg
     if (groupByTime != null) {
       if (isNotEmpty(groupBy)) {
         if (groupBy.size() == 1) {
-          return timeSeriesDataHelper.getTimeSeriesAggregatedData(accountId, filters, groupByTime, groupBy.get(0));
+          return timeSeriesDataHelper.getTimeSeriesAggregatedData(
+              accountId, aggregateFunction, filters, groupByTime, groupBy.get(0));
         } else {
           throw new WingsException("Invalid query. Only one groupBy column allowed");
         }
       } else {
-        return timeSeriesDataHelper.getTimeSeriesData(accountId, filters, groupByTime);
+        return timeSeriesDataHelper.getTimeSeriesData(accountId, aggregateFunction, filters, groupByTime);
       }
 
     } else {
@@ -59,7 +60,7 @@ public class InstanceStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOpAgg
             filters.stream().filter(filter -> filter.getCreatedAt() != null).findFirst();
         if (timeFilter.isPresent()) {
           throw new WingsException(
-              "Time Filter is only supported for time series data(grouped by time)", WingsException.USER);
+              "Time Filter is only supported for time series data (grouped by time)", WingsException.USER);
         }
       }
 
