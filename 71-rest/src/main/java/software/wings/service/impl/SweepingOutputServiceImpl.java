@@ -82,6 +82,7 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
     }
 
     return SweepingOutput.builder()
+        .uuid(generateUuid())
         .appId(appId)
         .pipelineExecutionId(pipelineExecutionId)
         .workflowExecutionId(workflowExecutionId)
