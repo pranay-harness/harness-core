@@ -32,7 +32,8 @@ public class QLDeploymentFilter implements EntityFilter {
    *   TriggeredBy(DeploymentMetaDataFields.TRIGGERED_BY),
    *   Trigger(DeploymentMetaDataFields.TRIGGER_ID),
    *   Workflow(DeploymentMetaDataFields.WORKFLOWID),
-   *   Pipeline(DeploymentMetaDataFields.PIPELINEID);
+   *   Pipeline(DeploymentMetaDataFields.PIPELINEID),
+   *   RollbackDuration(DeploymentMetaDataFields.ROLLBACK_DURATION),;
    */
 
   private QLIdFilter application;
@@ -44,6 +45,7 @@ public class QLDeploymentFilter implements EntityFilter {
   private QLTimeFilter endTime;
   private QLTimeFilter startTime;
   private QLNumberFilter duration;
+  private QLNumberFilter rollbackDuration;
   private QLIdFilter triggeredBy;
   private QLIdFilter trigger;
   private QLIdFilter workflow;
@@ -94,6 +96,10 @@ public class QLDeploymentFilter implements EntityFilter {
       filterTypes.add(QLDeploymentFilterType.Application);
     }
 
+    if (filter.getRollbackDuration() != null) {
+      filterTypes.add(QLDeploymentFilterType.RollbackDuration);
+    }
+
     return filterTypes;
   }
 
@@ -115,6 +121,8 @@ public class QLDeploymentFilter implements EntityFilter {
         return filter.getStatus();
       case Duration:
         return filter.getDuration();
+      case RollbackDuration:
+        return filter.getRollbackDuration();
       case Pipeline:
         return filter.getPipeline();
       case Trigger:

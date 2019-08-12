@@ -31,6 +31,7 @@ input DeploymentFilter {
   endTime: TimeFilter
   startTime: TimeFilter
   duration: NumberFilter
+  rollbackDuration: NumberFilter
   triggeredBy: IdFilter
   trigger: IdFilter
   workflow: IdFilter
@@ -40,6 +41,7 @@ input DeploymentFilter {
 input DeploymentAggregationFunction {
   count: CountAggregateOperation
   duration: DurationAggregateOperation
+  rollbackDuration: DurationAggregateOperation
 }
 
 enum DurationAggregateOperation {

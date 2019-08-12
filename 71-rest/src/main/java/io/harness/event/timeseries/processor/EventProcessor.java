@@ -20,7 +20,8 @@ public interface EventProcessor<T extends EventInfo> {
    ENVIRONMENTS TEXT[],
    PIPELINE TEXT,
    DURATION BIGINT NOT NULL,
-   ARTIFACTS TEXT[]
+   ARTIFACTS TEXT[],
+   ROLLBACK_DURATION
    */
   String EXECUTIONID = "EXECUTIONID";
   String STARTTIME = "STARTTIME";
@@ -39,6 +40,7 @@ public interface EventProcessor<T extends EventInfo> {
   String STAGENAME = "STAGENAME";
   String PIPELINE = "PIPELINE";
   String DURATION = "DURATION";
+  String ROLLBACK_DURATION = "ROLLBACK_DURATION";
   String ARTIFACT_LIST = "ARTIFACT_LIST";
   String SERVICEID = "SERVICEID";
   String ARTIFACTID = "ARTIFACTID";

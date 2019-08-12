@@ -9,4 +9,5 @@ import software.wings.graphql.schema.type.aggregation.QLCountAggregateOperation;
 public class QLDeploymentAggregationFunction {
   QLCountAggregateOperation count;
   QLDurationAggregateOperation duration;
+  QLDurationAggregateOperation rollbackDuration;
 }

@@ -33,7 +33,8 @@ public class DeploymentStatsQueryMetaData {
     WORKFLOWID("WORKFLOWID", DataType.STRING, QLFilterKind.ARRAY),
     ENVTYPE("ENVTYPE", DataType.STRING, QLFilterKind.ARRAY),
     STARTTIME("STARTTIME", DataType.TIMESTAMP, QLFilterKind.SIMPLE),
-    ENDTIME("ENDTIME", DataType.TIMESTAMP, QLFilterKind.SIMPLE);
+    ENDTIME("ENDTIME", DataType.TIMESTAMP, QLFilterKind.SIMPLE),
+    ROLLBACK_DURATION("ROLLBACK_DURATION", DataType.LONG, QLFilterKind.SIMPLE);
 
     private DataType dataType;
     private String fieldName;
