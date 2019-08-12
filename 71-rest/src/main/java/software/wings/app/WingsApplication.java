@@ -10,6 +10,7 @@ import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static software.wings.beans.FeatureName.GLOBAL_DISABLE_HEALTH_CHECK;
+import static software.wings.beans.FeatureName.PERPETUAL_TASK_SERVICE;
 import static software.wings.common.VerificationConstants.CV_24X7_METRIC_LABELS;
 import static software.wings.common.VerificationConstants.CV_META_DATA;
 import static software.wings.common.VerificationConstants.VERIFICATION_DEPLOYMENTS;
@@ -52,6 +53,9 @@ import io.harness.event.listener.EventListener;
 import io.harness.event.usagemetrics.EventsModuleHelper;
 import io.harness.exception.WingsException;
 import io.harness.govern.ProviderModule;
+import io.harness.grpc.GrpcServer;
+import io.harness.grpc.GrpcServerConfig;
+import io.harness.grpc.GrpcServerModule;
 import io.harness.health.HealthService;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
@@ -292,6 +296,13 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new SSOModule());
     modules.add(new AuthModule());
     modules.add(new GcpMarketplaceIntegrationModule());
+    modules.add(new ProviderModule() {
+      @Provides
+      public GrpcServerConfig getGrpcServerConfig() {
+        return configuration.getGrpcServerConfig();
+      }
+    });
+    modules.addAll(new GrpcServerModule().cumulativeDependencies());
 
     Injector injector = Guice.createInjector(modules);
 
@@ -400,7 +411,9 @@ public class WingsApplication extends Application<MainConfiguration> {
     }
 
     injector.getInstance(EventsModuleHelper.class).initialize();
-    //    injector.getInstance(GrpcServer.class).initalize();
+    if (injector.getInstance(FeatureFlagService.class).isGlobalEnabled(PERPETUAL_TASK_SERVICE)) {
+      injector.getInstance(GrpcServer.class).initialize();
+    }
     logger.info("Leaving startup maintenance mode");
     MaintenanceController.resetForceMaintenance();
 

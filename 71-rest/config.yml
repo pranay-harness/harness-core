@@ -154,6 +154,12 @@ timescaledb:
   logUnclosedConnections: false
   loggerLevel: OFF
 
+grpcServerConfig:
+  plainTextPort: 9879
+  tlsPort: 9880
+  keyFile: key.pem
+  certFile: cert.pem
+
 mongo:
   uri: mongodb://localhost:27017/harness
   #locksUri: mongodb://localhost:27017/impermanent

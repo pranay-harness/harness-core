@@ -23,6 +23,7 @@ import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
+import io.harness.grpc.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.scheduler.SchedulerConfig;
 import io.harness.timescaledb.TimeScaleDBConfig;
@@ -103,6 +104,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
 
   @JsonProperty("disabledCache") private Set<String> disabledCache;
   @JsonProperty("techStacks") private Map<String, UrlInfo> techStackLinks;
+  @JsonProperty("grpcServerConfig") private GrpcServerConfig grpcServerConfig;
 
   private int applicationPort;
   private boolean sslEnabled;

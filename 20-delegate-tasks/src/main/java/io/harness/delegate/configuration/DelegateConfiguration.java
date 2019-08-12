@@ -40,4 +40,6 @@ public class DelegateConfiguration {
   private String publishTarget;
 
   private String queueFilePath;
+
+  private String enablePerpetualTasks;
 }

@@ -6,6 +6,7 @@ import io.harness.marketplace.gcp.events.GcpMarketplaceEvent;
 import io.harness.mongo.HObjectFactory;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.notifications.NotificationReceiverInfo;
+import io.harness.perpetualtask.PerpetualTaskRecord;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.AmiServiceDeployElement;
 import software.wings.api.AmiServiceSetupElement;
@@ -872,6 +873,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(YamlGitConfig.class);
     set.add(YamlHistory.class);
     set.add(YamlVersion.class);
+    set.add(PerpetualTaskRecord.class);
   }
 
   @Override

@@ -88,6 +88,7 @@ import io.harness.managerclient.ManagerClient;
 import io.harness.managerclient.ManagerClientFactory;
 import io.harness.network.FibonacciBackOff;
 import io.harness.network.Http;
+import io.harness.perpetualtask.PerpetualTaskWorker;
 import io.harness.rest.RestResponse;
 import io.harness.security.TokenGenerator;
 import io.harness.security.encryption.DelegateDecryptionService;
@@ -203,6 +204,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Inject private DelegateConfiguration delegateConfiguration;
   @Inject private ManagerClient managerClient;
+
   @Inject @Named("heartbeatExecutor") private ScheduledExecutorService heartbeatExecutor;
   @Inject @Named("localHeartbeatExecutor") private ScheduledExecutorService localHeartbeatExecutor;
   @Inject @Named("upgradeExecutor") private ScheduledExecutorService upgradeExecutor;
@@ -213,6 +215,8 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject @Named("asyncExecutor") private ExecutorService asyncExecutorService;
   @Inject @Named("artifactExecutor") private ExecutorService artifactExecutorService;
   @Inject @Named("timeoutExecutor") private ExecutorService timeoutEnforcementService;
+  @Inject @Named("perpetualTaskExecutor") private ScheduledExecutorService perpetualTaskExecutor;
+  @Inject private PerpetualTaskWorker perpetualTaskWorker;
   @Inject private ExecutorService syncExecutorService;
   @Inject private SignalService signalService;
   @Inject private MessageService messageService;
@@ -935,6 +939,10 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void startTaskPolling() {
     taskPollExecutor.scheduleAtFixedRate(this ::pollForTask, 0, POLL_INTERVAL_SECONDS, TimeUnit.SECONDS);
+    if ("true".equalsIgnoreCase(delegateConfiguration.getEnablePerpetualTasks())) {
+      // TODO: delay instead of fixed rate
+      perpetualTaskExecutor.scheduleAtFixedRate(perpetualTaskWorker, 0, POLL_INTERVAL_SECONDS, TimeUnit.SECONDS);
+    }
   }
 
   private void pollForTask() {
