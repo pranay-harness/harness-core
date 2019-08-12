@@ -27,6 +27,7 @@ import io.harness.notifications.AlertNotificationRuleChecker;
 import io.harness.notifications.AlertNotificationRuleCheckerImpl;
 import io.harness.notifications.AlertVisibilityChecker;
 import io.harness.notifications.AlertVisibilityCheckerImpl;
+import io.harness.perpetualtask.PerpetualTaskServiceModule;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.scheduler.PersistentScheduler;
@@ -858,6 +859,8 @@ public class WingsModule extends DependencyModule {
     }
 
     // End of deployment trigger dependencies
+
+    install(new PerpetualTaskServiceModule());
   }
 
   private void bindFeatures() {

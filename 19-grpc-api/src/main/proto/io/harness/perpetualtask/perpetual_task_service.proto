@@ -1,0 +1,41 @@
+
+syntax = "proto3";
+
+package io.harness.perpetualtask;
+import "google/protobuf/any.proto";
+
+option java_multiple_files = true;
+
+// params are tracked in client/ownerService
+message PerpetualTaskParams {
+    google.protobuf.Any customized_params = 1;
+}
+
+// schedule is persisted in mongodb
+message PerpetualTaskSchedule {
+    uint64 interval = 1;
+    uint64 timeout = 2;
+}
+
+message PerpetualTaskContext {
+    PerpetualTaskParams task_params = 1;
+    PerpetualTaskSchedule task_schedule = 2;
+}
+
+message PerpetualTaskId{
+    string Id = 1;
+}
+
+message PerpetualTaskIdList{
+    repeated PerpetualTaskId task_id_list= 1;
+}
+
+message DelegateId{
+    string id = 1;
+}
+
+service PerpetualTaskService{
+    rpc ListTaskIds(DelegateId) returns(PerpetualTaskIdList){}
+    rpc GetTaskContext(PerpetualTaskId) returns(PerpetualTaskContext) {}
+}
+

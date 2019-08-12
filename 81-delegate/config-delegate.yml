@@ -9,3 +9,4 @@ pollForTasks: false
 description: description here
 publishTarget: localhost:9890
 queueFilePath: /tmp/eventQueue
+enablePerpetualTasks: false

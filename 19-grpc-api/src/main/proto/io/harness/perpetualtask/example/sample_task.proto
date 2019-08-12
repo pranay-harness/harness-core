@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package io.harness.perpetualtask.example;
+
+message SamplePerpetualTaskParams {
+    string country = 1;
+}

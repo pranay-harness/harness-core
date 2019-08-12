@@ -53,6 +53,7 @@ public class OwnerRule extends RepeatRule {
   public static final String MEENAKSHI = "meenakshi.raikwar@harness.io";
   public static final String UJJAWAL = "ujjawal.prasad@harness.io";
   public static final String ANKIT = "ankit.singhal@harness.io";
+  public static final String HANTANG = "hannah.tang@harness.io";
 
   private static List<String> active =
       asList(AADITI, ADWAIT, ANSHUL, ANUBHAW, BRETT, GARVIT, GEORGE, JATIN, MARK, PARNIAN, PRANJAL, PRAVEEN, POOJA,

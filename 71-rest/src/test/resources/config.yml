@@ -1,0 +1,5 @@
+grpcServerConfig:
+  plainTextPort: 8980
+  tlsPort: 9890
+  keyFile: key.pem
+  certFile: cert.pem
