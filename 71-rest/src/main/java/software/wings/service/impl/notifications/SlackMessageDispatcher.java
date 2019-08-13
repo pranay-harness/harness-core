@@ -5,9 +5,12 @@ import static org.apache.commons.lang3.StringUtils.stripToEmpty;
 import static software.wings.common.Constants.HARNESS_NAME;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 
+import com.google.api.client.util.Charsets;
+import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.apache.commons.text.StrSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Notification;
@@ -19,7 +22,10 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SlackNotificationService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Singleton
@@ -69,21 +75,36 @@ public class SlackMessageDispatcher {
             channel -> slackNotificationService.sendMessage(slackConfig, channel, HARNESS_NAME, message)));
   }
 
-  public void dispatch(String accountId, List<Notification> notifications, SlackNotificationConfiguration slackConfig) {
+  public void dispatch(List<Notification> notifications, SlackNotificationConfiguration slackConfig) {
     if (isEmpty(notifications)) {
       return;
     }
 
     List<String> messages = new ArrayList<>();
 
-    notifications.forEach(notification -> {
+    for (Notification notification : notifications) {
+      if (notification.getNotificationTemplateVariables().containsKey(SlackApprovalMessageKeys.MESSAGE_IDENTIFIER)) {
+        URL url = this.getClass().getResource(SlackApprovalMessageKeys.APPROVAL_MESSAGE_PAYLOAD_TEMPLATE);
+        String approvalTemplate;
+        StrSubstitutor sub = new StrSubstitutor(notification.getNotificationTemplateVariables());
+        try {
+          approvalTemplate = Resources.toString(url, Charsets.UTF_8);
+        } catch (IOException e) {
+          return;
+        }
+        String resolvedString = sub.replace(approvalTemplate);
+        slackNotificationService.sendJSONMessage(
+            resolvedString, Collections.singletonList(slackConfig.getOutgoingWebhookUrl()));
+        return;
+      }
+
       String slackTemplate = notificationMessageResolver.getSlackTemplate(notification.getNotificationTemplateId());
       if (slackTemplate == null) {
         log.error("No slack template found for templateId {}", notification.getNotificationTemplateId());
-        return;
+        continue;
       }
       messages.add(getDecoratedNotificationMessage(slackTemplate, notification.getNotificationTemplateVariables()));
-    });
+    }
 
     for (String message : messages) {
       slackNotificationService.sendMessage(slackConfig, stripToEmpty(slackConfig.getName()), HARNESS_NAME, message);

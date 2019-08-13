@@ -399,11 +399,19 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     User user = UserThreadLocal.get();
-    approvalDetails.setApprovedBy(EmbeddedUser.builder().email(user.getEmail()).name(user.getName()).build());
+    if (user != null) {
+      approvalDetails.setApprovedBy(EmbeddedUser.builder().email(user.getEmail()).name(user.getName()).build());
+    }
+
+    if (null == approvalDetails.getApprovedBy()) {
+      logger.error("Approved by not set in approval details. Details: {}", approvalDetails);
+    }
+
     ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()
                                                    .approvalId(approvalDetails.getApprovalId())
                                                    .approvedBy(approvalDetails.getApprovedBy())
                                                    .comments(approvalDetails.getComments())
+                                                   .approvalFromSlack(approvalDetails.isApprovalFromSlack())
                                                    .build();
 
     if (approvalDetails.getAction().equals(APPROVE)) {

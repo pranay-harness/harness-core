@@ -20,6 +20,11 @@ import allbegray.slack.webhook.SlackWebhookClient;
 import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import okhttp3.ResponseBody;
 import org.apache.commons.lang3.StringUtils;
 import retrofit2.Call;
@@ -33,6 +38,7 @@ import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.service.intfc.SlackNotificationService;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -43,6 +49,7 @@ import java.util.Objects;
 @Singleton
 public class SlackNotificationServiceImpl implements SlackNotificationService {
   public static final String SLACK_WEBHOOK_URL_PREFIX = "https://hooks.slack.com/services/";
+  public static final MediaType APPLICATION_JSON = MediaType.parse("application/json; charset=utf-8");
 
   @Override
   public void sendMessage(
@@ -90,6 +97,36 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
       webhookClient.post(payload);
     } else {
       sendGenericHttpPostRequest(webhookUrl, payload);
+    }
+  }
+
+  @Override
+  public void sendJSONMessage(String message, List<String> slackWebhooks) {
+    for (String slackWebHook : slackWebhooks) {
+      try {
+        OkHttpClient client = new OkHttpClient();
+        RequestBody body = RequestBody.create(APPLICATION_JSON, message);
+        Request request = new Request.Builder()
+                              .url(slackWebHook)
+                              .post(body)
+                              .addHeader("Content-Type", "application/json")
+                              .addHeader("Accept", "*/*")
+                              .addHeader("Cache-Control", "no-cache")
+                              .addHeader("Host", "hooks.slack.com")
+                              .addHeader("accept-encoding", "gzip, deflate")
+                              .addHeader("content-length", "798")
+                              .addHeader("Connection", "keep-alive")
+                              .addHeader("cache-control", "no-cache")
+                              .build();
+        Response response = client.newCall(request).execute();
+        if (!response.isSuccessful()) {
+          String bodyString = (null != response.body()) ? response.body().string() : "null";
+
+          logger.error("Response not Successful. Response body: {}", bodyString);
+        }
+      } catch (Exception e) {
+        logger.error("Error sending post data", e);
+      }
     }
   }
 

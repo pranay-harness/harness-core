@@ -1,0 +1,5 @@
+>*Workflow* : <${workflowUrl}|${workflowExecutionName}>
+>*Application* : ${appName}
+>*Services* : ${services}
+>*Environments* : ${environments}
+>*Artifacts* : ${artifacts}

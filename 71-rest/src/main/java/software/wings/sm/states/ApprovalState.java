@@ -24,6 +24,8 @@ import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_EXPIRED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_NEEDED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_STATE_CHANGE_NOTIFICATION;
+import static software.wings.security.SecretManager.JWT_CATEGORY.EXTERNAL_SERVICE_SECRET;
+import static software.wings.service.impl.slack.SlackApprovalUtils.createSlackApprovalMessage;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.states.ApprovalState.ApprovalStateType.USER_GROUP;
 import static software.wings.utils.Validator.notNullCheck;
@@ -35,6 +37,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -43,6 +46,9 @@ import io.harness.scheduler.PersistentScheduler;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.MediaType;
+import org.apache.commons.text.StringEscapeUtils;
+import org.json.JSONObject;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.ServiceNowExecutionData;
 import software.wings.api.WorkflowElement;
@@ -51,10 +57,15 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
+import software.wings.beans.ElementExecutionSummary;
+import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.NotificationRule.NotificationRuleBuilder;
+import software.wings.beans.Pipeline;
+import software.wings.beans.PipelineStage;
+import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.ApprovalNeededAlert;
@@ -63,24 +74,33 @@ import software.wings.beans.approval.ApprovalStateParams;
 import software.wings.beans.approval.JiraApprovalParams;
 import software.wings.beans.approval.ServiceNowApprovalParams;
 import software.wings.beans.approval.ShellScriptApprovalParams;
+import software.wings.beans.approval.SlackApprovalParams;
+import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandType;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.scheduler.JiraPollingJob;
 import software.wings.scheduler.ServiceNowApprovalJob;
+import software.wings.security.SecretManager;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.JiraHelperService;
+import software.wings.service.impl.notifications.SlackApprovalMessageKeys;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ApprovalPolingService;
+import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.servicenow.ServiceNowService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -90,11 +110,15 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.Misc;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.StringJoiner;
 
 @Slf4j
 public class ApprovalState extends State {
@@ -103,6 +127,7 @@ public class ApprovalState extends State {
   @Getter @Setter private boolean disable;
 
   public enum ApprovalStateType { JIRA, USER_GROUP, SHELL_SCRIPT, SERVICENOW }
+  public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
   @Inject private AlertService alertService;
   @Inject private WorkflowExecutionService workflowExecutionService;
@@ -112,11 +137,16 @@ public class ApprovalState extends State {
   @Inject private NotificationService notificationService;
   @Inject private UserGroupService userGroupService;
   @Inject private UserService userService;
+  @Inject private EnvironmentService environmentService;
   @Inject private JiraHelperService jiraHelperService;
   @Inject private ServiceNowService serviceNowService;
   @Inject private transient ActivityService activityService;
   @Inject private transient WorkflowNotificationHelper workflowNotificationHelper;
   @Inject private ApprovalPolingService approvalPolingService;
+  @Inject private SecretManager secretManager;
+  @Inject private PipelineService pipelineService;
+  @Inject private WorkflowService workflowService;
+  @Inject private ArtifactService artifactService;
 
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
   private Integer DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -167,7 +197,7 @@ public class ApprovalState extends State {
           app.getAccountId(), APPROVAL_NEEDED_NOTIFICATION, placeholderValues, context);
     } catch (Exception e) {
       // catch exception so that failure to send notification doesn't affect rest of execution
-      logger.error("Error sending approval notifiaction. accountId={}", app.getAccountId(), e);
+      logger.error("Error sending approval notification. accountId={}", app.getAccountId(), e);
     }
 
     WorkflowExecution workflowExecution =
@@ -183,7 +213,7 @@ public class ApprovalState extends State {
     if (approvalStateType == null) {
       executionData.setApprovalStateType(USER_GROUP);
       return executeUserGroupApproval(
-          userGroups, app.getAccountId(), placeholderValues, approvalId, executionData, app.getUuid());
+          userGroups, app.getAccountId(), placeholderValues, approvalId, executionData, app.getUuid(), context);
     }
     switch (approvalStateType) {
       case JIRA:
@@ -192,7 +222,7 @@ public class ApprovalState extends State {
         return executeServiceNowApproval(context, executionData, approvalId);
       case USER_GROUP:
         return executeUserGroupApproval(
-            userGroups, app.getAccountId(), placeholderValues, approvalId, executionData, app.getUuid());
+            userGroups, app.getAccountId(), placeholderValues, approvalId, executionData, app.getUuid(), context);
       case SHELL_SCRIPT:
         return executeShellScriptApproval(context, app.getAccountId(), app.getUuid(), approvalId,
             approvalStateParams.getShellScriptApprovalParams(), executionData);
@@ -472,9 +502,10 @@ public class ApprovalState extends State {
   }
 
   private ExecutionResponse executeUserGroupApproval(List<String> userGroups, String accountId,
-      Map<String, String> placeholderValues, String approvalId, ApprovalStateExecutionData executionData,
-      String appId) {
+      Map<String, String> placeholderValues, String approvalId, ApprovalStateExecutionData executionData, String appId,
+      ExecutionContext context) {
     executionData.setUserGroups(userGroups);
+    updatePlaceholderValuesForSlackApproval(approvalId, accountId, placeholderValues, context);
     sendNotificationForUserGroupApproval(userGroups, appId, accountId, APPROVAL_NEEDED_NOTIFICATION, placeholderValues);
     return anExecutionResponse()
         .withAsync(true)
@@ -484,10 +515,104 @@ public class ApprovalState extends State {
         .build();
   }
 
+  private void updatePlaceholderValuesForSlackApproval(
+      String approvalId, String accountId, Map<String, String> placeHolderValues, ExecutionContext context) {
+    String pausedStageName = null;
+    StringJoiner environments = new StringJoiner(", ");
+    StringJoiner services = new StringJoiner(", ");
+    StringJoiner artifacts = new StringJoiner(", ");
+
+    int tokenValidDuration = getTimeoutMillis();
+    boolean isPipeline = context.getWorkflowType().equals(WorkflowType.PIPELINE);
+    if (isPipeline) {
+      Pipeline pipeline = pipelineService.readPipeline(context.getAppId(), context.getWorkflowId(), true);
+      pausedStageName = getPipelineStageName(pipeline, getName());
+    }
+
+    Set<String> excludeFromAggregation = new HashSet<>();
+    WorkflowExecution workflowExecution = workflowExecutionService.getExecutionDetails(
+        context.getAppId(), context.getWorkflowExecutionId(), true, excludeFromAggregation);
+    if (EmptyPredicate.isNotEmpty(workflowExecution.getExecutionArgs().getArtifacts())) {
+      for (Artifact artifact : workflowExecution.getExecutionArgs().getArtifacts()) {
+        artifacts.add(
+            artifact.getArtifactSourceName() + " :" + artifact.getMetadata().get(ArtifactMetadataKeys.buildNo));
+      }
+    }
+    if (EmptyPredicate.isNotEmpty(workflowExecution.getEnvironments())) {
+      for (EnvSummary envSummary : workflowExecution.getEnvironments()) {
+        environments.add(envSummary.getName());
+      }
+    }
+    if (EmptyPredicate.isNotEmpty(workflowExecution.getServiceExecutionSummaries())) {
+      for (ElementExecutionSummary elementExecutionSummary : workflowExecution.getServiceExecutionSummaries()) {
+        services.add(elementExecutionSummary.getContextElement().getName());
+      }
+    }
+
+    Map<String, String> claims = new HashMap<>();
+    claims.put("approvalId", approvalId);
+    String workflowURL = placeHolderValues.get("WORKFLOW_URL");
+
+    String jwtToken = secretManager.generateJWTTokenWithCustomTimeOut(
+        claims, secretManager.getJWTSecret(EXTERNAL_SERVICE_SECRET), tokenValidDuration);
+
+    SlackApprovalParams slackApprovalParams = SlackApprovalParams.builder()
+                                                  .appId(context.getAppId())
+                                                  .appName(context.getApp().getName())
+                                                  .routingId(accountId)
+                                                  .deploymentId(context.getWorkflowExecutionId())
+                                                  .workflowId(context.getWorkflowId())
+                                                  .workflowExecutionName(context.getWorkflowExecutionName())
+                                                  .stateExecutionId(context.getStateExecutionInstanceId())
+                                                  .stateExecutionInstanceName(context.getStateExecutionInstanceName())
+                                                  .approvalId(approvalId)
+                                                  .pausedStageName(pausedStageName)
+                                                  .servicesInvolved(services.toString())
+                                                  .environmentsInvolved(environments.toString())
+                                                  .artifactsInvolved(artifacts.toString())
+                                                  .confirmation(false)
+                                                  .pipeline(isPipeline)
+                                                  .workflowUrl(workflowURL)
+                                                  .jwtToken(jwtToken)
+                                                  .build();
+    JSONObject customData = new JSONObject(slackApprovalParams);
+
+    URL notificationTemplateUrl;
+    if (slackApprovalParams.isPipeline()) {
+      notificationTemplateUrl =
+          this.getClass().getResource(SlackApprovalMessageKeys.PIPELINE_APPROVAL_MESSAGE_TEMPLATE);
+    } else {
+      notificationTemplateUrl =
+          this.getClass().getResource(SlackApprovalMessageKeys.WORKFLOW_APPROVAL_MESSAGE_TEMPLATE);
+    }
+
+    String displayText = createSlackApprovalMessage(slackApprovalParams, notificationTemplateUrl);
+    String buttonValue = customData.toString();
+    buttonValue = StringEscapeUtils.escapeJson(buttonValue);
+    placeHolderValues.put(SlackApprovalMessageKeys.SLACK_APPROVAL_PARAMS, buttonValue);
+    placeHolderValues.put(SlackApprovalMessageKeys.APPROVAL_MESSAGE, displayText);
+    placeHolderValues.put(SlackApprovalMessageKeys.MESSAGE_IDENTIFIER, "suppressTraditionalNotificationOnSlack");
+  }
+
+  private String getPipelineStageName(Pipeline pipeline, String pipelineApprovalStageName) {
+    List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
+    for (PipelineStage pipelineStage : pipelineStages) {
+      List<PipelineStageElement> pipelineStageElements = pipelineStage.getPipelineStageElements();
+      for (PipelineStageElement pipelineStageElement : pipelineStageElements) {
+        if (pipelineStageElement.getName().equals(pipelineApprovalStageName)) {
+          return pipelineStage.getName();
+        }
+      }
+    }
+    return null;
+  }
+
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     ApprovalStateExecutionData approvalNotifyResponse =
         (ApprovalStateExecutionData) response.values().iterator().next();
+
+    boolean isApprovalFromSlack = approvalNotifyResponse.isApprovalFromSlack();
 
     // Close the alert
     Application app = context.getApp();
@@ -515,15 +640,18 @@ public class ApprovalState extends State {
     workflowNotificationHelper.sendApprovalNotification(
         app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues, context);
     if (approvalStateType == null) {
-      return handleAsyncUserGroup(userGroups, placeholderValues, context, executionData, approvalNotifyResponse);
+      return handleAsyncUserGroup(
+          userGroups, placeholderValues, context, executionData, approvalNotifyResponse, isApprovalFromSlack);
     }
+
     switch (approvalStateType) {
       case JIRA:
         return handleAsyncJira(context, executionData, approvalNotifyResponse);
       case SERVICENOW:
         return handleAsyncServiceNow(context, executionData, approvalNotifyResponse);
       case USER_GROUP:
-        return handleAsyncUserGroup(userGroups, placeholderValues, context, executionData, approvalNotifyResponse);
+        return handleAsyncUserGroup(
+            userGroups, placeholderValues, context, executionData, approvalNotifyResponse, isApprovalFromSlack);
       case SHELL_SCRIPT:
         return handleAsyncShellScript(context, executionData, approvalNotifyResponse);
       default:
@@ -593,10 +721,13 @@ public class ApprovalState extends State {
 
   private ExecutionResponse handleAsyncUserGroup(List<String> userGroups, Map<String, String> placeholderValues,
       ExecutionContext context, ApprovalStateExecutionData executionData,
-      ApprovalStateExecutionData approvalNotifyResponse) {
+      ApprovalStateExecutionData approvalNotifyResponse, boolean isApprovalFromSlack) {
     Application app = context.getApp();
-    sendNotificationForUserGroupApproval(
-        userGroups, app.getUuid(), app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues);
+    if (!isApprovalFromSlack) {
+      sendNotificationForUserGroupApproval(
+          userGroups, app.getUuid(), app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues);
+    }
+
     return anExecutionResponse()
         .withStateExecutionData(executionData)
         .withExecutionStatus(approvalNotifyResponse.getStatus())
@@ -681,7 +812,6 @@ public class ApprovalState extends State {
   private void sendNotificationForUserGroupApproval(List<String> approvalUserGroups, String appId, String accountId,
       NotificationMessageType notificationMessageType, Map<String, String> placeHolderValues) {
     NotificationRule rule = NotificationRuleBuilder.aNotificationRule().withUserGroupIds(approvalUserGroups).build();
-
     InformationNotification notification = anInformationNotification()
                                                .withAppId(appId)
                                                .withAccountId(accountId)

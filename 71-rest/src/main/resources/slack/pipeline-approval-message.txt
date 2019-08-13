@@ -1,0 +1,6 @@
+>*Approval Step*: ${pausedStageName}
+>*Pipeline* : <${workflowUrl}|${workflowExecutionName}>
+>*Application* : ${appName}
+>*Services* : ${services}
+>*Environments* : ${environments}
+>*Artifacts* : ${artifacts}

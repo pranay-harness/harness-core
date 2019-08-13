@@ -159,4 +159,20 @@ public class SecretManager {
       throw new WingsException(GENERAL_ERROR, exception).addParam("message", "JWTToken could not be generated");
     }
   }
+
+  public String generateJWTTokenWithCustomTimeOut(Map<String, String> claims, String secret, int tokenValidDuration) {
+    try {
+      Algorithm algorithm = Algorithm.HMAC256(secret);
+      Builder jwtBuilder = JWT.create()
+                               .withIssuer(ISSUER)
+                               .withIssuedAt(new Date())
+                               .withExpiresAt(new Date(System.currentTimeMillis() + tokenValidDuration));
+      if (!isEmpty(claims)) {
+        claims.forEach(jwtBuilder::withClaim);
+      }
+      return jwtBuilder.sign(algorithm);
+    } catch (UnsupportedEncodingException | JWTCreationException exception) {
+      throw new WingsException(GENERAL_ERROR, exception).addParam("message", "JWTToken could not be generated");
+    }
+  }
 }

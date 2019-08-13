@@ -2,6 +2,8 @@ package software.wings.service.intfc;
 
 import software.wings.beans.notification.SlackNotificationConfiguration;
 
+import java.util.List;
+
 /**
  * Created by anubhaw on 12/14/16.
  */
@@ -15,4 +17,11 @@ public interface SlackNotificationService {
    * @param message     the message
    */
   void sendMessage(SlackNotificationConfiguration slackConfig, String slackChanel, String senderName, String message);
+
+  /**
+   * This handled json based messages and not YAML based templates.
+   * @param message
+   * @param slackWebhooks
+   */
+  void sendJSONMessage(String message, List<String> slackWebhooks);
 }

@@ -6,6 +6,7 @@ import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -13,11 +14,14 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
+import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_EXPIRED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_NEEDED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_STATE_CHANGE_NOTIFICATION;
+import static software.wings.security.SecretManager.JWT_CATEGORY.EXTERNAL_SERVICE_SECRET;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -29,6 +33,7 @@ import static software.wings.utils.WingsTestConstants.NOTIFICATION_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
@@ -44,24 +49,40 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
+import software.wings.api.AmiServiceDeployElement;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.WorkflowElement;
+import software.wings.beans.ElementExecutionSummary;
+import software.wings.beans.EnvSummary;
+import software.wings.beans.ExecutionArgs;
+import software.wings.beans.Pipeline;
+import software.wings.beans.PipelineStage;
+import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ApprovalNeededAlert;
+import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.common.NotificationMessageResolver;
+import software.wings.security.SecretManager;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.WorkflowStandardParams;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -79,6 +100,9 @@ public class ApprovalStateTest extends WingsBaseTest {
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private NotificationMessageResolver notificationMessageResolver;
   @Mock private WorkflowNotificationHelper workflowNotificationHelper;
+  @Mock private PipelineService pipelineService;
+  @Mock private WorkflowExecution workflowExecution;
+  @Mock private SecretManager secretManager;
 
   @InjectMocks private ApprovalState approvalState = new ApprovalState("ApprovalState");
 
@@ -89,8 +113,52 @@ public class ApprovalStateTest extends WingsBaseTest {
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(WORKFLOW_STANDARD_PARAMS);
     when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
     when(context.getWorkflowExecutionName()).thenReturn(BUILD_JOB_NAME);
-    //    when(workflowNotificationHelper.sendApprovalNotification(Mockito.anyString(), Mockito.any(),  Mockito.any(),
-    //    Mockito.any())).then(Mockito.doNothing());
+    when(context.getWorkflowId()).thenReturn(WORKFLOW_ID);
+    when(secretManager.getJWTSecret(EXTERNAL_SERVICE_SECRET)).thenReturn("secret");
+    writeField(approvalState, "secretManager", secretManager, true);
+
+    PipelineStageElement pipelineStageElement = PipelineStageElement.builder().name("ApprovalState").build();
+    PipelineStage pipelineStage = PipelineStage.builder()
+                                      .pipelineStageElements(Collections.singletonList(pipelineStageElement))
+                                      .name("Approval Needed")
+                                      .build();
+    Pipeline pipeline = Pipeline.builder()
+                            .name("pipeline")
+                            .appId(APP_ID)
+                            .uuid(WORKFLOW_ID)
+                            .pipelineStages(Collections.singletonList(pipelineStage))
+                            .build();
+    when(pipelineService.readPipeline(APP_ID, WORKFLOW_ID, true)).thenReturn(pipeline);
+
+    Map<String, String> metadata = new HashMap<>();
+    metadata.put(ArtifactMetadataKeys.buildNo, "2");
+    Artifact artifact = anArtifact().withMetadata(metadata).withArtifactSourceName("Artifact").build();
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setArtifacts(Collections.singletonList(artifact));
+
+    EnvSummary envsummary = EnvSummary.builder().name("Environment").build();
+
+    List<ElementExecutionSummary> elementExecutionSummaries = new ArrayList<>();
+    AmiServiceDeployElement amiServiceDeployElement = AmiServiceDeployElement.builder().build();
+
+    elementExecutionSummaries.add(0, anElementExecutionSummary().withContextElement(amiServiceDeployElement).build());
+
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                              .executionArgs(executionArgs)
+                                              .environments(Collections.singletonList(envsummary))
+                                              .serviceExecutionSummaries(elementExecutionSummaries)
+                                              .build();
+
+    Set<String> excludeFromAggregation = new HashSet<>();
+    when(workflowExecutionService.getExecutionDetails(
+             context.getAppId(), context.getWorkflowExecutionId(), true, excludeFromAggregation))
+        .thenReturn(workflowExecution);
+
+    String approvalId = generateUuid();
+    Map<String, String> claims = new HashMap<>();
+    claims.put("approvalId", approvalId);
+    String secret = "secret";
+    when(secretManager.generateJWTTokenWithCustomTimeOut(claims, secret, 60 * 60 * 1000 * 168)).thenReturn("token");
 
     when(workflowExecutionService.getWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID))
         .thenReturn(WorkflowExecution.builder()
@@ -115,12 +183,35 @@ public class ApprovalStateTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldExecute() {
+  public void shouldExecutePipeline() {
     PageResponse pageResponse = new PageResponse();
     pageResponse.setResponse(asList(User.Builder.anUser().build()));
     when(context.getStateExecutionInstance())
         .thenReturn(aStateExecutionInstance().executionType(WorkflowType.PIPELINE).build());
 
+    when(context.getWorkflowType()).thenReturn(WorkflowType.PIPELINE);
+
+    ExecutionResponse executionResponse = approvalState.execute(context);
+    verify(alertService)
+        .openAlert(eq(ACCOUNT_ID), eq(APP_ID), eq(AlertType.ApprovalNeeded), any(ApprovalNeededAlert.class));
+    assertThat(executionResponse.isAsync()).isTrue();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
+
+    Mockito.verify(workflowNotificationHelper, Mockito.times(1))
+        .sendApprovalNotification(
+            Mockito.eq(ACCOUNT_ID), Mockito.eq(APPROVAL_NEEDED_NOTIFICATION), Mockito.anyMap(), Mockito.any());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldExecuteWorkflow() {
+    PageResponse pageResponse = new PageResponse();
+    pageResponse.setResponse(asList(User.Builder.anUser().build()));
+    when(context.getStateExecutionInstance())
+        .thenReturn(aStateExecutionInstance().executionType(WorkflowType.ORCHESTRATION).build());
+
+    when(context.getWorkflowType()).thenReturn(WorkflowType.ORCHESTRATION);
     ExecutionResponse executionResponse = approvalState.execute(context);
     verify(alertService)
         .openAlert(eq(ACCOUNT_ID), eq(APP_ID), eq(AlertType.ApprovalNeeded), any(ApprovalNeededAlert.class));
@@ -284,7 +375,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     when(context.getStateExecutionInstance())
         .thenReturn(aStateExecutionInstance().executionType(WorkflowType.ORCHESTRATION).build());
     when(context.getEnv()).thenReturn(anEnvironment().appId(APP_ID).uuid(ENV_ID).build());
-
+    when(context.getWorkflowType()).thenReturn(WorkflowType.PIPELINE);
     approvalState.execute(context);
     ArgumentCaptor<ApprovalNeededAlert> argumentCaptor = ArgumentCaptor.forClass(ApprovalNeededAlert.class);
     verify(alertService).openAlert(eq(ACCOUNT_ID), eq(APP_ID), eq(AlertType.ApprovalNeeded), argumentCaptor.capture());
@@ -301,7 +392,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   public void testApprovalNeededAlertParamsForPipelineWithApproval() {
     when(context.getStateExecutionInstance())
         .thenReturn(aStateExecutionInstance().executionType(WorkflowType.PIPELINE).build());
-
+    when(context.getWorkflowType()).thenReturn(WorkflowType.PIPELINE);
     approvalState.execute(context);
     ArgumentCaptor<ApprovalNeededAlert> argumentCaptor = ArgumentCaptor.forClass(ApprovalNeededAlert.class);
     verify(alertService).openAlert(eq(ACCOUNT_ID), eq(APP_ID), eq(AlertType.ApprovalNeeded), argumentCaptor.capture());
@@ -319,6 +410,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     when(context.getStateExecutionInstance())
         .thenReturn(aStateExecutionInstance().executionType(WorkflowType.ORCHESTRATION).build());
     when(context.getEnv()).thenReturn(anEnvironment().appId(APP_ID).uuid(ENV_ID).build());
+    when(context.getWorkflowType()).thenReturn(WorkflowType.PIPELINE);
     when(context.getContextElement(ContextElementType.STANDARD))
         .thenReturn(
             aWorkflowStandardParams()
