@@ -119,7 +119,6 @@ import software.wings.scheduler.ArtifactCollectionHandler;
 import software.wings.scheduler.ExecutionLogsPruneJob;
 import software.wings.scheduler.InstancesPurgeJob;
 import software.wings.scheduler.LicenseCheckJob;
-import software.wings.scheduler.PersistentLockCleanupJob;
 import software.wings.scheduler.ResourceConstraintBackupJob;
 import software.wings.scheduler.UsageMetricsJob;
 import software.wings.scheduler.WorkflowExecutionMonitorJob;
@@ -164,6 +163,7 @@ import software.wings.yaml.gitSync.GitChangeSetRunnable;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
@@ -516,6 +516,8 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   private void scheduleJobs(Injector injector) {
+    final Random rand = new Random();
+
     logger.info("Initializing scheduled jobs...");
     injector.getInstance(NotifierScheduledExecutorService.class)
         .scheduleWithFixedDelay(injector.getInstance(Notifier.class), 0L, 30L, TimeUnit.SECONDS);
@@ -525,6 +527,9 @@ public class WingsApplication extends Application<MainConfiguration> {
         .scheduleWithFixedDelay(injector.getInstance(GitChangeSetRunnable.class), 0L, 2L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
         .scheduleWithFixedDelay(injector.getInstance(DelegateServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
+    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
+        .scheduleWithFixedDelay(
+            injector.getInstance(DelegateServiceImpl.class), rand.nextInt(60), 60L, TimeUnit.MINUTES);
   }
 
   public static void registerObservers(Injector injector) {
@@ -626,7 +631,6 @@ public class WingsApplication extends Application<MainConfiguration> {
       if (acquiredLock != null) {
         WorkflowExecutionMonitorJob.add(jobScheduler);
         ResourceConstraintBackupJob.addJob(jobScheduler);
-        PersistentLockCleanupJob.add(jobScheduler);
         ZombieHunterJob.scheduleJobs(jobScheduler);
         AdministrativeJob.addJob(jobScheduler);
         LicenseCheckJob.addJob(jobScheduler);

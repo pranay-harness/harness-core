@@ -1,4 +1,4 @@
-package software.wings.scheduler;
+package software.wings.scheduler.persistence;
 
 import static org.junit.Assert.assertEquals;
 
@@ -13,14 +13,16 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
+import software.wings.scheduler.PersistentLockCleanupJob;
+import software.wings.scheduler.persistance.PersistentLockCleanup;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
 
-public class PersistentLockCleanupJobTest extends WingsBaseTest {
+public class PersistentLockCleanupTest extends WingsBaseTest {
   @Inject private PersistentLocker persistentLocker;
 
-  @Inject @InjectMocks PersistentLockCleanupJob job;
+  @Inject @InjectMocks PersistentLockCleanup job;
 
   @Test
   @Category(UnitTests.class)
