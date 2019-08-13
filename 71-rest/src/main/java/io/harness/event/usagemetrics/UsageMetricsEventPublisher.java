@@ -32,7 +32,9 @@ import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
 import io.harness.event.publisher.EventPublisher;
 import io.harness.event.timeseries.processor.EventProcessor;
+import io.harness.queue.Queue;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.api.DeploymentTimeSeriesEvent;
 import software.wings.beans.Account;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
@@ -61,6 +63,7 @@ public class UsageMetricsEventPublisher {
   @Inject EventPublisher eventPublisher;
   @Inject private ExecutorService executorService;
   @Inject CVConfigurationService cvConfigurationService;
+  @Inject private Queue<DeploymentTimeSeriesEvent> deploymentTimeSeriesEventQueue;
   SimpleDateFormat sdf;
 
   public UsageMetricsEventPublisher() {
@@ -154,11 +157,17 @@ public class UsageMetricsEventPublisher {
                                         .listData(listData)
                                         .longData(longData)
                                         .build();
-    EventData eventData = EventData.builder().eventInfo(eventInfo).build();
     if (isEmpty(eventInfo.getListData())) {
       logger.info("TimeSeriesEventInfo has listData empty eventInfo=[{}]", eventInfo);
     }
-    publishEvent(Event.builder().eventType(EventType.DEPLOYMENT_EVENT).eventData(eventData).build());
+    DeploymentTimeSeriesEvent event = DeploymentTimeSeriesEvent.builder().timeSeriesEventInfo(eventInfo).build();
+    executorService.submit(() -> {
+      try {
+        deploymentTimeSeriesEventQueue.send(event);
+      } catch (Exception e) {
+        logger.error("Failed to publish deployment time series event:[{}]", event.getId(), e);
+      }
+    });
   }
 
   /**

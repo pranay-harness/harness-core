@@ -6,7 +6,7 @@ import io.harness.queue.QueueListener;
 import software.wings.api.InstanceEvent;
 
 /**
- * The instance
+ * The instance event that has info about the instance changes, which needs to be pushed
  * @author rktummala on 08/04/19
  *
  */
