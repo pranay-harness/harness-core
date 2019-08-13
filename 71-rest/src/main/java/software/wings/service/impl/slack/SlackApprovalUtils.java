@@ -57,7 +57,7 @@ public class SlackApprovalUtils {
     String actionType = action.get("action_id");
     String responseUrl = (String) mapper.readValue(body.getFirst("payload"), Map.class).get("response_url");
     SlackApprovalParams slackApprovalParams = mapper.readValue(action.get("value"), SlackApprovalParams.class);
-    final SlackApprovalParams approvalParams = slackApprovalParams.but()
+    final SlackApprovalParams approvalParams = slackApprovalParams.toBuilder()
                                                    .actionType(actionType)
                                                    .slackUsername(slackUserDetails.get("name"))
                                                    .slackUserId(slackUserDetails.get("id"))

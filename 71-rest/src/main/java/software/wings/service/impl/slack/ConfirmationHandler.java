@@ -30,7 +30,7 @@ public class ConfirmationHandler implements SlackActionHandler {
       String sessionTimedOutMessage, String responseUrl) throws IOException {
     boolean approve = slackApprovalParams.getActionType().equals(SlackApprovalMessageKeys.BUTTON_ACCEPT);
     final SlackApprovalParams confirmationParams =
-        slackApprovalParams.but().confirmation(true).approve(approve).build();
+        slackApprovalParams.toBuilder().confirmation(true).approve(approve).build();
 
     // Verifying JWT token
     if (!slackApprovalUtils.verifyJwtToken(slackApprovalParams)) {

@@ -4,7 +4,7 @@ import lombok.Builder;
 import lombok.Value;
 
 @Value
-@Builder
+@Builder(toBuilder = true)
 public class SlackApprovalParams {
   private final String routingId;
   private final String appId;
@@ -27,31 +27,4 @@ public class SlackApprovalParams {
   private String slackUserId;
   private boolean approve;
   private boolean confirmation;
-
-  // Note: if you add a field above, add it to this method also
-  public SlackApprovalParamsBuilder but() {
-    return SlackApprovalParams.builder()
-        .appId(this.appId)
-        .appName(this.appName)
-        .routingId(this.routingId)
-        .deploymentId(this.deploymentId)
-        .workflowId(this.workflowId)
-        .workflowExecutionName(this.workflowExecutionName)
-        .stateExecutionId(this.stateExecutionId)
-        .stateExecutionInstanceName(this.stateExecutionInstanceName)
-        .approvalId(this.approvalId)
-        .pausedStageName(this.pausedStageName)
-        .servicesInvolved(this.servicesInvolved)
-        .environmentsInvolved(this.environmentsInvolved)
-        .artifactsInvolved(this.artifactsInvolved)
-        .confirmation(this.confirmation)
-        .pipeline(this.pipeline)
-        .workflowUrl(this.workflowUrl)
-        .jwtToken(this.jwtToken)
-        .slackUsername(this.slackUsername)
-        .slackUserId(this.slackUserId)
-        .actionType(this.actionType)
-        .approve(this.approve)
-        .confirmation(this.confirmation);
-  }
 }

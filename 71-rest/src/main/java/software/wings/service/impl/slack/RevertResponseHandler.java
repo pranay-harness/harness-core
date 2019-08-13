@@ -35,7 +35,7 @@ public class RevertResponseHandler implements SlackActionHandler {
     }
 
     // Creating json payload
-    final SlackApprovalParams revertParams = slackApprovalParams.but().confirmation(false).build();
+    final SlackApprovalParams revertParams = slackApprovalParams.toBuilder().confirmation(false).build();
     String buttonValue = new JSONObject(revertParams).toString();
     buttonValue = StringEscapeUtils.escapeJson(buttonValue);
 
