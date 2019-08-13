@@ -34,6 +34,7 @@ import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentEvent;
 import software.wings.api.DeploymentSummary;
+import software.wings.api.DeploymentTimeSeriesEvent;
 import software.wings.api.EcsStepExecutionSummary;
 import software.wings.api.EmailStateExecutionData;
 import software.wings.api.EnvStateExecutionData;
@@ -761,6 +762,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(Instance.class);
     set.add(InstanceChangeEvent.class);
     set.add(InstanceEvent.class);
+    set.add(DeploymentTimeSeriesEvent.class);
     set.add(InstanceStatsSnapshot.class);
     set.add(JenkinsArtifactStream.class);
     set.add(KeywordsAware.class);

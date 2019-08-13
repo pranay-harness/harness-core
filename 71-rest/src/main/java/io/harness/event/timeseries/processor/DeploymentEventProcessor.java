@@ -138,7 +138,7 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
         }
       }
     } else {
-      logger.trace("Not processing data:[{}]", eventInfo);
+      logger.trace("Not processing deployment time series data:[{}]", eventInfo);
     }
   }
 
