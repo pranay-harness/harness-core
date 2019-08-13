@@ -1,7 +1,9 @@
 package software.wings.delegatetasks.validation;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 
 import io.harness.beans.DelegateTask;
@@ -59,6 +61,12 @@ public class BuildSourceTaskValidation extends AbstractDelegateValidateTask {
       return asList(((ArtifactoryConfig) settingValue).getArtifactoryUrl());
     } else if (artifactStreamType.equals(GCR.name())) {
       return asList(getUrl(artifactStreamAttributes.getRegistryHostName()));
+    } else if (artifactStreamType.equals(ACR.name())) {
+      final String default_server = "azure.microsoft.com";
+      String loginServer = isNotEmpty(artifactStreamAttributes.getRegistryHostName())
+          ? artifactStreamAttributes.getRegistryHostName()
+          : default_server;
+      return asList(getUrl(loginServer));
     }
     return asList(ALWAYS_TRUE_CRITERIA);
   }

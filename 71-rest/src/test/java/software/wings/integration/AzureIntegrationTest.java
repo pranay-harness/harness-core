@@ -75,7 +75,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
 
     for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
       String subscriptionId = entry.getKey();
-      registries.addAll(azureHelperService.listContainerRegistries(config, Collections.emptyList(), subscriptionId));
+      registries.addAll(azureHelperService.listContainerRegistryNames(config, Collections.emptyList(), subscriptionId));
     }
     assertThat(registries).isNotEmpty();
 
@@ -176,7 +176,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
     for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
       String subscriptionId = entry.getKey();
       List<String> registries =
-          azureHelperService.listContainerRegistries(config, Collections.emptyList(), subscriptionId);
+          azureHelperService.listContainerRegistryNames(config, Collections.emptyList(), subscriptionId);
       for (String registry : registries) {
         List<String> repositories =
             azureHelperService.listRepositories(config, Collections.emptyList(), subscriptionId, registry);

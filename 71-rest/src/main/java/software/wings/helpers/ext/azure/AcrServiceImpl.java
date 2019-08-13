@@ -12,6 +12,7 @@ import com.google.inject.Singleton;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -36,7 +37,7 @@ public class AcrServiceImpl implements AcrService {
   public List<String> listRegistries(
       AzureConfig config, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
     try {
-      return azureHelperService.listContainerRegistries(config, encryptionDetails, subscriptionId);
+      return azureHelperService.listContainerRegistryNames(config, encryptionDetails, subscriptionId);
     } catch (Exception e) {
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
     }
@@ -46,14 +47,16 @@ public class AcrServiceImpl implements AcrService {
   public List<BuildDetails> getBuilds(AzureConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes, int maxNumberOfBuilds) {
     try {
-      String loginServer = azureHelperService.getLoginServerForRegistry(config, encryptionDetails,
-          artifactStreamAttributes.getSubscriptionId(), artifactStreamAttributes.getRegistryName());
+      String loginServer = StringUtils.isNotEmpty(artifactStreamAttributes.getRegistryHostName())
+          ? artifactStreamAttributes.getRegistryHostName()
+          : azureHelperService.getLoginServerForRegistry(config, encryptionDetails,
+                artifactStreamAttributes.getSubscriptionId(), artifactStreamAttributes.getRegistryName());
 
       String repository = loginServer + "/" + artifactStreamAttributes.getRepositoryName();
 
       return azureHelperService
-          .listRepositoryTags(config, encryptionDetails, artifactStreamAttributes.getSubscriptionId(),
-              artifactStreamAttributes.getRegistryName(), artifactStreamAttributes.getRepositoryName())
+          .listRepositoryTags(config, encryptionDetails, artifactStreamAttributes.getRegistryHostName(),
+              artifactStreamAttributes.getRepositoryName())
           .stream()
           .map(tag -> {
             Map<String, String> metadata = new HashMap();
