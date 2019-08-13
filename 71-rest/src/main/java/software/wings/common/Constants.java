@@ -145,8 +145,6 @@ public interface Constants {
   String KUBERNETES_DELEGATE = "harness-delegate-kubernetes";
   String ECS_DELEGATE = "harness-delegate-ecs";
 
-  String SELF_DESTRUCT = "[SELF_DESTRUCT]";
-
   /**
    * The constant MAX_DELEGATE_LAST_HEARTBEAT.
    */
