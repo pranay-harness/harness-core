@@ -430,7 +430,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
     // Verify connector is created i.e connector with specific name exist
     boolean connectorFound = SettingsUtils.checkCloudproviderConnectorExist(
         bearerToken, getAccount().getUuid(), CATEGORY, CONNECTOR_NAME_ARTIFACTORY);
-    assertTrue(connectorFound);
+    assertThat(connectorFound).isTrue();
   }
 
   @Test
