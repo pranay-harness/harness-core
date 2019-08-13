@@ -1,5 +1,6 @@
 package io.harness.testframework.restutils;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
@@ -45,6 +46,7 @@ public class ConnectorUtils {
 
     JsonPath setAttrResponse = SettingsUtils.create(bearerToken, accountId, settingAttribute);
     assertNotNull(setAttrResponse);
+    assertThat(setAttrResponse.getString("resource.uuid")).withFailMessage(setAttrResponse.prettify()).isNotNull();
     return setAttrResponse.getString("resource.uuid").trim();
   }
 
