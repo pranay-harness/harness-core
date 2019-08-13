@@ -10,6 +10,8 @@ import static io.harness.beans.DelegateTask.Status.QUEUED;
 import static io.harness.beans.DelegateTask.Status.STARTED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.message.MessageConstants.MIGRATE;
+import static io.harness.delegate.message.MessageConstants.SELF_DESTRUCT;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.UNAVAILABLE_DELEGATES;
 import static io.harness.exception.WingsException.NOBODY;
@@ -45,7 +47,6 @@ import static software.wings.common.Constants.DOCKER_DELEGATE;
 import static software.wings.common.Constants.ECS_DELEGATE;
 import static software.wings.common.Constants.KUBERNETES_DELEGATE;
 import static software.wings.common.Constants.MAX_DELEGATE_LAST_HEARTBEAT;
-import static software.wings.common.Constants.SELF_DESTRUCT;
 import static software.wings.delegatetasks.RemoteMethodReturnValueData.Builder.aRemoteMethodReturnValueData;
 import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
 
@@ -1161,6 +1162,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       return Delegate.builder().uuid(SELF_DESTRUCT).build();
     }
 
+    if (accountService.isAccountMigrated(delegate.getAccountId())) {
+      String migrateMsg = MIGRATE + accountService.get(delegate.getAccountId()).getMigratedToClusterUrl();
+      broadcasterFactory.lookup("/stream/delegate/" + delegate.getAccountId(), true).broadcast(migrateMsg);
+      return Delegate.builder().uuid(migrateMsg).build();
+    }
+
     Query<Delegate> delegateQuery = wingsPersistence.createQuery(Delegate.class)
                                         .filter(DelegateKeys.accountId, delegate.getAccountId())
                                         .filter(DelegateKeys.hostName, delegate.getHostName());
@@ -1174,7 +1181,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         delegateQuery.project(DelegateKeys.status, true).project(DelegateKeys.delegateProfileId, true).get();
     if (existingDelegate != null && existingDelegate.getStatus() == Status.DELETED) {
       broadcasterFactory.lookup("/stream/delegate/" + delegate.getAccountId(), true)
-          .broadcast(SELF_DESTRUCT + "-" + existingDelegate.getUuid());
+          .broadcast(SELF_DESTRUCT + existingDelegate.getUuid());
 
       return Delegate.builder().uuid(SELF_DESTRUCT).build();
     }

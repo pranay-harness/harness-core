@@ -170,7 +170,7 @@ public class FileIo {
     ByteBuffer buffer = ByteBuffer.wrap(input.getBytes(StandardCharsets.UTF_8));
     Path path = Paths.get(filePath);
     try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.WRITE, standardOpenOption);
-         FileLock fileLock = fileChannel.lock()) {
+         FileLock ignore = fileChannel.lock()) {
       fileChannel.write(buffer);
     }
   }
@@ -179,7 +179,7 @@ public class FileIo {
     StringBuilder builder = new StringBuilder(128);
     Path path = Paths.get(filePath);
     try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ);
-         FileLock fileLock = fileChannel.lock(0, Long.MAX_VALUE, true)) {
+         FileLock ignore = fileChannel.lock(0, Long.MAX_VALUE, true)) {
       ByteBuffer buffer = ByteBuffer.allocate(128);
       int noOfBytesRead = fileChannel.read(buffer);
       while (noOfBytesRead != -1) {

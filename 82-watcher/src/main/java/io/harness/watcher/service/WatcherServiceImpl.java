@@ -7,6 +7,7 @@ import static io.harness.delegate.message.MessageConstants.DELEGATE_DASH;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_GO_AHEAD;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_HEARTBEAT;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_IS_NEW;
+import static io.harness.delegate.message.MessageConstants.DELEGATE_MIGRATE;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_RESTART_NEEDED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_RESUME;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_SELF_DESTRUCT;
@@ -51,13 +52,18 @@ import static org.apache.commons.io.filefilter.FileFilterUtils.prefixFileFilter;
 import static org.apache.commons.io.filefilter.FileFilterUtils.suffixFileFilter;
 import static org.apache.commons.io.filefilter.FileFilterUtils.trueFileFilter;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.replace;
+import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
@@ -355,6 +361,8 @@ public class WatcherServiceImpl implements WatcherService {
             } else if (delegateData.containsKey(DELEGATE_SELF_DESTRUCT)
                 && (Boolean) delegateData.get(DELEGATE_SELF_DESTRUCT)) {
               selfDestruct();
+            } else if (delegateData.containsKey(DELEGATE_MIGRATE)) {
+              migrate((String) delegateData.get(DELEGATE_MIGRATE));
             } else {
               String delegateVersion = (String) delegateData.get(DELEGATE_VERSION);
               runningVersions.put(delegateVersion, delegateProcess);
@@ -968,6 +976,65 @@ public class WatcherServiceImpl implements WatcherService {
     return System.getProperty("version", "1.0.0-DEV");
   }
 
+  private void migrate(String newUrl) {
+    try {
+      String managerUrlKey = "managerUrl: ";
+      String verificationServiceUrlKey = "verificationServiceUrl: ";
+
+      List<String> configFileNames = ImmutableList.of("config-delegate.yml", "config-watcher.yml");
+      for (String configName : configFileNames) {
+        File config = new File(configName);
+        boolean changed = false;
+        if (config.exists()) {
+          List<String> outLines = new ArrayList<>();
+          for (String line : FileUtils.readLines(config, Charsets.UTF_8)) {
+            if (startsWith(line, managerUrlKey)) {
+              String currentVal = substringAfter(line, managerUrlKey);
+              if (!StringUtils.equals(currentVal, newUrl)) {
+                outLines.add(managerUrlKey + newUrl);
+                changed = true;
+              } else {
+                outLines.add(line);
+              }
+            } else if (startsWith(line, verificationServiceUrlKey)) {
+              String currentVal = substringAfter(line, verificationServiceUrlKey);
+              String newUrlVerification = replace(newUrl, "api", "verification");
+              if (!StringUtils.equals(currentVal, newUrlVerification)) {
+                outLines.add(verificationServiceUrlKey + newUrlVerification);
+                changed = true;
+              } else {
+                outLines.add(line);
+              }
+            } else {
+              outLines.add(line);
+            }
+          }
+          if (changed) {
+            FileUtils.forceDelete(config);
+            FileUtils.touch(config);
+            FileUtils.writeLines(config, outLines);
+            Files.setPosixFilePermissions(config.toPath(),
+                Sets.newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE,
+                    PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
+          }
+        }
+      }
+
+      logger.info("Delegate processes {} will be restarted to complete migration.", runningDelegates);
+      if (multiVersion) {
+        runningDelegates.forEach(this ::drainDelegateProcess);
+      } else if (working.compareAndSet(false, true)) {
+        startDelegateProcess(null, ".", new ArrayList<>(runningDelegates), "DelegateRestartScript", getProcessId());
+      }
+
+      working.set(true);
+      upgradeWatcher(getVersion(), getVersion());
+
+    } catch (Exception e) {
+      logger.error("Error updating config.", e);
+    }
+  }
+
   @SuppressFBWarnings({"DM_EXIT", "DE_MIGHT_IGNORE"})
   private void selfDestruct() {
     logger.info("Self destructing now...");
@@ -995,7 +1062,7 @@ public class WatcherServiceImpl implements WatcherService {
           nameFileFilter("nohup-watcher.out"), suffixFileFilter(".sh"));
 
       IOFileFilter dirFilter = or(prefixFileFilter("jre"), prefixFileFilter("backup."), nameFileFilter(".cache"),
-          nameFileFilter("msg"), nameFileFilter("repository"));
+          nameFileFilter("msg"), nameFileFilter("repository"), nameFileFilter("client-tools"));
 
       FileUtils.listFilesAndDirs(workingDir, fileFilter, dirFilter)
           .stream()

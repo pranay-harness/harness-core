@@ -12,6 +12,7 @@ import static io.harness.delegate.message.MessageConstants.DELEGATE_DASH;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_GO_AHEAD;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_HEARTBEAT;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_IS_NEW;
+import static io.harness.delegate.message.MessageConstants.DELEGATE_MIGRATE;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_RESTART_NEEDED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_RESUME;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_SELF_DESTRUCT;
@@ -24,6 +25,8 @@ import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_NEED
 import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_PENDING;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_STARTED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_VERSION;
+import static io.harness.delegate.message.MessageConstants.MIGRATE;
+import static io.harness.delegate.message.MessageConstants.SELF_DESTRUCT;
 import static io.harness.delegate.message.MessageConstants.UPGRADING_DELEGATE;
 import static io.harness.delegate.message.MessageConstants.WATCHER_DATA;
 import static io.harness.delegate.message.MessageConstants.WATCHER_HEARTBEAT;
@@ -55,7 +58,6 @@ import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
-import static software.wings.common.Constants.SELF_DESTRUCT;
 import static software.wings.utils.Misc.getDurationString;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -250,6 +252,7 @@ public class DelegateServiceImpl implements DelegateService {
   private Socket socket;
   private RequestBuilder request;
   private String upgradeVersion;
+  private String migrateTo;
   private long startTime;
   private long upgradeStartedAt;
   private long stoppedAcquiringAt;
@@ -607,8 +610,10 @@ public class DelegateServiceImpl implements DelegateService {
       }
     } else if (StringUtils.equals(message, SELF_DESTRUCT)) {
       initiateSelfDestruct();
-    } else if (StringUtils.equals(message, SELF_DESTRUCT + "-" + delegateId)) {
+    } else if (StringUtils.equals(message, SELF_DESTRUCT + delegateId)) {
       initiateSelfDestruct();
+    } else if (StringUtils.startsWith(message, MIGRATE)) {
+      migrate(StringUtils.substringAfter(message, MIGRATE));
     } else if (!StringUtils.equals(message, "X")) {
       logger.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
       try {
@@ -691,6 +696,10 @@ public class DelegateServiceImpl implements DelegateService {
       if (StringUtils.equals(delegateId, SELF_DESTRUCT)) {
         initiateSelfDestruct();
         sleep(ofMinutes(1));
+        continue;
+      }
+      if (StringUtils.startsWith(delegateId, MIGRATE)) {
+        migrate(StringUtils.substringAfter(delegateId, MIGRATE));
         continue;
       }
       builder.uuid(delegateId).status(delegateResponse.getResource().getStatus());
@@ -1067,6 +1076,9 @@ public class DelegateServiceImpl implements DelegateService {
             }
             if (!acquireTasks.get()) {
               statusData.put(DELEGATE_SHUTDOWN_STARTED, stoppedAcquiringAt);
+            }
+            if (isNotBlank(migrateTo)) {
+              statusData.put(DELEGATE_MIGRATE, migrateTo);
             }
           }
           messageService.putAllData(DELEGATE_DASH + getProcessId(), statusData);
@@ -1647,6 +1659,13 @@ public class DelegateServiceImpl implements DelegateService {
     upgradeNeeded.set(false);
     restartNeeded.set(false);
     selfDestruct.set(true);
+  }
+
+  private void migrate(String newUrl) {
+    if (!newUrl.endsWith("/")) {
+      newUrl = newUrl + "/";
+    }
+    migrateTo = newUrl;
   }
 
   private void handleEcsDelegateSpecificMessage(String message) {
