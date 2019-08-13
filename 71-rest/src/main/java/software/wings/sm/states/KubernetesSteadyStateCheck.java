@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.beans.DelegateTask.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
+import static io.harness.exception.WingsException.USER;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
@@ -34,12 +35,15 @@ import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.Environment;
+import software.wings.beans.SyncTaskContext;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.container.KubernetesSteadyStateCheckParams;
 import software.wings.beans.container.Label;
 import software.wings.common.Constants;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
+import software.wings.helpers.ext.container.ContainerMasterUrlHelper;
+import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
@@ -59,11 +63,14 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class KubernetesSteadyStateCheck extends State {
+  public static final long DEFAULT_SYNC_CALL_TIMEOUT = 60 * 1000; // 1 minute
+
   @Inject private transient AppService appService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
   @Inject private transient DelegateService delegateService;
   @Inject private transient ActivityService activityService;
   @Inject private transient ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
+  @Inject private transient ContainerMasterUrlHelper containerMasterUrlHelper;
 
   @Getter @Setter @Attributes(title = "Labels") private List<Label> labels = Lists.newArrayList();
 
@@ -99,6 +106,17 @@ public class KubernetesSteadyStateCheck extends State {
 
       Map<String, String> labelMap = labels.stream().collect(Collectors.toMap(Label::getName, Label::getValue));
 
+      ContainerServiceParams containerServiceParams =
+          containerDeploymentManagerHelper.getContainerServiceParams(containerInfraMapping, "", context);
+
+      boolean masterUrlPresent = containerMasterUrlHelper.fetchMasterUrlAndUpdateInfraMapping(
+          containerInfraMapping, containerServiceParams, getSyncContext(context, containerInfraMapping));
+      if (!masterUrlPresent) {
+        throw new InvalidRequestException("No Valid Master Url for" + containerInfraMapping.getClass().getName()
+                + "Id : " + containerInfraMapping.getUuid(),
+            USER);
+      }
+
       Activity activity = createActivity(context);
       KubernetesSteadyStateCheckParams kubernetesSteadyStateCheckParams =
           KubernetesSteadyStateCheckParams.builder()
@@ -106,8 +124,7 @@ public class KubernetesSteadyStateCheck extends State {
               .appId(app.getUuid())
               .activityId(activity.getUuid())
               .commandName(KUBERNETES_STEADY_STATE_CHECK_COMMAND_NAME)
-              .containerServiceParams(
-                  containerDeploymentManagerHelper.getContainerServiceParams(containerInfraMapping, "", context))
+              .containerServiceParams(containerServiceParams)
               .labels(labelMap)
               .timeoutMillis(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
               .build();
@@ -220,5 +237,16 @@ public class KubernetesSteadyStateCheck extends State {
     }
     Activity activity = activityBuilder.build();
     return activityService.save(activity);
+  }
+
+  private SyncTaskContext getSyncContext(
+      ExecutionContext context, ContainerInfrastructureMapping containerInfrastructureMapping) {
+    return SyncTaskContext.builder()
+        .accountId(context.getAccountId())
+        .appId(context.getAppId())
+        .envId(containerInfrastructureMapping.getEnvId())
+        .infrastructureMappingId(containerInfrastructureMapping.getUuid())
+        .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 2)
+        .build();
   }
 }

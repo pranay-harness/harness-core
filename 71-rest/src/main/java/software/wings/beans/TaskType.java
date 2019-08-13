@@ -99,6 +99,7 @@ import software.wings.delegatetasks.validation.KubernetesSteadyStateCheckValidat
 import software.wings.delegatetasks.validation.KubernetesSwapServiceSelectorsValidation;
 import software.wings.delegatetasks.validation.LDAPValidation;
 import software.wings.delegatetasks.validation.LogzValidation;
+import software.wings.delegatetasks.validation.MasterUrlFetchValidation;
 import software.wings.delegatetasks.validation.NewRelicValidation;
 import software.wings.delegatetasks.validation.NexusValidation;
 import software.wings.delegatetasks.validation.PCFCommandValidation;
@@ -280,6 +281,9 @@ public enum TaskType {
   CONTAINER_CONNECTION_VALIDATION(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
   FETCH_CONTAINER_INFO(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
   LIST_CLUSTERS(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
+
+  FETCH_MASTER_URL(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, MasterUrlFetchValidation.class),
+
   DYNA_TRACE_VALIDATE_CONFIGURATION_TASK(
       TaskGroup.DYNA_TRACE, ServiceImplDelegateTask.class, DynaTraceValidation.class),
   DYNA_TRACE_METRIC_DATA_COLLECTION_TASK(

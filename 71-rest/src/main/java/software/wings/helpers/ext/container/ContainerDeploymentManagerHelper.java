@@ -126,15 +126,18 @@ public class ContainerDeploymentManagerHelper {
     String region = null;
     String resourceGroup = null;
     String subscriptionId = null;
+    String masterUrl = null;
     settingAttribute = settingsService.get(containerInfraMapping.getComputeProviderSettingId());
     if (containerInfraMapping instanceof DirectKubernetesInfrastructureMapping) {
       namespace = containerInfraMapping.getNamespace();
     } else if (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping) {
       namespace = containerInfraMapping.getNamespace();
+      masterUrl = ((GcpKubernetesInfrastructureMapping) containerInfraMapping).getMasterUrl();
     } else if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
       subscriptionId = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getSubscriptionId();
       resourceGroup = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getResourceGroup();
       namespace = containerInfraMapping.getNamespace();
+      masterUrl = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getMasterUrl();
     } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
       region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();
     }
@@ -151,6 +154,7 @@ public class ContainerDeploymentManagerHelper {
         .region(region)
         .subscriptionId(subscriptionId)
         .resourceGroup(resourceGroup)
+        .masterUrl(masterUrl)
         .build();
   }
 

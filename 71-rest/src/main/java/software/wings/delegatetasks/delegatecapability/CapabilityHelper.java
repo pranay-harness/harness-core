@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
@@ -25,7 +24,6 @@ import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import software.wings.settings.SettingValue;
 
 import java.util.ArrayList;
@@ -46,7 +44,6 @@ public class CapabilityHelper {
   private static final String HELM_VERSION_COMMAND = "${HELM_PATH} version -c";
 
   private static final String CHART_MUSEUM_VERSION_COMMAND = "${CHART_MUSEUM_PATH} -v";
-  @Inject private static K8sGlobalConfigService k8sGlobalConfigService;
 
   public static void embedCapabilitiesInDelegateTask(
       DelegateTask task, Collection<EncryptionConfig> encryptionConfigs) {

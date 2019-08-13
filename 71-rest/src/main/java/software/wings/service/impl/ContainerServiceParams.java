@@ -33,6 +33,7 @@ public class ContainerServiceParams implements ExecutionCapabilityDemander {
   private String region;
   private String subscriptionId;
   private String resourceGroup;
+  private String masterUrl;
   private Set<String> containerServiceNames;
 
   public boolean isKubernetesClusterConfig() {

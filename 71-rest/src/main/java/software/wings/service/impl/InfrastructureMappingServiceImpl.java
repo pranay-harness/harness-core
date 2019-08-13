@@ -115,6 +115,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.azure.AzureHelperService;
+import software.wings.helpers.ext.container.ContainerMasterUrlHelper;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -209,6 +210,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private PipelineService pipelineService;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
+  @Inject private ContainerMasterUrlHelper containerMasterUrlHelper;
   @Inject private EventPublishHelper eventPublishHelper;
 
   @Inject private Queue<PruneEvent> pruneQueue;
@@ -274,12 +276,22 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         gcpKubernetesInfrastructureMapping.setNamespace("default");
       }
       validateGcpInfraMapping(gcpKubernetesInfrastructureMapping);
+      if (gcpKubernetesInfrastructureMapping.getProvisionerId() == null) {
+        gcpKubernetesInfrastructureMapping.setMasterUrl(containerMasterUrlHelper.fetchMasterUrl(
+            gcpKubernetesInfrastructureMapping, getGcpContainerServiceParams(gcpKubernetesInfrastructureMapping),
+            getSyncTaskContext(gcpKubernetesInfrastructureMapping)));
+      }
     }
 
     if (infraMapping instanceof AzureKubernetesInfrastructureMapping) {
       AzureKubernetesInfrastructureMapping azureKubernetesInfrastructureMapping =
           (AzureKubernetesInfrastructureMapping) infraMapping;
       validateAzureKubernetesInfraMapping(azureKubernetesInfrastructureMapping);
+      if (azureKubernetesInfrastructureMapping.getProvisionerId() == null) {
+        azureKubernetesInfrastructureMapping.setMasterUrl(containerMasterUrlHelper.fetchMasterUrl(
+            azureKubernetesInfrastructureMapping, getAzureContainerServiceParams(azureKubernetesInfrastructureMapping),
+            getSyncTaskContext(azureKubernetesInfrastructureMapping)));
+      }
     }
 
     if (infraMapping instanceof AzureInfrastructureMapping) {
@@ -768,9 +780,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @VisibleForTesting
   public void validateGcpInfraMapping(GcpKubernetesInfrastructureMapping infraMapping) {
-    SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
-    notNullCheck(format("No cloud provider found with given id : [%s]", infraMapping.getComputeProviderSettingId()),
-        settingAttribute, USER);
     String clusterName = infraMapping.getClusterName();
     String namespace = infraMapping.getNamespace();
     if (isEmpty(clusterName)) {
@@ -781,22 +790,30 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
     KubernetesHelperService.validateNamespace(namespace);
 
-    List<EncryptedDataDetail> encryptionDetails =
-        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
+    ContainerServiceParams containerServiceParams = getGcpContainerServiceParams(infraMapping);
 
     SyncTaskContext syncTaskContext = getSyncTaskContext(infraMapping);
-    ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
-                                                        .settingAttribute(settingAttribute)
-                                                        .encryptionDetails(encryptionDetails)
-                                                        .clusterName(clusterName)
-                                                        .namespace(namespace)
-                                                        .build();
+
     try {
       delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
     } catch (Exception e) {
       logger.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
+  }
+
+  private ContainerServiceParams getGcpContainerServiceParams(GcpKubernetesInfrastructureMapping infraMapping) {
+    SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
+    notNullCheck(format("No cloud provider found with given id : [%s]", infraMapping.getComputeProviderSettingId()),
+        settingAttribute, USER);
+    List<EncryptedDataDetail> encryptionDetails =
+        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
+    return ContainerServiceParams.builder()
+        .settingAttribute(settingAttribute)
+        .encryptionDetails(encryptionDetails)
+        .clusterName(infraMapping.getClusterName())
+        .namespace(infraMapping.getNamespace())
+        .build();
   }
 
   private void validateAzureInfraMapping(AzureInfrastructureMapping infraMapping) {
@@ -824,36 +841,36 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   private void validateAzureKubernetesInfraMapping(AzureKubernetesInfrastructureMapping infraMapping) {
-    SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
-    notNullCheck("SettingAttribute", settingAttribute, USER);
-    String clusterName = infraMapping.getClusterName();
-    String subscriptionId = infraMapping.getSubscriptionId();
-    String resourceGroup = infraMapping.getResourceGroup();
-    String namespace = infraMapping.getNamespace();
-
     if (isNotEmpty(infraMapping.getProvisionerId())) {
       return;
     }
-    KubernetesHelperService.validateNamespace(namespace);
+    KubernetesHelperService.validateNamespace(infraMapping.getNamespace());
 
-    List<EncryptedDataDetail> encryptionDetails =
-        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
-
+    ContainerServiceParams containerServiceParams = getAzureContainerServiceParams(infraMapping);
     SyncTaskContext syncTaskContext = getSyncTaskContext(infraMapping);
-    ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
-                                                        .settingAttribute(settingAttribute)
-                                                        .encryptionDetails(encryptionDetails)
-                                                        .clusterName(clusterName)
-                                                        .subscriptionId(subscriptionId)
-                                                        .resourceGroup(resourceGroup)
-                                                        .namespace(namespace)
-                                                        .build();
+
     try {
       delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
     } catch (Exception e) {
       logger.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
+  }
+
+  private ContainerServiceParams getAzureContainerServiceParams(AzureKubernetesInfrastructureMapping infraMapping) {
+    SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
+    notNullCheck("SettingAttribute", settingAttribute, USER);
+    List<EncryptedDataDetail> encryptionDetails =
+        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
+
+    return ContainerServiceParams.builder()
+        .settingAttribute(settingAttribute)
+        .encryptionDetails(encryptionDetails)
+        .clusterName(infraMapping.getClusterName())
+        .subscriptionId(infraMapping.getSubscriptionId())
+        .resourceGroup(infraMapping.getResourceGroup())
+        .namespace(infraMapping.getNamespace())
+        .build();
   }
 
   private SyncTaskContext getSyncTaskContext(InfrastructureMapping infraMapping) {

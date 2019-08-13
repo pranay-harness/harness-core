@@ -30,6 +30,7 @@ import java.util.Optional;
 public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureMapping {
   @Attributes(title = "Namespace") @Blueprint private String namespace;
   @Trimmed private String releaseName;
+  private String masterUrl;
 
   /**
    * Instantiates a new Infrastructure mapping.
@@ -44,12 +45,13 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
       String computeProviderSettingId, String envId, String serviceTemplateId, String serviceId,
       String computeProviderType, String infraMappingType, String deploymentType, String computeProviderName,
       String name, boolean autoPopulateName, Map<String, Object> blueprints, String clusterName, String namespace,
-      String releaseName, String provisionerId, boolean sample) {
+      String releaseName, String provisionerId, boolean sample, String masterUrl) {
     super(entityYamlPath, appId, accountId, type, uuid, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt,
         computeProviderSettingId, envId, serviceTemplateId, serviceId, computeProviderType, infraMappingType,
         deploymentType, computeProviderName, name, autoPopulateName, blueprints, clusterName, provisionerId, sample);
     this.namespace = namespace;
     this.releaseName = releaseName;
+    this.masterUrl = masterUrl;
   }
 
   @Override
