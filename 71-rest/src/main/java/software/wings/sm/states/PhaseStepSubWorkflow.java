@@ -78,7 +78,6 @@ import software.wings.sm.StepExecutionSummary;
 import software.wings.sm.states.spotinst.SpotInstSetupContextElement;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -119,18 +118,16 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       response = super.execute(contextIntf);
     } else if (phaseStepType == PhaseStepType.ROLLBACK_PROVISIONERS
         || phaseStepType == PhaseStepType.ROLLBACK_PROVISION_INFRASTRUCTURE) {
-      response = (SpawningExecutionResponse) super.execute(contextIntf);
+      response = super.execute(contextIntf);
     } else {
       List<ContextElement> rollbackRequiredParams = getRollbackRequiredParam(phaseStepType, phaseElement, contextIntf);
-      if (rollbackRequiredParams == null) {
-        response = new ExecutionResponse();
-      } else {
-        SpawningExecutionResponse spawningExecutionResponse = (SpawningExecutionResponse) super.execute(contextIntf);
-        for (StateExecutionInstance instance : spawningExecutionResponse.getStateExecutionInstanceList()) {
+      SpawningExecutionResponse spawningExecutionResponse = (SpawningExecutionResponse) super.execute(contextIntf);
+      for (StateExecutionInstance instance : spawningExecutionResponse.getStateExecutionInstanceList()) {
+        if (isNotEmpty(rollbackRequiredParams)) {
           rollbackRequiredParams.forEach(p -> instance.getContextElements().push(p));
         }
-        response = spawningExecutionResponse;
       }
+      response = spawningExecutionResponse;
     }
 
     response.setStateExecutionData(aPhaseStepExecutionData()
@@ -193,21 +190,6 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
                                                    .filter(s -> s instanceof CommandStepExecutionSummary)
                                                    .findFirst();
         if (!first.isPresent()) {
-          //
-          // Deploy Container Step can use ShellScript to deploy, we have to let rollback steps go through for that.
-          //
-          Optional<StepExecutionSummary> firstScriptStateExecutionSummary =
-              phaseStepExecutionSummary.getStepExecutionSummaryList()
-                  .stream()
-                  .filter(s -> s instanceof ScriptStateExecutionSummary)
-                  .findFirst();
-          if (firstScriptStateExecutionSummary.isPresent()) {
-            return singletonList(ContainerRollbackRequestElement.builder()
-                                     .oldInstanceData(Collections.EMPTY_LIST)
-                                     .newInstanceData(Collections.EMPTY_LIST)
-                                     .build());
-          }
-
           return null;
         }
         CommandStepExecutionSummary commandStepExecutionSummary = (CommandStepExecutionSummary) first.get();

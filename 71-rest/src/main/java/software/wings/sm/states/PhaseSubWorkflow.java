@@ -306,7 +306,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
           saveArtifactsFromVariablesForRollback(
               context, workflowStandardParams, stateExecutionInstance, service, phaseElement, workflowExecution);
         } else {
-          phaseElementBuilder.withRollbackArtifactId(findRollbackArtifactId(service, workflowExecution));
+          phaseElement.setRollbackArtifactId(findRollbackArtifactId(service, workflowExecution));
         }
       } else {
         // save current artifacts in sweeping output

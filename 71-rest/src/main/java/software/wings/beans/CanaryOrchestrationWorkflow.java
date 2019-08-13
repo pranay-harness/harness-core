@@ -34,6 +34,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBAC
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.beans.OrchestrationWorkflowType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
@@ -774,6 +775,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         .withUserVariables(getUserVariables())
         .withDerivedVariables(getDerivedVariables())
         .withRequiredEntityTypes(getRequiredEntityTypes())
+        .withOrchestrationWorkflowType(getOrchestrationWorkflowType())
         .build();
   }
 
@@ -907,6 +909,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     private List<Variable> userVariables = new ArrayList<>();
     private List<Variable> derivedVariables = new ArrayList<>();
     private Set<EntityType> requiredEntityTypes;
+    private OrchestrationWorkflowType orchestrationWorkflowType = CANARY;
 
     private CanaryOrchestrationWorkflowBuilder() {}
 
@@ -985,6 +988,12 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       return this;
     }
 
+    public CanaryOrchestrationWorkflowBuilder withOrchestrationWorkflowType(
+        OrchestrationWorkflowType orchestrationWorkflowType) {
+      this.orchestrationWorkflowType = orchestrationWorkflowType;
+      return this;
+    }
+
     public CanaryOrchestrationWorkflow build() {
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = new CanaryOrchestrationWorkflow();
       canaryOrchestrationWorkflow.setGraph(graph);
@@ -1000,6 +1009,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       canaryOrchestrationWorkflow.setUserVariables(userVariables);
       canaryOrchestrationWorkflow.setDerivedVariables(derivedVariables);
       canaryOrchestrationWorkflow.setRequiredEntityTypes(requiredEntityTypes);
+      canaryOrchestrationWorkflow.setOrchestrationWorkflowType(orchestrationWorkflowType);
       return canaryOrchestrationWorkflow;
     }
   }
