@@ -1,0 +1,26 @@
+{
+  "blocks" : [
+    {
+      "text" : {"text" : "${approvalMessage}", "type" : "mrkdwn"},
+      "type" : "section"
+    },
+    {
+      "elements" : [
+        {
+          "action_id" : "button_accept",
+          "text" : {"text" : "Approve", "type" : "plain_text"},
+          "type" : "button",
+          "value" : "${slackApprovalParams}"
+        },
+        {
+          "action_id" : "button_reject",
+          "text" : {"text" : "Reject", "type" : "plain_text"},
+          "type" : "button",
+          "value" : "${slackApprovalParams}"
+        }
+      ],
+      "type" : "actions",
+      "block_id" : "actionblock789"
+    }
+  ]
+}

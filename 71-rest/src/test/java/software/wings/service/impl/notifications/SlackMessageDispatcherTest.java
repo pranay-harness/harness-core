@@ -54,7 +54,7 @@ public class SlackMessageDispatcherTest extends WingsBaseTest {
 
     SlackNotificationSetting setting = SlackNotificationSetting.emptyConfig();
 
-    slackMessageDispatcher.dispatch(ACCOUNT_ID, notifications, setting);
+    slackMessageDispatcher.dispatch(notifications, setting);
     Mockito.verify(slackNotificationService)
         .sendMessage(Mockito.eq(setting), Mockito.anyString(), Mockito.eq(HARNESS_NAME), Mockito.anyString());
   }

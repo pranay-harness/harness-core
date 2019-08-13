@@ -70,7 +70,7 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
     if (null != userGroup.getSlackConfig()) {
       try {
         log.info("Trying to send slack message. slack configuration: {}", userGroup.getSlackConfig());
-        slackMessageDispatcher.dispatch(accountId, notifications, userGroup.getSlackConfig());
+        slackMessageDispatcher.dispatch(notifications, userGroup.getSlackConfig());
       } catch (Exception e) {
         log.error("Error sending slack message. Slack Config: {}", userGroup.getSlackConfig(), e);
       }

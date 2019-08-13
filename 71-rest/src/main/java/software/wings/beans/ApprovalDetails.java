@@ -15,6 +15,7 @@ public class ApprovalDetails {
   private EmbeddedUser approvedBy;
   private String comments;
   private Action action;
+  private boolean approvalFromSlack;
 
   public enum Action {
     /**

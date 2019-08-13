@@ -62,6 +62,9 @@ public class ApprovalStateExecutionData extends StateExecutionData implements Re
   private String ticketUrl;
   private ServiceNowTicketType ticketType;
 
+  /** Slack approval */
+  private boolean approvalFromSlack;
+
   // Shell script approval
   private String activityId;
 

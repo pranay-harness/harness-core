@@ -1,0 +1,26 @@
+{
+  "blocks" : [
+    {
+      "text" : {"text" : "${confirmationMessage}", "type" : "mrkdwn"},
+      "type" : "section"
+    },
+    {
+      "elements" : [
+        {
+          "action_id" : "button_proceed",
+          "text" : {"text" : "Proceed", "type" : "plain_text"},
+          "type" : "button",
+          "value" : "${slackApprovalParams}"
+        },
+        {
+          "action_id" : "button_revert",
+          "text" : {"text" : "Revert Selection", "type" : "plain_text"},
+          "type" : "button",
+          "value" : "${slackApprovalParams}"
+        }
+      ],
+      "type" : "actions",
+      "block_id" : "actionblock789"
+    }
+  ]
+}
