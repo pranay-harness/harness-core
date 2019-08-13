@@ -53,6 +53,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AzureAvailabilitySet;
 import software.wings.beans.AzureConfig;
+import software.wings.beans.AzureContainerRegistry;
 import software.wings.beans.AzureInfrastructureMapping;
 import software.wings.beans.AzureKubernetesCluster;
 import software.wings.beans.AzureTag;
@@ -383,12 +384,28 @@ public class AzureHelperService {
     return Collections.EMPTY_SET;
   }
 
-  public List<String> listContainerRegistries(
+  public List<String> listContainerRegistryNames(
       AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
     encryptionService.decrypt(azureConfig, encryptionDetails);
     Azure azure = getAzureClient(azureConfig, subscriptionId);
     List<String> registries = new ArrayList<>();
     azure.containerRegistries().list().forEach(registry -> registries.add(registry.name()));
+    return registries;
+  }
+
+  public List<AzureContainerRegistry> listContainerRegistries(
+      AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
+    encryptionService.decrypt(azureConfig, encryptionDetails);
+    Azure azure = getAzureClient(azureConfig, subscriptionId);
+    List<AzureContainerRegistry> registries = new ArrayList<>();
+    azure.containerRegistries().list().forEach(registry
+        -> registries.add(AzureContainerRegistry.builder()
+                              .id(registry.id())
+                              .name(registry.name())
+                              .resourceGroup(registry.resourceGroupName())
+                              .subscriptionId(subscriptionId)
+                              .loginServer(registry.loginServerUrl())
+                              .build()));
     return registries;
   }
 
@@ -473,6 +490,23 @@ public class AzureHelperService {
       logger.error("Error occurred while getting repositories from subscriptionId/registryName/repositoryName :"
               + subscriptionId + "/" + registryName + "/" + repositoryName,
           e);
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", ExceptionUtils.getMessage(e));
+    }
+  }
+
+  public List<String> listRepositoryTags(AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails,
+      String registryHostName, String repositoryName) {
+    encryptionService.decrypt(azureConfig, encryptionDetails);
+    try {
+      AcrRestClient acrRestClient = getAcrRestClient(registryHostName);
+      return acrRestClient
+          .listRepositoryTags(
+              getAuthHeader(azureConfig.getClientId(), new String(azureConfig.getKey())), repositoryName)
+          .execute()
+          .body()
+          .getTags();
+    } catch (Exception e) {
+      logger.error("Error occurred while getting Tags for Repository :" + registryHostName + "/" + repositoryName, e);
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", ExceptionUtils.getMessage(e));
     }
   }

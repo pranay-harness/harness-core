@@ -21,6 +21,7 @@ import java.util.Set;
 public class AcrArtifactStream extends ArtifactStream {
   @NotEmpty private String subscriptionId;
   @NotEmpty private String registryName;
+  private String registryHostName;
   @NotEmpty private String repositoryName;
 
   public AcrArtifactStream() {
@@ -32,11 +33,12 @@ public class AcrArtifactStream extends ArtifactStream {
   public AcrArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
       String name, boolean autoPopulate, String serviceId, String subscriptionId, String registryName,
-      String repositoryName, String accountId, Set<String> keywords, boolean sample) {
+      String registryHostName, String repositoryName, String accountId, Set<String> keywords, boolean sample) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, ACR.name(), sourceName,
         settingId, name, autoPopulate, serviceId, true, accountId, keywords, sample);
     this.subscriptionId = subscriptionId;
     this.registryName = registryName;
+    this.registryHostName = registryHostName;
     this.repositoryName = repositoryName;
   }
 
@@ -52,6 +54,7 @@ public class AcrArtifactStream extends ArtifactStream {
         .artifactStreamType(getArtifactStreamType())
         .subscriptionId(subscriptionId)
         .registryName(registryName)
+        .registryHostName(registryHostName)
         .repositoryName(repositoryName)
         .build();
   }
@@ -77,14 +80,16 @@ public class AcrArtifactStream extends ArtifactStream {
   public static class Yaml extends ArtifactStream.Yaml {
     private String subscriptionId;
     private String registryName;
+    private String registryHostName;
     private String repositoryName;
 
     @lombok.Builder
     public Yaml(String harnessApiVersion, String serverName, boolean metadataOnly, String subscriptionId,
-        String registryName, String repositoryName) {
+        String registryName, String registryHostName, String repositoryName) {
       super(ACR.name(), harnessApiVersion, serverName);
       this.subscriptionId = subscriptionId;
       this.registryName = registryName;
+      this.registryHostName = registryHostName;
       this.repositoryName = repositoryName;
     }
   }

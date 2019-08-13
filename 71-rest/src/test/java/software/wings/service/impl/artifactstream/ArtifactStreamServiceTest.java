@@ -30,6 +30,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.TRIGGER_NAME;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
@@ -43,6 +44,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AzureConfig;
+import software.wings.beans.AzureContainerRegistry;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
@@ -71,6 +73,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
+import software.wings.service.intfc.AzureResourceService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -99,6 +102,19 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Mock private ArtifactService artifactService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @InjectMocks @Inject private ArtifactStreamService artifactStreamService;
+  @Mock private AzureResourceService azureResourceService;
+
+  @Before
+  public void setUp() {
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build();
+    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
+    when(settingsService.fetchAccountIdBySettingId(SETTING_ID)).thenReturn(ACCOUNT_ID);
+    when(azureResourceService.listContainerRegistries(anyString(), anyString()))
+        .thenReturn(ImmutableList.of(
+            AzureContainerRegistry.builder().name("harnessqa").loginServer("harnessqa.azurecr.io").build(),
+            AzureContainerRegistry.builder().name("harnessprod").loginServer("harnessprod.azurecr.io").build()));
+  }
 
   private ArtifactStream createArtifactStream(ArtifactStream artifactStream) {
     ArtifactStream savedArtifactSteam = artifactStreamService.create(artifactStream);
@@ -106,6 +122,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         .thenReturn(asList(artifactStream));
     when(artifactStreamServiceBindingService.listArtifactStreamIds(artifactStream.getAppId(), SERVICE_ID))
         .thenReturn(asList(artifactStream.getUuid()));
+
     return savedArtifactSteam;
   }
 
@@ -125,14 +142,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     supportedBuildSourceTypes = artifactStreamService.getSupportedBuildSourceTypes(APP_ID, SERVICE_ID);
     assertThat(supportedBuildSourceTypes.containsKey(CUSTOM));
     assertThat(supportedBuildSourceTypes.containsValue(CUSTOM));
-  }
-
-  @Before
-  public void setUp() {
-    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build();
-    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
-    when(settingsService.fetchAccountIdBySettingId(SETTING_ID)).thenReturn(ACCOUNT_ID);
   }
 
   @Test
@@ -1755,6 +1764,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                               .subscriptionId("20d6a917-99fa-4b1b-9b2e-a3d624e9dcf0")
                                               .repositoryName("nginx")
                                               .registryName("harnessqa")
+                                              .registryHostName("harnessqa.azurecr.io")
                                               .autoPopulate(true)
                                               .serviceId(SERVICE_ID)
                                               .build();
@@ -1771,6 +1781,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                               .subscriptionId("20d6a917-99fa-4b1b-9b2e-a3d624e9dcf0")
                                               .repositoryName("nginx")
                                               .registryName("harnessqa")
+                                              .registryHostName("harnessqa.azurecr.io")
                                               .autoPopulate(true)
                                               .build();
     updateAndValidateACRArtifactStream(acrArtifactStream, GLOBAL_APP_ID);
@@ -1795,8 +1806,10 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedAcrArtifactStream.getSubscriptionId()).isEqualTo("20d6a917-99fa-4b1b-9b2e-a3d624e9dcf0");
     assertThat(savedAcrArtifactStream.getRepositoryName()).isEqualTo("nginx");
     assertThat(savedAcrArtifactStream.getRegistryName()).isEqualTo("harnessqa");
+    assertThat(savedAcrArtifactStream.getRegistryHostName()).isEqualTo("harnessqa.azurecr.io");
 
     savedAcrArtifactStream.setRegistryName("harnessprod");
+    savedAcrArtifactStream.setRegistryHostName("harnessprod.azurecr.io");
     savedAcrArtifactStream.setRepositoryName("istio");
     savedAcrArtifactStream.setName("Acr Stream");
 
@@ -1819,6 +1832,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedAcrArtifactStream.getSubscriptionId()).isEqualTo("20d6a917-99fa-4b1b-9b2e-a3d624e9dcf0");
     assertThat(updatedAcrArtifactStream.getRepositoryName()).isEqualTo("istio");
     assertThat(updatedAcrArtifactStream.getRegistryName()).isEqualTo("harnessprod");
+    assertThat(updatedAcrArtifactStream.getRegistryHostName()).isEqualTo("harnessprod.azurecr.io");
     verify(buildSourceService, times(2))
         .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
   }

@@ -57,12 +57,14 @@ import org.mongodb.morphia.query.UpdateResults;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.AccountEvent;
 import software.wings.beans.AccountEventType;
+import software.wings.beans.AzureContainerRegistry;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.Variable;
+import software.wings.beans.artifact.AcrArtifactStream;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactKeys;
 import software.wings.beans.artifact.ArtifactStream;
@@ -84,6 +86,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
+import software.wings.service.intfc.AzureResourceService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -132,6 +135,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private TemplateService templateService;
   @Inject private TemplateHelper templateHelper;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private transient AzureResourceService azureResourceService;
 
   // Do not delete as they are being used by Prune
   @Inject private ArtifactService artifactService;
@@ -299,6 +303,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       }
     }
 
+    addAcrHostNameIfNeeded(artifactStream);
+
     // set metadata-only field for nexus
     setMetadataOnly(artifactStream);
     // add keywords
@@ -442,6 +448,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     artifactStream.setSourceName(artifactStream.generateSourceName());
 
+    addAcrHostNameIfNeeded(artifactStream);
+
     // add keywords
     artifactStream.setKeywords(trimmedLowercaseSet(artifactStream.generateKeywords()));
 
@@ -514,6 +522,20 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       if (((NexusArtifactStream) artifactStream).getRepositoryFormat().equals(RepositoryFormat.docker.name())) {
         artifactStream.setMetadataOnly(true);
       }
+    }
+  }
+
+  private void addAcrHostNameIfNeeded(ArtifactStream artifactStream) {
+    if (artifactStream instanceof AcrArtifactStream) {
+      AcrArtifactStream acrArtifactStream = (AcrArtifactStream) artifactStream;
+      AzureContainerRegistry registry =
+          azureResourceService
+              .listContainerRegistries(acrArtifactStream.getSettingId(), acrArtifactStream.getSubscriptionId())
+              .stream()
+              .filter(item -> item.getName().equals(acrArtifactStream.getRegistryName()))
+              .findFirst()
+              .get();
+      acrArtifactStream.setRegistryHostName(registry.getLoginServer());
     }
   }
 

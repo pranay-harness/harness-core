@@ -8,6 +8,7 @@ import com.google.inject.Singleton;
 import io.harness.exception.WingsException;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AzureConfig;
+import software.wings.beans.AzureContainerRegistry;
 import software.wings.beans.AzureKubernetesCluster;
 import software.wings.beans.SettingAttribute;
 import software.wings.helpers.ext.azure.AzureHelperService;
@@ -35,7 +36,14 @@ public class AzureResourceServiceImpl implements AzureResourceService {
         azureConfig, secretManager.getEncryptionDetails(azureConfig, null, null));
   }
 
-  public List<String> listContainerRegistries(String cloudProviderId, String subscriptionId) {
+  public List<String> listContainerRegistryNames(String cloudProviderId, String subscriptionId) {
+    SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
+    AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
+    return azureHelperService.listContainerRegistryNames(
+        azureConfig, secretManager.getEncryptionDetails(azureConfig, null, null), subscriptionId);
+  }
+
+  public List<AzureContainerRegistry> listContainerRegistries(String cloudProviderId, String subscriptionId) {
     SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
     AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
     return azureHelperService.listContainerRegistries(

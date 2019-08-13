@@ -299,9 +299,13 @@ public class ArtifactCollectionUtils {
       } else if (artifactStream.getArtifactStreamType().equals(ACR.name())) {
         AcrArtifactStream acrArtifactStream = (AcrArtifactStream) artifactStream;
         AzureConfig azureConfig = (AzureConfig) settingsService.get(settingId).getValue();
-        String loginServer = azureHelperService.getLoginServerForRegistry(azureConfig,
-            secretManager.getEncryptionDetails(azureConfig, null, workflowExecutionId),
-            acrArtifactStream.getSubscriptionId(), acrArtifactStream.getRegistryName());
+        managerDecryptionService.decrypt(
+            azureConfig, secretManager.getEncryptionDetails(azureConfig, null, workflowExecutionId));
+        String loginServer = isNotEmpty(acrArtifactStream.getRegistryHostName())
+            ? acrArtifactStream.getRegistryHostName()
+            : azureHelperService.getLoginServerForRegistry(azureConfig,
+                  secretManager.getEncryptionDetails(azureConfig, null, workflowExecutionId),
+                  acrArtifactStream.getSubscriptionId(), acrArtifactStream.getRegistryName());
 
         imageDetailsBuilder.registryUrl(azureHelperService.getUrl(loginServer))
             .sourceName(acrArtifactStream.getRepositoryName())

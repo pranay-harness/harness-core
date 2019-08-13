@@ -13,6 +13,7 @@ public class AcrArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
     super.toYaml(yaml, bean);
     yaml.setSubscriptionId(bean.getSubscriptionId());
     yaml.setRegistryName(bean.getRegistryName());
+    yaml.setRegistryHostName(bean.getRegistryHostName());
     yaml.setRepositoryName(bean.getRepositoryName());
     return yaml;
   }
@@ -22,6 +23,7 @@ public class AcrArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
     Yaml yaml = changeContext.getYaml();
     bean.setSubscriptionId(yaml.getSubscriptionId());
     bean.setRegistryName(yaml.getRegistryName());
+    bean.setRegistryHostName(yaml.getRegistryHostName());
     bean.setRepositoryName(yaml.getRepositoryName());
   }
 

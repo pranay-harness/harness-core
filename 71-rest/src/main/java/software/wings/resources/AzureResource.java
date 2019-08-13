@@ -9,6 +9,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import software.wings.beans.AzureContainerRegistry;
 import software.wings.beans.AzureKubernetesCluster;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AzureResourceService;
@@ -45,6 +46,16 @@ public class AzureResource {
   @ExceptionMetered
   public RestResponse<List<String>> listContainerRegistries(@QueryParam("accountId") String accountId,
       @QueryParam("cloudProviderId") String cloudProviderId,
+      @PathParam(value = "subscriptionId") String subscriptionId) {
+    return new RestResponse(azureResourceService.listContainerRegistryNames(cloudProviderId, subscriptionId));
+  }
+
+  @GET
+  @Path("/subscriptions/{subscriptionId}/containerRegistriesWithDetails")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<AzureContainerRegistry>> listContainerRegistriesWithDetails(
+      @QueryParam("accountId") String accountId, @QueryParam("cloudProviderId") String cloudProviderId,
       @PathParam(value = "subscriptionId") String subscriptionId) {
     return new RestResponse(azureResourceService.listContainerRegistries(cloudProviderId, subscriptionId));
   }
