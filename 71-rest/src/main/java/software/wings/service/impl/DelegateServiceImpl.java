@@ -1094,10 +1094,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       eventEmitter.send(Channel.DELEGATES,
           anEvent().withOrgId(delegate.getAccountId()).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
       assignDelegateService.clearConnectionResults(delegate.getAccountId());
-      eventPublishHelper.publishInstalledDelegateEvent(delegate.getAccountId(), delegate.getUuid());
     }
 
     updateWithTokenAndSeqNumIfEcsDelegate(delegate, savedDelegate);
+    eventPublishHelper.publishInstalledDelegateEvent(delegate.getAccountId(), delegate.getUuid());
     return savedDelegate;
   }
 
