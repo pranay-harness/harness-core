@@ -42,7 +42,6 @@ import software.wings.beans.Application;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
-import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.ExecutionCredential;
@@ -600,16 +599,14 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   public Map<String, Artifact> getArtifactsForService(String serviceId) {
     Map<String, Artifact> map = new HashMap<>();
     List<ArtifactVariable> artifactVariables = getWorkflowElement().getArtifactVariables();
-    Map<String, Artifact> artifactVariablesForPhase = getArtifactVariablesForPhase();
-    Artifact artifact = null;
-    if (isNotEmpty(artifactVariables) && isNotEmpty(artifactVariablesForPhase)) {
+    Map<String, Artifact> artifactMapForPhase = getArtifactMapForPhase();
+    if (isNotEmpty(artifactVariables) && isNotEmpty(artifactMapForPhase)) {
       for (ArtifactVariable artifactVariable : artifactVariables) {
-        if (EntityType.SERVICE.equals(artifactVariable.getEntityType())
-            && artifactVariable.getEntityId().equals(serviceId)) {
-          artifact = artifactVariablesForPhase.get(artifactVariable.getName());
-        } else if (EntityType.WORKFLOW.equals(artifactVariable.getEntityType())) {
-          artifact = artifactVariablesForPhase.get(artifactVariable.getName());
+        if (!isArtifactVariableForService(serviceId, artifactVariable)) {
+          continue;
         }
+
+        Artifact artifact = artifactMapForPhase.getOrDefault(artifactVariable.getName(), null);
         // TODO: ASR: throw error if null?
         if (artifact != null) {
           map.put(artifactVariable.getName(), artifact);
@@ -619,7 +616,28 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     return map;
   }
 
-  private Map<String, Artifact> getArtifactVariablesForPhase() {
+  private boolean isArtifactVariableForService(String serviceId, ArtifactVariable artifactVariable) {
+    switch (artifactVariable.getEntityType()) {
+      case SERVICE:
+        return artifactVariable.getEntityId().equals(serviceId);
+      case ENVIRONMENT:
+        if (isEmpty(artifactVariable.getOverriddenArtifactVariables())) {
+          return true;
+        }
+        for (ArtifactVariable overriddenArtifactVariable : artifactVariable.getOverriddenArtifactVariables()) {
+          if (isArtifactVariableForService(serviceId, overriddenArtifactVariable)) {
+            return true;
+          }
+        }
+        return false;
+      case WORKFLOW:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  private Map<String, Artifact> getArtifactMapForPhase() {
     SweepingOutput sweepingOutputInput = context.prepareSweepingOutputBuilder(Scope.PHASE).name("artifacts").build();
     SweepingOutput result = sweepingOutputService.find(sweepingOutputInput.getAppId(), sweepingOutputInput.getName(),
         sweepingOutputInput.getPipelineExecutionId(), sweepingOutputInput.getWorkflowExecutionId(),
