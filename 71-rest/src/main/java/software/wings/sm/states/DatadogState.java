@@ -7,6 +7,9 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.VerificationConstants.DD_ECS_HOST_NAME;
 import static software.wings.common.VerificationConstants.DD_HOST_NAME_EXPRESSION;
 import static software.wings.common.VerificationConstants.DD_K8s_HOST_NAME;
+import static software.wings.metrics.MetricType.ERROR;
+import static software.wings.metrics.MetricType.RESP_TIME;
+import static software.wings.metrics.MetricType.THROUGHPUT;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Sets;
@@ -66,6 +69,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 @Slf4j
 public class DatadogState extends AbstractMetricAnalysisState {
@@ -118,6 +122,14 @@ public class DatadogState extends AbstractMetricAnalysisState {
       throw new WingsException("No Metric Group Names found. This is a required field");
     }
     return groupInfoMap;
+  }
+
+  @Override
+  public Map<String, String> validateFields() {
+    if (isNotEmpty(customMetrics)) {
+      return validateDatadogCustomMetrics(customMetrics);
+    }
+    return new HashMap<>();
   }
 
   @Override
@@ -365,7 +377,14 @@ public class DatadogState extends AbstractMetricAnalysisState {
             MetricInfo metricInfo = metricInfos.get(metric.getDatadogMetricType());
 
             APMMetricInfoBuilder newMetricInfoBuilder = APMMetricInfo.builder();
-            newMetricInfoBuilder.responseMappers(metricInfo.responseMapperMap());
+            // update the response mapper with the transaction/group name.
+            Map<String, ResponseMapper> responseMapperMap = metricInfo.responseMapperMap();
+            String txnName = "Transaction Group 1";
+            if (isNotEmpty(metric.getTxnName())) {
+              txnName = metric.getTxnName();
+            }
+            responseMapperMap.put("txnName", ResponseMapper.builder().fieldName("txnName").fieldValue(txnName).build());
+            newMetricInfoBuilder.responseMappers(responseMapperMap);
             newMetricInfoBuilder.metricType(MetricType.valueOf(metric.getMlMetricType()));
             newMetricInfoBuilder.tag(metric.getDatadogMetricType());
             newMetricInfoBuilder.metricName(metric.getDisplayName());
@@ -526,6 +545,66 @@ public class DatadogState extends AbstractMetricAnalysisState {
     this.metrics = metrics;
   }
 
+  /**
+   * Validate the fields for custom metrics - for each txn, there should be only one throughput
+   * If error/response time is present, throughput should be present too.
+   * If only throughput is present, we won't analyze it.
+   * @param customMetrics
+   * @return
+   */
+  public static Map<String, String> validateDatadogCustomMetrics(Map<String, Set<Metric>> customMetrics) {
+    if (isNotEmpty(customMetrics)) {
+      Map<String, String> invalidFields = new HashMap<>();
+      // group the metrics by txn.
+      Map<String, Set<Metric>> txnMetricMap = new HashMap<>();
+      customMetrics.forEach((filter, metricSet) -> {
+        metricSet.forEach(metric -> {
+          String txnFilter = filter + "-" + metric.getTxnName();
+          if (!txnMetricMap.containsKey(txnFilter)) {
+            txnMetricMap.put(txnFilter, new HashSet<>());
+          }
+          txnMetricMap.get(txnFilter).add(metric);
+        });
+      });
+
+      // validate the txnMetricMap for the ones mentioned above.
+      txnMetricMap.forEach((txnName, metricSet) -> {
+        AtomicInteger throughputCount = new AtomicInteger(0);
+        AtomicInteger otherMetricsCount = new AtomicInteger(0);
+        AtomicInteger errorResponseCount = new AtomicInteger(0);
+
+        metricSet.forEach(metric -> {
+          if (metric.getMlMetricType().equals(THROUGHPUT.name())) {
+            throughputCount.incrementAndGet();
+          } else {
+            otherMetricsCount.incrementAndGet();
+            if (metric.getMlMetricType().equals(RESP_TIME.name()) || metric.getMlMetricType().equals(ERROR.name())) {
+              errorResponseCount.incrementAndGet();
+            }
+          }
+        });
+
+        if (throughputCount.get() > 1) {
+          invalidFields.put("Incorrect throughput configuration for group: " + txnName,
+              "There are more than one throughput metrics defined.");
+        }
+        if (otherMetricsCount.get() == 0 && throughputCount.get() != 0) {
+          invalidFields.put("Invalid metric configuration for group: " + txnName,
+              "It has only throughput metrics. Throughput metrics is used to analyze other metrics and is not analyzed.");
+        }
+        if (errorResponseCount.get() > 0 && throughputCount.get() == 0) {
+          invalidFields.put("Incorrect configuration for group: " + txnName,
+              "Error or Response metrics have been defined for " + txnName
+                  + " but there is no definition for a throughput metric.");
+        }
+      });
+
+      return invalidFields;
+    }
+
+    return null;
+  }
+
   @Data
   @Builder
   public static class Metric {
@@ -536,6 +615,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
     private String transformation;
     private String transformation24x7;
     private Set<String> tags;
+    private String txnName; // this field is optional. It can be extracted from the response
   }
 
   @Data

@@ -16,13 +16,16 @@ import software.wings.WingsBaseTest;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.apm.APMMetricInfo;
+import software.wings.sm.states.DatadogState.Metric;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 
 public class DatadogStateTest extends WingsBaseTest {
@@ -150,5 +153,103 @@ public class DatadogStateTest extends WingsBaseTest {
       assertTrue(v.size() == 1);
       assertTrue(traceMetrics.contains(v.get(0).getMetricName()));
     });
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCustomDatadogMetricsValidateTxnName() {
+    Map<String, Set<Metric>> customMetricMap = new HashMap<>();
+    Set<Metric> metrics = new HashSet<>();
+    metrics.add(Metric.builder()
+                    .txnName("transaction1")
+                    .displayName("display")
+                    .mlMetricType("RESP_TIME")
+                    .metricName("test.metric.1")
+                    .datadogMetricType("Custom")
+                    .build());
+    metrics.add(Metric.builder()
+                    .txnName("transaction1")
+                    .displayName("display2")
+                    .mlMetricType("THROUGHPUT")
+                    .metricName("test.metric.2")
+                    .datadogMetricType("Custom")
+                    .build());
+    customMetricMap.put("service:todolist", metrics);
+    Map<String, List<APMMetricInfo>> metricEndpointsInfo = DatadogState.metricEndpointsInfo(
+        Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(customMetricMap), Optional.empty());
+    assertEquals(2, metricEndpointsInfo.size());
+    Set<String> traceMetrics = new HashSet<>(Arrays.asList("Request Duration", "Errors", "Hits"));
+    metricEndpointsInfo.forEach((k, v) -> {
+      v.forEach(metricInfo -> {
+        assertTrue(metricInfo.getResponseMappers().containsKey("txnName"));
+        assertTrue(metricInfo.getResponseMappers().get("txnName").getFieldValue().equals("transaction1"));
+      });
+    });
+  }
+
+  private Set<Metric> getMetricsSet(List<String> metricType) {
+    Set<Metric> metrics = new HashSet<>();
+    int i = 0;
+    metricType.forEach(type -> {
+      metrics.add(Metric.builder()
+                      .txnName("transaction1")
+                      .displayName("display23" + new Random().nextInt())
+                      .mlMetricType(type)
+                      .metricName("test.metric3" + new Random().nextInt())
+                      .datadogMetricType("Custom")
+                      .build());
+    });
+
+    return metrics;
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateCustomFields2Throughput() {
+    Map<String, Set<Metric>> customMetricMap = new HashMap<>();
+
+    customMetricMap.put("service:todolist", getMetricsSet(Arrays.asList("THROUGHPUT", "THROUGHPUT")));
+
+    Map<String, String> invalidFields = DatadogState.validateDatadogCustomMetrics(customMetricMap);
+    assertEquals(2, invalidFields.size());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateCustomFieldsOnlyThroughput() {
+    Map<String, Set<Metric>> customMetricMap = new HashMap<>();
+
+    Set<Metric> metrics = getMetricsSet(Arrays.asList("THROUGHPUT"));
+
+    customMetricMap.put("service:todolist", metrics);
+
+    Map<String, String> invalidFields = DatadogState.validateDatadogCustomMetrics(customMetricMap);
+    assertEquals(1, invalidFields.size());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateCustomFieldsMissingThroughput() {
+    Map<String, Set<Metric>> customMetricMap = new HashMap<>();
+
+    Set<Metric> metrics = getMetricsSet(Arrays.asList("RESP_TIME", "ERROR"));
+
+    customMetricMap.put("service:todolist", metrics);
+
+    Map<String, String> invalidFields = DatadogState.validateDatadogCustomMetrics(customMetricMap);
+    assertEquals(1, invalidFields.size());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateCustomFieldsGoodCase() {
+    Map<String, Set<Metric>> customMetricMap = new HashMap<>();
+
+    Set<Metric> metrics = getMetricsSet(Arrays.asList("THROUGHPUT", "RESP_TIME", "ERROR"));
+
+    customMetricMap.put("service:todolist", metrics);
+
+    Map<String, String> invalidFields = DatadogState.validateDatadogCustomMetrics(customMetricMap);
+    assertEquals(0, invalidFields.size());
   }
 }

@@ -31,6 +31,7 @@ import migrations.all.CreateDefaultAlertNotificationRule;
 import migrations.all.DanglingAppEnvReferenceRemovalMigration;
 import migrations.all.DanglingUserInviteCleanupMigration;
 import migrations.all.DatadogCVServiceConfigurationMigration;
+import migrations.all.DatadogCustomMetricMigration;
 import migrations.all.DeleteCVAlertsMigration;
 import migrations.all.DeleteLETaskDelCronMigration;
 import migrations.all.DeleteNewRelicMetricNameCronMigration;
@@ -277,6 +278,7 @@ public class MigrationList {
         .add(Pair.of(275, ScheduleSegmentPublishJob.class))
         .add(Pair.of(276, BaseMigration.class))
         .add(Pair.of(277, SweepingStateMigration.class))
+        .add(Pair.of(278, DatadogCustomMetricMigration.class))
         .build();
   }
 }
