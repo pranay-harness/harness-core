@@ -131,6 +131,14 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             && isEmpty(ddCVConfig.getEcsMetrics()) && isEmpty(ddCVConfig.getCustomMetrics())) {
           throw new WingsException("No metrics found in the yaml");
         }
+        if (isNotEmpty(ddCVConfig.getCustomMetrics())) {
+          final Map<String, String> ddInvalidFields =
+              DatadogState.validateDatadogCustomMetrics(ddCVConfig.getCustomMetrics());
+          if (isNotEmpty(ddInvalidFields)) {
+            throw new WingsException("Invalid configuration, reason: " + ddInvalidFields);
+          }
+        }
+
         break;
 
       case CLOUD_WATCH:
