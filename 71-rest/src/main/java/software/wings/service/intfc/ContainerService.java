@@ -4,6 +4,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.service.impl.ContainerServiceParams;
+import software.wings.service.impl.MasterUrlFetchTaskParameter;
 
 import java.util.List;
 import java.util.Map;
@@ -26,4 +27,7 @@ public interface ContainerService {
   List<software.wings.cloudprovider.ContainerInfo> fetchContainerInfos(ContainerServiceParams containerServiceParams);
 
   @DelegateTaskType(TaskType.LIST_CLUSTERS) List<String> listClusters(ContainerServiceParams containerServiceParams);
+
+  @DelegateTaskType(TaskType.FETCH_MASTER_URL)
+  String fetchMasterUrl(MasterUrlFetchTaskParameter masterUrlFetchTaskParameter);
 }

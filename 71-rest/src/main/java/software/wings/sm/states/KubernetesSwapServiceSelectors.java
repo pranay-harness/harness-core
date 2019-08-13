@@ -36,11 +36,14 @@ import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.Environment;
+import software.wings.beans.SyncTaskContext;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.container.KubernetesSwapServiceSelectorsParams;
 import software.wings.common.Constants;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
+import software.wings.helpers.ext.container.ContainerMasterUrlHelper;
+import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
@@ -62,6 +65,8 @@ import java.util.Map;
 
 @Slf4j
 public class KubernetesSwapServiceSelectors extends State {
+  public static final long DEFAULT_SYNC_CALL_TIMEOUT = 60 * 1000; // 1 minute
+
   @Inject private SecretManager secretManager;
   @Inject private SettingsService settingsService;
   @Inject private transient AppService appService;
@@ -70,6 +75,7 @@ public class KubernetesSwapServiceSelectors extends State {
   @Inject private transient ActivityService activityService;
   @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
   @Inject private transient K8sStateHelper k8sStateHelper;
+  @Inject private ContainerMasterUrlHelper containerMasterUrlHelper;
 
   @Getter @Setter @Attributes(title = "Service One") private String service1;
 
@@ -224,14 +230,24 @@ public class KubernetesSwapServiceSelectors extends State {
     String renderedService2 = getRenderedServiceName(context, baseServiceName, service2);
 
     Activity activity = createActivity(context);
+
+    ContainerServiceParams containerServiceParams =
+        containerDeploymentManagerHelper.getContainerServiceParams(containerInfraMapping, "", context);
+    boolean masterUrlPresent = containerMasterUrlHelper.fetchMasterUrlAndUpdateInfraMapping(
+        containerInfraMapping, containerServiceParams, getSyncContext(context, containerInfraMapping));
+    if (!masterUrlPresent) {
+      throw new InvalidRequestException("No Valid Master Url for" + containerInfraMapping.getClass().getName()
+              + "Id : " + containerInfraMapping.getUuid(),
+          USER);
+    }
+
     KubernetesSwapServiceSelectorsParams kubernetesSwapServiceSelectorsParams =
         KubernetesSwapServiceSelectorsParams.builder()
             .accountId(app.getAccountId())
             .appId(app.getUuid())
             .activityId(activity.getUuid())
             .commandName(KUBERNETES_SWAP_SERVICE_SELECTORS_COMMAND_NAME)
-            .containerServiceParams(
-                containerDeploymentManagerHelper.getContainerServiceParams(containerInfraMapping, "", context))
+            .containerServiceParams(containerServiceParams)
             .service1(renderedService1)
             .service2(renderedService2)
             .build();
@@ -260,6 +276,17 @@ public class KubernetesSwapServiceSelectors extends State {
                                     .commandName(KUBERNETES_SWAP_SERVICE_SELECTORS_COMMAND_NAME)
                                     .build())
         .withDelegateTaskId(delegateTaskId)
+        .build();
+  }
+
+  private SyncTaskContext getSyncContext(
+      ExecutionContext context, ContainerInfrastructureMapping containerInfrastructureMapping) {
+    return SyncTaskContext.builder()
+        .accountId(context.getAccountId())
+        .appId(context.getAppId())
+        .envId(containerInfrastructureMapping.getEnvId())
+        .infrastructureMappingId(containerInfrastructureMapping.getUuid())
+        .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 2)
         .build();
   }
 }

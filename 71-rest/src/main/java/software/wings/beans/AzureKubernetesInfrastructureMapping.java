@@ -26,6 +26,7 @@ public class AzureKubernetesInfrastructureMapping extends ContainerInfrastructur
   @Attributes(title = "Resource Group") private String resourceGroup;
   @Attributes(title = "Namespace") private String namespace;
   @Trimmed private String releaseName;
+  private String masterUrl;
 
   public AzureKubernetesInfrastructureMapping() {
     super(InfrastructureMappingType.AZURE_KUBERNETES.name());
@@ -50,6 +51,7 @@ public class AzureKubernetesInfrastructureMapping extends ContainerInfrastructur
     protected String appId;
     private String accountId;
     private String clusterName;
+    private String masterUrl;
     private String subscriptionId;
     private String resourceGroup;
     private String namespace;
@@ -79,6 +81,11 @@ public class AzureKubernetesInfrastructureMapping extends ContainerInfrastructur
 
     public Builder withClusterName(String clusterName) {
       this.clusterName = clusterName;
+      return this;
+    }
+
+    public Builder withMasterUrl(String masterUrl) {
+      this.clusterName = masterUrl;
       return this;
     }
 

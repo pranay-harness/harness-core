@@ -19,13 +19,16 @@ import com.amazonaws.services.ecs.model.Task;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.cloudprovider.aws.AwsClusterService;
@@ -33,6 +36,7 @@ import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.helpers.ext.azure.AzureHelperService;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.ContainerService;
 import software.wings.settings.SettingValue;
 import software.wings.utils.Validator;
@@ -321,5 +325,30 @@ public class ContainerServiceImpl implements ContainerService {
   public List<String> listClusters(ContainerServiceParams containerServiceParams) {
     return gkeClusterService.listClusters(
         containerServiceParams.getSettingAttribute(), containerServiceParams.getEncryptionDetails());
+  }
+
+  @Override
+  public String fetchMasterUrl(MasterUrlFetchTaskParameter masterUrlFetchTaskParameter) {
+    ContainerServiceParams containerServiceParams = masterUrlFetchTaskParameter.getContainerServiceParams();
+    SettingAttribute settingAttribute = containerServiceParams.getSettingAttribute();
+    SettingValue value = settingAttribute.getValue();
+    KubernetesConfig kubernetesConfig;
+
+    String clusterName = containerServiceParams.getClusterName();
+    String namespace = containerServiceParams.getNamespace();
+    String subscriptionId = containerServiceParams.getSubscriptionId();
+    String resourceGroup = containerServiceParams.getResourceGroup();
+    List<EncryptedDataDetail> edd = containerServiceParams.getEncryptionDetails();
+    if (value instanceof GcpConfig) {
+      kubernetesConfig = gkeClusterService.getCluster(settingAttribute, edd, clusterName, namespace);
+    } else if (value instanceof AzureConfig) {
+      AzureConfig azureConfig = (AzureConfig) value;
+      kubernetesConfig = azureHelperService.getKubernetesClusterConfig(
+          azureConfig, edd, subscriptionId, resourceGroup, clusterName, namespace);
+    } else {
+      throw new InvalidArgumentsException(
+          Pair.of("Setting Value", "Unknown kubernetes cloud provider setting value: " + value.getType()));
+    }
+    return kubernetesConfig.getMasterUrl();
   }
 }

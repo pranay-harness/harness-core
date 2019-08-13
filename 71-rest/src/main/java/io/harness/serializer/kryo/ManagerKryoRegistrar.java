@@ -428,6 +428,7 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.impl.ContainerServiceParams;
+import software.wings.service.impl.MasterUrlFetchTaskParameter;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.WorkflowExecutionUpdate;
@@ -1326,6 +1327,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SpotInstSetupContextElement.class, 7223);
     kryo.register(SpotInstSetupExecutionSummary.class, 7224);
     kryo.register(SpotInstDeployStateExecutionData.class, 7225);
-    kryo.register(SpotInstListenerUpdateStateExecutionData.class, 7226);
+    kryo.register(MasterUrlFetchTaskParameter.class, 7226);
+    kryo.register(SpotInstListenerUpdateStateExecutionData.class, 7227);
   }
 }
