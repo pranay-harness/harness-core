@@ -1580,8 +1580,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             artifactStreamService.fetchArtifactSourceProperties(accountId, artifact.getArtifactStreamId());
         if (!source.containsKey(ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY)
             || ARTIFACT_SOURCE_DOCKER_CONFIG_PLACEHOLDER.equals(source.get(ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY))) {
-          source.put(ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY,
-              artifactCollectionUtils.getDockerConfig(artifact.getArtifactStreamId()));
+          try {
+            String dockerConfig = artifactCollectionUtils.getDockerConfig(artifact.getArtifactStreamId());
+            source.put(ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY, dockerConfig);
+          } catch (InvalidRequestException e) {
+            // Artifact stream type doesn't have docker credentials. Ex. Jenkins
+            // Ignore exception.
+          }
         }
         artifact.setSource(source);
 

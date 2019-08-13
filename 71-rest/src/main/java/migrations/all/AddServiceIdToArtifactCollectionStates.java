@@ -1,6 +1,7 @@
 package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.inject.Inject;
 
@@ -39,7 +40,7 @@ public class AddServiceIdToArtifactCollectionStates implements Migration {
   public void migrate() {
     logger.info("Migration Started - add service id to artifact collection states");
 
-    List<String> accountIds = wingsPersistence.createQuery(Account.class)
+    List<String> accountIds = wingsPersistence.createQuery(Account.class, excludeAuthority)
                                   .asList()
                                   .stream()
                                   .map(Account::getUuid)

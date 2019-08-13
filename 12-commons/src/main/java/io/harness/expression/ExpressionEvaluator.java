@@ -199,6 +199,10 @@ public class ExpressionEvaluator {
   }
 
   public static void updateServiceArtifactVariableNames(String str, Set<String> serviceArtifactVariableNames) {
+    if (str == null) {
+      return;
+    }
+
     // TODO: ASR: IMP: ARTIFACT_FILE_NAME behaved differently for multi artifact
     if (str.contains("${artifact.") || str.contains("${ARTIFACT_FILE_NAME}")) {
       serviceArtifactVariableNames.add("artifact");
@@ -211,6 +215,10 @@ public class ExpressionEvaluator {
   }
 
   public static void updateWorkflowVariableNames(String str, Set<String> workflowVariableNames) {
+    if (str == null) {
+      return;
+    }
+
     Matcher matcher = workflowVariablePattern.matcher(str);
     while (matcher.find()) {
       workflowVariableNames.add(matcher.group(1));

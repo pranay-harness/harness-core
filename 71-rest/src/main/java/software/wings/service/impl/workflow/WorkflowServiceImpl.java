@@ -2666,7 +2666,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     notNullCheck("Orchestration workflow not associated", orchestrationWorkflow, USER);
 
     if (!(orchestrationWorkflow instanceof CanaryOrchestrationWorkflow)) {
-      // early return if not a CanaryOrchestrationWorkflow
+      // Early return if not a CanaryOrchestrationWorkflow.
       return;
     }
 
@@ -2676,14 +2676,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     // map of serviceId to artifact variables used in the workflow
     Map<String, Set<String>> serviceArtifactVariableNamesMap = new HashMap<>();
 
-    // set of workflow artifact variables used in the workflow
+    // Set of workflow artifact variables used in the workflow.
     Set<String> workflowVariableNames = new HashSet<>();
 
-    // process PreDeploymentSteps
+    // Process PreDeploymentSteps.
     updateArtifactVariableNames(appId, "", canaryOrchestrationWorkflow.getPreDeploymentSteps(), null, null,
         serviceArtifactVariableNamesMap, workflowVariableNames);
 
-    // process WorkflowPhases
+    // Process WorkflowPhases.
     for (WorkflowPhase phase : canaryOrchestrationWorkflow.getWorkflowPhases()) {
       updateArtifactVariableNames(
           appId, phase, workflowVariablesMap, serviceArtifactVariableNamesMap, workflowVariableNames);
@@ -2691,7 +2691,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     boolean requiresArtifact = serviceArtifactVariableNamesMap.size() + workflowVariableNames.size() > 0;
 
-    // process RollbackWorkflowPhases
+    // Process RollbackWorkflowPhases.
     for (WorkflowPhase phase : canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().values()) {
       updateArtifactVariableNames(
           appId, phase, workflowVariablesMap, serviceArtifactVariableNamesMap, workflowVariableNames);
@@ -2715,7 +2715,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                           .filter(entry -> isNotEmpty(entry.getKey()) && isNotEmpty(entry.getValue()))
                                           .collect(toMap(Entry::getKey, Entry::getValue));
 
-    // NOTE: current overriding behaviour order:
+    // NOTE: Current overriding behaviour order:
     // 1. ArtifactVariables defined as ServiceVariables at Service level - with allowed list = artifactStreamIds
     // 2. ServiceVariable overrides for all services defined at Environment level - with allowed list =
     //    artifactStreamIds
@@ -2724,12 +2724,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     // 4. Workflow Variables defined at Workflow level with type ARTIFACT and same name as one of the above
     //    ServiceVariable - with allowed list = artifactStreamIds
 
-    // compute artifact variables associated to a service with overrides at env level
-    // overriding behaviours 1, 2 and 3 covered here
+    // Compute artifact variables associated to a service with overrides at env level
+    // overriding behaviours 1, 2 and 3 covered here.
     Map<String, List<ServiceVariable>> serviceVariablesMap =
         computeServiceVariables(appId, workflow.getEnvId(), serviceArtifactVariableNamesMap.keySet());
 
-    // loop over serviceIds and add artifact variables used based on the above computed service variables
+    // Loop over serviceIds and add artifact variables used based on the above computed service variables.
     if (!isBuildWorkflow) {
       for (Entry<String, Set<String>> entry : serviceArtifactVariableNamesMap.entrySet()) {
         String serviceId = entry.getKey();
@@ -2743,8 +2743,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         Map<String, ServiceVariable> variableNames =
             serviceVariables.stream().collect(Collectors.toMap(ServiceVariable::getName, Function.identity()));
         int count = 0;
+        Set<String> invalidVariableNames = new HashSet<>();
         for (String variableName : serviceArtifactVariableNames) {
           if (!variableNames.containsKey(variableName)) {
+            // Artifact variable name `variableName` is used while deployment/execution, but it is not defined for the
+            // service. This will lead to runtime error, so instead we are throwing an error while fetching deployment
+            // metadata. We collect all the invalid variable names for this service and throw a single error at the end.
+            invalidVariableNames.add(variableName);
+            continue;
+          }
+          if (isNotEmpty(invalidVariableNames)) {
+            // If we have invalid variable names, we will just throw at the end of the for loop. No need to process
+            // further.
             continue;
           }
 
@@ -2782,25 +2792,48 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           count++;
         }
 
+        if (isNotEmpty(invalidVariableNames)) {
+          // Throw an exception in invalid artifact variable names were found for the current service.
+          Service service = serviceResourceService.get(serviceId);
+          notNullCheck("Service does not exist: " + serviceId, service, USER);
+          throw new InvalidRequestException(
+              format(
+                  "Undefined artifact variables [%s] are used while deploying the service [%s]. Please ensure these variable names are defined for this service.",
+                  String.join(",", invalidVariableNames), service.getName()),
+              USER);
+        }
+
         if (count > 0) {
           artifactNeededServiceIds.add(serviceId);
         }
       }
     }
 
-    // list of variables defined at the workflow variable with type ARTIFACT
+    // List of variables defined at the workflow variable with type ARTIFACT.
     List<Variable> workflowVariables = canaryOrchestrationWorkflow.getUserVariables();
     Map<String, Variable> workflowArtifactVariableNamesMap =
         workflowVariables.stream()
             .filter(variable -> variable.getType().equals(VariableType.ARTIFACT))
             .collect(Collectors.toMap(Variable::getName, Function.identity()));
 
-    workflowVariableNames = workflowVariableNames.stream()
-                                .filter(workflowArtifactVariableNamesMap::containsKey)
-                                .collect(Collectors.toSet());
+    // Filter out invalid workflow artifact variable names which are used while deployment/execution, but it are not
+    // defined for the workflow. This will lead to runtime error, so instead we are throwing an error while fetching
+    // deployment metadata.
+    Set<String> invalidWorkflowVariableNames =
+        workflowVariableNames.stream()
+            .filter(variableName -> !workflowArtifactVariableNamesMap.containsKey(variableName))
+            .collect(Collectors.toSet());
+    if (invalidWorkflowVariableNames.size() > 0) {
+      // Throw an exception in invalid workflow artifact variable names were found.
+      throw new InvalidRequestException(
+          format(
+              "Undefined artifact variables [%s] are used while deploying the workflow [%s]. Please ensure these variable names are defined for this workflow.",
+              String.join(",", invalidWorkflowVariableNames), workflow.getName()),
+          USER);
+    }
 
-    // copy over all the service variables as well as they might have been overridden by workflow variables
-    // overriding behaviour 4 (defined above in the NOTE) covered here
+    // Copy over all the service variables as well as they might have been overridden by workflow variables
+    // overriding behaviour 4 (defined above in the NOTE) covered here.
     workflowVariableNames.addAll(serviceArtifactVariableNamesMap.values()
                                      .stream()
                                      .flatMap(Set::stream)
@@ -2811,8 +2844,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     for (String variableName : workflowVariableNames) {
       Variable variable = workflowArtifactVariableNamesMap.get(variableName);
 
-      // override artifact variables with the same name and store them in the new artifact variable
-      // overriding behaviour 4 (defined above in the NOTE) covered here
+      // Override artifact variables with the same name and store them in the new artifact variable
+      // overriding behaviour 4 (defined above in the NOTE) covered here.
       List<ArtifactVariable> overriddenArtifactVariables =
           artifactVariables.stream()
               .filter(artifactVariable -> artifactVariable.getName().equals(variableName))
@@ -2845,7 +2878,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     // serviceTemplates with list of service variables defined at service level and service template overrides defined
-    // at the env level
+    // at the env level.
     List<ServiceTemplate> serviceTemplates =
         serviceTemplateService.list(aPageRequest()
                                         .addFilter(ServiceTemplateKeys.appId, EQ, appId)
@@ -2886,7 +2919,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private List<ServiceVariable> overrideServiceVariables(
       List<ServiceVariable> existingServiceVariables, List<ServiceVariable> newServiceVariables) {
-    // append newServiceVariables to existingServiceVariables overwriting any variables with same names
+    // Append newServiceVariables to existingServiceVariables overwriting any variables with same names.
     if (existingServiceVariables == null) {
       existingServiceVariables = new ArrayList<>();
     }
@@ -2933,7 +2966,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private void updateArtifactVariableNames(String appId, String serviceId, PhaseStep phaseStep,
       WorkflowPhase workflowPhase, Map<String, String> workflowVariables,
       Map<String, Set<String>> serviceArtifactVariableNamesMap, Set<String> workflowVariableNames) {
-    // NOTE: if serviceId is "", we assume those artifact variables to be workflow variables
+    // NOTE: If serviceId is "", we assume those artifact variables to be workflow variables.
     boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(appId));
     Set<String> serviceArtifactVariableNames;
     if (serviceArtifactVariableNamesMap.containsKey(serviceId)) {
