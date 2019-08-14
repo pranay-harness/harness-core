@@ -514,6 +514,7 @@ public class AwsAmiServiceDeployState extends State {
                                 .withEnvId(infrastructureMapping.getEnvId())
                                 .withHostConnAttr(infrastructureMapping.getHostConnectionAttrs())
                                 .withInfraMappingId(infrastructureMapping.getUuid())
+                                .withInfraDefinitionId(infrastructureMapping.getInfrastructureDefinitionId())
                                 .withServiceTemplateId(infrastructureMapping.getServiceTemplateId())
                                 .build();
                 Host savedHost = hostService.saveHost(host);

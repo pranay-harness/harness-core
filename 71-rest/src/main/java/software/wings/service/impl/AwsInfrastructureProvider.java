@@ -111,6 +111,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
                             ? awsInfrastructureMapping.getHostConnectionAttrs()
                             : null)
                     .withInfraMappingId(awsInfrastructureMapping.getUuid())
+                    .withInfraDefinitionId(awsInfrastructureMapping.getInfrastructureDefinitionId())
                     .withServiceTemplateId(awsInfrastructureMapping.getServiceTemplateId())
                     .build();
               })
@@ -329,7 +330,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
                    .withAppId(appId)
                    .withEnvId(envId)
                    .withHostConnAttr(awsInstanceInfrastructure.getHostConnectionAttrs())
-                   .withInfraMappingId(infraDefinitionId)
+                   .withInfraDefinitionId(infraDefinitionId)
                    .build())
         .collect(toList());
   }

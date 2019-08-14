@@ -47,6 +47,7 @@ public class AwsStateHelper {
                                 .withEnvId(infraMapping.getEnvId())
                                 .withHostConnAttr(infraMapping.getHostConnectionAttrs())
                                 .withInfraMappingId(infraMapping.getUuid())
+                                .withInfraDefinitionId(infraMapping.getInfrastructureDefinitionId())
                                 .withServiceTemplateId(infraMapping.getServiceTemplateId())
                                 .build();
                 Host savedHost = hostService.saveHost(host);
