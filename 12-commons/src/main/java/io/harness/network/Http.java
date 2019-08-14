@@ -131,7 +131,7 @@ public class Http {
     }
   }
 
-  private static TrustManager[] getTrustManagers() {
+  public static TrustManager[] getTrustManagers() {
     return new TrustManager[] {new SslTrustManager()};
   }
 
@@ -146,10 +146,15 @@ public class Http {
 
   public static synchronized OkHttpClient.Builder getUnsafeOkHttpClientBuilder(
       String url, long connectTimeOutSeconds, long readTimeOutSeconds) {
+    return getUnsafeOkHttpClientBuilder(url, connectTimeOutSeconds, readTimeOutSeconds, getSslContext());
+  }
+
+  public static synchronized OkHttpClient.Builder getUnsafeOkHttpClientBuilder(
+      String url, long connectTimeOutSeconds, long readTimeOutSeconds, SSLContext sslContext) {
     try {
       OkHttpClient.Builder builder =
           getOkHttpClientBuilder()
-              .sslSocketFactory(getSslContext().getSocketFactory(), (X509TrustManager) getTrustManagers()[0])
+              .sslSocketFactory(sslContext.getSocketFactory(), (X509TrustManager) getTrustManagers()[0])
               .hostnameVerifier((s, sslSession) -> true)
               .connectTimeout(connectTimeOutSeconds, TimeUnit.SECONDS)
               .readTimeout(readTimeOutSeconds, TimeUnit.SECONDS);
@@ -160,7 +165,6 @@ public class Http {
       }
 
       return builder;
-
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

@@ -278,6 +278,8 @@ public abstract class SettingValue implements ExecutionCapabilityDemander {
 
     AWS_SECRETS_MANAGER,
 
+    CYBERARK,
+
     WINRM_CONNECTION_ATTRIBUTES("WinRm Connection Attributes"),
 
     WINRM_SESSION_CONFIG,

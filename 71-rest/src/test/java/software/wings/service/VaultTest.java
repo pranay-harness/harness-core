@@ -51,7 +51,6 @@ import software.wings.WingsBaseTest;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Account;
-import software.wings.beans.Account.Builder;
 import software.wings.beans.AccountType;
 import software.wings.beans.Activity;
 import software.wings.beans.AppDynamicsConfig;
@@ -59,7 +58,6 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.EntityType;
 import software.wings.beans.KmsConfig;
-import software.wings.beans.LicenseInfo;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
@@ -369,15 +367,6 @@ public class VaultTest extends WingsBaseTest {
     assertEquals(1, encryptedDataList.get(0).getParentIds().size());
     assertEquals(savedConfig.getUuid(), encryptedDataList.get(0).getParentIds().iterator().next());
     assertEquals(name + "_token", encryptedDataList.get(0).getName());
-  }
-
-  private Account getAccount(String accountType) {
-    Builder accountBuilder = Builder.anAccount().withUuid(UUID.randomUUID().toString());
-    LicenseInfo license = getLicenseInfo();
-    license.setAccountType(accountType);
-    accountBuilder.withLicenseInfo(license);
-
-    return accountBuilder.build();
   }
 
   @Test

@@ -18,6 +18,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureVaultConfig;
+import software.wings.beans.CyberArkConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.VaultConfig;
@@ -26,6 +27,7 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.service.intfc.security.AwsSecretsManagerService;
 import software.wings.service.intfc.security.AzureSecretsManagerService;
+import software.wings.service.intfc.security.CyberArkService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalEncryptionService;
 import software.wings.service.intfc.security.SecretManagerConfigService;
@@ -47,6 +49,7 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
   @Inject private AwsSecretsManagerService secretsManagerService;
   @Inject private LocalEncryptionService localEncryptionService;
   @Inject private AzureSecretsManagerService azureSecretsManagerService;
+  @Inject private CyberArkService cyberArkService;
 
   @Override
   public String save(SecretManagerConfig secretManagerConfig) {
@@ -113,6 +116,9 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
         break;
       case AZURE_VAULT:
         encryptionConfig = azureSecretsManagerService.getEncryptionConfig(accountId, secretManagerConfig.getUuid());
+        break;
+      case CYBERARK:
+        encryptionConfig = cyberArkService.getConfig(accountId, secretManagerConfig.getUuid());
         break;
       default:
         throw new IllegalArgumentException("Encryption type " + encryptionType + " is not valid");
@@ -192,6 +198,9 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
               break;
             case AZURE_VAULT:
               azureSecretsManagerService.decryptAzureConfigSecrets((AzureVaultConfig) secretManagerConfig, maskSecret);
+              break;
+            case CYBERARK:
+              cyberArkService.decryptCyberArkConfigSecrets(accountId, (CyberArkConfig) secretManagerConfig, maskSecret);
               break;
             default:
               // Do nothing;

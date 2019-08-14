@@ -21,7 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -32,7 +31,6 @@ import com.amazonaws.services.secretsmanager.model.AWSSecretsManagerException;
 import com.amazonaws.services.secretsmanager.model.GetSecretValueRequest;
 import com.amazonaws.services.secretsmanager.model.ResourceNotFoundException;
 import com.mongodb.DuplicateKeyException;
-import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
@@ -41,8 +39,6 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.SyncTaskContext;
-import software.wings.features.SecretsManagementFeature;
-import software.wings.features.api.PremiumFeature;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.service.intfc.AccountService;
@@ -74,7 +70,6 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
 
   @Inject private AlertService alertService;
   @Inject private AccountService accountService;
-  @Inject @Named(SecretsManagementFeature.FEATURE_NAME) private PremiumFeature secretsManagementFeature;
 
   private void validateSecretName(String name) {
     if (!AWS_SECRET_NAME_PATTERN.matcher(name).find()) {
@@ -145,7 +140,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
 
   @Override
   public String saveAwsSecretsManagerConfig(String accountId, AwsSecretsManagerConfig secretsManagerConfig) {
-    checkIfAwsSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
+    checkIfSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
 
     AwsSecretsManagerConfig savedSecretsManagerConfig = null;
     boolean shouldVerify = true;
@@ -169,7 +164,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     secretsManagerConfig.setAccountId(accountId);
 
     EncryptedData secretKeyEncryptedData = getEncryptedDataForSecretField(
-        secretsManagerConfig, secretsManagerConfig, secretsManagerConfig.getSecretKey(), SECRET_KEY_NAME_SUFFIX);
+        savedSecretsManagerConfig, secretsManagerConfig, secretsManagerConfig.getSecretKey(), SECRET_KEY_NAME_SUFFIX);
 
     secretsManagerConfig.setSecretKey(null);
     String secretsManagerConfigId;
@@ -186,12 +181,6 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     secretsManagerConfig.setSecretKey(secretKeyEncryptedDataId);
 
     return secretManagerConfigService.save(secretsManagerConfig);
-  }
-
-  private void checkIfAwsSecretsManagerConfigCanBeCreatedOrUpdated(String accountId) {
-    if (!secretsManagementFeature.isAvailableForAccount(accountId)) {
-      throw new InvalidRequestException(String.format("Operation not permitted for account [%s]", accountId), USER);
-    }
   }
 
   public void validateSecretsManagerConfig(AwsSecretsManagerConfig secretsManagerConfig) {
@@ -273,7 +262,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     if (count > 0) {
       String message =
           "Can not delete the AWS Secrets Manager configuration since there are secrets encrypted with this. "
-          + "Please transition your secrets to a new kms and then try again";
+          + "Please transition your secrets to another secret manager and try again.";
       throw new WingsException(AWS_SECRETS_MANAGER_OPERATION_ERROR, USER).addParam(REASON_KEY, message);
     }
 
@@ -286,8 +275,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
           secretsManagerConfig.getSecretKey(), secretsManagerConfig.getName());
     }
 
-    wingsPersistence.delete(SecretManagerConfig.class, configId);
-    return wingsPersistence.delete(secretsManagerConfig);
+    return wingsPersistence.delete(SecretManagerConfig.class, configId);
   }
 
   @Override

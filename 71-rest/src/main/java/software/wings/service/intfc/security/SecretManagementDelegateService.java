@@ -3,6 +3,7 @@ package software.wings.service.intfc.security;
 import io.harness.security.encryption.EncryptedRecord;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureVaultConfig;
+import software.wings.beans.CyberArkConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.VaultConfig;
@@ -98,4 +99,10 @@ public interface SecretManagementDelegateService {
    * if the deletion failed (e.g. The specified path is non-existent)
    */
   @DelegateTaskType(TaskType.AZURE_VAULT_DELETE) boolean delete(AzureVaultConfig config, String key);
+
+  /**
+   * Decrypt the previously encrypted data using CyberArk Secrets Manager. The decrypted value will be returned.
+   * We only allow reference of existing secrets in CyberArk for now. Therefore only the decrypt task is present.
+   */
+  @DelegateTaskType(TaskType.CYBERARK_DECRYPT) char[] decrypt(EncryptedRecord data, CyberArkConfig cyberArkConfig);
 }

@@ -137,6 +137,7 @@ import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.CustomArtifactServerConfig;
+import software.wings.beans.CyberArkConfig;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnection;
@@ -880,6 +881,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(YamlHistory.class);
     set.add(YamlVersion.class);
     set.add(PerpetualTaskRecord.class);
+    set.add(CyberArkConfig.class);
   }
 
   @Override
@@ -1108,6 +1110,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.yaml.GitDiffRequest", GitDiffRequest.class);
     w.put("beans.yaml.GitDiffResult", GitDiffResult.class);
     w.put("beans.yaml.GitFetchFilesFromMultipleRepoResult", GitFetchFilesFromMultipleRepoResult.class);
+    w.put("beans.CyberArkConfig", CyberArkConfig.class);
     w.put("collect.ArtifactCollectionCallback", ArtifactCollectionCallback.class);
     w.put("delegatetasks.buildsource.BuildSourceCallback", BuildSourceCallback.class);
     w.put("delegatetasks.buildsource.BuildSourceCleanupCallback", BuildSourceCleanupCallback.class);

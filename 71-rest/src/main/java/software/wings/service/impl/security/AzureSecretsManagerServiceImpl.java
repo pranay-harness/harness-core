@@ -10,7 +10,6 @@ import static software.wings.service.intfc.security.SecretManager.SECRET_NAME_KE
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import com.microsoft.azure.keyvault.KeyVaultClient;
 import com.microsoft.azure.keyvault.models.SecretBundle;
@@ -18,7 +17,6 @@ import com.microsoft.azure.management.keyvault.Vault;
 import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
 import com.mongodb.DuplicateKeyException;
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
@@ -26,8 +24,6 @@ import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.AzureVaultConfig;
 import software.wings.dl.WingsPersistence;
-import software.wings.features.SecretsManagementFeature;
-import software.wings.features.api.PremiumFeature;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
@@ -43,11 +39,10 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AzureHelperService azureHelperService;
   private static final String SECRET_KEY_NAME_SUFFIX = "_secretKey";
-  @Inject @Named(SecretsManagementFeature.FEATURE_NAME) private PremiumFeature secretsManagementFeature;
 
   @Override
   public String saveAzureSecretsManagerConfig(String accountId, AzureVaultConfig secretsManagerConfig) {
-    checkIfAzureKeyVaultConfigCanBeCreatedOrUpdated(accountId);
+    checkIfSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
     AzureVaultConfig savedSecretsManagerConfig = null;
     secretsManagerConfig.setAccountId(accountId);
 
@@ -189,7 +184,7 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
     if (count > 0) {
       String message =
           "Can not delete the Azure Secrets Manager configuration since there are secrets encrypted with this. "
-          + "Please transition your secrets to a new vault and then try again";
+          + "Please transition your secrets to another secret manager and try again.";
       throw new WingsException(AZURE_KEY_VAULT_OPERATION_ERROR, USER).addParam(REASON_KEY, message);
     }
     AzureVaultConfig azureVaultConfig = wingsPersistence.get(AzureVaultConfig.class, configId);
@@ -201,11 +196,5 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
           azureVaultConfig.getSecretKey(), azureVaultConfig.getName());
     }
     return wingsPersistence.delete(azureVaultConfig);
-  }
-
-  private void checkIfAzureKeyVaultConfigCanBeCreatedOrUpdated(String accountId) {
-    if (!secretsManagementFeature.isAvailableForAccount(accountId)) {
-      throw new InvalidRequestException(String.format("Operation not permitted for account [%s]", accountId), USER);
-    }
   }
 }

@@ -64,7 +64,6 @@ import software.wings.WingsBaseTest;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Account;
-import software.wings.beans.Account.Builder;
 import software.wings.beans.AccountType;
 import software.wings.beans.Activity;
 import software.wings.beans.AppDynamicsConfig;
@@ -75,7 +74,6 @@ import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.KmsConfig;
-import software.wings.beans.LicenseInfo;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
@@ -2954,15 +2952,6 @@ public class KmsTest extends WingsBaseTest {
         assertEquals("Changed password", secretChangeLog.getDescription());
       }
     }
-  }
-
-  private Account getAccount(String accountType) {
-    Builder accountBuilder = Builder.anAccount().withUuid(generateUuid());
-    LicenseInfo license = getLicenseInfo();
-    license.setAccountType(accountType);
-    accountBuilder.withLicenseInfo(license);
-
-    return accountBuilder.build();
   }
 
   public KmsConfig getKmsConfig() {
