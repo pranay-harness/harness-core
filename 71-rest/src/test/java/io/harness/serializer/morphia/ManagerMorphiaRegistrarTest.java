@@ -24,6 +24,7 @@ import software.wings.common.PartitionProcessorTest.SampleElement;
 import software.wings.integration.common.MongoDBTest.MongoEntity;
 import software.wings.integration.dl.PageRequestTest.Dummy;
 import software.wings.service.impl.WorkflowExecutionUpdateFake;
+import software.wings.service.impl.analysis.DataCollectionInfo;
 import software.wings.settings.SettingValue;
 import software.wings.sm.ContextElement;
 import software.wings.sm.State;
@@ -90,6 +91,7 @@ public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
                                                            .add(AlertData.class)
                                                            .add(CommandUnit.class)
                                                            .add(ContextElement.class)
+                                                           .add(DataCollectionInfo.class)
                                                            .add(SettingValue.class)
                                                            .add(State.class)
                                                            .add(StateMachineExecutionCallback.class)
