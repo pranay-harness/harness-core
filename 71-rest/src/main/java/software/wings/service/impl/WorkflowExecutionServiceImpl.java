@@ -162,6 +162,7 @@ import software.wings.beans.alert.UsageLimitExceededAlert;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.beans.deployment.DeploymentMetadata;
+import software.wings.beans.infrastructure.Host;
 import software.wings.beans.trigger.Trigger;
 import software.wings.common.Constants;
 import software.wings.common.cache.MongoStore;
@@ -184,6 +185,7 @@ import software.wings.service.intfc.BarrierService.OrchestrationWorkflowInfo;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
@@ -288,6 +290,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private MultiArtifactWorkflowExecutionServiceHelper multiArtifactWorkflowExecutionServiceHelper;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
+  @Inject private HostService hostService;
 
   @Inject @RateLimitCheck private PreDeploymentChecker deployLimitChecker;
   @Inject @ServiceInstanceUsage private PreDeploymentChecker siUsageChecker;
@@ -2452,23 +2455,43 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private int refreshTotal(WorkflowExecution workflowExecution) {
+    boolean infraRefactor =
+        featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, workflowExecution.getAccountId());
     Workflow workflow = workflowService.readWorkflow(workflowExecution.getAppId(), workflowExecution.getWorkflowId());
     if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
       logger.info("Workflow was deleted. Skipping the refresh total");
       return 0;
     }
-    List<InfrastructureMapping> resolvedInfraMappings = getResolvedInfraMappings(workflow, workflowExecution);
-    if (isEmpty(resolvedInfraMappings)) {
-      return 0;
+
+    if (infraRefactor) {
+      List<InfrastructureDefinition> resolvedInfraDefinitions =
+          getResolvedInfraDefinitions(workflow, workflowExecution);
+      if (isEmpty(resolvedInfraDefinitions)) {
+        return 0;
+      }
+      try {
+        List<Host> hosts = hostService.getHostsByInfraDefinitionIds(workflow.getAppId(),
+            resolvedInfraDefinitions.stream().map(InfrastructureDefinition::getUuid).collect(toList()));
+        return hosts == null ? 0 : hosts.size();
+      } catch (Exception e) {
+        logger.error(
+            "Error occurred while calculating Refresh total for workflow execution {}", workflowExecution.getUuid(), e);
+      }
+    } else {
+      List<InfrastructureMapping> resolvedInfraMappings = getResolvedInfraMappings(workflow, workflowExecution);
+      if (isEmpty(resolvedInfraMappings)) {
+        return 0;
+      }
+      try {
+        List<Host> hosts = hostService.getHostsByInfraMappingIds(
+            workflow.getAppId(), resolvedInfraMappings.stream().map(InfrastructureMapping::getUuid).collect(toList()));
+        return hosts == null ? 0 : hosts.size();
+      } catch (Exception e) {
+        logger.error(
+            "Error occurred while calculating Refresh total for workflow execution {}", workflowExecution.getUuid(), e);
+      }
     }
-    try {
-      return infrastructureMappingService
-          .listHosts(workflowExecution.getAppId(), resolvedInfraMappings.get(0).getUuid())
-          .size();
-    } catch (Exception e) {
-      logger.error(
-          "Error occurred while calculating Refresh total for workflow execution {}", workflowExecution.getUuid(), e);
-    }
+
     return 0;
   }
 

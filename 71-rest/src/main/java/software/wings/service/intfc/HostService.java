@@ -93,6 +93,9 @@ public interface HostService extends OwnedByInfrastructureMapping {
    */
   List<Host> getHostsByEnv(@NotEmpty String appId, @NotEmpty String envId);
 
+  List<Host> getHostsByInfraMappingIds(String appId, List<String> infraMappingIds);
+
+  List<Host> getHostsByInfraDefinitionIds(String appId, List<String> infraDefinitionIds);
   /**
    * Gets host by env.
    *

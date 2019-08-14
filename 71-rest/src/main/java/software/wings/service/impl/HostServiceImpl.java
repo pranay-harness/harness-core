@@ -151,6 +151,24 @@ public class HostServiceImpl implements HostService {
   }
 
   @Override
+  public List<Host> getHostsByInfraMappingIds(String appId, List<String> infraMappingIds) {
+    return wingsPersistence.createQuery(Host.class)
+        .filter("appId", appId)
+        .field(HostKeys.infraMappingId)
+        .in(infraMappingIds)
+        .asList();
+  }
+
+  @Override
+  public List<Host> getHostsByInfraDefinitionIds(String appId, List<String> infraDefinitionIds) {
+    return wingsPersistence.createQuery(Host.class)
+        .filter("appId", appId)
+        .field(HostKeys.infraDefinitionId)
+        .in(infraDefinitionIds)
+        .asList();
+  }
+
+  @Override
   public Host getHostByEnv(String appId, String envId, String hostId) {
     return wingsPersistence.createQuery(Host.class)
         .filter("appId", appId)

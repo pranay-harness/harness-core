@@ -261,6 +261,7 @@ public class AzureHelperService {
                         ? azureInfrastructureMapping.getWinRmConnectionAttributes()
                         : null)
                 .withInfraMappingId(azureInfrastructureMapping.getUuid())
+                .withInfraDefinitionId(azureInfrastructureMapping.getInfrastructureDefinitionId())
                 .withServiceTemplateId(azureInfrastructureMapping.getServiceTemplateId())
                 .build();
         azureHosts.add(host);
@@ -295,6 +296,7 @@ public class AzureHelperService {
                         ? azureInstanceInfrastructure.getWinRmConnectionAttributes()
                         : null)
                 .withInfraMappingId(infrastructureDefinition.getUuid())
+                .withInfraDefinitionId(infrastructureDefinition.getUuid())
                 .build();
         azureHosts.add(host);
       }
