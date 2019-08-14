@@ -10,9 +10,10 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonTypeName("LAST_COLLECTED")
 public class TriggerArtifactSelectionLastCollected implements TriggerArtifactSelectionValue {
   @NotEmpty private ArtifactSelectionType artifactSelectionType = ArtifactSelectionType.LAST_COLLECTED;
-
   @NotEmpty private String artifactStreamId;
-  private transient String artifactSourceName;
+  @NotEmpty private String artifactServerId;
+  private transient String artifactStreamName;
+  private transient String artifactServerName;
   private transient String artifactStreamType;
   private String artifactFilter;
 }

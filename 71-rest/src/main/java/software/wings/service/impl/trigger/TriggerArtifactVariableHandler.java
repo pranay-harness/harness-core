@@ -2,6 +2,7 @@ package software.wings.service.impl.trigger;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.stream.Collectors.toList;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
@@ -16,6 +17,7 @@ import software.wings.beans.ArtifactVariable;
 import software.wings.beans.EntityType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.ServiceVariable;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
@@ -37,6 +39,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 
@@ -59,6 +62,7 @@ public class TriggerArtifactVariableHandler {
   @Inject private transient ArtifactService artifactService;
   @Inject private transient EnvironmentService environmentService;
   @Inject private transient ServiceResourceService serviceResourceService;
+  @Inject private transient SettingsService settingService;
 
   public void validateTriggerArtifactVariables(String appId, List<TriggerArtifactVariable> triggerArtifactVariables) {
     if (triggerArtifactVariables != null) {
@@ -152,22 +156,48 @@ public class TriggerArtifactVariableHandler {
       case LAST_COLLECTED:
         TriggerArtifactSelectionLastCollected artifactVar = (TriggerArtifactSelectionLastCollected) inputValue;
         String artifactStreamId = artifactVar.getArtifactStreamId();
-        ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
 
-        return TriggerArtifactSelectionLastCollected.builder()
-            .artifactFilter(artifactVar.getArtifactFilter())
-            .artifactStreamId(artifactVar.getArtifactStreamId())
-            .artifactSourceName(artifactStream.generateSourceName())
-            .artifactStreamType(artifactStream.getArtifactStreamType())
-            .build();
+        if (isExpression(artifactStreamId) && !isExpression(artifactVar.getArtifactServerId())) {
+          SettingAttribute settingAttribute = settingService.get(artifactVar.getArtifactServerId());
+          return TriggerArtifactSelectionLastCollected.builder()
+              .artifactFilter(artifactVar.getArtifactFilter())
+              .artifactStreamId(artifactVar.getArtifactStreamId())
+              .artifactServerId(artifactVar.getArtifactServerId())
+              .artifactServerName(settingAttribute.getName())
+              .build();
+        } else if (isExpression(artifactStreamId) && isExpression(artifactVar.getArtifactServerId())) {
+          return TriggerArtifactSelectionLastCollected.builder()
+              .artifactFilter(artifactVar.getArtifactFilter())
+              .artifactStreamId(artifactVar.getArtifactStreamId())
+              .artifactServerId(artifactVar.getArtifactServerId())
+              .build();
+        } else if (!isExpression(artifactStreamId) && !isExpression(artifactVar.getArtifactServerId())) {
+          ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+          SettingAttribute settingAttribute = settingService.get(artifactStream.getSettingId());
+          return TriggerArtifactSelectionLastCollected.builder()
+              .artifactFilter(artifactVar.getArtifactFilter())
+              .artifactStreamId(artifactVar.getArtifactStreamId())
+              .artifactServerId(artifactVar.getArtifactServerId())
+              .artifactStreamName(artifactStream.getName())
+              .artifactStreamType(artifactStream.getArtifactStreamType())
+              .artifactServerName(settingAttribute.getName())
+              .build();
+        } else {
+          throw new WingsException(
+              "artifact stream should also be expression also be expression if artifact server is expression");
+        }
       case LAST_DEPLOYED:
         TriggerArtifactSelectionLastDeployed workflowVar = (TriggerArtifactSelectionLastDeployed) inputValue;
 
-        return TriggerArtifactSelectionLastDeployed.builder()
-            .workflowId(workflowVar.getWorkflowId())
-            .workflowName(fetchWorkflowName(appId, workflowVar.getWorkflowId()))
-            .variableName(workflowVar.getVariableName())
-            .build();
+        if (!isExpression(workflowVar.getWorkflowId())) {
+          return TriggerArtifactSelectionLastDeployed.builder()
+              .workflowId(workflowVar.getWorkflowId())
+              .workflowName(fetchWorkflowName(appId, workflowVar.getWorkflowId()))
+              .build();
+        } else {
+          return TriggerArtifactSelectionLastDeployed.builder().workflowId(workflowVar.getWorkflowId()).build();
+        }
+
       case ARTIFACT_SOURCE:
         return TriggerArtifactSelectionFromSource.builder().build();
       case PIPELINE_SOURCE:
@@ -198,11 +228,19 @@ public class TriggerArtifactVariableHandler {
     return null;
   }
 
+  private boolean isExpression(String inputValue) {
+    return matchesVariablePattern(inputValue);
+  }
+
   private void validateTriggerArtifactSelection(
       String appId, TriggerArtifactSelectionValue variableValue, String variableName) {
     switch (variableValue.getArtifactSelectionType()) {
       case LAST_DEPLOYED:
         TriggerArtifactSelectionLastDeployed workflowVar = (TriggerArtifactSelectionLastDeployed) variableValue;
+
+        if (isExpression(workflowVar.getWorkflowId())) {
+          return;
+        }
         try {
           workflowService.fetchWorkflowName(appId, workflowVar.getWorkflowId());
         } catch (WingsException exception) {
@@ -215,6 +253,13 @@ public class TriggerArtifactVariableHandler {
         break;
       case LAST_COLLECTED:
         TriggerArtifactSelectionLastCollected artifactVar = (TriggerArtifactSelectionLastCollected) variableValue;
+        if (isExpression(artifactVar.getArtifactServerId()) && !isExpression(artifactVar.getArtifactStreamId())) {
+          throw new WingsException(
+              "artifact stream should also be expression also be expression if artifact server is expression");
+        }
+        if (isExpression(artifactVar.getArtifactStreamId())) {
+          return;
+        }
         ArtifactStream artifactStream = artifactStreamService.get(artifactVar.getArtifactStreamId());
         notNullCheck("artifactStream does not exist for id " + artifactVar.getArtifactStreamId(), artifactStream);
         break;
@@ -224,6 +269,9 @@ public class TriggerArtifactVariableHandler {
   }
 
   private void validateVariableName(String appId, String entityId, EntityType entityType, String variableName) {
+    if (isExpression(variableName)) {
+      return;
+    }
     switch (entityType) {
       case SERVICE:
       case SERVICE_TEMPLATE:
