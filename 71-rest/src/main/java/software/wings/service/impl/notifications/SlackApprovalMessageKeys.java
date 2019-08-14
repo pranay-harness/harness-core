@@ -1,6 +1,7 @@
 package software.wings.service.impl.notifications;
 
 public class SlackApprovalMessageKeys {
+  // The paths to pick the Templates of the messages and the JSON payloads
   public static final String MESSAGE_IDENTIFIER = "suppressTraditionalApprovalNotification";
   public static final String APPROVAL_MESSAGE_PAYLOAD_TEMPLATE = "/slack/approval-message.json";
   public static final String PIPELINE_APPROVAL_MESSAGE_TEMPLATE = "/slack/pipeline-approval-message.txt";
@@ -9,7 +10,7 @@ public class SlackApprovalMessageKeys {
   public static final String ADDITIONAL_CONFIRMATION_MESSAGE_TEMPLATE = "/slack/additional-confirmation.json";
   public static final String SLACK_ACTION_MESSAGE_TEMPLATE = "/slack/slack-action-message.txt";
   public static final String APPROVAL_STATE_CHANGED_MESSAGE =
-      "The Approval state can no longer be *Approved/Rejected*\nThe state has been *modified* through *Harness UI*!";
+      "The Approval state can no longer be *Approved/Rejected*\nThe state has been *modified* through *Harness UI*.";
 
   // Slack Message template keys
   // Note: Update these keys if any changes to slack message templates is made
