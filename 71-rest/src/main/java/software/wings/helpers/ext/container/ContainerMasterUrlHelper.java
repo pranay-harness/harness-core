@@ -59,4 +59,9 @@ public class ContainerMasterUrlHelper {
     }
     return masterUrl;
   }
+
+  public boolean masterUrlRequired(ContainerInfrastructureMapping containerInfraMapping) {
+    return (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping)
+        || (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping);
+  }
 }
