@@ -597,10 +597,21 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     bumpClusterLevel(stateType, mlAnalysisResponse.getStateExecutionId(), mlAnalysisResponse.getAppId(),
         mlAnalysisResponse.getQuery(), emptySet(), mlAnalysisResponse.getLogCollectionMinute(),
         ClusterLevel.getHeartBeatLevel(L2), ClusterLevel.getFinal());
+    logAnalysisSummaryMessage(mlAnalysisResponse);
     if (taskId.isPresent()) {
       learningEngineService.markCompleted(taskId.get());
     }
     return true;
+  }
+
+  private void logAnalysisSummaryMessage(LogMLAnalysisRecord mlAnalysisResponse) {
+    if (isNotEmpty(mlAnalysisResponse.getAnalysisSummaryMessage())) {
+      cvActivityLogService
+          .getLogger(mlAnalysisResponse.getCvConfigId(), mlAnalysisResponse.getLogCollectionMinute(),
+              mlAnalysisResponse.getStateExecutionId())
+          .warn("Learning engine: " + mlAnalysisResponse.getAnalysisSummaryMessage() + " Minute "
+              + mlAnalysisResponse.getLogCollectionMinute());
+    }
   }
 
   @Override
