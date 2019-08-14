@@ -2,7 +2,6 @@ package software.wings.service.impl.trigger;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static net.redhogs.cronparser.CronExpressionDescriptor.getDescription;
@@ -121,7 +120,7 @@ public class DeploymentTriggerServiceHelper {
           getDescription(DescriptionTypeEnum.FULL, cronExpression, new Options(), I18nMessages.DEFAULT_LOCALE);
       return StringUtils.lowerCase("" + description.charAt(0)) + description.substring(1);
     } catch (Exception e) {
-      throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "Invalid cron expression" + cronExpression);
+      throw new WingsException("Invalid cron expression" + cronExpression, USER);
     }
   }
 

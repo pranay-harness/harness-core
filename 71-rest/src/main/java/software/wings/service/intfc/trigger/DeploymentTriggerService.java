@@ -26,6 +26,14 @@ public interface DeploymentTriggerService {
   void triggerExecutionPostArtifactCollectionAsync(
       String accountId, String appId, String artifactStreamId, List<Artifact> artifacts);
 
+  /**
+   * Gets the cron expression
+   *
+   * @param expression
+   * @return
+   */
+  String getCronDescription(String expression);
+
   void triggerScheduledExecutionAsync(DeploymentTrigger trigger);
 
   void triggerExecutionPostPipelineCompletionAsync(String appId, String pipelineId);

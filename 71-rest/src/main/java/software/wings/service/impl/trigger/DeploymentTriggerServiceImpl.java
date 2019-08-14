@@ -5,6 +5,7 @@ import static software.wings.beans.trigger.Condition.Type.NEW_ARTIFACT;
 import static software.wings.beans.trigger.Condition.Type.PIPELINE_COMPLETION;
 import static software.wings.beans.trigger.Condition.Type.SCHEDULED;
 import static software.wings.beans.trigger.Condition.Type.WEBHOOK;
+import static software.wings.scheduler.ScheduledTriggerJob.PREFIX;
 import static software.wings.utils.Validator.equalCheck;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -117,6 +118,11 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
             .artifactStreamId(artifactStreamId)
             .collectedArtifacts(artifacts)
             .build());
+  }
+
+  @Override
+  public String getCronDescription(String expression) {
+    return triggerServiceHelper.getCronDescription(PREFIX + expression);
   }
 
   @Override
