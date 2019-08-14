@@ -76,8 +76,10 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AccountEvent;
 import software.wings.beans.AccountEventType;
+import software.wings.beans.AmiDeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
+import software.wings.beans.AwsAmiInfrastructureMapping.AwsAmiInfrastructureMappingKeys;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
@@ -627,41 +629,60 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       }
     } else if (infrastructureMapping instanceof AwsAmiInfrastructureMapping) {
       AwsAmiInfrastructureMapping awsAmiInfrastructureMapping = (AwsAmiInfrastructureMapping) infrastructureMapping;
+      AwsAmiInfrastructureMapping savedAwsAmiInfrastructureMapping = (AwsAmiInfrastructureMapping) savedInfraMapping;
       validateAwsAmiInfrastructureMapping(awsAmiInfrastructureMapping);
       if (awsAmiInfrastructureMapping.getRegion() != null) {
         keyValuePairs.put("region", awsAmiInfrastructureMapping.getRegion());
       } else {
         fieldsToRemove.add("region");
       }
-      if (awsAmiInfrastructureMapping.getAutoScalingGroupName() != null) {
-        keyValuePairs.put("autoScalingGroupName", awsAmiInfrastructureMapping.getAutoScalingGroupName());
-      } else {
-        fieldsToRemove.add("autoScalingGroupName");
-      }
-      if (awsAmiInfrastructureMapping.getClassicLoadBalancers() != null) {
-        keyValuePairs.put("classicLoadBalancers", awsAmiInfrastructureMapping.getClassicLoadBalancers());
-      } else {
-        fieldsToRemove.add("classicLoadBalancers");
-      }
-      if (awsAmiInfrastructureMapping.getTargetGroupArns() != null) {
-        keyValuePairs.put("targetGroupArns", awsAmiInfrastructureMapping.getTargetGroupArns());
-      } else {
-        fieldsToRemove.add("targetGroupArns");
-      }
-      if (awsAmiInfrastructureMapping.getStageClassicLoadBalancers() != null) {
-        keyValuePairs.put("stageClassicLoadBalancers", awsAmiInfrastructureMapping.getStageClassicLoadBalancers());
-      } else {
-        fieldsToRemove.add("stageClassicLoadBalancers");
-      }
-      if (awsAmiInfrastructureMapping.getStageTargetGroupArns() != null) {
-        keyValuePairs.put("stageTargetGroupArns", awsAmiInfrastructureMapping.getStageTargetGroupArns());
-      } else {
-        fieldsToRemove.add("stageTargetGroupArns");
-      }
       if (awsAmiInfrastructureMapping.getHostNameConvention() != null) {
         keyValuePairs.put("hostNameConvention", awsAmiInfrastructureMapping.getHostNameConvention());
       } else {
         fieldsToRemove.add("hostNameConvention");
+      }
+      if (AmiDeploymentType.AWS_ASG.equals(savedAwsAmiInfrastructureMapping.getAmiDeploymentType())) {
+        if (awsAmiInfrastructureMapping.getAutoScalingGroupName() != null) {
+          keyValuePairs.put("autoScalingGroupName", awsAmiInfrastructureMapping.getAutoScalingGroupName());
+        } else {
+          fieldsToRemove.add("autoScalingGroupName");
+        }
+        if (awsAmiInfrastructureMapping.getClassicLoadBalancers() != null) {
+          keyValuePairs.put("classicLoadBalancers", awsAmiInfrastructureMapping.getClassicLoadBalancers());
+        } else {
+          fieldsToRemove.add("classicLoadBalancers");
+        }
+        if (awsAmiInfrastructureMapping.getTargetGroupArns() != null) {
+          keyValuePairs.put("targetGroupArns", awsAmiInfrastructureMapping.getTargetGroupArns());
+        } else {
+          fieldsToRemove.add("targetGroupArns");
+        }
+        if (awsAmiInfrastructureMapping.getStageClassicLoadBalancers() != null) {
+          keyValuePairs.put("stageClassicLoadBalancers", awsAmiInfrastructureMapping.getStageClassicLoadBalancers());
+        } else {
+          fieldsToRemove.add("stageClassicLoadBalancers");
+        }
+        if (awsAmiInfrastructureMapping.getStageTargetGroupArns() != null) {
+          keyValuePairs.put("stageTargetGroupArns", awsAmiInfrastructureMapping.getStageTargetGroupArns());
+        } else {
+          fieldsToRemove.add("stageTargetGroupArns");
+        }
+      } else if (AmiDeploymentType.SPOTINST.equals(savedAwsAmiInfrastructureMapping.getAmiDeploymentType())) {
+        if (isNotEmpty(awsAmiInfrastructureMapping.getSpotinstCloudProvider())) {
+          keyValuePairs.put(AwsAmiInfrastructureMappingKeys.spotinstCloudProvider,
+              awsAmiInfrastructureMapping.getSpotinstCloudProvider());
+        } else {
+          fieldsToRemove.add(AwsAmiInfrastructureMappingKeys.spotinstCloudProvider);
+        }
+        if (isNotEmpty(awsAmiInfrastructureMapping.getSpotinstElastiGroupJson())) {
+          keyValuePairs.put(AwsAmiInfrastructureMappingKeys.spotinstElastiGroupJson,
+              awsAmiInfrastructureMapping.getSpotinstElastiGroupJson());
+        } else {
+          fieldsToRemove.add(AwsAmiInfrastructureMappingKeys.spotinstElastiGroupJson);
+        }
+      } else {
+        throw new InvalidRequestException(format(
+            "Unrecognized Ami deployment type: [%s]", savedAwsAmiInfrastructureMapping.getAmiDeploymentType().name()));
       }
     } else if (infrastructureMapping instanceof PcfInfrastructureMapping) {
       PcfInfrastructureMapping pcfInfrastructureMapping = (PcfInfrastructureMapping) infrastructureMapping;
@@ -1000,7 +1021,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (isEmpty(infrastructureMapping.getRegion())) {
       throw new InvalidRequestException("Region is mandatory");
     }
-    if (isEmpty(infrastructureMapping.getAutoScalingGroupName())) {
+    if (AmiDeploymentType.AWS_ASG.equals(infrastructureMapping.getAmiDeploymentType())
+        && isEmpty(infrastructureMapping.getAutoScalingGroupName())) {
       throw new InvalidRequestException("Auto Scaling Group is mandatory");
     }
   }

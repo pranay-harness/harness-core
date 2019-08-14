@@ -391,8 +391,6 @@ public class YamlModule extends AbstractModule {
         .to(JiraConfigYamlHandler.class);
     collaborationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.SERVICENOW.name())
         .to(ServiceNowConfigYamlHandler.class);
-    collaborationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.SPOT_INST.name())
-        .to(SpotInstConfigYamlHandler.class);
 
     MapBinder<String, CloudProviderYamlHandler> cloudProviderYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CloudProviderYamlHandler.class);
@@ -404,6 +402,8 @@ public class YamlModule extends AbstractModule {
     cloudProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
         .to(PhysicalDataCenterConfigYamlHandler.class);
     cloudProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.PCF.name()).to(PcfConfigYamlHandler.class);
+    cloudProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.SPOT_INST.name())
+        .to(SpotInstConfigYamlHandler.class);
 
     MapBinder<String, WorkflowYamlHandler> workflowYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, WorkflowYamlHandler.class);

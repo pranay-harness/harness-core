@@ -17,6 +17,7 @@ public class AwsAmiInfrastructureMappingTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testApplyProvisionerVariables() {
     AwsAmiInfrastructureMapping infrastructureMapping = new AwsAmiInfrastructureMapping();
+    infrastructureMapping.setAmiDeploymentType(AmiDeploymentType.AWS_ASG);
     Map<String, Object> resolvedBlueprints = new HashMap<>();
     Assertions.assertThatThrownBy(() -> infrastructureMapping.applyProvisionerVariables(resolvedBlueprints, null, true))
         .isInstanceOf(InvalidRequestException.class);

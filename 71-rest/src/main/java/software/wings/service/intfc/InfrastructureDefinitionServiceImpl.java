@@ -58,6 +58,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentType;
+import software.wings.beans.AmiDeploymentType;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter.AwsInstanceFilterKeys;
@@ -348,7 +349,8 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     if (isEmpty(expressions.get(AwsAmiInfrastructureKeys.region))) {
       throw new InvalidRequestException("Region is mandatory");
     }
-    if (isEmpty(expressions.get(AwsAmiInfrastructureKeys.autoScalingGroupName))) {
+    String baseAsgName = expressions.get(AwsAmiInfrastructureKeys.autoScalingGroupName);
+    if (AmiDeploymentType.AWS_ASG.equals(infra.getAmiDeploymentType()) && isEmpty(baseAsgName)) {
       throw new InvalidRequestException("Auto Scaling Group is mandatory");
     }
   }

@@ -19,7 +19,7 @@ import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
-import software.wings.yaml.setting.CollaborationProviderYaml;
+import software.wings.yaml.setting.CloudProviderYaml;
 
 import java.util.Arrays;
 import java.util.List;
@@ -63,7 +63,7 @@ public class SpotInstConfig extends SettingValue implements EncryptableSetting, 
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends CollaborationProviderYaml {
+  public static final class Yaml extends CloudProviderYaml {
     private String spotInstToken;
     private String spotInstAccountId;
 

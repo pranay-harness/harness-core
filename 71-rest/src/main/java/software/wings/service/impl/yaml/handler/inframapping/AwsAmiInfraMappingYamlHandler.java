@@ -6,6 +6,7 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.inject.Singleton;
 
 import io.harness.exception.HarnessException;
+import software.wings.beans.AmiDeploymentType;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsAmiInfrastructureMapping.Yaml;
 import software.wings.beans.InfrastructureMappingType;
@@ -31,6 +32,11 @@ public class AwsAmiInfraMappingYamlHandler
     yaml.setHostNameConvention(bean.getHostNameConvention());
     yaml.setStageClassicLoadBalancers(bean.getStageClassicLoadBalancers());
     yaml.setStageTargetGroupArns(bean.getStageTargetGroupArns());
+    yaml.setAmiDeploymentType(bean.getAmiDeploymentType());
+    yaml.setSpotinstElastiGroupJson(bean.getSpotinstElastiGroupJson());
+    if (AmiDeploymentType.SPOTINST.equals(bean.getAmiDeploymentType())) {
+      yaml.setSpotinstCloudProviderName(getSettingName(bean.getSpotinstCloudProvider()));
+    }
     return yaml;
   }
 
@@ -48,10 +54,14 @@ public class AwsAmiInfraMappingYamlHandler
     notNullCheck("Couldn't retrieve compute provider from yaml:" + yamlFilePath, computeProviderId, USER);
     String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
     notNullCheck("Couldn't retrieve service from yaml:" + yamlFilePath, serviceId, USER);
+    String spotinstCloudProviderId = null;
+    if (AmiDeploymentType.SPOTINST.equals(infraMappingYaml.getAmiDeploymentType())) {
+      spotinstCloudProviderId = getSettingId(accountId, appId, infraMappingYaml.getSpotinstCloudProviderName());
+    }
 
     AwsAmiInfrastructureMapping current = new AwsAmiInfrastructureMapping();
 
-    toBean(current, changeContext, appId, envId, computeProviderId, serviceId);
+    toBean(current, changeContext, appId, envId, computeProviderId, serviceId, spotinstCloudProviderId);
 
     String name = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
     AwsAmiInfrastructureMapping previous =
@@ -61,7 +71,7 @@ public class AwsAmiInfraMappingYamlHandler
   }
 
   private void toBean(AwsAmiInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId, String envId,
-      String computeProviderId, String serviceId) throws HarnessException {
+      String computeProviderId, String serviceId, String spotinstCloudProviderId) throws HarnessException {
     Yaml infraMappingYaml = changeContext.getYaml();
 
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, null);
@@ -73,6 +83,9 @@ public class AwsAmiInfraMappingYamlHandler
     bean.setHostNameConvention(infraMappingYaml.getHostNameConvention());
     bean.setStageClassicLoadBalancers(infraMappingYaml.getStageClassicLoadBalancers());
     bean.setStageTargetGroupArns(infraMappingYaml.getStageTargetGroupArns());
+    bean.setAmiDeploymentType(infraMappingYaml.getAmiDeploymentType());
+    bean.setSpotinstElastiGroupJson(infraMappingYaml.getSpotinstElastiGroupJson());
+    bean.setSpotinstCloudProvider(spotinstCloudProviderId);
   }
 
   @Override
