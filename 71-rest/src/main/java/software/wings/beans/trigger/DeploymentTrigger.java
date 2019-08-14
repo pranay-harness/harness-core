@@ -1,6 +1,7 @@
 package software.wings.beans.trigger;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.scheduler.ScheduledTriggerJob.PREFIX;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessExportableEntity;
@@ -84,7 +85,7 @@ public class DeploymentTrigger implements PersistentEntity, UuidAware, CreatedAt
     }
 
     ScheduledCondition scheduledCondition = (ScheduledCondition) condition;
-    if (expandNextIterations(scheduledCondition.getCronExpression(), nextIterations)) {
+    if (expandNextIterations(PREFIX + scheduledCondition.getCronExpression(), nextIterations)) {
       return nextIterations;
     }
 

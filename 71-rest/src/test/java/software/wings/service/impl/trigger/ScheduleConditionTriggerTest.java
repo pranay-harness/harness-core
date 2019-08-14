@@ -142,7 +142,7 @@ public class ScheduleConditionTriggerTest extends WingsBaseTest {
     assertThat(savedScheduledTrigger.getUuid()).isNotEmpty();
     assertThat(savedScheduledTrigger.getCondition()).isInstanceOf(ScheduledCondition.class);
     assertThat(((ScheduledCondition) trigger.getCondition()).getCronDescription()).isNotNull();
-    assertThat(((ScheduledCondition) trigger.getCondition()).getCronExpression()).isNotNull().isEqualTo("0 * * * * ?");
+    assertThat(((ScheduledCondition) trigger.getCondition()).getCronExpression()).isNotNull().isEqualTo("* * * * ?");
   }
 
   @Test
@@ -158,7 +158,7 @@ public class ScheduleConditionTriggerTest extends WingsBaseTest {
     assertThat(((ScheduledCondition) updatedTrigger.getCondition()).getCronDescription()).isNotNull();
     assertThat(((ScheduledCondition) updatedTrigger.getCondition()).getCronExpression())
         .isNotNull()
-        .isEqualTo("0 * * * * ?");
+        .isEqualTo("* * * * ?");
     assertThat(updatedTrigger.getDescription()).isNotNull().isEqualTo("updated description");
   }
 }

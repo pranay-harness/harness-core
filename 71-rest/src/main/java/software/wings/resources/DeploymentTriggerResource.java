@@ -16,6 +16,7 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.utils.Validator;
 
+import java.util.Map;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -68,6 +69,14 @@ public class DeploymentTriggerResource {
   public RestResponse<DeploymentTrigger> get(
       @QueryParam("appId") String appId, @PathParam("triggerId") String triggerId) {
     return new RestResponse<>(deploymentTriggerService.get(appId, triggerId));
+  }
+
+  @POST
+  @Path("cron/translate")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> translateCron(Map<String, String> inputMap) {
+    return new RestResponse<>(deploymentTriggerService.getCronDescription(inputMap.get("expression")));
   }
 
   /**

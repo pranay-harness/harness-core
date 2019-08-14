@@ -105,17 +105,17 @@ public class ScheduleTriggerProcessor implements TriggerProcessor {
     try {
       String cronExpression;
       if (existingTrigger == null) {
-        cronExpression = PREFIX + scheduledCondition.getCronExpression();
+        cronExpression = scheduledCondition.getCronExpression();
       } else {
         cronExpression = scheduledCondition.getCronExpression();
       }
       if (isNotBlank(scheduledCondition.getCronExpression())) {
-        ScheduledCondition scheduledConditionWithDesc =
-            ScheduledCondition.builder()
-                .cronExpression(cronExpression)
-                .cronDescription(triggerServiceHelper.getCronDescription(scheduledCondition.getCronExpression()))
-                .onNewArtifactOnly(scheduledCondition.isOnNewArtifactOnly())
-                .build();
+        ScheduledCondition scheduledConditionWithDesc = ScheduledCondition.builder()
+                                                            .cronExpression(cronExpression)
+                                                            .cronDescription(triggerServiceHelper.getCronDescription(
+                                                                PREFIX + scheduledCondition.getCronExpression()))
+                                                            .onNewArtifactOnly(scheduledCondition.isOnNewArtifactOnly())
+                                                            .build();
 
         deploymentTrigger.setCondition(scheduledConditionWithDesc);
         deploymentTrigger.setNextIterations(null);
