@@ -1,6 +1,7 @@
 package software.wings.service.impl.verification;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
@@ -37,7 +38,7 @@ public class CVActivityLogServiceImpl implements CVActivityLogService {
                                                      TimeUnit.MILLISECONDS.toMinutes(endTimeMilli))
                                                  .addOrder(CVActivityLogKeys.createdAt, OrderType.ASC)
                                                  .build();
-    return wingsPersistence.query(CVActivityLog.class, pageRequest).getResponse();
+    return wingsPersistence.query(CVActivityLog.class, pageRequest, excludeAuthority).getResponse();
   }
 
   @Override
@@ -63,7 +64,7 @@ public class CVActivityLogServiceImpl implements CVActivityLogService {
             .addFilter(CVActivityLogKeys.stateExecutionId, Operator.EQ, stateExecutionId)
             .addOrder(CVActivityLogKeys.createdAt, OrderType.ASC)
             .build();
-    return wingsPersistence.query(CVActivityLog.class, pageRequest).getResponse();
+    return wingsPersistence.query(CVActivityLog.class, pageRequest, excludeAuthority).getResponse();
   }
 
   private class LoggerImpl implements Logger {
