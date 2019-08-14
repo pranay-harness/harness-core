@@ -156,8 +156,26 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     logger.info(
         "inserted NewRelicMetricAnalysisRecord to persistence layer for workflowExecutionId: {} StateExecutionInstanceId: {}",
         metricAnalysisRecord.getWorkflowExecutionId(), metricAnalysisRecord.getStateExecutionId());
+    logLearningEngineAnalysisMessage(metricAnalysisRecord);
   }
 
+  private void logLearningEngineAnalysisMessage(NewRelicMetricAnalysisRecord metricAnalysisRecord) {
+    if (isNotEmpty(metricAnalysisRecord.getMessage())) {
+      cvActivityLogService
+          .getLogger(metricAnalysisRecord.getCvConfigId(), metricAnalysisRecord.getAnalysisMinute(),
+              metricAnalysisRecord.getStateExecutionId())
+          .warn(metricAnalysisRecord.getMessage());
+    }
+  }
+
+  private void logLearningEngineAnalysisMessage(MetricAnalysisRecord mlAnalysisResponse) {
+    if (isNotEmpty(mlAnalysisResponse.getMessage())) {
+      cvActivityLogService
+          .getLogger(mlAnalysisResponse.getCvConfigId(), mlAnalysisResponse.getAnalysisMinute(),
+              mlAnalysisResponse.getStateExecutionId())
+          .warn(mlAnalysisResponse.getMessage());
+    }
+  }
   /**
    * Method to save ml analysed records to mongoDB
    *
@@ -181,7 +199,6 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       String cvConfigId, MetricAnalysisRecord mlAnalysisResponse, String tag) {
     logger.info("saveAnalysisRecordsML stateType  {} stateExecutionId {} analysisMinute {}", stateType,
         stateExecutionId, analysisMinute);
-
     mlAnalysisResponse.setStateType(stateType);
     mlAnalysisResponse.setAppId(appId);
     mlAnalysisResponse.setWorkflowExecutionId(workflowExecutionId);
@@ -341,6 +358,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     logger.info("inserted MetricAnalysisRecord to persistence layer for "
             + "stateType: {}, workflowExecutionId: {} StateExecutionInstanceId: {}",
         stateType, workflowExecutionId, stateExecutionId);
+    logLearningEngineAnalysisMessage(mlAnalysisResponse);
     return true;
   }
 
