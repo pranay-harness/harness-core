@@ -4,16 +4,20 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildJenkinsArtifactStream;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildPipeline;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACTORY_URL;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ENTITY_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
+import static software.wings.utils.WingsTestConstants.SETTING_NAME;
 import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
 import static software.wings.utils.WingsTestConstants.VARIABLE_NAME;
 import static software.wings.utils.WingsTestConstants.VARIABLE_VALUE;
@@ -31,7 +35,9 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.JenkinsArtifactStream;
+import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.GitHubPayloadSource;
 import software.wings.beans.trigger.WebhookCondition;
@@ -42,6 +48,7 @@ import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
 
 import java.util.List;
@@ -51,6 +58,7 @@ public class WebhookConditionTriggerTest extends WingsBaseTest {
   @Mock private PipelineService pipelineService;
   @Mock private ServiceVariableService serviceVariablesService;
   @Mock private ArtifactStreamService artifactStreamService;
+  @Mock private SettingsService settingsService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
@@ -62,10 +70,20 @@ public class WebhookConditionTriggerTest extends WingsBaseTest {
   JenkinsArtifactStream jenkinsArtifactStream = buildJenkinsArtifactStream();
   @Before
   public void setUp() {
+    SettingAttribute artifactorySetting = aSettingAttribute()
+                                              .withUuid(SETTING_ID)
+                                              .withName(SETTING_NAME)
+                                              .withValue(ArtifactoryConfig.builder()
+                                                             .artifactoryUrl(ARTIFACTORY_URL)
+                                                             .username("admin")
+                                                             .password("dummy123!".toCharArray())
+                                                             .build())
+                                              .build();
     Pipeline pipeline = buildPipeline();
     List<ServiceVariable> serviceVariableList = asList(
         ServiceVariable.builder().type(Type.ARTIFACT).name(VARIABLE_NAME).value(VARIABLE_VALUE.toCharArray()).build());
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
+    when(settingsService.get(SETTING_ID)).thenReturn(artifactorySetting);
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
     when(artifactStreamServiceBindingService.getService(APP_ID, ARTIFACT_STREAM_ID, true))
         .thenReturn(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build());

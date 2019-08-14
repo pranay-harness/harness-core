@@ -520,13 +520,15 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
                                      .entityType(EntityType.SERVICE)
                                      .build());
 
-    triggerArtifactVariables.add(
-        TriggerArtifactVariable.builder()
-            .variableName(VARIABLE_NAME)
-            .variableValue(TriggerArtifactSelectionLastCollected.builder().artifactStreamId(ARTIFACT_STREAM_ID).build())
-            .entityId(ENTITY_ID)
-            .entityType(EntityType.SERVICE)
-            .build());
+    triggerArtifactVariables.add(TriggerArtifactVariable.builder()
+                                     .variableName(VARIABLE_NAME)
+                                     .variableValue(TriggerArtifactSelectionLastCollected.builder()
+                                                        .artifactServerId(SETTING_ID)
+                                                        .artifactStreamId(ARTIFACT_STREAM_ID)
+                                                        .build())
+                                     .entityId(ENTITY_ID)
+                                     .entityType(EntityType.SERVICE)
+                                     .build());
 
     triggerArtifactVariables.add(
         TriggerArtifactVariable.builder()

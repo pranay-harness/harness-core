@@ -45,7 +45,7 @@ import javax.validation.constraints.NotNull;
       options = @IndexOptions(name = "uniqueTriggerIdx", unique = true), fields = { @Field("appId")
                                                                                     , @Field("name") })
   ,
-      @Index(options = @IndexOptions(name = "uniqueTypeIdx", unique = true), fields = {
+      @Index(options = @IndexOptions(name = "uniqueTypeIdx"), fields = {
         @Field("accountId"), @Field("appId"), @Field("type")
       }), @Index(options = @IndexOptions(name = "iterations"), fields = { @Field("type")
                                                                           , @Field("nextIterations") })
