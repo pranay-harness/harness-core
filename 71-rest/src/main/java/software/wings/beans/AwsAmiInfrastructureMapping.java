@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
+import static software.wings.beans.AmiDeploymentType.AWS_ASG;
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_ASG_AMI;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -48,6 +49,13 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
   @Blueprint private List<String> stageClassicLoadBalancers;
   @Blueprint private List<String> stageTargetGroupArns;
 
+  // Right now ONLY regular Asg OR SpotInst
+  private AmiDeploymentType amiDeploymentType;
+
+  // Variables used for SpotInst Deployment type
+  private String spotinstElastiGroupJson;
+  private String spotinstCloudProvider;
+
   public AwsAmiInfrastructureMapping() {
     super(InfrastructureMappingType.AWS_AMI.name());
   }
@@ -55,6 +63,11 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
   @Override
   public void applyProvisionerVariables(
       Map<String, Object> map, NodeFilteringType nodeFilteringType, boolean featureFlagEnabled) {
+    if (!AWS_ASG.equals(getAmiDeploymentType())) {
+      // Should never happen
+      throw new InvalidRequestException("Provisioning ONLY supported for AWS_ASG type AMI deployments");
+    }
+
     if (featureFlagEnabled) {
       applyProvisionerVariables(map);
     } else {
@@ -232,6 +245,31 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
     this.stageTargetGroupArns = stageTargetGroupArns;
   }
 
+  public AmiDeploymentType getAmiDeploymentType() {
+    // Default to AWS_ASG
+    return (amiDeploymentType != null) ? amiDeploymentType : AWS_ASG;
+  }
+
+  public void setAmiDeploymentType(AmiDeploymentType amiDeploymentType) {
+    this.amiDeploymentType = amiDeploymentType;
+  }
+
+  public String getSpotinstElastiGroupJson() {
+    return spotinstElastiGroupJson;
+  }
+
+  public void setSpotinstElastiGroupJson(String spotinstElastiGroupJson) {
+    this.spotinstElastiGroupJson = spotinstElastiGroupJson;
+  }
+
+  public String getSpotinstCloudProvider() {
+    return spotinstCloudProvider;
+  }
+
+  public void setSpotinstCloudProvider(String spotinstCloudProvider) {
+    this.spotinstCloudProvider = spotinstCloudProvider;
+  }
+
   public static final class Builder {
     private AwsAmiInfrastructureMapping awsAmiInfrastructureMapping;
 
@@ -270,6 +308,21 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
 
     public Builder withStageTargetGroupArns(List<String> stageTargetGroupArns) {
       awsAmiInfrastructureMapping.setStageTargetGroupArns(stageTargetGroupArns);
+      return this;
+    }
+
+    public Builder withAmiDeploymentType(AmiDeploymentType amiDeploymentType) {
+      awsAmiInfrastructureMapping.setAmiDeploymentType(amiDeploymentType);
+      return this;
+    }
+
+    public Builder withSpotinstElastiGroupJson(String spotinstElastiGroupJson) {
+      awsAmiInfrastructureMapping.setSpotinstElastiGroupJson(spotinstElastiGroupJson);
+      return this;
+    }
+
+    public Builder withSpotinstCloudProvider(String spotinstCloudProvider) {
+      awsAmiInfrastructureMapping.setSpotinstCloudProvider(spotinstCloudProvider);
       return this;
     }
 
@@ -374,13 +427,17 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
     private String hostNameConvention;
     private List<String> stageClassicLoadBalancers;
     private List<String> stageTargetGroupArns;
+    private AmiDeploymentType amiDeploymentType;
+    private String spotinstElastiGroupJson;
+    private String spotinstCloudProviderName;
 
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
         String infraMappingType, String deploymentType, String computeProviderName, String region,
         String autoScalingGroupName, List<String> classicLoadBalancers, List<String> targetGroupArns,
         String hostNameConvention, List<String> stageClassicLoadBalancers, List<String> stageTargetGroupArns,
-        Map<String, Object> blueprints) {
+        Map<String, Object> blueprints, AmiDeploymentType amiDeploymentType, String spotinstElastiGroupJson,
+        String spotinstCloudProviderName) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
           computeProviderName, blueprints);
       this.region = region;
@@ -390,6 +447,9 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
       this.hostNameConvention = hostNameConvention;
       this.stageClassicLoadBalancers = stageClassicLoadBalancers;
       this.stageTargetGroupArns = stageTargetGroupArns;
+      this.amiDeploymentType = amiDeploymentType;
+      this.spotinstElastiGroupJson = spotinstElastiGroupJson;
+      this.spotinstCloudProviderName = spotinstCloudProviderName;
     }
   }
 }

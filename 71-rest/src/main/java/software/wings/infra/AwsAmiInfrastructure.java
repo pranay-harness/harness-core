@@ -12,6 +12,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import software.wings.annotation.ExcludeFieldMap;
 import software.wings.api.CloudProviderType;
+import software.wings.beans.AmiDeploymentType;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
@@ -38,7 +39,19 @@ public class AwsAmiInfrastructure
   private List<String> stageClassicLoadBalancers;
   private List<String> stageTargetGroupArns;
 
+  // Right now ONLY regular Asg OR SpotInst
+  // This field can't be modified once Infra is created
+  private AmiDeploymentType amiDeploymentType;
+
+  // Variables used for SpotInst Deployment type
+  private String spotinstElastiGroupJson;
+  private String spotinstCloudProvider;
+
   @ExcludeFieldMap private Map<String, String> expressions;
+
+  public AmiDeploymentType getAmiDeploymentType() {
+    return amiDeploymentType != null ? amiDeploymentType : AmiDeploymentType.AWS_ASG;
+  }
 
   @Override
   public InfrastructureMapping getInfraMapping() {
@@ -53,6 +66,9 @@ public class AwsAmiInfrastructure
         .withStageClassicLoadBalancers(stageClassicLoadBalancers)
         .withStageTargetGroupArns(stageTargetGroupArns)
         .withInfraMappingType(InfrastructureMappingType.AWS_AMI.name())
+        .withAmiDeploymentType(getAmiDeploymentType())
+        .withSpotinstCloudProvider(spotinstCloudProvider)
+        .withSpotinstElastiGroupJson(spotinstElastiGroupJson)
         .build();
   }
 
@@ -91,10 +107,15 @@ public class AwsAmiInfrastructure
     private List<String> stageTargetGroupArns;
     private Map<String, String> expressions;
 
+    private AmiDeploymentType amiDeploymentType;
+    private String spotinstElastiGroupJson;
+    private String spotinstCloudProviderName;
+
     @Builder
     public Yaml(String type, String cloudProviderName, String region, String autoScalingGroupName,
         List<String> classicLoadBalancers, List<String> targetGroupArns, String hostNameConvention,
-        List<String> stageClassicLoadBalancers, List<String> stageTargetGroupArns, Map<String, String> expressions) {
+        List<String> stageClassicLoadBalancers, List<String> stageTargetGroupArns, Map<String, String> expressions,
+        AmiDeploymentType amiDeploymentType, String spotinstElastiGroupJson, String spotinstCloudProviderName) {
       super(type);
       setCloudProviderName(cloudProviderName);
       setRegion(region);
@@ -105,6 +126,9 @@ public class AwsAmiInfrastructure
       setStageClassicLoadBalancers(stageClassicLoadBalancers);
       setStageTargetGroupArns(stageTargetGroupArns);
       setExpressions(expressions);
+      setAmiDeploymentType(amiDeploymentType);
+      setSpotinstCloudProviderName(spotinstCloudProviderName);
+      setSpotinstElastiGroupJson(spotinstElastiGroupJson);
     }
 
     public Yaml() {

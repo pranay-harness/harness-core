@@ -30,6 +30,7 @@ import java.io.IOException;
 public class AwsAmiInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerTest {
   private String validYamlContent = "harnessApiVersion: '1.0'\n"
       + "type: AWS_AMI\n"
+      + "amiDeploymentType: AWS_ASG\n"
       + "autoScalingGroupName: Abaris__AMI__Test__deploy__v2__QA__Env__1\n"
       + "classicLoadBalancers:\n"
       + "- todolist-lb\n"

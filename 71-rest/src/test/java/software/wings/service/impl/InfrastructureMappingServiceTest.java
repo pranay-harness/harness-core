@@ -83,6 +83,7 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
+import software.wings.beans.AmiDeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
@@ -1112,6 +1113,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     infrastructureMapping.setProvisionerId("p123");
     infrastructureMapping.setRegion("region");
     infrastructureMapping.setAutoScalingGroupName("asg");
+    infrastructureMapping.setAmiDeploymentType(AmiDeploymentType.AWS_ASG);
     infrastructureMappingService.validateAwsAmiInfrastructureMapping(infrastructureMapping);
 
     infrastructureMapping.setRegion(null);

@@ -6,11 +6,12 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
 import software.wings.beans.SpotInstConfig.Yaml;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.service.impl.yaml.handler.setting.cloudprovider.CloudProviderYamlHandler;
 
 import java.util.List;
 
 @Singleton
-public class SpotInstConfigYamlHandler extends CollaborationProviderYamlHandler<Yaml, SpotInstConfig> {
+public class SpotInstConfigYamlHandler extends CloudProviderYamlHandler<Yaml, SpotInstConfig> {
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     SpotInstConfig spotInstConfig = (SpotInstConfig) settingAttribute.getValue();

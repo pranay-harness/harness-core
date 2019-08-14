@@ -1,10 +1,12 @@
 package software.wings.service.impl.yaml.handler.InfraDefinition;
 
+import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
+import software.wings.beans.AmiDeploymentType;
 import software.wings.beans.InfrastructureType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
@@ -21,6 +23,14 @@ public class AwsAmiInfrastructureYamlHandler
   @Override
   public Yaml toYaml(AwsAmiInfrastructure bean, String appId) {
     SettingAttribute cloudProvider = settingsService.get(bean.getCloudProviderId());
+    String spotinstCloudProviderName = null;
+    if (AmiDeploymentType.SPOTINST.equals(bean.getAmiDeploymentType())) {
+      SettingAttribute spotinstCloudProvider = settingsService.get(bean.getSpotinstCloudProvider());
+      notNullCheck(
+          "SettingAttribute can't be found for Id:" + bean.getSpotinstCloudProvider(), spotinstCloudProvider, USER);
+      spotinstCloudProviderName = spotinstCloudProvider.getName();
+    }
+
     return Yaml.builder()
         .autoScalingGroupName(bean.getAutoScalingGroupName())
         .classicLoadBalancers(bean.getClassicLoadBalancers())
@@ -30,6 +40,9 @@ public class AwsAmiInfrastructureYamlHandler
         .stageTargetGroupArns(bean.getStageTargetGroupArns())
         .targetGroupArns(bean.getTargetGroupArns())
         .cloudProviderName(cloudProvider.getName())
+        .amiDeploymentType(bean.getAmiDeploymentType())
+        .spotinstCloudProviderName(spotinstCloudProviderName)
+        .spotinstElastiGroupJson(bean.getSpotinstElastiGroupJson())
         .type(InfrastructureType.AWS_AMI)
         .expressions(bean.getExpressions())
         .build();
@@ -47,10 +60,21 @@ public class AwsAmiInfrastructureYamlHandler
     String accountId = changeContext.getChange().getAccountId();
     SettingAttribute cloudProvider = settingsService.getSettingAttributeByName(accountId, yaml.getCloudProviderName());
     notNullCheck(format("Cloud Provider with name %s does not exist", yaml.getCloudProviderName()), cloudProvider);
+    String spotinstCloudProviderId = null;
+    if (AmiDeploymentType.SPOTINST.equals(yaml.getAmiDeploymentType())) {
+      SettingAttribute spotinstCloudProvider =
+          settingsService.getSettingAttributeByName(accountId, yaml.getSpotinstCloudProviderName());
+      notNullCheck("SettingAttribute can't be found for Name:" + yaml.getSpotinstCloudProviderName(),
+          spotinstCloudProvider, USER);
+      spotinstCloudProviderId = spotinstCloudProvider.getUuid();
+    }
     bean.setCloudProviderId(cloudProvider.getUuid());
     bean.setAutoScalingGroupName(yaml.getAutoScalingGroupName());
     bean.setClassicLoadBalancers(yaml.getClassicLoadBalancers());
     bean.setHostNameConvention(yaml.getHostNameConvention());
+    bean.setAmiDeploymentType(yaml.getAmiDeploymentType());
+    bean.setSpotinstCloudProvider(spotinstCloudProviderId);
+    bean.setSpotinstElastiGroupJson(yaml.getSpotinstElastiGroupJson());
     bean.setExpressions(yaml.getExpressions());
   }
 
