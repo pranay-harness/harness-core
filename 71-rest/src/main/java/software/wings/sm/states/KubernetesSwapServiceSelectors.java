@@ -233,12 +233,15 @@ public class KubernetesSwapServiceSelectors extends State {
 
     ContainerServiceParams containerServiceParams =
         containerDeploymentManagerHelper.getContainerServiceParams(containerInfraMapping, "", context);
-    boolean masterUrlPresent = containerMasterUrlHelper.fetchMasterUrlAndUpdateInfraMapping(
-        containerInfraMapping, containerServiceParams, getSyncContext(context, containerInfraMapping));
-    if (!masterUrlPresent) {
-      throw new InvalidRequestException("No Valid Master Url for" + containerInfraMapping.getClass().getName()
-              + "Id : " + containerInfraMapping.getUuid(),
-          USER);
+
+    if (containerMasterUrlHelper.masterUrlRequired(containerInfraMapping)) {
+      boolean masterUrlPresent = containerMasterUrlHelper.fetchMasterUrlAndUpdateInfraMapping(
+          containerInfraMapping, containerServiceParams, getSyncContext(context, containerInfraMapping));
+      if (!masterUrlPresent) {
+        throw new InvalidRequestException("No Valid Master Url for" + containerInfraMapping.getClass().getName()
+                + "Id : " + containerInfraMapping.getUuid(),
+            USER);
+      }
     }
 
     KubernetesSwapServiceSelectorsParams kubernetesSwapServiceSelectorsParams =

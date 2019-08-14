@@ -109,12 +109,14 @@ public class KubernetesSteadyStateCheck extends State {
       ContainerServiceParams containerServiceParams =
           containerDeploymentManagerHelper.getContainerServiceParams(containerInfraMapping, "", context);
 
-      boolean masterUrlPresent = containerMasterUrlHelper.fetchMasterUrlAndUpdateInfraMapping(
-          containerInfraMapping, containerServiceParams, getSyncContext(context, containerInfraMapping));
-      if (!masterUrlPresent) {
-        throw new InvalidRequestException("No Valid Master Url for" + containerInfraMapping.getClass().getName()
-                + "Id : " + containerInfraMapping.getUuid(),
-            USER);
+      if (containerMasterUrlHelper.masterUrlRequired(containerInfraMapping)) {
+        boolean masterUrlPresent = containerMasterUrlHelper.fetchMasterUrlAndUpdateInfraMapping(
+            containerInfraMapping, containerServiceParams, getSyncContext(context, containerInfraMapping));
+        if (!masterUrlPresent) {
+          throw new InvalidRequestException("No Valid Master Url for" + containerInfraMapping.getClass().getName()
+                  + "Id : " + containerInfraMapping.getUuid(),
+              USER);
+        }
       }
 
       Activity activity = createActivity(context);
