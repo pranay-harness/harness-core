@@ -33,7 +33,6 @@ import static io.harness.event.model.EventType.TRIAL_TO_PAID;
 import static io.harness.event.model.EventType.USER_INVITED_FROM_EXISTING_ACCOUNT;
 import static io.harness.exception.WingsException.USER;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -85,8 +84,7 @@ public class SegmentHandler implements EventHandler {
     boolean validApiUrl = StringUtils.contains(segmentConfig.getUrl(), "https://api.segment.io");
     if (isSegmentEnabled() && validApiUrl) {
       registerEventHandlers(eventListener);
-      this.apiKey = "Bearer "
-          + new String(java.util.Base64.getEncoder().encode(segmentConfig.getApiKey().getBytes()), Charsets.UTF_8);
+      this.apiKey = segmentConfig.getApiKey();
     }
   }
 
