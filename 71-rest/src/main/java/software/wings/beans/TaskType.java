@@ -257,6 +257,7 @@ public enum TaskType {
       TaskGroup.ARTIFACTORY, ServiceImplDelegateTask.class, ArtifactoryValidation.class),
 
   // Secret manager validation
+  CYBERARK_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
   AZURE_VAULT_ENCRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
   AZURE_VAULT_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
   AZURE_VAULT_DELETE(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),

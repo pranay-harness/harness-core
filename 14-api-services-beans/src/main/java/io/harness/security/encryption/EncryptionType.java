@@ -8,6 +8,7 @@ public enum EncryptionType {
   KMS("amazonkms"),
   AWS_SECRETS_MANAGER("awssecretsmanager"),
   AZURE_VAULT("azurevault"),
+  CYBERARK("cyberark"),
   VAULT("hashicorpvault");
 
   private final String yamlName;

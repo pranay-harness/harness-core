@@ -126,6 +126,7 @@ import software.wings.beans.BugsnagConfig;
 import software.wings.beans.CanaryWorkflowExecutionAdvisor;
 import software.wings.beans.ChecksumType;
 import software.wings.beans.CountsByStatuses;
+import software.wings.beans.CyberArkConfig;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.DelegatePackage;
 import software.wings.beans.DelegateTaskResponse;
@@ -1329,5 +1330,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SpotInstDeployStateExecutionData.class, 7225);
     kryo.register(MasterUrlFetchTaskParameter.class, 7226);
     kryo.register(SpotInstListenerUpdateStateExecutionData.class, 7227);
+    kryo.register(CyberArkConfig.class, 7228);
   }
 }

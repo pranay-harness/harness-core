@@ -5,6 +5,7 @@ import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.AZURE_KEY_VAULT_OPERATION_ERROR;
+import static io.harness.eraro.ErrorCode.CYBERARK_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
@@ -52,7 +53,6 @@ import com.microsoft.azure.keyvault.models.DeletedSecretBundle;
 import com.microsoft.azure.keyvault.models.SecretBundle;
 import com.microsoft.azure.keyvault.requests.SetSecretRequest;
 import io.harness.beans.EmbeddedUser;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.DelegateRetryableException;
 import io.harness.exception.KmsOperationException;
@@ -65,14 +65,18 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import retrofit2.Response;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureVaultConfig;
+import software.wings.beans.CyberArkConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
+import software.wings.helpers.ext.cyberark.CyberArkRestClientFactory;
 import software.wings.helpers.ext.vault.VaultRestClientFactory;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.impl.security.VaultSecretMetadata.VersionMetadata;
+import software.wings.service.impl.security.cyberark.CyberArkReadResponse;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -699,7 +703,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     String value =
         VaultRestClientFactory.create(vaultConfig).readSecret(String.valueOf(vaultConfig.getAuthToken()), fullPath);
 
-    if (EmptyPredicate.isNotEmpty(value)) {
+    if (isNotEmpty(value)) {
       logger.info("Done reading secret {} from vault {} in {} ms.", fullPath, vaultConfig.getVaultUrl(),
           System.currentTimeMillis() - startTime);
       return value.toCharArray();
@@ -839,6 +843,66 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     } catch (Exception ex) {
       logger.error("Failed to delete key {} from azure vault: {}", key, config.getVaultName(), ex);
       return false;
+    }
+  }
+
+  @Override
+  public char[] decrypt(EncryptedRecord data, CyberArkConfig cyberArkConfig) {
+    int failedAttempts = 0;
+    while (true) {
+      try {
+        return timeLimiter.callWithTimeout(() -> decryptInternal(data, cyberArkConfig), 5, TimeUnit.SECONDS, true);
+      } catch (Exception e) {
+        failedAttempts++;
+        logger.warn(format("decryption failed. trial num: %d", failedAttempts), e);
+        if (isRetryable(e)) {
+          if (failedAttempts == NUM_OF_RETRIES) {
+            throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
+                .addParam(REASON_KEY, "Decryption failed after " + NUM_OF_RETRIES + " retries");
+          }
+          sleep(ofMillis(1000));
+        } else {
+          throw new WingsException(CYBERARK_OPERATION_ERROR, e.getMessage(), USER)
+              .addParam(REASON_KEY, "Failed to decrypt CyberArk secret " + data.getName());
+        }
+      }
+    }
+  }
+
+  private char[] decryptInternal(EncryptedRecord data, CyberArkConfig cyberArkConfig) {
+    String appId = cyberArkConfig.getAppId();
+    // Sample query params: "Address=components;Username=svc_account" or
+    // "Safe=Test;Folder=root\OS\Windows;Object=windows1"
+    String query = data.getPath();
+
+    if (isEmpty(query)) {
+      logger.warn("Query parameter is mandatory but it's not present in the CyberArk query: {}", query);
+      return null;
+    }
+
+    long startTime = System.currentTimeMillis();
+    logger.info(
+        "Reading secret CyberArk {} using AppID '{}' and query '{}'", cyberArkConfig.getCyberArkUrl(), appId, query);
+
+    String secretValue = null;
+    try {
+      Response<CyberArkReadResponse> response =
+          CyberArkRestClientFactory.create(cyberArkConfig).readSecret(appId, query).execute();
+      if (response != null && response.isSuccessful()) {
+        secretValue = response.body().getContent();
+      }
+    } catch (IOException e) {
+      logger.error("Failed to read secret from CyberArk", e);
+    }
+
+    if (isNotEmpty(secretValue)) {
+      logger.info("Done reading secret {} from CyberArk {} in {} ms.", query, cyberArkConfig.getCyberArkUrl(),
+          System.currentTimeMillis() - startTime);
+      return secretValue.toCharArray();
+    } else {
+      String errorMsg = "CyberArk query '" + query + "' is invalid in application '" + appId + "'";
+      logger.error(errorMsg);
+      throw new WingsException(CYBERARK_OPERATION_ERROR, USER).addParam(REASON_KEY, errorMsg);
     }
   }
 

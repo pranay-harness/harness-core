@@ -8,8 +8,10 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedFields;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
+import static io.harness.eraro.ErrorCode.CYBERARK_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
+import static io.harness.eraro.ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -66,6 +68,7 @@ import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigFileKeys;
+import software.wings.beans.CyberArkConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
@@ -102,6 +105,7 @@ import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.security.AwsSecretsManagerService;
 import software.wings.service.intfc.security.AzureSecretsManagerService;
+import software.wings.service.intfc.security.CyberArkService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalEncryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -146,6 +150,7 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private VaultService vaultService;
   @Inject private AwsSecretsManagerService secretsManagerService;
   @Inject private AzureVaultService azureVaultService;
+  @Inject private CyberArkService cyberArkService;
   @Inject private AlertService alertService;
   @Inject private FileService fileService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
@@ -174,8 +179,21 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public EncryptedData encrypt(EncryptionType encryptionType, String accountId, SettingVariableTypes settingType,
       char[] secret, String path, EncryptedData encryptedData, String secretName, UsageRestrictions usageRestrictions) {
+    String toEncrypt = secret == null ? null : String.valueOf(secret);
+    // Need to initialize an EncryptedData instance to carry the 'path' value for delegate to validate against.
+    if (encryptedData == null) {
+      encryptedData = EncryptedData.builder()
+                          .name(secretName)
+                          .path(path)
+                          .encryptionType(encryptionType)
+                          .accountId(accountId)
+                          .type(settingType)
+                          .enabled(true)
+                          .parentIds(new HashSet<>())
+                          .build();
+    }
+
     EncryptedData rv;
-    String toEncrypt;
     switch (encryptionType) {
       case LOCAL:
         final LocalEncryptionConfig localEncryptionConfig = localEncryptionService.getEncryptionConfig(accountId);
@@ -191,20 +209,7 @@ public class SecretManagerImpl implements SecretManager {
 
       case VAULT:
         final VaultConfig vaultConfig = (VaultConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
-        toEncrypt = secret == null ? null : String.valueOf(secret);
-        // Need to initialize an EncryptedData instance to carry the 'path' value for delegate to validate against.
-        if (encryptedData == null) {
-          encryptedData = EncryptedData.builder()
-                              .name(secretName)
-                              .path(path)
-                              .encryptionType(encryptionType)
-                              .accountId(accountId)
-                              .type(settingType)
-                              .enabled(true)
-                              .parentIds(new HashSet<>())
-                              .kmsId(vaultConfig.getUuid())
-                              .build();
-        }
+        encryptedData.setKmsId(vaultConfig.getUuid());
         rv = vaultService.encrypt(secretName, toEncrypt, accountId, settingType, vaultConfig, encryptedData);
         rv.setKmsId(vaultConfig.getUuid());
         break;
@@ -212,20 +217,7 @@ public class SecretManagerImpl implements SecretManager {
       case AWS_SECRETS_MANAGER:
         final AwsSecretsManagerConfig secretsManagerConfig =
             (AwsSecretsManagerConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
-        toEncrypt = secret == null ? null : String.valueOf(secret);
-        // Need to initialize an EncryptedData instance to carry the 'path' value for delegate to validate against.
-        if (encryptedData == null) {
-          encryptedData = EncryptedData.builder()
-                              .name(secretName)
-                              .path(path)
-                              .encryptionType(encryptionType)
-                              .accountId(accountId)
-                              .type(settingType)
-                              .enabled(true)
-                              .parentIds(new HashSet<>())
-                              .kmsId(secretsManagerConfig.getUuid())
-                              .build();
-        }
+        encryptedData.setKmsId(secretsManagerConfig.getUuid());
         rv = secretsManagerService.encrypt(
             secretName, toEncrypt, accountId, settingType, secretsManagerConfig, encryptedData);
         rv.setKmsId(secretsManagerConfig.getUuid());
@@ -234,21 +226,19 @@ public class SecretManagerImpl implements SecretManager {
       case AZURE_VAULT:
         final AzureVaultConfig azureConfig =
             (AzureVaultConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
-        toEncrypt = secret == null ? null : String.valueOf(secret);
-
-        if (encryptedData == null) {
-          encryptedData = EncryptedData.builder()
-                              .name(secretName)
-                              .encryptionType(encryptionType)
-                              .accountId(accountId)
-                              .type(settingType)
-                              .enabled(true)
-                              .parentIds(new HashSet<>())
-                              .kmsId(azureConfig.getUuid())
-                              .build();
-        }
+        encryptedData.setKmsId(azureConfig.getUuid());
         rv = azureVaultService.encrypt(secretName, toEncrypt, accountId, settingType, azureConfig, encryptedData);
         rv.setKmsId(azureConfig.getUuid());
+        break;
+
+      case CYBERARK:
+        final CyberArkConfig cyberArkConfig =
+            (CyberArkConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
+        encryptedData.setKmsId(cyberArkConfig.getUuid());
+        // CyberArk encrypt need to use decrypt of the secret reference as a way of validating the reference is valid.
+        // If the Cyberark reference is not valid, an exception will be throw.
+        cyberArkService.decrypt(encryptedData, accountId, cyberArkConfig);
+        rv = encryptedData;
         break;
 
       default:
@@ -793,6 +783,9 @@ public class SecretManagerImpl implements SecretManager {
             fromConfig.getUuid(), accountId);
         azureVaultService.delete(accountId, azureSecretName, (AzureVaultConfig) fromConfig);
         break;
+      case CYBERARK:
+        decrypted = cyberArkService.decrypt(encryptedData, accountId, (CyberArkConfig) fromConfig);
+        break;
       default:
         throw new IllegalStateException("Invalid type : " + fromEncryptionType);
     }
@@ -826,6 +819,9 @@ public class SecretManagerImpl implements SecretManager {
         encrypted = azureVaultService.encrypt(encryptedData.getName(), secretValue, accountId, encryptedData.getType(),
             (AzureVaultConfig) toConfig, EncryptedData.builder().encryptionKey(encryptionKey).build());
         break;
+      case CYBERARK:
+        throw new WingsException(
+            UNSUPPORTED_OPERATION_EXCEPTION, "Deprecate operation is not supported for CyberArk secret manager");
       default:
         throw new IllegalStateException("Invalid type : " + toEncryptionType);
     }
@@ -872,6 +868,10 @@ public class SecretManagerImpl implements SecretManager {
             accountId, (AzureVaultConfig) toConfig, encryptedData.getName(), decryptedFileContent, encryptedData);
         break;
 
+      case CYBERARK:
+        throw new WingsException(
+            UNSUPPORTED_OPERATION_EXCEPTION, "Deprecate operation is not supported for CyberArk secret manager");
+
       default:
         throw new IllegalArgumentException("Invalid target encryption type " + toEncryptionType);
     }
@@ -897,6 +897,15 @@ public class SecretManagerImpl implements SecretManager {
               accountId, encryptedData.getEncryptionKey(), (AwsSecretsManagerConfig) fromConfig);
         }
         break;
+      case AZURE_VAULT:
+        if (isEmpty(encryptedData.getPath())) {
+          azureVaultService.delete(accountId, encryptedData.getEncryptionKey(), (AzureVaultConfig) fromConfig);
+        }
+        break;
+      case CYBERARK:
+        throw new WingsException(
+            UNSUPPORTED_OPERATION_EXCEPTION, "Deprecate operation is not supported for CyberArk secret manager");
+
       default:
         break;
     }
@@ -1039,13 +1048,16 @@ public class SecretManagerImpl implements SecretManager {
           awsConfig.setDefault(false);
           secretsManagerService.saveAwsSecretsManagerConfig(accountId, awsConfig);
           break;
-
         case AZURE_VAULT:
           AzureVaultConfig azureConfig = azureSecretsManagerService.getEncryptionConfig(accountId, config.getUuid());
           azureConfig.setDefault(false);
           azureSecretsManagerService.saveAzureSecretsManagerConfig(accountId, azureConfig);
           break;
-
+        case CYBERARK:
+          CyberArkConfig cyberArkConfig = cyberArkService.getConfig(accountId, config.getUuid());
+          cyberArkConfig.setDefault(false);
+          cyberArkService.saveConfig(accountId, cyberArkConfig);
+          break;
         default:
           throw new IllegalStateException("Unexpected value: " + config.getEncryptionType());
       }
@@ -1089,9 +1101,11 @@ public class SecretManagerImpl implements SecretManager {
           break;
         case AWS_SECRETS_MANAGER:
           break;
+        case CYBERARK:
+          break;
         default:
           throw new WingsException(
-              "Secret path can be specified only if the secret manager is of VAULT/AWS_SECRETS_MANAGER type!");
+              "Secret path can be specified only if the secret manager is of VAULT/AWS_SECRETS_MANAGER/CYBERARK type!");
       }
     }
 
@@ -1108,7 +1122,7 @@ public class SecretManagerImpl implements SecretManager {
         generateAuditForEncryptedRecord(accountId, null, encryptedDataId);
       } catch (DuplicateKeyException e) {
         String reason = "Variable " + name + " already exists";
-        throw new KmsOperationException(reason, USER);
+        throw new KmsOperationException(reason, e, USER);
       }
 
       auditMessage = "Created";
@@ -1356,7 +1370,11 @@ public class SecretManagerImpl implements SecretManager {
         return secretsManagerService.decryptFile(readInto, accountId, encryptedData);
 
       case AZURE_VAULT:
-        return secretsManagerService.decryptFile(readInto, accountId, encryptedData);
+        return azureVaultService.decryptFile(readInto, accountId, encryptedData);
+
+      case CYBERARK:
+        throw new WingsException(
+            CYBERARK_OPERATION_ERROR, "Encrypted file operations are not supported for CyberArk secret manager");
 
       default:
         throw new IllegalArgumentException("Invalid type " + encryptionType);
@@ -1397,6 +1415,10 @@ public class SecretManagerImpl implements SecretManager {
         case AZURE_VAULT:
           azureVaultService.decryptToStream(accountId, encryptedData, output);
           break;
+
+        case CYBERARK:
+          throw new WingsException(
+              CYBERARK_OPERATION_ERROR, "Encrypted file operations are not supported for CyberArk secret manager");
 
         default:
           throw new IllegalArgumentException("Invalid type " + encryptionType);
@@ -1532,6 +1554,10 @@ public class SecretManagerImpl implements SecretManager {
           newEncryptedFile = azureVaultService.encryptFile(accountId, azureConfig, name, inputBytes, encryptedData);
           newEncryptedFile.setKmsId(azureConfig.getUuid());
           break;
+
+        case CYBERARK:
+          throw new WingsException(
+              CYBERARK_OPERATION_ERROR, "Encrypted file operations are not supported for CyberArk secret manager");
 
         default:
           throw new IllegalArgumentException("Invalid type " + encryptionType);
@@ -1686,6 +1712,9 @@ public class SecretManagerImpl implements SecretManager {
         azureVaultService.delete(accountId, encryptedData.getEncryptionKey(),
             azureSecretsManagerService.getEncryptionConfig(accountId, encryptedData.getKmsId()));
         break;
+      case CYBERARK:
+        throw new WingsException(
+            CYBERARK_OPERATION_ERROR, "Delete file operation is not supported for CyberArk secret manager");
       default:
         throw new IllegalStateException("Invalid type " + encryptedData.getEncryptionType());
     }
@@ -1871,6 +1900,8 @@ public class SecretManagerImpl implements SecretManager {
         return secretsManagerService.getAwsSecretsManagerConfig(accountId, entityId);
       case AZURE_VAULT:
         return azureSecretsManagerService.getEncryptionConfig(accountId, entityId);
+      case CYBERARK:
+        return cyberArkService.getConfig(accountId, entityId);
       default:
         throw new IllegalStateException("invalid type: " + encryptionType);
     }
@@ -2005,6 +2036,20 @@ public class SecretManagerImpl implements SecretManager {
           rv.addAll(secretsManagerConfigs);
           break;
 
+        case CYBERARK:
+          List<CyberArkConfig> cyberArkConfigs = wingsPersistence.createQuery(CyberArkConfig.class)
+                                                     .field(ID_KEY)
+                                                     .in(parentIds)
+                                                     .field(ACCOUNT_ID_KEY)
+                                                     .equal(accountId)
+                                                     .asList();
+          cyberArkConfigs.forEach(cyberArkConfig -> {
+            cyberArkConfig.setEncryptionType(cell.getColumnKey().getEncryptionType());
+            cyberArkConfig.setEncryptedBy(cell.getColumnKey().getSecretManagerName());
+          });
+          rv.addAll(cyberArkConfigs);
+          break;
+
         default:
           List<SettingAttribute> settingAttributes = settingsService
                                                          .list(aPageRequest()
@@ -2050,6 +2095,12 @@ public class SecretManagerImpl implements SecretManager {
             "could not find azureid " + kmsId + " for " + type + " id: " + parentId + " encryptionType"
                 + encryptionType);
         return azureConfig.getName();
+      case CYBERARK:
+        CyberArkConfig cyberArkConfig = wingsPersistence.get(CyberArkConfig.class, kmsId);
+        Preconditions.checkNotNull(cyberArkConfig,
+            "could not find azureid " + kmsId + " for " + type + " id: " + parentId + " encryptionType"
+                + encryptionType);
+        return cyberArkConfig.getName();
       default:
         throw new IllegalArgumentException("Invalid type: " + encryptionType);
     }
@@ -2078,6 +2129,9 @@ public class SecretManagerImpl implements SecretManager {
             break;
           case AZURE_VAULT:
             azureSecretsManagerService.validateSecretsManagerConfig((AzureVaultConfig) encryptionConfig);
+            break;
+          case CYBERARK:
+            cyberArkService.validateConfig((CyberArkConfig) encryptionConfig);
             break;
           default:
             break;

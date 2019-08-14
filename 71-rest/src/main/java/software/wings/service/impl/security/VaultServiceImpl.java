@@ -24,11 +24,9 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.SecretString;
 import io.harness.network.Http;
@@ -44,14 +42,11 @@ import org.mongodb.morphia.query.Query;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
-import software.wings.beans.Account;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.KmsSetupAlert;
-import software.wings.features.SecretsManagementFeature;
-import software.wings.features.api.PremiumFeature;
 import software.wings.helpers.ext.vault.VaultSysAuthRestClient;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
@@ -59,7 +54,6 @@ import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.impl.security.vault.VaultAppRoleLoginRequest;
 import software.wings.service.impl.security.vault.VaultAppRoleLoginResponse;
 import software.wings.service.impl.security.vault.VaultAppRoleLoginResult;
-import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.VaultService;
@@ -86,8 +80,6 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   private static final String SECRET_ID_SECRET_NAME_SUFFIX = "_secret_id";
 
   @Inject private AlertService alertService;
-  @Inject private AccountService accountService;
-  @Inject @Named(SecretsManagementFeature.FEATURE_NAME) private PremiumFeature secretsManagementFeature;
 
   @Override
   public EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
@@ -246,7 +238,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
   @Override
   public String saveVaultConfig(String accountId, VaultConfig vaultConfig) {
-    checkIfVaultConfigCanBeCreatedOrUpdated(accountId);
+    checkIfSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
 
     // First normalize the base path value. Set default base path if it has not been specified from input.
     String basePath = isEmpty(vaultConfig.getBasePath()) ? DEFAULT_BASE_PATH : vaultConfig.getBasePath().trim();
@@ -333,24 +325,6 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     return wingsPersistence.save(encryptedData);
   }
 
-  private void checkIfVaultConfigCanBeCreatedOrUpdated(String accountId) {
-    Account account = accountService.get(accountId);
-
-    if (account.isLocalEncryptionEnabled()) {
-      // Reject creation of new Vault secret manager if 'localEncryptionEnabled' account flag is set
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER_SRE)
-          .addParam(REASON_KEY, "Can't create new Vault secret manager for a LOCAL encryption enabled account!");
-    }
-
-    if (!secretsManagementFeature.isAvailableForAccount(accountId)) {
-      throw new InvalidRequestException(String.format("Operation not permitted for account [%s]", accountId), USER);
-    }
-  }
-
-  private VaultConfig getSavedVaultConfig(String id) {
-    return wingsPersistence.get(VaultConfig.class, id);
-  }
-
   @Override
   public boolean deleteVaultConfig(String accountId, String vaultConfigId) {
     final long count = wingsPersistence.createQuery(EncryptedData.class)
@@ -361,7 +335,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
     if (count > 0) {
       String message = "Can not delete the vault configuration since there are secrets encrypted with this. "
-          + "Please transition your secrets to a new kms and then try again";
+          + "Please transition your secrets to another secret manager and try again.";
       throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER).addParam(REASON_KEY, message);
     }
 

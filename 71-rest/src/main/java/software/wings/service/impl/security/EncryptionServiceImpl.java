@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureVaultConfig;
+import software.wings.beans.CyberArkConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -91,6 +92,11 @@ public class EncryptionServiceImpl implements EncryptionService {
       case AZURE_VAULT:
         return secretManagementDelegateService.decrypt(
             encryptedDataDetail.getEncryptedData(), (AzureVaultConfig) encryptedDataDetail.getEncryptionConfig());
+
+      case CYBERARK:
+        return secretManagementDelegateService.decrypt(
+            encryptedDataDetail.getEncryptedData(), (CyberArkConfig) encryptedDataDetail.getEncryptionConfig());
+
       default:
         throw new IllegalStateException("invalid encryption type: " + encryptedDataDetail.getEncryptionType());
     }

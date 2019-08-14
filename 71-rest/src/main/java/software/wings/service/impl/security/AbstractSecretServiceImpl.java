@@ -1,15 +1,24 @@
 package software.wings.service.impl.security;
 
-import com.google.inject.Inject;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.exception.WingsException.USER_SRE;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.Account;
 import software.wings.beans.KmsConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.features.SecretsManagementFeature;
+import software.wings.features.api.PremiumFeature;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagerConfigService;
 
@@ -30,6 +39,8 @@ public abstract class AbstractSecretServiceImpl {
   @Inject protected DelegateProxyFactory delegateProxyFactory;
   @Inject protected SecretManagerConfigService secretManagerConfigService;
   @Inject private KmsService kmsService;
+  @Inject private AccountService accountService;
+  @Inject @Named(SecretsManagementFeature.FEATURE_NAME) private PremiumFeature secretsManagementFeature;
 
   EncryptedData encryptLocal(char[] value) {
     final String encryptionKey = UUID.randomUUID().toString();
@@ -84,6 +95,19 @@ public abstract class AbstractSecretServiceImpl {
         return decrypted;
       default:
         throw new IllegalStateException("Unexpected Vault root token encryption type: " + encryptionType);
+    }
+  }
+
+  void checkIfSecretsManagerConfigCanBeCreatedOrUpdated(String accountId) {
+    Account account = accountService.get(accountId);
+    if (account.isLocalEncryptionEnabled()) {
+      // Reject creation of new Vault secret manager if 'localEncryptionEnabled' account flag is set
+      throw new InvalidRequestException(
+          "Can't create new secret manager for a LOCAL encryption enabled account!", USER_SRE);
+    }
+
+    if (!secretsManagementFeature.isAvailableForAccount(accountId)) {
+      throw new InvalidRequestException(String.format("Operation not permitted for account [%s]", accountId), USER);
     }
   }
 }

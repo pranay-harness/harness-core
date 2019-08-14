@@ -9,9 +9,12 @@ import io.harness.security.encryption.EncryptionType;
 import org.junit.Rule;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.beans.Account;
+import software.wings.beans.Account.Builder;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.CyberArkConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.SettingAttribute;
@@ -59,6 +62,31 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
   }
 
   protected char[] decrypt(EncryptedData data, KmsConfig kmsConfig) throws Exception {
+    return SecretManagementDelegateServiceImpl
+        .decrypt(data.getEncryptedValue(), new SecretKeySpec(plainTextKey.getBytes(), "AES"))
+        .toCharArray();
+  }
+
+  protected EncryptedData encrypt(String value, CyberArkConfig cyberArkConfig) throws Exception {
+    if (cyberArkConfig.getClientCertificate().equals("invalidCertificate")) {
+      throw new KmsOperationException("Invalid credentials");
+    }
+    char[] encryptedValue = value == null
+        ? null
+        : SecretManagementDelegateServiceImpl.encrypt(value, new SecretKeySpec(plainTextKey.getBytes(), "AES"));
+
+    return EncryptedData.builder()
+        .encryptionKey(plainTextKey)
+        .encryptedValue(encryptedValue)
+        .encryptionType(EncryptionType.CYBERARK)
+        .kmsId(cyberArkConfig.getUuid())
+        .enabled(true)
+        .parentIds(new HashSet<>())
+        .accountId(cyberArkConfig.getAccountId())
+        .build();
+  }
+
+  protected char[] decrypt(EncryptedData data, CyberArkConfig cyberArkConfig) throws Exception {
     return SecretManagementDelegateServiceImpl
         .decrypt(data.getEncryptedValue(), new SecretKeySpec(plainTextKey.getBytes(), "AES"))
         .toCharArray();
@@ -117,6 +145,29 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
     kmsConfig.setAccessKey(generateUuid());
     kmsConfig.setSecretKey(generateUuid());
     return kmsConfig;
+  }
+
+  protected CyberArkConfig getCyberArkConfig() {
+    return getCyberArkConfig(null);
+  }
+
+  protected CyberArkConfig getCyberArkConfig(String clientCertificate) {
+    final CyberArkConfig cyberArkConfig = new CyberArkConfig();
+    cyberArkConfig.setName("myCyberArk");
+    cyberArkConfig.setDefault(true);
+    cyberArkConfig.setCyberArkUrl("https://app.harness.io"); // Just a valid URL.
+    cyberArkConfig.setAppId(generateUuid());
+    cyberArkConfig.setClientCertificate(clientCertificate);
+    return cyberArkConfig;
+  }
+
+  protected Account getAccount(String accountType) {
+    Builder accountBuilder = Builder.anAccount().withUuid(generateUuid());
+    LicenseInfo license = getLicenseInfo();
+    license.setAccountType(accountType);
+    accountBuilder.withLicenseInfo(license);
+
+    return accountBuilder.build();
   }
 
   protected LicenseInfo getLicenseInfo() {
