@@ -64,6 +64,7 @@ import org.objenesis.strategy.StdInstantiatorStrategy;
 import java.lang.reflect.InvocationHandler;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.SocketException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -204,6 +205,7 @@ public class HKryo extends Kryo {
     register(FileData.class, 1201);
     register(GlobalContext.class, 1202);
     register(GlobalContextData.class, 1203);
+    register(SocketException.class, 1204);
   }
 
   private Registration check(Registration registration, int id) {
