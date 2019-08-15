@@ -365,11 +365,7 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public String getAccountStatus(String accountId) {
-    Account account = dbCache.get(Account.class, accountId);
-    if (account == null) {
-      // Some false nulls have been observed. Verify by querying directly from db.
-      account = wingsPersistence.get(Account.class, accountId);
-    }
+    Account account = getFromCacheWithFallback(accountId);
     if (account == null) {
       // Account was hard/physically deleted case
       return AccountStatus.DELETED;
@@ -384,6 +380,15 @@ public class AccountServiceImpl implements AccountService {
     }
 
     accounts.forEach(account -> licenseService.decryptLicenseInfo(account, false));
+  }
+
+  private Account getFromCacheWithFallback(String accountId) {
+    Account account = dbCache.get(Account.class, accountId);
+    if (account == null) {
+      // Some false nulls have been observed. Verify by querying directly from db.
+      account = wingsPersistence.get(Account.class, accountId);
+    }
+    return account;
   }
 
   public <T> List<T> descendingServices(Class<T> cls) {
@@ -829,15 +834,20 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public boolean isAccountMigrated(String accountId) {
-    Account account = get(accountId);
-    return AccountStatus.INACTIVE.equals(account.getLicenseInfo().getAccountStatus())
-        && isNotEmpty(account.getMigratedToClusterUrl());
+    Account account = getFromCacheWithFallback(accountId);
+    if (account != null && account.getLicenseInfo() != null) {
+      // Old account have empty 'licenseInfo' field in account. Need special handling of those account.
+      return AccountStatus.INACTIVE.equals(account.getLicenseInfo().getAccountStatus())
+          && isNotEmpty(account.getMigratedToClusterUrl());
+    } else {
+      return false;
+    }
   }
 
   @Override
   public String getMigratedToClusterUrl(String accountId) {
-    Account account = get(accountId);
-    return account.getMigratedToClusterUrl();
+    Account account = getFromCacheWithFallback(accountId);
+    return account == null ? null : account.getMigratedToClusterUrl();
   }
 
   @Override
