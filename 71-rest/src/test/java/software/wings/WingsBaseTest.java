@@ -87,9 +87,7 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
   }
 
   protected char[] decrypt(EncryptedData data, CyberArkConfig cyberArkConfig) throws Exception {
-    return SecretManagementDelegateServiceImpl
-        .decrypt(data.getEncryptedValue(), new SecretKeySpec(plainTextKey.getBytes(), "AES"))
-        .toCharArray();
+    return "Cyberark1".toCharArray();
   }
 
   protected EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,

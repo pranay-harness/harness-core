@@ -876,8 +876,10 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     String query = data.getPath();
 
     if (isEmpty(query)) {
-      logger.warn("Query parameter is mandatory but it's not present in the CyberArk query: {}", query);
-      return null;
+      String errorMessage =
+          "Query parameter is mandatory but it's not present in the encrypted record for CyberArk secret manager "
+          + cyberArkConfig.getUuid();
+      throw new IllegalArgumentException(errorMessage);
     }
 
     long startTime = System.currentTimeMillis();

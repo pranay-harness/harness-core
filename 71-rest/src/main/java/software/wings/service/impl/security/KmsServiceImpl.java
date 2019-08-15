@@ -15,6 +15,7 @@ import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
+import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -102,6 +103,11 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   public String saveGlobalKmsConfig(String accountId, KmsConfig kmsConfig) {
     validateKms(accountId, kmsConfig);
     return saveKmsConfigInternal(GLOBAL_ACCOUNT_ID, kmsConfig);
+  }
+
+  @Override
+  public KmsConfig getGlobalKmsConfig() {
+    return wingsPersistence.createQuery(KmsConfig.class).field(ACCOUNT_ID_KEY).equal(GLOBAL_ACCOUNT_ID).get();
   }
 
   @Override

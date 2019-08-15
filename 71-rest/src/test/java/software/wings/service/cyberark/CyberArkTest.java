@@ -2,6 +2,8 @@ package software.wings.service.cyberark;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -15,6 +17,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.security.encryption.EncryptionType;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -44,9 +47,12 @@ import software.wings.service.intfc.security.CyberArkService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.SecretManagerConfigService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.UsageRestrictions;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
@@ -186,5 +192,46 @@ public class CyberArkTest extends WingsBaseTest {
       assertEquals(1, encryptedData.getParentIds().size());
       assertEquals(savedConfig.getUuid(), encryptedData.getParentIds().iterator().next());
     }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testEncryptDecrypt() {
+    String queryAsPath = "Address=components;Username=svc_account";
+    String secretName = "TestSecret";
+    String secretValue = "MySecretValue";
+    EncryptedData savedEnryptedData = EncryptedData.builder()
+                                          .name(secretName)
+                                          .path(queryAsPath)
+                                          .encryptionType(EncryptionType.CYBERARK)
+                                          .accountId(accountId)
+                                          .type(SettingVariableTypes.ARTIFACTORY)
+                                          .enabled(true)
+                                          .parentIds(new HashSet<>())
+                                          .build();
+
+    String name = UUID.randomUUID().toString();
+    CyberArkConfig cyberArkConfig = getCyberArkConfig();
+    cyberArkConfig.setName(name);
+    cyberArkConfig.setAccountId(accountId);
+
+    cyberArkResource.saveCyberArkConfig(cyberArkConfig.getAccountId(), cyberArkConfig);
+
+    // Encrypt of path reference will use a CyberArk decryption to validate the reference
+    EncryptedData encryptedData = secretManager.encrypt(EncryptionType.CYBERARK, accountId,
+        SettingVariableTypes.ARTIFACTORY, null, queryAsPath, null, secretName, new UsageRestrictions());
+    assertNotNull(encryptedData);
+    assertEquals(EncryptionType.CYBERARK, encryptedData.getEncryptionType());
+    assertEquals(SettingVariableTypes.ARTIFACTORY, encryptedData.getType());
+    assertNull(encryptedData.getEncryptedValue());
+
+    // Encrypt of real secret text will use a LOCAL Harness SecretStore to encrypt, since CyberArk doesn't support
+    // creating new reference now.
+    encryptedData = secretManager.encrypt(EncryptionType.CYBERARK, accountId, SettingVariableTypes.ARTIFACTORY,
+        secretValue.toCharArray(), null, null, secretName, new UsageRestrictions());
+    assertNotNull(encryptedData);
+    assertEquals(EncryptionType.LOCAL, encryptedData.getEncryptionType());
+    assertEquals(SettingVariableTypes.ARTIFACTORY, encryptedData.getType());
+    assertNotNull(encryptedData.getEncryptedValue());
   }
 }
