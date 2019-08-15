@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher.execution;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
@@ -80,9 +81,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -219,15 +222,25 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
       Map<String, List<QLIntermediateStackDataPoint>> intermediateMap) {
     QLStackedDataBuilder builder = QLStackedData.builder();
     List<QLStackedDataPoint> stackedDataPoints = new ArrayList<>();
-    intermediateMap.keySet().forEach(key -> {
-      QLStackedDataPointBuilder stackedDataPointBuilder = QLStackedDataPoint.builder();
-      List<QLDataPoint> dataPoints = intermediateMap.get(key)
-                                         .stream()
-                                         .map(QLIntermediateStackDataPoint::getDataPoint)
-                                         .collect(Collectors.toList());
 
-      stackedDataPointBuilder.values(dataPoints).key(buildQLReference(groupBy1, key));
-      stackedDataPoints.add(stackedDataPointBuilder.build());
+    final Map<DeploymentMetaDataFields, String[]> filterValueMap =
+        getFilterDeploymentMetaDataField(queryData.getFilters());
+
+    String[] values = filterValueMap.get(groupBy1);
+    Set<String> valueSet = values == null ? new HashSet<>() : Sets.newHashSet(values);
+    intermediateMap.keySet().forEach(key -> {
+      if (values == null || valueSet.contains(key)) {
+        QLStackedDataPointBuilder stackedDataPointBuilder = QLStackedDataPoint.builder();
+        List<QLDataPoint> dataPoints = intermediateMap.get(key)
+                                           .stream()
+                                           .map(QLIntermediateStackDataPoint::getDataPoint)
+                                           .collect(Collectors.toList());
+
+        dataPoints = filterQLDataPoints(dataPoints, queryData.getFilters(), queryData.getGroupByFields().get(1));
+
+        stackedDataPointBuilder.values(dataPoints).key(buildQLReference(groupBy1, key));
+        stackedDataPoints.add(stackedDataPointBuilder.build());
+      }
     });
 
     boolean countSort = false;
@@ -327,17 +340,20 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
       qlTimeDataPointMap.get(dataPoint.getTime()).add(dataPoint);
     }
 
-    return prepareStackedTimeSeriesData(qlTimeDataPointMap);
+    return prepareStackedTimeSeriesData(queryData, qlTimeDataPointMap);
   }
 
-  private QLData prepareStackedTimeSeriesData(Map<Long, List<QLTimeDataPoint>> qlTimeDataPointMap) {
+  private QLData prepareStackedTimeSeriesData(
+      DeploymentStatsQueryMetaData queryData, Map<Long, List<QLTimeDataPoint>> qlTimeDataPointMap) {
     QLStackedTimeSeriesDataBuilder timeSeriesDataBuilder = QLStackedTimeSeriesData.builder();
     List<QLStackedTimeSeriesDataPoint> timeSeriesDataPoints = new ArrayList<>();
     qlTimeDataPointMap.keySet().forEach(time -> {
       List<QLTimeDataPoint> timeDataPoints = qlTimeDataPointMap.get(time);
       QLStackedTimeSeriesDataPointBuilder builder = QLStackedTimeSeriesDataPoint.builder();
-      builder.values(timeDataPoints.parallelStream().map(QLTimeDataPoint::getQLDataPoint).collect(Collectors.toList()))
-          .time(time);
+      List<QLDataPoint> dataPoints =
+          timeDataPoints.parallelStream().map(QLTimeDataPoint::getQLDataPoint).collect(Collectors.toList());
+      dataPoints = filterQLDataPoints(dataPoints, queryData.getFilters(), queryData.getGroupByFields().get(0));
+      builder.values(dataPoints).time(time);
       timeSeriesDataPoints.add(builder.build());
     });
     return timeSeriesDataBuilder.data(timeSeriesDataPoints).build();
@@ -393,7 +409,24 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
       }
       dataPoints.add(dataPoint.build());
     }
+
+    dataPoints = filterQLDataPoints(dataPoints, queryData.getFilters(), queryData.getGroupByFields().get(0));
+
     return builder.dataPoints(dataPoints).build();
+  }
+
+  private List<QLDataPoint> filterQLDataPoints(
+      List<QLDataPoint> dataPoints, List<QLDeploymentFilter> filters, DeploymentMetaDataFields groupBy) {
+    if (groupBy != null) {
+      Map<DeploymentMetaDataFields, String[]> filterValueMap = getFilterDeploymentMetaDataField(filters);
+      String[] values = filterValueMap.get(groupBy);
+      if (values != null) {
+        final Set valueSet = Sets.newHashSet(values);
+        dataPoints.removeIf(dataPoint -> !valueSet.contains(dataPoint.getKey().getId()));
+      }
+    }
+
+    return dataPoints;
   }
 
   private QLData generateSinglePointData(DeploymentStatsQueryMetaData queryData, ResultSet resultSet)
@@ -508,6 +541,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
     queryMetaDataBuilder.query(selectQuery.toString());
     queryMetaDataBuilder.groupByFields(groupByFields);
     queryMetaDataBuilder.sortCriteria(finalSortCriteria);
+    queryMetaDataBuilder.filters(filters);
     return queryMetaDataBuilder.build();
   }
 
@@ -883,6 +917,33 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcher<QLDeplo
       default:
         throw new RuntimeException("Order type not supported " + sortType);
     }
+  }
+
+  private Map<DeploymentMetaDataFields, String[]> getFilterDeploymentMetaDataField(List<QLDeploymentFilter> filters) {
+    Map<DeploymentMetaDataFields, String[]> filterMap = new HashMap<>();
+    for (QLDeploymentFilter filter : filters) {
+      if (filter.getService() != null) {
+        filterMap.put(DeploymentMetaDataFields.SERVICEID, filter.getService().getValues());
+      }
+
+      if (filter.getEnvironment() != null) {
+        filterMap.put(DeploymentMetaDataFields.ENVID, filter.getEnvironment().getValues());
+      }
+      if (filter.getEnvironmentType() != null) {
+        filterMap.put(DeploymentMetaDataFields.ENVTYPE,
+            Arrays.asList(filter.getEnvironmentType().getValues())
+                .stream()
+                .map(Enum::name)
+                .collect(Collectors.toList())
+                .toArray(new String[0]));
+      }
+
+      if (filter.getCloudProvider() != null) {
+        filterMap.put(DeploymentMetaDataFields.CLOUDPROVIDERID, filter.getCloudProvider().getValues());
+      }
+    }
+
+    return filterMap;
   }
 
   /**

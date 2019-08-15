@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import software.wings.graphql.schema.type.aggregation.QLFilterKind;
+import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentFilter;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentSortCriteria;
 
 import java.util.List;
@@ -70,4 +71,6 @@ public class DeploymentStatsQueryMetaData {
   private List<QLDeploymentSortCriteria> sortCriteria;
 
   private String query;
+
+  List<QLDeploymentFilter> filters;
 }
