@@ -31,6 +31,7 @@ import io.harness.event.client.EventPublisher;
 import io.harness.event.client.PublisherModule;
 import io.harness.govern.ProviderModule;
 import io.harness.managerclient.ManagerClientModule;
+import io.harness.serializer.KryoModule;
 import io.harness.serializer.YamlUtils;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
@@ -98,6 +99,7 @@ public class DelegateApplication {
         new ThreadFactoryBuilder().setNameFormat("sync-task-%d").setPriority(Thread.NORM_PRIORITY).build()));
 
     List<Module> modules = new ArrayList<>();
+    modules.add(new KryoModule());
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
