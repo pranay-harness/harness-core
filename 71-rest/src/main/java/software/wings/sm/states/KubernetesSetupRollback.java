@@ -14,6 +14,7 @@ import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder;
 import software.wings.api.DeploymentType;
+import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
@@ -27,6 +28,7 @@ import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.command.KubernetesSetupParams;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ImageDetails;
+import software.wings.common.Constants;
 import software.wings.sm.ExecutionContext;
 
 /**
@@ -63,6 +65,15 @@ public class KubernetesSetupRollback extends ContainerServiceSetup {
         getServiceSteadyStateTimeout() > 0 ? getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT;
     boolean useNewLabelMechanism = true;
 
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    ContainerServiceElement containerElement =
+        context.<ContainerServiceElement>getContextElementList(ContextElementType.CONTAINER_SERVICE)
+            .stream()
+            .filter(cse -> phaseElement.getDeploymentType().equals(cse.getDeploymentType().name()))
+            .filter(cse -> phaseElement.getInfraMappingId().equals(cse.getInfraMappingId()))
+            .findFirst()
+            .orElse(ContainerServiceElement.builder().build());
+
     return aKubernetesSetupParams()
         .withAppName(app.getName())
         .withEnvName(env.getName())
@@ -79,6 +90,7 @@ public class KubernetesSetupRollback extends ContainerServiceSetup {
         .withResourceGroup(resourceGroup)
         .withUseNewLabelMechanism(useNewLabelMechanism)
         .withReleaseName(rollbackElement.getReleaseName())
+        .withServiceCounts(containerElement.getActiveServiceCounts())
         .build();
   }
 
@@ -94,7 +106,8 @@ public class KubernetesSetupRollback extends ContainerServiceSetup {
             .clusterName(executionData.getClusterName())
             .namespace(setupParams.getNamespace())
             .deploymentType(DeploymentType.KUBERNETES)
-            .infraMappingId(setupParams.getInfraMappingId());
+            .infraMappingId(setupParams.getInfraMappingId())
+            .activeServiceCounts(executionData.getServiceCounts());
     if (executionResult != null) {
       ContainerSetupCommandUnitExecutionData setupExecutionData =
           (ContainerSetupCommandUnitExecutionData) executionResult.getCommandExecutionData();

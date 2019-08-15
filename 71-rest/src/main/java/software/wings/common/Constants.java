@@ -126,11 +126,6 @@ public interface Constants {
    */
   Integer ENV_STATE_TIMEOUT_MILLIS = 12 * 60 * 60 * 1000; // 12 hours
 
-  /**
-   * The constant NOT_REGISTERED.
-   */
-  String NOT_REGISTERED = "<Not registered yet>";
-
   String PROVISION_CLOUD_FORMATION = "CloudFormation Create Stack";
   String DE_PROVISION_CLOUD_FORMATION = "CloudFormation Delete Stack";
   String ROLLBACK_CLOUD_FORMATION = "CloudFormation Rollback Stack";
@@ -164,11 +159,6 @@ public interface Constants {
    * The constant S3.
    */
   String S3 = "S3";
-
-  /**
-   * The constant FILE_CONTENT_NOT_STORED.
-   */
-  String FILE_CONTENT_NOT_STORED = "__FILE_CONTENT_NOT_STORED__";
 
   /**
    * The constant WINGS_RUNTIME_PATH.

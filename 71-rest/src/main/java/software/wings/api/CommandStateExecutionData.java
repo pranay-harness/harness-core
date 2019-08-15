@@ -73,6 +73,7 @@ public class CommandStateExecutionData extends StateExecutionData {
   private String codeDeployDeploymentId;
   private ContainerSetupParams containerSetupParams;
   private ContainerResizeParams containerResizeParams;
+  private List<String[]> serviceCounts;
 
   // Aws Lambda Data
   private List<String> aliases;

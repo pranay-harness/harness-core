@@ -144,10 +144,12 @@ public abstract class ContainerServiceDeploy extends State {
         executionDataBuilder.withOldInstanceData(contextData.rollbackElement.getOldInstanceData());
       }
 
-      CommandStateExecutionData executionData = executionDataBuilder.build();
       ContainerResizeParams params = buildContainerResizeParams(context, contextData);
       DeploymentType deploymentType =
           serviceResourceService.getDeploymentType(infrastructureMapping, contextData.service, null);
+
+      CommandStateExecutionData executionData = executionDataBuilder.build();
+      executionData.setServiceCounts(params.getOriginalServiceCounts());
 
       CommandExecutionContext commandExecutionContext =
           aCommandExecutionContext()

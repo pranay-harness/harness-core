@@ -295,6 +295,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           performYamlRollback(encryptedDataDetails, executionLogCallback, previousConfig, kubernetesConfig,
               containerServiceName, setupParams.getServiceSteadyStateTimeout());
         } else {
+          performResize(kubernetesConfig, setupParams.getClusterName(), lastCtrlName, setupParams.getServiceCounts(),
+              setupParams.getServiceSteadyStateTimeout(), executionLogCallback);
+
           if (previousConfig != null && isNotBlank(previousConfig.getData().get(AUTOSCALER_YAML))) {
             rollbackAutoscaler(encryptedDataDetails, executionLogCallback, kubernetesConfig,
                 decodeBase64ToString(previousConfig.getData().get(AUTOSCALER_YAML)));
@@ -1990,6 +1993,30 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       logger.error("Couldn't get path from ingress rule.", e);
       executionLogCallback.saveExecutionLog(
           "Error getting Ingress rule - " + ExceptionUtils.getMessage(e), LogLevel.WARN);
+    }
+  }
+
+  private void performResize(KubernetesConfig kubernetesConfig, String clusterName, String newControllerName,
+      List<String[]> serviceCounts, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
+    if (isNotEmpty(serviceCounts)) {
+      for (String[] serviceCount : serviceCounts) {
+        Optional<Integer> controllerPodCount =
+            kubernetesContainerService.getControllerPodCount(kubernetesConfig, null, serviceCount[0]);
+        if (controllerPodCount.isPresent()) {
+          kubernetesContainerService.setControllerPodCount(kubernetesConfig, new ArrayList<>(), clusterName,
+              serviceCount[0], controllerPodCount.get(), Integer.parseInt(serviceCount[1]), serviceSteadyStateTimeout,
+              executionLogCallback);
+        }
+      }
+    }
+
+    if (isNotBlank(newControllerName)) {
+      Optional<Integer> controllerPodCount =
+          kubernetesContainerService.getControllerPodCount(kubernetesConfig, null, newControllerName);
+      if (controllerPodCount.isPresent()) {
+        kubernetesContainerService.setControllerPodCount(kubernetesConfig, new ArrayList<>(), clusterName,
+            newControllerName, controllerPodCount.get(), 0, serviceSteadyStateTimeout, executionLogCallback);
+      }
     }
   }
 
