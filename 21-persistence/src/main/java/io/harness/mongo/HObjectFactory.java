@@ -6,6 +6,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.modelmapper.internal.objenesis.Objenesis;
 import org.modelmapper.internal.objenesis.ObjenesisStd;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -26,6 +27,8 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class HObjectFactory extends DefaultCreator {
+  @Getter private static ThreadLocal<String> collection = new ThreadLocal<>();
+
   @Setter private AdvancedDatastore datastore;
 
   private static synchronized Map<String, Class> collectMorphiaInterfaceImplementers() {
@@ -56,6 +59,8 @@ public class HObjectFactory extends DefaultCreator {
   }
 
   public interface NotFoundClass {}
+
+  private Map<String, Set<String>> alerted = new ConcurrentHashMap<>();
 
   @SuppressWarnings("unchecked")
   private Class getClass(final DBObject dbObj) {
@@ -89,10 +94,25 @@ public class HObjectFactory extends DefaultCreator {
         }
         return NotFoundClass.class;
       });
-    }
 
-    if (clazz == NotFoundClass.class) {
-      return null;
+      if (clazz == NotFoundClass.class) {
+        return null;
+      }
+
+      String actualClassName = clazz.getName();
+      if (!className.equals(actualClassName)) {
+        final String collectionName = collection.get();
+        if (collectionName == null) {
+          logger.error("The collection was not initialized", new Exception());
+        } else {
+          final Set<String> collections = alerted.computeIfAbsent(className, cn -> new ConcurrentHashSet<>());
+          if (!collections.contains(collectionName)) {
+            collections.add(collectionName);
+            logger.error(
+                "Collection {} need migration for class from {} to {}", collectionName, className, actualClassName);
+          }
+        }
+      }
     }
 
     return clazz;

@@ -8,6 +8,7 @@ import static java.lang.String.format;
 import com.google.common.collect.Sets;
 
 import com.mongodb.DBCollection;
+import io.harness.mongo.HObjectFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
@@ -86,7 +87,9 @@ public class HQuery<T> extends QueryImpl<T> {
     }
   }
 
+  @SuppressWarnings("deprecation")
   public T get(FindOptions options) {
+    HObjectFactory.getCollection().set(super.getCollection().getName());
     return HPersistence.retry(() -> super.get(options));
   }
 
@@ -105,7 +108,9 @@ public class HQuery<T> extends QueryImpl<T> {
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public List<T> asList(FindOptions options) {
+    HObjectFactory.getCollection().set(super.getCollection().getName());
     enforceHarnessRules();
     return HPersistence.retry(() -> {
       final List<T> list = super.asList(options);
