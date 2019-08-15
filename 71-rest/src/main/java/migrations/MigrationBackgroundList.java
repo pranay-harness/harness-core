@@ -34,6 +34,7 @@ import migrations.all.SetDummyTechStackForOldAccounts;
 import migrations.all.SetEmailToIndividualMemberFlag;
 import migrations.all.SetLastLoginTimeToAllUsers;
 import migrations.all.TerraformIsTemplatizedMigration;
+import migrations.all.UpdateAccountEncryptionClassNames;
 import migrations.all.UpdateWorkflowExecutionAccountId;
 import migrations.all.UpdateWorkflowExecutionDuration;
 import org.apache.commons.lang3.tuple.Pair;
@@ -95,6 +96,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(45, FetchAndSaveAccounts2.class))
         .add(Pair.of(46, ScheduleSegmentPublishJob.class))
         .add(Pair.of(47, UpdateWorkflowExecutionAccountId.class))
+        .add(Pair.of(48, UpdateAccountEncryptionClassNames.class))
         .build();
   }
 }
