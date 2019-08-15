@@ -77,6 +77,7 @@ import software.wings.prune.PruneEvent;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
@@ -123,6 +124,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private EventPublishHelper eventPublishHelper;
 
   @Inject private Queue<PruneEvent> pruneQueue;
+  @Inject private HarnessTagService harnessTagService;
 
   /**
    * {@inheritDoc}
@@ -367,6 +369,7 @@ public class PipelineServiceImpl implements PipelineService {
       if (prunePipeline(appId, pipeline.getUuid())) {
         auditServiceHelper.reportDeleteForAuditing(appId, pipeline);
       }
+      harnessTagService.pruneTagLinks(pipeline.getAccountId(), pipeline.getUuid());
     }
 
     if (StringUtils.isNotEmpty(accountId)) {

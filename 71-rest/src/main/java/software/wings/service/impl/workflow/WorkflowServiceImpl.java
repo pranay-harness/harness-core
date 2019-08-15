@@ -207,6 +207,7 @@ import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -341,6 +342,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private ArtifactService artifactService;
 
   @Inject private Queue<PruneEvent> pruneQueue;
+  @Inject private HarnessTagService harnessTagService;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -1457,6 +1459,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (pruneWorkflow(appId, workflow.getUuid())) {
         auditServiceHelper.reportDeleteForAuditing(appId, workflow);
       }
+      harnessTagService.pruneTagLinks(workflow.getAccountId(), workflow.getUuid());
     }
 
     if (StringUtils.isNotEmpty(accountId)) {

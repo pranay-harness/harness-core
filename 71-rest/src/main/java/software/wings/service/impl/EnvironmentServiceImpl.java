@@ -84,6 +84,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationService;
@@ -143,6 +144,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private EventPublishHelper eventPublishHelper;
 
   @Inject private Queue<PruneEvent> pruneQueue;
+  @Inject private HarnessTagService harnessTagService;
 
   /**
    * {@inheritDoc}
@@ -506,6 +508,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       wingsPersistence.delete(environment);
       auditServiceHelper.reportDeleteForAuditing(appId, environment);
       pruneDescendingEntities(appId, environment.getUuid());
+      harnessTagService.pruneTagLinks(environment.getAccountId(), environment.getUuid());
     });
   }
 

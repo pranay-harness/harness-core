@@ -83,6 +83,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
+import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
@@ -130,6 +131,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Inject private Queue<PruneEvent> pruneQueue;
   @Inject private LimitCheckerFactory limitCheckerFactory;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
+  @Inject private HarnessTagService harnessTagService;
 
   @Override
   @ValidationGroups(Create.class)
@@ -366,6 +368,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
                                                     .asKeyList();
     for (Key<InfrastructureProvisioner> key : keys) {
       prune(appId, (String) key.getId());
+      harnessTagService.pruneTagLinks(appService.getAccountIdByAppId(appId), (String) key.getId());
     }
   }
 

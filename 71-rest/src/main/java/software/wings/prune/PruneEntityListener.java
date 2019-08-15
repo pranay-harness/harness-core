@@ -100,6 +100,7 @@ public class PruneEntityListener extends QueueListener<PruneEvent> {
       if (clz.equals(Activity.class)) {
         activityService.pruneDescendingEntities(appId, entityId);
       } else if (clz.equals(Application.class)) {
+        pruneTagLinks = true;
         appService.pruneDescendingEntities(appId);
       } else if (clz.equals(ArtifactStream.class)) {
         artifactStreamService.pruneDescendingEntities(appId, entityId);
