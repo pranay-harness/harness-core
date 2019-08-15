@@ -257,6 +257,7 @@ public class TriggerServiceImpl implements TriggerService {
     wingsPersistence.createQuery(Trigger.class).filter(Trigger.APP_ID_KEY, appId).asList().forEach(trigger -> {
       delete(appId, trigger.getUuid());
       auditServiceHelper.reportDeleteForAuditing(appId, trigger);
+      harnessTagService.pruneTagLinks(appService.getAccountIdByAppId(appId), trigger.getUuid());
     });
   }
 

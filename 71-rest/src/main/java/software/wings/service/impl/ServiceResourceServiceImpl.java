@@ -150,6 +150,7 @@ import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
@@ -263,6 +264,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Inject private Queue<PruneEvent> pruneQueue;
   @Inject private ApplicationManifestUtils applicationManifestUtils;
+  @Inject private HarnessTagService harnessTagService;
 
   /**
    * {@inheritDoc}
@@ -1050,6 +1052,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       auditServiceHelper.reportDeleteForAuditing(service.getAppId(), service);
       pruneDeploymentSpecifications(service);
       pruneDescendingEntities(appId, service.getUuid());
+      harnessTagService.pruneTagLinks(service.getAccountId(), service.getUuid());
     }
 
     if (!StringUtils.isEmpty(accountId)) {
