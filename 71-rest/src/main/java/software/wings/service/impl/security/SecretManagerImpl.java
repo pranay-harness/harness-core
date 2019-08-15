@@ -16,6 +16,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeCount;
+import static io.harness.security.encryption.EncryptionType.KMS;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -196,7 +197,7 @@ public class SecretManagerImpl implements SecretManager {
     EncryptedData rv;
     switch (encryptionType) {
       case LOCAL:
-        final LocalEncryptionConfig localEncryptionConfig = localEncryptionService.getEncryptionConfig(accountId);
+        LocalEncryptionConfig localEncryptionConfig = localEncryptionService.getEncryptionConfig(accountId);
         rv = localEncryptionService.encrypt(secret, accountId, localEncryptionConfig);
         rv.setType(settingType);
         break;
@@ -235,9 +236,29 @@ public class SecretManagerImpl implements SecretManager {
         final CyberArkConfig cyberArkConfig =
             (CyberArkConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
         encryptedData.setKmsId(cyberArkConfig.getUuid());
-        // CyberArk encrypt need to use decrypt of the secret reference as a way of validating the reference is valid.
-        // If the Cyberark reference is not valid, an exception will be throw.
-        cyberArkService.decrypt(encryptedData, accountId, cyberArkConfig);
+        if (isNotEmpty(encryptedData.getPath())) {
+          // CyberArk encrypt need to use decrypt of the secret reference as a way of validating the reference is valid.
+          // If the  CyberArk reference is not valid, an exception will be throw.
+          cyberArkService.decrypt(encryptedData, accountId, cyberArkConfig);
+        } else if (isNotEmpty(toEncrypt)) {
+          KmsConfig fallbackKmsConfig = kmsService.getGlobalKmsConfig();
+          if (fallbackKmsConfig != null) {
+            logger.info(
+                "CyberArk doesn't support creating new secret. This new secret text will be created in the global KMS SecretStore instead");
+            rv = kmsService.encrypt(secret, accountId, fallbackKmsConfig);
+            rv.setEncryptionType(KMS);
+          } else {
+            logger.info(
+                "CyberArk doesn't support creating new secret. This new secret text will be created in the local Harness SecretStore instead");
+            localEncryptionConfig = localEncryptionService.getEncryptionConfig(accountId);
+            rv = localEncryptionService.encrypt(secret, accountId, localEncryptionConfig);
+            rv.setEncryptionType(LOCAL);
+          }
+          rv.setName(secretName);
+          rv.setType(settingType);
+          rv.setUsageRestrictions(usageRestrictions);
+          return rv;
+        }
         rv = encryptedData;
         break;
 

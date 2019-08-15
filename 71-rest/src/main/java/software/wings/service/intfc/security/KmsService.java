@@ -18,6 +18,8 @@ public interface KmsService {
 
   String saveGlobalKmsConfig(String accountId, KmsConfig kmsConfig);
 
+  KmsConfig getGlobalKmsConfig();
+
   String saveKmsConfig(String accountId, KmsConfig kmsConfig);
 
   boolean deleteKmsConfig(String accountId, String kmsConfigId);
