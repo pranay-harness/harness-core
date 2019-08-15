@@ -1,5 +1,7 @@
 package migrations.all;
 
+import static migrations.all.UnregisteredUserNameMigration.NOT_REGISTERED;
+
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
@@ -11,7 +13,6 @@ import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.User;
 import software.wings.beans.User.Builder;
-import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 
 import java.util.stream.LongStream;
@@ -34,15 +35,11 @@ public class UnregisteredUserNameMigrationTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testMigrationOfAllUnregisteredUsers() {
     long initialCount = 10;
-    prepareTest(initialCount, Constants.NOT_REGISTERED);
-    Assertions
-        .assertThat(
-            wingsPersistence.getCollection(User.class).count(new BasicDBObject("name", Constants.NOT_REGISTERED)))
+    prepareTest(initialCount, NOT_REGISTERED);
+    Assertions.assertThat(wingsPersistence.getCollection(User.class).count(new BasicDBObject("name", NOT_REGISTERED)))
         .isEqualTo(initialCount);
     unregisteredUserNameMigration.migrate();
-    Assertions
-        .assertThat(
-            wingsPersistence.getCollection(User.class).count(new BasicDBObject("name", Constants.NOT_REGISTERED)))
+    Assertions.assertThat(wingsPersistence.getCollection(User.class).count(new BasicDBObject("name", NOT_REGISTERED)))
         .isEqualTo(0);
   }
 
@@ -63,19 +60,15 @@ public class UnregisteredUserNameMigrationTest extends WingsBaseTest {
   public void testMigrationOfSomeRegisteredUsers() {
     long initialCount = 10;
     prepareTest(initialCount, "TestUser");
-    prepareTest(initialCount, Constants.NOT_REGISTERED);
+    prepareTest(initialCount, NOT_REGISTERED);
     Assertions.assertThat(wingsPersistence.getCollection(User.class).count(new BasicDBObject("name", "TestUser")))
         .isEqualTo(10);
-    Assertions
-        .assertThat(
-            wingsPersistence.getCollection(User.class).count(new BasicDBObject("name", Constants.NOT_REGISTERED)))
+    Assertions.assertThat(wingsPersistence.getCollection(User.class).count(new BasicDBObject("name", NOT_REGISTERED)))
         .isEqualTo(initialCount);
     unregisteredUserNameMigration.migrate();
     Assertions.assertThat(wingsPersistence.getCollection(User.class).count(new BasicDBObject("name", "TestUser")))
         .isEqualTo(10);
-    Assertions
-        .assertThat(
-            wingsPersistence.getCollection(User.class).count(new BasicDBObject("name", Constants.NOT_REGISTERED)))
+    Assertions.assertThat(wingsPersistence.getCollection(User.class).count(new BasicDBObject("name", NOT_REGISTERED)))
         .isEqualTo(0);
   }
 }

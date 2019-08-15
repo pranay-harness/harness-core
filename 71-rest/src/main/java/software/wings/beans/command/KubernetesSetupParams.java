@@ -51,6 +51,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
   private List<String[]> encryptedConfigFiles;
   private boolean useNewLabelMechanism;
   private String releaseName;
+  private List<String[]> serviceCounts;
 
   public static final class KubernetesSetupParamsBuilder {
     private String serviceName;
@@ -96,6 +97,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
     private List<String[]> encryptedConfigFiles;
     private boolean useNewLabelMechanism;
     private String releaseName;
+    private List<String[]> serviceCounts;
 
     private KubernetesSetupParamsBuilder() {}
 
@@ -318,6 +320,11 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       return this;
     }
 
+    public KubernetesSetupParamsBuilder withServiceCounts(List<String[]> serviceCounts) {
+      this.serviceCounts = serviceCounts;
+      return this;
+    }
+
     public KubernetesSetupParamsBuilder but() {
       return aKubernetesSetupParams()
           .withServiceName(serviceName)
@@ -362,7 +369,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
           .withPlainConfigFiles(plainConfigFiles)
           .withEncryptedConfigFiles(encryptedConfigFiles)
           .withUseNewLabelMechanism(useNewLabelMechanism)
-          .withReleaseName(releaseName);
+          .withReleaseName(releaseName)
+          .withServiceCounts(serviceCounts);
     }
 
     public KubernetesSetupParams build() {
@@ -410,6 +418,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       kubernetesSetupParams.setEncryptedConfigFiles(encryptedConfigFiles);
       kubernetesSetupParams.setUseNewLabelMechanism(useNewLabelMechanism);
       kubernetesSetupParams.setReleaseName(releaseName);
+      kubernetesSetupParams.setServiceCounts(serviceCounts);
       return kubernetesSetupParams;
     }
   }

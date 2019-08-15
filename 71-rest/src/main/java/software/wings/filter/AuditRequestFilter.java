@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.network.Localhost.getLocalHostAddress;
 import static io.harness.network.Localhost.getLocalHostName;
 import static java.util.Arrays.asList;
-import static software.wings.common.Constants.FILE_CONTENT_NOT_STORED;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -47,6 +46,8 @@ import javax.ws.rs.ext.Provider;
 @Priority(1500) // Authorization > Audit > Authentication
 @Slf4j
 public class AuditRequestFilter implements ContainerRequestFilter {
+  private static final String FILE_CONTENT_NOT_STORED = "__FILE_CONTENT_NOT_STORED__";
+
   @Context private ResourceContext resourceContext;
   @Context private ResourceInfo resourceInfo;
 
