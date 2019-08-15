@@ -1127,4 +1127,18 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     Assertions.assertThatThrownBy(
         () -> infrastructureMappingService.validateAwsAmiInfrastructureMapping(infrastructureMapping));
   }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testExtractRegionFromInfraMapping() {
+    String region = "region";
+    EcsInfrastructureMapping ecsInfrastructureMapping = new EcsInfrastructureMapping();
+    ecsInfrastructureMapping.setRegion(region);
+    assertThat(infrastructureMappingServiceImpl.extractRegionFromInfraMapping(ecsInfrastructureMapping))
+        .isEqualTo(region);
+    AwsAmiInfrastructureMapping awsAmiInfrastructureMapping = new AwsAmiInfrastructureMapping();
+    awsAmiInfrastructureMapping.setRegion(region);
+    assertThat(infrastructureMappingServiceImpl.extractRegionFromInfraMapping(awsAmiInfrastructureMapping))
+        .isEqualTo(region);
+  }
 }
