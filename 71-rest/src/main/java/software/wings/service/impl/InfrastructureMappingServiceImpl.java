@@ -13,6 +13,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
@@ -970,7 +971,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
     keyValuePairs.put("assignPublicIp", ecsInfrastructureMapping.isAssignPublicIp());
     keyValuePairs.put(
-        "vpcId", ecsInfrastructureMapping.getVpcId() == null ? StringUtils.EMPTY : ecsInfrastructureMapping.getVpcId());
+        "vpcId", ecsInfrastructureMapping.getVpcId() == null ? EMPTY : ecsInfrastructureMapping.getVpcId());
     keyValuePairs.put("subnetIds",
         ecsInfrastructureMapping.getSubnetIds() == null ? Collections.EMPTY_LIST
                                                         : ecsInfrastructureMapping.getSubnetIds());
@@ -978,8 +979,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         ecsInfrastructureMapping.getSecurityGroupIds() == null ? Collections.EMPTY_LIST
                                                                : ecsInfrastructureMapping.getSecurityGroupIds());
     keyValuePairs.put("executionRole",
-        ecsInfrastructureMapping.getExecutionRole() == null ? StringUtils.EMPTY
-                                                            : ecsInfrastructureMapping.getExecutionRole());
+        ecsInfrastructureMapping.getExecutionRole() == null ? EMPTY : ecsInfrastructureMapping.getExecutionRole());
   }
 
   private void validatePyInfraMapping(PhysicalInfrastructureMapping pyInfraMapping) {
@@ -1590,6 +1590,18 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     return Collections.emptyMap();
   }
 
+  String extractRegionFromInfraMapping(InfrastructureMapping infrastructureMapping) {
+    String region = EMPTY;
+    if (infrastructureMapping instanceof EcsInfrastructureMapping) {
+      region = ((EcsInfrastructureMapping) infrastructureMapping).getRegion();
+    } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
+      region = ((AwsInfrastructureMapping) infrastructureMapping).getRegion();
+    } else if (infrastructureMapping instanceof AwsAmiInfrastructureMapping) {
+      region = ((AwsAmiInfrastructureMapping) infrastructureMapping).getRegion();
+    }
+    return region;
+  }
+
   @Override
   public Map<String, String> listElasticLoadBalancers(String appId, String infraMappingId) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
@@ -1597,19 +1609,15 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     notNullCheck("Compute Provider", computeProviderSetting);
-
-    if (infrastructureMapping instanceof EcsInfrastructureMapping
-        || infrastructureMapping instanceof AwsInfrastructureMapping) {
-      String region = infrastructureMapping instanceof EcsInfrastructureMapping
-          ? ((EcsInfrastructureMapping) infrastructureMapping).getRegion()
-          : ((AwsInfrastructureMapping) infrastructureMapping).getRegion();
-
-      return ((AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name()))
-          .listElasticBalancers(computeProviderSetting, region, appId)
-          .stream()
-          .collect(toMap(s -> s, s -> s));
+    String region = extractRegionFromInfraMapping(infrastructureMapping);
+    if (isEmpty(region)) {
+      return Collections.emptyMap();
     }
-    return Collections.emptyMap();
+
+    return ((AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name()))
+        .listElasticBalancers(computeProviderSetting, region, appId)
+        .stream()
+        .collect(toMap(s -> s, s -> s));
   }
 
   @Override
@@ -1707,16 +1715,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     notNullCheck("Compute Provider", computeProviderSetting);
 
-    if (infrastructureMapping instanceof AwsInfrastructureMapping
-        || infrastructureMapping instanceof EcsInfrastructureMapping) {
-      String region = infrastructureMapping instanceof AwsInfrastructureMapping
-          ? ((AwsInfrastructureMapping) infrastructureMapping).getRegion()
-          : ((EcsInfrastructureMapping) infrastructureMapping).getRegion();
-      AwsInfrastructureProvider infrastructureProvider =
-          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-      return infrastructureProvider.listListeners(computeProviderSetting, region, loadbalancerName, appId);
+    String region = extractRegionFromInfraMapping(infrastructureMapping);
+    if (isEmpty(region)) {
+      return Collections.emptyList();
     }
-    return Collections.emptyList();
+
+    AwsInfrastructureProvider infrastructureProvider =
+        (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+    return infrastructureProvider.listListeners(computeProviderSetting, region, loadbalancerName, appId);
   }
 
   @Override
