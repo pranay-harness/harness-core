@@ -426,15 +426,15 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     long startTime = System.currentTimeMillis();
     logger.info("Saving secret '{}' into AWS Secrets Manager: {}", fullSecretName, secretsManagerConfig.getName());
 
-    EncryptedRecord encryptedData = savedEncryptedData != null ? savedEncryptedData
-                                                               : EncryptedData.builder()
-                                                                     .encryptionKey(fullSecretName)
-                                                                     .encryptionType(EncryptionType.AWS_SECRETS_MANAGER)
-                                                                     .enabled(true)
-                                                                     .accountId(accountId)
-                                                                     .parentIds(new HashSet<>())
-                                                                     .kmsId(secretsManagerConfig.getUuid())
-                                                                     .build();
+    EncryptedData encryptedData = savedEncryptedData != null ? (EncryptedData) savedEncryptedData
+                                                             : EncryptedData.builder()
+                                                                   .encryptionKey(fullSecretName)
+                                                                   .encryptionType(EncryptionType.AWS_SECRETS_MANAGER)
+                                                                   .enabled(true)
+                                                                   .accountId(accountId)
+                                                                   .parentIds(new HashSet<>())
+                                                                   .kmsId(secretsManagerConfig.getUuid())
+                                                                   .build();
 
     if (!pathReference && isEmpty(value)) {
       return encryptedData;
@@ -641,7 +641,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     long startTime = System.currentTimeMillis();
     logger.info("Saving secret {} into Vault {}", name, keyUrl);
 
-    EncryptedRecord encryptedData = savedEncryptedData;
+    EncryptedData encryptedData = (EncryptedData) savedEncryptedData;
     if (savedEncryptedData == null) {
       encryptedData = EncryptedData.builder()
                           .encryptionKey(keyUrl)
@@ -774,15 +774,15 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
     long startTime = System.currentTimeMillis();
 
-    EncryptedRecord encryptedData = savedEncryptedData != null ? savedEncryptedData
-                                                               : EncryptedData.builder()
-                                                                     .encryptionKey(fullSecretName)
-                                                                     .encryptionType(EncryptionType.AZURE_VAULT)
-                                                                     .enabled(true)
-                                                                     .accountId(accountId)
-                                                                     .parentIds(new HashSet<>())
-                                                                     .kmsId(secretsManagerConfig.getUuid())
-                                                                     .build();
+    EncryptedData encryptedData = savedEncryptedData != null ? (EncryptedData) savedEncryptedData
+                                                             : EncryptedData.builder()
+                                                                   .encryptionKey(fullSecretName)
+                                                                   .encryptionType(EncryptionType.AZURE_VAULT)
+                                                                   .enabled(true)
+                                                                   .accountId(accountId)
+                                                                   .parentIds(new HashSet<>())
+                                                                   .kmsId(secretsManagerConfig.getUuid())
+                                                                   .build();
 
     KeyVaultClient azureVaultClient = getAzureVaultClient(secretsManagerConfig);
 
